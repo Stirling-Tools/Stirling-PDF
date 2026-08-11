@@ -17,8 +17,4 @@ import java.util.List;
  *     the client knows coverage is incomplete.
  */
 public record Evidence(
-        String sessionId,
-        List<Folio> folios,
-        int round,
-        boolean finalRound,
-        List<Integer> unauditablePages) {}
+        String sessionId, List<Folio> folios, int round, boolean finalRound, List<Integer> unauditablePages) {}

@@ -44,10 +44,9 @@ public class ClassificationMeterController {
     @PostMapping("/classify/meter")
     @Operation(
             summary = "Meter a client-side classification run",
-            description =
-                    "Records billing + audit for a non-AI classification performed in the browser."
-                            + " Does no classification itself. Dispatched by the frontend, not for"
-                            + " direct use.")
+            description = "Records billing + audit for a non-AI classification performed in the browser."
+                    + " Does no classification itself. Dispatched by the frontend, not for"
+                    + " direct use.")
     public ResponseEntity<Void> meterClassification(
             @RequestBody(required = false) ClassifyMeterRequest body, HttpServletRequest request) {
         int documents = body != null && body.documentCount() != null ? body.documentCount() : 1;
@@ -67,15 +66,12 @@ public class ClassificationMeterController {
             try {
                 runBiller.recordClassificationRun(documents);
             } catch (RuntimeException e) {
-                log.warn(
-                        "[classify meter] billing failed; classification proceeds unbilled: {}",
-                        e.getMessage());
+                log.warn("[classify meter] billing failed; classification proceeds unbilled: {}", e.getMessage());
             }
         }
         return ResponseEntity.accepted().build();
     }
 
     /** Frontend payload: documents classified, plus the policy name for the audit label. */
-    public record ClassifyMeterRequest(
-            String policyName, Integer documentCount, List<String> labels) {}
+    public record ClassifyMeterRequest(String policyName, Integer documentCount, List<String> labels) {}
 }

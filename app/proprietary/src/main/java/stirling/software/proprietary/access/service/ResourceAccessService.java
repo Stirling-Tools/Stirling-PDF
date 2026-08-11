@@ -48,11 +48,9 @@ public class ResourceAccessService {
      * must hold ids of users who lead their own active team — the set the ADMINS_AND_TEAM_LEADS
      * default admits, matching {@link #canAccessPortal}.
      */
-    public Set<Long> usersWithPortalAccess(
-            Collection<User> users, Set<Long> activeTeamLeaderUserIds) {
+    public Set<Long> usersWithPortalAccess(Collection<User> users, Set<Long> activeTeamLeaderUserIds) {
         Set<PrincipalRef> grantedPrincipals = new HashSet<>();
-        for (ResourceGrant g :
-                grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, "")) {
+        for (ResourceGrant g : grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, "")) {
             if (permissionSatisfies(g.getPermission(), AccessPermission.USE)) {
                 grantedPrincipals.add(new PrincipalRef(g.getPrincipalType(), g.getPrincipalId()));
             }
@@ -60,17 +58,14 @@ public class ResourceAccessService {
         Set<Long> leaderIds = activeTeamLeaderUserIds == null ? Set.of() : activeTeamLeaderUserIds;
         Set<Long> allowed = new HashSet<>();
         for (User user : users) {
-            if (user != null
-                    && user.getId() != null
-                    && hasPortalAccess(user, grantedPrincipals, leaderIds)) {
+            if (user != null && user.getId() != null && hasPortalAccess(user, grantedPrincipals, leaderIds)) {
                 allowed.add(user.getId());
             }
         }
         return allowed;
     }
 
-    private boolean hasPortalAccess(
-            User user, Set<PrincipalRef> grantedPrincipals, Set<Long> leaderIds) {
+    private boolean hasPortalAccess(User user, Set<PrincipalRef> grantedPrincipals, Set<Long> leaderIds) {
         if (isAdmin(user)) {
             return true;
         }
@@ -91,11 +86,7 @@ public class ResourceAccessService {
 
     /** Whether the user may use a resource, falling back to its default policy. */
     public boolean canUseResource(
-            ResourceType type,
-            String resourceId,
-            PrincipalRef owner,
-            DefaultAccessPolicy defaultPolicy,
-            User user) {
+            ResourceType type, String resourceId, PrincipalRef owner, DefaultAccessPolicy defaultPolicy, User user) {
         if (user == null) {
             return false;
         }
@@ -109,8 +100,7 @@ public class ResourceAccessService {
     }
 
     /** Whether the user may manage (edit/delete/share) a resource. No default-policy fallback. */
-    public boolean canManageResource(
-            ResourceType type, String resourceId, PrincipalRef owner, User user) {
+    public boolean canManageResource(ResourceType type, String resourceId, PrincipalRef owner, User user) {
         if (user == null) {
             return false;
         }
@@ -131,14 +121,11 @@ public class ResourceAccessService {
             AccessPermission permission,
             User grantedBy) {
         String rid = normalize(resourceId);
-        ResourceGrant grant =
-                grantRepository.findByResourceTypeAndResourceId(type, rid).stream()
-                        .filter(
-                                g ->
-                                        g.getPrincipalType() == principalType
-                                                && g.getPrincipalId().equals(principalId))
-                        .findFirst()
-                        .orElseGet(ResourceGrant::new);
+        ResourceGrant grant = grantRepository.findByResourceTypeAndResourceId(type, rid).stream()
+                .filter(g -> g.getPrincipalType() == principalType
+                        && g.getPrincipalId().equals(principalId))
+                .findFirst()
+                .orElseGet(ResourceGrant::new);
         grant.setResourceType(type);
         grant.setResourceId(rid);
         grant.setPrincipalType(principalType);
@@ -160,8 +147,7 @@ public class ResourceAccessService {
     }
 
     /** Every grant a principal holds, for the per-user/per-team manage-access view. */
-    public List<ResourceGrant> listGrantsForPrincipal(
-            PrincipalType principalType, Long principalId) {
+    public List<ResourceGrant> listGrantsForPrincipal(PrincipalType principalType, Long principalId) {
         return grantRepository.findByPrincipalTypeAndPrincipalId(principalType, principalId);
     }
 
@@ -172,9 +158,8 @@ public class ResourceAccessService {
         }
         Set<String> ids = new HashSet<>();
         for (PrincipalRef principal : principalResolver.principalsOf(user)) {
-            for (ResourceGrant g :
-                    grantRepository.findByResourceTypeAndPrincipalTypeAndPrincipalId(
-                            type, principal.type(), principal.id())) {
+            for (ResourceGrant g : grantRepository.findByResourceTypeAndPrincipalTypeAndPrincipalId(
+                    type, principal.type(), principal.id())) {
                 ids.add(g.getResourceId());
             }
         }
@@ -183,8 +168,7 @@ public class ResourceAccessService {
 
     // ---- internals ----
 
-    private boolean hasGrant(
-            ResourceType type, String resourceId, User user, AccessPermission required) {
+    private boolean hasGrant(ResourceType type, String resourceId, User user, AccessPermission required) {
         Set<PrincipalRef> principals = principalResolver.principalsOf(user);
         for (ResourceGrant g : grantRepository.findByResourceTypeAndResourceId(type, resourceId)) {
             if (!permissionSatisfies(g.getPermission(), required)) {

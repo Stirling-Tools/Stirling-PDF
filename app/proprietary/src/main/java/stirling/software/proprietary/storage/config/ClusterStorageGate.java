@@ -78,18 +78,13 @@ public class ClusterStorageGate {
 
     private static void validate(String propertyName, String configuredValue, String remediation) {
         String normalized =
-                Optional.ofNullable(configuredValue)
-                        .orElse("local")
-                        .trim()
-                        .toLowerCase(Locale.ROOT);
+                Optional.ofNullable(configuredValue).orElse("local").trim().toLowerCase(Locale.ROOT);
         if ("local".equals(normalized)) {
-            throw new IllegalStateException(
-                    "Cluster mode (cluster.enabled=true) is incompatible with "
-                            + propertyName
-                            + "=local. "
-                            + remediation);
+            throw new IllegalStateException("Cluster mode (cluster.enabled=true) is incompatible with "
+                    + propertyName
+                    + "=local. "
+                    + remediation);
         }
-        log.info(
-                "Cluster storage gate: clusterEnabled=true, {}={} -> OK", propertyName, normalized);
+        log.info("Cluster storage gate: clusterEnabled=true, {}={} -> OK", propertyName, normalized);
     }
 }

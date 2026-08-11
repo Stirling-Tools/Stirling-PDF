@@ -57,8 +57,7 @@ class RuntimePathConfigTest {
                             .toString(),
                     config.getPipelineWatchedFoldersPath());
             assertEquals(
-                    Path.of(expectedPipeline, "finishedFolders").toString(),
-                    config.getPipelineFinishedFoldersPath());
+                    Path.of(expectedPipeline, "finishedFolders").toString(), config.getPipelineFinishedFoldersPath());
             assertEquals(
                     Path.of(expectedPipeline, "defaultWebUIConfigs").toString(),
                     config.getPipelineDefaultWebUiConfigs());
@@ -76,8 +75,7 @@ class RuntimePathConfigTest {
             assertEquals("/custom/pipeline", config.getPipelinePath());
             // Sub-folders are derived from the (already-resolved) custom pipeline path.
             assertEquals(
-                    Path.of("/custom/pipeline", "finishedFolders").toString(),
-                    config.getPipelineFinishedFoldersPath());
+                    Path.of("/custom/pipeline", "finishedFolders").toString(), config.getPipelineFinishedFoldersPath());
             assertEquals(
                     Path.of("/custom/pipeline", "defaultWebUIConfigs").toString(),
                     config.getPipelineDefaultWebUiConfigs());
@@ -119,11 +117,10 @@ class RuntimePathConfigTest {
             RuntimePathConfig config = build(newProperties());
 
             // Watched folders are resolved to an absolute, normalized path by the production code.
-            String expected =
-                    Path.of(Path.of(BASE_PATH, "pipeline").toString(), "watchedFolders")
-                            .toAbsolutePath()
-                            .normalize()
-                            .toString();
+            String expected = Path.of(Path.of(BASE_PATH, "pipeline").toString(), "watchedFolders")
+                    .toAbsolutePath()
+                    .normalize()
+                    .toString();
             assertEquals(expected, config.getPipelineWatchedFoldersPath());
             assertEquals(1, config.getPipelineWatchedFoldersPaths().size());
             assertEquals(expected, config.getPipelineWatchedFoldersPaths().get(0));
@@ -133,16 +130,13 @@ class RuntimePathConfigTest {
         @DisplayName("Legacy single watchedFoldersDir is used when no list is provided")
         void legacyWatchedFolder() {
             ApplicationProperties properties = newProperties();
-            properties
-                    .getSystem()
-                    .getCustomPaths()
-                    .getPipeline()
-                    .setWatchedFoldersDir("relativeWatched");
+            properties.getSystem().getCustomPaths().getPipeline().setWatchedFoldersDir("relativeWatched");
 
             RuntimePathConfig config = build(properties);
 
             // Legacy paths are normalized to absolute.
-            String expected = Path.of("relativeWatched").toAbsolutePath().normalize().toString();
+            String expected =
+                    Path.of("relativeWatched").toAbsolutePath().normalize().toString();
             assertEquals(1, config.getPipelineWatchedFoldersPaths().size());
             assertEquals(expected, config.getPipelineWatchedFoldersPath());
         }
@@ -162,8 +156,8 @@ class RuntimePathConfigTest {
             assertEquals(Path.of("listDirA").toAbsolutePath().normalize().toString(), paths.get(0));
             assertEquals(Path.of("listDirB").toAbsolutePath().normalize().toString(), paths.get(1));
             // The legacy value must NOT appear when the list is present.
-            assertFalse(
-                    paths.contains(Path.of("legacyDir").toAbsolutePath().normalize().toString()));
+            assertFalse(paths.contains(
+                    Path.of("legacyDir").toAbsolutePath().normalize().toString()));
         }
 
         @Test
@@ -174,8 +168,7 @@ class RuntimePathConfigTest {
                     .getSystem()
                     .getCustomPaths()
                     .getPipeline()
-                    .setWatchedFoldersDirs(
-                            new ArrayList<>(Arrays.asList("dupDir", "dupDir", "otherDir")));
+                    .setWatchedFoldersDirs(new ArrayList<>(Arrays.asList("dupDir", "dupDir", "otherDir")));
 
             RuntimePathConfig config = build(properties);
 
@@ -193,8 +186,7 @@ class RuntimePathConfigTest {
                     .getSystem()
                     .getCustomPaths()
                     .getPipeline()
-                    .setWatchedFoldersDirs(
-                            new ArrayList<>(Arrays.asList("  ", "", "validDir", "   ")));
+                    .setWatchedFoldersDirs(new ArrayList<>(Arrays.asList("  ", "", "validDir", "   ")));
 
             RuntimePathConfig config = build(properties);
 
@@ -235,11 +227,10 @@ class RuntimePathConfigTest {
             // sanitizePathList strips everything -> empty -> falls through to default watched
             // folder.
             // The default is also resolved to an absolute, normalized path by the production code.
-            String expectedDefault =
-                    Path.of(Path.of(BASE_PATH, "pipeline").toString(), "watchedFolders")
-                            .toAbsolutePath()
-                            .normalize()
-                            .toString();
+            String expectedDefault = Path.of(Path.of(BASE_PATH, "pipeline").toString(), "watchedFolders")
+                    .toAbsolutePath()
+                    .normalize()
+                    .toString();
             assertEquals(1, config.getPipelineWatchedFoldersPaths().size());
             assertEquals(expectedDefault, config.getPipelineWatchedFoldersPath());
         }
@@ -256,9 +247,7 @@ class RuntimePathConfigTest {
 
             RuntimePathConfig config = build(properties);
 
-            assertEquals(
-                    config.getPipelineWatchedFoldersPaths().get(0),
-                    config.getPipelineWatchedFoldersPath());
+            assertEquals(config.getPipelineWatchedFoldersPaths().get(0), config.getPipelineWatchedFoldersPath());
             assertEquals(
                     Path.of("firstDir").toAbsolutePath().normalize().toString(),
                     config.getPipelineWatchedFoldersPath());
@@ -317,11 +306,7 @@ class RuntimePathConfigTest {
         @DisplayName("A single custom path leaves the other operation paths at defaults")
         void partialOperationOverride() {
             ApplicationProperties properties = newProperties();
-            properties
-                    .getSystem()
-                    .getCustomPaths()
-                    .getOperations()
-                    .setSoffice("/usr/local/soffice");
+            properties.getSystem().getCustomPaths().getOperations().setSoffice("/usr/local/soffice");
 
             RuntimePathConfig config = build(properties);
 
@@ -433,8 +418,7 @@ class RuntimePathConfigTest {
             badPort.setHost("192.168.1.11");
             badPort.setPort(0);
 
-            processExecutor.setUnoServerEndpoints(
-                    new ArrayList<>(Arrays.asList(valid, blankHost, badPort)));
+            processExecutor.setUnoServerEndpoints(new ArrayList<>(Arrays.asList(valid, blankHost, badPort)));
 
             RuntimePathConfig config = build(properties);
 

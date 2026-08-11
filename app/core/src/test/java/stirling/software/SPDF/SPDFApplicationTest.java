@@ -17,13 +17,17 @@ import stirling.software.common.model.ApplicationProperties;
 @ExtendWith(MockitoExtension.class)
 public class SPDFApplicationTest {
 
-    @Mock private Environment env;
+    @Mock
+    private Environment env;
 
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock
+    private ApplicationProperties applicationProperties;
 
-    @InjectMocks private SPDFApplication sPDFApplication;
+    @InjectMocks
+    private SPDFApplication sPDFApplication;
 
-    @Mock private AppConfig appConfig;
+    @Mock
+    private AppConfig appConfig;
 
     @BeforeEach
     public void setUp() {

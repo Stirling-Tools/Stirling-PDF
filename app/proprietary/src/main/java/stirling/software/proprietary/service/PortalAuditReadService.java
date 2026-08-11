@@ -48,10 +48,9 @@ public class PortalAuditReadService {
         if (principals.isEmpty()) {
             return List.of();
         }
-        return toRows(
-                auditRepository
-                        .findByTypeNotInAndPrincipalIn(NOISE_TYPES, principals, recentPage())
-                        .getContent());
+        return toRows(auditRepository
+                .findByTypeNotInAndPrincipalIn(NOISE_TYPES, principals, recentPage())
+                .getContent());
     }
 
     private static PageRequest recentPage() {
@@ -60,14 +59,12 @@ public class PortalAuditReadService {
 
     private static List<PortalAuditEventRow> toRows(List<PersistentAuditEvent> events) {
         return events.stream()
-                .map(
-                        e ->
-                                new PortalAuditEventRow(
-                                        e.getId() == null ? 0L : e.getId(),
-                                        e.getPrincipal(),
-                                        e.getType(),
-                                        e.getData(),
-                                        e.getTimestamp()))
+                .map(e -> new PortalAuditEventRow(
+                        e.getId() == null ? 0L : e.getId(),
+                        e.getPrincipal(),
+                        e.getType(),
+                        e.getData(),
+                        e.getTimestamp()))
                 .toList();
     }
 }

@@ -12,8 +12,7 @@ import stirling.software.common.model.api.PDFFile;
 public class BookletImpositionRequest extends PDFFile {
 
     @Schema(
-            description =
-                    "The number of pages per side for booklet printing (always 2 for proper booklet).",
+            description = "The number of pages per side for booklet printing (always 2 for proper booklet).",
             type = "number",
             defaultValue = "2",
             requiredMode = Schema.RequiredMode.REQUIRED,

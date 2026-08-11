@@ -31,7 +31,8 @@ import tools.jackson.databind.ObjectMapper;
  */
 class SignatureServiceTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -85,8 +86,7 @@ class SignatureServiceTest {
         @Test
         @DisplayName("personal scope writes image + metadata and returns a reference URL")
         void savesPersonalSignature() throws Exception {
-            SavedSignatureResponse resp =
-                    service.saveSignature(USER, imageRequest("sig1", "personal"));
+            SavedSignatureResponse resp = service.saveSignature(USER, imageRequest("sig1", "personal"));
 
             assertThat(resp.getId()).isEqualTo("sig1");
             assertThat(resp.getScope()).isEqualTo("personal");
@@ -108,11 +108,11 @@ class SignatureServiceTest {
         @Test
         @DisplayName("shared scope writes into the ALL_USERS folder")
         void savesSharedSignature() throws Exception {
-            SavedSignatureResponse resp =
-                    service.saveSignature(USER, imageRequest("shared1", "shared"));
+            SavedSignatureResponse resp = service.saveSignature(USER, imageRequest("shared1", "shared"));
 
             assertThat(resp.getScope()).isEqualTo("shared");
-            assertThat(Files.exists(tempDir.resolve("ALL_USERS").resolve("shared1.png"))).isTrue();
+            assertThat(Files.exists(tempDir.resolve("ALL_USERS").resolve("shared1.png")))
+                    .isTrue();
         }
 
         @Test
@@ -227,9 +227,7 @@ class SignatureServiceTest {
             List<SavedSignatureResponse> all = service.getSavedSignatures(USER);
 
             assertThat(all).extracting(SavedSignatureResponse::getId).contains("p1", "s1");
-            assertThat(all)
-                    .extracting(SavedSignatureResponse::getScope)
-                    .contains("personal", "shared");
+            assertThat(all).extracting(SavedSignatureResponse::getScope).contains("personal", "shared");
         }
 
         @Test
@@ -302,10 +300,8 @@ class SignatureServiceTest {
 
             service.updateSignatureLabel(USER, "sig1", "Renamed");
 
-            String json =
-                    Files.readString(userFolder(USER).resolve("sig1.json"), StandardCharsets.UTF_8);
-            SavedSignatureResponse updated =
-                    objectMapper.readValue(json, SavedSignatureResponse.class);
+            String json = Files.readString(userFolder(USER).resolve("sig1.json"), StandardCharsets.UTF_8);
+            SavedSignatureResponse updated = objectMapper.readValue(json, SavedSignatureResponse.class);
             assertThat(updated.getLabel()).isEqualTo("Renamed");
         }
 
@@ -316,12 +312,8 @@ class SignatureServiceTest {
 
             service.updateSignatureLabel(USER, "sh1", "SharedRenamed");
 
-            String json =
-                    Files.readString(
-                            tempDir.resolve("ALL_USERS").resolve("sh1.json"),
-                            StandardCharsets.UTF_8);
-            SavedSignatureResponse updated =
-                    objectMapper.readValue(json, SavedSignatureResponse.class);
+            String json = Files.readString(tempDir.resolve("ALL_USERS").resolve("sh1.json"), StandardCharsets.UTF_8);
+            SavedSignatureResponse updated = objectMapper.readValue(json, SavedSignatureResponse.class);
             assertThat(updated.getLabel()).isEqualTo("SharedRenamed");
         }
 
@@ -355,8 +347,7 @@ class SignatureServiceTest {
         @Test
         @DisplayName("rejects an invalid signature id")
         void rejectsInvalidId() {
-            assertThatThrownBy(() -> service.isSharedSignature("../x"))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> service.isSharedSignature("../x")).isInstanceOf(IllegalArgumentException.class);
         }
     }
 

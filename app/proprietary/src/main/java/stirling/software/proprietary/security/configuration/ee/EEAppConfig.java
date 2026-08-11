@@ -20,8 +20,7 @@ public class EEAppConfig {
 
     private final LicenseKeyChecker licenseKeyChecker;
 
-    public EEAppConfig(
-            ApplicationProperties applicationProperties, LicenseKeyChecker licenseKeyChecker) {
+    public EEAppConfig(ApplicationProperties applicationProperties, LicenseKeyChecker licenseKeyChecker) {
         this.applicationProperties = applicationProperties;
         this.licenseKeyChecker = licenseKeyChecker;
         migrateEnterpriseSettingsToPremium(this.applicationProperties);
@@ -68,8 +67,7 @@ public class EEAppConfig {
         }
 
         // Copy the license key if it's set in enterprise but not in premium
-        if (premium.getKey() == null
-                || "00000000-0000-0000-0000-000000000000".equals(premium.getKey())) {
+        if (premium.getKey() == null || "00000000-0000-0000-0000-000000000000".equals(premium.getKey())) {
             if (enterpriseEdition.getKey() != null
                     && !"00000000-0000-0000-0000-000000000000".equals(enterpriseEdition.getKey())) {
                 premium.setKey(enterpriseEdition.getKey());
@@ -93,8 +91,7 @@ public class EEAppConfig {
 
         if (enterpriseMetadata != null && premiumMetadata != null) {
             // Copy autoUpdateMetadata setting
-            if (!premiumMetadata.isAutoUpdateMetadata()
-                    && enterpriseMetadata.isAutoUpdateMetadata()) {
+            if (!premiumMetadata.isAutoUpdateMetadata() && enterpriseMetadata.isAutoUpdateMetadata()) {
                 premiumMetadata.setAutoUpdateMetadata(true);
             }
 
@@ -108,16 +105,14 @@ public class EEAppConfig {
             }
 
             // Copy creator if not set in premium but set in enterprise and different from default
-            if ((premiumMetadata.getCreator() == null
-                            || "Stirling-PDF".equals(premiumMetadata.getCreator()))
+            if ((premiumMetadata.getCreator() == null || "Stirling-PDF".equals(premiumMetadata.getCreator()))
                     && enterpriseMetadata.getCreator() != null
                     && !"Stirling-PDF".equals(enterpriseMetadata.getCreator())) {
                 premiumMetadata.setCreator(enterpriseMetadata.getCreator());
             }
 
             // Copy producer if not set in premium but set in enterprise and different from default
-            if ((premiumMetadata.getProducer() == null
-                            || "Stirling-PDF".equals(premiumMetadata.getProducer()))
+            if ((premiumMetadata.getProducer() == null || "Stirling-PDF".equals(premiumMetadata.getProducer()))
                     && enterpriseMetadata.getProducer() != null
                     && !"Stirling-PDF".equals(enterpriseMetadata.getProducer())) {
                 premiumMetadata.setProducer(enterpriseMetadata.getProducer());

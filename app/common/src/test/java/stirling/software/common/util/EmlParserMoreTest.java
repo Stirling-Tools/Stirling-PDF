@@ -51,9 +51,7 @@ class EmlParserMoreTest {
 
     private static String multipartWithAttachment(
             String boundary, String body, String filename, String attachmentContent) {
-        String encoded =
-                Base64.getEncoder()
-                        .encodeToString(attachmentContent.getBytes(StandardCharsets.UTF_8));
+        String encoded = Base64.getEncoder().encodeToString(attachmentContent.getBytes(StandardCharsets.UTF_8));
         return String.format(
                 Locale.ROOT,
                 "From: a@example.com\nTo: b@example.com\nCc: c@example.com\n"
@@ -81,16 +79,10 @@ class EmlParserMoreTest {
         @Test
         @DisplayName("subject, from, to and plain-text body are extracted")
         void plainTextEmail() throws Exception {
-            EmailContent content =
-                    EmlParser.extractEmailContent(
-                            eml(
-                                    simpleText(
-                                            "sender@example.com",
-                                            "recipient@example.com",
-                                            "Hello Subject",
-                                            "Body line one")),
-                            null,
-                            null);
+            EmailContent content = EmlParser.extractEmailContent(
+                    eml(simpleText("sender@example.com", "recipient@example.com", "Hello Subject", "Body line one")),
+                    null,
+                    null);
 
             assertThat(content.getSubject()).isEqualTo("Hello Subject");
             assertThat(content.getFrom()).contains("sender@example.com");
@@ -102,8 +94,7 @@ class EmlParserMoreTest {
         @DisplayName("the sent date is parsed into a UTC ZonedDateTime")
         void parsesDate() throws Exception {
             EmailContent content =
-                    EmlParser.extractEmailContent(
-                            eml(simpleText("a@x.com", "b@x.com", "Dated", "hi")), null, null);
+                    EmlParser.extractEmailContent(eml(simpleText("a@x.com", "b@x.com", "Dated", "hi")), null, null);
             ZonedDateTime date = content.getDate();
             assertThat(date).isNotNull();
             assertThat(date.getYear()).isEqualTo(2024);
@@ -112,14 +103,13 @@ class EmlParserMoreTest {
         @Test
         @DisplayName("an HTML body is captured as the html body")
         void htmlBodyCaptured() throws Exception {
-            String html =
-                    String.format(
-                            Locale.ROOT,
-                            "From: a@x.com\nTo: b@x.com\nSubject: HtmlMail\nDate: %s\n"
-                                    + "Content-Type: text/html; charset=UTF-8\n"
-                                    + "Content-Transfer-Encoding: 8bit\n\n"
-                                    + "<html><body><p>Rich</p></body></html>",
-                            TS);
+            String html = String.format(
+                    Locale.ROOT,
+                    "From: a@x.com\nTo: b@x.com\nSubject: HtmlMail\nDate: %s\n"
+                            + "Content-Type: text/html; charset=UTF-8\n"
+                            + "Content-Transfer-Encoding: 8bit\n\n"
+                            + "<html><body><p>Rich</p></body></html>",
+                    TS);
 
             EmailContent content = EmlParser.extractEmailContent(eml(html), null, null);
             assertThat(content.getHtmlBody()).contains("Rich");
@@ -133,16 +123,10 @@ class EmlParserMoreTest {
         @Test
         @DisplayName("attachment metadata is mapped and CC recipients are formatted")
         void attachmentMappedAndCc() throws Exception {
-            EmailContent content =
-                    EmlParser.extractEmailContent(
-                            eml(
-                                    multipartWithAttachment(
-                                            "----b1",
-                                            "see attached",
-                                            "notes.txt",
-                                            "attachment payload")),
-                            requestWithAttachments(10),
-                            null);
+            EmailContent content = EmlParser.extractEmailContent(
+                    eml(multipartWithAttachment("----b1", "see attached", "notes.txt", "attachment payload")),
+                    requestWithAttachments(10),
+                    null);
 
             assertThat(content.getCc()).contains("c@example.com");
             assertThat(content.getAttachmentCount()).isGreaterThanOrEqualTo(1);
@@ -157,13 +141,8 @@ class EmlParserMoreTest {
             EmlToPdfRequest noAttach = new EmlToPdfRequest();
             noAttach.setIncludeAttachments(false);
 
-            EmailContent content =
-                    EmlParser.extractEmailContent(
-                            eml(
-                                    multipartWithAttachment(
-                                            "----b2", "body", "doc.txt", "some content")),
-                            noAttach,
-                            null);
+            EmailContent content = EmlParser.extractEmailContent(
+                    eml(multipartWithAttachment("----b2", "body", "doc.txt", "some content")), noAttach, null);
 
             // Metadata still present, but the raw bytes are not attached.
             assertThat(content.getAttachmentCount()).isGreaterThanOrEqualTo(1);
@@ -174,16 +153,11 @@ class EmlParserMoreTest {
         @DisplayName("an attachment over the size limit has its data skipped")
         void attachmentOverSizeLimitSkipped() throws Exception {
             // 0 MB limit means any non-empty attachment exceeds it.
-            EmailContent content =
-                    EmlParser.extractEmailContent(
-                            eml(
-                                    multipartWithAttachment(
-                                            "----b3",
-                                            "body",
-                                            "big.txt",
-                                            "this content exceeds the zero-byte limit")),
-                            requestWithAttachments(0),
-                            null);
+            EmailContent content = EmlParser.extractEmailContent(
+                    eml(multipartWithAttachment(
+                            "----b3", "body", "big.txt", "this content exceeds the zero-byte limit")),
+                    requestWithAttachments(0),
+                    null);
 
             assertThat(content.getAttachments().get(0).getData()).isNull();
         }
@@ -228,8 +202,7 @@ class EmlParserMoreTest {
         @DisplayName("setHtmlBody and setTextBody strip carriage returns")
         void stripsCarriageReturns() throws Exception {
             EmailContent content =
-                    EmlParser.extractEmailContent(
-                            eml(simpleText("a@x.com", "b@x.com", "s", "x")), null, null);
+                    EmlParser.extractEmailContent(eml(simpleText("a@x.com", "b@x.com", "s", "x")), null, null);
             content.setHtmlBody("line1\r\nline2");
             content.setTextBody("a\r\nb");
             assertThat(content.getHtmlBody()).doesNotContain("\r");
@@ -240,8 +213,7 @@ class EmlParserMoreTest {
         @DisplayName("null bodies are preserved as null")
         void nullBodiesPreserved() throws Exception {
             EmailContent content =
-                    EmlParser.extractEmailContent(
-                            eml(simpleText("a@x.com", "b@x.com", "s", "x")), null, null);
+                    EmlParser.extractEmailContent(eml(simpleText("a@x.com", "b@x.com", "s", "x")), null, null);
             content.setHtmlBody(null);
             assertThat(content.getHtmlBody()).isNull();
         }

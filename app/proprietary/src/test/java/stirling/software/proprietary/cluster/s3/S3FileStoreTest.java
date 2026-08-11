@@ -40,9 +40,7 @@ class S3FileStoreTest {
 
     @Container
     static MinIOContainer minio =
-            new MinIOContainer("minio/minio:latest")
-                    .withUserName(ACCESS_KEY)
-                    .withPassword(SECRET_KEY);
+            new MinIOContainer("minio/minio:latest").withUserName(ACCESS_KEY).withPassword(SECRET_KEY);
 
     private static S3Client s3Client;
     private static S3FileStore store;
@@ -51,16 +49,16 @@ class S3FileStoreTest {
     static void setUp() {
         URI endpoint = URI.create(minio.getS3URL());
         AwsBasicCredentials creds = AwsBasicCredentials.create(ACCESS_KEY, SECRET_KEY);
-        S3Configuration s3Config = S3Configuration.builder().pathStyleAccessEnabled(true).build();
+        S3Configuration s3Config =
+                S3Configuration.builder().pathStyleAccessEnabled(true).build();
 
-        s3Client =
-                S3Client.builder()
-                        .endpointOverride(endpoint)
-                        .httpClient(UrlConnectionHttpClient.create())
-                        .region(Region.US_EAST_1)
-                        .credentialsProvider(StaticCredentialsProvider.create(creds))
-                        .serviceConfiguration(s3Config)
-                        .build();
+        s3Client = S3Client.builder()
+                .endpointOverride(endpoint)
+                .httpClient(UrlConnectionHttpClient.create())
+                .region(Region.US_EAST_1)
+                .credentialsProvider(StaticCredentialsProvider.create(creds))
+                .serviceConfiguration(s3Config)
+                .build();
 
         s3Client.createBucket(CreateBucketRequest.builder().bucket(BUCKET).build());
         store = new S3FileStore(s3Client, BUCKET, "transient/", false);
@@ -78,10 +76,8 @@ class S3FileStoreTest {
 
     @Test
     void blankBucket_constructorRejects() {
-        assertThatThrownBy(() -> new S3FileStore(s3Client, ""))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new S3FileStore(s3Client, null))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new S3FileStore(s3Client, "")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new S3FileStore(s3Client, null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -108,18 +104,14 @@ class S3FileStoreTest {
 
         String prefixed = store.resolveKey(stored.fileId());
         assertThat(prefixed).startsWith("transient/");
-        s3Client.headObject(HeadObjectRequest.builder().bucket(BUCKET).key(prefixed).build());
+        s3Client.headObject(
+                HeadObjectRequest.builder().bucket(BUCKET).key(prefixed).build());
 
-        assertThatThrownBy(
-                        () ->
-                                s3Client.headObject(
-                                        HeadObjectRequest.builder()
-                                                .bucket(BUCKET)
-                                                .key(stored.fileId())
-                                                .build()))
-                .isInstanceOfAny(
-                        NoSuchKeyException.class,
-                        software.amazon.awssdk.services.s3.model.S3Exception.class);
+        assertThatThrownBy(() -> s3Client.headObject(HeadObjectRequest.builder()
+                        .bucket(BUCKET)
+                        .key(stored.fileId())
+                        .build()))
+                .isInstanceOfAny(NoSuchKeyException.class, software.amazon.awssdk.services.s3.model.S3Exception.class);
     }
 
     @Test
@@ -134,12 +126,10 @@ class S3FileStoreTest {
 
     @Test
     void delete_removesObject_andReturnsTrue() throws IOException {
-        FileStore.Stored stored =
-                store.store(new ByteArrayInputStream(new byte[] {1, 2, 3}), "d.bin");
+        FileStore.Stored stored = store.store(new ByteArrayInputStream(new byte[] {1, 2, 3}), "d.bin");
         assertThat(store.delete(stored.fileId())).isTrue();
         assertThat(store.exists(stored.fileId())).isFalse();
-        assertThatThrownBy(() -> store.retrieveBytes(stored.fileId()))
-                .isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> store.retrieveBytes(stored.fileId())).isInstanceOf(IOException.class);
     }
 
     @Test
@@ -151,8 +141,7 @@ class S3FileStoreTest {
 
     @Test
     void retrieve_missingKey_throwsIOException() {
-        assertThatThrownBy(() -> store.retrieveBytes("does-not-exist"))
-                .isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> store.retrieveBytes("does-not-exist")).isInstanceOf(IOException.class);
         assertThatThrownBy(() -> store.retrieve("does-not-exist")).isInstanceOf(IOException.class);
         assertThatThrownBy(() -> store.size("does-not-exist")).isInstanceOf(IOException.class);
     }
@@ -196,15 +185,10 @@ class S3FileStoreTest {
 
         // Non-existent bucket causes putObject to fail after the temp file is written, exercising
         // the failure-path cleanup in the finally block.
-        S3FileStore brokenStore =
-                new S3FileStore(s3Client, "bucket-that-does-not-exist", "transient/", false);
+        S3FileStore brokenStore = new S3FileStore(s3Client, "bucket-that-does-not-exist", "transient/", false);
 
-        assertThatThrownBy(
-                        () ->
-                                brokenStore.store(
-                                        new ByteArrayInputStream(
-                                                "payload".getBytes(StandardCharsets.UTF_8)),
-                                        "x.bin"))
+        assertThatThrownBy(() -> brokenStore.store(
+                        new ByteArrayInputStream("payload".getBytes(StandardCharsets.UTF_8)), "x.bin"))
                 .isInstanceOf(IOException.class);
 
         assertThat(countS3UploadTemps(tempDir)).isEqualTo(uploadTempsBefore);
@@ -212,7 +196,8 @@ class S3FileStoreTest {
 
     private static long countS3UploadTemps(Path tempDir) {
         try (Stream<Path> entries = Files.list(tempDir)) {
-            return entries.filter(p -> p.getFileName().toString().startsWith("s3-upload-")).count();
+            return entries.filter(p -> p.getFileName().toString().startsWith("s3-upload-"))
+                    .count();
         } catch (IOException e) {
             return 0L;
         }
@@ -254,18 +239,14 @@ class S3FileStoreTest {
     @Test
     void store_withOwner_persistsOwnerMetadata() throws IOException {
         FileStore.Stored stored =
-                store.store(
-                        new ByteArrayInputStream("owned".getBytes(StandardCharsets.UTF_8)),
-                        "o.txt",
-                        "alice");
+                store.store(new ByteArrayInputStream("owned".getBytes(StandardCharsets.UTF_8)), "o.txt", "alice");
         assertThat(store.getOwner(stored.fileId())).isEqualTo("alice");
     }
 
     @Test
     void store_withoutOwner_yieldsNullFromGetOwner() throws IOException {
         FileStore.Stored stored =
-                store.store(
-                        new ByteArrayInputStream("anon".getBytes(StandardCharsets.UTF_8)), "a.txt");
+                store.store(new ByteArrayInputStream("anon".getBytes(StandardCharsets.UTF_8)), "a.txt");
         assertThat(store.getOwner(stored.fileId())).isNull();
     }
 

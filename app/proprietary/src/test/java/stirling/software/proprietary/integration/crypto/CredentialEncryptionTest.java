@@ -58,7 +58,6 @@ class CredentialEncryptionTest {
         raw[raw.length - 1] ^= 0x01;
         String tampered = Base64.getEncoder().encodeToString(raw);
 
-        assertThatThrownBy(() -> CredentialEncryption.decrypt(tampered))
-                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> CredentialEncryption.decrypt(tampered)).isInstanceOf(IllegalStateException.class);
     }
 }

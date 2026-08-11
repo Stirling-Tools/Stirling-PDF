@@ -64,9 +64,7 @@ public class EmailService {
         // Sets the recipient, subject, body, and sender email
         helper.addTo(email.getTo());
         helper.setSubject(email.getSubject());
-        helper.setText(
-                email.getBody(),
-                true); // The "true" here indicates that the body contains HTML content.
+        helper.setText(email.getBody(), true); // The "true" here indicates that the body contains HTML content.
         helper.setFrom(mailProperties.getFrom());
 
         // Adds the attachment to the email
@@ -103,11 +101,7 @@ public class EmailService {
         helper.setText(body, false);
         helper.setFrom(mailProperties.getFrom());
         mailSender.send(message);
-        log.debug(
-                "Simple email sent successfully to {} with subject: {} body: {}",
-                to,
-                subject,
-                body);
+        log.debug("Simple email sent successfully to {} with subject: {} body: {}", to, subject, body);
     }
 
     /**
@@ -120,8 +114,7 @@ public class EmailService {
      * @throws MessagingException If there is an issue with creating or sending the email.
      */
     @Async
-    public void sendPlainEmail(String to, String subject, String body, boolean isHtml)
-            throws MessagingException {
+    public void sendPlainEmail(String to, String subject, String body, boolean isHtml) throws MessagingException {
         // Validate recipient email address
         if (to == null || to.trim().isEmpty()) {
             throw new MessagingException("Invalid recipient email address");
@@ -155,13 +148,11 @@ public class EmailService {
      * @throws MessagingException If there is an issue with creating or sending the email.
      */
     @Async
-    public void sendInviteEmail(
-            String to, String username, String temporaryPassword, String loginUrl)
+    public void sendInviteEmail(String to, String username, String temporaryPassword, String loginUrl)
             throws MessagingException {
         String subject = "Welcome to Stirling PDF";
 
-        String body =
-                """
+        String body = """
                 <html><body style="margin: 0; padding: 0;">
                 <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;">
                   <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
@@ -200,8 +191,7 @@ public class EmailService {
                   </div>
                 </div>
                 </body></html>
-                """
-                        .formatted(username, temporaryPassword, loginUrl, loginUrl);
+                """.formatted(username, temporaryPassword, loginUrl, loginUrl);
 
         sendPlainEmail(to, subject, body, true);
     }
@@ -215,12 +205,10 @@ public class EmailService {
      * @throws MessagingException If there is an issue with creating or sending the email.
      */
     @Async
-    public void sendInviteLinkEmail(String to, String inviteUrl, String expiresAt)
-            throws MessagingException {
+    public void sendInviteLinkEmail(String to, String inviteUrl, String expiresAt) throws MessagingException {
         String subject = "You've been invited to Stirling PDF";
 
-        String body =
-                """
+        String body = """
                 <html><body style="margin: 0; padding: 0;">
                 <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;">
                   <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
@@ -254,30 +242,23 @@ public class EmailService {
                   </div>
                 </div>
                 </body></html>
-                """
-                        .formatted(inviteUrl, inviteUrl, expiresAt);
+                """.formatted(inviteUrl, inviteUrl, expiresAt);
 
         sendPlainEmail(to, subject, body, true);
     }
 
     @Async
-    public void sendPasswordChangedNotification(
-            String to, String username, String newPassword, String loginUrl)
+    public void sendPasswordChangedNotification(String to, String username, String newPassword, String loginUrl)
             throws MessagingException {
         String subject = "Your Stirling PDF password has been updated";
 
-        String passwordSection =
-                newPassword == null
-                        ? ""
-                        : """
+        String passwordSection = newPassword == null ? "" : """
                           <div style=\"background-color: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0; border-radius: 4px;\">
                             <p style=\"margin: 0;\"><strong>Temporary Password:</strong> %s</p>
                           </div>
-                        """
-                                .formatted(newPassword);
+                        """.formatted(newPassword);
 
-        String body =
-                """
+        String body = """
                 <html><body style=\"margin: 0; padding: 0;\">
                 <div style=\"font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;\">
                   <div style=\"max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;\">
@@ -304,8 +285,7 @@ public class EmailService {
                   </div>
                 </div>
                 </body></html>
-                """
-                        .formatted(username, passwordSection, loginUrl, loginUrl);
+                """.formatted(username, passwordSection, loginUrl, loginUrl);
 
         sendPlainEmail(to, subject, body, true);
     }

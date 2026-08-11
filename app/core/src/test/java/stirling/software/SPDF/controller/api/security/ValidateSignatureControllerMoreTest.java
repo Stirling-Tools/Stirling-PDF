@@ -101,8 +101,7 @@ class ValidateSignatureControllerMoreTest {
     }
 
     /** Build a single-page PDF and apply a detached PKCS7 signature with the test certificate. */
-    private static byte[] createSignedPdf(PrivateKey privateKey, Certificate[] chain)
-            throws Exception {
+    private static byte[] createSignedPdf(PrivateKey privateKey, Certificate[] chain) throws Exception {
         byte[] base;
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage());
@@ -112,28 +111,22 @@ class ValidateSignatureControllerMoreTest {
         }
 
         X509Certificate signer = (X509Certificate) chain[0];
-        SignatureInterface signatureInterface =
-                content -> {
-                    try {
-                        byte[] data = content.readAllBytes();
-                        List<Certificate> certList = new ArrayList<>(Arrays.asList(chain));
-                        JcaCertStore certs = new JcaCertStore(certList);
-                        CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
-                        gen.addSignerInfoGenerator(
-                                new JcaSignerInfoGeneratorBuilder(
-                                                new JcaDigestCalculatorProviderBuilder().build())
-                                        .build(
-                                                new JcaContentSignerBuilder("SHA256WithRSA")
-                                                        .build(privateKey),
-                                                signer));
-                        gen.addCertificates(certs);
-                        CMSSignedData signedData =
-                                gen.generate(new CMSProcessableByteArray(data), false);
-                        return signedData.getEncoded();
-                    } catch (Exception e) {
-                        throw new IOException(e);
-                    }
-                };
+        SignatureInterface signatureInterface = content -> {
+            try {
+                byte[] data = content.readAllBytes();
+                List<Certificate> certList = new ArrayList<>(Arrays.asList(chain));
+                JcaCertStore certs = new JcaCertStore(certList);
+                CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
+                gen.addSignerInfoGenerator(
+                        new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build())
+                                .build(new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey), signer));
+                gen.addCertificates(certs);
+                CMSSignedData signedData = gen.generate(new CMSProcessableByteArray(data), false);
+                return signedData.getEncoded();
+            } catch (Exception e) {
+                throw new IOException(e);
+            }
+        };
 
         try (PDDocument doc = Loader.loadPDF(base)) {
             PDSignature signature = new PDSignature();
@@ -152,8 +145,7 @@ class ValidateSignatureControllerMoreTest {
     }
 
     private MockMultipartFile signedPdfMultipart() {
-        return new MockMultipartFile(
-                "fileInput", "signed.pdf", MediaType.APPLICATION_PDF_VALUE, signedPdfBytes);
+        return new MockMultipartFile("fileInput", "signed.pdf", MediaType.APPLICATION_PDF_VALUE, signedPdfBytes);
     }
 
     @Nested
@@ -166,11 +158,9 @@ class ValidateSignatureControllerMoreTest {
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(signedPdfMultipart());
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
 
-            ResponseEntity<List<SignatureValidationResult>> response =
-                    controller.validateSignature(request);
+            ResponseEntity<List<SignatureValidationResult>> response = controller.validateSignature(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).hasSize(1);
@@ -190,8 +180,7 @@ class ValidateSignatureControllerMoreTest {
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(signedPdfMultipart());
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
 
             SignatureValidationResult result =
                     controller.validateSignature(request).getBody().get(0);
@@ -215,8 +204,7 @@ class ValidateSignatureControllerMoreTest {
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(signedPdfMultipart());
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
 
             SignatureValidationResult result =
                     controller.validateSignature(request).getBody().get(0);
@@ -233,8 +221,7 @@ class ValidateSignatureControllerMoreTest {
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(signedPdfMultipart());
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
 
             SignatureValidationResult result =
                     controller.validateSignature(request).getBody().get(0);
@@ -249,8 +236,7 @@ class ValidateSignatureControllerMoreTest {
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(signedPdfMultipart());
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
 
             SignatureValidationResult result =
                     controller.validateSignature(request).getBody().get(0);
@@ -270,15 +256,13 @@ class ValidateSignatureControllerMoreTest {
         @DisplayName("Custom cert that equals the signer yields a valid trusted chain")
         void chainValidWhenCustomCertIsTheAnchor() throws Exception {
             MockMultipartFile certFile =
-                    new MockMultipartFile(
-                            "certFile", "test-cert.der", "application/pkix-cert", testCertDer);
+                    new MockMultipartFile("certFile", "test-cert.der", "application/pkix-cert", testCertDer);
 
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(signedPdfMultipart());
             request.setCertFile(certFile);
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(signedPdfBytes));
 
             SignatureValidationResult result =
                     controller.validateSignature(request).getBody().get(0);
@@ -320,12 +304,8 @@ class ValidateSignatureControllerMoreTest {
         @Test
         @DisplayName("Invalid certificate file content throws a runtime exception")
         void invalidCertFileThrows() throws Exception {
-            MockMultipartFile certFile =
-                    new MockMultipartFile(
-                            "certFile",
-                            "bad.pem",
-                            "application/x-pem-file",
-                            "this is not a certificate".getBytes());
+            MockMultipartFile certFile = new MockMultipartFile(
+                    "certFile", "bad.pem", "application/x-pem-file", "this is not a certificate".getBytes());
 
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(signedPdfMultipart());
@@ -340,8 +320,7 @@ class ValidateSignatureControllerMoreTest {
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(signedPdfMultipart());
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenThrow(new IOException("boom"));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenThrow(new IOException("boom"));
 
             assertThrows(IOException.class, () -> controller.validateSignature(request));
         }
@@ -357,17 +336,14 @@ class ValidateSignatureControllerMoreTest {
                 unsigned = baos.toByteArray();
             }
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", "plain.pdf", MediaType.APPLICATION_PDF_VALUE, unsigned);
+                    new MockMultipartFile("fileInput", "plain.pdf", MediaType.APPLICATION_PDF_VALUE, unsigned);
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(pdfFile);
 
             byte[] unsignedCopy = unsigned;
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(unsignedCopy));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(unsignedCopy));
 
-            ResponseEntity<List<SignatureValidationResult>> response =
-                    controller.validateSignature(request);
+            ResponseEntity<List<SignatureValidationResult>> response = controller.validateSignature(request);
 
             assertThat(response.getBody()).isEmpty();
         }

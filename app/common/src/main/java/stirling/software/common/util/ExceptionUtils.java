@@ -60,8 +60,7 @@ public class ExceptionUtils {
 
     private static final String MESSAGES_BUNDLE = "messages";
     private static final Object LOCK = new Object();
-    private static final Pattern GS_PAGE_PATTERN =
-            Pattern.compile("Page\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern GS_PAGE_PATTERN = Pattern.compile("Page\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
     private static volatile ResourceBundle messages;
 
     /**
@@ -135,13 +134,12 @@ public class ExceptionUtils {
                                 MESSAGES_BUNDLE,
                                 locale);
                         // Create a fallback empty bundle
-                        messages =
-                                new java.util.ListResourceBundle() {
-                                    @Override
-                                    protected Object[][] getContents() {
-                                        return new Object[0][0];
-                                    }
-                                };
+                        messages = new java.util.ListResourceBundle() {
+                            @Override
+                            protected Object[][] getContents() {
+                                return new Object[0][0];
+                            }
+                        };
                     }
                 }
             }
@@ -259,10 +257,7 @@ public class ExceptionUtils {
                     pageNumber,
                     dpi,
                     new IllegalArgumentException(
-                            "Dimension exceeds Integer.MAX_VALUE: "
-                                    + widthInPixels
-                                    + "x"
-                                    + heightInPixels));
+                            "Dimension exceeds Integer.MAX_VALUE: " + widthInPixels + "x" + heightInPixels));
         }
 
         // Check if total pixel count would exceed safe limits
@@ -283,8 +278,7 @@ public class ExceptionUtils {
             throw createOutOfMemoryDpiException(
                     pageNumber,
                     dpi,
-                    new IllegalArgumentException(
-                            "Total pixel count exceeds safe limit: " + totalPixels));
+                    new IllegalArgumentException("Total pixel count exceeds safe limit: " + totalPixels));
         }
 
         // Additional safety check: warn about very large images (> 1GB estimated)
@@ -329,8 +323,7 @@ public class ExceptionUtils {
      * @throws OutOfMemoryDpiException if OutOfMemoryError or NegativeArraySizeException occurs
      * @throws IOException if any other I/O error occurs during rendering
      */
-    public static <T> T handleOomRendering(int pageNumber, int dpi, RenderOperation<T> operation)
-            throws IOException {
+    public static <T> T handleOomRendering(int pageNumber, int dpi, RenderOperation<T> operation) throws IOException {
         try {
             return operation.render();
         } catch (OutOfMemoryError | NegativeArraySizeException e) {
@@ -351,8 +344,7 @@ public class ExceptionUtils {
      * @throws OutOfMemoryDpiException if OutOfMemoryError or NegativeArraySizeException occurs
      * @throws IOException if any other I/O error occurs during rendering
      */
-    public static <T> T handleOomRendering(int dpi, RenderOperation<T> operation)
-            throws IOException {
+    public static <T> T handleOomRendering(int dpi, RenderOperation<T> operation) throws IOException {
         try {
             return operation.render();
         } catch (OutOfMemoryError | NegativeArraySizeException e) {
@@ -367,8 +359,7 @@ public class ExceptionUtils {
      * @param args optional arguments for message formatting
      * @return IllegalArgumentException with formatted message
      */
-    public static IllegalArgumentException createIllegalArgumentException(
-            ErrorCode errorCode, Object... args) {
+    public static IllegalArgumentException createIllegalArgumentException(ErrorCode errorCode, Object... args) {
         requireNonNull(errorCode, "errorCode");
         String message = getMessage(errorCode, args);
         return new IllegalArgumentException(message);
@@ -381,16 +372,13 @@ public class ExceptionUtils {
      * @param cause the original exception
      * @return PdfCorruptedException with user-friendly message
      */
-    public static PdfCorruptedException createPdfCorruptedException(
-            String context, Exception cause) {
+    public static PdfCorruptedException createPdfCorruptedException(String context, Exception cause) {
         requireNonNull(cause, "cause");
 
         String message;
         if (context != null && !context.isEmpty()) {
             String contextKey = "error.pdfCorruptedDuring";
-            String defaultMsg =
-                    MessageFormat.format(
-                            "Error {0}: {1}", context, getMessage(ErrorCode.PDF_CORRUPTED));
+            String defaultMsg = MessageFormat.format("Error {0}: {1}", context, getMessage(ErrorCode.PDF_CORRUPTED));
             message = getMessage(contextKey, defaultMsg, context);
         } else {
             message =
@@ -409,8 +397,7 @@ public class ExceptionUtils {
     public static PdfCorruptedException createMultiplePdfCorruptedException(Exception cause) {
         requireNonNull(cause, "cause");
         String message = getMessage(ErrorCode.PDF_MULTIPLE_CORRUPTED);
-        return new PdfCorruptedException(
-                message, cause, ErrorCode.PDF_MULTIPLE_CORRUPTED.getCode());
+        return new PdfCorruptedException(message, cause, ErrorCode.PDF_MULTIPLE_CORRUPTED.getCode());
     }
 
     /**
@@ -572,22 +559,18 @@ public class ExceptionUtils {
     public static IOException createFileProcessingException(String operation, Exception cause) {
         requireNonNull(operation, "operation");
         requireNonNull(cause, "cause");
-        String message =
-                getMessage(
-                        ErrorCode.FILE_PROCESSING.getMessageKey(),
-                        ErrorCode.FILE_PROCESSING.getDefaultMessage(),
-                        operation,
-                        cause.getMessage());
+        String message = getMessage(
+                ErrorCode.FILE_PROCESSING.getMessageKey(),
+                ErrorCode.FILE_PROCESSING.getDefaultMessage(),
+                operation,
+                cause.getMessage());
         return new IOException(message, cause);
     }
 
     public static IOException createImageReadException(String filename) {
         requireNonNull(filename, "filename");
-        String message =
-                getMessage(
-                        ErrorCode.IMAGE_READ_ERROR.getMessageKey(),
-                        ErrorCode.IMAGE_READ_ERROR.getDefaultMessage(),
-                        filename);
+        String message = getMessage(
+                ErrorCode.IMAGE_READ_ERROR.getMessageKey(), ErrorCode.IMAGE_READ_ERROR.getDefaultMessage(), filename);
         return new IOException(message);
     }
 
@@ -648,11 +631,8 @@ public class ExceptionUtils {
 
     public static IllegalArgumentException createInvalidPageSizeException(String size) {
         requireNonNull(size, "size");
-        String message =
-                getMessage(
-                        ErrorCode.INVALID_PAGE_SIZE.getMessageKey(),
-                        ErrorCode.INVALID_PAGE_SIZE.getDefaultMessage(),
-                        size);
+        String message = getMessage(
+                ErrorCode.INVALID_PAGE_SIZE.getMessageKey(), ErrorCode.INVALID_PAGE_SIZE.getDefaultMessage(), size);
         return new IllegalArgumentException(message);
     }
 
@@ -693,11 +673,10 @@ public class ExceptionUtils {
     }
 
     public static IOException createOcrProcessingFailedException(int returnCode) {
-        String message =
-                getMessage(
-                        ErrorCode.OCR_PROCESSING_FAILED.getMessageKey(),
-                        ErrorCode.OCR_PROCESSING_FAILED.getDefaultMessage(),
-                        returnCode);
+        String message = getMessage(
+                ErrorCode.OCR_PROCESSING_FAILED.getMessageKey(),
+                ErrorCode.OCR_PROCESSING_FAILED.getDefaultMessage(),
+                returnCode);
         return new IOException(message);
     }
 
@@ -708,8 +687,7 @@ public class ExceptionUtils {
     }
 
     public static IOException createPythonRequiredForWebpException() {
-        return createIOException(
-                "error.toolRequired", "{0} is required for {1}", null, "Python", "WebP conversion");
+        return createIOException("error.toolRequired", "{0} is required for {1}", null, "Python", "WebP conversion");
     }
 
     /** Create compression-related exceptions. */
@@ -732,8 +710,7 @@ public class ExceptionUtils {
         return createGhostscriptCompressionException(cause.getMessage(), cause);
     }
 
-    public static GhostscriptException createGhostscriptCompressionException(
-            String processOutput, Exception cause) {
+    public static GhostscriptException createGhostscriptCompressionException(String processOutput, Exception cause) {
         GhostscriptErrorInfo errorInfo = analyzeGhostscriptOutput(processOutput, cause);
         return buildGhostscriptException(errorInfo, processOutput, cause);
     }
@@ -753,31 +730,28 @@ public class ExceptionUtils {
             if (errorInfo.affectedPages().size() == 1) {
                 targetDescription = "page " + errorInfo.affectedPages().get(0);
             } else {
-                targetDescription =
-                        "pages "
-                                + String.join(
-                                        ", ",
-                                        errorInfo.affectedPages().stream()
-                                                .map(String::valueOf)
-                                                .toArray(String[]::new));
+                targetDescription = "pages "
+                        + String.join(
+                                ", ",
+                                errorInfo.affectedPages().stream()
+                                        .map(String::valueOf)
+                                        .toArray(String[]::new));
             }
         } else {
             targetDescription = "the input file";
         }
 
-        String diagnostic =
-                errorInfo.diagnostic() != null
-                        ? errorInfo.diagnostic()
-                        : deriveDefaultGhostscriptDiagnostic(processOutput);
+        String diagnostic = errorInfo.diagnostic() != null
+                ? errorInfo.diagnostic()
+                : deriveDefaultGhostscriptDiagnostic(processOutput);
 
         String message;
         if (errorInfo.errorCode() == ErrorCode.GHOSTSCRIPT_PAGE_DRAWING) {
-            message =
-                    getMessage(
-                            errorInfo.errorCode().getMessageKey(),
-                            errorInfo.errorCode().getDefaultMessage(),
-                            targetDescription,
-                            diagnostic);
+            message = getMessage(
+                    errorInfo.errorCode().getMessageKey(),
+                    errorInfo.errorCode().getDefaultMessage(),
+                    targetDescription,
+                    diagnostic);
         } else {
             message = getMessage(errorInfo.errorCode());
             if (errorInfo.diagnostic() != null && !errorInfo.diagnostic().isBlank()) {
@@ -788,8 +762,7 @@ public class ExceptionUtils {
         return new GhostscriptException(message, cause, errorInfo.errorCode().getCode());
     }
 
-    private static GhostscriptErrorInfo analyzeGhostscriptOutput(
-            String processOutput, Exception cause) {
+    private static GhostscriptErrorInfo analyzeGhostscriptOutput(String processOutput, Exception cause) {
         String combinedOutput = processOutput;
         if ((combinedOutput == null || combinedOutput.isBlank()) && cause != null) {
             combinedOutput = cause.getMessage();
@@ -851,11 +824,7 @@ public class ExceptionUtils {
             Integer pageNumber = affectedPages.isEmpty() ? null : affectedPages.get(0);
 
             return new GhostscriptErrorInfo(
-                    ErrorCode.GHOSTSCRIPT_PAGE_DRAWING,
-                    pageNumber,
-                    diagnostic,
-                    true,
-                    affectedPages);
+                    ErrorCode.GHOSTSCRIPT_PAGE_DRAWING, pageNumber, diagnostic, true, affectedPages);
         }
 
         // Fallback: capture the first non-empty informative line for context
@@ -866,13 +835,11 @@ public class ExceptionUtils {
             }
             String normalized = normalizeGhostscriptLine(line);
             if (!normalized.isEmpty()) {
-                return new GhostscriptErrorInfo(
-                        ErrorCode.GHOSTSCRIPT_COMPRESSION, null, normalized, false, List.of());
+                return new GhostscriptErrorInfo(ErrorCode.GHOSTSCRIPT_COMPRESSION, null, normalized, false, List.of());
             }
         }
 
-        return new GhostscriptErrorInfo(
-                ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false, List.of());
+        return new GhostscriptErrorInfo(ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false, List.of());
     }
 
     private static String normalizeGhostscriptLine(String line) {
@@ -891,29 +858,25 @@ public class ExceptionUtils {
 
     private static String deriveDefaultGhostscriptDiagnostic(String processOutput) {
         return getMessage(
-                "error.ghostscriptDefaultDiagnostic",
-                "The source file contains content Ghostscript cannot render.");
+                "error.ghostscriptDefaultDiagnostic", "The source file contains content Ghostscript cannot render.");
     }
 
     public static IOException createGhostscriptConversionException(String outputType) {
         requireNonNull(outputType, "outputType");
-        String message =
-                getMessage(
-                        ErrorCode.GHOSTSCRIPT_COMPRESSION.getMessageKey(),
-                        ErrorCode.GHOSTSCRIPT_COMPRESSION.getDefaultMessage(),
-                        outputType);
+        String message = getMessage(
+                ErrorCode.GHOSTSCRIPT_COMPRESSION.getMessageKey(),
+                ErrorCode.GHOSTSCRIPT_COMPRESSION.getDefaultMessage(),
+                outputType);
         return new IOException(message);
     }
 
-    public static IOException createProcessingInterruptedException(
-            String processType, InterruptedException cause) {
+    public static IOException createProcessingInterruptedException(String processType, InterruptedException cause) {
         requireNonNull(processType, "processType");
         requireNonNull(cause, "cause");
-        String message =
-                getMessage(
-                        ErrorCode.PROCESSING_INTERRUPTED.getMessageKey(),
-                        ErrorCode.PROCESSING_INTERRUPTED.getDefaultMessage(),
-                        processType);
+        String message = getMessage(
+                ErrorCode.PROCESSING_INTERRUPTED.getMessageKey(),
+                ErrorCode.PROCESSING_INTERRUPTED.getDefaultMessage(),
+                processType);
         return new IOException(message, cause);
     }
 
@@ -922,26 +885,21 @@ public class ExceptionUtils {
         return new RuntimeException(message);
     }
 
-    public static IllegalArgumentException createInvalidArgumentException(
-            String argumentName, String value) {
+    public static IllegalArgumentException createInvalidArgumentException(String argumentName, String value) {
         requireNonNull(argumentName, "argumentName");
         requireNonNull(value, "value");
-        String message =
-                getMessage(
-                        ErrorCode.INVALID_ARGUMENT.getMessageKey(),
-                        ErrorCode.INVALID_ARGUMENT.getDefaultMessage(),
-                        argumentName,
-                        value);
+        String message = getMessage(
+                ErrorCode.INVALID_ARGUMENT.getMessageKey(),
+                ErrorCode.INVALID_ARGUMENT.getDefaultMessage(),
+                argumentName,
+                value);
         return new IllegalArgumentException(message);
     }
 
     public static IllegalArgumentException createNullArgumentException(String argumentName) {
         requireNonNull(argumentName, "argumentName");
-        String message =
-                getMessage(
-                        ErrorCode.NULL_ARGUMENT.getMessageKey(),
-                        ErrorCode.NULL_ARGUMENT.getDefaultMessage(),
-                        argumentName);
+        String message = getMessage(
+                ErrorCode.NULL_ARGUMENT.getMessageKey(), ErrorCode.NULL_ARGUMENT.getDefaultMessage(), argumentName);
         return new IllegalArgumentException(message);
     }
 
@@ -956,15 +914,13 @@ public class ExceptionUtils {
      *     NegativeArraySizeException)
      * @return OutOfMemoryDpiException with user-friendly message
      */
-    public static OutOfMemoryDpiException createOutOfMemoryDpiException(
-            int pageNumber, int dpi, Throwable cause) {
+    public static OutOfMemoryDpiException createOutOfMemoryDpiException(int pageNumber, int dpi, Throwable cause) {
         requireNonNull(cause, "cause");
-        String message =
-                getMessage(
-                        ErrorCode.OUT_OF_MEMORY_DPI.getMessageKey(),
-                        ErrorCode.OUT_OF_MEMORY_DPI.getDefaultMessage(),
-                        pageNumber,
-                        dpi);
+        String message = getMessage(
+                ErrorCode.OUT_OF_MEMORY_DPI.getMessageKey(),
+                ErrorCode.OUT_OF_MEMORY_DPI.getDefaultMessage(),
+                pageNumber,
+                dpi);
         return new OutOfMemoryDpiException(message, cause, ErrorCode.OUT_OF_MEMORY_DPI.getCode());
     }
 
@@ -993,11 +949,8 @@ public class ExceptionUtils {
      */
     public static OutOfMemoryDpiException createOutOfMemoryDpiException(int dpi, Throwable cause) {
         requireNonNull(cause, "cause");
-        String message =
-                getMessage(
-                        ErrorCode.OUT_OF_MEMORY_DPI.getMessageKey(),
-                        ErrorCode.OUT_OF_MEMORY_DPI.getDefaultMessage(),
-                        dpi);
+        String message = getMessage(
+                ErrorCode.OUT_OF_MEMORY_DPI.getMessageKey(), ErrorCode.OUT_OF_MEMORY_DPI.getDefaultMessage(), dpi);
         return new OutOfMemoryDpiException(message, cause, ErrorCode.OUT_OF_MEMORY_DPI.getCode());
     }
 
@@ -1008,8 +961,7 @@ public class ExceptionUtils {
      * @param cause the original OutOfMemoryError
      * @return OutOfMemoryDpiException with user-friendly message
      */
-    public static OutOfMemoryDpiException createOutOfMemoryDpiException(
-            int dpi, OutOfMemoryError cause) {
+    public static OutOfMemoryDpiException createOutOfMemoryDpiException(int dpi, OutOfMemoryError cause) {
         return createOutOfMemoryDpiException(dpi, (Throwable) cause);
     }
 
@@ -1066,8 +1018,7 @@ public class ExceptionUtils {
         if (PdfErrorUtils.isCorruptedPdfError(exception)) {
             log.warn("PDF corruption detected during {}: {}", operation, exception.getMessage());
         } else if (exception instanceof IOException
-                && (isEncryptionError((IOException) exception)
-                        || isPasswordError((IOException) exception))) {
+                && (isEncryptionError((IOException) exception) || isPasswordError((IOException) exception))) {
             log.info("PDF security issue during {}: {}", operation, exception.getMessage());
         } else {
             log.error("Unexpected error during {}", operation, exception);
@@ -1102,8 +1053,7 @@ public class ExceptionUtils {
             return new RuntimeException(createFileProcessingException(operation, e));
         }
 
-        return new RuntimeException(
-                MessageFormat.format("Error during {0}: {1}", operation, e.getMessage()), e);
+        return new RuntimeException(MessageFormat.format("Error during {0}: {1}", operation, e.getMessage()), e);
     }
 
     /**
@@ -1170,38 +1120,30 @@ public class ExceptionUtils {
         IMAGE_READ_ERROR("E034", "error.imageReadError", "Unable to read image from file: {0}"),
 
         // OCR errors
-        OCR_LANGUAGE_REQUIRED(
-                "E040", "error.ocrLanguageRequired", "OCR language options are not specified"),
+        OCR_LANGUAGE_REQUIRED("E040", "error.ocrLanguageRequired", "OCR language options are not specified"),
         OCR_INVALID_LANGUAGES(
                 "E041",
                 "error.ocrInvalidLanguages",
                 "Invalid OCR languages format: none of the selected languages are valid"),
         OCR_TOOLS_UNAVAILABLE("E042", "error.ocrToolsUnavailable", "OCR tools are not installed"),
         OCR_INVALID_RENDER_TYPE(
-                "E043",
-                "error.ocrInvalidRenderType",
-                "Invalid OCR render type. Must be 'hocr' or 'sandwich'"),
-        OCR_PROCESSING_FAILED(
-                "E044", "error.ocrProcessingFailed", "OCRmyPDF failed with return code: {0}"),
+                "E043", "error.ocrInvalidRenderType", "Invalid OCR render type. Must be 'hocr' or 'sandwich'"),
+        OCR_PROCESSING_FAILED("E044", "error.ocrProcessingFailed", "OCRmyPDF failed with return code: {0}"),
 
         // Compression errors
         COMPRESSION_OPTIONS(
                 "E050",
                 "error.compressionOptions",
                 "Compression options are not specified (expected output size and optimize level)"),
-        GHOSTSCRIPT_COMPRESSION(
-                "E051", "error.ghostscriptCompression", "Ghostscript compression command failed"),
+        GHOSTSCRIPT_COMPRESSION("E051", "error.ghostscriptCompression", "Ghostscript compression command failed"),
         QPDF_COMPRESSION("E052", "error.qpdfCompression", "QPDF command failed"),
-        PROCESSING_INTERRUPTED(
-                "E053", "error.processingInterrupted", "{0} processing was interrupted"),
-        GHOSTSCRIPT_PAGE_DRAWING(
-                "E054", "error.ghostscriptPageDrawing", "Ghostscript could not render {0}. {1}"),
+        PROCESSING_INTERRUPTED("E053", "error.processingInterrupted", "{0} processing was interrupted"),
+        GHOSTSCRIPT_PAGE_DRAWING("E054", "error.ghostscriptPageDrawing", "Ghostscript could not render {0}. {1}"),
 
         // Conversion errors
         PDFA_CONVERSION_FAILED("E060", "error.pdfaConversionFailed", "PDF/A conversion failed"),
         HTML_FILE_REQUIRED("E061", "error.htmlFileRequired", "File must be in HTML or ZIP format"),
-        PYTHON_REQUIRED_WEBP(
-                "E062", "error.pythonRequiredWebp", "Python is required for WebP conversion"),
+        PYTHON_REQUIRED_WEBP("E062", "error.pythonRequiredWebp", "Python is required for WebP conversion"),
         FFMPEG_REQUIRED(
                 "E063",
                 "error.ffmpegRequired",
@@ -1289,11 +1231,7 @@ public class ExceptionUtils {
     }
 
     private record GhostscriptErrorInfo(
-            ErrorCode errorCode,
-            Integer pageNumber,
-            String diagnostic,
-            boolean critical,
-            List<Integer> affectedPages) {
+            ErrorCode errorCode, Integer pageNumber, String diagnostic, boolean critical, List<Integer> affectedPages) {
         private GhostscriptErrorInfo(
                 ErrorCode errorCode,
                 Integer pageNumber,
@@ -1308,8 +1246,7 @@ public class ExceptionUtils {
         }
 
         private static GhostscriptErrorInfo unknown() {
-            return new GhostscriptErrorInfo(
-                    ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false, List.of());
+            return new GhostscriptErrorInfo(ErrorCode.GHOSTSCRIPT_COMPRESSION, null, null, false, List.of());
         }
     }
 
@@ -1325,8 +1262,7 @@ public class ExceptionUtils {
     }
 
     /** Base exception with error code support for illegal argument errors. */
-    public abstract static class BaseValidationException extends IllegalArgumentException
-            implements ErrorCodeProvider {
+    public abstract static class BaseValidationException extends IllegalArgumentException implements ErrorCodeProvider {
         @Getter(onMethod_ = {@Override})
         private final String errorCode;
 

@@ -38,8 +38,7 @@ class RedactExecuteServiceTest {
     private static final float TOP_Y = PAGE_HEIGHT - 80f;
     private static final float FONT_SIZE = 11f;
 
-    private final RedactExecuteService service =
-            new RedactExecuteService(null, null, new TextRedactionService());
+    private final RedactExecuteService service = new RedactExecuteService(null, null, new TextRedactionService());
 
     @Nested
     @DisplayName("Single-column documents")
@@ -49,8 +48,7 @@ class RedactExecuteServiceTest {
         void redactBetweenMarkers_inclusive() throws IOException {
             try (PDDocument doc = buildSingleColumnDoc()) {
                 Map<Integer, PageColumnLayout> cache = new HashMap<>();
-                List<PDFText> blocks =
-                        service.collectRangeBlocks(doc, "START-HERE", "STOP-HERE", cache);
+                List<PDFText> blocks = service.collectRangeBlocks(doc, "START-HERE", "STOP-HERE", cache);
 
                 assertThat(blocks)
                         .as("blocks should be produced for single-column range")
@@ -67,8 +65,7 @@ class RedactExecuteServiceTest {
                             .as("block top must be at or below the start anchor's top")
                             .isGreaterThanOrEqualTo(screenTopOfStart - 1f);
                     assertThat(block.getY2())
-                            .as(
-                                    "block bottom must not extend past the end anchor's bottom (end is inclusive)")
+                            .as("block bottom must not extend past the end anchor's bottom (end is inclusive)")
                             .isLessThanOrEqualTo(screenBottomOfEnd + 1f);
                     assertThat(block.getX2())
                             .as("block should not extend into a hypothetical right column")
@@ -81,8 +78,7 @@ class RedactExecuteServiceTest {
         void missingStartString_noBlocks() throws IOException {
             try (PDDocument doc = buildSingleColumnDoc()) {
                 Map<Integer, PageColumnLayout> cache = new HashMap<>();
-                List<PDFText> blocks =
-                        service.collectRangeBlocks(doc, "MISSING-START", "STOP-HERE", cache);
+                List<PDFText> blocks = service.collectRangeBlocks(doc, "MISSING-START", "STOP-HERE", cache);
 
                 assertThat(blocks).isEmpty();
             }
@@ -97,8 +93,7 @@ class RedactExecuteServiceTest {
             // regions.
             try (PDDocument doc = buildCvStyleDoc()) {
                 Map<Integer, PageColumnLayout> cache = new HashMap<>();
-                List<PDFText> blocks =
-                        service.collectRangeBlocks(doc, "SECTION-A", "SECTION-C", cache);
+                List<PDFText> blocks = service.collectRangeBlocks(doc, "SECTION-A", "SECTION-C", cache);
 
                 assertThat(blocks)
                         .as("CV-style redaction between section headings must produce blocks")
@@ -119,8 +114,7 @@ class RedactExecuteServiceTest {
             try (PDDocument doc = buildHeadingPdf()) {
                 Map<Integer, PageColumnLayout> cache = new HashMap<>();
                 List<PDFText> blocks =
-                        service.collectRangeBlocks(
-                                doc, "#3: Character substitution", "#6: Image resolution", cache);
+                        service.collectRangeBlocks(doc, "#3: Character substitution", "#6: Image resolution", cache);
 
                 assertThat(blocks)
                         .as("anchor with extra punctuation should still resolve via fallback")
@@ -177,8 +171,7 @@ class RedactExecuteServiceTest {
             // end.y < start.y in screen coords.
             try (PDDocument doc = buildTwoColumnWithTocDoc()) {
                 Map<Integer, PageColumnLayout> cache = new HashMap<>();
-                List<PDFText> blocks =
-                        service.collectRangeBlocks(doc, "BODY-L-3", "BODY-R-1", cache);
+                List<PDFText> blocks = service.collectRangeBlocks(doc, "BODY-L-3", "BODY-R-1", cache);
 
                 assertThat(blocks)
                         .as("cross-column body redaction must produce blocks despite stacked TOC")
@@ -191,8 +184,7 @@ class RedactExecuteServiceTest {
             // This is the case the original code couldn't handle at all: end Y < start Y.
             try (PDDocument doc = buildTwoColumnDoc()) {
                 Map<Integer, PageColumnLayout> cache = new HashMap<>();
-                List<PDFText> blocks =
-                        service.collectRangeBlocks(doc, "L-MIDDLE", "R-MIDDLE", cache);
+                List<PDFText> blocks = service.collectRangeBlocks(doc, "L-MIDDLE", "R-MIDDLE", cache);
 
                 assertThat(blocks)
                         .as("cross-column range must produce blocks, not be silently dropped")
@@ -206,8 +198,12 @@ class RedactExecuteServiceTest {
                     if (midX < gutterMid) sawLeft = true;
                     else sawRight = true;
                 }
-                assertThat(sawLeft).as("left column should contain at least one block").isTrue();
-                assertThat(sawRight).as("right column should contain at least one block").isTrue();
+                assertThat(sawLeft)
+                        .as("left column should contain at least one block")
+                        .isTrue();
+                assertThat(sawRight)
+                        .as("right column should contain at least one block")
+                        .isTrue();
             }
         }
     }
@@ -225,9 +221,7 @@ class RedactExecuteServiceTest {
         doc.addPage(page);
         try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
             cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE);
-            String[] lines = {
-                "START-HERE", "line one", "line two", "line three", "STOP-HERE", "line five"
-            };
+            String[] lines = {"START-HERE", "line one", "line two", "line three", "STOP-HERE", "line five"};
             for (int i = 0; i < lines.length; i++) {
                 cs.beginText();
                 cs.newLineAtOffset(LEFT_X, yForLine(i));
@@ -251,20 +245,8 @@ class RedactExecuteServiceTest {
             // Body lines are padded to make each column genuinely wide enough that column
             // detection (which ignores narrow lines) treats both sides as real columns.
             String fill = " " + "x".repeat(26);
-            String[] left = {
-                "L-TOP" + fill,
-                "L-START" + fill,
-                "L-MIDDLE" + fill,
-                "L-END" + fill,
-                "L-BOTTOM" + fill
-            };
-            String[] right = {
-                "R-TOP" + fill,
-                "R-MIDDLE" + fill,
-                "R-START" + fill,
-                "R-END" + fill,
-                "R-BOTTOM" + fill
-            };
+            String[] left = {"L-TOP" + fill, "L-START" + fill, "L-MIDDLE" + fill, "L-END" + fill, "L-BOTTOM" + fill};
+            String[] right = {"R-TOP" + fill, "R-MIDDLE" + fill, "R-START" + fill, "R-END" + fill, "R-BOTTOM" + fill};
             for (int i = 0; i < left.length; i++) {
                 cs.beginText();
                 cs.newLineAtOffset(LEFT_X, yForLine(i));
@@ -408,8 +390,7 @@ class RedactExecuteServiceTest {
         return doc;
     }
 
-    private static void writeAt(PDPageContentStream cs, float x, float y, String text)
-            throws IOException {
+    private static void writeAt(PDPageContentStream cs, float x, float y, String text) throws IOException {
         cs.beginText();
         cs.newLineAtOffset(x, y);
         cs.showText(text);

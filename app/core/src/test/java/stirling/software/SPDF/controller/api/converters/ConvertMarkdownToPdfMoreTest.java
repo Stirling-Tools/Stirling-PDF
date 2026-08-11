@@ -54,12 +54,20 @@ import stirling.software.common.util.WebResponseUtils;
 @ExtendWith(MockitoExtension.class)
 class ConvertMarkdownToPdfMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private RuntimePathConfig runtimePathConfig;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private CustomHtmlSanitizer customHtmlSanitizer;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertMarkdownToPdf controller;
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private CustomHtmlSanitizer customHtmlSanitizer;
+
+    @InjectMocks
+    private ConvertMarkdownToPdf controller;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -68,19 +76,14 @@ class ConvertMarkdownToPdfMoreTest {
                 .when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(any(byte[].class)))
                 .thenAnswer(inv -> inv.getArgument(0));
         // A real managed temp file so Files.write succeeds before the (mocked) response build.
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("md-test", inv.<String>getArgument(0))
-                                            .toFile();
-                            f.deleteOnExit();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("md-test", inv.<String>getArgument(0)).toFile();
+            f.deleteOnExit();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
         // A real temp directory backing the ZIP-extraction branch.
         lenient()
                 .when(tempFileManager.createTempDirectory())
@@ -108,24 +111,18 @@ class ConvertMarkdownToPdfMoreTest {
             GeneralFile gf = generalFileOf("doc.md", "text/markdown", md.getBytes());
 
             try (MockedStatic<FileToPdf> ftp = Mockito.mockStatic(FileToPdf.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
                 ArgumentCaptor<byte[]> htmlBytes = ArgumentCaptor.forClass(byte[].class);
-                ftp.when(
-                                () ->
-                                        FileToPdf.convertHtmlToPdf(
-                                                eq("/usr/bin/weasyprint"),
-                                                isNull(),
-                                                htmlBytes.capture(),
-                                                eq("converted.html"),
-                                                eq(tempFileManager),
-                                                eq(customHtmlSanitizer)))
+                ftp.when(() -> FileToPdf.convertHtmlToPdf(
+                                eq("/usr/bin/weasyprint"),
+                                isNull(),
+                                htmlBytes.capture(),
+                                eq("converted.html"),
+                                eq(tempFileManager),
+                                eq(customHtmlSanitizer)))
                         .thenReturn("pdf".getBytes());
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(cannedResponse());
 
                 ResponseEntity<Resource> response = controller.markdownToPdf(gf);
@@ -144,19 +141,16 @@ class ConvertMarkdownToPdfMoreTest {
             GeneralFile gf = generalFileOf("doc.md", "text/markdown", "# Hi".getBytes());
 
             try (MockedStatic<FileToPdf> ftp = Mockito.mockStatic(FileToPdf.class)) {
-                ftp.when(
-                                () ->
-                                        FileToPdf.convertHtmlToPdf(
-                                                anyString(),
-                                                isNull(),
-                                                any(byte[].class),
-                                                anyString(),
-                                                any(TempFileManager.class),
-                                                any(CustomHtmlSanitizer.class)))
+                ftp.when(() -> FileToPdf.convertHtmlToPdf(
+                                anyString(),
+                                isNull(),
+                                any(byte[].class),
+                                anyString(),
+                                any(TempFileManager.class),
+                                any(CustomHtmlSanitizer.class)))
                         .thenThrow(new java.io.IOException("weasyprint failed"));
 
-                assertThatThrownBy(() -> controller.markdownToPdf(gf))
-                        .isInstanceOf(java.io.IOException.class);
+                assertThatThrownBy(() -> controller.markdownToPdf(gf)).isInstanceOf(java.io.IOException.class);
             }
         }
     }
@@ -188,36 +182,28 @@ class ConvertMarkdownToPdfMoreTest {
             GeneralFile gf = generalFileOf("bundle.zip", "application/zip", zip);
 
             try (MockedStatic<FileToPdf> ftp = Mockito.mockStatic(FileToPdf.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
-                ftp.when(
-                                () ->
-                                        FileToPdf.convertHtmlToPdf(
-                                                eq("/usr/bin/weasyprint"),
-                                                isNull(),
-                                                any(byte[].class),
-                                                eq("package.zip"),
-                                                eq(tempFileManager),
-                                                eq(customHtmlSanitizer)))
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+                ftp.when(() -> FileToPdf.convertHtmlToPdf(
+                                eq("/usr/bin/weasyprint"),
+                                isNull(),
+                                any(byte[].class),
+                                eq("package.zip"),
+                                eq(tempFileManager),
+                                eq(customHtmlSanitizer)))
                         .thenReturn("pdf".getBytes());
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(cannedResponse());
 
                 ResponseEntity<Resource> response = controller.markdownToPdf(gf);
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                ftp.verify(
-                        () ->
-                                FileToPdf.convertHtmlToPdf(
-                                        anyString(),
-                                        isNull(),
-                                        any(byte[].class),
-                                        eq("package.zip"),
-                                        any(TempFileManager.class),
-                                        any(CustomHtmlSanitizer.class)));
+                ftp.verify(() -> FileToPdf.convertHtmlToPdf(
+                        anyString(),
+                        isNull(),
+                        any(byte[].class),
+                        eq("package.zip"),
+                        any(TempFileManager.class),
+                        any(CustomHtmlSanitizer.class)));
             }
         }
 
@@ -230,8 +216,7 @@ class ConvertMarkdownToPdfMoreTest {
 
             GeneralFile gf = generalFileOf("bundle.zip", "application/zip", zip);
 
-            assertThatThrownBy(() -> controller.markdownToPdf(gf))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.markdownToPdf(gf)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -245,8 +230,7 @@ class ConvertMarkdownToPdfMoreTest {
             GeneralFile gf = new GeneralFile();
             gf.setFileInput(null);
 
-            assertThatThrownBy(() -> controller.markdownToPdf(gf))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.markdownToPdf(gf)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -254,8 +238,7 @@ class ConvertMarkdownToPdfMoreTest {
         void wrongExtension() {
             GeneralFile gf = generalFileOf("notes.txt", "text/plain", "hello".getBytes());
 
-            assertThatThrownBy(() -> controller.markdownToPdf(gf))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.markdownToPdf(gf)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 

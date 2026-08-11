@@ -36,11 +36,9 @@ public class PortalDocumentsController {
         if (!scope.allowed()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        PortalDocumentsResponseDto body =
-                scope.fullServer()
-                        ? portalDocumentsService.serverDocuments()
-                        : portalDocumentsService.scopedDocuments(
-                                scope.cacheKey(), scope.principals());
+        PortalDocumentsResponseDto body = scope.fullServer()
+                ? portalDocumentsService.serverDocuments()
+                : portalDocumentsService.scopedDocuments(scope.cacheKey(), scope.principals());
         return ResponseEntity.ok(body);
     }
 }

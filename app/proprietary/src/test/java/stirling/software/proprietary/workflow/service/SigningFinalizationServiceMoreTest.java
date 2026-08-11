@@ -56,12 +56,23 @@ import tools.jackson.databind.ObjectMapper;
 @ExtendWith(MockitoExtension.class)
 class SigningFinalizationServiceMoreTest {
 
-    @Mock private WorkflowParticipantRepository participantRepository;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private PdfSigningService pdfSigningService;
-    @Mock private MetadataEncryptionService metadataEncryptionService;
-    @Mock private ServerCertificateServiceInterface serverCertificateService;
-    @Mock private UserServerCertificateService userServerCertificateService;
+    @Mock
+    private WorkflowParticipantRepository participantRepository;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private PdfSigningService pdfSigningService;
+
+    @Mock
+    private MetadataEncryptionService metadataEncryptionService;
+
+    @Mock
+    private ServerCertificateServiceInterface serverCertificateService;
+
+    @Mock
+    private UserServerCertificateService userServerCertificateService;
 
     // Real Jackson 3 mapper so extractCertificateSubmission actually parses metadata
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -70,24 +81,20 @@ class SigningFinalizationServiceMoreTest {
 
     @BeforeEach
     void setUp() {
-        service =
-                new SigningFinalizationService(
-                        participantRepository,
-                        pdfDocumentFactory,
-                        objectMapper,
-                        pdfSigningService,
-                        metadataEncryptionService,
-                        serverCertificateService,
-                        userServerCertificateService);
+        service = new SigningFinalizationService(
+                participantRepository,
+                pdfDocumentFactory,
+                objectMapper,
+                pdfSigningService,
+                metadataEncryptionService,
+                serverCertificateService,
+                userServerCertificateService);
         // Keystores are stored encrypted at rest; these fixtures store them as plain Base64 (the
         // legacy form), which decryptBytes decodes unchanged.
-        lenient()
-                .when(metadataEncryptionService.decryptBytes(any()))
-                .thenAnswer(
-                        inv -> {
-                            String stored = inv.getArgument(0, String.class);
-                            return stored == null ? null : Base64.getDecoder().decode(stored);
-                        });
+        lenient().when(metadataEncryptionService.decryptBytes(any())).thenAnswer(inv -> {
+            String stored = inv.getArgument(0, String.class);
+            return stored == null ? null : Base64.getDecoder().decode(stored);
+        });
     }
 
     // -------------------------------------------------------------------------
@@ -95,9 +102,7 @@ class SigningFinalizationServiceMoreTest {
     // -------------------------------------------------------------------------
 
     private static byte[] loadCert(String filename) throws Exception {
-        try (InputStream in =
-                SigningFinalizationServiceMoreTest.class.getResourceAsStream(
-                        "/test-certs/" + filename)) {
+        try (InputStream in = SigningFinalizationServiceMoreTest.class.getResourceAsStream("/test-certs/" + filename)) {
             if (in == null) {
                 throw new IllegalStateException("cert not found: " + filename);
             }
@@ -197,15 +202,7 @@ class SigningFinalizationServiceMoreTest {
 
             byte[] signedOut = "SIGNED-PDF".getBytes();
             when(pdfSigningService.signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean(),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean()))
+                            any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean()))
                     .thenReturn(signedOut);
 
             byte[] original = singlePagePdf();
@@ -213,16 +210,7 @@ class SigningFinalizationServiceMoreTest {
 
             assertThat(result).isEqualTo(signedOut);
             verify(pdfSigningService, times(1))
-                    .signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean(),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean());
+                    .signWithKeystore(any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean());
         }
 
         @Test
@@ -244,15 +232,7 @@ class SigningFinalizationServiceMoreTest {
             when(participantRepository.findById(1L)).thenReturn(Optional.of(p));
             when(metadataEncryptionService.decrypt("testpass")).thenReturn("testpass");
             when(pdfSigningService.signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean(),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean()))
+                            any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean()))
                     .thenReturn("ok".getBytes());
 
             service.finalizeDocument(session, singlePagePdf());
@@ -291,16 +271,7 @@ class SigningFinalizationServiceMoreTest {
             // Untouched - no wet sigs, signing skipped because status != SIGNED
             assertThat(result).isEqualTo(original);
             verify(pdfSigningService, never())
-                    .signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean(),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean());
+                    .signWithKeystore(any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean());
         }
 
         @Test
@@ -317,16 +288,7 @@ class SigningFinalizationServiceMoreTest {
 
             assertThat(result).isEqualTo(original);
             verify(pdfSigningService, never())
-                    .signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean(),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean());
+                    .signWithKeystore(any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean());
         }
 
         @Test
@@ -409,15 +371,7 @@ class SigningFinalizationServiceMoreTest {
             when(participantRepository.findById(1L)).thenReturn(Optional.of(signed));
             lenient().when(metadataEncryptionService.decrypt("testpass")).thenReturn("testpass");
             when(pdfSigningService.signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean(),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean()))
+                            any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
             byte[] result = service.finalizeDocument(session, original);
@@ -425,16 +379,7 @@ class SigningFinalizationServiceMoreTest {
             assertThat(result).isNotNull();
             // showVisualSignature forced to false when summary page enabled
             verify(pdfSigningService)
-                    .signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            eq(false),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean());
+                    .signWithKeystore(any(), any(), any(), eq(false), any(), any(), any(), any(), anyBoolean());
         }
     }
 
@@ -529,15 +474,7 @@ class SigningFinalizationServiceMoreTest {
             when(participantRepository.findById(1L)).thenReturn(Optional.of(p));
             when(metadataEncryptionService.decrypt("jkspass")).thenReturn("jkspass");
             when(pdfSigningService.signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean(),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean()))
+                            any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean()))
                     .thenReturn("jks-signed".getBytes());
 
             byte[] result = service.finalizeDocument(session, singlePagePdf());
@@ -601,15 +538,7 @@ class SigningFinalizationServiceMoreTest {
             when(serverCertificateService.getServerKeyStore()).thenReturn(serverKs);
             when(serverCertificateService.getServerCertificatePassword()).thenReturn("testpass");
             when(pdfSigningService.signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean(),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean()))
+                            any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean()))
                     .thenReturn("server-signed".getBytes());
 
             byte[] result = service.finalizeDocument(session, singlePagePdf());
@@ -675,15 +604,7 @@ class SigningFinalizationServiceMoreTest {
             when(userServerCertificateService.getUserKeyStore(42L)).thenReturn(userKs);
             when(userServerCertificateService.getUserKeystorePassword(42L)).thenReturn("testpass");
             when(pdfSigningService.signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean(),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean()))
+                            any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean()))
                     .thenReturn("user-signed".getBytes());
 
             byte[] result = service.finalizeDocument(session, singlePagePdf());
@@ -711,15 +632,7 @@ class SigningFinalizationServiceMoreTest {
             when(participantRepository.findById(1L)).thenReturn(Optional.of(p));
             when(metadataEncryptionService.decrypt("enc:token")).thenReturn("testpass");
             when(pdfSigningService.signWithKeystore(
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean(),
-                            any(),
-                            any(),
-                            any(),
-                            any(),
-                            anyBoolean()))
+                            any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean()))
                     .thenReturn("ok".getBytes());
 
             byte[] result = service.finalizeDocument(session, singlePagePdf());

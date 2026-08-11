@@ -109,9 +109,7 @@ class TextRedactionServiceMoreTest {
             String raw = "BT /F1 12 Tf 72 700 Td (PUBLIC) Tj (SECRET) ' ET";
             try (PDDocument doc = docWithRawContent(raw)) {
                 PDPage page = doc.getPage(0);
-                List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Set.of("SECRET"), false, false);
+                List<Object> tokens = service.createTokensWithoutTargetText(doc, page, Set.of("SECRET"), false, false);
                 String text = tokensText(tokens);
                 assertThat(text).doesNotContain("SECRET");
                 assertThat(text).contains("PUBLIC");
@@ -128,9 +126,7 @@ class TextRedactionServiceMoreTest {
             try (PDDocument doc = docWithRawContent(raw)) {
                 PDPage page = doc.getPage(0);
                 List<Object> before = parseTokens(page);
-                List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Set.of("SECRET"), false, false);
+                List<Object> tokens = service.createTokensWithoutTargetText(doc, page, Set.of("SECRET"), false, false);
                 assertThat(tokens).hasSameSizeAs(before);
                 assertThat(tokensText(tokens)).contains("SECRET");
             }
@@ -154,13 +150,10 @@ class TextRedactionServiceMoreTest {
                     cs.beginText();
                     cs.newLineAtOffset(LEFT_X, TOP_Y);
                     // showTextWithPositioning emits a single TJ array.
-                    cs.showTextWithPositioning(
-                            new Object[] {"keep ", -50f, "SECRET", 20f, " tail"});
+                    cs.showTextWithPositioning(new Object[] {"keep ", -50f, "SECRET", 20f, " tail"});
                     cs.endText();
                 }
-                List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Set.of("SECRET"), false, false);
+                List<Object> tokens = service.createTokensWithoutTargetText(doc, page, Set.of("SECRET"), false, false);
 
                 boolean sawTj = tokens.stream().anyMatch(t -> t instanceof COSArray);
                 assertThat(sawTj).as("expected a TJ array token").isTrue();
@@ -183,9 +176,7 @@ class TextRedactionServiceMoreTest {
                     cs.endText();
                 }
                 List<Object> before = parseTokens(page);
-                List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Set.of("ZZZ"), false, false);
+                List<Object> tokens = service.createTokensWithoutTargetText(doc, page, Set.of("ZZZ"), false, false);
                 assertThat(tokens).hasSameSizeAs(before);
                 assertThat(tokensText(tokens)).contains("alpha");
             }
@@ -231,9 +222,7 @@ class TextRedactionServiceMoreTest {
                 // form, writeRedactedContentToXObject runs and sets a /Contents item on the form's
                 // COS dictionary. Asserting that item appears proves the XObject redaction path
                 // executed end-to-end without throwing.
-                List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Set.of("SECRET"), false, false);
+                List<Object> tokens = service.createTokensWithoutTargetText(doc, page, Set.of("SECRET"), false, false);
 
                 assertThat(tokens).isNotNull();
                 assertThat(form.getCOSObject().containsKey(COSName.CONTENTS))
@@ -302,9 +291,7 @@ class TextRedactionServiceMoreTest {
             try (PDDocument doc = twoPageDoc("alpha SECRET one", "beta SECRET two")) {
                 Map<Integer, List<PDFText>> found =
                         service.findTextToRedact(doc, new String[] {"SECRET"}, false, false);
-                boolean fallback =
-                        service.performTextReplacement(
-                                doc, found, new String[] {"SECRET"}, false, false);
+                boolean fallback = service.performTextReplacement(doc, found, new String[] {"SECRET"}, false, false);
                 assertThat(fallback).isFalse();
                 Map<Integer, List<PDFText>> after =
                         service.findTextToRedact(doc, new String[] {"SECRET"}, false, false);
@@ -316,11 +303,9 @@ class TextRedactionServiceMoreTest {
         @DisplayName("regex replacement across pages removes all matches")
         void regexReplaceAcrossPages() throws IOException {
             try (PDDocument doc = twoPageDoc("id 111 here", "id 222 there")) {
-                Map<Integer, List<PDFText>> found =
-                        service.findTextToRedact(doc, new String[] {"\\d+"}, true, false);
+                Map<Integer, List<PDFText>> found = service.findTextToRedact(doc, new String[] {"\\d+"}, true, false);
                 service.performTextReplacement(doc, found, new String[] {"\\d+"}, true, false);
-                Map<Integer, List<PDFText>> after =
-                        service.findTextToRedact(doc, new String[] {"\\d+"}, true, false);
+                Map<Integer, List<PDFText>> after = service.findTextToRedact(doc, new String[] {"\\d+"}, true, false);
                 assertThat(after).isEmpty();
             }
         }
@@ -342,17 +327,12 @@ class TextRedactionServiceMoreTest {
 
             // Segment text is the concatenation "SECRET tail"; startPos 0.
             TextRedactionService.TextSegment segment =
-                    new TextRedactionService.TextSegment(
-                            0, "TJ", "SECRET tail", 0, 11, helvetica(), FONT_SIZE);
+                    new TextRedactionService.TextSegment(0, "TJ", "SECRET tail", 0, 11, helvetica(), FONT_SIZE);
             List<TextRedactionService.MatchRange> matches =
                     List.of(new TextRedactionService.MatchRange(0, 6)); // "SECRET"
 
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "createRedactedTJArray",
-                            COSArray.class,
-                            TextRedactionService.TextSegment.class,
-                            List.class);
+            Method m = TextRedactionService.class.getDeclaredMethod(
+                    "createRedactedTJArray", COSArray.class, TextRedactionService.TextSegment.class, List.class);
             m.setAccessible(true);
             COSArray result = (COSArray) m.invoke(service, original, segment, matches);
 
@@ -368,16 +348,12 @@ class TextRedactionServiceMoreTest {
         @DisplayName("applyRedactionsToSegmentText swaps the matched span for a placeholder")
         void applyRedactionsToSegmentText() throws Exception {
             TextRedactionService.TextSegment segment =
-                    new TextRedactionService.TextSegment(
-                            0, "Tj", "keepSECRETkeep", 0, 14, helvetica(), FONT_SIZE);
+                    new TextRedactionService.TextSegment(0, "Tj", "keepSECRETkeep", 0, 14, helvetica(), FONT_SIZE);
             List<TextRedactionService.MatchRange> matches =
                     List.of(new TextRedactionService.MatchRange(4, 10)); // SECRET
 
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "applyRedactionsToSegmentText",
-                            TextRedactionService.TextSegment.class,
-                            List.class);
+            Method m = TextRedactionService.class.getDeclaredMethod(
+                    "applyRedactionsToSegmentText", TextRedactionService.TextSegment.class, List.class);
             m.setAccessible(true);
             String out = (String) m.invoke(service, segment, matches);
             assertThat(out).doesNotContain("SECRET");
@@ -390,18 +366,10 @@ class TextRedactionServiceMoreTest {
         void widthAdjustmentNullFont() throws Exception {
             TextRedactionService.TextSegment segment =
                     new TextRedactionService.TextSegment(0, "Tj", "abc", 0, 3, null, FONT_SIZE);
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "calculateWidthAdjustment",
-                            TextRedactionService.TextSegment.class,
-                            List.class);
+            Method m = TextRedactionService.class.getDeclaredMethod(
+                    "calculateWidthAdjustment", TextRedactionService.TextSegment.class, List.class);
             m.setAccessible(true);
-            float adj =
-                    (float)
-                            m.invoke(
-                                    service,
-                                    segment,
-                                    List.of(new TextRedactionService.MatchRange(0, 3)));
+            float adj = (float) m.invoke(service, segment, List.of(new TextRedactionService.MatchRange(0, 3)));
             assertThat(adj).isZero();
         }
 
@@ -411,23 +379,14 @@ class TextRedactionServiceMoreTest {
             // A subset font name (6 uppercase letters + '+') trips the subset short-circuit.
             PDFont subsetNamed = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
             TextRedactionService.TextSegment segment =
-                    new TextRedactionService.TextSegment(
-                            0, "Tj", "ABCDEF", 0, 6, subsetNamed, FONT_SIZE);
+                    new TextRedactionService.TextSegment(0, "Tj", "ABCDEF", 0, 6, subsetNamed, FONT_SIZE);
 
             // The real Helvetica name is not a subset, so this segment goes through the normal
             // calculation; assert the call is at least exception-free and finite.
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "calculateWidthAdjustment",
-                            TextRedactionService.TextSegment.class,
-                            List.class);
+            Method m = TextRedactionService.class.getDeclaredMethod(
+                    "calculateWidthAdjustment", TextRedactionService.TextSegment.class, List.class);
             m.setAccessible(true);
-            float adj =
-                    (float)
-                            m.invoke(
-                                    service,
-                                    segment,
-                                    List.of(new TextRedactionService.MatchRange(0, 6)));
+            float adj = (float) m.invoke(service, segment, List.of(new TextRedactionService.MatchRange(0, 6)));
             assertThat(Float.isFinite(adj)).isTrue();
         }
 
@@ -437,17 +396,15 @@ class TextRedactionServiceMoreTest {
             List<Object> tokens = new ArrayList<>();
             tokens.add(new COSString("hello"));
             TextRedactionService.TextSegment segment =
-                    new TextRedactionService.TextSegment(
-                            99, "Tj", "hello", 0, 5, helvetica(), FONT_SIZE);
+                    new TextRedactionService.TextSegment(99, "Tj", "hello", 0, 5, helvetica(), FONT_SIZE);
 
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "modifyTokenForRedaction",
-                            List.class,
-                            TextRedactionService.TextSegment.class,
-                            String.class,
-                            float.class,
-                            List.class);
+            Method m = TextRedactionService.class.getDeclaredMethod(
+                    "modifyTokenForRedaction",
+                    List.class,
+                    TextRedactionService.TextSegment.class,
+                    String.class,
+                    float.class,
+                    List.class);
             m.setAccessible(true);
             m.invoke(service, tokens, segment, "", 0f, List.of());
 
@@ -459,14 +416,10 @@ class TextRedactionServiceMoreTest {
         @Test
         @DisplayName("buildCompleteText concatenates the text of all segments in order")
         void buildCompleteText() throws Exception {
-            List<TextRedactionService.TextSegment> segments =
-                    List.of(
-                            new TextRedactionService.TextSegment(
-                                    0, "Tj", "foo", 0, 3, helvetica(), FONT_SIZE),
-                            new TextRedactionService.TextSegment(
-                                    1, "Tj", "bar", 3, 6, helvetica(), FONT_SIZE));
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod("buildCompleteText", List.class);
+            List<TextRedactionService.TextSegment> segments = List.of(
+                    new TextRedactionService.TextSegment(0, "Tj", "foo", 0, 3, helvetica(), FONT_SIZE),
+                    new TextRedactionService.TextSegment(1, "Tj", "bar", 3, 6, helvetica(), FONT_SIZE));
+            Method m = TextRedactionService.class.getDeclaredMethod("buildCompleteText", List.class);
             m.setAccessible(true);
             assertThat(m.invoke(service, segments)).isEqualTo("foobar");
         }
@@ -474,9 +427,7 @@ class TextRedactionServiceMoreTest {
         @Test
         @DisplayName("extractTextFromToken returns text for the \" operator")
         void extractTextFromQuoteOperator() throws Exception {
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "extractTextFromToken", Object.class, String.class);
+            Method m = TextRedactionService.class.getDeclaredMethod("extractTextFromToken", Object.class, String.class);
             m.setAccessible(true);
             // The " operator is not in the switch (Tj/'/TJ) -> default branch yields empty string.
             assertThat(m.invoke(service, new COSString("x"), "\"")).isEqualTo("");
@@ -500,8 +451,7 @@ class TextRedactionServiceMoreTest {
             } catch (IOException e) {
                 targetWidth = 30f;
             }
-            String placeholder =
-                    service.createPlaceholderWithWidth(original, targetWidth, font, FONT_SIZE);
+            String placeholder = service.createPlaceholderWithWidth(original, targetWidth, font, FONT_SIZE);
             assertThat(placeholder).isNotEmpty();
             assertThat(placeholder.chars().allMatch(c -> c == ' ')).isTrue();
             // spaceCount is capped at originalLength*2.
@@ -528,8 +478,7 @@ class TextRedactionServiceMoreTest {
         @DisplayName("GraphicsState defaults are null font and zero size, mutators round-trip")
         void graphicsStateRoundTrip() throws Exception {
             Class<?> gsClass =
-                    Class.forName(
-                            "stirling.software.SPDF.controller.api.security.TextRedactionService$GraphicsState");
+                    Class.forName("stirling.software.SPDF.controller.api.security.TextRedactionService$GraphicsState");
             var ctor = gsClass.getDeclaredConstructor();
             ctor.setAccessible(true);
             Object gs = ctor.newInstance();

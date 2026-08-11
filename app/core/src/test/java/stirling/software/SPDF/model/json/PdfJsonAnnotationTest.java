@@ -25,20 +25,19 @@ class PdfJsonAnnotationTest {
         @Test
         @DisplayName("builder sets scalar and array fields")
         void builder() {
-            PdfJsonAnnotation a =
-                    PdfJsonAnnotation.builder()
-                            .subtype("Highlight")
-                            .contents("note")
-                            .rect(new float[] {0f, 0f, 10f, 10f})
-                            .color(new float[] {1f, 1f, 0f})
-                            .flags(4)
-                            .destination("page2")
-                            .iconName("Comment")
-                            .subject("subj")
-                            .author("Alice")
-                            .creationDate("2025-01-01")
-                            .modificationDate("2026-01-01")
-                            .build();
+            PdfJsonAnnotation a = PdfJsonAnnotation.builder()
+                    .subtype("Highlight")
+                    .contents("note")
+                    .rect(new float[] {0f, 0f, 10f, 10f})
+                    .color(new float[] {1f, 1f, 0f})
+                    .flags(4)
+                    .destination("page2")
+                    .iconName("Comment")
+                    .subject("subj")
+                    .author("Alice")
+                    .creationDate("2025-01-01")
+                    .modificationDate("2026-01-01")
+                    .build();
 
             assertThat(a.getSubtype()).isEqualTo("Highlight");
             assertThat(a.getContents()).isEqualTo("note");
@@ -73,23 +72,20 @@ class PdfJsonAnnotationTest {
         @Test
         @DisplayName("equal content arrays equal; different content not")
         void arrayEquality() {
-            PdfJsonAnnotation a =
-                    PdfJsonAnnotation.builder()
-                            .subtype("Highlight")
-                            .rect(new float[] {1f, 2f, 3f, 4f})
-                            .build();
-            PdfJsonAnnotation b =
-                    PdfJsonAnnotation.builder()
-                            .subtype("Highlight")
-                            .rect(new float[] {1f, 2f, 3f, 4f})
-                            .build();
+            PdfJsonAnnotation a = PdfJsonAnnotation.builder()
+                    .subtype("Highlight")
+                    .rect(new float[] {1f, 2f, 3f, 4f})
+                    .build();
+            PdfJsonAnnotation b = PdfJsonAnnotation.builder()
+                    .subtype("Highlight")
+                    .rect(new float[] {1f, 2f, 3f, 4f})
+                    .build();
             assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
 
-            PdfJsonAnnotation c =
-                    PdfJsonAnnotation.builder()
-                            .subtype("Highlight")
-                            .rect(new float[] {9f, 9f, 9f, 9f})
-                            .build();
+            PdfJsonAnnotation c = PdfJsonAnnotation.builder()
+                    .subtype("Highlight")
+                    .rect(new float[] {9f, 9f, 9f, 9f})
+                    .build();
             assertThat(a).isNotEqualTo(c).isNotEqualTo(null).isNotEqualTo("string");
         }
 

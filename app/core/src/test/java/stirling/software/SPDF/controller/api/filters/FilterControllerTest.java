@@ -45,21 +45,21 @@ class FilterControllerTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private FilterController filterController;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private FilterController filterController;
 
     private MockMultipartFile mockFile;
 
     @BeforeEach
     void setUp() {
-        mockFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
+        mockFile = new MockMultipartFile(
+                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, "PDF content".getBytes());
     }
 
     // ---- containsText tests ----
@@ -80,10 +80,7 @@ class FilterControllerTest {
                 MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
 
             pdfUtilsMock.when(() -> PdfUtils.hasText(mockDoc, "all", "hello")).thenReturn(true);
-            webMock.when(
-                            () ->
-                                    WebResponseUtils.pdfDocToWebResponse(
-                                            mockDoc, "test.pdf", tempFileManager))
+            webMock.when(() -> WebResponseUtils.pdfDocToWebResponse(mockDoc, "test.pdf", tempFileManager))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> result = filterController.containsText(request);
@@ -130,10 +127,7 @@ class FilterControllerTest {
                 MockedStatic<WebResponseUtils> webMock = mockStatic(WebResponseUtils.class)) {
 
             pdfUtilsMock.when(() -> PdfUtils.hasImages(mockDoc, "all")).thenReturn(true);
-            webMock.when(
-                            () ->
-                                    WebResponseUtils.pdfDocToWebResponse(
-                                            mockDoc, "test.pdf", tempFileManager))
+            webMock.when(() -> WebResponseUtils.pdfDocToWebResponse(mockDoc, "test.pdf", tempFileManager))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> result = filterController.containsImage(request);

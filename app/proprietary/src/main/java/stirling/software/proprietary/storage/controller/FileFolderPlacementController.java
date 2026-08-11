@@ -39,8 +39,7 @@ public class FileFolderPlacementController {
 
     /** Move a single file to a folder (or to root when folderId is null). */
     @PatchMapping("/{fileId}/folder")
-    public ResponseEntity<Void> moveFileToFolder(
-            @PathVariable Long fileId, @Valid @RequestBody FolderPlacement body) {
+    public ResponseEntity<Void> moveFileToFolder(@PathVariable Long fileId, @Valid @RequestBody FolderPlacement body) {
         folderService.moveFileToFolder(fileId, body.getFolderId());
         return ResponseEntity.noContent().build();
     }
@@ -54,10 +53,8 @@ public class FileFolderPlacementController {
     public ResponseEntity<BulkMoveResponse> bulkMove(@Valid @RequestBody BulkMoveRequest body) {
         FolderService.BulkMoveResult result =
                 folderService.bulkMoveFilesToFolder(body.getFolderId(), body.getFileIds());
-        HttpStatus status =
-                result.skippedFileIds().isEmpty() ? HttpStatus.OK : HttpStatus.MULTI_STATUS;
-        return ResponseEntity.status(status)
-                .body(new BulkMoveResponse(result.movedFileIds(), result.skippedFileIds()));
+        HttpStatus status = result.skippedFileIds().isEmpty() ? HttpStatus.OK : HttpStatus.MULTI_STATUS;
+        return ResponseEntity.status(status).body(new BulkMoveResponse(result.movedFileIds(), result.skippedFileIds()));
     }
 
     @Data
@@ -74,10 +71,7 @@ public class FileFolderPlacementController {
         private UUID folderId;
 
         @NotNull
-        @Size(
-                min = 1,
-                max = BULK_MOVE_MAX_FILES,
-                message = "fileIds must contain between 1 and 1000 entries")
+        @Size(min = 1, max = BULK_MOVE_MAX_FILES, message = "fileIds must contain between 1 and 1000 entries")
         private List<Long> fileIds;
     }
 

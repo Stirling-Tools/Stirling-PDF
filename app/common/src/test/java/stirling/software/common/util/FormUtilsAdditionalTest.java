@@ -139,8 +139,7 @@ class FormUtilsAdditionalTest {
     @Test
     void testBuildFillTemplateRecord_textField() {
         FormUtils.FormFieldInfo info =
-                new FormUtils.FormFieldInfo(
-                        "name", "Name", "text", "John", null, false, 0, false, null, 0);
+                new FormUtils.FormFieldInfo("name", "Name", "text", "John", null, false, 0, false, null, 0);
         Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(info));
         assertEquals("John", result.get("name"));
     }
@@ -148,8 +147,7 @@ class FormUtilsAdditionalTest {
     @Test
     void testBuildFillTemplateRecord_checkboxField() {
         FormUtils.FormFieldInfo info =
-                new FormUtils.FormFieldInfo(
-                        "agree", "Agreement", "checkbox", "Yes", null, false, 0, false, null, 0);
+                new FormUtils.FormFieldInfo("agree", "Agreement", "checkbox", "Yes", null, false, 0, false, null, 0);
         Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(info));
         assertEquals(Boolean.TRUE, result.get("agree"));
     }
@@ -157,8 +155,7 @@ class FormUtilsAdditionalTest {
     @Test
     void testBuildFillTemplateRecord_checkboxFieldOff() {
         FormUtils.FormFieldInfo info =
-                new FormUtils.FormFieldInfo(
-                        "agree", "Agreement", "checkbox", "Off", null, false, 0, false, null, 0);
+                new FormUtils.FormFieldInfo("agree", "Agreement", "checkbox", "Off", null, false, 0, false, null, 0);
         Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(info));
         assertEquals(Boolean.FALSE, result.get("agree"));
     }
@@ -166,8 +163,7 @@ class FormUtilsAdditionalTest {
     @Test
     void testBuildFillTemplateRecord_skipsButton() {
         FormUtils.FormFieldInfo info =
-                new FormUtils.FormFieldInfo(
-                        "submit", "Submit", "button", null, null, false, 0, false, null, 0);
+                new FormUtils.FormFieldInfo("submit", "Submit", "button", null, null, false, 0, false, null, 0);
         Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(info));
         assertFalse(result.containsKey("submit"));
     }
@@ -175,8 +171,7 @@ class FormUtilsAdditionalTest {
     @Test
     void testBuildFillTemplateRecord_skipsSignature() {
         FormUtils.FormFieldInfo info =
-                new FormUtils.FormFieldInfo(
-                        "sig", "Signature", "signature", null, null, false, 0, false, null, 0);
+                new FormUtils.FormFieldInfo("sig", "Signature", "signature", null, null, false, 0, false, null, 0);
         Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(info));
         assertFalse(result.containsKey("sig"));
     }
@@ -205,9 +200,7 @@ class FormUtilsAdditionalTest {
     void testApplyFieldValues_noAcroFormStrict() throws IOException {
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage());
-            assertThrows(
-                    IOException.class,
-                    () -> FormUtils.applyFieldValues(doc, Map.of("key", "val"), false, true));
+            assertThrows(IOException.class, () -> FormUtils.applyFieldValues(doc, Map.of("key", "val"), false, true));
         }
     }
 
@@ -264,8 +257,7 @@ class FormUtilsAdditionalTest {
             assertTrue(setup.acroForm.getNeedAppearances());
 
             assertTimeoutPreemptively(
-                    Duration.ofSeconds(10),
-                    () -> FormUtils.applyFieldValues(doc, Map.of(), true, false));
+                    Duration.ofSeconds(10), () -> FormUtils.applyFieldValues(doc, Map.of(), true, false));
 
             PDAcroForm after = doc.getDocumentCatalog().getAcroForm();
             assertTrue(after == null || after.getFields().isEmpty());
@@ -280,9 +272,7 @@ class FormUtilsAdditionalTest {
             textField.setPartialName("company");
             attachWidget(setup, textField, new PDRectangle(60, 720, 220, 20));
 
-            assertTimeoutPreemptively(
-                    Duration.ofSeconds(10),
-                    () -> FormUtils.applyFieldValues(doc, null, true, false));
+            assertTimeoutPreemptively(Duration.ofSeconds(10), () -> FormUtils.applyFieldValues(doc, null, true, false));
 
             PDAcroForm after = doc.getDocumentCatalog().getAcroForm();
             assertTrue(after == null || after.getFields().isEmpty());
@@ -308,17 +298,13 @@ class FormUtilsAdditionalTest {
 
     @Test
     void testFilterSingleChoiceSelection_validSelection() {
-        String result =
-                FormUtils.filterSingleChoiceSelection(
-                        "Option A", List.of("Option A", "Option B"), "field1");
+        String result = FormUtils.filterSingleChoiceSelection("Option A", List.of("Option A", "Option B"), "field1");
         assertEquals("Option A", result);
     }
 
     @Test
     void testFilterSingleChoiceSelection_invalidSelection() {
-        String result =
-                FormUtils.filterSingleChoiceSelection(
-                        "Invalid", List.of("Option A", "Option B"), "field1");
+        String result = FormUtils.filterSingleChoiceSelection("Invalid", List.of("Option A", "Option B"), "field1");
         assertNull(result);
     }
 

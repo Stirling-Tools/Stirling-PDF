@@ -35,38 +35,36 @@ import stirling.software.proprietary.storage.service.FileStorageService;
 @ExtendWith(MockitoExtension.class)
 class FileStorageControllerTest {
 
-    private static final String SIGNED_URL =
-            "https://test-bucket.s3.example.com/signed-blob?X-Amz-Signature=abc";
+    private static final String SIGNED_URL = "https://test-bucket.s3.example.com/signed-blob?X-Amz-Signature=abc";
 
-    @Mock private FileStorageService fileStorageService;
-    @Mock private StorageProvider storageProvider;
+    @Mock
+    private FileStorageService fileStorageService;
+
+    @Mock
+    private StorageProvider storageProvider;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        FileStorageController controller =
-                new FileStorageController(fileStorageService, storageProvider);
+        FileStorageController controller = new FileStorageController(fileStorageService, storageProvider);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
     @Test
-    void downloadFile_whenProviderReturnsSignedUrl_returns302RedirectWithoutSessionCredentials()
-            throws Exception {
+    void downloadFile_whenProviderReturnsSignedUrl_returns302RedirectWithoutSessionCredentials() throws Exception {
         StoredFile file = newStoredFile();
 
         when(fileStorageService.requireAuthenticatedUser()).thenReturn(file.getOwner());
         when(fileStorageService.getAccessibleFile(file.getOwner(), 77L)).thenReturn(file);
-        when(storageProvider.signedDownloadUrl(
-                        eq("11/abc-doc.pdf"), any(Duration.class), anyBoolean(), anyString()))
+        when(storageProvider.signedDownloadUrl(eq("11/abc-doc.pdf"), any(Duration.class), anyBoolean(), anyString()))
                 .thenReturn(Optional.of(URI.create(SIGNED_URL)));
 
-        MvcResult result =
-                mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L))
-                        .andExpect(status().is(HttpStatus.FOUND.value()))
-                        .andExpect(header().string(HttpHeaders.LOCATION, SIGNED_URL))
-                        .andExpect(redirectedUrl(SIGNED_URL))
-                        .andReturn();
+        MvcResult result = mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L))
+                .andExpect(status().is(HttpStatus.FOUND.value()))
+                .andExpect(header().string(HttpHeaders.LOCATION, SIGNED_URL))
+                .andExpect(redirectedUrl(SIGNED_URL))
+                .andReturn();
 
         // Regression fence: signed URLs delegate auth to the URL itself, so the redirect
         // response must NOT carry any session credentials forward.
@@ -81,17 +79,14 @@ class FileStorageControllerTest {
 
         when(fileStorageService.requireAuthenticatedUser()).thenReturn(file.getOwner());
         when(fileStorageService.getAccessibleFile(file.getOwner(), 77L)).thenReturn(file);
-        when(storageProvider.signedDownloadUrl(
-                        eq("11/abc-doc.pdf"), any(Duration.class), eq(false), eq("doc.pdf")))
+        when(storageProvider.signedDownloadUrl(eq("11/abc-doc.pdf"), any(Duration.class), eq(false), eq("doc.pdf")))
                 .thenReturn(Optional.of(URI.create(SIGNED_URL)));
 
         mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L))
                 .andExpect(status().is(HttpStatus.FOUND.value()))
                 .andExpect(header().string(HttpHeaders.LOCATION, SIGNED_URL));
 
-        verify(storageProvider)
-                .signedDownloadUrl(
-                        eq("11/abc-doc.pdf"), any(Duration.class), eq(false), eq("doc.pdf"));
+        verify(storageProvider).signedDownloadUrl(eq("11/abc-doc.pdf"), any(Duration.class), eq(false), eq("doc.pdf"));
     }
 
     @Test
@@ -100,17 +95,14 @@ class FileStorageControllerTest {
 
         when(fileStorageService.requireAuthenticatedUser()).thenReturn(file.getOwner());
         when(fileStorageService.getAccessibleFile(file.getOwner(), 77L)).thenReturn(file);
-        when(storageProvider.signedDownloadUrl(
-                        eq("11/abc-doc.pdf"), any(Duration.class), eq(true), eq("doc.pdf")))
+        when(storageProvider.signedDownloadUrl(eq("11/abc-doc.pdf"), any(Duration.class), eq(true), eq("doc.pdf")))
                 .thenReturn(Optional.of(URI.create(SIGNED_URL)));
 
         mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L).param("inline", "true"))
                 .andExpect(status().is(HttpStatus.FOUND.value()))
                 .andExpect(header().string(HttpHeaders.LOCATION, SIGNED_URL));
 
-        verify(storageProvider)
-                .signedDownloadUrl(
-                        eq("11/abc-doc.pdf"), any(Duration.class), eq(true), eq("doc.pdf"));
+        verify(storageProvider).signedDownloadUrl(eq("11/abc-doc.pdf"), any(Duration.class), eq(true), eq("doc.pdf"));
     }
 
     private static StoredFile newStoredFile() {

@@ -62,9 +62,7 @@ class TableRendererTest {
         @Test
         @DisplayName("two rows produce a header, a separator and a data row")
         void headerSeparatorData() {
-            String md =
-                    TableRenderer.render(
-                            table(List.of(List.of("Name", "Age"), List.of("Alice", "30"))));
+            String md = TableRenderer.render(table(List.of(List.of("Name", "Age"), List.of("Alice", "30"))));
             String[] lines = md.split("\n");
             assertThat(lines).hasSize(3);
             assertThat(lines[0]).startsWith("|").contains("Name").contains("Age");
@@ -76,12 +74,7 @@ class TableRendererTest {
         @Test
         @DisplayName("column widths grow to fit the widest cell in each column")
         void columnWidthsFitContent() {
-            String md =
-                    TableRenderer.render(
-                            table(
-                                    List.of(
-                                            List.of("h", "header2"),
-                                            List.of("averylongvalue", "x"))));
+            String md = TableRenderer.render(table(List.of(List.of("h", "header2"), List.of("averylongvalue", "x"))));
             String[] lines = md.split("\n");
             // Every rendered row (header, separator, data) is the same total width.
             int width = lines[0].length();
@@ -102,8 +95,7 @@ class TableRendererTest {
         @Test
         @DisplayName("pipe characters in cells are escaped in every rendered row")
         void escapesPipes() {
-            String md =
-                    TableRenderer.render(table(List.of(List.of("a|b", "c"), List.of("d", "e|f"))));
+            String md = TableRenderer.render(table(List.of(List.of("a|b", "c"), List.of("d", "e|f"))));
             // Two literal pipes escaped; the structural pipes are not.
             assertThat(md).contains("a\\|b").contains("e\\|f");
         }
@@ -111,9 +103,7 @@ class TableRendererTest {
         @Test
         @DisplayName("cells are trimmed before measuring and rendering")
         void trimsCells() {
-            String md =
-                    TableRenderer.render(
-                            table(List.of(List.of("  Name  ", " Age "), List.of("Al", "30"))));
+            String md = TableRenderer.render(table(List.of(List.of("  Name  ", " Age "), List.of("Al", "30"))));
             assertThat(md).contains("| Name").contains("Age ");
             assertThat(md).doesNotContain("  Name  ");
         }
@@ -121,13 +111,7 @@ class TableRendererTest {
         @Test
         @DisplayName("three rows emit two data rows after the separator")
         void multipleDataRows() {
-            String md =
-                    TableRenderer.render(
-                            table(
-                                    List.of(
-                                            List.of("c1", "c2"),
-                                            List.of("a", "b"),
-                                            List.of("x", "y"))));
+            String md = TableRenderer.render(table(List.of(List.of("c1", "c2"), List.of("a", "b"), List.of("x", "y"))));
             String[] lines = md.split("\n");
             assertThat(lines).hasSize(4);
             assertThat(lines[2]).contains("a").contains("b");
@@ -139,8 +123,7 @@ class TableRendererTest {
         void shortRowPaddedByGrid() {
             // colCount comes from the first row; a shorter later row is padded with empty cells by
             // Table.asGrid, so rendering must not throw and the grid stays rectangular.
-            String md =
-                    TableRenderer.render(table(List.of(List.of("a", "b", "c"), List.of("only"))));
+            String md = TableRenderer.render(table(List.of(List.of("a", "b", "c"), List.of("only"))));
             String[] lines = md.split("\n");
             assertThat(lines).hasSize(3);
             int width = lines[0].length();

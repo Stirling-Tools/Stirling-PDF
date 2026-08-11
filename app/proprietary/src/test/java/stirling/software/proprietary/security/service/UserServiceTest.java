@@ -48,60 +48,95 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private TeamRepository teamRepository;
-    @Mock private AuthorityRepository authorityRepository;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private MessageSource messageSource;
-    @Mock private SessionPersistentRegistry sessionRegistry;
-    @Mock private DatabaseServiceInterface databaseService;
-    @Mock private ApplicationProperties.Security.OAUTH2 oAuth2;
-    @Mock private PersistentLoginRepository persistentLoginRepository;
-    @Mock private UserServerCertificateService userServerCertificateService;
-    @Mock private WorkflowParticipantRepository workflowParticipantRepository;
-    @Mock private WorkflowSessionRepository workflowSessionRepository;
-    @Mock private StoredFileRepository storedFileRepository;
-    @Mock private StorageCleanupEntryRepository storageCleanupEntryRepository;
-    @Mock private FileShareRepository fileShareRepository;
-    @Mock private FileShareAccessRepository fileShareAccessRepository;
-    @Mock private ResourceGrantRepository resourceGrantRepository;
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private TeamRepository teamRepository;
+
+    @Mock
+    private AuthorityRepository authorityRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private MessageSource messageSource;
+
+    @Mock
+    private SessionPersistentRegistry sessionRegistry;
+
+    @Mock
+    private DatabaseServiceInterface databaseService;
+
+    @Mock
+    private ApplicationProperties.Security.OAUTH2 oAuth2;
+
+    @Mock
+    private PersistentLoginRepository persistentLoginRepository;
+
+    @Mock
+    private UserServerCertificateService userServerCertificateService;
+
+    @Mock
+    private WorkflowParticipantRepository workflowParticipantRepository;
+
+    @Mock
+    private WorkflowSessionRepository workflowSessionRepository;
+
+    @Mock
+    private StoredFileRepository storedFileRepository;
+
+    @Mock
+    private StorageCleanupEntryRepository storageCleanupEntryRepository;
+
+    @Mock
+    private FileShareRepository fileShareRepository;
+
+    @Mock
+    private FileShareAccessRepository fileShareAccessRepository;
+
+    @Mock
+    private ResourceGrantRepository resourceGrantRepository;
 
     @Mock
     private stirling.software.proprietary.integration.repository.IntegrationConfigRepository
             integrationConfigRepository;
 
-    @Mock private TeamMembershipService teamMembershipService;
-    @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
+    @Mock
+    private TeamMembershipService teamMembershipService;
 
-    @Spy @InjectMocks private UserService userService;
+    @Mock
+    private ApiKeyAuthenticationService apiKeyAuthenticationService;
+
+    @Spy
+    @InjectMocks
+    private UserService userService;
 
     @Test
-    void saveUserCore_populatesFieldsAndPersists()
-            throws SQLException, UnsupportedProviderException {
+    void saveUserCore_populatesFieldsAndPersists() throws SQLException, UnsupportedProviderException {
         Long teamId = 42L;
         Team team = new Team();
         team.setId(teamId);
         when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
         when(passwordEncoder.encode("plain")).thenReturn("encoded");
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        SaveUserRequest request =
-                SaveUserRequest.builder()
-                        .username("validUser")
-                        .password("plain")
-                        .ssoProviderId("sso-id")
-                        .ssoProvider("provider-x")
-                        .authenticationType(AuthenticationType.OAUTH2)
-                        .teamId(teamId)
-                        .role(Role.ADMIN.getRoleId())
-                        .firstLogin(true)
-                        .enabled(false)
-                        .requireMfa(true)
-                        .mfaEnabled(true)
-                        .mfaSecret("top-secret")
-                        .mfaLastUsedStep(5L)
-                        .build();
+        SaveUserRequest request = SaveUserRequest.builder()
+                .username("validUser")
+                .password("plain")
+                .ssoProviderId("sso-id")
+                .ssoProvider("provider-x")
+                .authenticationType(AuthenticationType.OAUTH2)
+                .teamId(teamId)
+                .role(Role.ADMIN.getRoleId())
+                .firstLogin(true)
+                .enabled(false)
+                .requireMfa(true)
+                .mfaEnabled(true)
+                .mfaSecret("top-secret")
+                .mfaLastUsedStep(5L)
+                .build();
 
         User saved = userService.saveUserCore(request);
 
@@ -118,21 +153,14 @@ class UserServiceTest {
         assertEquals("oauth2", persisted.getAuthenticationType());
         assertFalse(persisted.isEnabled());
         assertTrue(persisted.isFirstLogin());
-        assertTrue(
-                persisted.getAuthorities().stream()
-                        .anyMatch(a -> Role.ADMIN.getRoleId().equals(a.getAuthority())));
+        assertTrue(persisted.getAuthorities().stream()
+                .anyMatch(a -> Role.ADMIN.getRoleId().equals(a.getAuthority())));
         assertEquals(
-                "true",
-                persisted.getSettings().get(MfaService.MFA_REQUIRED_KEY),
-                "MFA requirement should be stored");
+                "true", persisted.getSettings().get(MfaService.MFA_REQUIRED_KEY), "MFA requirement should be stored");
         assertEquals(
-                "true",
-                persisted.getSettings().get(MfaService.MFA_ENABLED_KEY),
-                "MFA enabled flag should be stored");
+                "true", persisted.getSettings().get(MfaService.MFA_ENABLED_KEY), "MFA enabled flag should be stored");
         assertEquals(
-                "top-secret",
-                persisted.getSettings().get(MfaService.MFA_SECRET_KEY),
-                "MFA secret should be stored");
+                "top-secret", persisted.getSettings().get(MfaService.MFA_SECRET_KEY), "MFA secret should be stored");
         assertEquals(
                 "5",
                 persisted.getSettings().get(MfaService.MFA_LAST_USED_STEP_KEY),
@@ -141,15 +169,14 @@ class UserServiceTest {
     }
 
     @Test
-    void saveUserCore_withoutTeam_usesDefaultTeam()
-            throws SQLException, UnsupportedProviderException {
+    void saveUserCore_withoutTeam_usesDefaultTeam() throws SQLException, UnsupportedProviderException {
         Team defaultTeam = new Team();
         defaultTeam.setName("Default");
         when(teamRepository.findByName("Default")).thenReturn(Optional.of(defaultTeam));
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        SaveUserRequest request = SaveUserRequest.builder().username("anotherUser").build();
+        SaveUserRequest request =
+                SaveUserRequest.builder().username("anotherUser").build();
 
         User saved = userService.saveUserCore(request);
 
@@ -164,8 +191,7 @@ class UserServiceTest {
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         String username = "autoUser";
         doReturn(true).when(userService).isUsernameValid(username);
-        when(userRepository.findBySsoProviderAndSsoProviderId("prov", "id"))
-                .thenReturn(Optional.empty());
+        when(userRepository.findBySsoProviderAndSsoProviderId("prov", "id")).thenReturn(Optional.empty());
         when(userRepository.findByUsernameIgnoreCase(username)).thenReturn(Optional.empty());
         User created = new User();
         doReturn(created).when(userService).saveUserCore(any(SaveUserRequest.class));
@@ -188,8 +214,7 @@ class UserServiceTest {
         user.setUsername("user");
         when(userRepository.findByUsernameIgnoreCase("user")).thenReturn(Optional.of(user));
         when(userRepository.findByApiKey(any())).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         User updated = userService.addApiKeyToUser("user");
 
@@ -204,8 +229,7 @@ class UserServiceTest {
         user.setApiKey("old-secret");
         when(userRepository.findByUsernameIgnoreCase("user")).thenReturn(Optional.of(user));
         when(userRepository.findByApiKey(any())).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         User updated = userService.addApiKeyToUser("user");
 
@@ -224,8 +248,7 @@ class UserServiceTest {
         user.setUsername("user");
         when(userRepository.findByUsernameIgnoreCase("user")).thenReturn(Optional.of(user));
         when(userRepository.findByApiKey(any())).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         String apiKey = userService.getApiKeyForUser("user");
 
@@ -259,8 +282,7 @@ class UserServiceTest {
 
         FileShare inboundShare = new FileShare();
         when(userRepository.findByUsernameIgnoreCase("target")).thenReturn(Optional.of(user));
-        when(workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(user))
-                .thenReturn(List.of(session));
+        when(workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(user)).thenReturn(List.of(session));
         when(storedFileRepository.findAllByOwner(user)).thenReturn(List.of(ownedFile));
         when(fileShareRepository.findBySharedWithUser(user)).thenReturn(List.of(inboundShare));
 

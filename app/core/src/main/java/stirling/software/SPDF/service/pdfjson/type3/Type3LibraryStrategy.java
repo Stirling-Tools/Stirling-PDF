@@ -55,8 +55,8 @@ public class Type3LibraryStrategy implements Type3ConversionStrategy {
     }
 
     @Override
-    public PdfJsonFontConversionCandidate convert(
-            Type3ConversionRequest request, Type3GlyphContext context) throws IOException {
+    public PdfJsonFontConversionCandidate convert(Type3ConversionRequest request, Type3GlyphContext context)
+            throws IOException {
         if (request == null || request.getFont() == null) {
             return PdfJsonFontConversionCandidate.builder()
                     .strategyId(getId())
@@ -94,11 +94,8 @@ public class Type3LibraryStrategy implements Type3ConversionStrategy {
                     .build();
         }
 
-        String message =
-                String.format(
-                        "Matched %s via %s",
-                        entry.getLabel(),
-                        match.getMatchType() != null ? match.getMatchType() : "alias");
+        String message = String.format(
+                "Matched %s via %s", entry.getLabel(), match.getMatchType() != null ? match.getMatchType() : "alias");
 
         return PdfJsonFontConversionCandidate.builder()
                 .strategyId(getId())

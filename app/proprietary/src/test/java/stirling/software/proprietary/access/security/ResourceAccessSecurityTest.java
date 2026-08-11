@@ -19,10 +19,14 @@ import stirling.software.proprietary.security.service.UserService;
 @ExtendWith(MockitoExtension.class)
 class ResourceAccessSecurityTest {
 
-    @Mock private ResourceAccessService accessService;
-    @Mock private UserService userService;
+    @Mock
+    private ResourceAccessService accessService;
 
-    @InjectMocks private ResourceAccessSecurity security;
+    @Mock
+    private UserService userService;
+
+    @InjectMocks
+    private ResourceAccessSecurity security;
 
     @AfterEach
     void clearContext() {
@@ -54,8 +58,6 @@ class ResourceAccessSecurityTest {
 
     private void authenticate(Object principal) {
         SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                principal, null, java.util.List.of()));
+                .setAuthentication(new UsernamePasswordAuthenticationToken(principal, null, java.util.List.of()));
     }
 }

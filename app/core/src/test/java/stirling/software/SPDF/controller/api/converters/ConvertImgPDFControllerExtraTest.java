@@ -53,11 +53,17 @@ import stirling.software.common.util.WebResponseUtils;
 @DisplayName("ConvertImgPDFController extra convertToImage branches")
 class ConvertImgPDFControllerExtraTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertImgPDFController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @InjectMocks
+    private ConvertImgPDFController controller;
 
     private static byte[] tinyPdfBytes(int pages) throws IOException {
         try (PDDocument doc = new PDDocument();
@@ -104,33 +110,26 @@ class ConvertImgPDFControllerExtraTest {
             byte[] pdfBytes = tinyPdfBytes(1);
             ConvertToImageRequest request = baseRequest(pdfBytes, "png");
 
-            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
-                    .thenReturn(tinyDocument(1));
+            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(tinyDocument(1));
 
             @SuppressWarnings("unchecked")
             ResponseEntity<byte[]> expected = Mockito.mock(ResponseEntity.class);
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
                 // Null bytes hit the "resultant bytes is null" log branch but still respond.
-                pu.when(
-                                () ->
-                                        PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("PNG"),
-                                                eq(ImageType.RGB),
-                                                eq(true),
-                                                eq(72),
-                                                any(String.class),
-                                                eq(false)))
+                pu.when(() -> PdfUtils.convertFromPdf(
+                                eq(pdfDocumentFactory),
+                                any(byte[].class),
+                                eq("PNG"),
+                                eq(ImageType.RGB),
+                                eq(true),
+                                eq(72),
+                                any(String.class),
+                                eq(false)))
                         .thenReturn(null);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.bytesToWebResponse(
-                                                any(), any(String.class), any(MediaType.class)))
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(any(), any(String.class), any(MediaType.class)))
                         .thenReturn(expected);
 
                 ResponseEntity<?> response = controller.convertToImage(request);
@@ -150,8 +149,7 @@ class ConvertImgPDFControllerExtraTest {
             byte[] pdfBytes = tinyPdfBytes(1);
             ConvertToImageRequest request = baseRequest(pdfBytes, "webp");
 
-            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
-                    .thenReturn(tinyDocument(1));
+            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(tinyDocument(1));
 
             // ProcessExecutor instance + result are mocked; the empty output dir drives the
             // "No WebP files were created" IOException without invoking Python.
@@ -166,27 +164,21 @@ class ConvertImgPDFControllerExtraTest {
             Path scriptPath = Path.of("png_to_webp.py");
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<CheckProgramInstall> cpi =
-                            Mockito.mockStatic(CheckProgramInstall.class);
+                    MockedStatic<CheckProgramInstall> cpi = Mockito.mockStatic(CheckProgramInstall.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                     MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
 
-                pu.when(
-                                () ->
-                                        PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("png"),
-                                                any(ImageType.class),
-                                                anyBoolean(),
-                                                anyInt(),
-                                                any(String.class),
-                                                anyBoolean()))
+                pu.when(() -> PdfUtils.convertFromPdf(
+                                eq(pdfDocumentFactory),
+                                any(byte[].class),
+                                eq("png"),
+                                any(ImageType.class),
+                                anyBoolean(),
+                                anyInt(),
+                                any(String.class),
+                                anyBoolean()))
                         .thenReturn("png-image".getBytes());
-                gu.when(
-                                () ->
-                                        GeneralUtils.parsePageList(
-                                                any(String[].class), anyInt(), anyBoolean()))
+                gu.when(() -> GeneralUtils.parsePageList(any(String[].class), anyInt(), anyBoolean()))
                         .thenReturn(pageOrder);
                 gu.when(() -> GeneralUtils.generateFilename(any(), any(String.class)))
                         .thenReturn("out");

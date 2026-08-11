@@ -71,8 +71,7 @@ public class PolicyExecutor {
      * @throws IOException on a non-OK tool response, a missing supporting file, or a read failure
      */
     public PolicyExecutionResult execute(
-            PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener)
-            throws IOException {
+            PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener) throws IOException {
         List<PipelineStep> steps = definition.steps();
         if (steps.isEmpty()) {
             throw new IllegalArgumentException("Pipeline definition has no steps");
@@ -94,12 +93,10 @@ public class PolicyExecutor {
             PipelineStep step = steps.get(i);
             String operation = step.operation();
             if (operation == null || operation.isBlank()) {
-                throw new IllegalArgumentException(
-                        "Pipeline step " + (i + 1) + " has no operation");
+                throw new IllegalArgumentException("Pipeline step " + (i + 1) + " has no operation");
             }
             listener.onStepStart(i + 1, steps.size(), operation);
-            StepOutput stepResult =
-                    executeStep(step, currentFiles, currentOrigins, supportingFiles);
+            StepOutput stepResult = executeStep(step, currentFiles, currentOrigins, supportingFiles);
             currentFiles = stepResult.files();
             currentOrigins = stepResult.origins();
             if (stepResult.report() != null) {
@@ -170,8 +167,7 @@ public class PolicyExecutor {
      * unpacked to a flat file list.
      */
     private ToolResult callEndpoint(
-            PipelineStep step, List<Resource> files, Map<String, List<Resource>> supportingFiles)
-            throws IOException {
+            PipelineStep step, List<Resource> files, Map<String, List<Resource>> supportingFiles) throws IOException {
         String endpointPath = step.operation();
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         for (Resource file : files) {
@@ -184,14 +180,13 @@ public class PolicyExecutor {
             String assetKey = binding.getValue();
             List<Resource> assets = supportingFiles.get(assetKey);
             if (assets == null || assets.isEmpty()) {
-                throw new IOException(
-                        "Step "
-                                + endpointPath
-                                + " references supporting file '"
-                                + assetKey
-                                + "' for field '"
-                                + fieldName
-                                + "' but no such file was provided");
+                throw new IOException("Step "
+                        + endpointPath
+                        + " references supporting file '"
+                        + assetKey
+                        + "' for field '"
+                        + fieldName
+                        + "' but no such file was provided");
             }
             for (Resource asset : assets) {
                 body.add(fieldName, asset);
@@ -215,8 +210,7 @@ public class PolicyExecutor {
         }
         ResponseEntity<Resource> response = internalApiClient.post(endpointPath, body);
         if (!HttpStatus.OK.equals(response.getStatusCode()) || response.getBody() == null) {
-            throw new IOException(
-                    "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
+            throw new IOException("Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
         }
         Resource resource = response.getBody();
 
@@ -282,13 +276,7 @@ public class PolicyExecutor {
         for (Resource file : files) {
             if (!matchesType(file, accepted)) {
                 throw new IOException(
-                        "Step "
-                                + operation
-                                + " accepts "
-                                + accepted
-                                + " but received '"
-                                + file.getFilename()
-                                + "'");
+                        "Step " + operation + " accepts " + accepted + " but received '" + file.getFilename() + "'");
             }
         }
     }

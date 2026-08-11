@@ -40,8 +40,7 @@ class InvertFullColorStrategyTest {
 
         // Add a filled rectangle with a specific color
         PDPageContentStream contentStream = new PDPageContentStream(document, page);
-        contentStream.setNonStrokingColor(
-                new PDColor(new float[] {0.8f, 0.2f, 0.2f}, PDDeviceRGB.INSTANCE));
+        contentStream.setNonStrokingColor(new PDColor(new float[] {0.8f, 0.2f, 0.2f}, PDDeviceRGB.INSTANCE));
         contentStream.addRect(100, 100, 400, 400);
         contentStream.fill();
         contentStream.close();
@@ -58,8 +57,7 @@ class InvertFullColorStrategyTest {
         // Create a simple PDF document for testing
         byte[] pdfBytes = createSimplePdfWithRectangle();
         MultipartFile mockPdfFile =
-                new MockMultipartFile(
-                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         // Create the strategy instance
         strategy = new InvertFullColorStrategy(mockPdfFile, ReplaceAndInvert.FULL_INVERSION);
@@ -75,8 +73,7 @@ class InvertFullColorStrategyTest {
     }
 
     @Test
-    void testInvertImageColors()
-            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    void testInvertImageColors() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         // Create a test image with known colors
         BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
         java.awt.Graphics graphics = image.getGraphics();
@@ -89,8 +86,7 @@ class InvertFullColorStrategyTest {
 
         // Access private method using reflection
         Method invertMethodRef =
-                InvertFullColorStrategy.class.getDeclaredMethod(
-                        "invertImageColors", BufferedImage.class);
+                InvertFullColorStrategy.class.getDeclaredMethod("invertImageColors", BufferedImage.class);
         invertMethodRef.setAccessible(true);
 
         // Invoke the private method
@@ -100,33 +96,20 @@ class InvertFullColorStrategyTest {
         Color invertedColor = new Color(image.getRGB(5, 5), true);
 
         // Assert that the inversion worked correctly
-        assertEquals(
-                255 - originalColor.getRed(),
-                invertedColor.getRed(),
-                "Red channel should be inverted");
-        assertEquals(
-                255 - originalColor.getGreen(),
-                invertedColor.getGreen(),
-                "Green channel should be inverted");
-        assertEquals(
-                255 - originalColor.getBlue(),
-                invertedColor.getBlue(),
-                "Blue channel should be inverted");
+        assertEquals(255 - originalColor.getRed(), invertedColor.getRed(), "Red channel should be inverted");
+        assertEquals(255 - originalColor.getGreen(), invertedColor.getGreen(), "Green channel should be inverted");
+        assertEquals(255 - originalColor.getBlue(), invertedColor.getBlue(), "Blue channel should be inverted");
     }
 
     @Test
     void testConvertToBufferedImageTpFile()
-            throws NoSuchMethodException,
-                    InvocationTargetException,
-                    IllegalAccessException,
-                    IOException {
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
         // Create a test image
         BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
 
         // Access private method using reflection
         Method convertMethodRef =
-                InvertFullColorStrategy.class.getDeclaredMethod(
-                        "convertToBufferedImageTpFile", BufferedImage.class);
+                InvertFullColorStrategy.class.getDeclaredMethod("convertToBufferedImageTpFile", BufferedImage.class);
         convertMethodRef.setAccessible(true);
 
         // Invoke the private method

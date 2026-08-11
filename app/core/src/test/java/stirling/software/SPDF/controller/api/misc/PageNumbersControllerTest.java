@@ -44,29 +44,30 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class PageNumbersControllerTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private PageNumbersController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private PageNumbersController controller;
 
     @BeforeEach
     void setUp() throws Exception {
         // Each managed temp file is backed by a real on-disk file so document.save() works
         // and WebResponseUtils can stat/stream it.
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("pgnum-test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("pgnum-test", inv.<String>getArgument(0))
+                    .toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     // ---- helpers ----------------------------------------------------------
@@ -79,8 +80,7 @@ class PageNumbersControllerTest {
             }
             doc.save(path.toFile());
         }
-        return new MockMultipartFile(
-                "fileInput", filename, MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
+        return new MockMultipartFile("fileInput", filename, MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
     }
 
     private AddPageNumbersRequest baseRequest(MockMultipartFile file) {

@@ -58,11 +58,17 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ConvertPDFToPDFAGapTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock private RuntimePathConfig runtimePathConfig;
-    @Mock private VeraPDFService veraPDFService;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @Mock
+    private VeraPDFService veraPDFService;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private ConvertPDFToPDFA newController() {
         return new ConvertPDFToPDFA(runtimePathConfig, veraPDFService, tempFileManager);
@@ -82,8 +88,7 @@ class ConvertPDFToPDFAGapTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T invokeInstance(Object target, String methodName, Object... args)
-            throws Exception {
+    private static <T> T invokeInstance(Object target, String methodName, Object... args) throws Exception {
         Method method = findMethod(methodName, args.length);
         method.setAccessible(true);
         try {
@@ -99,8 +104,7 @@ class ConvertPDFToPDFAGapTest {
                 return method;
             }
         }
-        throw new IllegalStateException(
-                "No method named " + methodName + " with " + argCount + " params");
+        throw new IllegalStateException("No method named " + methodName + " with " + argCount + " params");
     }
 
     private static Exception unwrap(InvocationTargetException e) {
@@ -333,22 +337,11 @@ class ConvertPDFToPDFAGapTest {
         @DisplayName("isValidQuadPoints accepts multiples of 8, rejects otherwise")
         void quadValidation() throws Exception {
             ConvertPDFToPDFA controller = newController();
-            assertThat(
-                            (boolean)
-                                    invokeInstance(
-                                            controller, "isValidQuadPoints", (Object) new float[8]))
+            assertThat((boolean) invokeInstance(controller, "isValidQuadPoints", (Object) new float[8]))
                     .isTrue();
-            assertThat(
-                            (boolean)
-                                    invokeInstance(
-                                            controller,
-                                            "isValidQuadPoints",
-                                            (Object) new float[16]))
+            assertThat((boolean) invokeInstance(controller, "isValidQuadPoints", (Object) new float[16]))
                     .isTrue();
-            assertThat(
-                            (boolean)
-                                    invokeInstance(
-                                            controller, "isValidQuadPoints", (Object) new float[5]))
+            assertThat((boolean) invokeInstance(controller, "isValidQuadPoints", (Object) new float[5]))
                     .isFalse();
             assertThat((boolean) invokeInstance(controller, "isValidQuadPoints", (Object) null))
                     .isFalse();
@@ -360,8 +353,10 @@ class ConvertPDFToPDFAGapTest {
             ConvertPDFToPDFA controller = newController();
             PDRectangle zero = new PDRectangle(10f, 10f, 0f, 0f);
             PDRectangle real = new PDRectangle(0f, 0f, 100f, 50f);
-            assertThat((boolean) invokeInstance(controller, "isZeroSizeRect", zero)).isTrue();
-            assertThat((boolean) invokeInstance(controller, "isZeroSizeRect", real)).isFalse();
+            assertThat((boolean) invokeInstance(controller, "isZeroSizeRect", zero))
+                    .isTrue();
+            assertThat((boolean) invokeInstance(controller, "isZeroSizeRect", real))
+                    .isFalse();
         }
     }
 
@@ -509,8 +504,7 @@ class ConvertPDFToPDFAGapTest {
 
                 invokeInstance(newController(), "sanitizeMetadata", document);
 
-                assertThat(document.getDocumentInformation().getProducer())
-                        .isEqualTo("Stirling-PDF Sanitizer");
+                assertThat(document.getDocumentInformation().getProducer()).isEqualTo("Stirling-PDF Sanitizer");
             }
         }
 
@@ -523,7 +517,8 @@ class ConvertPDFToPDFAGapTest {
 
                 invokeInstance(newController(), "removeForbiddenActions", document);
 
-                assertThat(catalog.getCOSObject().containsKey(COSName.JAVA_SCRIPT)).isFalse();
+                assertThat(catalog.getCOSObject().containsKey(COSName.JAVA_SCRIPT))
+                        .isFalse();
                 assertThat(catalog.getOpenAction()).isNull();
             }
         }
@@ -554,10 +549,7 @@ class ConvertPDFToPDFAGapTest {
         void addsBackground() throws Exception {
             try (PDDocument document = simplePdf()) {
                 int pagesBefore = document.getNumberOfPages();
-                assertThatCode(
-                                () ->
-                                        invokeInstance(
-                                                newController(), "addWhiteBackground", document))
+                assertThatCode(() -> invokeInstance(newController(), "addWhiteBackground", document))
                         .doesNotThrowAnyException();
                 assertThat(document.getNumberOfPages()).isEqualTo(pagesBefore);
                 // page still has content streams after prepending background
@@ -598,12 +590,7 @@ class ConvertPDFToPDFAGapTest {
         @DisplayName("ensureEmbeddedFileCompliance returns quietly with no names dictionary")
         void noNamesDictionary() throws Exception {
             try (PDDocument document = simplePdf()) {
-                assertThatCode(
-                                () ->
-                                        invokeInstance(
-                                                newController(),
-                                                "ensureEmbeddedFileCompliance",
-                                                document))
+                assertThatCode(() -> invokeInstance(newController(), "ensureEmbeddedFileCompliance", document))
                         .doesNotThrowAnyException();
             }
         }
@@ -617,7 +604,10 @@ class ConvertPDFToPDFAGapTest {
                 invokeInstance(newController(), "addICCProfileIfNotPresent", document);
 
                 assertThat(document.getDocumentCatalog().getOutputIntents()).hasSize(1);
-                assertThat(document.getDocumentCatalog().getOutputIntents().get(0).getInfo())
+                assertThat(document.getDocumentCatalog()
+                                .getOutputIntents()
+                                .get(0)
+                                .getInfo())
                         .contains("sRGB");
             }
         }
@@ -646,12 +636,8 @@ class ConvertPDFToPDFAGapTest {
 
             // PdfaProfile.PDF_A_2B has no preflight format -> basic validation path.
             Object profile = resolvePdfaProfile("pdfa-2b");
-            org.apache.pdfbox.preflight.ValidationResult result =
-                    invokeStaticWithTypes(
-                            "performBasicPdfAValidation",
-                            new Class<?>[] {Path.class, profile.getClass()},
-                            pdf,
-                            profile);
+            org.apache.pdfbox.preflight.ValidationResult result = invokeStaticWithTypes(
+                    "performBasicPdfAValidation", new Class<?>[] {Path.class, profile.getClass()}, pdf, profile);
 
             assertThat(result).isNotNull();
             assertThat(result.isValid()).isFalse();
@@ -665,21 +651,15 @@ class ConvertPDFToPDFAGapTest {
             org.apache.pdfbox.preflight.ValidationResult result =
                     new org.apache.pdfbox.preflight.ValidationResult(false);
             result.addError(
-                    new org.apache.pdfbox.preflight.ValidationResult.ValidationError(
-                            "CODE_A", "first problem"));
+                    new org.apache.pdfbox.preflight.ValidationResult.ValidationError("CODE_A", "first problem"));
             result.addError(
-                    new org.apache.pdfbox.preflight.ValidationResult.ValidationError(
-                            "CODE_B", "second problem"));
+                    new org.apache.pdfbox.preflight.ValidationResult.ValidationError("CODE_B", "second problem"));
 
-            String message =
-                    invokeStaticWithTypes(
-                            "buildComprehensiveValidationMessage",
-                            new Class<?>[] {
-                                org.apache.pdfbox.preflight.ValidationResult.class,
-                                profile.getClass()
-                            },
-                            result,
-                            profile);
+            String message = invokeStaticWithTypes(
+                    "buildComprehensiveValidationMessage",
+                    new Class<?>[] {org.apache.pdfbox.preflight.ValidationResult.class, profile.getClass()},
+                    result,
+                    profile);
 
             assertThat(message).contains("PDF/A-1b");
             assertThat(message).contains("2 errors");
@@ -700,8 +680,7 @@ class ConvertPDFToPDFAGapTest {
         }
 
         @SuppressWarnings("unchecked")
-        private <T> T invokeStaticWithTypes(String name, Class<?>[] types, Object... args)
-                throws Exception {
+        private <T> T invokeStaticWithTypes(String name, Class<?>[] types, Object... args) throws Exception {
             Method m = ConvertPDFToPDFA.class.getDeclaredMethod(name, types);
             m.setAccessible(true);
             try {
@@ -727,12 +706,7 @@ class ConvertPDFToPDFAGapTest {
             when(veraPDFService.validatePDF(any())).thenReturn(List.of(ok));
 
             ConvertPDFToPDFA controller = newController();
-            assertThatCode(
-                            () ->
-                                    invokeInstance(
-                                            controller,
-                                            "verifyStrictCompliance",
-                                            (Object) "dummy".getBytes()))
+            assertThatCode(() -> invokeInstance(controller, "verifyStrictCompliance", (Object) "dummy".getBytes()))
                     .doesNotThrowAnyException();
         }
 
@@ -746,14 +720,8 @@ class ConvertPDFToPDFAGapTest {
             when(veraPDFService.validatePDF(any())).thenReturn(List.of(bad));
 
             ConvertPDFToPDFA controller = newController();
-            ResponseStatusException ex =
-                    (ResponseStatusException)
-                            catchThrowable(
-                                    () ->
-                                            invokeInstance(
-                                                    controller,
-                                                    "verifyStrictCompliance",
-                                                    (Object) "dummy".getBytes()));
+            ResponseStatusException ex = (ResponseStatusException) catchThrowable(
+                    () -> invokeInstance(controller, "verifyStrictCompliance", (Object) "dummy".getBytes()));
             assertThat(ex).isNotNull();
             assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(ex.getReason()).contains("PDF/A-1b with errors");
@@ -765,14 +733,8 @@ class ConvertPDFToPDFAGapTest {
             when(veraPDFService.validatePDF(any())).thenReturn(Collections.emptyList());
 
             ConvertPDFToPDFA controller = newController();
-            ResponseStatusException ex =
-                    (ResponseStatusException)
-                            catchThrowable(
-                                    () ->
-                                            invokeInstance(
-                                                    controller,
-                                                    "verifyStrictCompliance",
-                                                    (Object) "dummy".getBytes()));
+            ResponseStatusException ex = (ResponseStatusException) catchThrowable(
+                    () -> invokeInstance(controller, "verifyStrictCompliance", (Object) "dummy".getBytes()));
             assertThat(ex).isNotNull();
             assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
@@ -783,14 +745,8 @@ class ConvertPDFToPDFAGapTest {
             when(veraPDFService.validatePDF(any())).thenThrow(new IOException("boom"));
 
             ConvertPDFToPDFA controller = newController();
-            ResponseStatusException ex =
-                    (ResponseStatusException)
-                            catchThrowable(
-                                    () ->
-                                            invokeInstance(
-                                                    controller,
-                                                    "verifyStrictCompliance",
-                                                    (Object) "dummy".getBytes()));
+            ResponseStatusException ex = (ResponseStatusException) catchThrowable(
+                    () -> invokeInstance(controller, "verifyStrictCompliance", (Object) "dummy".getBytes()));
             assertThat(ex).isNotNull();
             assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -805,19 +761,14 @@ class ConvertPDFToPDFAGapTest {
         @DisplayName("non-PDF content type throws PDF-required exception before any conversion")
         void nonPdfContentTypeRejected() {
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "input.txt",
-                            MediaType.TEXT_PLAIN_VALUE,
-                            "not a pdf".getBytes());
+                    new MockMultipartFile("fileInput", "input.txt", MediaType.TEXT_PLAIN_VALUE, "not a pdf".getBytes());
             PdfToPdfARequest request = new PdfToPdfARequest();
             request.setFileInput(file);
             request.setOutputFormat("pdfa-2b");
 
             ConvertPDFToPDFA controller = newController();
 
-            assertThatThrownBy(() -> controller.pdfToPdfA(request))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.pdfToPdfA(request)).isInstanceOf(IllegalArgumentException.class);
 
             // collaborators must not be touched on the validation-failure path
             verifyNoInteractions(tempFileManager, veraPDFService);
@@ -826,16 +777,14 @@ class ConvertPDFToPDFAGapTest {
         @Test
         @DisplayName("null content type is also rejected as not-a-PDF")
         void nullContentTypeRejected() {
-            MockMultipartFile file =
-                    new MockMultipartFile("fileInput", "input.bin", null, "data".getBytes());
+            MockMultipartFile file = new MockMultipartFile("fileInput", "input.bin", null, "data".getBytes());
             PdfToPdfARequest request = new PdfToPdfARequest();
             request.setFileInput(file);
             request.setOutputFormat("pdfa");
 
             ConvertPDFToPDFA controller = newController();
 
-            assertThatThrownBy(() -> controller.pdfToPdfA(request))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.pdfToPdfA(request)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -863,7 +812,8 @@ class ConvertPDFToPDFAGapTest {
             assertThat((boolean) invokeStatic("isTransparencyGroup", withGroup)).isTrue();
 
             COSDictionary withoutGroup = new COSDictionary();
-            assertThat((boolean) invokeStatic("isTransparencyGroup", withoutGroup)).isFalse();
+            assertThat((boolean) invokeStatic("isTransparencyGroup", withoutGroup))
+                    .isFalse();
         }
     }
 }

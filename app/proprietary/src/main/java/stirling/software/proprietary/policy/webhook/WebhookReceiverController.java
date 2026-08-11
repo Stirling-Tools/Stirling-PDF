@@ -48,10 +48,9 @@ public class WebhookReceiverController {
     @PostMapping("/{webhookId}")
     @Operation(
             summary = "Deliver a document to a webhook source",
-            description =
-                    "The body is the raw document; sign it with the source's secret and present"
-                            + " 'sha256=<hex>' in the X-Stirling-Signature header. Returns 202 once"
-                            + " the document is spooled for the referencing policies.")
+            description = "The body is the raw document; sign it with the source's secret and present"
+                    + " 'sha256=<hex>' in the X-Stirling-Signature header. Returns 202 once"
+                    + " the document is spooled for the referencing policies.")
     public ResponseEntity<WebhookDeliveryResponse> receive(
             @PathVariable String webhookId,
             @RequestHeader(value = SIGNATURE_HEADER, required = false) String signature,
@@ -81,11 +80,7 @@ public class WebhookReceiverController {
         String storedName = stageToSpool(webhookId, filename, body);
 
         webhookTrigger.fireForWebhook(webhookId);
-        log.info(
-                "Accepted webhook delivery '{}' ({} bytes) for {}",
-                storedName,
-                body.length,
-                webhookId);
+        log.info("Accepted webhook delivery '{}' ({} bytes) for {}", storedName, body.length, webhookId);
         return ResponseEntity.accepted()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new WebhookDeliveryResponse(true, storedName, body.length));
@@ -110,8 +105,7 @@ public class WebhookReceiverController {
                     spool.store(webhookId, filename, body).getFileName().toString());
         } catch (IOException e) {
             log.error("Could not spool webhook delivery for {}: {}", webhookId, e.getMessage());
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Could not store delivery");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not store delivery");
         }
     }
 
@@ -119,29 +113,24 @@ public class WebhookReceiverController {
         long maxBytes = applicationProperties.getPolicies().getWebhookMaxBytes();
         long declared = request.getContentLengthLong();
         if (declared < 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.LENGTH_REQUIRED, "A Content-Length header is required");
+            throw new ResponseStatusException(HttpStatus.LENGTH_REQUIRED, "A Content-Length header is required");
         }
         if (declared > maxBytes) {
             throw new ResponseStatusException(
-                    HttpStatus.PAYLOAD_TOO_LARGE,
-                    "Delivery exceeds the " + maxBytes + "-byte limit");
+                    HttpStatus.PAYLOAD_TOO_LARGE, "Delivery exceeds the " + maxBytes + "-byte limit");
         }
         byte[] body = new byte[(int) declared];
         int total = 0;
         try (InputStream in = request.getInputStream()) {
             int read;
-            while (total < body.length
-                    && (read = in.read(body, total, body.length - total)) != -1) {
+            while (total < body.length && (read = in.read(body, total, body.length - total)) != -1) {
                 total += read;
             }
             if (total == body.length && in.read() != -1) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Body exceeds the declared Content-Length");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Body exceeds the declared Content-Length");
             }
         } catch (IOException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Could not read request body");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not read request body");
         }
         return total == body.length ? body : Arrays.copyOf(body, total);
     }

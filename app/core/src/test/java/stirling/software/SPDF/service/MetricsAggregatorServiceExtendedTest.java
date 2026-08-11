@@ -29,8 +29,7 @@ class MetricsAggregatorServiceExtendedTest {
         meterRegistry = new SimpleMeterRegistry();
         postHogService = mock(PostHogService.class);
         endpointInspector = mock(EndpointInspector.class);
-        when(endpointInspector.getValidGetEndpoints())
-                .thenReturn(Set.of("/home", "/about", "/settings"));
+        when(endpointInspector.getValidGetEndpoints()).thenReturn(Set.of("/home", "/about", "/settings"));
         when(endpointInspector.isValidGetEndpoint("/home")).thenReturn(true);
         when(endpointInspector.isValidGetEndpoint("/about")).thenReturn(true);
         when(endpointInspector.isValidGetEndpoint("/settings")).thenReturn(true);
@@ -67,7 +66,9 @@ class MetricsAggregatorServiceExtendedTest {
 
     @Test
     void aggregateAndSendMetrics_skipsPostWithoutApiV1() {
-        meterRegistry.counter("http.requests", "method", "POST", "uri", "/login").increment(5);
+        meterRegistry
+                .counter("http.requests", "method", "POST", "uri", "/login")
+                .increment(5);
 
         service.aggregateAndSendMetrics();
         verify(postHogService, never()).captureEvent(anyString(), anyMap());
@@ -91,7 +92,9 @@ class MetricsAggregatorServiceExtendedTest {
     @Test
     void aggregateAndSendMetrics_skipsInvalidGetEndpoints() {
         when(endpointInspector.isValidGetEndpoint("/invalid")).thenReturn(false);
-        meterRegistry.counter("http.requests", "method", "GET", "uri", "/invalid").increment(5);
+        meterRegistry
+                .counter("http.requests", "method", "GET", "uri", "/invalid")
+                .increment(5);
 
         service.aggregateAndSendMetrics();
         verify(postHogService, never()).captureEvent(anyString(), anyMap());
@@ -111,7 +114,9 @@ class MetricsAggregatorServiceExtendedTest {
 
     @Test
     void aggregateAndSendMetrics_skipsTxtUris() {
-        meterRegistry.counter("http.requests", "method", "GET", "uri", "/robots.txt").increment(10);
+        meterRegistry
+                .counter("http.requests", "method", "GET", "uri", "/robots.txt")
+                .increment(10);
 
         service.aggregateAndSendMetrics();
         verify(postHogService, never()).captureEvent(anyString(), anyMap());

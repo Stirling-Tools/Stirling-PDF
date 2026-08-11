@@ -52,8 +52,7 @@ public class SignatureImageController {
             if (personalSignatureService != null && userService != null) {
                 try {
                     String username = userService.getCurrentUsername();
-                    imageBytes =
-                            personalSignatureService.getPersonalSignatureBytes(username, fileName);
+                    imageBytes = personalSignatureService.getPersonalSignatureBytes(username, fileName);
                 } catch (Exception e) {
                     // Not found in personal folder or not authenticated, will try shared
                     log.debug("Personal signature not found, trying shared: {}", e.getMessage());

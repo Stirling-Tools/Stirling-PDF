@@ -60,8 +60,11 @@ import stirling.software.common.util.TempFileManager;
 @DisplayName("BlankPageController removeBlankPages")
 class BlankPageControllerMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private BlankPageController controller;
 
@@ -69,28 +72,22 @@ class BlankPageControllerMoreTest {
     void setUp() throws Exception {
         controller = new BlankPageController(pdfDocumentFactory, tempFileManager);
 
-        when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("blank_test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("blank_test", inv.<String>getArgument(0))
+                    .toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
 
         // load(MultipartFile) hands back a freshly loaded document from the upload bytes.
         lenient()
-                .when(
-                        pdfDocumentFactory.load(
-                                any(org.springframework.web.multipart.MultipartFile.class)))
-                .thenAnswer(
-                        inv -> {
-                            org.springframework.web.multipart.MultipartFile mf = inv.getArgument(0);
-                            return Loader.loadPDF(mf.getBytes());
-                        });
+                .when(pdfDocumentFactory.load(any(org.springframework.web.multipart.MultipartFile.class)))
+                .thenAnswer(inv -> {
+                    org.springframework.web.multipart.MultipartFile mf = inv.getArgument(0);
+                    return Loader.loadPDF(mf.getBytes());
+                });
 
         // createNewDocument() returns a real, empty document the controller fills + saves.
         lenient().when(pdfDocumentFactory.createNewDocument()).thenAnswer(inv -> new PDDocument());
@@ -156,8 +153,7 @@ class BlankPageControllerMoreTest {
             PDPage page = new PDPage(PDRectangle.A4);
             doc.addPage(page);
             java.awt.image.BufferedImage img =
-                    new java.awt.image.BufferedImage(
-                            120, 120, java.awt.image.BufferedImage.TYPE_INT_RGB);
+                    new java.awt.image.BufferedImage(120, 120, java.awt.image.BufferedImage.TYPE_INT_RGB);
             java.awt.Graphics2D g = img.createGraphics();
             g.setColor(color);
             g.fillRect(0, 0, 120, 120);
@@ -181,8 +177,7 @@ class BlankPageControllerMoreTest {
 
     private static List<String> zipNames(Resource resource) throws Exception {
         List<String> names = new ArrayList<>();
-        try (ZipInputStream zis =
-                new ZipInputStream(new ByteArrayInputStream(resource.getContentAsByteArray()))) {
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(resource.getContentAsByteArray()))) {
             ZipEntry e;
             while ((e = zis.getNextEntry()) != null) {
                 names.add(e.getName());
@@ -199,8 +194,7 @@ class BlankPageControllerMoreTest {
         @Test
         @DisplayName("all-text document keeps every page in the non-blank PDF only")
         void allTextPages() throws Exception {
-            ResponseEntity<Resource> response =
-                    controller.removeBlankPages(request(textPage("Hello"), 10, 99.9f));
+            ResponseEntity<Resource> response = controller.removeBlankPages(request(textPage("Hello"), 10, 99.9f));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -213,8 +207,7 @@ class BlankPageControllerMoreTest {
         @Test
         @DisplayName("document with only empty pages produces the all-blank entry")
         void onlyBlankPages() throws Exception {
-            ResponseEntity<Resource> response =
-                    controller.removeBlankPages(request(emptyPages(2), 10, 99.9f));
+            ResponseEntity<Resource> response = controller.removeBlankPages(request(emptyPages(2), 10, 99.9f));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             List<String> names = zipNames(response.getBody());
@@ -225,8 +218,7 @@ class BlankPageControllerMoreTest {
         @Test
         @DisplayName("mixed text and blank pages yields both non-blank and blank entries")
         void mixedPages() throws Exception {
-            ResponseEntity<Resource> response =
-                    controller.removeBlankPages(request(mixedTextAndBlank(), 10, 99.9f));
+            ResponseEntity<Resource> response = controller.removeBlankPages(request(mixedTextAndBlank(), 10, 99.9f));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             List<String> names = zipNames(response.getBody());
@@ -244,8 +236,7 @@ class BlankPageControllerMoreTest {
         @DisplayName("page with a black image is treated as non-blank")
         void blackImageIsNonBlank() throws Exception {
             // Black image -> not enough white -> non-blank branch.
-            ResponseEntity<Resource> response =
-                    controller.removeBlankPages(request(imagePage(Color.BLACK), 10, 99.9f));
+            ResponseEntity<Resource> response = controller.removeBlankPages(request(imagePage(Color.BLACK), 10, 99.9f));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             List<String> names = zipNames(response.getBody());
@@ -256,8 +247,7 @@ class BlankPageControllerMoreTest {
         @DisplayName("page with a white image counts as blank")
         void whiteImageIsBlank() throws Exception {
             // White image with a high white-percent threshold -> blank branch.
-            ResponseEntity<Resource> response =
-                    controller.removeBlankPages(request(imagePage(Color.WHITE), 10, 50.0f));
+            ResponseEntity<Resource> response = controller.removeBlankPages(request(imagePage(Color.WHITE), 10, 50.0f));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             List<String> names = zipNames(response.getBody());
@@ -290,8 +280,7 @@ class BlankPageControllerMoreTest {
         @DisplayName("loader IOException is caught and returned as a 500 response")
         void corruptPdfReturnsServerError() throws Exception {
             RemoveBlankPagesRequest req = request("garbage".getBytes(), 10, 99.9f);
-            when(pdfDocumentFactory.load(
-                            any(org.springframework.web.multipart.MultipartFile.class)))
+            when(pdfDocumentFactory.load(any(org.springframework.web.multipart.MultipartFile.class)))
                     .thenThrow(new IOException("bad pdf"));
 
             // The controller swallows IOException from the loader and maps it to HTTP 500.
@@ -314,8 +303,7 @@ class BlankPageControllerMoreTest {
                 controller.createZipEntry(zos, pages, "entry.pdf");
             }
 
-            try (ZipInputStream zis =
-                    new ZipInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
+            try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
                 ZipEntry entry = zis.getNextEntry();
                 assertEquals("entry.pdf", entry.getName());
                 try (PDDocument loaded = Loader.loadPDF(zis.readAllBytes())) {

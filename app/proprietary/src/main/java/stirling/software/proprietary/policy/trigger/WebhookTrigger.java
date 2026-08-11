@@ -53,11 +53,10 @@ public class WebhookTrigger implements PolicyTrigger {
 
     @Override
     public void validate(Policy policy, PipelineInput input) {
-        boolean isWebhookSource =
-                sourceStore
-                        .get(input.sourceId())
-                        .filter(source -> WEBHOOK_SOURCE_TYPE.equals(source.type()))
-                        .isPresent();
+        boolean isWebhookSource = sourceStore
+                .get(input.sourceId())
+                .filter(source -> WEBHOOK_SOURCE_TYPE.equals(source.type()))
+                .isPresent();
         if (!isWebhookSource) {
             throw new IllegalArgumentException("webhook trigger requires a webhook input source");
         }
@@ -69,9 +68,8 @@ public class WebhookTrigger implements PolicyTrigger {
             return;
         }
         long reconcileSeconds = applicationProperties.getPolicies().getWatchReconcileSeconds();
-        reconciler =
-                Executors.newSingleThreadScheduledExecutor(
-                        Thread.ofVirtual().name("policy-webhook-reconcile-", 0).factory());
+        reconciler = Executors.newSingleThreadScheduledExecutor(
+                Thread.ofVirtual().name("policy-webhook-reconcile-", 0).factory());
         reconciler.scheduleAtFixedRate(this::safeReconcile, 0, reconcileSeconds, TimeUnit.SECONDS);
         log.info("Webhook trigger started (reconcile every {}s)", reconcileSeconds);
     }

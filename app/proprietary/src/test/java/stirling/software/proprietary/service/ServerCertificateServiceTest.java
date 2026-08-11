@@ -37,9 +37,11 @@ import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
 @ExtendWith(MockitoExtension.class)
 class ServerCertificateServiceTest {
 
-    @Mock private LicenseKeyChecker licenseKeyChecker;
+    @Mock
+    private LicenseKeyChecker licenseKeyChecker;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private ServerCertificateService service;
 
@@ -65,15 +67,11 @@ class ServerCertificateServiceTest {
     }
 
     private void grantProLicense() {
-        lenient()
-                .when(licenseKeyChecker.getPremiumLicenseEnabledResult())
-                .thenReturn(License.SERVER);
+        lenient().when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
     }
 
     private void denyLicense() {
-        lenient()
-                .when(licenseKeyChecker.getPremiumLicenseEnabledResult())
-                .thenReturn(License.NORMAL);
+        lenient().when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
     }
 
     // -------------------------------------------------------------------------
@@ -376,8 +374,7 @@ class ServerCertificateServiceTest {
 
     // -------------------------------------------------------------------------
     private static byte[] loadCert(String filename) throws Exception {
-        try (InputStream in =
-                ServerCertificateServiceTest.class.getResourceAsStream("/test-certs/" + filename)) {
+        try (InputStream in = ServerCertificateServiceTest.class.getResourceAsStream("/test-certs/" + filename)) {
             if (in == null) {
                 throw new IllegalStateException("cert not found: " + filename);
             }

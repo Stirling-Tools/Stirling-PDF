@@ -38,8 +38,7 @@ class McpToolCatalogTest {
         // Empty method set (matches all verbs) is not invocable.
         assertFalse(McpToolCatalog.isInvocableMethod(Set.of()));
         // Multi-verb mapping including POST stays invocable.
-        assertTrue(
-                McpToolCatalog.isInvocableMethod(Set.of(RequestMethod.POST, RequestMethod.DELETE)));
+        assertTrue(McpToolCatalog.isInvocableMethod(Set.of(RequestMethod.POST, RequestMethod.DELETE)));
     }
 
     @Test
@@ -50,30 +49,27 @@ class McpToolCatalogTest {
         // The PDF op's endpoint is disabled.
         when(endpoints.isEndpointEnabledForUri(anyString())).thenReturn(false);
 
-        McpToolCatalog catalog =
-                new McpToolCatalog(ctx, endpoints, new ApplicationProperties(), mapper);
+        McpToolCatalog catalog = new McpToolCatalog(ctx, endpoints, new ApplicationProperties(), mapper);
 
         ObjectNode schema = mapper.createObjectNode();
-        OperationMeta pdf =
-                new OperationMeta(
-                        "collide",
-                        OperationCategory.MISC,
-                        "pdf op",
-                        schema,
-                        "mcp.tools.write",
-                        OperationMeta.Target.JAVA_ENDPOINT,
-                        "/api/v1/misc/collide",
-                        null);
-        OperationMeta ai =
-                new OperationMeta(
-                        "collide",
-                        OperationCategory.AI,
-                        "ai op",
-                        schema,
-                        "mcp.tools.write",
-                        OperationMeta.Target.ENGINE_CAPABILITY,
-                        "collide",
-                        null);
+        OperationMeta pdf = new OperationMeta(
+                "collide",
+                OperationCategory.MISC,
+                "pdf op",
+                schema,
+                "mcp.tools.write",
+                OperationMeta.Target.JAVA_ENDPOINT,
+                "/api/v1/misc/collide",
+                null);
+        OperationMeta ai = new OperationMeta(
+                "collide",
+                OperationCategory.AI,
+                "ai op",
+                schema,
+                "mcp.tools.write",
+                OperationMeta.Target.ENGINE_CAPABILITY,
+                "collide",
+                null);
         seed(catalog, "pdfOps", "collide", pdf);
         seed(catalog, "aiOps", "collide", ai);
 
@@ -96,7 +92,8 @@ class McpToolCatalogTest {
                         OperationMeta.Target.ENGINE_CAPABILITY,
                         "ai-only",
                         null));
-        assertEquals("ai-only", catalog.findByOperationId("ai-only").orElseThrow().id());
+        assertEquals(
+                "ai-only", catalog.findByOperationId("ai-only").orElseThrow().id());
     }
 
     @Test
@@ -107,9 +104,9 @@ class McpToolCatalogTest {
         seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
         seed(catalog, "pdfOps", "ocr-pdf", miscOp("ocr-pdf"));
 
-        assertTrue(
-                catalog.findByOperationId("compress-pdf").isEmpty(), "blocked op must be hidden");
-        assertEquals("ocr-pdf", catalog.findByOperationId("ocr-pdf").orElseThrow().id());
+        assertTrue(catalog.findByOperationId("compress-pdf").isEmpty(), "blocked op must be hidden");
+        assertEquals(
+                "ocr-pdf", catalog.findByOperationId("ocr-pdf").orElseThrow().id());
         assertFalse(idsOf(catalog).contains("compress-pdf"));
         assertTrue(idsOf(catalog).contains("ocr-pdf"));
     }
@@ -122,10 +119,10 @@ class McpToolCatalogTest {
         seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
         seed(catalog, "pdfOps", "ocr-pdf", miscOp("ocr-pdf"));
 
-        assertEquals("compress-pdf", catalog.findByOperationId("compress-pdf").orElseThrow().id());
-        assertTrue(
-                catalog.findByOperationId("ocr-pdf").isEmpty(),
-                "op not on the allow-list must be hidden");
+        assertEquals(
+                "compress-pdf",
+                catalog.findByOperationId("compress-pdf").orElseThrow().id());
+        assertTrue(catalog.findByOperationId("ocr-pdf").isEmpty(), "op not on the allow-list must be hidden");
         assertEquals(List.of("compress-pdf"), idsOf(catalog));
     }
 
@@ -137,9 +134,7 @@ class McpToolCatalogTest {
         McpToolCatalog catalog = catalogWithEndpointsEnabled(props);
         seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
 
-        assertTrue(
-                catalog.findByOperationId("compress-pdf").isEmpty(),
-                "block-list must win over allow-list");
+        assertTrue(catalog.findByOperationId("compress-pdf").isEmpty(), "block-list must win over allow-list");
     }
 
     @Test
@@ -147,7 +142,9 @@ class McpToolCatalogTest {
         McpToolCatalog catalog = catalogWithEndpointsEnabled(new ApplicationProperties());
         seed(catalog, "pdfOps", "compress-pdf", miscOp("compress-pdf"));
 
-        assertEquals("compress-pdf", catalog.findByOperationId("compress-pdf").orElseThrow().id());
+        assertEquals(
+                "compress-pdf",
+                catalog.findByOperationId("compress-pdf").orElseThrow().id());
         assertTrue(idsOf(catalog).contains("compress-pdf"));
     }
 
@@ -172,12 +169,13 @@ class McpToolCatalogTest {
     }
 
     private static List<String> idsOf(McpToolCatalog catalog) {
-        return catalog.enabledOps(OperationCategory.MISC).stream().map(OperationMeta::id).toList();
+        return catalog.enabledOps(OperationCategory.MISC).stream()
+                .map(OperationMeta::id)
+                .toList();
     }
 
     @SuppressWarnings("unchecked")
-    private static void seed(McpToolCatalog catalog, String field, String id, OperationMeta meta)
-            throws Exception {
+    private static void seed(McpToolCatalog catalog, String field, String id, OperationMeta meta) throws Exception {
         Field f = McpToolCatalog.class.getDeclaredField(field);
         f.setAccessible(true);
         ((Map<String, OperationMeta>) f.get(catalog)).put(id, meta);

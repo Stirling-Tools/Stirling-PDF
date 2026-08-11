@@ -13,13 +13,13 @@ import stirling.software.common.model.ApplicationProperties;
 @Slf4j
 public class UploadLimitService {
 
-    @Autowired private ApplicationProperties applicationProperties;
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     public long getUploadLimit() {
-        String raw =
-                applicationProperties.getSystem().getFileUploadLimit() != null
-                        ? applicationProperties.getSystem().getFileUploadLimit()
-                        : "";
+        String raw = applicationProperties.getSystem().getFileUploadLimit() != null
+                ? applicationProperties.getSystem().getFileUploadLimit()
+                : "";
         if (raw == null || raw.isEmpty()) {
             return 0L;
         }

@@ -118,8 +118,7 @@ class PdfJsonImageServiceTest {
             var result = service.collectImages(doc, 1, progress -> {});
             assertNotNull(result);
             // The page has no images so the map should be empty
-            assertTrue(
-                    result.isEmpty() || result.values().stream().allMatch(java.util.List::isEmpty));
+            assertTrue(result.isEmpty() || result.values().stream().allMatch(java.util.List::isEmpty));
         }
     }
 
@@ -129,8 +128,8 @@ class PdfJsonImageServiceTest {
             doc.addPage(new org.apache.pdfbox.pdmodel.PDPage());
             doc.addPage(new org.apache.pdfbox.pdmodel.PDPage());
 
-            java.util.List<stirling.software.SPDF.model.api.PdfJsonConversionProgress>
-                    progressList = new java.util.ArrayList<>();
+            java.util.List<stirling.software.SPDF.model.api.PdfJsonConversionProgress> progressList =
+                    new java.util.ArrayList<>();
             service.collectImages(doc, 2, progressList::add);
 
             assertEquals(2, progressList.size());

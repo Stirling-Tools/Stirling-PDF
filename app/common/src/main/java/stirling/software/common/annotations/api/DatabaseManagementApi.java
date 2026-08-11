@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/admin/database")
-@Tag(
-        name = "Database Management",
-        description =
-                """
+@Tag(name = "Database Management", description = """
                 Enterprise database administration for production data management and business continuity.
 
                 This endpoint group provides database administration capabilities for organizations

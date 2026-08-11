@@ -38,10 +38,17 @@ import stirling.software.common.util.ExceptionUtils.*;
 @ExtendWith(MockitoExtension.class)
 class GlobalExceptionHandlerTest {
 
-    @Mock private MessageSource messageSource;
-    @Mock private Environment environment;
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
+    @Mock
+    private MessageSource messageSource;
+
+    @Mock
+    private Environment environment;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private HttpServletResponse response;
 
     private GlobalExceptionHandler handler;
 
@@ -156,8 +163,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleMissingParameter_returns_400() {
-        MissingServletRequestParameterException ex =
-                new MissingServletRequestParameterException("file", "String");
+        MissingServletRequestParameterException ex = new MissingServletRequestParameterException("file", "String");
         ResponseEntity<ProblemDetail> resp = handler.handleMissingParameter(ex, request);
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
         assertEquals("file", resp.getBody().getProperties().get("parameterName"));
@@ -216,8 +222,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void handleNoResourceFound_returns_404_not_500() {
         when(request.getMethod()).thenReturn("GET");
-        NoResourceFoundException ex =
-                new NoResourceFoundException(HttpMethod.GET, "/api/v1/storage/folders", "");
+        NoResourceFoundException ex = new NoResourceFoundException(HttpMethod.GET, "/api/v1/storage/folders", "");
         ResponseEntity<ProblemDetail> resp = handler.handleNoResourceFound(ex, request);
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
         assertEquals("GET", resp.getBody().getProperties().get("method"));
@@ -313,8 +318,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ProblemDetail> resp = handler.handleRuntimeException(ex, request);
         assertEquals("debug me", resp.getBody().getProperties().get("debugMessage"));
         assertEquals(
-                RuntimeException.class.getName(),
-                resp.getBody().getProperties().get("exceptionType"));
+                RuntimeException.class.getName(), resp.getBody().getProperties().get("exceptionType"));
     }
 
     // ---- Generic exception ----

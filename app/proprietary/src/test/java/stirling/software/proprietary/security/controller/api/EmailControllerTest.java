@@ -31,9 +31,11 @@ class EmailControllerTest {
 
     private MockMvc mockMvc;
 
-    @Mock private EmailService emailService;
+    @Mock
+    private EmailService emailService;
 
-    @InjectMocks private EmailController emailController;
+    @InjectMocks
+    private EmailController emailController;
 
     @BeforeEach
     void setUp() {
@@ -43,10 +45,7 @@ class EmailControllerTest {
     @ParameterizedTest(name = "Case {index}: exception={0}, includeTo={1}")
     @MethodSource("emailParams")
     void shouldHandleEmailRequests(
-            Exception serviceException,
-            boolean includeTo,
-            int expectedStatus,
-            String expectedContent)
+            Exception serviceException, boolean includeTo, int expectedStatus, String expectedContent)
             throws Exception {
         if (serviceException == null) {
             doNothing().when(emailService).sendEmailWithAttachment(any(Email.class));
@@ -54,11 +53,10 @@ class EmailControllerTest {
             doThrow(serviceException).when(emailService).sendEmailWithAttachment(any(Email.class));
         }
 
-        var request =
-                multipart("/api/v1/general/send-email")
-                        .file("fileInput", "dummy-content".getBytes())
-                        .param("subject", "Test Email")
-                        .param("body", "This is a test email.");
+        var request = multipart("/api/v1/general/send-email")
+                .file("fileInput", "dummy-content".getBytes())
+                .param("subject", "Test Email")
+                .param("body", "This is a test email.");
 
         if (includeTo) {
             request = request.param("to", "test@example.com");
@@ -80,11 +78,7 @@ class EmailControllerTest {
                         500,
                         "Failed to send email: Failed to send email"),
                 // missing 'to' results in MailSendException
-                Arguments.of(
-                        new MailSendException("Invalid Addresses"),
-                        false,
-                        500,
-                        "Invalid Addresses"),
+                Arguments.of(new MailSendException("Invalid Addresses"), false, 500, "Invalid Addresses"),
                 // invalid email address formatting
                 Arguments.of(
                         new MessagingException("Invalid Addresses"),

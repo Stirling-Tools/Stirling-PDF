@@ -51,8 +51,11 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ConvertPdfToVideoControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private ConvertPdfToVideoController controller;
 
@@ -90,17 +93,15 @@ class ConvertPdfToVideoControllerTest {
     }
 
     @SuppressWarnings("unchecked")
-    private List<String> buildFfmpegCommand(
-            String format, String resolution, String frameRate, TempFile outputVideo)
+    private List<String> buildFfmpegCommand(String format, String resolution, String frameRate, TempFile outputVideo)
             throws Exception {
-        return (List<String>)
-                invokePrivate(
-                        "buildFfmpegCommand",
-                        new Class<?>[] {String.class, String.class, String.class, TempFile.class},
-                        format,
-                        resolution,
-                        frameRate,
-                        outputVideo);
+        return (List<String>) invokePrivate(
+                "buildFfmpegCommand",
+                new Class<?>[] {String.class, String.class, String.class, TempFile.class},
+                format,
+                resolution,
+                frameRate,
+                outputVideo);
     }
 
     private void applyWatermark(BufferedImage image, float opacity, String text) throws Exception {
@@ -113,18 +114,11 @@ class ConvertPdfToVideoControllerTest {
     }
 
     private void generateFrames(
-            Path inputPdf,
-            Path outputDir,
-            int dpi,
-            float opacity,
-            String watermarkText,
-            boolean watermarkEnabled)
+            Path inputPdf, Path outputDir, int dpi, float opacity, String watermarkText, boolean watermarkEnabled)
             throws Exception {
         invokePrivate(
                 "generateFrames",
-                new Class<?>[] {
-                    Path.class, Path.class, int.class, float.class, String.class, boolean.class
-                },
+                new Class<?>[] {Path.class, Path.class, int.class, float.class, String.class, boolean.class},
                 inputPdf,
                 outputDir,
                 dpi,
@@ -337,15 +331,11 @@ class ConvertPdfToVideoControllerTest {
             // The watermark is drawn through the image centre, so a small image still gets pixels
             // painted; the smaller buffer keeps the two getRGB snapshots cheap.
             BufferedImage image = solidImage(100, 80, Color.RED);
-            int[] before =
-                    image.getRGB(
-                            0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
+            int[] before = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
 
             applyWatermark(image, 1.0f, "CONFIDENTIAL");
 
-            int[] after =
-                    image.getRGB(
-                            0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
+            int[] after = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
             boolean changed = false;
             for (int i = 0; i < before.length; i++) {
                 if (before[i] != after[i]) {
@@ -426,8 +416,7 @@ class ConvertPdfToVideoControllerTest {
             when(pdfDocumentFactory.load(any(File.class))).thenReturn(new PDDocument());
 
             assertThrows(
-                    IllegalArgumentException.class,
-                    () -> generateFrames(inputPdf, outputDir, 72, 1.0f, null, false));
+                    IllegalArgumentException.class, () -> generateFrames(inputPdf, outputDir, 72, 1.0f, null, false));
             try (var stream = Files.list(outputDir)) {
                 assertEquals(0, stream.count());
             }
@@ -442,9 +431,7 @@ class ConvertPdfToVideoControllerTest {
 
             when(pdfDocumentFactory.load(any(File.class))).thenThrow(new IOException("boom"));
 
-            assertThrows(
-                    IOException.class,
-                    () -> generateFrames(inputPdf, outputDir, 72, 1.0f, null, false));
+            assertThrows(IOException.class, () -> generateFrames(inputPdf, outputDir, 72, 1.0f, null, false));
         }
     }
 }

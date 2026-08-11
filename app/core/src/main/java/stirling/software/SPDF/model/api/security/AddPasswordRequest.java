@@ -12,16 +12,14 @@ import stirling.software.common.model.api.PDFFile;
 public class AddPasswordRequest extends PDFFile {
 
     @Schema(
-            description =
-                    "The owner password to be added to the PDF file (Restricts what can be done"
-                            + " with the document once it is opened)",
+            description = "The owner password to be added to the PDF file (Restricts what can be done"
+                    + " with the document once it is opened)",
             format = "password")
     private String ownerPassword;
 
     @Schema(
             description =
-                    "The password to be added to the PDF file (Restricts the opening of the"
-                            + " document itself.)",
+                    "The password to be added to the PDF file (Restricts the opening of the" + " document itself.)",
             format = "password")
     private String password;
 
@@ -39,9 +37,7 @@ public class AddPasswordRequest extends PDFFile {
     @Schema(description = "Whether content extraction is prevented", defaultValue = "false")
     private Boolean preventExtractContent;
 
-    @Schema(
-            description = "Whether content extraction for accessibility is prevented",
-            defaultValue = "false")
+    @Schema(description = "Whether content extraction for accessibility is prevented", defaultValue = "false")
     private Boolean preventExtractForAccessibility;
 
     @Schema(description = "Whether form filling is prevented", defaultValue = "false")
@@ -50,9 +46,7 @@ public class AddPasswordRequest extends PDFFile {
     @Schema(description = "Whether document modification is prevented", defaultValue = "false")
     private Boolean preventModify;
 
-    @Schema(
-            description = "Whether modification of annotations is prevented",
-            defaultValue = "false")
+    @Schema(description = "Whether modification of annotations is prevented", defaultValue = "false")
     private Boolean preventModifyAnnotations;
 
     @Schema(description = "Whether printing of the document is prevented", defaultValue = "false")

@@ -33,15 +33,11 @@ class UserBasedRateLimitingFilterTest {
         u.setUsername(username);
         u.setEnabled(true);
         SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new ApiKeyAuthenticationToken(
-                                u,
-                                "irrelevant",
-                                List.of(new SimpleGrantedAuthority(Role.USER.getRoleId()))));
+                .setAuthentication(new ApiKeyAuthenticationToken(
+                        u, "irrelevant", List.of(new SimpleGrantedAuthority(Role.USER.getRoleId()))));
     }
 
-    private long remainingAfterApiPost(UserBasedRateLimitingFilter filter, String apiKey)
-            throws Exception {
+    private long remainingAfterApiPost(UserBasedRateLimitingFilter filter, String apiKey) throws Exception {
         MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/general/x");
         req.addHeader("X-API-KEY", apiKey);
         MockHttpServletResponse res = new MockHttpServletResponse();

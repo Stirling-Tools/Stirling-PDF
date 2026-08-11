@@ -73,9 +73,7 @@ class GeneralFormCopyUtilsTest {
             target.addPage(new PDPage());
             // No acro form set on source - should simply return without error
             assertDoesNotThrow(
-                    () ->
-                            GeneralFormCopyUtils.copyAndTransformFormFields(
-                                    source, target, 1, 1, 1, 1, 612f, 792f));
+                    () -> GeneralFormCopyUtils.copyAndTransformFormFields(source, target, 1, 1, 1, 1, 612f, 792f));
         }
     }
 
@@ -89,9 +87,7 @@ class GeneralFormCopyUtilsTest {
             var acroForm = new org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm(source);
             source.getDocumentCatalog().setAcroForm(acroForm);
             assertDoesNotThrow(
-                    () ->
-                            GeneralFormCopyUtils.copyAndTransformFormFields(
-                                    source, target, 1, 1, 1, 1, 612f, 792f));
+                    () -> GeneralFormCopyUtils.copyAndTransformFormFields(source, target, 1, 1, 1, 1, 612f, 792f));
         }
     }
 }

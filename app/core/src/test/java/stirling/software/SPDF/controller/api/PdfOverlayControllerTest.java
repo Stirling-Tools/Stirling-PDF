@@ -52,25 +52,27 @@ class PdfOverlayControllerTest {
         return baos.toByteArray();
     }
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private PdfOverlayController controller;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private PdfOverlayController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private byte[] createPdf(int numPages) throws IOException {
@@ -91,14 +93,9 @@ class PdfOverlayControllerTest {
         byte[] overlayBytes = createPdf(2);
 
         MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
+                new MockMultipartFile("fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
         MockMultipartFile overlayFile =
-                new MockMultipartFile(
-                        "overlayFile",
-                        "overlay.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        overlayBytes);
+                new MockMultipartFile("overlayFile", "overlay.pdf", MediaType.APPLICATION_PDF_VALUE, overlayBytes);
 
         OverlayPdfsRequest request = new OverlayPdfsRequest();
         request.setFileInput(baseFile);
@@ -125,14 +122,11 @@ class PdfOverlayControllerTest {
         byte[] overlay2Bytes = createPdf(1);
 
         MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
+                new MockMultipartFile("fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
         MockMultipartFile overlay1 =
-                new MockMultipartFile(
-                        "overlay1", "overlay1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
+                new MockMultipartFile("overlay1", "overlay1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
         MockMultipartFile overlay2 =
-                new MockMultipartFile(
-                        "overlay2", "overlay2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
+                new MockMultipartFile("overlay2", "overlay2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
 
         OverlayPdfsRequest request = new OverlayPdfsRequest();
         request.setFileInput(baseFile);
@@ -156,14 +150,9 @@ class PdfOverlayControllerTest {
         byte[] overlayBytes = createPdf(1);
 
         MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
+                new MockMultipartFile("fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
         MockMultipartFile overlayFile =
-                new MockMultipartFile(
-                        "overlayFile",
-                        "overlay.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        overlayBytes);
+                new MockMultipartFile("overlayFile", "overlay.pdf", MediaType.APPLICATION_PDF_VALUE, overlayBytes);
 
         OverlayPdfsRequest request = new OverlayPdfsRequest();
         request.setFileInput(baseFile);
@@ -188,14 +177,9 @@ class PdfOverlayControllerTest {
         byte[] overlayBytes = createPdf(1);
 
         MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
+                new MockMultipartFile("fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
         MockMultipartFile overlayFile =
-                new MockMultipartFile(
-                        "overlayFile",
-                        "overlay.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        overlayBytes);
+                new MockMultipartFile("overlayFile", "overlay.pdf", MediaType.APPLICATION_PDF_VALUE, overlayBytes);
 
         OverlayPdfsRequest request = new OverlayPdfsRequest();
         request.setFileInput(baseFile);
@@ -219,14 +203,9 @@ class PdfOverlayControllerTest {
         byte[] overlayBytes = createPdf(1);
 
         MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
+                new MockMultipartFile("fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
         MockMultipartFile overlayFile =
-                new MockMultipartFile(
-                        "overlayFile",
-                        "overlay.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        overlayBytes);
+                new MockMultipartFile("overlayFile", "overlay.pdf", MediaType.APPLICATION_PDF_VALUE, overlayBytes);
 
         OverlayPdfsRequest request = new OverlayPdfsRequest();
         request.setFileInput(baseFile);
@@ -248,14 +227,11 @@ class PdfOverlayControllerTest {
         byte[] overlay2Bytes = createPdf(1);
 
         MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
+                new MockMultipartFile("fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
         MockMultipartFile overlay1 =
-                new MockMultipartFile(
-                        "overlay1", "o1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
+                new MockMultipartFile("overlay1", "o1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
         MockMultipartFile overlay2 =
-                new MockMultipartFile(
-                        "overlay2", "o2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
+                new MockMultipartFile("overlay2", "o2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
 
         OverlayPdfsRequest request = new OverlayPdfsRequest();
         request.setFileInput(baseFile);
@@ -278,14 +254,11 @@ class PdfOverlayControllerTest {
         byte[] overlay2Bytes = createPdf(1);
 
         MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
+                new MockMultipartFile("fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
         MockMultipartFile overlay1 =
-                new MockMultipartFile(
-                        "overlay1", "o1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
+                new MockMultipartFile("overlay1", "o1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
         MockMultipartFile overlay2 =
-                new MockMultipartFile(
-                        "overlay2", "o2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
+                new MockMultipartFile("overlay2", "o2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
 
         OverlayPdfsRequest request = new OverlayPdfsRequest();
         request.setFileInput(baseFile);
@@ -310,14 +283,11 @@ class PdfOverlayControllerTest {
         byte[] overlay2Bytes = createPdf(1);
 
         MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
+                new MockMultipartFile("fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
         MockMultipartFile overlay1 =
-                new MockMultipartFile(
-                        "overlay1", "o1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
+                new MockMultipartFile("overlay1", "o1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
         MockMultipartFile overlay2 =
-                new MockMultipartFile(
-                        "overlay2", "o2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
+                new MockMultipartFile("overlay2", "o2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
 
         OverlayPdfsRequest request = new OverlayPdfsRequest();
         request.setFileInput(baseFile);

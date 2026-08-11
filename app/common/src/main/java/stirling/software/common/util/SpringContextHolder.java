@@ -32,9 +32,7 @@ public class SpringContextHolder implements ApplicationContextAware {
      */
     public static <T> T getBean(Class<T> beanClass) {
         if (applicationContext == null) {
-            log.warn(
-                    "Application context not initialized when attempting to get bean of type {}",
-                    beanClass.getName());
+            log.warn("Application context not initialized when attempting to get bean of type {}", beanClass.getName());
             return null;
         }
 
@@ -55,9 +53,7 @@ public class SpringContextHolder implements ApplicationContextAware {
      */
     public static <T> T getBean(String beanName) {
         if (applicationContext == null) {
-            log.warn(
-                    "Application context not initialized when attempting to get bean '{}'",
-                    beanName);
+            log.warn("Application context not initialized when attempting to get bean '{}'", beanName);
             return null;
         }
 

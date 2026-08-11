@@ -36,8 +36,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                         @Schema(
                                                 type = "string",
                                                 format = "binary",
-                                                description =
-                                                        "ZIP archive containing multiple output files")),
+                                                description = "ZIP archive containing multiple output files")),
                         @Content(
                                 mediaType = "image/png",
                                 schema =

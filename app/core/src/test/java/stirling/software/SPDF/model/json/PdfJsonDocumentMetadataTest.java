@@ -41,16 +41,16 @@ class PdfJsonDocumentMetadataTest {
         void builder() {
             PdfJsonMetadata meta = PdfJsonMetadata.builder().title("T").build();
             List<PdfJsonPageDimension> dims = List.of(new PdfJsonPageDimension(1, 10f, 20f, 0));
-            List<PdfJsonFormField> fields = List.of(PdfJsonFormField.builder().name("f").build());
+            List<PdfJsonFormField> fields =
+                    List.of(PdfJsonFormField.builder().name("f").build());
 
-            PdfJsonDocumentMetadata m =
-                    PdfJsonDocumentMetadata.builder()
-                            .metadata(meta)
-                            .xmpMetadata("base64xmp")
-                            .lazyImages(true)
-                            .pageDimensions(dims)
-                            .formFields(fields)
-                            .build();
+            PdfJsonDocumentMetadata m = PdfJsonDocumentMetadata.builder()
+                    .metadata(meta)
+                    .xmpMetadata("base64xmp")
+                    .lazyImages(true)
+                    .pageDimensions(dims)
+                    .formFields(fields)
+                    .build();
 
             assertThat(m.getMetadata()).isSameAs(meta);
             assertThat(m.getXmpMetadata()).isEqualTo("base64xmp");
@@ -77,19 +77,21 @@ class PdfJsonDocumentMetadataTest {
         @Test
         @DisplayName("equal pair shares hashCode; differs by field")
         void equality() {
-            PdfJsonDocumentMetadata a = PdfJsonDocumentMetadata.builder().xmpMetadata("x").build();
-            PdfJsonDocumentMetadata b = PdfJsonDocumentMetadata.builder().xmpMetadata("x").build();
+            PdfJsonDocumentMetadata a =
+                    PdfJsonDocumentMetadata.builder().xmpMetadata("x").build();
+            PdfJsonDocumentMetadata b =
+                    PdfJsonDocumentMetadata.builder().xmpMetadata("x").build();
             assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
 
-            PdfJsonDocumentMetadata c = PdfJsonDocumentMetadata.builder().xmpMetadata("y").build();
+            PdfJsonDocumentMetadata c =
+                    PdfJsonDocumentMetadata.builder().xmpMetadata("y").build();
             assertThat(a).isNotEqualTo(c).isNotEqualTo(null).isNotEqualTo("string");
         }
 
         @Test
         @DisplayName("toString contains class name")
         void toStringContent() {
-            assertThat(new PdfJsonDocumentMetadata().toString())
-                    .contains("PdfJsonDocumentMetadata");
+            assertThat(new PdfJsonDocumentMetadata().toString()).contains("PdfJsonDocumentMetadata");
         }
     }
 }

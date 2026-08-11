@@ -64,10 +64,9 @@ public class PurviewLabelController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Apply a Microsoft Purview sensitivity label",
-            description =
-                    "Writes the Purview label metadata (MSIP_Label_<GUID>_*) onto the PDF, so"
-                            + " Purview-aware tools recognise the label. Applies the label only;"
-                            + " it cannot encrypt, which requires the Microsoft client.")
+            description = "Writes the Purview label metadata (MSIP_Label_<GUID>_*) onto the PDF, so"
+                    + " Purview-aware tools recognise the label. Applies the label only;"
+                    + " it cannot encrypt, which requires the Microsoft client.")
     public ResponseEntity<Resource> applyLabel(
             @RequestParam("fileInput") MultipartFile fileInput,
             @RequestParam("connectionId") String connectionId,
@@ -82,14 +81,8 @@ public class PurviewLabelController {
 
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             String fileName = safeFileName(fileInput.getOriginalFilename());
-            SensitivityLabel label =
-                    new SensitivityLabel(
-                            labelId.trim(),
-                            labelName,
-                            settings.tenantId(),
-                            assignment,
-                            Instant.now(),
-                            contentBits);
+            SensitivityLabel label = new SensitivityLabel(
+                    labelId.trim(), labelName, settings.tenantId(), assignment, Instant.now(), contentBits);
             PdfSensitivityLabels.apply(document, label);
             log.debug("[purview-apply-label] labelled {} as {}", fileName, labelId);
             return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
@@ -100,12 +93,10 @@ public class PurviewLabelController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Read the Microsoft Purview sensitivity label on a PDF",
-            description =
-                    "Reports the Purview labels a PDF already carries so a policy can act on"
-                            + " them. The document passes through unchanged.")
+            description = "Reports the Purview labels a PDF already carries so a policy can act on"
+                    + " them. The document passes through unchanged.")
     public ResponseEntity<Resource> readLabel(
-            @RequestParam("fileInput") MultipartFile fileInput,
-            @RequestParam("connectionId") String connectionId)
+            @RequestParam("fileInput") MultipartFile fileInput, @RequestParam("connectionId") String connectionId)
             throws IOException {
 
         PurviewConnectionSettings settings = settings(connectionId);
@@ -119,8 +110,7 @@ public class PurviewLabelController {
         byte[] bytes = fileInput.getBytes();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData(
-                "attachment", safeFileName(fileInput.getOriginalFilename()));
+        headers.setContentDispositionFormData("attachment", safeFileName(fileInput.getOriginalFilename()));
         headers.setContentLength(bytes.length);
         headers.set(AiToolResponseHeaders.TOOL_REPORT, buildReport(labels, settings));
         return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(bytes));
@@ -131,31 +121,28 @@ public class PurviewLabelController {
      * several organisations, and only the matching one reflects this tenant's policy.
      */
     private String buildReport(List<SensitivityLabel> labels, PurviewConnectionSettings settings) {
-        Optional<SensitivityLabel> own =
-                labels.stream()
-                        .filter(label -> settings.tenantId().equalsIgnoreCase(label.siteId()))
-                        .findFirst();
+        Optional<SensitivityLabel> own = labels.stream()
+                .filter(label -> settings.tenantId().equalsIgnoreCase(label.siteId()))
+                .findFirst();
         ObjectNode report = objectMapper.createObjectNode();
         report.put("labelled", own.isPresent());
-        own.ifPresent(
-                label -> {
-                    report.put("labelId", label.labelId());
-                    report.put("labelName", label.name());
-                    report.put("method", label.method() == null ? null : label.method().name());
-                    report.put(
-                            "setDate", label.setDate() == null ? null : label.setDate().toString());
-                    report.put("contentBits", label.contentBits());
-                    report.put("protected", label.isProtected());
-                });
+        own.ifPresent(label -> {
+            report.put("labelId", label.labelId());
+            report.put("labelName", label.name());
+            report.put("method", label.method() == null ? null : label.method().name());
+            report.put(
+                    "setDate", label.setDate() == null ? null : label.setDate().toString());
+            report.put("contentBits", label.contentBits());
+            report.put("protected", label.isProtected());
+        });
         ArrayNode others = report.putArray("otherTenantLabels");
         labels.stream()
                 .filter(label -> !settings.tenantId().equalsIgnoreCase(label.siteId()))
-                .forEach(
-                        label -> {
-                            ObjectNode node = others.addObject();
-                            node.put("labelId", label.labelId());
-                            node.put("siteId", label.siteId());
-                        });
+                .forEach(label -> {
+                    ObjectNode node = others.addObject();
+                    node.put("labelId", label.labelId());
+                    node.put("siteId", label.siteId());
+                });
         return objectMapper.writeValueAsString(report);
     }
 
@@ -164,8 +151,7 @@ public class PurviewLabelController {
         if (id == null) {
             throw new IllegalArgumentException("'connectionId' is required");
         }
-        return PurviewConnectionSettings.from(
-                connectionResolver.resolveConfig(id, IntegrationType.PURVIEW));
+        return PurviewConnectionSettings.from(connectionResolver.resolveConfig(id, IntegrationType.PURVIEW));
     }
 
     private static AssignmentMethod parseMethod(String method) {

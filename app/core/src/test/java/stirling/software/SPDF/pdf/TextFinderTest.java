@@ -49,11 +49,7 @@ class TextFinderTest {
         assertEquals(
                 expectedCount,
                 foundTexts.size(),
-                String.format(
-                        Locale.ROOT,
-                        "Expected %d matches for search term '%s'",
-                        expectedCount,
-                        searchTerm));
+                String.format(Locale.ROOT, "Expected %d matches for search term '%s'", expectedCount, searchTerm));
 
         if (expectedTexts != null) {
             for (String expectedText : expectedTexts) {
@@ -64,15 +60,14 @@ class TextFinderTest {
         }
 
         // Verify basic properties of found texts
-        foundTexts.forEach(
-                text -> {
-                    assertNotNull(text.getText());
-                    assertTrue(text.getX1() >= 0);
-                    assertTrue(text.getY1() >= 0);
-                    assertTrue(text.getX2() >= text.getX1());
-                    assertTrue(text.getY2() >= text.getY1());
-                    assertEquals(0, text.getPageIndex()); // Single page test
-                });
+        foundTexts.forEach(text -> {
+            assertNotNull(text.getText());
+            assertTrue(text.getX1() >= 0);
+            assertTrue(text.getY1() >= 0);
+            assertTrue(text.getX2() >= text.getX1());
+            assertTrue(text.getY2() >= text.getY1());
+            assertEquals(0, text.getPageIndex()); // Single page test
+        });
     }
 
     @BeforeEach
@@ -244,13 +239,7 @@ class TextFinderTest {
         @Test
         @DisplayName("Should find currency patterns")
         void findCurrencyPatterns() throws IOException {
-            testTextFinding(
-                    "Price: $100.50 and €75.25",
-                    "\\$\\d+\\.\\d{2}",
-                    true,
-                    false,
-                    new String[] {"$100.50"},
-                    1);
+            testTextFinding("Price: $100.50 and €75.25", "\\$\\d+\\.\\d{2}", true, false, new String[] {"$100.50"}, 1);
         }
 
         @ParameterizedTest
@@ -264,8 +253,7 @@ class TextFinderTest {
                 })
         @DisplayName("Should handle various regex patterns")
         void handleVariousRegexPatterns(String regexPattern) throws IOException {
-            String testContent =
-                    "Date: 2023-12-25, Email: test@domain.com, Price: $250, Code: ABC123, Number: 1234";
+            String testContent = "Date: 2023-12-25, Email: test@domain.com, Price: $250, Code: ABC123, Number: 1234";
             addTextToPage(testContent);
 
             TextFinder textFinder = new TextFinder(regexPattern, true, false);
@@ -275,10 +263,7 @@ class TextFinderTest {
             // Each pattern should find at least one match in our test content
             assertFalse(
                     foundTexts.isEmpty(),
-                    String.format(
-                            Locale.ROOT,
-                            "Pattern '%s' should find at least one match",
-                            regexPattern));
+                    String.format(Locale.ROOT, "Pattern '%s' should find at least one match", regexPattern));
         }
 
         @Test
@@ -310,20 +295,14 @@ class TextFinderTest {
         @Test
         @DisplayName("Should handle international characters")
         void handleInternationalCharacters() throws IOException {
-            testTextFinding(
-                    "Hello café naïve résumé", "café", false, false, new String[] {"café"}, 1);
+            testTextFinding("Hello café naïve résumé", "café", false, false, new String[] {"café"}, 1);
         }
 
         @Test
         @DisplayName("Should find text with accented characters")
         void findAccentedCharacters() throws IOException {
             testTextFinding(
-                    "Café, naïve, résumé, piñata",
-                    "café",
-                    false,
-                    false,
-                    new String[] {"Café"},
-                    1); // Case insensitive
+                    "Café, naïve, résumé, piñata", "café", false, false, new String[] {"Café"}, 1); // Case insensitive
         }
 
         @Test
@@ -335,13 +314,7 @@ class TextFinderTest {
         @Test
         @DisplayName("Should find currency symbols")
         void findCurrencySymbols() throws IOException {
-            testTextFinding(
-                    "Prices: $100 €75 £50 ¥1000",
-                    "[€£¥]",
-                    true,
-                    false,
-                    new String[] {"€", "£", "¥"},
-                    3);
+            testTextFinding("Prices: $100 €75 £50 ¥1000", "[€£¥]", true, false, new String[] {"€", "£", "¥"}, 3);
         }
     }
 
@@ -365,8 +338,10 @@ class TextFinderTest {
 
             assertEquals(2, foundTexts.size());
 
-            long page0Count = foundTexts.stream().filter(text -> text.getPageIndex() == 0).count();
-            long page1Count = foundTexts.stream().filter(text -> text.getPageIndex() == 1).count();
+            long page0Count =
+                    foundTexts.stream().filter(text -> text.getPageIndex() == 0).count();
+            long page1Count =
+                    foundTexts.stream().filter(text -> text.getPageIndex() == 1).count();
 
             assertEquals(1, page0Count);
             assertEquals(1, page1Count);
@@ -419,9 +394,7 @@ class TextFinderTest {
             long endTime = 1001000L; // Fixed end time
 
             assertEquals(10, foundTexts.size());
-            assertTrue(
-                    endTime - startTime < 3000,
-                    "Multi-page search should complete within 3 seconds");
+            assertTrue(endTime - startTime < 3000, "Multi-page search should complete within 3 seconds");
         }
     }
 
@@ -472,13 +445,12 @@ class TextFinderTest {
 
             String complexRegex = "(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z\\d]{6}";
 
-            assertDoesNotThrow(
-                    () -> {
-                        TextFinder textFinder = new TextFinder(complexRegex, true, false);
-                        textFinder.getText(document);
-                        List<PDFText> foundTexts = textFinder.getFoundTexts();
-                        assertNotNull(foundTexts);
-                    });
+            assertDoesNotThrow(() -> {
+                TextFinder textFinder = new TextFinder(complexRegex, true, false);
+                textFinder.getText(document);
+                List<PDFText> foundTexts = textFinder.getFoundTexts();
+                assertNotNull(foundTexts);
+            });
         }
 
         @ParameterizedTest
@@ -535,11 +507,10 @@ class TextFinderTest {
             List<PDFText> foundTexts = textFinder.getFoundTexts();
 
             assertFalse(foundTexts.isEmpty());
-            foundTexts.forEach(
-                    text -> {
-                        assertNotNull(text.getText());
-                        assertTrue(text.getX1() >= 0 && text.getY1() >= 0);
-                    });
+            foundTexts.forEach(text -> {
+                assertNotNull(text.getText());
+                assertTrue(text.getX1() >= 0 && text.getY1() >= 0);
+            });
         }
     }
 
@@ -582,8 +553,7 @@ class TextFinderTest {
         @Test
         @DisplayName("Should find single characters in various contexts")
         void findSingleCharacters() throws IOException {
-            String content =
-                    "Grade: A. Section B has item A-1. The letter A appears multiple times.";
+            String content = "Grade: A. Section B has item A-1. The letter A appears multiple times.";
             addTextToPage(content);
 
             TextFinder textFinder = new TextFinder("A", false, true);
@@ -600,8 +570,7 @@ class TextFinderTest {
         @Test
         @DisplayName("Digits as strict standalone tokens (exclude decimals and suffixes)")
         void findDigitsAtWordBoundaries() throws IOException {
-            String content =
-                    "Numbers: 1, 2, 3. Code: 123. Version: 1.0. Item1 and Item2. Price: 2,50€";
+            String content = "Numbers: 1, 2, 3. Code: 123. Version: 1.0. Item1 and Item2. Price: 2,50€";
             addTextToPage(content);
 
             TextFinder textFinder1 = new TextFinder("1", false, true);
@@ -617,10 +586,7 @@ class TextFinderTest {
             textFinder2.getText(document);
             List<PDFText> foundTexts2 = textFinder2.getFoundTexts();
 
-            assertEquals(
-                    1,
-                    foundTexts2.size(),
-                    "Should find only the standalone '2' in the number list");
+            assertEquals(1, foundTexts2.size(), "Should find only the standalone '2' in the number list");
         }
 
         @Test
@@ -647,10 +613,7 @@ class TextFinderTest {
             textFinder.getText(document);
             List<PDFText> foundTexts = textFinder.getFoundTexts();
 
-            assertEquals(
-                    2,
-                    foundTexts.size(),
-                    "Should find both '1' instances despite spacing variations");
+            assertEquals(2, foundTexts.size(), "Should find both '1' instances despite spacing variations");
         }
     }
 

@@ -80,14 +80,11 @@ public class AuthController {
     @PostMapping("/login")
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
     public ResponseEntity<?> login(
-            @RequestBody UsernameAndPassMfa request,
-            HttpServletRequest httpRequest,
-            HttpServletResponse response) {
+            @RequestBody UsernameAndPassMfa request, HttpServletRequest httpRequest, HttpServletResponse response) {
         try {
             // Check if username/password authentication is allowed
             if (!securityProperties.isUserPass()) {
-                log.warn(
-                        "Username/password login attempted but not allowed by current login method configuration");
+                log.warn("Username/password login attempted but not allowed by current login method configuration");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(
                                 Map.of(
@@ -98,16 +95,12 @@ public class AuthController {
             // Validate input parameters
             if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
                 log.warn("Login attempt with null or empty username");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Username is required"));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Username is required"));
             }
 
             if (request.getPassword() == null || request.getPassword().isEmpty()) {
-                log.warn(
-                        "Login attempt with null or empty password for user: {}",
-                        request.getUsername());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Password is required"));
+                log.warn("Login attempt with null or empty password for user: {}", request.getUsername());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Password is required"));
             }
 
             String username = request.getUsername().trim();
@@ -134,23 +127,18 @@ public class AuthController {
 
             if (!user.isEnabled()) {
                 log.warn("Disabled user attempted login: {} from IP: {}", username, ip);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User account is disabled"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User account is disabled"));
             }
 
             if (mfaService.isMfaEnabled(user)) {
                 String code = request.getMfaCode();
                 if (code == null || code.isBlank()) {
-                    log.warn(
-                            "MFA required but no code provided for user: {} from IP: {}",
-                            username,
-                            ip);
+                    log.warn("MFA required but no code provided for user: {} from IP: {}", username, ip);
                     // loginAttemptService.loginFailed(username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                            .body(
-                                    Map.of(
-                                            "error", "mfa_required",
-                                            "message", "Two-factor code required"));
+                            .body(Map.of(
+                                    "error", "mfa_required",
+                                    "message", "Two-factor code required"));
                 }
                 String secret = mfaService.getSecret(user);
                 if (secret == null || secret.isBlank()) {
@@ -163,19 +151,17 @@ public class AuthController {
                     log.warn("Invalid MFA code for user: {} from IP: {}", username, ip);
                     loginAttemptService.loginFailed(username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                            .body(
-                                    Map.of(
-                                            "error", "invalid_mfa_code",
-                                            "message", "Invalid two-factor code"));
+                            .body(Map.of(
+                                    "error", "invalid_mfa_code",
+                                    "message", "Invalid two-factor code"));
                 }
                 if (!mfaService.markTotpStepUsed(user, timeStep)) {
                     log.warn("Replay MFA code detected for user: {} from IP: {}", username, ip);
                     loginAttemptService.loginFailed(username);
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                            .body(
-                                    Map.of(
-                                            "error", "invalid_mfa_code",
-                                            "message", "Invalid two-factor code"));
+                            .body(Map.of(
+                                    "error", "invalid_mfa_code",
+                                    "message", "Invalid two-factor code"));
                 }
             }
 
@@ -190,8 +176,7 @@ public class AuthController {
             int keyRetentionDays = securityProperties.getJwt().getKeyRetentionDays();
             if (isDesktopClient) {
                 // Desktop: Use configured desktop token expiry (default 30 days)
-                int desktopExpiryMinutes =
-                        DesktopClientUtils.getDesktopTokenExpiryMinutes(applicationProperties);
+                int desktopExpiryMinutes = DesktopClientUtils.getDesktopTokenExpiryMinutes(applicationProperties);
                 token = jwtService.generateToken(user.getUsername(), claims, desktopExpiryMinutes);
                 log.info(
                         "Issued DESKTOP token for user '{}': expiry={}min ({}d), keyRetention={}d",
@@ -202,8 +187,7 @@ public class AuthController {
             } else {
                 // Web: Use configured web expiry (default 24 hours)
                 token = jwtService.generateToken(user.getUsername(), claims);
-                int webExpiryMinutes =
-                        DesktopClientUtils.getWebTokenExpiryMinutes(applicationProperties);
+                int webExpiryMinutes = DesktopClientUtils.getWebTokenExpiryMinutes(applicationProperties);
                 log.info(
                         "Issued WEB token for user '{}': expiry={}min ({}d), keyRetention={}d",
                         username,
@@ -214,34 +198,22 @@ public class AuthController {
 
             // Record successful login
             loginAttemptService.loginSucceeded(username);
-            log.info(
-                    "Login successful for user: {} from IP: {} (desktop: {})",
-                    username,
-                    ip,
-                    isDesktopClient);
+            log.info("Login successful for user: {} from IP: {} (desktop: {})", username, ip, isDesktopClient);
 
-            return ResponseEntity.ok(
-                    Map.of(
-                            "user", buildUserResponse(user),
-                            "session",
-                                    Map.of(
-                                            "access_token",
-                                            token,
-                                            "expires_in",
-                                            getTokenExpirySeconds(isDesktopClient))));
+            return ResponseEntity.ok(Map.of(
+                    "user", buildUserResponse(user),
+                    "session", Map.of("access_token", token, "expires_in", getTokenExpirySeconds(isDesktopClient))));
 
         } catch (UsernameNotFoundException e) {
             String username = request.getUsername();
             log.warn("User not found: {}", username);
             loginAttemptService.loginFailed(username);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid username or password"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid username or password"));
         } catch (AuthenticationException e) {
             String username = request.getUsername();
             log.error("Authentication failed for user: {}", username, e);
             loginAttemptService.loginFailed(username);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid credentials"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
         } catch (Exception e) {
             log.error("Login error for user: {}", request.getUsername(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -260,17 +232,13 @@ public class AuthController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-            if (auth == null
-                    || !auth.isAuthenticated()
-                    || "anonymousUser".equals(auth.getPrincipal())) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Not authenticated"));
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
             }
 
             // Anonymous SaaS sessions carry a raw Jwt principal; treat them as unauthenticated
             if (!(auth.getPrincipal() instanceof User user)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Not authenticated"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
             }
 
             return ResponseEntity.ok(Map.of("user", buildUserResponse(user)));
@@ -321,8 +289,7 @@ public class AuthController {
             String token = jwtService.extractToken(request);
 
             if (token == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "No token found"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "No token found"));
             }
 
             // Generate token hash for rate limiting (avoid storing actual tokens)
@@ -331,35 +298,30 @@ public class AuthController {
             Map<String, Object> claims = jwtService.extractClaimsAllowExpired(token);
             if (!isRefreshWithinGrace(claims)) {
                 log.warn("Token refresh rejected: token expired beyond configured grace window");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Token refresh failed"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token refresh failed"));
             }
 
             // Only apply rate limiting if token is actually expired (not for valid tokens)
             // This prevents false-positive 429 errors with multiple tabs, retries, etc.
             long expMillis = extractEpochMillis(claims.get("exp"));
             boolean isExpired = expMillis > 0 && expMillis < System.currentTimeMillis();
-            if (isExpired
-                    && !refreshRateLimitService.isRefreshAllowed(
-                            tokenHash, getRefreshGraceMillis())) {
+            if (isExpired && !refreshRateLimitService.isRefreshAllowed(tokenHash, getRefreshGraceMillis())) {
                 log.warn(
                         "Token refresh rejected: rate limit exceeded (max {} attempts allowed)",
                         JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE);
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                        .body(
-                                Map.of(
-                                        "error",
-                                        "Too many refresh attempts",
-                                        "max_attempts",
-                                        JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE));
+                        .body(Map.of(
+                                "error",
+                                "Too many refresh attempts",
+                                "max_attempts",
+                                JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE));
             }
 
             Object usernameClaim = claims.get("sub");
             String username = usernameClaim != null ? usernameClaim.toString() : null;
             if (username == null || username.isBlank()) {
                 log.warn("Token refresh rejected: missing subject claim");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Token refresh failed"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token refresh failed"));
             }
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -373,8 +335,7 @@ public class AuthController {
             boolean isDesktopClient = DesktopClientUtils.isDesktopClient(request);
             String newToken;
             if (isDesktopClient) {
-                int desktopExpiryMinutes =
-                        DesktopClientUtils.getDesktopTokenExpiryMinutes(applicationProperties);
+                int desktopExpiryMinutes = DesktopClientUtils.getDesktopTokenExpiryMinutes(applicationProperties);
                 newToken = jwtService.generateToken(username, newClaims, desktopExpiryMinutes);
                 log.info(
                         "Refreshed DESKTOP token for user '{}': expiry={}min ({}d)",
@@ -383,8 +344,7 @@ public class AuthController {
                         desktopExpiryMinutes / 1440);
             } else {
                 newToken = jwtService.generateToken(username, newClaims);
-                int webExpiryMinutes =
-                        DesktopClientUtils.getWebTokenExpiryMinutes(applicationProperties);
+                int webExpiryMinutes = DesktopClientUtils.getWebTokenExpiryMinutes(applicationProperties);
                 log.info(
                         "Refreshed WEB token for user '{}': expiry={}min ({}d)",
                         username,
@@ -397,24 +357,16 @@ public class AuthController {
 
             log.debug("Token refreshed for user: {}", username);
 
-            return ResponseEntity.ok(
-                    Map.of(
-                            "user", buildUserResponse(user),
-                            "session",
-                                    Map.of(
-                                            "access_token",
-                                            newToken,
-                                            "expires_in",
-                                            getTokenExpirySeconds(isDesktopClient))));
+            return ResponseEntity.ok(Map.of(
+                    "user", buildUserResponse(user),
+                    "session", Map.of("access_token", newToken, "expires_in", getTokenExpirySeconds(isDesktopClient))));
 
         } catch (AuthenticationFailureException e) {
             log.warn("Token refresh failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Token refresh failed"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token refresh failed"));
         } catch (Exception e) {
             log.error("Token refresh error", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Token refresh failed"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token refresh failed"));
         }
     }
 
@@ -422,23 +374,20 @@ public class AuthController {
     @GetMapping("/mfa/setup")
     public ResponseEntity<?> setupMfa(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
         }
 
         String username = authentication.getName();
-        User user =
-                userService
-                        .findByUsernameIgnoreCaseWithSettings(username)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userService
+                .findByUsernameIgnoreCaseWithSettings(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
         if (authTypeResponse != null) {
             return authTypeResponse;
         }
 
         if (mfaService.isMfaEnabled(user)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "MFA already enabled"));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "MFA already enabled"));
         }
 
         try {
@@ -449,25 +398,21 @@ public class AuthController {
             return ResponseEntity.ok(Map.of("secret", secret, "otpauthUri", otpAuthUri));
         } catch (Exception e) {
             log.error("Failed to setup MFA for user: {}", username, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to setup MFA"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to setup MFA"));
         }
     }
 
     @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/mfa/enable")
-    public ResponseEntity<?> enableMfa(
-            @RequestBody MfaCodeRequest request, Authentication authentication) {
+    public ResponseEntity<?> enableMfa(@RequestBody MfaCodeRequest request, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
         }
 
         String username = authentication.getName();
-        User user =
-                userService
-                        .findByUsernameIgnoreCaseWithSettings(username)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userService
+                .findByUsernameIgnoreCaseWithSettings(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
         if (authTypeResponse != null) {
             return authTypeResponse;
@@ -475,25 +420,21 @@ public class AuthController {
 
         String secret = mfaService.getSecret(user);
         if (secret == null || secret.isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "MFA setup required"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "MFA setup required"));
         }
 
         if (request == null || request.getCode() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "MFA code is required"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "MFA code is required"));
         }
 
         Long timeStep = totpService.getValidTimeStep(secret, request.getCode());
         if (timeStep == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid two-factor code"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid two-factor code"));
         }
 
         try {
             if (!mfaService.isTotpStepUsable(user, timeStep)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Invalid two-factor code"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid two-factor code"));
             }
             mfaService.enableMfa(user);
             mfaService.markTotpStepUsed(user, timeStep);
@@ -508,18 +449,15 @@ public class AuthController {
 
     @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/mfa/disable")
-    public ResponseEntity<?> disableMfa(
-            @RequestBody MfaCodeRequest request, Authentication authentication) {
+    public ResponseEntity<?> disableMfa(@RequestBody MfaCodeRequest request, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
         }
 
         String username = authentication.getName();
-        User user =
-                userService
-                        .findByUsernameIgnoreCaseWithSettings(username)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userService
+                .findByUsernameIgnoreCaseWithSettings(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
         if (authTypeResponse != null) {
             return authTypeResponse;
@@ -531,25 +469,21 @@ public class AuthController {
 
         String secret = mfaService.getSecret(user);
         if (secret == null || secret.isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "MFA configuration missing"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "MFA configuration missing"));
         }
 
         if (request == null || request.getCode() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "MFA code is required"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "MFA code is required"));
         }
 
         Long timeStep = totpService.getValidTimeStep(secret, request.getCode());
         if (timeStep == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid two-factor code"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid two-factor code"));
         }
 
         try {
             if (!mfaService.isTotpStepUsable(user, timeStep)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Invalid two-factor code"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid two-factor code"));
             }
             mfaService.disableMfa(user);
             mfaService.markTotpStepUsed(user, timeStep);
@@ -565,19 +499,16 @@ public class AuthController {
     @PostMapping("/mfa/setup/cancel")
     public ResponseEntity<?> cancelMfaSetup(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
         }
 
         String username = authentication.getName();
-        User user =
-                userService
-                        .findByUsernameIgnoreCaseWithSettings(username)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userService
+                .findByUsernameIgnoreCaseWithSettings(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (mfaService.isMfaEnabled(user)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "MFA already enabled"));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "MFA already enabled"));
         }
 
         try {
@@ -600,10 +531,9 @@ public class AuthController {
     @PostMapping("/mfa/disable/admin/{username}")
     public ResponseEntity<?> disableMfaByAdmin(@PathVariable String username) {
         try {
-            User user =
-                    userService
-                            .findByUsernameIgnoreCaseWithSettings(username)
-                            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            User user = userService
+                    .findByUsernameIgnoreCaseWithSettings(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
             if (!mfaService.isMfaEnabled(user)) {
                 return ResponseEntity.ok(Map.of("enabled", false));
@@ -613,8 +543,7 @@ public class AuthController {
             return ResponseEntity.ok(Map.of("enabled", false));
         } catch (UsernameNotFoundException e) {
             log.warn("User not found for MFA disable: {}", username);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found"));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
         } catch (Exception e) {
             log.error("Failed to disable MFA for user: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -640,11 +569,10 @@ public class AuthController {
         // Expose the caller's team so non-admin team owners can scope their own team's resources.
         if (user.getTeam() != null) {
             userMap.put(
-                    "team", Map.of("id", user.getTeam().getId(), "name", user.getTeam().getName()));
+                    "team",
+                    Map.of("id", user.getTeam().getId(), "name", user.getTeam().getName()));
         }
-        userMap.put(
-                "authenticationType",
-                user.getAuthenticationType()); // Expose authentication type for SSO detection
+        userMap.put("authenticationType", user.getAuthenticationType()); // Expose authentication type for SSO detection
 
         // Add metadata for OAuth compatibility
         Map<String, Object> appMetadata = new HashMap<>();
@@ -661,10 +589,7 @@ public class AuthController {
 
     private long getTokenExpirySeconds() {
         int configuredMinutes = securityProperties.getJwt().getTokenExpiryMinutes();
-        int expiryMinutes =
-                configuredMinutes > 0
-                        ? configuredMinutes
-                        : JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
+        int expiryMinutes = configuredMinutes > 0 ? configuredMinutes : JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
         return expiryMinutes * JwtConstants.SECONDS_PER_MINUTE;
     }
 
@@ -695,10 +620,7 @@ public class AuthController {
 
     private long getRefreshGraceMillis() {
         int configuredMinutes = securityProperties.getJwt().getRefreshGraceMinutes();
-        int graceMinutes =
-                configuredMinutes >= 0
-                        ? configuredMinutes
-                        : JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES;
+        int graceMinutes = configuredMinutes >= 0 ? configuredMinutes : JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES;
         return graceMinutes * JwtConstants.MILLIS_PER_MINUTE;
     }
 
@@ -730,8 +652,7 @@ public class AuthController {
     private String generateTokenHash(String token) {
         try {
             java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes =
-                    digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            byte[] hashBytes = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             StringBuilder hexString = new StringBuilder();
             for (byte b : hashBytes) {
                 String hex = Integer.toHexString(0xff & b);

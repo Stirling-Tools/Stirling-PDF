@@ -19,33 +19,23 @@ class PolicyS3ConnectionUsageCheckTest {
 
     private final InProcessSourceStore sourceStore = new InProcessSourceStore();
     private final InProcessPolicyStore policyStore = new InProcessPolicyStore();
-    private final PolicyS3ConnectionUsageCheck check =
-            new PolicyS3ConnectionUsageCheck(sourceStore, policyStore);
+    private final PolicyS3ConnectionUsageCheck check = new PolicyS3ConnectionUsageCheck(sourceStore, policyStore);
 
     @Test
     void reportsSourcesAndOutputsReferencingTheConnection() {
-        sourceStore.save(
-                new Source(
-                        null,
-                        "Claims intake",
-                        "s3",
-                        Map.of("connectionId", 5L, "prefix", "in/"),
-                        true,
-                        "alice",
-                        null));
-        policyStore.save(
-                new Policy(
-                        null,
-                        "Rotate",
-                        "alice",
-                        true,
-                        List.of(),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        new OutputSpec("s3", Map.of("connectionId", "5")),
-                        null));
+        sourceStore.save(new Source(
+                null, "Claims intake", "s3", Map.of("connectionId", 5L, "prefix", "in/"), true, "alice", null));
+        policyStore.save(new Policy(
+                null,
+                "Rotate",
+                "alice",
+                true,
+                List.of(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                new OutputSpec("s3", Map.of("connectionId", "5")),
+                null));
 
-        assertThat(check.usagesOf(5))
-                .containsExactlyInAnyOrder("source 'Claims intake'", "pipeline 'Rotate'");
+        assertThat(check.usagesOf(5)).containsExactlyInAnyOrder("source 'Claims intake'", "pipeline 'Rotate'");
         assertThat(check.usagesOf(6)).isEmpty();
     }
 }

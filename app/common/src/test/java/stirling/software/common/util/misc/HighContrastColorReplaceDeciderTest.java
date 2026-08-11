@@ -61,8 +61,7 @@ class HighContrastColorReplaceDeciderTest {
     void testGetColors_YellowTextOnBlack() {
         // Arrange
         ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.HIGH_CONTRAST_COLOR;
-        HighContrastColorCombination combination =
-                HighContrastColorCombination.YELLOW_TEXT_ON_BLACK;
+        HighContrastColorCombination combination = HighContrastColorCombination.YELLOW_TEXT_ON_BLACK;
 
         // Act
         String[] colors = HighContrastColorReplaceDecider.getColors(replaceAndInvert, combination);
@@ -92,15 +91,9 @@ class HighContrastColorReplaceDeciderTest {
         HighContrastColorCombination combination = HighContrastColorCombination.BLACK_TEXT_ON_WHITE;
 
         // Act
-        String[] colors1 =
-                HighContrastColorReplaceDecider.getColors(
-                        ReplaceAndInvert.HIGH_CONTRAST_COLOR, combination);
-        String[] colors2 =
-                HighContrastColorReplaceDecider.getColors(
-                        ReplaceAndInvert.CUSTOM_COLOR, combination);
-        String[] colors3 =
-                HighContrastColorReplaceDecider.getColors(
-                        ReplaceAndInvert.FULL_INVERSION, combination);
+        String[] colors1 = HighContrastColorReplaceDecider.getColors(ReplaceAndInvert.HIGH_CONTRAST_COLOR, combination);
+        String[] colors2 = HighContrastColorReplaceDecider.getColors(ReplaceAndInvert.CUSTOM_COLOR, combination);
+        String[] colors3 = HighContrastColorReplaceDecider.getColors(ReplaceAndInvert.FULL_INVERSION, combination);
 
         // Assert - all should return the same colors, showing that the ReplaceAndInvert parameter
         // isn't used

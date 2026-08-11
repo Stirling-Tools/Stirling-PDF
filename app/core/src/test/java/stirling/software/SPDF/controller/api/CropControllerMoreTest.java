@@ -56,28 +56,32 @@ import stirling.software.common.util.TempFileManager;
 @DisplayName("CropController additional branch tests")
 class CropControllerMoreTest {
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @InjectMocks private CropController cropController;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @InjectMocks
+    private CropController cropController;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile(
-                                                    tempDir, "crop", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            lenient().when(tf.getAbsolutePath()).thenReturn(f.getAbsolutePath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile(tempDir, "crop", inv.<String>getArgument(0))
+                    .toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            lenient().when(tf.getAbsolutePath()).thenReturn(f.getAbsolutePath());
+            return tf;
+        });
     }
 
     private MockMultipartFile pdf(int pages) throws IOException {
@@ -88,8 +92,7 @@ class CropControllerMoreTest {
             }
             doc.save(p.toFile());
         }
-        return new MockMultipartFile(
-                "fileInput", "src.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(p));
+        return new MockMultipartFile("fileInput", "src.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(p));
     }
 
     private CropPdfForm form(MockMultipartFile file, boolean removeOutside) {
@@ -109,8 +112,7 @@ class CropControllerMoreTest {
     class GhostscriptRouting {
 
         @Test
-        @DisplayName(
-                "removeDataOutsideCrop with Ghostscript disabled falls back to the PDFBox path")
+        @DisplayName("removeDataOutsideCrop with Ghostscript disabled falls back to the PDFBox path")
         void disabledFallsBackToPdfBox() throws Exception {
             MockMultipartFile file = pdf(1);
             CropPdfForm request = form(file, true);
@@ -167,11 +169,9 @@ class CropControllerMoreTest {
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
                         .thenReturn(executor);
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenThrow(new InterruptedException("stop"));
+                when(executor.runCommandWithOutputHandling(any())).thenThrow(new InterruptedException("stop"));
 
-                org.junit.jupiter.api.Assertions.assertThrows(
-                        Exception.class, () -> cropController.cropPdf(request));
+                org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> cropController.cropPdf(request));
             }
         }
     }
@@ -184,9 +184,7 @@ class CropControllerMoreTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            detect =
-                    CropController.class.getDeclaredMethod(
-                            "detectContentBounds", BufferedImage.class);
+            detect = CropController.class.getDeclaredMethod("detectContentBounds", BufferedImage.class);
             detect.setAccessible(true);
         }
 

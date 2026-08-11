@@ -45,8 +45,7 @@ import stirling.software.common.util.ExceptionUtils;
 public class AttachmentService implements AttachmentServiceInterface {
 
     private static final long DEFAULT_MAX_ATTACHMENT_SIZE_BYTES = 50L * 1024 * 1024; // 50 MB
-    private static final long DEFAULT_MAX_TOTAL_ATTACHMENT_SIZE_BYTES =
-            200L * 1024 * 1024; // 200 MB
+    private static final long DEFAULT_MAX_TOTAL_ATTACHMENT_SIZE_BYTES = 200L * 1024 * 1024; // 200 MB
 
     private final long maxAttachmentSizeBytes;
     private final long maxTotalAttachmentSizeBytes;
@@ -61,8 +60,7 @@ public class AttachmentService implements AttachmentServiceInterface {
     }
 
     @Override
-    public PDDocument addAttachment(PDDocument document, List<MultipartFile> attachments)
-            throws IOException {
+    public PDDocument addAttachment(PDDocument document, List<MultipartFile> attachments) throws IOException {
         PDEmbeddedFilesNameTreeNode embeddedFilesTree = getEmbeddedFilesTree(document);
         Map<String, PDComplexFileSpecification> existingNames;
 
@@ -81,43 +79,38 @@ public class AttachmentService implements AttachmentServiceInterface {
             throw e;
         }
 
-        attachments.forEach(
-                attachment -> {
-                    String filename = attachment.getOriginalFilename();
+        attachments.forEach(attachment -> {
+            String filename = attachment.getOriginalFilename();
 
-                    try {
-                        PDEmbeddedFile embeddedFile =
-                                new PDEmbeddedFile(document, attachment.getInputStream());
-                        embeddedFile.setSize((int) attachment.getSize());
-                        // use java.time.Instant and convert to GregorianCalendar for PDFBox
-                        Instant now = Instant.now();
-                        GregorianCalendar nowCal =
-                                GregorianCalendar.from(
-                                        ZonedDateTime.ofInstant(now, ZoneId.systemDefault()));
-                        embeddedFile.setCreationDate(nowCal);
-                        embeddedFile.setModDate(nowCal);
-                        String contentType = attachment.getContentType();
-                        if (StringUtils.isNotBlank(contentType)) {
-                            embeddedFile.setSubtype(contentType);
-                        }
+            try {
+                PDEmbeddedFile embeddedFile = new PDEmbeddedFile(document, attachment.getInputStream());
+                embeddedFile.setSize((int) attachment.getSize());
+                // use java.time.Instant and convert to GregorianCalendar for PDFBox
+                Instant now = Instant.now();
+                GregorianCalendar nowCal = GregorianCalendar.from(ZonedDateTime.ofInstant(now, ZoneId.systemDefault()));
+                embeddedFile.setCreationDate(nowCal);
+                embeddedFile.setModDate(nowCal);
+                String contentType = attachment.getContentType();
+                if (StringUtils.isNotBlank(contentType)) {
+                    embeddedFile.setSubtype(contentType);
+                }
 
-                        // Create attachments specification and associate embedded attachment with
-                        // file
-                        PDComplexFileSpecification fileSpecification =
-                                new PDComplexFileSpecification();
-                        fileSpecification.setFile(filename);
-                        fileSpecification.setFileUnicode(filename);
-                        fileSpecification.setFileDescription("Embedded attachment: " + filename);
-                        fileSpecification.setEmbeddedFile(embeddedFile);
-                        fileSpecification.setEmbeddedFileUnicode(embeddedFile);
+                // Create attachments specification and associate embedded attachment with
+                // file
+                PDComplexFileSpecification fileSpecification = new PDComplexFileSpecification();
+                fileSpecification.setFile(filename);
+                fileSpecification.setFileUnicode(filename);
+                fileSpecification.setFileDescription("Embedded attachment: " + filename);
+                fileSpecification.setEmbeddedFile(embeddedFile);
+                fileSpecification.setEmbeddedFileUnicode(embeddedFile);
 
-                        existingNames.put(filename, fileSpecification);
+                existingNames.put(filename, fileSpecification);
 
-                        log.info("Added attachment: {} ({} bytes)", filename, attachment.getSize());
-                    } catch (IOException e) {
-                        log.warn("Failed to create embedded file for attachment: {}", filename, e);
-                    }
-                });
+                log.info("Added attachment: {} ({} bytes)", filename, attachment.getSize());
+            } catch (IOException e) {
+                log.warn("Failed to create embedded file for attachment: {}", filename, e);
+            }
+        });
 
         embeddedFilesTree.setNames(existingNames);
         setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
@@ -160,9 +153,7 @@ public class AttachmentService implements AttachmentServiceInterface {
                 PDEmbeddedFile embeddedFile = getEmbeddedFile(fileSpecification);
 
                 if (embeddedFile == null) {
-                    log.debug(
-                            "Skipping attachment {} because embedded file was null",
-                            entry.getKey());
+                    log.debug("Skipping attachment {} because embedded file was null", entry.getKey());
                     continue;
                 }
 
@@ -263,13 +254,7 @@ public class AttachmentService implements AttachmentServiceInterface {
                 }
 
                 AttachmentInfo attachmentInfo =
-                        new AttachmentInfo(
-                                filename,
-                                size,
-                                contentType,
-                                description,
-                                creationDate,
-                                modificationDate);
+                        new AttachmentInfo(filename, size, contentType, description, creationDate, modificationDate);
 
                 attachments.add(attachmentInfo);
             }
@@ -279,8 +264,7 @@ public class AttachmentService implements AttachmentServiceInterface {
     }
 
     @Override
-    public PDDocument renameAttachment(PDDocument document, String attachmentName, String newName)
-            throws IOException {
+    public PDDocument renameAttachment(PDDocument document, String attachmentName, String newName) throws IOException {
         PDEmbeddedFilesNameTreeNode embeddedFilesTree = getEmbeddedFilesTree(document);
 
         Map<String, PDComplexFileSpecification> allEmbeddedFiles = new LinkedHashMap<>();
@@ -301,9 +285,7 @@ public class AttachmentService implements AttachmentServiceInterface {
         if (fileToRename == null || keyToRename == null) {
             log.warn("Attachment '{}' not found for renaming", attachmentName);
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.attachmentNotFound",
-                    "Attachment ''{0}'' not found for renaming",
-                    attachmentName);
+                    "error.attachmentNotFound", "Attachment ''{0}'' not found for renaming", attachmentName);
         }
 
         fileToRename.setFile(newName);
@@ -321,8 +303,7 @@ public class AttachmentService implements AttachmentServiceInterface {
     }
 
     @Override
-    public PDDocument deleteAttachment(PDDocument document, String attachmentName)
-            throws IOException {
+    public PDDocument deleteAttachment(PDDocument document, String attachmentName) throws IOException {
         PDEmbeddedFilesNameTreeNode embeddedFilesTree = getEmbeddedFilesTree(document);
 
         Map<String, PDComplexFileSpecification> allEmbeddedFiles = new LinkedHashMap<>();
@@ -341,9 +322,7 @@ public class AttachmentService implements AttachmentServiceInterface {
         if (keyToRemove == null) {
             log.warn("Attachment '{}' not found for deletion", attachmentName);
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.attachmentNotFound",
-                    "Attachment ''{0}'' not found for deletion",
-                    attachmentName);
+                    "error.attachmentNotFound", "Attachment ''{0}'' not found for deletion", attachmentName);
         }
 
         allEmbeddedFiles.remove(keyToRemove);
@@ -386,8 +365,7 @@ public class AttachmentService implements AttachmentServiceInterface {
     }
 
     private void collectEmbeddedFiles(
-            PDNameTreeNode<PDComplexFileSpecification> node,
-            Map<String, PDComplexFileSpecification> collector)
+            PDNameTreeNode<PDComplexFileSpecification> node, Map<String, PDComplexFileSpecification> collector)
             throws IOException {
         if (node == null) {
             return;

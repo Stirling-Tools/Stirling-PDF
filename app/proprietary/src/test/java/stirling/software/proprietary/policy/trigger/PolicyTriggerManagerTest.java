@@ -19,8 +19,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class PolicyTriggerManagerTest {
 
-    @Mock private PolicyTrigger triggerA;
-    @Mock private PolicyTrigger triggerB;
+    @Mock
+    private PolicyTrigger triggerA;
+
+    @Mock
+    private PolicyTrigger triggerB;
 
     @Test
     void startsAndStopsAllTriggers() {

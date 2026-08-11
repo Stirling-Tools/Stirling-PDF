@@ -24,7 +24,8 @@ import stirling.software.common.model.job.JobResult;
 
 class TaskManagerJobStoreDelegationTest {
 
-    @Mock private FileStorage fileStorage;
+    @Mock
+    private FileStorage fileStorage;
 
     private InProcessJobStore jobStore;
     private ClusterBackplane backplane;
@@ -67,30 +68,29 @@ class TaskManagerJobStoreDelegationTest {
 
     @Test
     void cleanupOldJobsIsNoopWhenBackplaneIsNotInProcess() {
-        ClusterBackplane mockedValkeyBackplane =
-                new ClusterBackplane() {
-                    @Override
-                    public boolean isHealthy() {
-                        return true;
-                    }
+        ClusterBackplane mockedValkeyBackplane = new ClusterBackplane() {
+            @Override
+            public boolean isHealthy() {
+                return true;
+            }
 
-                    @Override
-                    public String backplaneType() {
-                        return "valkey";
-                    }
+            @Override
+            public String backplaneType() {
+                return "valkey";
+            }
 
-                    @Override
-                    public String localNodeId() {
-                        return "node-1";
-                    }
+            @Override
+            public String localNodeId() {
+                return "node-1";
+            }
 
-                    @Override
-                    public boolean shouldRunLocalCleanup() {
-                        // Distributed backplanes own job TTL eviction themselves; this mock
-                        // mirrors the real ValkeyClusterBackplane override of the default true.
-                        return false;
-                    }
-                };
+            @Override
+            public boolean shouldRunLocalCleanup() {
+                // Distributed backplanes own job TTL eviction themselves; this mock
+                // mirrors the real ValkeyClusterBackplane override of the default true.
+                return false;
+            }
+        };
         TaskManager tm = new TaskManager(fileStorage, jobStore, mockedValkeyBackplane);
         ReflectionTestUtils.setField(tm, "jobResultExpiryMinutes", 30);
         tm.createTask("job-4");
@@ -113,8 +113,7 @@ class TaskManagerJobStoreDelegationTest {
 
     @SuppressWarnings("unchecked")
     private static void ageJobPastExpiry(TaskManager tm, String jobId) {
-        var jobResults =
-                (java.util.Map<String, JobResult>) ReflectionTestUtils.getField(tm, "jobResults");
+        var jobResults = (java.util.Map<String, JobResult>) ReflectionTestUtils.getField(tm, "jobResults");
         JobResult result = jobResults.get(jobId);
         ReflectionTestUtils.setField(result, "completedAt", LocalDateTime.now().minusHours(2));
         ReflectionTestUtils.setField(result, "complete", true);

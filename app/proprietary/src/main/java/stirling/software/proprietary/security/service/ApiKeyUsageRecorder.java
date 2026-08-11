@@ -33,8 +33,7 @@ public class ApiKeyUsageRecorder {
             // First writer of the day inserts the row; everyone else (and the loser of an insert
             // race) increments. Separate transactions mean a unique-key clash never rolls back an
             // already-counted request.
-            if (writer.increment(apiKeyId, epochDay) == 0
-                    && !firstUseInserted(apiKeyId, epochDay)) {
+            if (writer.increment(apiKeyId, epochDay) == 0 && !firstUseInserted(apiKeyId, epochDay)) {
                 writer.increment(apiKeyId, epochDay);
             }
             writer.stampLastUsed(apiKeyId);

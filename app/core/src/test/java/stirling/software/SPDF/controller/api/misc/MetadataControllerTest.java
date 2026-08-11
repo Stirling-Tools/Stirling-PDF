@@ -30,8 +30,11 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class MetadataControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @InjectMocks private MetadataController metadataController;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @InjectMocks
+    private MetadataController metadataController;
 
     private PDDocument mockDocument;
     private PDDocumentInformation mockInfo;
@@ -219,8 +222,7 @@ class MetadataControllerTest {
 
     @Test
     void testMetadata_ioExceptionOnLoad() throws Exception {
-        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true)))
-                .thenThrow(new IOException("corrupt"));
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenThrow(new IOException("corrupt"));
 
         MetadataRequest request = new MetadataRequest();
         request.setFileInput(mockFile);

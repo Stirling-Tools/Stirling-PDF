@@ -52,8 +52,7 @@ public class ConvertPDFToOffice {
     @Operation(
             summary = "Convert PDF to Presentation format",
             description = "This endpoint converts a given PDF file to a Presentation format.")
-    public ResponseEntity<Resource> processPdfToPresentation(
-            @ModelAttribute PdfToPresentationRequest request)
+    public ResponseEntity<Resource> processPdfToPresentation(@ModelAttribute PdfToPresentationRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
@@ -75,14 +74,12 @@ public class ConvertPDFToOffice {
     @Operation(
             summary = "Convert PDF to Text or RTF format",
             description = "This endpoint converts a given PDF file to Text or RTF format.")
-    public ResponseEntity<Resource> processPdfToRTForTXT(
-            @ModelAttribute PdfToTextOrRTFRequest request)
+    public ResponseEntity<Resource> processPdfToRTForTXT(@ModelAttribute PdfToTextOrRTFRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
         if ("txt".equals(request.getOutputFormat())) {
-            String fileName =
-                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt");
+            String fileName = GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt");
             TempFile finalOut = tempFileManager.createManagedTempFile(".txt");
             try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
                 PDFTextStripper stripper = new PDFTextStripper();
@@ -120,9 +117,7 @@ public class ConvertPDFToOffice {
             value = "/pdf/xml",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @ToolIO(produces = ToolFormat.XML)
-    @Operation(
-            summary = "Convert PDF to XML",
-            description = "This endpoint converts a PDF file to an XML file.")
+    @Operation(summary = "Convert PDF to XML", description = "This endpoint converts a PDF file to an XML file.")
     public ResponseEntity<Resource> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
 

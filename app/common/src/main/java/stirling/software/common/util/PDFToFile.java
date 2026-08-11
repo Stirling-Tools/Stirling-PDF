@@ -35,8 +35,7 @@ import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 @Slf4j
 public class PDFToFile {
 
-    private static final Pattern PATTERN =
-            Pattern.compile("(!\\[.*?\\])\\((?!images/)([^/)][^)]*?)\\)");
+    private static final Pattern PATTERN = Pattern.compile("(!\\[.*?\\])\\((?!images/)([^/)][^)]*?)\\)");
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
 
@@ -55,27 +54,14 @@ public class PDFToFile {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        MutableDataSet options =
-                new MutableDataSet()
-                        .set(
-                                FlexmarkHtmlConverter.MAX_BLANK_LINES,
-                                2) // Control max consecutive blank lines
-                        .set(
-                                FlexmarkHtmlConverter.MAX_TRAILING_BLANK_LINES,
-                                1) // Control trailing blank lines
-                        .set(
-                                FlexmarkHtmlConverter.SETEXT_HEADINGS,
-                                true) // Use Setext headings for h1 and h2
-                        .set(
-                                FlexmarkHtmlConverter.OUTPUT_UNKNOWN_TAGS,
-                                false) // Don't output HTML for unknown tags
-                        .set(
-                                FlexmarkHtmlConverter.TYPOGRAPHIC_QUOTES,
-                                true) // Convert quotation marks
-                        .set(
-                                FlexmarkHtmlConverter.BR_AS_PARA_BREAKS,
-                                true) // Convert <br> to paragraph breaks
-                        .set(FlexmarkHtmlConverter.CODE_INDENT, "    "); // Indent for code blocks
+        MutableDataSet options = new MutableDataSet()
+                .set(FlexmarkHtmlConverter.MAX_BLANK_LINES, 2) // Control max consecutive blank lines
+                .set(FlexmarkHtmlConverter.MAX_TRAILING_BLANK_LINES, 1) // Control trailing blank lines
+                .set(FlexmarkHtmlConverter.SETEXT_HEADINGS, true) // Use Setext headings for h1 and h2
+                .set(FlexmarkHtmlConverter.OUTPUT_UNKNOWN_TAGS, false) // Don't output HTML for unknown tags
+                .set(FlexmarkHtmlConverter.TYPOGRAPHIC_QUOTES, true) // Convert quotation marks
+                .set(FlexmarkHtmlConverter.BR_AS_PARA_BREAKS, true) // Convert <br> to paragraph breaks
+                .set(FlexmarkHtmlConverter.CODE_INDENT, "    "); // Indent for code blocks
 
         FlexmarkHtmlConverter htmlToMarkdownConverter =
                 FlexmarkHtmlConverter.builder(options).build();
@@ -93,20 +79,12 @@ public class PDFToFile {
                     TempDirectory tempOutputDir = new TempDirectory(tempFileManager)) {
                 inputFile.transferTo(tempInputFile.getFile());
 
-                List<String> command =
-                        new ArrayList<>(
-                                Arrays.asList(
-                                        "pdftohtml",
-                                        "-s",
-                                        "-noframes",
-                                        "-c",
-                                        tempInputFile.getAbsolutePath(),
-                                        pdfBaseName));
+                List<String> command = new ArrayList<>(Arrays.asList(
+                        "pdftohtml", "-s", "-noframes", "-c", tempInputFile.getAbsolutePath(), pdfBaseName));
 
-                ProcessExecutorResult returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
-                                .runCommandWithOutputHandling(
-                                        command, tempOutputDir.getPath().toFile());
+                ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
+                        .runCommandWithOutputHandling(
+                                command, tempOutputDir.getPath().toFile());
                 // Process HTML files to Markdown
                 File[] outputFiles =
                         Objects.requireNonNull(tempOutputDir.getPath().toFile().listFiles());
@@ -155,8 +133,7 @@ public class PDFToFile {
             finalOut.close();
             throw e;
         }
-        return WebResponseUtils.fileToWebResponse(
-                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.fileToWebResponse(finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
 
     /**
@@ -169,8 +146,7 @@ public class PDFToFile {
         return PATTERN.matcher(markdown).replaceAll("$1(images/$2)");
     }
 
-    public ResponseEntity<Resource> processPdfToHtml(MultipartFile inputFile)
-            throws IOException, InterruptedException {
+    public ResponseEntity<Resource> processPdfToHtml(MultipartFile inputFile) throws IOException, InterruptedException {
         if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -196,16 +172,14 @@ public class PDFToFile {
 
                 // Run the pdftohtml command with complex output
                 List<String> command =
-                        new ArrayList<>(
-                                Arrays.asList(
-                                        "pdftohtml", "-c", tempInputFile.toString(), pdfBaseName));
+                        new ArrayList<>(Arrays.asList("pdftohtml", "-c", tempInputFile.toString(), pdfBaseName));
 
-                ProcessExecutorResult returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
-                                .runCommandWithOutputHandling(command, tempOutputDir.toFile());
+                ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
+                        .runCommandWithOutputHandling(command, tempOutputDir.toFile());
 
                 // Get output files
-                File[] outputFiles = Objects.requireNonNull(tempOutputDir.toFile().listFiles());
+                File[] outputFiles =
+                        Objects.requireNonNull(tempOutputDir.toFile().listFiles());
 
                 try (OutputStream fos = Files.newOutputStream(finalOut.getPath());
                         ZipOutputStream zipOutputStream = new ZipOutputStream(fos)) {
@@ -228,8 +202,7 @@ public class PDFToFile {
             throw e;
         }
 
-        return WebResponseUtils.fileToWebResponse(
-                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.fileToWebResponse(finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
 
     public ResponseEntity<Resource> processPdfToOfficeFormat(
@@ -259,8 +232,7 @@ public class PDFToFile {
         }
 
         String fileName;
-        TempFile finalOut =
-                tempFileManager.createManagedTempFile("." + resolvePrimaryExtension(outputFormat));
+        TempFile finalOut = tempFileManager.createManagedTempFile("." + resolvePrimaryExtension(outputFormat));
         Path libreOfficeProfile = null;
         try {
             try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
@@ -268,9 +240,7 @@ public class PDFToFile {
 
                 Path tempInputFile = inputFileTemp.getPath();
                 Path tempOutputDir = outputDirTemp.getPath();
-                Path unoOutputFile =
-                        tempOutputDir.resolve(
-                                pdfBaseName + "." + resolvePrimaryExtension(outputFormat));
+                Path unoOutputFile = tempOutputDir.resolve(pdfBaseName + "." + resolvePrimaryExtension(outputFormat));
 
                 // Save the uploaded file to a temporary location
                 inputFile.transferTo(tempInputFile);
@@ -282,19 +252,12 @@ public class PDFToFile {
                 if (isUnoConvertEnabled()) {
                     try {
                         List<String> unoCommand =
-                                buildUnoConvertCommand(
-                                        tempInputFile,
-                                        unoOutputFile,
-                                        outputFormat,
-                                        libreOfficeFilter);
-                        returnCode =
-                                ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                                        .runCommandWithOutputHandling(unoCommand);
+                                buildUnoConvertCommand(tempInputFile, unoOutputFile, outputFormat, libreOfficeFilter);
+                        returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                                .runCommandWithOutputHandling(unoCommand);
                     } catch (IOException e) {
                         unoconvertException = e;
-                        log.warn(
-                                "Unoconvert command failed ({}). Falling back to soffice command.",
-                                e.getMessage());
+                        log.warn("Unoconvert command failed ({}). Falling back to soffice command.", e.getMessage());
                     }
                 }
 
@@ -303,7 +266,8 @@ public class PDFToFile {
                     libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
                     List<String> command = new ArrayList<>();
                     command.add(runtimePathConfig.getSOfficePath());
-                    command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
+                    command.add("-env:UserInstallation="
+                            + libreOfficeProfile.toUri().toString());
                     command.add("--headless");
                     command.add("--nologo");
                     command.add("--infilter=" + libreOfficeFilter);
@@ -314,9 +278,8 @@ public class PDFToFile {
                     command.add(tempInputFile.toString());
 
                     try {
-                        returnCode =
-                                ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                                        .runCommandWithOutputHandling(command);
+                        returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                                .runCommandWithOutputHandling(command);
                     } catch (IOException e) {
                         if (unoconvertException != null) {
                             e.addSuppressed(unoconvertException);
@@ -365,8 +328,7 @@ public class PDFToFile {
                 FileUtils.deleteQuietly(libreOfficeProfile.toFile());
             }
         }
-        return WebResponseUtils.fileToWebResponse(
-                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.fileToWebResponse(finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
 
     private boolean isUnoConvertEnabled() {

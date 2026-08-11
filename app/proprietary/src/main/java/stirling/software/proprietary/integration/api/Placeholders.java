@@ -49,11 +49,10 @@ final class Placeholders {
             String path = matcher.group(1);
             JsonNode value = lookup(context, path);
             if (value == null || value.isMissingNode()) {
-                throw new IllegalArgumentException(
-                        "unknown placeholder '{{"
-                                + path
-                                + "}}'; available: document.*, classification.*,"
-                                + " sensitivityLabel.*, run.*");
+                throw new IllegalArgumentException("unknown placeholder '{{"
+                        + path
+                        + "}}'; available: document.*, classification.*,"
+                        + " sensitivityLabel.*, run.*");
             }
             matcher.appendReplacement(out, Matcher.quoteReplacement(render(value, escaping)));
         }
@@ -134,14 +133,13 @@ final class Placeholders {
         for (byte b : text.getBytes(java.nio.charset.StandardCharsets.UTF_8)) {
             char c = (char) (b & 0xFF);
             // RFC 3986 unreserved.
-            boolean unreserved =
-                    (c >= 'a' && c <= 'z')
-                            || (c >= 'A' && c <= 'Z')
-                            || (c >= '0' && c <= '9')
-                            || c == '-'
-                            || c == '.'
-                            || c == '_'
-                            || c == '~';
+            boolean unreserved = (c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9')
+                    || c == '-'
+                    || c == '.'
+                    || c == '_'
+                    || c == '~';
             if (unreserved) {
                 out.append(c);
             } else {

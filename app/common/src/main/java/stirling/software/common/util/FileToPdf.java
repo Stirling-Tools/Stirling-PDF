@@ -31,23 +31,16 @@ public class FileToPdf {
             throws IOException, InterruptedException {
 
         try (TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf")) {
-            try (TempFile tempInputFile =
-                    new TempFile(
-                            tempFileManager,
-                            fileName.toLowerCase(Locale.ROOT).endsWith(".html")
-                                    ? ".html"
-                                    : ".zip")) {
+            try (TempFile tempInputFile = new TempFile(
+                    tempFileManager, fileName.toLowerCase(Locale.ROOT).endsWith(".html") ? ".html" : ".zip")) {
 
                 if (fileName.toLowerCase(Locale.ROOT).endsWith(".html")) {
                     String sanitizedHtml =
-                            sanitizeHtmlContent(
-                                    new String(fileBytes, StandardCharsets.UTF_8),
-                                    customHtmlSanitizer);
+                            sanitizeHtmlContent(new String(fileBytes, StandardCharsets.UTF_8), customHtmlSanitizer);
                     Files.writeString(tempInputFile.getPath(), sanitizedHtml);
                 } else if (fileName.toLowerCase(Locale.ROOT).endsWith(".zip")) {
                     Files.write(tempInputFile.getPath(), fileBytes);
-                    sanitizeHtmlFilesInZip(
-                            tempInputFile.getPath(), tempFileManager, customHtmlSanitizer);
+                    sanitizeHtmlFilesInZip(tempInputFile.getPath(), tempFileManager, customHtmlSanitizer);
                 } else {
                     throw ExceptionUtils.createHtmlFileRequiredException();
                 }
@@ -61,47 +54,38 @@ public class FileToPdf {
                 command.add(tempInputFile.getAbsolutePath());
                 command.add(tempOutputFile.getAbsolutePath());
 
-                ProcessExecutorResult returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
-                                .runCommandWithOutputHandling(command);
+                ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
+                        .runCommandWithOutputHandling(command);
 
                 return Files.readAllBytes(tempOutputFile.getPath());
             } // tempInputFile auto-closed
         } // tempOutputFile auto-closed
     }
 
-    private static String sanitizeHtmlContent(
-            String htmlContent, CustomHtmlSanitizer customHtmlSanitizer) {
+    private static String sanitizeHtmlContent(String htmlContent, CustomHtmlSanitizer customHtmlSanitizer) {
         return customHtmlSanitizer.sanitize(htmlContent);
     }
 
     private static void sanitizeHtmlFilesInZip(
-            Path zipFilePath,
-            TempFileManager tempFileManager,
-            CustomHtmlSanitizer customHtmlSanitizer)
+            Path zipFilePath, TempFileManager tempFileManager, CustomHtmlSanitizer customHtmlSanitizer)
             throws IOException {
         try (TempDirectory tempUnzippedDir = new TempDirectory(tempFileManager)) {
-            try (ZipInputStream zipIn =
-                    ZipSecurity.createHardenedInputStream(Files.newInputStream(zipFilePath))) {
+            try (ZipInputStream zipIn = ZipSecurity.createHardenedInputStream(Files.newInputStream(zipFilePath))) {
                 ZipEntry entry = zipIn.getNextEntry();
                 while (entry != null) {
-                    Path filePath =
-                            tempUnzippedDir.getPath().resolve(sanitizeZipFilename(entry.getName()));
+                    Path filePath = tempUnzippedDir.getPath().resolve(sanitizeZipFilename(entry.getName()));
                     Path normalizedTargetDir =
                             tempUnzippedDir.getPath().toAbsolutePath().normalize();
                     Path normalizedFilePath = filePath.toAbsolutePath().normalize();
                     if (!normalizedFilePath.startsWith(normalizedTargetDir)) {
-                        throw new IOException(
-                                "Zip entry path escapes target directory: " + entry.getName());
+                        throw new IOException("Zip entry path escapes target directory: " + entry.getName());
                     }
                     if (!entry.isDirectory()) {
                         Files.createDirectories(filePath.getParent());
                         if (entry.getName().toLowerCase(Locale.ROOT).endsWith(".html")
                                 || entry.getName().toLowerCase(Locale.ROOT).endsWith(".htm")) {
-                            String content =
-                                    new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
-                            String sanitizedContent =
-                                    sanitizeHtmlContent(content, customHtmlSanitizer);
+                            String content = new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
+                            String sanitizedContent = sanitizeHtmlContent(content, customHtmlSanitizer);
                             Files.writeString(filePath, sanitizedContent);
                         } else {
                             Files.copy(zipIn, filePath);
@@ -118,22 +102,18 @@ public class FileToPdf {
     }
 
     private static void zipDirectory(Path sourceDir, Path zipFilePath) throws IOException {
-        try (ZipOutputStream zos =
-                new ZipOutputStream(new FileOutputStream(zipFilePath.toFile()))) {
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFilePath.toFile()))) {
             try (Stream<Path> walk = Files.walk(sourceDir)) {
-                walk.filter(path -> !Files.isDirectory(path))
-                        .forEach(
-                                path -> {
-                                    ZipEntry zipEntry =
-                                            new ZipEntry(sourceDir.relativize(path).toString());
-                                    try {
-                                        zos.putNextEntry(zipEntry);
-                                        Files.copy(path, zos);
-                                        zos.closeEntry();
-                                    } catch (IOException e) {
-                                        throw new UncheckedIOException(e);
-                                    }
-                                });
+                walk.filter(path -> !Files.isDirectory(path)).forEach(path -> {
+                    ZipEntry zipEntry = new ZipEntry(sourceDir.relativize(path).toString());
+                    try {
+                        zos.putNextEntry(zipEntry);
+                        Files.copy(path, zos);
+                        zos.closeEntry();
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                });
             }
         }
     }
@@ -143,27 +123,24 @@ public class FileToPdf {
             return "";
         }
         // Remove any drive letters (e.g., "C:\") and leading forward/backslashes
-        entryName =
-                RegexPatternUtils.getInstance()
-                        .getDriveLetterPattern()
-                        .matcher(entryName)
-                        .replaceAll("");
-        entryName =
-                RegexPatternUtils.getInstance()
-                        .getLeadingSlashesPattern()
-                        .matcher(entryName)
-                        .replaceAll("");
+        entryName = RegexPatternUtils.getInstance()
+                .getDriveLetterPattern()
+                .matcher(entryName)
+                .replaceAll("");
+        entryName = RegexPatternUtils.getInstance()
+                .getLeadingSlashesPattern()
+                .matcher(entryName)
+                .replaceAll("");
 
         // Recursively remove path traversal sequences
         while (entryName.contains("../") || entryName.contains("..\\")) {
             entryName = entryName.replace("../", "").replace("..\\", "");
         }
         // Normalize all backslashes to forward slashes
-        entryName =
-                RegexPatternUtils.getInstance()
-                        .getBackslashPattern()
-                        .matcher(entryName)
-                        .replaceAll("/");
+        entryName = RegexPatternUtils.getInstance()
+                .getBackslashPattern()
+                .matcher(entryName)
+                .replaceAll("/");
         return entryName;
     }
 }

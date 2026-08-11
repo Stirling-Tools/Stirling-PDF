@@ -20,13 +20,17 @@ import stirling.software.common.util.misc.ReplaceAndInvertColorStrategy;
 
 class ReplaceAndInvertColorServiceTest {
 
-    @Mock private ReplaceAndInvertColorFactory replaceAndInvertColorFactory;
+    @Mock
+    private ReplaceAndInvertColorFactory replaceAndInvertColorFactory;
 
-    @Mock private MultipartFile file;
+    @Mock
+    private MultipartFile file;
 
-    @Mock private ReplaceAndInvertColorStrategy replaceAndInvertColorStrategy;
+    @Mock
+    private ReplaceAndInvertColorStrategy replaceAndInvertColorStrategy;
 
-    @InjectMocks private ReplaceAndInvertColorService replaceAndInvertColorService;
+    @InjectMocks
+    private ReplaceAndInvertColorService replaceAndInvertColorService;
 
     @BeforeEach
     void setUp() {
@@ -37,41 +41,27 @@ class ReplaceAndInvertColorServiceTest {
     void testReplaceAndInvertColor() throws IOException {
         // Arrange
         ReplaceAndInvert replaceAndInvertOption = mock(ReplaceAndInvert.class);
-        HighContrastColorCombination highContrastColorCombination =
-                mock(HighContrastColorCombination.class);
+        HighContrastColorCombination highContrastColorCombination = mock(HighContrastColorCombination.class);
         String backGroundColor = "#FFFFFF";
         String textColor = "#000000";
 
         when(replaceAndInvertColorFactory.replaceAndInvert(
-                        file,
-                        replaceAndInvertOption,
-                        highContrastColorCombination,
-                        backGroundColor,
-                        textColor))
+                        file, replaceAndInvertOption, highContrastColorCombination, backGroundColor, textColor))
                 .thenReturn(replaceAndInvertColorStrategy);
 
         InputStreamResource expectedResource = mock(InputStreamResource.class);
         when(replaceAndInvertColorStrategy.replace()).thenReturn(expectedResource);
 
         // Act
-        InputStreamResource result =
-                replaceAndInvertColorService.replaceAndInvertColor(
-                        file,
-                        replaceAndInvertOption,
-                        highContrastColorCombination,
-                        backGroundColor,
-                        textColor);
+        InputStreamResource result = replaceAndInvertColorService.replaceAndInvertColor(
+                file, replaceAndInvertOption, highContrastColorCombination, backGroundColor, textColor);
 
         // Assert
         assertNotNull(result);
         assertEquals(expectedResource, result);
         verify(replaceAndInvertColorFactory, times(1))
                 .replaceAndInvert(
-                        file,
-                        replaceAndInvertOption,
-                        highContrastColorCombination,
-                        backGroundColor,
-                        textColor);
+                        file, replaceAndInvertOption, highContrastColorCombination, backGroundColor, textColor);
         verify(replaceAndInvertColorStrategy, times(1)).replace();
     }
 }

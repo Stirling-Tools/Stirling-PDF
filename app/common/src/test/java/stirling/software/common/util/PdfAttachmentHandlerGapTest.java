@@ -38,7 +38,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PdfAttachmentHandlerGapTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
     // ----- helpers -------------------------------------------------------
 
@@ -111,8 +112,7 @@ class PdfAttachmentHandlerGapTest {
         @DisplayName("null attachment list returns the original bytes untouched")
         void nullAttachments_returnsOriginalBytes() throws Exception {
             byte[] original = {1, 2, 3, 4};
-            byte[] result =
-                    PdfAttachmentHandler.attachFilesToPdf(original, null, pdfDocumentFactory);
+            byte[] result = PdfAttachmentHandler.attachFilesToPdf(original, null, pdfDocumentFactory);
             assertSame(original, result);
             verifyNoInteractions(pdfDocumentFactory);
         }
@@ -121,9 +121,7 @@ class PdfAttachmentHandlerGapTest {
         @DisplayName("empty attachment list returns the original bytes untouched")
         void emptyAttachments_returnsOriginalBytes() throws Exception {
             byte[] original = {9, 8, 7};
-            byte[] result =
-                    PdfAttachmentHandler.attachFilesToPdf(
-                            original, new ArrayList<>(), pdfDocumentFactory);
+            byte[] result = PdfAttachmentHandler.attachFilesToPdf(original, new ArrayList<>(), pdfDocumentFactory);
             assertSame(original, result);
             verifyNoInteractions(pdfDocumentFactory);
         }
@@ -138,9 +136,7 @@ class PdfAttachmentHandlerGapTest {
             attachments.add(attachment("empty.pdf", new byte[0]));
             attachments.add(attachment("alsoEmpty.pdf", null));
 
-            byte[] result =
-                    PdfAttachmentHandler.attachFilesToPdf(
-                            pdfBytes, attachments, pdfDocumentFactory);
+            byte[] result = PdfAttachmentHandler.attachFilesToPdf(pdfBytes, attachments, pdfDocumentFactory);
 
             assertNotNull(result);
             assertTrue(result.length > 0);
@@ -163,9 +159,7 @@ class PdfAttachmentHandlerGapTest {
             List<EmlParser.EmailAttachment> attachments = new ArrayList<>();
             attachments.add(attachment("report.pdf", "hello".getBytes(StandardCharsets.UTF_8)));
 
-            byte[] result =
-                    PdfAttachmentHandler.attachFilesToPdf(
-                            pdfBytes, attachments, pdfDocumentFactory);
+            byte[] result = PdfAttachmentHandler.attachFilesToPdf(pdfBytes, attachments, pdfDocumentFactory);
 
             List<String> embedded = embeddedFileNames(result);
             assertEquals(1, embedded.size());
@@ -175,16 +169,13 @@ class PdfAttachmentHandlerGapTest {
         @Test
         @DisplayName("embeds attachment and adds an annotation when an '@' marker matches")
         void embedsAttachment_withMatchingMarker() throws Exception {
-            byte[] pdfBytes =
-                    pdfWithLines("Email body text here", "Attachments (1)", "@report.pdf (5 KB)");
+            byte[] pdfBytes = pdfWithLines("Email body text here", "Attachments (1)", "@report.pdf (5 KB)");
             when(pdfDocumentFactory.load(pdfBytes)).thenReturn(Loader.loadPDF(pdfBytes));
 
             List<EmlParser.EmailAttachment> attachments = new ArrayList<>();
             attachments.add(attachment("report.pdf", "PDFDATA".getBytes(StandardCharsets.UTF_8)));
 
-            byte[] result =
-                    PdfAttachmentHandler.attachFilesToPdf(
-                            pdfBytes, attachments, pdfDocumentFactory);
+            byte[] result = PdfAttachmentHandler.attachFilesToPdf(pdfBytes, attachments, pdfDocumentFactory);
 
             List<String> embedded = embeddedFileNames(result);
             assertTrue(embedded.contains("report.pdf"));
@@ -208,9 +199,7 @@ class PdfAttachmentHandlerGapTest {
             List<EmlParser.EmailAttachment> attachments = new ArrayList<>();
             attachments.add(a);
 
-            byte[] result =
-                    PdfAttachmentHandler.attachFilesToPdf(
-                            pdfBytes, attachments, pdfDocumentFactory);
+            byte[] result = PdfAttachmentHandler.attachFilesToPdf(pdfBytes, attachments, pdfDocumentFactory);
 
             // A single embedded file should exist with a non-blank generated name.
             List<String> embedded = embeddedFileNames(result);
@@ -228,9 +217,7 @@ class PdfAttachmentHandlerGapTest {
             attachments.add(attachment("dup.pdf", "a".getBytes(StandardCharsets.UTF_8)));
             attachments.add(attachment("dup.pdf", "b".getBytes(StandardCharsets.UTF_8)));
 
-            byte[] result =
-                    PdfAttachmentHandler.attachFilesToPdf(
-                            pdfBytes, attachments, pdfDocumentFactory);
+            byte[] result = PdfAttachmentHandler.attachFilesToPdf(pdfBytes, attachments, pdfDocumentFactory);
 
             List<String> embedded = embeddedFileNames(result);
             assertEquals(2, embedded.size());
@@ -250,18 +237,14 @@ class PdfAttachmentHandlerGapTest {
         @DisplayName("IOException from the factory load propagates to the caller")
         void factoryIOException_propagates() throws Exception {
             byte[] pdfBytes = {0x25, 0x50, 0x44, 0x46}; // "%PDF"
-            when(pdfDocumentFactory.load(pdfBytes))
-                    .thenThrow(new java.io.IOException("boom from factory"));
+            when(pdfDocumentFactory.load(pdfBytes)).thenThrow(new java.io.IOException("boom from factory"));
 
             List<EmlParser.EmailAttachment> attachments = new ArrayList<>();
             attachments.add(attachment("a.pdf", "data".getBytes(StandardCharsets.UTF_8)));
 
-            java.io.IOException ex =
-                    assertThrows(
-                            java.io.IOException.class,
-                            () ->
-                                    PdfAttachmentHandler.attachFilesToPdf(
-                                            pdfBytes, attachments, pdfDocumentFactory));
+            java.io.IOException ex = assertThrows(
+                    java.io.IOException.class,
+                    () -> PdfAttachmentHandler.attachFilesToPdf(pdfBytes, attachments, pdfDocumentFactory));
             assertTrue(ex.getMessage().contains("boom from factory"));
         }
     }
@@ -276,11 +259,7 @@ class PdfAttachmentHandlerGapTest {
         @DisplayName("finds marker positions inside an attachments section")
         void findsMarkerPositions() throws Exception {
             byte[] pdfBytes =
-                    pdfWithLines(
-                            "Some intro text",
-                            "Attachments (2)",
-                            "@invoice.pdf (10 KB)",
-                            "@photo.png (4 KB)");
+                    pdfWithLines("Some intro text", "Attachments (2)", "@invoice.pdf (10 KB)", "@photo.png (4 KB)");
 
             try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
                 PdfAttachmentHandler.AttachmentMarkerPositionFinder finder =
@@ -294,10 +273,9 @@ class PdfAttachmentHandlerGapTest {
                 List<PdfAttachmentHandler.MarkerPosition> positions = finder.getPositions();
                 assertEquals(2, positions.size());
 
-                List<String> filenames =
-                        positions.stream()
-                                .map(PdfAttachmentHandler.MarkerPosition::getFilename)
-                                .toList();
+                List<String> filenames = positions.stream()
+                        .map(PdfAttachmentHandler.MarkerPosition::getFilename)
+                        .toList();
                 assertTrue(filenames.contains("invoice.pdf"));
                 assertTrue(filenames.contains("photo.png"));
 
@@ -311,8 +289,7 @@ class PdfAttachmentHandlerGapTest {
         @Test
         @DisplayName("collects no positions when there is no attachments section")
         void noAttachmentSection_noPositions() throws Exception {
-            byte[] pdfBytes =
-                    pdfWithLines("Plain email body", "Contact us @ support address", "Goodbye");
+            byte[] pdfBytes = pdfWithLines("Plain email body", "Contact us @ support address", "Goodbye");
 
             try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
                 PdfAttachmentHandler.AttachmentMarkerPositionFinder finder =
@@ -325,8 +302,7 @@ class PdfAttachmentHandlerGapTest {
         @Test
         @DisplayName("sortByPosition reorders collected positions deterministically")
         void sortByPosition_sortsPositions() throws Exception {
-            byte[] pdfBytes =
-                    pdfWithLines("Attachments (2)", "@first.pdf (1 KB)", "@second.pdf (2 KB)");
+            byte[] pdfBytes = pdfWithLines("Attachments (2)", "@first.pdf (1 KB)", "@second.pdf (2 KB)");
 
             try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
                 PdfAttachmentHandler.AttachmentMarkerPositionFinder finder =
@@ -422,8 +398,7 @@ class PdfAttachmentHandlerGapTest {
         @DisplayName("a known instant formats to a stable UTC string regardless of input zone")
         void zonedDateTime_formatsToUtc() {
             // 2024-06-15 12:00 in Tokyo is 03:00 UTC the same day.
-            ZonedDateTime tokyo =
-                    ZonedDateTime.of(2024, 6, 15, 12, 0, 0, 0, ZoneId.of("Asia/Tokyo"));
+            ZonedDateTime tokyo = ZonedDateTime.of(2024, 6, 15, 12, 0, 0, 0, ZoneId.of("Asia/Tokyo"));
             String result = PdfAttachmentHandler.formatEmailDate(tokyo);
             assertEquals("Sat, Jun 15, 2024 at 3:00 AM UTC", result);
         }

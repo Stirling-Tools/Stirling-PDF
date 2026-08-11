@@ -46,30 +46,28 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class EditTextControllerTest {
 
-    @Mock private PdfJsonConversionService pdfJsonConversionService;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private PdfJsonConversionService pdfJsonConversionService;
 
-    @InjectMocks private EditTextController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private EditTextController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private static MultipartFile pdfFile() {
-        return new MockMultipartFile(
-                "fileInput", "doc.pdf", "application/pdf", "stub-pdf-bytes".getBytes());
+        return new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "stub-pdf-bytes".getBytes());
     }
 
     private static EditTextOperation edit(String find, String replace) {
@@ -199,10 +197,14 @@ class EditTextControllerTest {
                 .convertJsonToPdf(captor.capture(), any(OutputStream.class));
         PdfJsonDocument mutated = captor.getValue();
 
-        assertEquals("bar and bar", mutated.getPages().get(0).getTextElements().get(0).getText());
+        assertEquals(
+                "bar and bar",
+                mutated.getPages().get(0).getTextElements().get(0).getText());
         assertNull(mutated.getPages().get(0).getTextElements().get(0).getCharCodes());
 
-        assertEquals("no match here", mutated.getPages().get(1).getTextElements().get(0).getText());
+        assertEquals(
+                "no match here",
+                mutated.getPages().get(1).getTextElements().get(0).getText());
         // Char codes preserved on unmodified spans.
         assertNotNull(mutated.getPages().get(1).getTextElements().get(0).getCharCodes());
     }
@@ -295,9 +297,15 @@ class EditTextControllerTest {
                 .convertJsonToPdf(captor.capture(), any(OutputStream.class));
         PdfJsonDocument mutated = captor.getValue();
 
-        assertEquals("foo on page 1", mutated.getPages().get(0).getTextElements().get(0).getText());
-        assertEquals("bar on page 2", mutated.getPages().get(1).getTextElements().get(0).getText());
-        assertEquals("foo on page 3", mutated.getPages().get(2).getTextElements().get(0).getText());
+        assertEquals(
+                "foo on page 1",
+                mutated.getPages().get(0).getTextElements().get(0).getText());
+        assertEquals(
+                "bar on page 2",
+                mutated.getPages().get(1).getTextElements().get(0).getText());
+        assertEquals(
+                "foo on page 3",
+                mutated.getPages().get(2).getTextElements().get(0).getText());
     }
 
     @Test
@@ -307,8 +315,7 @@ class EditTextControllerTest {
         request.setEdits(List.of(edit("foo", "bar")));
         request.setPageNumbers("2-3");
 
-        PdfJsonDocument input =
-                documentWithText("foo page 1", "foo page 2", "foo page 3", "foo page 4");
+        PdfJsonDocument input = documentWithText("foo page 1", "foo page 2", "foo page 3", "foo page 4");
         when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
                 .thenReturn(input);
 
@@ -340,7 +347,9 @@ class EditTextControllerTest {
         ArgumentCaptor<PdfJsonDocument> captor = ArgumentCaptor.forClass(PdfJsonDocument.class);
         org.mockito.Mockito.verify(pdfJsonConversionService)
                 .convertJsonToPdf(captor.capture(), any(OutputStream.class));
-        assertEquals("baz", captor.getValue().getPages().get(0).getTextElements().get(0).getText());
+        assertEquals(
+                "baz",
+                captor.getValue().getPages().get(0).getTextElements().get(0).getText());
     }
 
     @Test
@@ -381,7 +390,8 @@ class EditTextControllerTest {
         assertEquals(
                 originalCodes, input.getPages().get(0).getTextElements().get(0).getCharCodes());
         assertEquals(
-                "nothing to match", input.getPages().get(0).getTextElements().get(0).getText());
+                "nothing to match",
+                input.getPages().get(0).getTextElements().get(0).getText());
     }
 
     @Test
@@ -447,7 +457,8 @@ class EditTextControllerTest {
                 .convertJsonToPdf(captor.capture(), any(OutputStream.class));
         PdfJsonDocument mutated = captor.getValue();
         assertNull(mutated.getPages().get(0).getTextElements().get(0).getText());
-        assertEquals("bar here", mutated.getPages().get(0).getTextElements().get(1).getText());
+        assertEquals(
+                "bar here", mutated.getPages().get(0).getTextElements().get(1).getText());
     }
 
     @Test
@@ -456,8 +467,7 @@ class EditTextControllerTest {
         request.setFileInput(pdfFile());
         request.setEdits(List.of(edit("Hello World", "Goodbye Earth")));
 
-        PdfJsonDocument input =
-                documentWithElements(List.of(textElement("Hello "), textElement("World")));
+        PdfJsonDocument input = documentWithElements(List.of(textElement("Hello "), textElement("World")));
         when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
                 .thenReturn(input);
 
@@ -482,17 +492,14 @@ class EditTextControllerTest {
         // Reproduces the real-world case: a multi-word title fragmented one word per text span.
         EditTextRequest request = new EditTextRequest();
         request.setFileInput(pdfFile());
-        request.setEdits(
-                List.of(edit("The Free Adobe Acrobat Alternative", "The PDF automation pipeline")));
+        request.setEdits(List.of(edit("The Free Adobe Acrobat Alternative", "The PDF automation pipeline")));
 
-        PdfJsonDocument input =
-                documentWithElements(
-                        List.of(
-                                textElement("The "),
-                                textElement("Free "),
-                                textElement("Adobe "),
-                                textElement("Acrobat "),
-                                textElement("Alternative")));
+        PdfJsonDocument input = documentWithElements(List.of(
+                textElement("The "),
+                textElement("Free "),
+                textElement("Adobe "),
+                textElement("Acrobat "),
+                textElement("Alternative")));
         when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
                 .thenReturn(input);
 
@@ -518,8 +525,7 @@ class EditTextControllerTest {
         request.setEdits(List.of(edit("Hello World", "Goodbye Earth")));
 
         PdfJsonDocument input =
-                documentWithElements(
-                        List.of(textElement("Greeting: Hello "), textElement("World! And more")));
+                documentWithElements(List.of(textElement("Greeting: Hello "), textElement("World! And more")));
         when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
                 .thenReturn(input);
 
@@ -543,11 +549,7 @@ class EditTextControllerTest {
         request.setEdits(List.of(edit("World", "Earth")));
 
         PdfJsonDocument input =
-                documentWithElements(
-                        List.of(
-                                textElement("Hello "),
-                                textElement("World!"),
-                                textElement(" Goodbye")));
+                documentWithElements(List.of(textElement("Hello "), textElement("World!"), textElement(" Goodbye")));
         when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
                 .thenReturn(input);
 
@@ -575,13 +577,8 @@ class EditTextControllerTest {
         request.setFileInput(pdfFile());
         request.setEdits(List.of(edit("foo bar", "X")));
 
-        PdfJsonDocument input =
-                documentWithElements(
-                        List.of(
-                                textElement("foo "),
-                                textElement("bar baz "),
-                                textElement("foo "),
-                                textElement("bar")));
+        PdfJsonDocument input = documentWithElements(
+                List.of(textElement("foo "), textElement("bar baz "), textElement("foo "), textElement("bar")));
         when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
                 .thenReturn(input);
 
@@ -610,20 +607,18 @@ class EditTextControllerTest {
         request.setEdits(List.of(edit("Hello World", "Goodbye Earth")));
 
         // 11 sub-word elements covering "Hello World".
-        PdfJsonDocument input =
-                documentWithElements(
-                        List.of(
-                                textElement("H"),
-                                textElement("e"),
-                                textElement("l"),
-                                textElement("l"),
-                                textElement("o"),
-                                textElement(" "),
-                                textElement("W"),
-                                textElement("o"),
-                                textElement("r"),
-                                textElement("l"),
-                                textElement("d")));
+        PdfJsonDocument input = documentWithElements(List.of(
+                textElement("H"),
+                textElement("e"),
+                textElement("l"),
+                textElement("l"),
+                textElement("o"),
+                textElement(" "),
+                textElement("W"),
+                textElement("o"),
+                textElement("r"),
+                textElement("l"),
+                textElement("d")));
         when(pdfJsonConversionService.convertPdfToJsonDocument(any(MultipartFile.class)))
                 .thenReturn(input);
 
@@ -644,9 +639,7 @@ class EditTextControllerTest {
     @Test
     void editText_outputFilenameDerivedFromInput() throws Exception {
         EditTextRequest request = new EditTextRequest();
-        request.setFileInput(
-                new MockMultipartFile(
-                        "fileInput", "report.pdf", "application/pdf", buildEmptyPdf()));
+        request.setFileInput(new MockMultipartFile("fileInput", "report.pdf", "application/pdf", buildEmptyPdf()));
         request.setEdits(List.of(edit("anything", "x")));
 
         PdfJsonDocument input = documentWithText("nothing matches");
@@ -655,8 +648,7 @@ class EditTextControllerTest {
 
         ResponseEntity<Resource> response = controller.editText(request);
         String contentDisposition =
-                response.getHeaders()
-                        .getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
+                response.getHeaders().getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
         assertNotNull(contentDisposition);
         assertTrue(contentDisposition.contains("report_edited.pdf"));
         assertFalse(contentDisposition.contains(".pdf_edited.pdf"));

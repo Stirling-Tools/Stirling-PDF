@@ -49,18 +49,14 @@ class NetworkInputSourceTest {
         // allowPrivate=true so the host guard never resolves DNS; connect() is overridden anyway.
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowPrivateNetworkSources(true);
-        RemoteFileClientFactory factory =
-                new RemoteFileClientFactory(new NetworkHostGuard(properties)) {
-                    @Override
-                    public RemoteFileClient connect(NetworkConfig config) {
-                        return new FakeClient(server);
-                    }
-                };
-        NetworkConnectionResolver resolver =
-                new NetworkConnectionResolver(
-                        mock(IntegrationConfigRepository.class),
-                        mock(OwnershipService.class),
-                        mock(UserService.class));
+        RemoteFileClientFactory factory = new RemoteFileClientFactory(new NetworkHostGuard(properties)) {
+            @Override
+            public RemoteFileClient connect(NetworkConfig config) {
+                return new FakeClient(server);
+            }
+        };
+        NetworkConnectionResolver resolver = new NetworkConnectionResolver(
+                mock(IntegrationConfigRepository.class), mock(OwnershipService.class), mock(UserService.class));
         source = new NetworkInputSource(resolver, factory);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
@@ -180,9 +176,7 @@ class NetworkInputSourceTest {
         options.put("host", "files.example.com");
         options.put("username", "u");
         options.put("password", "p");
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> source.validate(new InputSpec("network", options)));
+        assertThrows(IllegalArgumentException.class, () -> source.validate(new InputSpec("network", options)));
     }
 
     /** In-memory remote server shared between a test's fake clients. */
@@ -211,11 +205,10 @@ class NetworkInputSourceTest {
         @Override
         public List<RemoteFile> list(String directory, boolean recursive) {
             List<RemoteFile> out = new ArrayList<>();
-            server.files.forEach(
-                    (path, file) -> {
-                        String name = path.substring(path.lastIndexOf('/') + 1);
-                        out.add(new RemoteFile(path, name, file.content().length, file.mtime()));
-                    });
+            server.files.forEach((path, file) -> {
+                String name = path.substring(path.lastIndexOf('/') + 1);
+                out.add(new RemoteFile(path, name, file.content().length, file.mtime()));
+            });
             return out;
         }
 
@@ -262,8 +255,7 @@ class NetworkInputSourceTest {
         }
 
         @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
+        public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
             ledger.settle(policyId, identity, finalGate, finalContentHash, success);
         }
 

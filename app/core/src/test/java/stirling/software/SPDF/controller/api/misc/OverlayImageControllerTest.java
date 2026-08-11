@@ -51,41 +51,33 @@ class OverlayImageControllerTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private SvgSanitizer svgSanitizer;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private OverlayImageController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private SvgSanitizer svgSanitizer;
+
+    @InjectMocks
+    private OverlayImageController controller;
 
     private MockMultipartFile pdfFile;
     private MockMultipartFile imageFile;
 
     @BeforeEach
     void setUp() throws IOException {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
-        pdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
-        imageFile =
-                new MockMultipartFile(
-                        "imageFile",
-                        "overlay.png",
-                        MediaType.IMAGE_PNG_VALUE,
-                        createValidPngBytes());
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
+        pdfFile = new MockMultipartFile(
+                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, "PDF content".getBytes());
+        imageFile = new MockMultipartFile("imageFile", "overlay.png", MediaType.IMAGE_PNG_VALUE, createValidPngBytes());
     }
 
     private byte[] createValidPngBytes() throws IOException {
@@ -110,14 +102,10 @@ class OverlayImageControllerTest {
         mockDoc.addPage(page);
         when(pdfDocumentFactory.load(any(byte[].class))).thenReturn(mockDoc);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponse =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponse = mockStatic(WebResponseUtils.class)) {
             ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+                    .when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = controller.overlayImage(request);
@@ -158,14 +146,10 @@ class OverlayImageControllerTest {
         mockDoc.addPage(new PDPage(PDRectangle.A4));
         when(pdfDocumentFactory.load(any(byte[].class))).thenReturn(mockDoc);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponse =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponse = mockStatic(WebResponseUtils.class)) {
             ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+                    .when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = controller.overlayImage(request);
@@ -189,14 +173,10 @@ class OverlayImageControllerTest {
         mockDoc.addPage(new PDPage(PDRectangle.A4));
         when(pdfDocumentFactory.load(any(byte[].class))).thenReturn(mockDoc);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponse =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponse = mockStatic(WebResponseUtils.class)) {
             ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+                    .when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = controller.overlayImage(request);
@@ -209,23 +189,20 @@ class OverlayImageControllerTest {
 
     @Test
     void overlayImage_svgInput_sanitizedBeforeOverlay() throws Exception {
-        byte[] maliciousSvg =
-                ("<svg xmlns=\"http://www.w3.org/2000/svg\""
-                                + " xmlns:xlink=\"http://www.w3.org/1999/xlink\""
-                                + " width=\"10\" height=\"10\">"
-                                + "<image x=\"0\" y=\"0\" width=\"10\" height=\"10\""
-                                + " xlink:href=\"file:///etc/passwd\"/>"
-                                + "</svg>")
-                        .getBytes();
-        byte[] sanitized =
-                ("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\">"
-                                + "<image x=\"0\" y=\"0\" width=\"10\" height=\"10\"/>"
-                                + "</svg>")
-                        .getBytes();
+        byte[] maliciousSvg = ("<svg xmlns=\"http://www.w3.org/2000/svg\""
+                        + " xmlns:xlink=\"http://www.w3.org/1999/xlink\""
+                        + " width=\"10\" height=\"10\">"
+                        + "<image x=\"0\" y=\"0\" width=\"10\" height=\"10\""
+                        + " xlink:href=\"file:///etc/passwd\"/>"
+                        + "</svg>")
+                .getBytes();
+        byte[] sanitized = ("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\">"
+                        + "<image x=\"0\" y=\"0\" width=\"10\" height=\"10\"/>"
+                        + "</svg>")
+                .getBytes();
         when(svgSanitizer.sanitize(maliciousSvg)).thenReturn(sanitized);
 
-        MockMultipartFile svgFile =
-                new MockMultipartFile("imageFile", "overlay.svg", "image/svg+xml", maliciousSvg);
+        MockMultipartFile svgFile = new MockMultipartFile("imageFile", "overlay.svg", "image/svg+xml", maliciousSvg);
         OverlayImageRequest request = new OverlayImageRequest();
         request.setFileInput(pdfFile);
         request.setImageFile(svgFile);
@@ -237,13 +214,9 @@ class OverlayImageControllerTest {
         mockDoc.addPage(new PDPage(PDRectangle.A4));
         when(pdfDocumentFactory.load(any(byte[].class))).thenReturn(mockDoc);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponse =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponse = mockStatic(WebResponseUtils.class)) {
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+                    .when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(streamingOk("result".getBytes()));
 
             controller.overlayImage(request);
@@ -266,14 +239,10 @@ class OverlayImageControllerTest {
         mockDoc.addPage(new PDPage(PDRectangle.A4));
         when(pdfDocumentFactory.load(any(byte[].class))).thenReturn(mockDoc);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponse =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponse = mockStatic(WebResponseUtils.class)) {
             ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+                    .when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             // Should not throw - coordinates are passed to contentStream.drawImage

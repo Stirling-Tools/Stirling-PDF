@@ -29,7 +29,8 @@ import stirling.software.common.model.ApplicationProperties;
  */
 class LoginAgreementServiceTest {
 
-    @TempDir Path customFilesDir;
+    @TempDir
+    Path customFilesDir;
 
     private ApplicationProperties properties;
     private ApplicationProperties.Legal.LoginAgreement config;
@@ -48,10 +49,8 @@ class LoginAgreementServiceTest {
      * Run {@code action} with InstallationPathConfig.getCustomFilesPath() pointing at the temp dir.
      */
     private void withMockedPath(Runnable action) {
-        try (MockedStatic<InstallationPathConfig> mocked =
-                mockStatic(InstallationPathConfig.class)) {
-            mocked.when(InstallationPathConfig::getCustomFilesPath)
-                    .thenReturn(customFilesDir.toString());
+        try (MockedStatic<InstallationPathConfig> mocked = mockStatic(InstallationPathConfig.class)) {
+            mocked.when(InstallationPathConfig::getCustomFilesPath).thenReturn(customFilesDir.toString());
             action.run();
         }
     }
@@ -104,26 +103,23 @@ class LoginAgreementServiceTest {
     @Test
     void resolveContentDoesNotEscapeDisclaimerDirectory() throws IOException {
         // Plant a file outside the disclaimer dir; a traversal-style locale must not read it.
-        Files.writeString(
-                customFilesDir.resolve("secret.md"), "TOP SECRET", StandardCharsets.UTF_8);
+        Files.writeString(customFilesDir.resolve("secret.md"), "TOP SECRET", StandardCharsets.UTF_8);
         config.setFallbackText("safe");
-        withMockedPath(
-                () -> {
-                    assertEquals("safe", service.resolveContent("../secret"));
-                    assertEquals("safe", service.resolveContent("..%2Fsecret"));
-                    assertEquals("safe", service.resolveContent("/etc/passwd"));
-                });
+        withMockedPath(() -> {
+            assertEquals("safe", service.resolveContent("../secret"));
+            assertEquals("safe", service.resolveContent("..%2Fsecret"));
+            assertEquals("safe", service.resolveContent("/etc/passwd"));
+        });
     }
 
     @Test
     void readRawRejectsInvalidLocale() {
-        withMockedPath(
-                () -> {
-                    assertNull(service.readRawForLocale("../secret"));
-                    assertNull(service.readRawForLocale("en/GB"));
-                    assertNull(service.readRawForLocale("C:\\x"));
-                    assertNull(service.readRawForLocale(null));
-                });
+        withMockedPath(() -> {
+            assertNull(service.readRawForLocale("../secret"));
+            assertNull(service.readRawForLocale("en/GB"));
+            assertNull(service.readRawForLocale("C:\\x"));
+            assertNull(service.readRawForLocale(null));
+        });
     }
 
     @Test
@@ -135,42 +131,36 @@ class LoginAgreementServiceTest {
     void overlongLocaleIsRejectedWithoutStackOverflow() {
         // Guards against the regex-recursion stack overflow on unbounded input.
         String hostile = "en" + "-ab".repeat(4000);
-        withMockedPath(
-                () -> {
-                    assertDoesNotThrow(() -> service.readRawForLocale(hostile));
-                    assertNull(service.readRawForLocale(hostile));
-                    assertDoesNotThrow(() -> service.resolveContent(hostile));
-                });
+        withMockedPath(() -> {
+            assertDoesNotThrow(() -> service.readRawForLocale(hostile));
+            assertNull(service.readRawForLocale(hostile));
+            assertDoesNotThrow(() -> service.resolveContent(hostile));
+        });
     }
 
     @Test
     void writeThenReadRoundTrips() throws IOException {
-        withMockedPath(
-                () -> {
-                    assertDoesNotThrow(() -> service.writeForLocale("fr-FR", "# Bonjour"));
-                    assertEquals("# Bonjour", service.readRawForLocale("fr-FR"));
-                });
+        withMockedPath(() -> {
+            assertDoesNotThrow(() -> service.writeForLocale("fr-FR", "# Bonjour"));
+            assertEquals("# Bonjour", service.readRawForLocale("fr-FR"));
+        });
         assertTrue(Files.isRegularFile(disclaimerDir.resolve("fr-FR.md")));
     }
 
     @Test
     void writeBlankDeletesFile() throws IOException {
         writeFile("fr-FR", "# Bonjour");
-        withMockedPath(
-                () -> {
-                    assertDoesNotThrow(() -> service.writeForLocale("fr-FR", "   "));
-                    assertEquals("", service.readRawForLocale("fr-FR"));
-                });
+        withMockedPath(() -> {
+            assertDoesNotThrow(() -> service.writeForLocale("fr-FR", "   "));
+            assertEquals("", service.readRawForLocale("fr-FR"));
+        });
         assertFalse(Files.exists(disclaimerDir.resolve("fr-FR.md")));
     }
 
     @Test
     void writeRejectsInvalidLocale() {
         withMockedPath(
-                () ->
-                        assertThrows(
-                                IllegalArgumentException.class,
-                                () -> service.writeForLocale("../escape", "x")));
+                () -> assertThrows(IllegalArgumentException.class, () -> service.writeForLocale("../escape", "x")));
     }
 
     @Test
@@ -178,13 +168,12 @@ class LoginAgreementServiceTest {
         writeFile("en-GB", "a");
         writeFile("fr-FR", "b");
         Files.writeString(disclaimerDir.resolve("notes.txt"), "x", StandardCharsets.UTF_8);
-        withMockedPath(
-                () -> {
-                    var locales = service.listLocalesWithContent();
-                    assertTrue(locales.contains("en-GB"));
-                    assertTrue(locales.contains("fr-FR"));
-                    assertEquals(2, locales.size());
-                });
+        withMockedPath(() -> {
+            var locales = service.listLocalesWithContent();
+            assertTrue(locales.contains("en-GB"));
+            assertTrue(locales.contains("fr-FR"));
+            assertEquals(2, locales.size());
+        });
     }
 
     @Test

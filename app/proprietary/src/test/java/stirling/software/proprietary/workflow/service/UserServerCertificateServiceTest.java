@@ -39,8 +39,11 @@ import stirling.software.proprietary.workflow.repository.UserServerCertificateRe
 @ExtendWith(MockitoExtension.class)
 class UserServerCertificateServiceTest {
 
-    @Mock private UserServerCertificateRepository certificateRepository;
-    @Mock private UserRepository userRepository;
+    @Mock
+    private UserServerCertificateRepository certificateRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     private MetadataEncryptionService encryptionService;
     private UserServerCertificateService service;
@@ -53,9 +56,7 @@ class UserServerCertificateServiceTest {
         props.setAutomaticallyGenerated(generated);
 
         encryptionService = new MetadataEncryptionService(props);
-        service =
-                new UserServerCertificateService(
-                        certificateRepository, userRepository, encryptionService);
+        service = new UserServerCertificateService(certificateRepository, userRepository, encryptionService);
     }
 
     private User user(long id) {
@@ -76,8 +77,7 @@ class UserServerCertificateServiceTest {
 
         service.generateUserCertificate(user);
 
-        ArgumentCaptor<UserServerCertificateEntity> captor =
-                ArgumentCaptor.forClass(UserServerCertificateEntity.class);
+        ArgumentCaptor<UserServerCertificateEntity> captor = ArgumentCaptor.forClass(UserServerCertificateEntity.class);
         verify(certificateRepository).save(captor.capture());
 
         String stored = captor.getValue().getKeystorePassword();
@@ -101,8 +101,7 @@ class UserServerCertificateServiceTest {
 
         service.uploadUserCertificate(user, new ByteArrayInputStream(p12Bytes), uploadPassword);
 
-        ArgumentCaptor<UserServerCertificateEntity> captor =
-                ArgumentCaptor.forClass(UserServerCertificateEntity.class);
+        ArgumentCaptor<UserServerCertificateEntity> captor = ArgumentCaptor.forClass(UserServerCertificateEntity.class);
         verify(certificateRepository).save(captor.capture());
 
         String stored = captor.getValue().getKeystorePassword();
@@ -170,25 +169,20 @@ class UserServerCertificateServiceTest {
         kpg.initialize(2048, new SecureRandom());
         KeyPair kp = kpg.generateKeyPair();
 
-        org.bouncycastle.asn1.x500.X500Name subject =
-                new org.bouncycastle.asn1.x500.X500Name("CN=test");
+        org.bouncycastle.asn1.x500.X500Name subject = new org.bouncycastle.asn1.x500.X500Name("CN=test");
         BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
         Date notBefore = new Date();
         Date notAfter = new Date(notBefore.getTime() + 365L * 24 * 60 * 60 * 1000);
 
         JcaX509v3CertificateBuilder builder =
-                new JcaX509v3CertificateBuilder(
-                        subject, serial, notBefore, notAfter, subject, kp.getPublic());
+                new JcaX509v3CertificateBuilder(subject, serial, notBefore, notAfter, subject, kp.getPublic());
 
         ContentSigner signer =
-                new JcaContentSignerBuilder("SHA256WithRSA")
-                        .setProvider("BC")
-                        .build(kp.getPrivate());
+                new JcaContentSignerBuilder("SHA256WithRSA").setProvider("BC").build(kp.getPrivate());
 
-        X509Certificate cert =
-                new JcaX509CertificateConverter()
-                        .setProvider(new BouncyCastleProvider())
-                        .getCertificate(builder.build(signer));
+        X509Certificate cert = new JcaX509CertificateConverter()
+                .setProvider(new BouncyCastleProvider())
+                .getCertificate(builder.build(signer));
 
         KeyStore ks = KeyStore.getInstance("PKCS12");
         ks.load(null, null);

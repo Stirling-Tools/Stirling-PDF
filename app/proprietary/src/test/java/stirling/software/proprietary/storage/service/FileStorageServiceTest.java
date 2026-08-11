@@ -43,34 +43,55 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class FileStorageServiceTest {
 
-    @Mock private StoredFileRepository storedFileRepository;
-    @Mock private FileShareRepository fileShareRepository;
-    @Mock private FileShareAccessRepository fileShareAccessRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private StorageProvider storageProvider;
-    @Mock private StorageCleanupEntryRepository storageCleanupEntryRepository;
+    @Mock
+    private StoredFileRepository storedFileRepository;
 
-    @Mock private ApplicationProperties.Security securityProperties;
-    @Mock private ApplicationProperties.System systemProperties;
-    @Mock private ApplicationProperties.Storage storageProperties;
-    @Mock private ApplicationProperties.Storage.Sharing sharingProperties;
-    @Mock private ApplicationProperties.Storage.Quotas quotasProperties;
+    @Mock
+    private FileShareRepository fileShareRepository;
+
+    @Mock
+    private FileShareAccessRepository fileShareAccessRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private StorageProvider storageProvider;
+
+    @Mock
+    private StorageCleanupEntryRepository storageCleanupEntryRepository;
+
+    @Mock
+    private ApplicationProperties.Security securityProperties;
+
+    @Mock
+    private ApplicationProperties.System systemProperties;
+
+    @Mock
+    private ApplicationProperties.Storage storageProperties;
+
+    @Mock
+    private ApplicationProperties.Storage.Sharing sharingProperties;
+
+    @Mock
+    private ApplicationProperties.Storage.Quotas quotasProperties;
 
     private FileStorageService service;
 
     @BeforeEach
     void setUp() {
-        service =
-                new FileStorageService(
-                        storedFileRepository,
-                        fileShareRepository,
-                        fileShareAccessRepository,
-                        userRepository,
-                        applicationProperties,
-                        storageProvider,
-                        Optional.empty(),
-                        storageCleanupEntryRepository);
+        service = new FileStorageService(
+                storedFileRepository,
+                fileShareRepository,
+                fileShareAccessRepository,
+                userRepository,
+                applicationProperties,
+                storageProvider,
+                Optional.empty(),
+                storageCleanupEntryRepository);
 
         // Default: storage and sharing fully enabled, share links enabled, no expiry
         when(applicationProperties.getSecurity()).thenReturn(securityProperties);
@@ -177,8 +198,7 @@ class FileStorageServiceTest {
         User requester = user(2L);
         StoredFile f = ownedFile(owner);
         FileShare share = shareFor(f, requester, ShareAccessRole.EDITOR);
-        when(fileShareRepository.findByFileAndSharedWithUser(f, requester))
-                .thenReturn(Optional.of(share));
+        when(fileShareRepository.findByFileAndSharedWithUser(f, requester)).thenReturn(Optional.of(share));
 
         service.requireEditorAccess(requester, f);
     }
@@ -189,8 +209,7 @@ class FileStorageServiceTest {
         User requester = user(2L);
         StoredFile f = ownedFile(owner);
         FileShare share = shareFor(f, requester, ShareAccessRole.VIEWER);
-        when(fileShareRepository.findByFileAndSharedWithUser(f, requester))
-                .thenReturn(Optional.of(share));
+        when(fileShareRepository.findByFileAndSharedWithUser(f, requester)).thenReturn(Optional.of(share));
 
         assertThatThrownBy(() -> service.requireEditorAccess(requester, f))
                 .isInstanceOf(ResponseStatusException.class)
@@ -203,8 +222,7 @@ class FileStorageServiceTest {
         User owner = user(1L);
         User requester = user(2L);
         StoredFile f = ownedFile(owner);
-        when(fileShareRepository.findByFileAndSharedWithUser(f, requester))
-                .thenReturn(Optional.empty());
+        when(fileShareRepository.findByFileAndSharedWithUser(f, requester)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.requireEditorAccess(requester, f))
                 .isInstanceOf(ResponseStatusException.class)
@@ -229,8 +247,7 @@ class FileStorageServiceTest {
         User requester = user(2L);
         StoredFile f = ownedFile(owner);
         FileShare share = shareFor(f, requester, ShareAccessRole.VIEWER);
-        when(fileShareRepository.findByFileAndSharedWithUser(f, requester))
-                .thenReturn(Optional.of(share));
+        when(fileShareRepository.findByFileAndSharedWithUser(f, requester)).thenReturn(Optional.of(share));
 
         service.requireReadAccess(requester, f);
     }
@@ -245,8 +262,7 @@ class FileStorageServiceTest {
         User target = user(2L);
         StoredFile f = ownedFile(owner);
         when(userRepository.findByUsernameIgnoreCase("user2")).thenReturn(Optional.of(target));
-        when(fileShareRepository.findByFileAndSharedWithUser(f, target))
-                .thenReturn(Optional.empty());
+        when(fileShareRepository.findByFileAndSharedWithUser(f, target)).thenReturn(Optional.empty());
         when(fileShareRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         FileShare result = service.shareWithUser(owner, f, "user2", ShareAccessRole.VIEWER);
@@ -263,8 +279,7 @@ class FileStorageServiceTest {
         StoredFile f = ownedFile(owner);
         FileShare existing = shareFor(f, target, ShareAccessRole.VIEWER);
         when(userRepository.findByUsernameIgnoreCase("user2")).thenReturn(Optional.of(target));
-        when(fileShareRepository.findByFileAndSharedWithUser(f, target))
-                .thenReturn(Optional.of(existing));
+        when(fileShareRepository.findByFileAndSharedWithUser(f, target)).thenReturn(Optional.of(existing));
         when(fileShareRepository.save(existing)).thenReturn(existing);
 
         service.shareWithUser(owner, f, "user2", ShareAccessRole.EDITOR);
@@ -291,8 +306,7 @@ class FileStorageServiceTest {
         User nonOwner = user(2L);
         StoredFile f = ownedFile(owner);
 
-        assertThatThrownBy(
-                        () -> service.shareWithUser(nonOwner, f, "user1", ShareAccessRole.VIEWER))
+        assertThatThrownBy(() -> service.shareWithUser(nonOwner, f, "user1", ShareAccessRole.VIEWER))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
                 .isEqualTo(403);
@@ -309,8 +323,7 @@ class FileStorageServiceTest {
         StoredFile f = ownedFile(owner);
         FileShare share = shareFor(f, target, ShareAccessRole.VIEWER);
         when(userRepository.findByUsernameIgnoreCase("user2")).thenReturn(Optional.of(target));
-        when(fileShareRepository.findByFileAndSharedWithUser(f, target))
-                .thenReturn(Optional.of(share));
+        when(fileShareRepository.findByFileAndSharedWithUser(f, target)).thenReturn(Optional.of(share));
 
         service.revokeUserShare(owner, f, "user2");
 
@@ -323,8 +336,7 @@ class FileStorageServiceTest {
         User target = user(2L);
         StoredFile f = ownedFile(owner);
         when(userRepository.findByUsernameIgnoreCase("user2")).thenReturn(Optional.of(target));
-        when(fileShareRepository.findByFileAndSharedWithUser(f, target))
-                .thenReturn(Optional.empty());
+        when(fileShareRepository.findByFileAndSharedWithUser(f, target)).thenReturn(Optional.empty());
 
         service.revokeUserShare(owner, f, "user2");
 
@@ -427,16 +439,14 @@ class FileStorageServiceTest {
     void storeFile_nullQuotas_passes() throws IOException {
         when(storageProperties.getQuotas()).thenReturn(null);
         User owner = user(1L);
-        MockMultipartFile file =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
         when(storageProvider.store(any(), any()))
-                .thenReturn(
-                        StoredObject.builder()
-                                .storageKey("k")
-                                .originalFilename("test.pdf")
-                                .contentType("application/pdf")
-                                .sizeBytes(1L)
-                                .build());
+                .thenReturn(StoredObject.builder()
+                        .storageKey("k")
+                        .originalFilename("test.pdf")
+                        .contentType("application/pdf")
+                        .sizeBytes(1L)
+                        .build());
         when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         service.storeFile(owner, file);
@@ -452,9 +462,7 @@ class FileStorageServiceTest {
         when(quotasProperties.getMaxStorageMbTotal()).thenReturn(-1L);
         User owner = user(1L);
         // 2 MB file exceeds the 1 MB limit
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "file", "big.pdf", "application/pdf", new byte[2 * 1024 * 1024]);
+        MockMultipartFile file = new MockMultipartFile("file", "big.pdf", "application/pdf", new byte[2 * 1024 * 1024]);
 
         assertThatThrownBy(() -> service.storeFile(owner, file))
                 .isInstanceOf(ResponseStatusException.class)
@@ -471,9 +479,7 @@ class FileStorageServiceTest {
         User owner = user(1L);
         // user already has 9 MB stored; a 2 MB upload pushes to 11 MB > 10 MB cap
         when(storedFileRepository.sumStorageBytesByOwner(owner)).thenReturn(9L * 1024 * 1024);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "file", "f.pdf", "application/pdf", new byte[2 * 1024 * 1024]);
+        MockMultipartFile file = new MockMultipartFile("file", "f.pdf", "application/pdf", new byte[2 * 1024 * 1024]);
 
         assertThatThrownBy(() -> service.storeFile(owner, file))
                 .isInstanceOf(ResponseStatusException.class)
@@ -490,9 +496,7 @@ class FileStorageServiceTest {
         User owner = user(1L);
         // system already has 99 MB; a 2 MB upload pushes to 101 MB > 100 MB cap
         when(storedFileRepository.sumStorageBytesTotal()).thenReturn(99L * 1024 * 1024);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "file", "f.pdf", "application/pdf", new byte[2 * 1024 * 1024]);
+        MockMultipartFile file = new MockMultipartFile("file", "f.pdf", "application/pdf", new byte[2 * 1024 * 1024]);
 
         assertThatThrownBy(() -> service.storeFile(owner, file))
                 .isInstanceOf(ResponseStatusException.class)
@@ -510,16 +514,14 @@ class FileStorageServiceTest {
         existing.setSizeBytes(5L * 1024 * 1024);
         existing.setStorageKey("old-key");
         MockMultipartFile newFile =
-                new MockMultipartFile(
-                        "file", "small.pdf", "application/pdf", new byte[1 * 1024 * 1024]);
+                new MockMultipartFile("file", "small.pdf", "application/pdf", new byte[1 * 1024 * 1024]);
         when(storageProvider.store(any(), any()))
-                .thenReturn(
-                        StoredObject.builder()
-                                .storageKey("new-key")
-                                .originalFilename("small.pdf")
-                                .contentType("application/pdf")
-                                .sizeBytes(1L * 1024 * 1024)
-                                .build());
+                .thenReturn(StoredObject.builder()
+                        .storageKey("new-key")
+                        .originalFilename("small.pdf")
+                        .contentType("application/pdf")
+                        .sizeBytes(1L * 1024 * 1024)
+                        .build());
         when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         service.replaceFile(owner, existing, newFile);
@@ -582,15 +584,12 @@ class FileStorageServiceTest {
     void loadFile_revokedKey_throwsForbidden() throws IOException {
         StoredFile f = ownedFile(user(1L));
         f.setStorageKey("k");
-        when(storageProvider.load("k"))
-                .thenThrow(new StorageKeyRevokedException("Encryption key X is disabled"));
+        when(storageProvider.load("k")).thenThrow(new StorageKeyRevokedException("Encryption key X is disabled"));
 
         assertThatThrownBy(() -> service.loadFile(f))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode())
-                                        .isEqualTo(HttpStatus.FORBIDDEN));
+                .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                        .isEqualTo(HttpStatus.FORBIDDEN));
     }
 
     @Test
@@ -601,9 +600,7 @@ class FileStorageServiceTest {
 
         assertThatThrownBy(() -> service.loadFile(f))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode())
-                                        .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR));
+                .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                        .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR));
     }
 }

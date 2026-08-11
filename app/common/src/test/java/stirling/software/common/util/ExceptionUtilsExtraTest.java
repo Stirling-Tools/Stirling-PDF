@@ -31,8 +31,7 @@ class ExceptionUtilsExtraTest {
         void outputAndCause() {
             Exception cause = new RuntimeException("boom");
             GhostscriptException ex =
-                    ExceptionUtils.createGhostscriptCompressionException(
-                            "Some informational chatter", cause);
+                    ExceptionUtils.createGhostscriptCompressionException("Some informational chatter", cause);
             assertSame(cause, ex.getCause());
             assertEquals(ErrorCode.GHOSTSCRIPT_COMPRESSION.getCode(), ex.getErrorCode());
         }
@@ -49,8 +48,7 @@ class ExceptionUtilsExtraTest {
         @Test
         @DisplayName("single-string overload with informational output uses compression code")
         void singleStringInformational() {
-            GhostscriptException ex =
-                    ExceptionUtils.createGhostscriptCompressionException("just chatter");
+            GhostscriptException ex = ExceptionUtils.createGhostscriptCompressionException("just chatter");
             assertEquals(ErrorCode.GHOSTSCRIPT_COMPRESSION.getCode(), ex.getErrorCode());
             // The fallback informative line is appended to the base message.
             assertTrue(ex.getMessage().contains("chatter"));
@@ -83,8 +81,7 @@ class ExceptionUtilsExtraTest {
         @DisplayName("FfmpegRequiredException(message, cause, code) retains the cause")
         void ffmpegWithCause() {
             Exception cause = new RuntimeException("no ffmpeg");
-            FfmpegRequiredException ex =
-                    new FfmpegRequiredException("ffmpeg missing", cause, "E063");
+            FfmpegRequiredException ex = new FfmpegRequiredException("ffmpeg missing", cause, "E063");
             assertSame(cause, ex.getCause());
             assertEquals("E063", ex.getErrorCode());
         }

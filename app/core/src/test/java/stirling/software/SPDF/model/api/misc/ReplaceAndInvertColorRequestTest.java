@@ -96,9 +96,7 @@ class ReplaceAndInvertColorRequestTest {
         void toStringContainsField() {
             ReplaceAndInvertColorRequest req = new ReplaceAndInvertColorRequest();
             req.setReplaceAndInvertOption(ReplaceAndInvert.FULL_INVERSION);
-            assertThat(req.toString())
-                    .isNotNull()
-                    .contains("replaceAndInvertOption=FULL_INVERSION");
+            assertThat(req.toString()).isNotNull().contains("replaceAndInvertOption=FULL_INVERSION");
         }
     }
 

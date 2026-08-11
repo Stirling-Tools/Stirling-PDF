@@ -26,8 +26,8 @@ final class FormPayloadParser {
     private static final String KEY_DEFAULT_VALUE = "defaultValue";
 
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
-    private static final TypeReference<List<FormUtils.ModifyFormFieldDefinition>>
-            MODIFY_FIELD_LIST_TYPE = new TypeReference<>() {};
+    private static final TypeReference<List<FormUtils.ModifyFormFieldDefinition>> MODIFY_FIELD_LIST_TYPE =
+            new TypeReference<>() {};
     private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {};
 
     private FormPayloadParser() {}
@@ -156,8 +156,7 @@ final class FormPayloadParser {
             }
 
             JsonNode valueNode = fieldNode.get(KEY_VALUE);
-            if ((valueNode == null || valueNode.isNull())
-                    && fieldNode.hasNonNull(KEY_DEFAULT_VALUE)) {
+            if ((valueNode == null || valueNode.isNull()) && fieldNode.hasNonNull(KEY_DEFAULT_VALUE)) {
                 valueNode = fieldNode.get(KEY_DEFAULT_VALUE);
             }
 
@@ -238,8 +237,7 @@ final class FormPayloadParser {
             }
             final JsonNode field = node.get(KEY_FIELD);
             if (field != null && field.isObject()) {
-                final String nested =
-                        textProperty(field, KEY_NAME, KEY_TARGET_NAME, KEY_FIELD_NAME);
+                final String nested = textProperty(field, KEY_NAME, KEY_TARGET_NAME, KEY_FIELD_NAME);
                 if (nonBlank(nested)) {
                     return nested;
                 }
@@ -262,19 +260,16 @@ final class FormPayloadParser {
 
     private static Map<String, Object> objectToLinkedMap(JsonNode objectNode) {
         final Map<String, Object> result = new LinkedHashMap<>();
-        objectNode
-                .propertyNames()
-                .forEach(
-                        key -> {
-                            final JsonNode v = objectNode.get(key);
-                            if (v == null || v.isNull()) {
-                                result.put(key, null);
-                            } else if (v.isString() || v.isNumber() || v.isBoolean()) {
-                                result.put(key, coerceScalarToString(v));
-                            } else {
-                                result.put(key, v.toString());
-                            }
-                        });
+        objectNode.propertyNames().forEach(key -> {
+            final JsonNode v = objectNode.get(key);
+            if (v == null || v.isNull()) {
+                result.put(key, null);
+            } else if (v.isString() || v.isNumber() || v.isBoolean()) {
+                result.put(key, coerceScalarToString(v));
+            } else {
+                result.put(key, v.toString());
+            }
+        });
         return result;
     }
 

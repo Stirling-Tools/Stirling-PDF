@@ -12,9 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 class OverlayPdfsRequestTest {
 
     private static MultipartFile[] overlays() {
-        return new MultipartFile[] {
-            new MockMultipartFile("overlayFiles", "o.pdf", "application/pdf", new byte[] {9})
-        };
+        return new MultipartFile[] {new MockMultipartFile("overlayFiles", "o.pdf", "application/pdf", new byte[] {9})};
     }
 
     @Nested

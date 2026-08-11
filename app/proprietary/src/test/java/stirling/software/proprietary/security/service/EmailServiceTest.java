@@ -22,15 +22,20 @@ import stirling.software.proprietary.security.model.api.Email;
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceTest {
 
-    @Mock private JavaMailSender mailSender;
+    @Mock
+    private JavaMailSender mailSender;
 
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock
+    private ApplicationProperties applicationProperties;
 
-    @Mock private ApplicationProperties.Mail mailProperties;
+    @Mock
+    private ApplicationProperties.Mail mailProperties;
 
-    @Mock private MultipartFile fileInput;
+    @Mock
+    private MultipartFile fileInput;
 
-    @InjectMocks private EmailService emailService;
+    @InjectMocks
+    private EmailService emailService;
 
     @Test
     void testSendEmailWithAttachment() throws MessagingException {

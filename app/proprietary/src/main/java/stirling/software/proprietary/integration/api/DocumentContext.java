@@ -56,11 +56,7 @@ final class DocumentContext {
     private DocumentContext() {}
 
     static ObjectNode build(
-            MultipartFile file,
-            byte[] content,
-            String policyName,
-            String runId,
-            ObjectMapper objectMapper) {
+            MultipartFile file, byte[] content, String policyName, String runId, ObjectMapper objectMapper) {
         ObjectNode root = objectMapper.createObjectNode();
         ObjectNode document = root.putObject("document");
 
@@ -86,8 +82,7 @@ final class DocumentContext {
     }
 
     /** PDF-only facts. A document we cannot parse still gets the basics above. */
-    private static void addPdfFacts(
-            ObjectNode document, ObjectNode root, byte[] content, ObjectMapper objectMapper) {
+    private static void addPdfFacts(ObjectNode document, ObjectNode root, byte[] content, ObjectMapper objectMapper) {
         try (PDDocument pdf = Loader.loadPDF(content)) {
             document.put("pageCount", pdf.getNumberOfPages());
             document.put("encrypted", pdf.isEncrypted());
@@ -112,8 +107,7 @@ final class DocumentContext {
     }
 
     /** The classifier policy's verdict, so a call-out can act on it without re-classifying. */
-    private static void addClassification(
-            ObjectNode root, PDDocumentInformation info, ObjectMapper objectMapper) {
+    private static void addClassification(ObjectNode root, PDDocumentInformation info, ObjectMapper objectMapper) {
         String raw = info.getCustomMetadataValue(PdfMetadataService.CLASSIFICATION_KEY);
         if (raw == null || raw.isBlank()) {
             return;
@@ -145,11 +139,7 @@ final class DocumentContext {
 
     /** Cheap check so a non-PDF never pays for a parse attempt. */
     private static boolean looksLikePdf(byte[] content) {
-        return content.length > 4
-                && content[0] == '%'
-                && content[1] == 'P'
-                && content[2] == 'D'
-                && content[3] == 'F';
+        return content.length > 4 && content[0] == '%' && content[1] == 'P' && content[2] == 'D' && content[3] == 'F';
     }
 
     /**

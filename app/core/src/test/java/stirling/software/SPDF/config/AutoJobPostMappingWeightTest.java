@@ -47,12 +47,11 @@ class AutoJobPostMappingWeightTest {
 
         assertTrue(
                 offenders.isEmpty(),
-                () ->
-                        "The following @AutoJobPostMapping methods do not declare an explicit"
-                                + " resourceWeight. Pick a value from"
-                                + " stirling.software.common.enumeration.ResourceWeight (SMALL,"
-                                + " MEDIUM, LARGE, XLARGE) and add it to the annotation:\n  - "
-                                + String.join("\n  - ", offenders));
+                () -> "The following @AutoJobPostMapping methods do not declare an explicit"
+                        + " resourceWeight. Pick a value from"
+                        + " stirling.software.common.enumeration.ResourceWeight (SMALL,"
+                        + " MEDIUM, LARGE, XLARGE) and add it to the annotation:\n  - "
+                        + String.join("\n  - ", offenders));
     }
 
     private List<String> findOffendingMethods() throws IOException, ClassNotFoundException {
@@ -83,12 +82,10 @@ class AutoJobPostMappingWeightTest {
 
         // Pre-filter by reading annotation metadata from the class file so we don't have to load
         // every class on the test classpath just to find the few that are annotated.
-        TypeFilter mentionsAutoJobPostMapping =
-                (reader, factory) ->
-                        reader.getAnnotationMetadata()
-                                        .getAnnotatedMethods(AutoJobPostMapping.class.getName())
-                                        .size()
-                                > 0;
+        TypeFilter mentionsAutoJobPostMapping = (reader, factory) -> reader.getAnnotationMetadata()
+                        .getAnnotatedMethods(AutoJobPostMapping.class.getName())
+                        .size()
+                > 0;
 
         List<Class<?>> matches = new ArrayList<>();
         for (Resource resource : resources) {
@@ -110,19 +107,17 @@ class AutoJobPostMappingWeightTest {
      */
     @Test
     void scannerFindsAtLeastOneAutoJobPostMapping() throws Exception {
-        long count =
-                scanForCandidateClasses().stream()
-                        .flatMap(c -> java.util.Arrays.stream(c.getDeclaredMethods()))
-                        .filter(m -> m.isAnnotationPresent(AutoJobPostMapping.class))
-                        .count();
+        long count = scanForCandidateClasses().stream()
+                .flatMap(c -> java.util.Arrays.stream(c.getDeclaredMethods()))
+                .filter(m -> m.isAnnotationPresent(AutoJobPostMapping.class))
+                .count();
 
         assertTrue(
                 count > 10,
-                () ->
-                        "Expected the classpath scan to find many @AutoJobPostMapping methods but"
-                                + " found only "
-                                + count
-                                + ". Scanner regression?");
+                () -> "Expected the classpath scan to find many @AutoJobPostMapping methods but"
+                        + " found only "
+                        + count
+                        + ". Scanner regression?");
     }
 
     @SuppressWarnings("unused")

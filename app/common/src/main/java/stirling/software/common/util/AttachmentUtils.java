@@ -28,20 +28,17 @@ public class AttachmentUtils {
                 catalog.setPageMode(pageMode);
                 catalogDict.setName(COSName.PAGE_MODE, pageMode.stringValue());
 
-                COSDictionary viewerPrefs =
-                        (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
+                COSDictionary viewerPrefs = (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
                 if (viewerPrefs == null) {
                     viewerPrefs = new COSDictionary();
                     catalogDict.setItem(COSName.VIEWER_PREFERENCES, viewerPrefs);
                 }
 
-                viewerPrefs.setName(
-                        COSName.getPDFName("NonFullScreenPageMode"), pageMode.stringValue());
+                viewerPrefs.setName(COSName.getPDFName("NonFullScreenPageMode"), pageMode.stringValue());
 
                 viewerPrefs.setBoolean(COSName.getPDFName("DisplayDocTitle"), true);
 
-                log.info(
-                        "Set PDF PageMode to UseAttachments to automatically show attachments pane");
+                log.info("Set PDF PageMode to UseAttachments to automatically show attachments pane");
             }
         } catch (Exception e) {
             log.error("Failed to set catalog viewer preferences for attachments", e);

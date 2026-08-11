@@ -111,8 +111,11 @@ public class PdfContentExtractor {
         List<TableFragment> fragments = tabulaTableParser.parse(document, pageNumber);
         if (fragments.isEmpty()) return List.of();
 
-        CSVFormat format =
-                CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
+        CSVFormat format = CSVFormat.EXCEL
+                .builder()
+                .setEscape('"')
+                .setQuoteMode(QuoteMode.ALL)
+                .build();
         List<String> csvStrings = new ArrayList<>();
 
         for (TableFragment fragment : fragments) {
@@ -156,8 +159,7 @@ public class PdfContentExtractor {
 
             for (AiPdfContentType contentType : contentTypes) {
                 Optional<PdfContentResult> result =
-                        dispatchContentType(
-                                contentType, lf, fileReq, remainingPages, remainingCharacters);
+                        dispatchContentType(contentType, lf, fileReq, remainingPages, remainingCharacters);
                 if (result.isPresent()) {
                     PdfContentResult content = result.get();
                     contentResults.add(content);
@@ -189,29 +191,20 @@ public class PdfContentExtractor {
             throws IOException {
         return switch (contentType) {
             case PAGE_TEXT, FULL_TEXT ->
-                    Optional.<PdfContentResult>ofNullable(
-                            extractText(lf, fileReq, remainingPages, remainingCharacters));
+                Optional.<PdfContentResult>ofNullable(extractText(lf, fileReq, remainingPages, remainingCharacters));
             default -> {
-                log.warn(
-                        "Content type {} not yet implemented, skipping for {}",
-                        contentType,
-                        lf.fileName());
+                log.warn("Content type {} not yet implemented, skipping for {}", contentType, lf.fileName());
                 yield Optional.empty();
             }
         };
     }
 
     private ExtractedFileText extractText(
-            LoadedFile lf,
-            AiWorkflowFileRequest fileReq,
-            int remainingPages,
-            int remainingCharacters)
+            LoadedFile lf, AiWorkflowFileRequest fileReq, int remainingPages, int remainingCharacters)
             throws IOException {
         List<Integer> requestedPages = fileReq != null ? fileReq.getPageNumbers() : null;
-        List<Integer> pages =
-                selectPages(lf.document().getNumberOfPages(), requestedPages, remainingPages);
-        List<AiWorkflowTextSelection> extracted =
-                extractPageText(lf.document(), pages, remainingCharacters);
+        List<Integer> pages = selectPages(lf.document().getNumberOfPages(), requestedPages, remainingPages);
+        List<AiWorkflowTextSelection> extracted = extractPageText(lf.document(), pages, remainingCharacters);
         return extracted.isEmpty() ? null : buildExtractedFileText(lf.fileName(), extracted);
     }
 
@@ -219,17 +212,16 @@ public class PdfContentExtractor {
         return switch (kind) {
             case EXTRACTED_TEXT -> {
                 ExtractedTextArtifact artifact = new ExtractedTextArtifact();
-                artifact.setFiles(results.stream().map(ExtractedFileText.class::cast).toList());
+                artifact.setFiles(
+                        results.stream().map(ExtractedFileText.class::cast).toList());
                 yield artifact;
             }
             case TOOL_REPORT ->
-                    throw new IllegalArgumentException(
-                            "TOOL_REPORT artifacts are not produced by PdfContentExtractor");
+                throw new IllegalArgumentException("TOOL_REPORT artifacts are not produced by PdfContentExtractor");
         };
     }
 
-    private List<Integer> selectPages(
-            int totalPages, List<Integer> requestedPageNumbers, int maxPages) {
+    private List<Integer> selectPages(int totalPages, List<Integer> requestedPageNumbers, int maxPages) {
         if (totalPages <= 0) {
             throw ExceptionUtils.createPdfNoPages();
         }
@@ -260,8 +252,7 @@ public class PdfContentExtractor {
     }
 
     private List<AiWorkflowTextSelection> extractPageText(
-            PDDocument document, List<Integer> selectedPages, int maxCharacters)
-            throws IOException {
+            PDDocument document, List<Integer> selectedPages, int maxCharacters) throws IOException {
         List<AiWorkflowTextSelection> pages = new ArrayList<>();
         int remainingCharacters = maxCharacters;
 
@@ -280,11 +271,9 @@ public class PdfContentExtractor {
             // Prepend page dimensions so the AI agent can reason about absolute coordinates.
             PDPage page = document.getPage(pageNumber - 1);
             PDRectangle bbox = page.getBBox();
-            String dimensionHeader =
-                    String.format(
-                            "--- Page dimensions: %.0fx%.0f pts"
-                                    + " (PDF user-space: origin bottom-left, Y up) ---\n",
-                            bbox.getWidth(), bbox.getHeight());
+            String dimensionHeader = String.format(
+                    "--- Page dimensions: %.0fx%.0f pts" + " (PDF user-space: origin bottom-left, Y up) ---\n",
+                    bbox.getWidth(), bbox.getHeight());
             pageText = dimensionHeader + pageText;
 
             // Append image metadata so the AI agent can reason about images spatially.
@@ -334,16 +323,13 @@ public class PdfContentExtractor {
                 String position = spatialLabel(img, pageWidth, pageHeight);
                 float w = img.x2() - img.x1();
                 float h = img.y2() - img.y1();
-                sb.append(
-                        String.format(
-                                "\nImage %d: position=%s, size=%.0fx%.0f pts,"
-                                        + " bounds=(x1=%.0f, y1=%.0f, x2=%.0f, y2=%.0f)",
-                                i + 1, position, w, h, img.x1(), img.y1(), img.x2(), img.y2()));
+                sb.append(String.format(
+                        "\nImage %d: position=%s, size=%.0fx%.0f pts," + " bounds=(x1=%.0f, y1=%.0f, x2=%.0f, y2=%.0f)",
+                        i + 1, position, w, h, img.x1(), img.y1(), img.x2(), img.y2()));
             }
             return sb.toString();
         } catch (Exception e) {
-            log.debug(
-                    "Failed to extract image positions for page {}: {}", pageIndex, e.getMessage());
+            log.debug("Failed to extract image positions for page {}: {}", pageIndex, e.getMessage());
             return "";
         }
     }
@@ -362,8 +348,7 @@ public class PdfContentExtractor {
         return vert + "-" + horiz;
     }
 
-    private ExtractedFileText buildExtractedFileText(
-            String fileName, List<AiWorkflowTextSelection> pages) {
+    private ExtractedFileText buildExtractedFileText(String fileName, List<AiWorkflowTextSelection> pages) {
         ExtractedFileText fileText = new ExtractedFileText();
         fileText.setFileName(fileName);
         fileText.setPages(pages);
@@ -405,8 +390,7 @@ public class PdfContentExtractor {
      * @param pageIndex 0-based page index
      * @return list of located images in document order
      */
-    public List<ImageBlock> extractImagePositions(PDDocument document, int pageIndex)
-            throws IOException {
+    public List<ImageBlock> extractImagePositions(PDDocument document, int pageIndex) throws IOException {
         PDPage page = document.getPage(pageIndex);
         PageImageLocator locator = new PageImageLocator(page, pageIndex);
         locator.processPage(page);
@@ -423,8 +407,7 @@ public class PdfContentExtractor {
      * @param useRegex {@code true} to treat {@code pattern} as a regular expression
      * @return list of located matches, in page order
      */
-    public List<TextBlock> findTextPositions(PDDocument document, String pattern, boolean useRegex)
-            throws IOException {
+    public List<TextBlock> findTextPositions(PDDocument document, String pattern, boolean useRegex) throws IOException {
         LocalTextFinder finder = new LocalTextFinder(pattern, useRegex);
         finder.getText(document);
         return finder.found;

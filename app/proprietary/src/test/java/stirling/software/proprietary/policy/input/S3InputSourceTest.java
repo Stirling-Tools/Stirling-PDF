@@ -55,7 +55,8 @@ class S3InputSourceTest {
     private static final String POLICY = "p1";
     private static final String BUCKET = "inbox-bucket";
 
-    @Mock private S3Client s3Client;
+    @Mock
+    private S3Client s3Client;
 
     private S3InputSource source;
     private InProcessProcessedLedger ledger;
@@ -63,10 +64,9 @@ class S3InputSourceTest {
 
     @BeforeEach
     void setUp() {
-        source =
-                new S3InputSource(
-                        new S3ConnectionPool(new ApplicationProperties(), config -> s3Client),
-                        S3TestConnections.legacyResolver());
+        source = new S3InputSource(
+                new S3ConnectionPool(new ApplicationProperties(), config -> s3Client),
+                S3TestConnections.legacyResolver());
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
     }
@@ -168,15 +168,14 @@ class S3InputSourceTest {
 
     @Test
     void listingPagesAreAllRead() throws IOException {
-        ListObjectsV2Response firstPage =
-                ListObjectsV2Response.builder()
-                        .contents(object("a.pdf", "\"etag-a\""))
-                        .nextContinuationToken("next")
-                        .build();
-        ListObjectsV2Response secondPage =
-                ListObjectsV2Response.builder().contents(object("b.pdf", "\"etag-b\"")).build();
-        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
-                .thenReturn(firstPage, secondPage);
+        ListObjectsV2Response firstPage = ListObjectsV2Response.builder()
+                .contents(object("a.pdf", "\"etag-a\""))
+                .nextContinuationToken("next")
+                .build();
+        ListObjectsV2Response secondPage = ListObjectsV2Response.builder()
+                .contents(object("b.pdf", "\"etag-b\""))
+                .build();
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(firstPage, secondPage);
 
         assertEquals(2, source.resolve(spec(), ctx).size());
     }
@@ -194,10 +193,9 @@ class S3InputSourceTest {
         listingReturns(object("incoming/doc.pdf", "\"etag-1\""));
         byte[] payload = "data".getBytes(StandardCharsets.UTF_8);
         when(s3Client.getObject(any(GetObjectRequest.class)))
-                .thenReturn(
-                        new ResponseInputStream<>(
-                                GetObjectResponse.builder().build(),
-                                AbortableInputStream.create(new ByteArrayInputStream(payload))));
+                .thenReturn(new ResponseInputStream<>(
+                        GetObjectResponse.builder().build(),
+                        AbortableInputStream.create(new ByteArrayInputStream(payload))));
 
         var resource = source.resolve(spec(), ctx).get(0).inputs().primary().get(0);
 
@@ -212,39 +210,38 @@ class S3InputSourceTest {
     @Test
     void aMissingETagFallsBackToSizeAndLastModified() throws IOException {
         Instant modified = Instant.parse("2026-01-01T00:00:00Z");
-        listingReturns(S3Object.builder().key("doc.pdf").size(4L).lastModified(modified).build());
+        listingReturns(S3Object.builder()
+                .key("doc.pdf")
+                .size(4L)
+                .lastModified(modified)
+                .build());
 
         assertEquals(1, source.resolve(spec(), ctx).size());
         // The same gate on the next sweep reads as already claimed.
-        listingReturns(S3Object.builder().key("doc.pdf").size(4L).lastModified(modified).build());
+        listingReturns(S3Object.builder()
+                .key("doc.pdf")
+                .size(4L)
+                .lastModified(modified)
+                .build());
         assertTrue(source.resolve(spec(), ctx).isEmpty());
     }
 
     @Test
     void validateRejectsBadConfig() {
         // No bucket.
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> source.validate(new InputSpec("s3", Map.of())));
+        assertThrows(IllegalArgumentException.class, () -> source.validate(new InputSpec("s3", Map.of())));
         // Credentials are required, never the server's own identity - together and individually.
         assertThrows(
-                IllegalArgumentException.class,
-                () -> source.validate(new InputSpec("s3", Map.of("bucket", BUCKET))));
+                IllegalArgumentException.class, () -> source.validate(new InputSpec("s3", Map.of("bucket", BUCKET))));
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        source.validate(
-                                new InputSpec(
-                                        "s3", Map.of("bucket", BUCKET, "accessKeyId", "AKIA"))));
+                () -> source.validate(new InputSpec("s3", Map.of("bucket", BUCKET, "accessKeyId", "AKIA"))));
         assertThrows(
                 IllegalArgumentException.class,
                 () -> source.validate(new InputSpec("s3", options(Map.of("mode", "sideways")))));
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        source.validate(
-                                new InputSpec(
-                                        "s3", options(Map.of("endpoint", "ftp://example.com")))));
+                () -> source.validate(new InputSpec("s3", options(Map.of("endpoint", "ftp://example.com")))));
     }
 
     @Test
@@ -284,12 +281,11 @@ class S3InputSourceTest {
 
     private void headReturns(String key, String eTag) {
         when(s3Client.headObject(any(HeadObjectRequest.class)))
-                .thenReturn(
-                        HeadObjectResponse.builder()
-                                .eTag(eTag)
-                                .contentLength(4L)
-                                .lastModified(Instant.parse("2026-01-01T00:00:00Z"))
-                                .build());
+                .thenReturn(HeadObjectResponse.builder()
+                        .eTag(eTag)
+                        .contentLength(4L)
+                        .lastModified(Instant.parse("2026-01-01T00:00:00Z"))
+                        .build());
     }
 
     private class RecordingContext implements ResolveContext {
@@ -311,8 +307,7 @@ class S3InputSourceTest {
         }
 
         @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
+        public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
             ledger.settle(policyId, identity, finalGate, finalContentHash, success);
         }
 

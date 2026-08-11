@@ -178,8 +178,7 @@ public class PdfJsonConversionService {
     }
 
     private void loadConfigurationFromProperties() {
-        stirling.software.common.model.ApplicationProperties.PdfEditor cfg =
-                applicationProperties.getPdfEditor();
+        stirling.software.common.model.ApplicationProperties.PdfEditor cfg = applicationProperties.getPdfEditor();
         if (cfg != null) {
             fontNormalizationEnabled = cfg.getFontNormalization().isEnabled();
             cacheMaxBytes = cfg.getCache().getMaxBytes();
@@ -199,16 +198,14 @@ public class PdfJsonConversionService {
 
         if (!isGhostscriptGroupEnabled()) {
             ghostscriptAvailable = false;
-            log.warn(
-                    "Ghostscript font normalization disabled: Ghostscript group is not enabled in configuration");
+            log.warn("Ghostscript font normalization disabled: Ghostscript group is not enabled in configuration");
             return;
         }
 
         List<String> command = List.of("gs", "-version");
         try {
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(command);
+            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    .runCommandWithOutputHandling(command);
             ghostscriptAvailable = result.getRc() == 0;
             if (!ghostscriptAvailable) {
                 log.warn(
@@ -263,15 +260,12 @@ public class PdfJsonConversionService {
         return objectMapper.readValue(buffer.toByteArray(), PdfJsonDocument.class);
     }
 
-    public void convertPdfToJson(MultipartFile file, boolean lightweight, OutputStream out)
-            throws IOException {
+    public void convertPdfToJson(MultipartFile file, boolean lightweight, OutputStream out) throws IOException {
         convertPdfToJson(file, null, lightweight, out);
     }
 
     public void convertPdfToJson(
-            MultipartFile file,
-            Consumer<PdfJsonConversionProgress> progressCallback,
-            OutputStream out)
+            MultipartFile file, Consumer<PdfJsonConversionProgress> progressCallback, OutputStream out)
             throws IOException {
         convertPdfToJson(file, progressCallback, false, out);
     }
@@ -297,14 +291,22 @@ public class PdfJsonConversionService {
             log.debug("Generated synthetic jobId for synchronous conversion: {}", jobId);
         } else {
             jobId = contextJobId;
-            log.info(
-                    "Starting PDF to JSON conversion, jobId from context: {} (lightweight={})",
-                    jobId,
-                    lightweight);
+            log.info("Starting PDF to JSON conversion, jobId from context: {} (lightweight={})", jobId, lightweight);
         }
 
-        Consumer<PdfJsonConversionProgress> progress =
-                progressCallback != null
+        Consumer<PdfJsonConversionProgress> progress = progressCallback != null
+                ? (p) -> {
+                    log.debug(
+                            "Progress: [{}%] {} - {}{}",
+                            p.getPercent(),
+                            p.getStage(),
+                            p.getMessage(),
+                            (p.getCurrent() != null && p.getTotal() != null)
+                                    ? String.format(" (%d/%d)", p.getCurrent(), p.getTotal())
+                                    : "");
+                    progressCallback.accept(p);
+                }
+                : useLazyImages
                         ? (p) -> {
                             log.debug(
                                     "Progress: [{}%] {} - {}{}",
@@ -312,37 +314,20 @@ public class PdfJsonConversionService {
                                     p.getStage(),
                                     p.getMessage(),
                                     (p.getCurrent() != null && p.getTotal() != null)
-                                            ? String.format(
-                                                    " (%d/%d)", p.getCurrent(), p.getTotal())
+                                            ? String.format(" (%d/%d)", p.getCurrent(), p.getTotal())
                                             : "");
-                            progressCallback.accept(p);
+                            reportProgressToTaskManager(jobId, p);
                         }
-                        : useLazyImages
-                                ? (p) -> {
-                                    log.debug(
-                                            "Progress: [{}%] {} - {}{}",
-                                            p.getPercent(),
-                                            p.getStage(),
-                                            p.getMessage(),
-                                            (p.getCurrent() != null && p.getTotal() != null)
-                                                    ? String.format(
-                                                            " (%d/%d)",
-                                                            p.getCurrent(), p.getTotal())
-                                                    : "");
-                                    reportProgressToTaskManager(jobId, p);
-                                }
-                                : (p) -> {
-                                    log.debug(
-                                            "Progress (no job): [{}%] {} - {}{}",
-                                            p.getPercent(),
-                                            p.getStage(),
-                                            p.getMessage(),
-                                            (p.getCurrent() != null && p.getTotal() != null)
-                                                    ? String.format(
-                                                            " (%d/%d)",
-                                                            p.getCurrent(), p.getTotal())
-                                                    : "");
-                                };
+                        : (p) -> {
+                            log.debug(
+                                    "Progress (no job): [{}%] {} - {}{}",
+                                    p.getPercent(),
+                                    p.getStage(),
+                                    p.getMessage(),
+                                    (p.getCurrent() != null && p.getTotal() != null)
+                                            ? String.format(" (%d/%d)", p.getCurrent(), p.getTotal())
+                                            : "");
+                        };
 
         TempFile normalizedFile = null;
         try (TempFile originalFile = new TempFile(tempFileManager, ".pdf")) {
@@ -353,17 +338,14 @@ public class PdfJsonConversionService {
             if (fontNormalizationEnabled && canRunGhostscript()) {
                 try {
                     progress.accept(
-                            PdfJsonConversionProgress.of(
-                                    10, "normalizing", "Normalizing fonts with Ghostscript"));
+                            PdfJsonConversionProgress.of(10, "normalizing", "Normalizing fonts with Ghostscript"));
                     normalizedFile = normalizePdfFonts(workingPath);
                     if (normalizedFile != null && normalizedFile.exists()) {
                         workingPath = normalizedFile.getPath();
                         log.debug("Using Ghostscript-normalized PDF for JSON export");
                     }
                 } catch (IOException ex) {
-                    log.warn(
-                            "Ghostscript font normalization failed ({}); using original PDF",
-                            ex.getMessage());
+                    log.warn("Ghostscript font normalization failed ({}); using original PDF", ex.getMessage());
                     closeQuietly(normalizedFile);
                     normalizedFile = null;
                 }
@@ -396,71 +378,50 @@ public class PdfJsonConversionService {
                 Map<Integer, List<PdfJsonTextElement>> textByPage = new LinkedHashMap<>();
                 Map<Integer, Map<PDFont, String>> pageFontResources = new HashMap<>();
 
-                progress.accept(
-                        PdfJsonConversionProgress.of(30, "fonts", "Collecting font information"));
+                progress.accept(PdfJsonConversionProgress.of(30, "fonts", "Collecting font information"));
                 int pageNumber = 1;
                 for (PDPage page : document.getPages()) {
                     Map<PDFont, String> resourceMap =
-                            collectFontsForPage(
-                                    document, page, pageNumber, fonts, fontCache, jobId);
+                            collectFontsForPage(document, page, pageNumber, fonts, fontCache, jobId);
                     pageFontResources.put(pageNumber, resourceMap);
-                    log.debug(
-                            "PDF->JSON: collected {} font resources on page {}",
-                            resourceMap.size(),
-                            pageNumber);
+                    log.debug("PDF->JSON: collected {} font resources on page {}", resourceMap.size(), pageNumber);
 
                     // Update progress for font collection (30-50%)
                     int fontProgress = 30 + (int) ((pageNumber / (double) totalPages) * 20);
-                    progress.accept(
-                            PdfJsonConversionProgress.of(
-                                    fontProgress,
-                                    "fonts",
-                                    "Collecting fonts",
-                                    pageNumber,
-                                    totalPages));
+                    progress.accept(PdfJsonConversionProgress.of(
+                            fontProgress, "fonts", "Collecting fonts", pageNumber, totalPages));
                     pageNumber++;
                 }
 
-                progress.accept(
-                        PdfJsonConversionProgress.of(50, "text", "Extracting text content"));
+                progress.accept(PdfJsonConversionProgress.of(50, "text", "Extracting text content"));
                 TextCollectingStripper stripper =
-                        new TextCollectingStripper(
-                                document, fonts, textByPage, pageFontResources, fontCache, jobId);
+                        new TextCollectingStripper(document, fonts, textByPage, pageFontResources, fontCache, jobId);
                 stripper.setSortByPosition(true);
                 stripper.getText(document);
 
                 Map<Integer, List<PdfJsonImageElement>> imagesByPage;
                 if (useLazyImages) {
-                    progress.accept(
-                            PdfJsonConversionProgress.of(
-                                    70, "images", "Skipping upfront image extraction"));
+                    progress.accept(PdfJsonConversionProgress.of(70, "images", "Skipping upfront image extraction"));
                     imagesByPage = new LinkedHashMap<>();
                 } else {
-                    progress.accept(
-                            PdfJsonConversionProgress.of(
-                                    70, "images", "Extracting embedded images"));
+                    progress.accept(PdfJsonConversionProgress.of(70, "images", "Extracting embedded images"));
                     imagesByPage = collectImages(document, totalPages, progress, imageCache);
                 }
 
                 progress.accept(
-                        PdfJsonConversionProgress.of(
-                                80, "annotations", "Collecting annotations and form fields"));
+                        PdfJsonConversionProgress.of(80, "annotations", "Collecting annotations and form fields"));
                 boolean includeAnnotationRawData = !(lightweight && useLazyImages);
                 Map<Integer, List<PdfJsonAnnotation>> annotationsByPage =
-                        collectAnnotations(
-                                document, totalPages, progress, includeAnnotationRawData);
+                        collectAnnotations(document, totalPages, progress, includeAnnotationRawData);
 
-                progress.accept(
-                        PdfJsonConversionProgress.of(90, "metadata", "Extracting metadata"));
+                progress.accept(PdfJsonConversionProgress.of(90, "metadata", "Extracting metadata"));
                 PdfJsonDocument pdfJson = new PdfJsonDocument();
                 pdfJson.setMetadata(extractMetadata(document));
                 pdfJson.setXmpMetadata(extractXmpMetadata(document));
                 pdfJson.setLazyImages(useLazyImages);
                 List<PdfJsonFont> cachedFonts = cloneFontList(fonts.values());
                 cachedFonts.sort(
-                        Comparator.comparing(
-                                PdfJsonFont::getUid,
-                                Comparator.nullsLast(Comparator.naturalOrder())));
+                        Comparator.comparing(PdfJsonFont::getUid, Comparator.nullsLast(Comparator.naturalOrder())));
                 dedupeFontPayloads(cachedFonts);
                 Map<String, PdfJsonFont> cachedFontMap = new LinkedHashMap<>();
                 for (PdfJsonFont cachedFont : cachedFonts) {
@@ -471,13 +432,8 @@ public class PdfJsonConversionService {
                 }
                 List<PdfJsonFont> responseFonts = cloneFontList(cachedFonts);
                 pdfJson.setFonts(responseFonts);
-                pdfJson.setPages(
-                        extractPages(
-                                document,
-                                textByPage,
-                                imagesByPage,
-                                annotationsByPage,
-                                lightweight && useLazyImages));
+                pdfJson.setPages(extractPages(
+                        document, textByPage, imagesByPage, annotationsByPage, lightweight && useLazyImages));
                 if (lightweight && useLazyImages) {
                     // Lightweight async editor flow does not use form fields and this payload can
                     // be
@@ -489,10 +445,7 @@ public class PdfJsonConversionService {
 
                 // Only cache for real async jobIds, not synthetic synchronous ones
                 if (useLazyImages) {
-                    log.debug(
-                            "Creating cache for jobId: {} (useLazyImages={})",
-                            jobId,
-                            useLazyImages);
+                    log.debug("Creating cache for jobId: {} (useLazyImages={})", jobId, useLazyImages);
                     PdfJsonDocumentMetadata docMetadata = new PdfJsonDocumentMetadata();
                     docMetadata.setMetadata(pdfJson.getMetadata());
                     docMetadata.setXmpMetadata(pdfJson.getXmpMetadata());
@@ -508,9 +461,7 @@ public class PdfJsonConversionService {
                         // Use CropBox if present (defines visible page area), otherwise fall back
                         // to MediaBox
                         PDRectangle pageBox = page.getCropBox();
-                        if (pageBox == null
-                                || pageBox.getWidth() == 0
-                                || pageBox.getHeight() == 0) {
+                        if (pageBox == null || pageBox.getWidth() == 0 || pageBox.getHeight() == 0) {
                             pageBox = page.getMediaBox();
                         }
                         dim.setWidth(pageBox.getWidth());
@@ -525,12 +476,7 @@ public class PdfJsonConversionService {
                         cachedPdfBytes = Files.readAllBytes(workingPath);
                     }
                     CachedPdfDocument cached =
-                            buildCachedDocument(
-                                    jobId,
-                                    cachedPdfBytes,
-                                    docMetadata,
-                                    cachedFontMap,
-                                    pageFontResources);
+                            buildCachedDocument(jobId, cachedPdfBytes, docMetadata, cachedFontMap, pageFontResources);
                     putCachedDocument(jobId, cached);
                     log.info(
                             "Successfully cached PDF ({} bytes, {} pages, {} fonts) for jobId: {} (diskBacked={})",
@@ -541,10 +487,7 @@ public class PdfJsonConversionService {
                             cached.isDiskBacked());
                     scheduleDocumentCleanup(jobId);
                 } else {
-                    log.warn(
-                            "Skipping cache creation: useLazyImages={}, jobId={}",
-                            useLazyImages,
-                            jobId);
+                    log.warn("Skipping cache creation: useLazyImages={}, jobId={}", useLazyImages, jobId);
                 }
 
                 if (lightweight) {
@@ -558,39 +501,27 @@ public class PdfJsonConversionService {
                 logFontPayloadStats(responseFonts, "pdf/text-editor");
                 analyzePdfJson(pdfJson, "pdf/text-editor");
 
-                progress.accept(
-                        PdfJsonConversionProgress.of(95, "serializing", "Generating JSON output"));
+                progress.accept(PdfJsonConversionProgress.of(95, "serializing", "Generating JSON output"));
 
                 // Collect font issues for summary
-                java.util.List<String> fontsWithMissingProgram =
-                        responseFonts.stream()
-                                .filter(
-                                        f ->
-                                                Boolean.TRUE.equals(f.getEmbedded())
-                                                        && !(hasPayload(f.getProgram())
-                                                                || hasPayload(f.getPdfProgram())
-                                                                || hasPayload(f.getWebProgram())))
-                                .map(
-                                        f -> {
-                                            String name =
-                                                    f.getBaseName() != null
-                                                            ? f.getBaseName()
-                                                            : "Unknown";
-                                            String subtype =
-                                                    f.getSubtype() != null
-                                                            ? f.getSubtype()
-                                                            : "Unknown";
-                                            // Clean up subset prefix (e.g., "ABCDEF+TimesNewRoman"
-                                            // -> "TimesNewRoman")
-                                            String cleanName =
-                                                    FONT_SUBSET_PREFIX_PATTERN
-                                                            .matcher(name)
-                                                            .replaceAll("");
-                                            return String.format("%s (%s)", cleanName, subtype);
-                                        })
-                                .toList();
-                long type3Fonts =
-                        responseFonts.stream().filter(f -> "Type3".equals(f.getSubtype())).count();
+                java.util.List<String> fontsWithMissingProgram = responseFonts.stream()
+                        .filter(f -> Boolean.TRUE.equals(f.getEmbedded())
+                                && !(hasPayload(f.getProgram())
+                                        || hasPayload(f.getPdfProgram())
+                                        || hasPayload(f.getWebProgram())))
+                        .map(f -> {
+                            String name = f.getBaseName() != null ? f.getBaseName() : "Unknown";
+                            String subtype = f.getSubtype() != null ? f.getSubtype() : "Unknown";
+                            // Clean up subset prefix (e.g., "ABCDEF+TimesNewRoman"
+                            // -> "TimesNewRoman")
+                            String cleanName =
+                                    FONT_SUBSET_PREFIX_PATTERN.matcher(name).replaceAll("");
+                            return String.format("%s (%s)", cleanName, subtype);
+                        })
+                        .toList();
+                long type3Fonts = responseFonts.stream()
+                        .filter(f -> "Type3".equals(f.getSubtype()))
+                        .count();
 
                 if (!fontsWithMissingProgram.isEmpty()) {
                     log.warn(
@@ -667,15 +598,10 @@ public class PdfJsonConversionService {
             Set<String> allFallbackFontIds = new java.util.HashSet<>();
             int pagesWithFallbacks = 0;
             for (PdfJsonPage pageModel : pages) {
-                int pageNumberValue =
-                        pageModel.getPageNumber() != null
-                                ? pageModel.getPageNumber()
-                                : pageIndex + 1;
+                int pageNumberValue = pageModel.getPageNumber() != null ? pageModel.getPageNumber() : pageIndex + 1;
                 log.debug("Reconstructing page {}", pageNumberValue);
                 PDRectangle pageSize =
-                        new PDRectangle(
-                                safeFloat(pageModel.getWidth(), 612f),
-                                safeFloat(pageModel.getHeight(), 792f));
+                        new PDRectangle(safeFloat(pageModel.getWidth(), 612f), safeFloat(pageModel.getHeight(), 792f));
                 PDPage page = new PDPage(pageSize);
                 if (pageModel.getRotation() != null) {
                     page.setRotation(pageModel.getRotation());
@@ -684,16 +610,13 @@ public class PdfJsonConversionService {
 
                 applyPageResources(document, page, pageModel.getResources());
 
-                List<PDStream> preservedStreams =
-                        buildContentStreams(document, pageModel.getContentStreams());
+                List<PDStream> preservedStreams = buildContentStreams(document, pageModel.getContentStreams());
                 if (!preservedStreams.isEmpty()) {
                     page.setContents(preservedStreams);
                 }
 
                 List<PdfJsonImageElement> imageElements =
-                        pageModel.getImageElements() != null
-                                ? pageModel.getImageElements()
-                                : new ArrayList<>();
+                        pageModel.getImageElements() != null ? pageModel.getImageElements() : new ArrayList<>();
 
                 // Reconstruct image XObjects if content streams are preserved
                 // (images were filtered out during serialization to avoid duplication)
@@ -702,13 +625,10 @@ public class PdfJsonConversionService {
                 }
 
                 List<PdfJsonTextElement> elements =
-                        pageModel.getTextElements() != null
-                                ? pageModel.getTextElements()
-                                : new ArrayList<>();
+                        pageModel.getTextElements() != null ? pageModel.getTextElements() : new ArrayList<>();
 
                 PreflightResult preflightResult =
-                        preflightTextElements(
-                                document, fontMap, fontModels, elements, pageNumberValue);
+                        preflightTextElements(document, fontMap, fontModels, elements, pageNumberValue);
 
                 fontLookup = buildFontModelLookup(fontModels);
 
@@ -740,19 +660,10 @@ public class PdfJsonConversionService {
                         rewriteSucceeded = false;
                     } else if (!preservedStreams.isEmpty()) {
                         log.debug("Attempting token rewrite for page {}", pageNumberValue);
-                        rewriteSucceeded =
-                                rewriteTextOperators(
-                                        document,
-                                        page,
-                                        elements,
-                                        false,
-                                        false,
-                                        fontLookup,
-                                        pageNumberValue);
+                        rewriteSucceeded = rewriteTextOperators(
+                                document, page, elements, false, false, fontLookup, pageNumberValue);
                         if (!rewriteSucceeded) {
-                            log.debug(
-                                    "Token rewrite failed for page {}, regenerating text stream",
-                                    pageNumberValue);
+                            log.debug("Token rewrite failed for page {}, regenerating text stream", pageNumberValue);
                         } else {
                             log.debug("Token rewrite succeeded for page {}", pageNumberValue);
                         }
@@ -778,8 +689,7 @@ public class PdfJsonConversionService {
                     log.debug("Regenerating page content for page {}", pageNumberValue);
                     AppendMode appendMode = AppendMode.OVERWRITE;
                     if (!preservedStreams.isEmpty()) {
-                        PDStream vectorStream =
-                                extractVectorGraphics(document, preservedStreams, imageElements);
+                        PDStream vectorStream = extractVectorGraphics(document, preservedStreams, imageElements);
                         if (vectorStream != null) {
                             page.setContents(Collections.singletonList(vectorStream));
                             appendMode = AppendMode.APPEND;
@@ -788,22 +698,13 @@ public class PdfJsonConversionService {
                         }
                     }
                     regeneratePageContent(
-                            document,
-                            page,
-                            elements,
-                            imageElements,
-                            fontMap,
-                            fontModels,
-                            pageNumberValue,
-                            appendMode);
+                            document, page, elements, imageElements, fontMap, fontModels, pageNumberValue, appendMode);
                     log.debug("Page content regeneration complete for page {}", pageNumberValue);
                 }
 
                 // Restore annotations for this page
                 List<PdfJsonAnnotation> annotations =
-                        pageModel.getAnnotations() != null
-                                ? pageModel.getAnnotations()
-                                : new ArrayList<>();
+                        pageModel.getAnnotations() != null ? pageModel.getAnnotations() : new ArrayList<>();
                 restoreAnnotations(document, page, annotations);
 
                 pageIndex++;
@@ -845,19 +746,8 @@ public class PdfJsonConversionService {
         Map<PDFont, String> mapping = new HashMap<>();
         Set<COSBase> visited = Collections.newSetFromMap(new IdentityHashMap<>());
         collectFontsFromResources(
-                document,
-                page.getResources(),
-                pageNumber,
-                fonts,
-                mapping,
-                visited,
-                "",
-                fontCache,
-                jobId);
-        log.debug(
-                "Page {} font scan complete (unique fonts discovered: {})",
-                pageNumber,
-                mapping.size());
+                document, page.getResources(), pageNumber, fonts, mapping, visited, "", fontCache, jobId);
+        log.debug("Page {} font scan complete (unique fonts discovered: {})", pageNumber, mapping.size());
         return mapping;
     }
 
@@ -898,15 +788,11 @@ public class PdfJsonConversionService {
             if (font == null) {
                 continue;
             }
-            String fontId =
-                    prefix.isEmpty()
-                            ? resourceName.getName()
-                            : prefix + "/" + resourceName.getName();
+            String fontId = prefix.isEmpty() ? resourceName.getName() : prefix + "/" + resourceName.getName();
             mapping.put(font, fontId);
             String key = buildFontKey(jobId, pageNumber, fontId);
             if (!fonts.containsKey(key)) {
-                fonts.put(
-                        key, buildFontModel(document, font, fontId, pageNumber, fontCache, jobId));
+                fonts.put(key, buildFontModel(document, font, fontId, pageNumber, fontCache, jobId));
             }
         }
 
@@ -921,9 +807,7 @@ public class PdfJsonConversionService {
                             fonts,
                             mapping,
                             visited,
-                            prefix.isEmpty()
-                                    ? xobjectName.getName()
-                                    : prefix + "/" + xobjectName.getName(),
+                            prefix.isEmpty() ? xobjectName.getName() : prefix + "/" + xobjectName.getName(),
                             fontCache,
                             jobId);
                 }
@@ -977,8 +861,7 @@ public class PdfJsonConversionService {
         return lookup;
     }
 
-    private PdfJsonFont resolveFontModel(
-            Map<String, PdfJsonFont> lookup, int pageNumber, String fontId) {
+    private PdfJsonFont resolveFontModel(Map<String, PdfJsonFont> lookup, int pageNumber, String fontId) {
         if (lookup == null || fontId == null) {
             return null;
         }
@@ -1012,8 +895,7 @@ public class PdfJsonConversionService {
             byte[] bytes = objectMapper.writeValueAsBytes(font);
             return objectMapper.readValue(bytes, PdfJsonFont.class);
         } catch (Exception ex) {
-            log.debug(
-                    "Failed deep-cloning font {} via roundtrip: {}", font.getId(), ex.getMessage());
+            log.debug("Failed deep-cloning font {} via roundtrip: {}", font.getId(), ex.getMessage());
             PdfJsonCosValue cosClone = null;
             try {
                 if (font.getCosDictionary() != null) {
@@ -1021,10 +903,7 @@ public class PdfJsonConversionService {
                     cosClone = objectMapper.readValue(cosBytes, PdfJsonCosValue.class);
                 }
             } catch (Exception cosEx) {
-                log.debug(
-                        "Failed deep-cloning font cosDictionary {}: {}",
-                        font.getId(),
-                        cosEx.getMessage());
+                log.debug("Failed deep-cloning font cosDictionary {}: {}", font.getId(), cosEx.getMessage());
             }
             return PdfJsonFont.builder()
                     .id(font.getId())
@@ -1041,10 +920,7 @@ public class PdfJsonConversionService {
                     .webProgramFormat(font.getWebProgramFormat())
                     .pdfProgram(font.getPdfProgram())
                     .pdfProgramFormat(font.getPdfProgramFormat())
-                    .type3Glyphs(
-                            font.getType3Glyphs() == null
-                                    ? null
-                                    : new ArrayList<>(font.getType3Glyphs()))
+                    .type3Glyphs(font.getType3Glyphs() == null ? null : new ArrayList<>(font.getType3Glyphs()))
                     .conversionCandidates(
                             font.getConversionCandidates() == null
                                     ? null
@@ -1075,10 +951,9 @@ public class PdfJsonConversionService {
             if (font == null) {
                 continue;
             }
-            boolean hasUsableProgram =
-                    hasPayload(font.getPdfProgram())
-                            || hasPayload(font.getWebProgram())
-                            || hasPayload(font.getProgram());
+            boolean hasUsableProgram = hasPayload(font.getPdfProgram())
+                    || hasPayload(font.getWebProgram())
+                    || hasPayload(font.getProgram());
 
             // Only clear cosDictionary for Type3 fonts (which have inline content streams)
             // All other font types may need ToUnicode CMap or encoding from the dictionary
@@ -1270,44 +1145,35 @@ public class PdfJsonConversionService {
                         continue;
                     }
                     long size = sizeOfObject(page);
-                    int pageNumber =
-                            page.getPageNumber() != null ? page.getPageNumber() : pageIndex + 1;
+                    int pageNumber = page.getPageNumber() != null ? page.getPageNumber() : pageIndex + 1;
                     topPages.add(new PageSizeStat(pageNumber, size, page));
                     pageIndex++;
                 }
                 topPages.sort((a, b) -> Long.compare(b.sizeBytes, a.sizeBytes));
-                String top =
-                        topPages.stream()
-                                .limit(5)
-                                .map(
-                                        s ->
-                                                String.format(
-                                                        "page=%d size=%d",
-                                                        s.pageNumber, s.sizeBytes))
-                                .collect(java.util.stream.Collectors.joining("; "));
+                String top = topPages.stream()
+                        .limit(5)
+                        .map(s -> String.format("page=%d size=%d", s.pageNumber, s.sizeBytes))
+                        .collect(java.util.stream.Collectors.joining("; "));
                 log.debug("PDF JSON analysis ({}): topPageSizes -> {}", label, top);
 
-                topPages.stream()
-                        .limit(3)
-                        .forEach(
-                                s -> {
-                                    PdfJsonPage page = s.page;
-                                    long resources = sizeOfObject(page.getResources());
-                                    long contentStreams = sizeOfObject(page.getContentStreams());
-                                    long annotations = sizeOfObject(page.getAnnotations());
-                                    long textElements = sizeOfObject(page.getTextElements());
-                                    long imageElements = sizeOfObject(page.getImageElements());
-                                    log.debug(
-                                            "PDF JSON analysis ({}): pageBreakdown page={} total={} resources={} contentStreams={} annotations={} textElements={} imageElements={}",
-                                            label,
-                                            s.pageNumber,
-                                            s.sizeBytes,
-                                            resources,
-                                            contentStreams,
-                                            annotations,
-                                            textElements,
-                                            imageElements);
-                                });
+                topPages.stream().limit(3).forEach(s -> {
+                    PdfJsonPage page = s.page;
+                    long resources = sizeOfObject(page.getResources());
+                    long contentStreams = sizeOfObject(page.getContentStreams());
+                    long annotations = sizeOfObject(page.getAnnotations());
+                    long textElements = sizeOfObject(page.getTextElements());
+                    long imageElements = sizeOfObject(page.getImageElements());
+                    log.debug(
+                            "PDF JSON analysis ({}): pageBreakdown page={} total={} resources={} contentStreams={} annotations={} textElements={} imageElements={}",
+                            label,
+                            s.pageNumber,
+                            s.sizeBytes,
+                            resources,
+                            contentStreams,
+                            annotations,
+                            textElements,
+                            imageElements);
+                });
             }
         } catch (Exception ex) {
             log.warn("PDF JSON analysis failed ({}): {}", label, ex.getMessage());
@@ -1323,10 +1189,9 @@ public class PdfJsonConversionService {
         if (bytes.length == 0) {
             return;
         }
-        String hash =
-                Base64.getEncoder()
-                        .encodeToString(
-                                java.security.MessageDigest.getInstance("SHA-256").digest(bytes));
+        String hash = Base64.getEncoder()
+                .encodeToString(
+                        java.security.MessageDigest.getInstance("SHA-256").digest(bytes));
         DuplicateStats entry = stats.computeIfAbsent(hash, k -> new DuplicateStats());
         entry.count++;
         if (entry.sizeBytes == 0) {
@@ -1334,30 +1199,24 @@ public class PdfJsonConversionService {
         }
     }
 
-    private void logDuplicateSummary(
-            String category, String label, Map<String, DuplicateStats> stats) {
+    private void logDuplicateSummary(String category, String label, Map<String, DuplicateStats> stats) {
         if (stats.isEmpty()) {
             return;
         }
-        List<DuplicateStats> duplicates =
-                stats.values().stream()
-                        .filter(s -> s.count > 1)
-                        .sorted((a, b) -> Long.compare(b.totalBytesSaved(), a.totalBytesSaved()))
-                        .limit(5)
-                        .toList();
+        List<DuplicateStats> duplicates = stats.values().stream()
+                .filter(s -> s.count > 1)
+                .sorted((a, b) -> Long.compare(b.totalBytesSaved(), a.totalBytesSaved()))
+                .limit(5)
+                .toList();
 
         if (duplicates.isEmpty()) {
             return;
         }
 
-        String summary =
-                duplicates.stream()
-                        .map(
-                                s ->
-                                        String.format(
-                                                "count=%d size=%d potentialSavings=%d",
-                                                s.count, s.sizeBytes, s.totalBytesSaved()))
-                        .collect(java.util.stream.Collectors.joining("; "));
+        String summary = duplicates.stream()
+                .map(s -> String.format(
+                        "count=%d size=%d potentialSavings=%d", s.count, s.sizeBytes, s.totalBytesSaved()))
+                .collect(java.util.stream.Collectors.joining("; "));
         log.debug("PDF JSON analysis ({}): top duplicates for {} -> {}", label, category, summary);
     }
 
@@ -1499,8 +1358,7 @@ public class PdfJsonConversionService {
     }
 
     private FontModelCacheEntry createFontCacheEntry(
-            PDDocument document, PDFont font, String fontId, int pageNumber, String jobId)
-            throws IOException {
+            PDDocument document, PDFont font, String fontId, int pageNumber, String jobId) throws IOException {
         PDFontDescriptor descriptor = font.getFontDescriptor();
         String subtype = font.getCOSObject().getNameAsString(COSName.SUBTYPE);
         String encoding = resolveEncoding(font);
@@ -1523,38 +1381,28 @@ public class PdfJsonConversionService {
         String fontUid = buildFontKey(jobId, pageNumber, fontId);
         if (font instanceof PDType3Font type3Font) {
             try {
-                conversionCandidates =
-                        type3FontConversionService.synthesize(
-                                Type3ConversionRequest.builder()
-                                        .document(document)
-                                        .font(type3Font)
-                                        .fontId(fontId)
-                                        .pageNumber(pageNumber)
-                                        .fontUid(fontUid)
-                                        .build());
+                conversionCandidates = type3FontConversionService.synthesize(Type3ConversionRequest.builder()
+                        .document(document)
+                        .font(type3Font)
+                        .fontId(fontId)
+                        .pageNumber(pageNumber)
+                        .fontUid(fontUid)
+                        .build());
                 if (conversionCandidates != null && conversionCandidates.isEmpty()) {
                     conversionCandidates = null;
                 }
                 try {
                     List<Type3GlyphOutline> outlines =
-                            type3GlyphExtractor.extractGlyphs(
-                                    document, type3Font, fontId, pageNumber);
+                            type3GlyphExtractor.extractGlyphs(document, type3Font, fontId, pageNumber);
                     if (outlines != null && !outlines.isEmpty()) {
-                        type3Glyphs =
-                                outlines.stream()
-                                        .map(
-                                                outline ->
-                                                        PdfJsonFontType3Glyph.builder()
-                                                                .charCode(outline.getCharCode())
-                                                                .charCodeRaw(
-                                                                        outline.getCharCode() >= 0
-                                                                                ? outline
-                                                                                        .getCharCode()
-                                                                                : null)
-                                                                .glyphName(outline.getGlyphName())
-                                                                .unicode(outline.getUnicode())
-                                                                .build())
-                                        .toList();
+                        type3Glyphs = outlines.stream()
+                                .map(outline -> PdfJsonFontType3Glyph.builder()
+                                        .charCode(outline.getCharCode())
+                                        .charCodeRaw(outline.getCharCode() >= 0 ? outline.getCharCode() : null)
+                                        .glyphName(outline.getGlyphName())
+                                        .unicode(outline.getUnicode())
+                                        .build())
+                                .toList();
                     }
                 } catch (Exception ex) {
                     log.debug(
@@ -1595,8 +1443,7 @@ public class PdfJsonConversionService {
                 conversionCandidates);
     }
 
-    private PdfJsonFont toPdfJsonFont(
-            FontModelCacheEntry cacheEntry, String fontId, int pageNumber, String jobId) {
+    private PdfJsonFont toPdfJsonFont(FontModelCacheEntry cacheEntry, String fontId, int pageNumber, String jobId) {
         FontProgramData programData = cacheEntry.programData();
         return PdfJsonFont.builder()
                 .id(fontId)
@@ -1641,46 +1488,25 @@ public class PdfJsonConversionService {
                 continue;
             }
             PdfJsonFontConversionStatus status = candidate.getStatus();
-            if (status == PdfJsonFontConversionStatus.SUCCESS
-                    || status == PdfJsonFontConversionStatus.WARNING) {
+            if (status == PdfJsonFontConversionStatus.SUCCESS || status == PdfJsonFontConversionStatus.WARNING) {
                 prioritized.add(candidate);
             }
         }
         if (prioritized.isEmpty()) {
             return Collections.emptyList();
         }
-        prioritized.sort(
-                Comparator.comparingInt(
-                        c ->
-                                conversionStatusPriority(
-                                        c.getStatus() != null
-                                                ? c.getStatus()
-                                                : PdfJsonFontConversionStatus.FAILURE)));
+        prioritized.sort(Comparator.comparingInt(c ->
+                conversionStatusPriority(c.getStatus() != null ? c.getStatus() : PdfJsonFontConversionStatus.FAILURE)));
 
         List<FontByteSource> sources = new ArrayList<>();
         for (PdfJsonFontConversionCandidate candidate : prioritized) {
             addCandidatePayload(
-                    sources,
-                    candidate.getPdfProgram(),
-                    candidate.getPdfProgramFormat(),
-                    candidate,
-                    "pdfProgram");
+                    sources, candidate.getPdfProgram(), candidate.getPdfProgramFormat(), candidate, "pdfProgram");
+            addCandidatePayload(sources, candidate.getProgram(), candidate.getProgramFormat(), candidate, "program");
             addCandidatePayload(
-                    sources,
-                    candidate.getProgram(),
-                    candidate.getProgramFormat(),
-                    candidate,
-                    "program");
-            addCandidatePayload(
-                    sources,
-                    candidate.getWebProgram(),
-                    candidate.getWebProgramFormat(),
-                    candidate,
-                    "webProgram");
+                    sources, candidate.getWebProgram(), candidate.getWebProgramFormat(), candidate, "webProgram");
         }
-        sources.sort(
-                Comparator.comparingInt(
-                        source -> fontFormatPreference(source.format(), source.originLabel())));
+        sources.sort(Comparator.comparingInt(source -> fontFormatPreference(source.format(), source.originLabel())));
         return sources;
     }
 
@@ -1707,8 +1533,7 @@ public class PdfJsonConversionService {
                 return;
             }
             String normalizedFormat = format != null ? format.toLowerCase(Locale.ROOT) : null;
-            String strategyId =
-                    candidate.getStrategyId() != null ? candidate.getStrategyId() : "unknown";
+            String strategyId = candidate.getStrategyId() != null ? candidate.getStrategyId() : "unknown";
             String origin = "candidate:" + strategyId + ":" + label;
             sources.add(new FontByteSource(bytes, normalizedFormat, origin));
             log.debug(
@@ -1832,8 +1657,7 @@ public class PdfJsonConversionService {
 
         Set<String> fallbackIds = new LinkedHashSet<>();
         boolean fallbackNeeded = false;
-        Set<String> warnedFonts =
-                new HashSet<>(); // Track fonts we've already warned about on this page
+        Set<String> warnedFonts = new HashSet<>(); // Track fonts we've already warned about on this page
 
         Map<String, PdfJsonFont> fontLookup = buildFontModelLookup(fontModels);
         Map<String, Set<Integer>> type3GlyphCache = new HashMap<>();
@@ -1858,19 +1682,17 @@ public class PdfJsonConversionService {
 
             PdfJsonFont fontModel = resolveFontModel(fontLookup, pageNumber, element.getFontId());
             if (font instanceof PDType3Font && fontModel != null) {
-                Set<Integer> supportedGlyphs =
-                        type3GlyphCache.computeIfAbsent(
-                                fontModel.getUid() != null ? fontModel.getUid() : fontModel.getId(),
-                                key -> {
-                                    List<PdfJsonFontType3Glyph> glyphs = fontModel.getType3Glyphs();
-                                    if (glyphs == null || glyphs.isEmpty()) {
-                                        return Collections.emptySet();
-                                    }
-                                    return glyphs.stream()
-                                            .map(PdfJsonFontType3Glyph::getUnicode)
-                                            .filter(Objects::nonNull)
-                                            .collect(Collectors.toSet());
-                                });
+                Set<Integer> supportedGlyphs = type3GlyphCache.computeIfAbsent(
+                        fontModel.getUid() != null ? fontModel.getUid() : fontModel.getId(), key -> {
+                            List<PdfJsonFontType3Glyph> glyphs = fontModel.getType3Glyphs();
+                            if (glyphs == null || glyphs.isEmpty()) {
+                                return Collections.emptySet();
+                            }
+                            return glyphs.stream()
+                                    .map(PdfJsonFontType3Glyph::getUnicode)
+                                    .filter(Objects::nonNull)
+                                    .collect(Collectors.toSet());
+                        });
 
                 boolean missingGlyph = false;
                 for (int offset = 0; offset < text.length(); ) {
@@ -1889,8 +1711,7 @@ public class PdfJsonConversionService {
                         int codePoint = text.codePointAt(offset);
                         offset += Character.charCount(codePoint);
                         if (!supportedGlyphs.contains(codePoint)) {
-                            String fallbackId =
-                                    fallbackFontService.resolveFallbackFontId(codePoint);
+                            String fallbackId = fallbackFontService.resolveFallbackFontId(codePoint);
                             fallbackIds.add(fallbackId != null ? fallbackId : FALLBACK_FONT_ID);
                         }
                     }
@@ -1899,12 +1720,11 @@ public class PdfJsonConversionService {
             }
 
             if (!fallbackFontService.canEncodeFully(font, text)) {
-                String fontName =
-                        fontModel != null && fontModel.getBaseName() != null
-                                ? FONT_SUBSET_PREFIX_PATTERN
-                                        .matcher(fontModel.getBaseName())
-                                        .replaceAll("") // Remove subset prefix
-                                : (font != null ? font.getName() : "unknown");
+                String fontName = fontModel != null && fontModel.getBaseName() != null
+                        ? FONT_SUBSET_PREFIX_PATTERN
+                                .matcher(fontModel.getBaseName())
+                                .replaceAll("") // Remove subset prefix
+                        : (font != null ? font.getName() : "unknown");
                 String fontKey = fontName + ":" + element.getFontId() + ":" + pageNumber;
                 if (!warnedFonts.contains(fontKey)) {
                     log.warn(
@@ -1940,8 +1760,7 @@ public class PdfJsonConversionService {
         return new PreflightResult(fallbackNeeded, fallbackIds);
     }
 
-    private void ensureFallbackResources(
-            PDPage page, Set<String> fallbackFontIds, Map<String, PDFont> fontMap) {
+    private void ensureFallbackResources(PDPage page, Set<String> fallbackFontIds, Map<String, PDFont> fontMap) {
         if (fallbackFontIds == null || fallbackFontIds.isEmpty()) {
             return;
         }
@@ -1973,23 +1792,16 @@ public class PdfJsonConversionService {
     }
 
     private PDFont ensureFallbackFont(
-            PDDocument document,
-            Map<String, PDFont> fontMap,
-            List<PdfJsonFont> fontModels,
-            String fallbackId)
+            PDDocument document, Map<String, PDFont> fontMap, List<PdfJsonFont> fontModels, String fallbackId)
             throws IOException {
         String effectiveId = fallbackId != null ? fallbackId : FALLBACK_FONT_ID;
         String key = buildFontKey(null, -1, effectiveId);
         PDFont font = fontMap.get(key);
         if (font != null) {
-            log.debug(
-                    "[FALLBACK-DEBUG] Reusing cached fallback font {} (key: {})", effectiveId, key);
+            log.debug("[FALLBACK-DEBUG] Reusing cached fallback font {} (key: {})", effectiveId, key);
             return font;
         }
-        log.debug(
-                "[FALLBACK-DEBUG] Loading fallback font {} (key: {}) via fallbackFontService",
-                effectiveId,
-                key);
+        log.debug("[FALLBACK-DEBUG] Loading fallback font {} (key: {}) via fallbackFontService", effectiveId, key);
         PDFont loaded = fallbackFontService.loadFallbackPdfFont(document, effectiveId);
         log.debug(
                 "[FALLBACK-DEBUG] Loaded fallback font {} - PDFont class: {}, name: {}",
@@ -1997,8 +1809,7 @@ public class PdfJsonConversionService {
                 loaded.getClass().getSimpleName(),
                 loaded.getName());
         fontMap.put(key, loaded);
-        if (fontModels != null
-                && fontModels.stream().noneMatch(f -> effectiveId.equals(f.getId()))) {
+        if (fontModels != null && fontModels.stream().noneMatch(f -> effectiveId.equals(f.getId()))) {
             fontModels.add(fallbackFontService.buildFallbackFontModel(effectiveId));
         }
         return loaded;
@@ -2020,8 +1831,7 @@ public class PdfJsonConversionService {
 
     private boolean isGhostscriptGroupEnabled() {
         try {
-            return endpointConfiguration != null
-                    && endpointConfiguration.isGroupEnabled("Ghostscript");
+            return endpointConfiguration != null && endpointConfiguration.isGroupEnabled("Ghostscript");
         } catch (Exception ex) {
             log.debug("Ghostscript group check failed: {}", ex.getMessage());
             return false;
@@ -2051,12 +1861,9 @@ public class PdfJsonConversionService {
         command.add("-f");
         command.add(sourcePath.toString());
         try {
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(command);
-            if (result.getRc() == 0
-                    && Files.exists(outputFile.getPath())
-                    && Files.size(outputFile.getPath()) > 0) {
+            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    .runCommandWithOutputHandling(command);
+            if (result.getRc() == 0 && Files.exists(outputFile.getPath()) && Files.size(outputFile.getPath()) > 0) {
                 return outputFile;
             }
             log.warn("Ghostscript normalization exited with code {}", result.getRc());
@@ -2138,33 +1945,22 @@ public class PdfJsonConversionService {
                         json.append(",");
                     }
                     first = false;
-                    json.append(
-                            String.format(
-                                    "{\"code\":%d,\"cid\":%d,\"gid\":%d,\"unicode\":%d}",
-                                    charCode, cid, gid, unicode));
+                    json.append(String.format(
+                            "{\"code\":%d,\"cid\":%d,\"gid\":%d,\"unicode\":%d}", charCode, cid, gid, unicode));
                 } catch (Exception e) {
                     // Skip entries that fail to map
-                    log.debug(
-                            "Failed to map charCode {} in font {}: {}",
-                            charCode,
-                            font.getName(),
-                            e.getMessage());
+                    log.debug("Failed to map charCode {} in font {}: {}", charCode, font.getName(), e.getMessage());
                 }
             }
 
             json.append("]}");
             String jsonStr = json.toString();
             log.debug(
-                    "Built Unicode mapping for CID font {} with {} entries",
-                    font.getName(),
-                    charCodeToUnicode.size());
+                    "Built Unicode mapping for CID font {} with {} entries", font.getName(), charCodeToUnicode.size());
             return Base64.getEncoder().encodeToString(jsonStr.getBytes(StandardCharsets.UTF_8));
 
         } catch (Exception e) {
-            log.warn(
-                    "Failed to build Unicode mapping for font {}: {}",
-                    font.getName(),
-                    e.getMessage());
+            log.warn("Failed to build Unicode mapping for font {}: {}", font.getName(), e.getMessage());
             return toUnicodeBase64; // Fall back to raw ToUnicode
         }
     }
@@ -2190,8 +1986,7 @@ public class PdfJsonConversionService {
         // one UTF-16 code unit. The PDF ToUnicode CMap convention requires an even number of bytes
         // (i.e. a multiple of four hex characters) for multi-unit values.
         if (hex.length() % 4 != 0) {
-            throw new NumberFormatException(
-                    "ToUnicode hex value not a multiple of 4 chars: " + hex);
+            throw new NumberFormatException("ToUnicode hex value not a multiple of 4 chars: " + hex);
         }
         int unitCount = hex.length() / 4;
         char[] units = new char[unitCount];
@@ -2237,12 +2032,8 @@ public class PdfJsonConversionService {
         PDStream fontFile3 = descriptor.getFontFile3();
         if (fontFile3 != null) {
             String subtype = fontFile3.getCOSObject().getNameAsString(COSName.SUBTYPE);
-            log.debug(
-                    "[FONT-DEBUG] Font {}: Found FontFile3 with subtype {}",
-                    font.getName(),
-                    subtype);
-            return readFontProgram(
-                    fontFile3, subtype != null ? subtype : "fontfile3", false, toUnicode);
+            log.debug("[FONT-DEBUG] Font {}: Found FontFile3 with subtype {}", font.getName(), subtype);
+            return readFontProgram(fontFile3, subtype != null ? subtype : "fontfile3", false, toUnicode);
         }
 
         PDStream fontFile2 = descriptor.getFontFile2();
@@ -2262,8 +2053,7 @@ public class PdfJsonConversionService {
     }
 
     private FontProgramData readFontProgram(
-            PDStream stream, String formatHint, boolean detectTrueType, String toUnicode)
-            throws IOException {
+            PDStream stream, String formatHint, boolean detectTrueType, String toUnicode) throws IOException {
         try (InputStream inputStream = stream.createInputStream();
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             inputStream.transferTo(baos);
@@ -2328,8 +2118,7 @@ public class PdfJsonConversionService {
                 }
 
                 if (webBase64 == null && pdfBase64 == null) {
-                    log.warn(
-                            "[FONT-DEBUG] ALL CFF conversions failed - font will not be usable in browser!");
+                    log.warn("[FONT-DEBUG] ALL CFF conversions failed - font will not be usable in browser!");
                 }
             } else if (format != null) {
                 log.debug("[FONT-DEBUG] Font is non-CFF format ({}), using as-is", format);
@@ -2412,10 +2201,9 @@ public class PdfJsonConversionService {
         if (plusIndex >= 0 && plusIndex < normalized.length() - 1) {
             normalized = normalized.substring(plusIndex + 1);
         }
-        normalized =
-                WHITESPACE_DASH_UNDERSCORE_PATTERN
-                        .matcher(normalized.toLowerCase(Locale.ROOT))
-                        .replaceAll("");
+        normalized = WHITESPACE_DASH_UNDERSCORE_PATTERN
+                .matcher(normalized.toLowerCase(Locale.ROOT))
+                .replaceAll("");
 
         // Exact match after normalization
         try {
@@ -2442,9 +2230,7 @@ public class PdfJsonConversionService {
         }
 
         // Helvetica family: Helvetica, Arial, Swiss
-        if (normalized.contains("helvetica")
-                || normalized.contains("arial")
-                || normalized.contains("swiss")) {
+        if (normalized.contains("helvetica") || normalized.contains("arial") || normalized.contains("swiss")) {
             if (normalized.contains("bold") && normalized.contains("oblique")) {
                 return Standard14Fonts.FontName.HELVETICA_BOLD_OBLIQUE;
             }
@@ -2459,8 +2245,7 @@ public class PdfJsonConversionService {
 
         // Courier family: Courier, CourierNew, Mono, Monospace
         if (normalized.contains("courier") || normalized.contains("mono")) {
-            if (normalized.contains("bold")
-                    && (normalized.contains("oblique") || normalized.contains("italic"))) {
+            if (normalized.contains("bold") && (normalized.contains("oblique") || normalized.contains("italic"))) {
                 return Standard14Fonts.FontName.COURIER_BOLD_OBLIQUE;
             }
             if (normalized.contains("bold")) {
@@ -2506,8 +2291,7 @@ public class PdfJsonConversionService {
             pageModel.setRotation(page.getRotation());
             pageModel.setTextElements(textByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));
             pageModel.setImageElements(imagesByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));
-            pageModel.setAnnotations(
-                    annotationsByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));
+            pageModel.setAnnotations(annotationsByPage.getOrDefault(pageIndex + 1, new ArrayList<>()));
             // Serialize resources but exclude image XObject streams to avoid duplication with
             // imageElements
             COSBase resourcesBase = page.getCOSObject().getDictionaryObject(COSName.RESOURCES);
@@ -2536,25 +2320,20 @@ public class PdfJsonConversionService {
         Map<Integer, List<PdfJsonImageElement>> imagesByPage = new LinkedHashMap<>();
         int pageNumber = 1;
         for (PDPage page : document.getPages()) {
-            ImageCollectingEngine engine =
-                    new ImageCollectingEngine(page, pageNumber, imagesByPage, imageCache);
+            ImageCollectingEngine engine = new ImageCollectingEngine(page, pageNumber, imagesByPage, imageCache);
             engine.processPage(page);
 
             // Update progress for image extraction (70-80%)
             int imageProgress = 70 + (int) ((pageNumber / (double) totalPages) * 10);
             progress.accept(
-                    PdfJsonConversionProgress.of(
-                            imageProgress, "images", "Extracting images", pageNumber, totalPages));
+                    PdfJsonConversionProgress.of(imageProgress, "images", "Extracting images", pageNumber, totalPages));
             pageNumber++;
         }
         return imagesByPage;
     }
 
     private Map<Integer, List<PdfJsonAnnotation>> collectAnnotations(
-            PDDocument document,
-            int totalPages,
-            Consumer<PdfJsonConversionProgress> progress,
-            boolean includeRawData)
+            PDDocument document, int totalPages, Consumer<PdfJsonConversionProgress> progress, boolean includeRawData)
             throws IOException {
         Map<Integer, List<PdfJsonAnnotation>> annotationsByPage = new LinkedHashMap<>();
         int pageNumber = 1;
@@ -2568,13 +2347,9 @@ public class PdfJsonConversionService {
 
                     PDRectangle rect = annotation.getRectangle();
                     if (rect != null) {
-                        ann.setRect(
-                                new float[] {
-                                    rect.getLowerLeftX(),
-                                    rect.getLowerLeftY(),
-                                    rect.getUpperRightX(),
-                                    rect.getUpperRightY()
-                                });
+                        ann.setRect(new float[] {
+                            rect.getLowerLeftX(), rect.getLowerLeftY(), rect.getUpperRightX(), rect.getUpperRightY()
+                        });
                     }
 
                     COSName appearanceState = annotation.getAppearanceState();
@@ -2597,16 +2372,13 @@ public class PdfJsonConversionService {
                         ann.setSubject(subj.getString());
                     }
 
-                    COSString creationDateStr =
-                            (COSString) annotDict.getDictionaryObject(COSName.CREATION_DATE);
+                    COSString creationDateStr = (COSString) annotDict.getDictionaryObject(COSName.CREATION_DATE);
                     if (creationDateStr != null) {
                         try {
-                            Calendar creationDate =
-                                    DateConverter.toCalendar(creationDateStr.getString());
+                            Calendar creationDate = DateConverter.toCalendar(creationDateStr.getString());
                             ann.setCreationDate(formatCalendar(creationDate));
                         } catch (Exception e) {
-                            log.debug(
-                                    "Failed to parse annotation creation date: {}", e.getMessage());
+                            log.debug("Failed to parse annotation creation date: {}", e.getMessage());
                         }
                     }
 
@@ -2616,26 +2388,19 @@ public class PdfJsonConversionService {
                             Calendar modDate = DateConverter.toCalendar(modDateStr.getString());
                             ann.setModificationDate(formatCalendar(modDate));
                         } catch (Exception e) {
-                            log.debug(
-                                    "Failed to parse annotation modification date: {}",
-                                    e.getMessage());
+                            log.debug("Failed to parse annotation modification date: {}", e.getMessage());
                         }
                     }
 
                     if (includeRawData) {
                         // Store raw dictionary for lossless round-trip
-                        ann.setRawData(
-                                cosMapper.serializeCosValue(
-                                        annotDict,
-                                        PdfJsonCosMapper.SerializationContext.ANNOTATION_RAW_DATA));
+                        ann.setRawData(cosMapper.serializeCosValue(
+                                annotDict, PdfJsonCosMapper.SerializationContext.ANNOTATION_RAW_DATA));
                     }
 
                     annotations.add(ann);
                 } catch (Exception e) {
-                    log.warn(
-                            "Failed to extract annotation on page {}: {}",
-                            pageNumber,
-                            e.getMessage());
+                    log.warn("Failed to extract annotation on page {}: {}", pageNumber, e.getMessage());
                 }
             }
             if (!annotations.isEmpty()) {
@@ -2644,13 +2409,8 @@ public class PdfJsonConversionService {
 
             // Update progress for annotation collection (80-90%)
             int annotationProgress = 80 + (int) ((pageNumber / (double) totalPages) * 10);
-            progress.accept(
-                    PdfJsonConversionProgress.of(
-                            annotationProgress,
-                            "annotations",
-                            "Collecting annotations",
-                            pageNumber,
-                            totalPages));
+            progress.accept(PdfJsonConversionProgress.of(
+                    annotationProgress, "annotations", "Collecting annotations", pageNumber, totalPages));
             pageNumber++;
         }
         return annotationsByPage;
@@ -2687,8 +2447,9 @@ public class PdfJsonConversionService {
                     formField.setMappingName(field.getMappingName());
 
                     // Find which page the field is on
-                    PDAnnotationWidget widget =
-                            field.getWidgets().isEmpty() ? null : field.getWidgets().get(0);
+                    PDAnnotationWidget widget = field.getWidgets().isEmpty()
+                            ? null
+                            : field.getWidgets().get(0);
                     if (widget != null) {
                         PDPage fieldPage = widget.getPage();
                         if (fieldPage != null) {
@@ -2697,29 +2458,23 @@ public class PdfJsonConversionService {
 
                             PDRectangle rect = widget.getRectangle();
                             if (rect != null) {
-                                formField.setRect(
-                                        new float[] {
-                                            rect.getLowerLeftX(),
-                                            rect.getLowerLeftY(),
-                                            rect.getUpperRightX(),
-                                            rect.getUpperRightY()
-                                        });
+                                formField.setRect(new float[] {
+                                    rect.getLowerLeftX(),
+                                    rect.getLowerLeftY(),
+                                    rect.getUpperRightX(),
+                                    rect.getUpperRightY()
+                                });
                             }
                         }
                     }
 
                     // Store raw dictionary for lossless round-trip
-                    formField.setRawData(
-                            cosMapper.serializeCosValue(
-                                    field.getCOSObject(),
-                                    PdfJsonCosMapper.SerializationContext.FORM_FIELD_RAW_DATA));
+                    formField.setRawData(cosMapper.serializeCosValue(
+                            field.getCOSObject(), PdfJsonCosMapper.SerializationContext.FORM_FIELD_RAW_DATA));
 
                     formFields.add(formField);
                 } catch (Exception e) {
-                    log.warn(
-                            "Failed to extract form field {}: {}",
-                            field.getFullyQualifiedName(),
-                            e.getMessage());
+                    log.warn("Failed to extract form field {}: {}", field.getFullyQualifiedName(), e.getMessage());
                 }
             }
         } catch (Exception e) {
@@ -2830,8 +2585,7 @@ public class PdfJsonConversionService {
         info.setCreator(metadata.getCreator());
         info.setProducer(metadata.getProducer());
         if (metadata.getCreationDate() != null) {
-            parseInstant(metadata.getCreationDate())
-                    .ifPresent(instant -> info.setCreationDate(toCalendar(instant)));
+            parseInstant(metadata.getCreationDate()).ifPresent(instant -> info.setCreationDate(toCalendar(instant)));
         }
         if (metadata.getModificationDate() != null) {
             parseInstant(metadata.getModificationDate())
@@ -2853,8 +2607,7 @@ public class PdfJsonConversionService {
         }
     }
 
-    private void restoreAnnotations(
-            PDDocument document, PDPage page, List<PdfJsonAnnotation> annotations) {
+    private void restoreAnnotations(PDDocument document, PDPage page, List<PdfJsonAnnotation> annotations) {
         if (annotations == null || annotations.isEmpty()) {
             return;
         }
@@ -2863,11 +2616,9 @@ public class PdfJsonConversionService {
             try {
                 // Restore from raw COS data if available for lossless round-trip
                 if (annModel.getRawData() != null) {
-                    COSBase rawAnnot =
-                            cosMapper.deserializeCosValue(annModel.getRawData(), document);
+                    COSBase rawAnnot = cosMapper.deserializeCosValue(annModel.getRawData(), document);
                     if (rawAnnot instanceof COSDictionary) {
-                        PDAnnotation annotation =
-                                PDAnnotation.createAnnotation((COSDictionary) rawAnnot);
+                        PDAnnotation annotation = PDAnnotation.createAnnotation((COSDictionary) rawAnnot);
                         page.getAnnotations().add(annotation);
                         log.debug("Restored annotation from raw data: {}", annModel.getSubtype());
                         continue;
@@ -2882,10 +2633,7 @@ public class PdfJsonConversionService {
                         annModel.getSubtype());
 
             } catch (Exception e) {
-                log.warn(
-                        "Failed to restore annotation {}: {}",
-                        annModel.getSubtype(),
-                        e.getMessage());
+                log.warn("Failed to restore annotation {}: {}", annModel.getSubtype(), e.getMessage());
             }
         }
     }
@@ -2902,8 +2650,7 @@ public class PdfJsonConversionService {
                 document.getDocumentCatalog().setAcroForm(acroForm);
             }
 
-            COSArray fieldsArray =
-                    (COSArray) acroForm.getCOSObject().getDictionaryObject(COSName.FIELDS);
+            COSArray fieldsArray = (COSArray) acroForm.getCOSObject().getDictionaryObject(COSName.FIELDS);
             if (fieldsArray == null) {
                 fieldsArray = new COSArray();
                 acroForm.getCOSObject().setItem(COSName.FIELDS, fieldsArray);
@@ -2913,13 +2660,11 @@ public class PdfJsonConversionService {
                 try {
                     // Restore from raw COS data if available for lossless round-trip
                     if (fieldModel.getRawData() != null) {
-                        COSBase rawField =
-                                cosMapper.deserializeCosValue(fieldModel.getRawData(), document);
+                        COSBase rawField = cosMapper.deserializeCosValue(fieldModel.getRawData(), document);
                         if (rawField instanceof COSDictionary) {
                             // Add the field dictionary directly to the fields array
                             fieldsArray.add(rawField);
-                            log.debug(
-                                    "Restored form field from raw data: {}", fieldModel.getName());
+                            log.debug("Restored form field from raw data: {}", fieldModel.getName());
                             continue;
                         }
                     }
@@ -2931,10 +2676,7 @@ public class PdfJsonConversionService {
                             fieldModel.getName());
 
                 } catch (Exception e) {
-                    log.warn(
-                            "Failed to restore form field {}: {}",
-                            fieldModel.getName(),
-                            e.getMessage());
+                    log.warn("Failed to restore form field {}: {}", fieldModel.getName(), e.getMessage());
                 }
             }
         } catch (Exception e) {
@@ -2942,8 +2684,8 @@ public class PdfJsonConversionService {
         }
     }
 
-    private void applyPageResources(
-            PDDocument document, PDPage page, PdfJsonCosValue resourcesModel) throws IOException {
+    private void applyPageResources(PDDocument document, PDPage page, PdfJsonCosValue resourcesModel)
+            throws IOException {
         if (resourcesModel == null) {
             return;
         }
@@ -2960,10 +2702,7 @@ public class PdfJsonConversionService {
      * with imageElements by objectName.
      */
     private void reconstructImageXObjects(
-            PDDocument document,
-            PDPage page,
-            List<PDStream> contentStreams,
-            List<PdfJsonImageElement> imageElements)
+            PDDocument document, PDPage page, List<PDStream> contentStreams, List<PdfJsonImageElement> imageElements)
             throws IOException {
 
         // Build map of objectName -> imageElement
@@ -2988,8 +2727,7 @@ public class PdfJsonConversionService {
 
                 for (int i = 0; i < tokens.size(); i++) {
                     Object token = tokens.get(i);
-                    if (token instanceof Operator op
-                            && OperatorName.DRAW_OBJECT.equals(op.getName())) {
+                    if (token instanceof Operator op && OperatorName.DRAW_OBJECT.equals(op.getName())) {
                         if (i > 0 && tokens.get(i - 1) instanceof COSName name) {
                             referencedXObjects.add(name.getName());
                         }
@@ -3010,9 +2748,7 @@ public class PdfJsonConversionService {
         for (String xobjName : referencedXObjects) {
             PdfJsonImageElement imageElement = imageMap.get(xobjName);
             if (imageElement == null) {
-                log.warn(
-                        "Content stream references image XObject '{}' but no matching imageElement found",
-                        xobjName);
+                log.warn("Content stream references image XObject '{}' but no matching imageElement found", xobjName);
                 continue;
             }
 
@@ -3028,8 +2764,8 @@ public class PdfJsonConversionService {
         }
     }
 
-    private List<PDStream> buildContentStreams(
-            PDDocument document, List<PdfJsonStream> streamModels) throws IOException {
+    private List<PDStream> buildContentStreams(PDDocument document, List<PdfJsonStream> streamModels)
+            throws IOException {
         List<PDStream> streams = new ArrayList<>();
         if (streamModels == null) {
             return streams;
@@ -3046,8 +2782,7 @@ public class PdfJsonConversionService {
         return streams;
     }
 
-    private List<PdfJsonStream> extractContentStreams(PDPage page, boolean omitRawData)
-            throws IOException {
+    private List<PdfJsonStream> extractContentStreams(PDPage page, boolean omitRawData) throws IOException {
         List<PdfJsonStream> streams = new ArrayList<>();
         Iterator<PDStream> iterator = page.getContentStreams();
         if (iterator == null) {
@@ -3055,13 +2790,10 @@ public class PdfJsonConversionService {
         }
         while (iterator.hasNext()) {
             PDStream stream = iterator.next();
-            PdfJsonStream model =
-                    omitRawData
-                            ? cosMapper.serializeStream(
-                                    stream,
-                                    PdfJsonCosMapper.SerializationContext
-                                            .CONTENT_STREAMS_LIGHTWEIGHT)
-                            : cosMapper.serializeStream(stream);
+            PdfJsonStream model = omitRawData
+                    ? cosMapper.serializeStream(
+                            stream, PdfJsonCosMapper.SerializationContext.CONTENT_STREAMS_LIGHTWEIGHT)
+                    : cosMapper.serializeStream(stream);
             if (model != null) {
                 streams.add(model);
             }
@@ -3074,9 +2806,7 @@ public class PdfJsonConversionService {
     }
 
     private PDStream extractVectorGraphics(
-            PDDocument document,
-            List<PDStream> preservedStreams,
-            List<PdfJsonImageElement> imageElements)
+            PDDocument document, List<PDStream> preservedStreams, List<PdfJsonImageElement> imageElements)
             throws IOException {
         if (preservedStreams == null || preservedStreams.isEmpty()) {
             return null;
@@ -3105,9 +2835,7 @@ public class PdfJsonConversionService {
                 List<Object> tokens = parser.parse();
                 collectVectorTokens(tokens, filteredTokens, imageObjectNames);
             } catch (IOException ex) {
-                log.debug(
-                        "Failed to parse preserved content stream for vector extraction: {}",
-                        ex.getMessage());
+                log.debug("Failed to parse preserved content stream for vector extraction: {}", ex.getMessage());
             }
         }
 
@@ -3142,8 +2870,7 @@ public class PdfJsonConversionService {
                     insideText = false;
                     continue;
                 }
-                if (OperatorName.BEGIN_INLINE_IMAGE.equals(name)
-                        || OperatorName.BEGIN_INLINE_IMAGE_DATA.equals(name)) {
+                if (OperatorName.BEGIN_INLINE_IMAGE.equals(name) || OperatorName.BEGIN_INLINE_IMAGE_DATA.equals(name)) {
                     if (!insideText) {
                         targetTokens.add(operator);
                     }
@@ -3165,8 +2892,7 @@ public class PdfJsonConversionService {
                         && !imageObjectNames.isEmpty()
                         && !targetTokens.isEmpty()) {
                     Object previous = targetTokens.get(targetTokens.size() - 1);
-                    if (previous instanceof COSName cosName
-                            && imageObjectNames.contains(cosName.getName())) {
+                    if (previous instanceof COSName cosName && imageObjectNames.contains(cosName.getName())) {
                         targetTokens.remove(targetTokens.size() - 1);
                         continue;
                     }
@@ -3196,8 +2922,7 @@ public class PdfJsonConversionService {
         Map<String, PdfJsonFont> runFontLookup = buildFontModelLookup(fontModels);
 
         AppendMode mode = appendMode != null ? appendMode : AppendMode.OVERWRITE;
-        try (PDPageContentStream contentStream =
-                new PDPageContentStream(document, page, mode, true, true)) {
+        try (PDPageContentStream contentStream = new PDPageContentStream(document, page, mode, true, true)) {
             boolean textOpen = false;
             for (DrawableElement drawable : drawables) {
                 switch (drawable.type()) {
@@ -3213,8 +2938,7 @@ public class PdfJsonConversionService {
                             textOpen = true;
                         }
 
-                        PDFont baseFont =
-                                fontMap.get(buildFontKey(null, pageNumber, element.getFontId()));
+                        PDFont baseFont = fontMap.get(buildFontKey(null, pageNumber, element.getFontId()));
                         if (baseFont == null && element.getFontId() != null) {
                             baseFont = fontMap.get(buildFontKey(null, -1, element.getFontId()));
                         }
@@ -3226,14 +2950,7 @@ public class PdfJsonConversionService {
                         applyTextMatrix(contentStream, element);
 
                         List<FontRun> runs =
-                                buildFontRuns(
-                                        document,
-                                        fontMap,
-                                        fontModels,
-                                        pageNumber,
-                                        baseFont,
-                                        text,
-                                        element);
+                                buildFontRuns(document, fontMap, fontModels, pageNumber, baseFont, text, element);
 
                         PDFont activeFont = null;
                         for (FontRun run : runs) {
@@ -3244,28 +2961,22 @@ public class PdfJsonConversionService {
                                 contentStream.setFont(run.font(), fontScale);
                                 activeFont = run.font();
                             }
-                            PdfJsonFont runFontModel =
-                                    resolveFontModel(runFontLookup, pageNumber, run.fontId());
+                            PdfJsonFont runFontModel = resolveFontModel(runFontLookup, pageNumber, run.fontId());
                             if (runFontModel == null) {
                                 runFontLookup = buildFontModelLookup(fontModels);
-                                runFontModel =
-                                        resolveFontModel(runFontLookup, pageNumber, run.fontId());
+                                runFontModel = resolveFontModel(runFontLookup, pageNumber, run.fontId());
                             }
                             // Check if this is a normalized Type3 font (has Type3 metadata but is
                             // not PDType3Font)
-                            boolean isNormalizedType3 =
-                                    !(run.font() instanceof PDType3Font)
-                                            && runFontModel != null
-                                            && runFontModel.getType3Glyphs() != null
-                                            && !runFontModel.getType3Glyphs().isEmpty();
+                            boolean isNormalizedType3 = !(run.font() instanceof PDType3Font)
+                                    && runFontModel != null
+                                    && runFontModel.getType3Glyphs() != null
+                                    && !runFontModel.getType3Glyphs().isEmpty();
 
                             // For fonts with proper Unicode mappings, let PDFBox handle encoding
                             // This includes: normalized Type3 fonts, PDType0Font (composite fonts)
-                            boolean useDirectText =
-                                    isNormalizedType3
-                                            || run.font()
-                                                    instanceof
-                                                    org.apache.pdfbox.pdmodel.font.PDType0Font;
+                            boolean useDirectText = isNormalizedType3
+                                    || run.font() instanceof org.apache.pdfbox.pdmodel.font.PDType0Font;
 
                             if (useDirectText) {
                                 // Pass text directly - PDFBox handles encoding internally
@@ -3291,24 +3002,16 @@ public class PdfJsonConversionService {
                                                 run.text(),
                                                 run.font().getName(),
                                                 run.fontId(),
-                                                runFontModel != null
-                                                        ? runFontModel.getId()
-                                                        : "null");
-                                        encoded =
-                                                encodeTextWithFont(
-                                                        run.font(),
-                                                        runFontModel,
-                                                        run.text(),
-                                                        run.charCodes());
+                                                runFontModel != null ? runFontModel.getId() : "null");
+                                        encoded = encodeTextWithFont(
+                                                run.font(), runFontModel, run.text(), run.charCodes());
                                     } catch (IOException ex) {
                                         log.warn(
                                                 "Failed to encode text '{}' with font {} (fontId={}, runFontModel={}) on page {}: {}",
                                                 run.text(),
                                                 run.font().getName(),
                                                 run.fontId(),
-                                                runFontModel != null
-                                                        ? runFontModel.getId()
-                                                        : "null",
+                                                runFontModel != null ? runFontModel.getId() : "null",
                                                 pageNumber,
                                                 ex.getMessage());
                                         continue;
@@ -3323,8 +3026,7 @@ public class PdfJsonConversionService {
                                     continue;
                                 }
                                 try {
-                                    contentStream.showText(
-                                            new String(encoded, StandardCharsets.ISO_8859_1));
+                                    contentStream.showText(new String(encoded, StandardCharsets.ISO_8859_1));
                                 } catch (IllegalArgumentException ex) {
                                     log.warn(
                                             "Failed to render text '{}' with font {} on page {}: {}",
@@ -3387,19 +3089,15 @@ public class PdfJsonConversionService {
 
         Map<String, PdfJsonFont> runFontLookup = buildFontModelLookup(fontModels);
         PdfJsonFont baseFontModel = resolveFontModel(runFontLookup, pageNumber, baseFontId);
-        boolean baseIsType3 =
-                baseFontModel != null
-                        && baseFontModel.getSubtype() != null
-                        && "type3".equalsIgnoreCase(baseFontModel.getSubtype());
-        PDFont normalizedType3Font =
-                baseIsType3 && baseFontModel.getUid() != null
-                        ? type3NormalizedFontCache.get(baseFontModel.getUid())
-                        : null;
-        Set<Integer> baseType3Coverage =
-                baseIsType3 && baseFontModel != null
-                        ? type3GlyphCoverageCache.getOrDefault(
-                                baseFontModel.getUid(), Collections.emptySet())
-                        : Collections.emptySet();
+        boolean baseIsType3 = baseFontModel != null
+                && baseFontModel.getSubtype() != null
+                && "type3".equalsIgnoreCase(baseFontModel.getSubtype());
+        PDFont normalizedType3Font = baseIsType3 && baseFontModel.getUid() != null
+                ? type3NormalizedFontCache.get(baseFontModel.getUid())
+                : null;
+        Set<Integer> baseType3Coverage = baseIsType3 && baseFontModel != null
+                ? type3GlyphCoverageCache.getOrDefault(baseFontModel.getUid(), Collections.emptySet())
+                : Collections.emptySet();
         boolean hasNormalizedType3 = baseIsType3 && normalizedType3Font != null;
         if (hasNormalizedType3 && log.isDebugEnabled()) {
             log.debug(
@@ -3442,8 +3140,7 @@ public class PdfJsonConversionService {
                 }
             } else if (baseIsType3) {
                 // For actual Type3 fonts without normalized replacement
-                boolean type3SupportsGlyph =
-                        isGlyphCoveredByType3Font(baseType3Coverage, codePoint);
+                boolean type3SupportsGlyph = isGlyphCoveredByType3Font(baseType3Coverage, codePoint);
                 if (!type3SupportsGlyph) {
                     targetFont = null;
                     targetFontId = null;
@@ -3452,17 +3149,14 @@ public class PdfJsonConversionService {
             if (targetFont == null || !fallbackFontService.canEncode(targetFont, glyph)) {
                 fallbackApplied = true;
                 // Try to match fallback font to original font family for visual consistency
-                String originalFontName =
-                        baseFontModel != null ? baseFontModel.getBaseName() : null;
-                String fallbackId =
-                        fallbackFontService.resolveFallbackFontId(originalFontName, codePoint);
+                String originalFontName = baseFontModel != null ? baseFontModel.getBaseName() : null;
+                String fallbackId = fallbackFontService.resolveFallbackFontId(originalFontName, codePoint);
                 targetFont = ensureFallbackFont(document, fontMap, fontModels, fallbackId);
                 targetFontId = fallbackId != null ? fallbackId : FALLBACK_FONT_ID;
                 if (targetFont == null || !fallbackFontService.canEncode(targetFont, glyph)) {
                     String mapped = fallbackFontService.mapUnsupportedGlyph(codePoint);
                     if (mapped != null) {
-                        if (targetFont != null
-                                && fallbackFontService.canEncode(targetFont, mapped)) {
+                        if (targetFont != null && fallbackFontService.canEncode(targetFont, mapped)) {
                             glyph = mapped;
                         } else if (fallbackFontService.canEncode(baseFont, mapped)) {
                             glyph = mapped;
@@ -3472,14 +3166,11 @@ public class PdfJsonConversionService {
                     }
                     if (targetFont == null || !fallbackFontService.canEncode(targetFont, glyph)) {
                         glyph = "?";
-                        targetFont =
-                                ensureFallbackFont(document, fontMap, fontModels, FALLBACK_FONT_ID);
+                        targetFont = ensureFallbackFont(document, fontMap, fontModels, FALLBACK_FONT_ID);
                         targetFontId = FALLBACK_FONT_ID;
-                        if (targetFont == null
-                                || !fallbackFontService.canEncode(targetFont, glyph)) {
+                        if (targetFont == null || !fallbackFontService.canEncode(targetFont, glyph)) {
                             log.debug(
-                                    "Dropping unsupported glyph U+{} for text element",
-                                    Integer.toHexString(codePoint));
+                                    "Dropping unsupported glyph U+{} for text element", Integer.toHexString(codePoint));
                             continue;
                         }
                     }
@@ -3487,21 +3178,19 @@ public class PdfJsonConversionService {
                 // Fallback applied - tracked at page level, not logged per character
             }
 
-            boolean useRawType3Glyph =
-                    rawCode != null
-                            && baseIsType3
-                            && !hasNormalizedType3
-                            && targetFont == baseFont
-                            && targetFont instanceof PDType3Font;
+            boolean useRawType3Glyph = rawCode != null
+                    && baseIsType3
+                    && !hasNormalizedType3
+                    && targetFont == baseFont
+                    && targetFont instanceof PDType3Font;
 
             if (targetFont != currentFont) {
                 if (buffer.length() > 0) {
-                    runs.add(
-                            new FontRun(
-                                    currentFont,
-                                    currentFontId,
-                                    buffer.toString(),
-                                    codeBuffer.isEmpty() ? null : new ArrayList<>(codeBuffer)));
+                    runs.add(new FontRun(
+                            currentFont,
+                            currentFontId,
+                            buffer.toString(),
+                            codeBuffer.isEmpty() ? null : new ArrayList<>(codeBuffer)));
                     buffer.setLength(0);
                     codeBuffer.clear();
                 }
@@ -3509,9 +3198,7 @@ public class PdfJsonConversionService {
                 currentFontId = targetFontId;
             }
             buffer.append(glyph);
-            if (useRawType3Glyph
-                    && currentFontId != null
-                    && currentFontId.equals(element.getFontId())) {
+            if (useRawType3Glyph && currentFontId != null && currentFontId.equals(element.getFontId())) {
                 codeBuffer.add(rawCode);
                 rawType3CodesUsed = true;
                 rawType3GlyphCount++;
@@ -3519,12 +3206,11 @@ public class PdfJsonConversionService {
         }
 
         if (buffer.length() > 0) {
-            runs.add(
-                    new FontRun(
-                            currentFont,
-                            currentFontId,
-                            buffer.toString(),
-                            codeBuffer.isEmpty() ? null : new ArrayList<>(codeBuffer)));
+            runs.add(new FontRun(
+                    currentFont,
+                    currentFontId,
+                    buffer.toString(),
+                    codeBuffer.isEmpty() ? null : new ArrayList<>(codeBuffer)));
         }
 
         if (fallbackApplied) {
@@ -3591,11 +3277,9 @@ public class PdfJsonConversionService {
                     pdfBytes.length,
                     budget,
                     jobId);
-            return new CachedPdfDocument(
-                    null, tempFile, pdfBytes.length, metadata, fonts, pageFontResources);
+            return new CachedPdfDocument(null, tempFile, pdfBytes.length, metadata, fonts, pageFontResources);
         }
-        return new CachedPdfDocument(
-                pdfBytes, null, pdfBytes.length, metadata, fonts, pageFontResources);
+        return new CachedPdfDocument(pdfBytes, null, pdfBytes.length, metadata, fonts, pageFontResources);
     }
 
     private void putCachedDocument(String jobId, CachedPdfDocument cached) {
@@ -3645,34 +3329,24 @@ public class PdfJsonConversionService {
         }
         if (currentCacheBytes > cacheBudgetBytes && !lruCache.isEmpty()) {
             // Spill the most recently used large entry to disk
-            String key =
-                    lruCache.entrySet().stream()
-                            .reduce((first, second) -> second)
-                            .map(java.util.Map.Entry::getKey)
-                            .orElse(null);
+            String key = lruCache.entrySet().stream()
+                    .reduce((first, second) -> second)
+                    .map(java.util.Map.Entry::getKey)
+                    .orElse(null);
             if (key != null) {
                 CachedPdfDocument doc = lruCache.get(key);
                 if (doc != null && doc.getInMemorySize() > 0) {
                     try {
-                        CachedPdfDocument diskDoc =
-                                buildCachedDocument(
-                                        key,
-                                        doc.getPdfBytes(),
-                                        doc.getMetadata(),
-                                        doc.getFonts(),
-                                        doc.getPageFontResources());
+                        CachedPdfDocument diskDoc = buildCachedDocument(
+                                key, doc.getPdfBytes(), doc.getMetadata(), doc.getFonts(), doc.getPageFontResources());
                         lruCache.put(key, diskDoc);
                         documentCache.put(key, diskDoc);
                         currentCacheBytes =
-                                Math.max(0L, currentCacheBytes - doc.getInMemorySize())
-                                        + diskDoc.getInMemorySize();
+                                Math.max(0L, currentCacheBytes - doc.getInMemorySize()) + diskDoc.getInMemorySize();
                         doc.close();
                         log.debug("Spilled cached PDF for jobId {} to disk to satisfy budget", key);
                     } catch (IOException ex) {
-                        log.warn(
-                                "Failed to spill cached PDF for jobId {} to disk: {}",
-                                key,
-                                ex.getMessage());
+                        log.warn("Failed to spill cached PDF for jobId {} to disk: {}", key, ex.getMessage());
                     }
                 }
             }
@@ -3690,10 +3364,7 @@ public class PdfJsonConversionService {
             if (removed != null) {
                 lruCache.remove(jobId);
                 currentCacheBytes = Math.max(0L, currentCacheBytes - removed.getInMemorySize());
-                log.warn(
-                        "Removed cached document for jobId: {} (size={} bytes)",
-                        jobId,
-                        removed.getInMemorySize());
+                log.warn("Removed cached document for jobId: {} (size={} bytes)", jobId, removed.getInMemorySize());
             } else {
                 log.warn("Attempted to remove jobId: {} but it was not in cache", jobId);
             }
@@ -3703,8 +3374,7 @@ public class PdfJsonConversionService {
         }
     }
 
-    private void applyTextState(PDPageContentStream contentStream, PdfJsonTextElement element)
-            throws IOException {
+    private void applyTextState(PDPageContentStream contentStream, PdfJsonTextElement element) throws IOException {
         if (element.getCharacterSpacing() != null) {
             contentStream.setCharacterSpacing(element.getCharacterSpacing());
         }
@@ -3724,8 +3394,7 @@ public class PdfJsonConversionService {
         applyColor(contentStream, element.getStrokeColor(), false);
     }
 
-    private void applyColor(
-            PDPageContentStream contentStream, PdfJsonTextColor color, boolean nonStroking)
+    private void applyColor(PDPageContentStream contentStream, PdfJsonTextColor color, boolean nonStroking)
             throws IOException {
         if (color == null || color.getComponents() == null) {
             return;
@@ -3757,8 +3426,7 @@ public class PdfJsonConversionService {
             case "DeviceRGB":
                 if (components.length >= 3) {
                     if (nonStroking) {
-                        contentStream.setNonStrokingColor(
-                                components[0], components[1], components[2]);
+                        contentStream.setNonStrokingColor(components[0], components[1], components[2]);
                     } else {
                         contentStream.setStrokingColor(components[0], components[1], components[2]);
                     }
@@ -3767,11 +3435,9 @@ public class PdfJsonConversionService {
             case "DeviceCMYK":
                 if (components.length >= 4) {
                     if (nonStroking) {
-                        contentStream.setNonStrokingColor(
-                                components[0], components[1], components[2], components[3]);
+                        contentStream.setNonStrokingColor(components[0], components[1], components[2], components[3]);
                     } else {
-                        contentStream.setStrokingColor(
-                                components[0], components[1], components[2], components[3]);
+                        contentStream.setStrokingColor(components[0], components[1], components[2], components[3]);
                     }
                 }
                 break;
@@ -3809,12 +3475,7 @@ public class PdfJsonConversionService {
         private final String pdfFormat;
 
         private FontProgramData(
-                String base64,
-                String format,
-                String webBase64,
-                String webFormat,
-                String pdfBase64,
-                String pdfFormat) {
+                String base64, String format, String webBase64, String webFormat, String pdfBase64, String pdfFormat) {
             this.base64 = base64;
             this.format = format;
             this.webBase64 = webBase64;
@@ -3944,11 +3605,8 @@ public class PdfJsonConversionService {
                         if (i >= 2 && tokens.get(i - 2) instanceof COSName fontResourceName) {
                             currentFont = resources.getFont(fontResourceName);
                             currentFontName = fontResourceName.getName();
-                            currentFontModel =
-                                    resolveFontModel(fontLookup, pageNumber, currentFontName);
-                            log.trace(
-                                    "Encountered Tf operator; switching to font resource {}",
-                                    currentFontName);
+                            currentFontModel = resolveFontModel(fontLookup, pageNumber, currentFontName);
+                            log.trace("Encountered Tf operator; switching to font resource {}", currentFontName);
                             if (forceRegenerate) {
                                 encounteredModifiedFont = true;
                             }
@@ -3956,14 +3614,12 @@ public class PdfJsonConversionService {
                             currentFont = null;
                             currentFontName = null;
                             currentFontModel = null;
-                            log.debug(
-                                    "Tf operator missing resource operand; clearing current font");
+                            log.debug("Tf operator missing resource operand; clearing current font");
                         }
                         break;
                     case "Tj":
                         if (i == 0 || !(tokens.get(i - 1) instanceof COSString)) {
-                            log.debug(
-                                    "Encountered Tj without preceding string operand; aborting rewrite");
+                            log.debug("Encountered Tj without preceding string operand; aborting rewrite");
                             return false;
                         }
                         log.trace(
@@ -3972,13 +3628,7 @@ public class PdfJsonConversionService {
                                 i,
                                 cursor.remaining());
                         if (!rewriteShowText(
-                                tokens,
-                                i - 1,
-                                currentFont,
-                                currentFontModel,
-                                currentFontName,
-                                cursor,
-                                removeOnly)) {
+                                tokens, i - 1, currentFont, currentFontModel, currentFontName, cursor, removeOnly)) {
                             log.debug("Failed to rewrite Tj operator; aborting rewrite");
                             return false;
                         }
@@ -3994,12 +3644,7 @@ public class PdfJsonConversionService {
                                 i,
                                 cursor.remaining());
                         if (!rewriteShowTextArray(
-                                array,
-                                currentFont,
-                                currentFontModel,
-                                currentFontName,
-                                cursor,
-                                removeOnly)) {
+                                array, currentFont, currentFontModel, currentFontName, cursor, removeOnly)) {
                             log.debug("Failed to rewrite TJ operator; aborting rewrite");
                             return false;
                         }
@@ -4015,8 +3660,7 @@ public class PdfJsonConversionService {
             }
 
             if (forceRegenerate && encounteredModifiedFont) {
-                log.debug(
-                        "Rewrite succeeded but forceRegenerate=true, returning false to trigger rebuild");
+                log.debug("Rewrite succeeded but forceRegenerate=true, returning false to trigger rebuild");
                 return false;
             }
 
@@ -4043,9 +3687,7 @@ public class PdfJsonConversionService {
             boolean removeOnly)
             throws IOException {
         if (font == null) {
-            log.debug(
-                    "rewriteShowText aborted: no active font for expected resource {}",
-                    expectedFontName);
+            log.debug("rewriteShowText aborted: no active font for expected resource {}", expectedFontName);
             return false;
         }
         COSString cosString = (COSString) tokens.get(tokenIndex);
@@ -4070,9 +3712,7 @@ public class PdfJsonConversionService {
         }
         MergedText replacement = mergeText(consumed);
         try {
-            byte[] encoded =
-                    encodeTextWithFont(
-                            font, fontModel, replacement.text(), replacement.charCodes());
+            byte[] encoded = encodeTextWithFont(font, fontModel, replacement.text(), replacement.charCodes());
             if (encoded == null) {
                 log.debug(
                         "Failed to map replacement text to glyphs for font {} (text='{}')",
@@ -4083,10 +3723,7 @@ public class PdfJsonConversionService {
             tokens.set(tokenIndex, new COSString(encoded));
             return true;
         } catch (IOException | IllegalArgumentException | UnsupportedOperationException ex) {
-            log.debug(
-                    "Failed to encode replacement text with font {}: {}",
-                    expectedFontName,
-                    ex.getMessage());
+            log.debug("Failed to encode replacement text with font {}: {}", expectedFontName, ex.getMessage());
             return false;
         }
     }
@@ -4100,9 +3737,7 @@ public class PdfJsonConversionService {
             boolean removeOnly)
             throws IOException {
         if (font == null) {
-            log.debug(
-                    "rewriteShowTextArray aborted: no active font for expected resource {}",
-                    expectedFontName);
+            log.debug("rewriteShowTextArray aborted: no active font for expected resource {}", expectedFontName);
             return false;
         }
         for (int i = 0; i < array.size(); i++) {
@@ -4125,9 +3760,7 @@ public class PdfJsonConversionService {
                 }
                 MergedText replacement = mergeText(consumed);
                 try {
-                    byte[] encoded =
-                            encodeTextWithFont(
-                                    font, fontModel, replacement.text(), replacement.charCodes());
+                    byte[] encoded = encodeTextWithFont(font, fontModel, replacement.text(), replacement.charCodes());
                     if (encoded == null) {
                         log.debug(
                                 "Failed to map replacement text in TJ array for font {} segment {}",
@@ -4136,9 +3769,7 @@ public class PdfJsonConversionService {
                         return false;
                     }
                     array.set(i, new COSString(encoded));
-                } catch (IOException
-                        | IllegalArgumentException
-                        | UnsupportedOperationException ex) {
+                } catch (IOException | IllegalArgumentException | UnsupportedOperationException ex) {
                     log.debug(
                             "Failed to encode replacement text in TJ array for font {} segment {}: {}",
                             expectedFontName,
@@ -4151,14 +3782,12 @@ public class PdfJsonConversionService {
         return true;
     }
 
-    private byte[] encodeTextWithFont(
-            PDFont font, PdfJsonFont fontModel, String text, List<Integer> rawCharCodes)
+    private byte[] encodeTextWithFont(PDFont font, PdfJsonFont fontModel, String text, List<Integer> rawCharCodes)
             throws IOException {
         boolean isType3Font = font instanceof PDType3Font;
-        boolean hasType3Metadata =
-                fontModel != null
-                        && fontModel.getType3Glyphs() != null
-                        && !fontModel.getType3Glyphs().isEmpty();
+        boolean hasType3Metadata = fontModel != null
+                && fontModel.getType3Glyphs() != null
+                && !fontModel.getType3Glyphs().isEmpty();
 
         // For normalized Type3 fonts (font is NOT Type3 but has Type3 metadata)
         if (!isType3Font && hasType3Metadata) {
@@ -4197,11 +3826,7 @@ public class PdfJsonConversionService {
                 byte[] encoded = font.encode(text);
                 return sanitizeEncoded(encoded);
             } catch (IllegalArgumentException ex) {
-                log.debug(
-                        "[FONT-DEBUG] Font {} cannot encode text '{}': {}",
-                        font.getName(),
-                        text,
-                        ex.getMessage());
+                log.debug("[FONT-DEBUG] Font {} cannot encode text '{}': {}", font.getName(), text, ex.getMessage());
                 // Return null to trigger fallback font mechanism
                 return null;
             }
@@ -4361,8 +3986,7 @@ public class PdfJsonConversionService {
      * <p>Both conditions were observed in the wild on round-tripped fallback fonts where the
      * embedded ToUnicode CMap matched 0x00 sequences, hanging the JSON&rarr;PDF rebuild.
      */
-    static int countCodesProtected(ByteArrayInputStream inputStream, CodeReader reader)
-            throws IOException {
+    static int countCodesProtected(ByteArrayInputStream inputStream, CodeReader reader) throws IOException {
         int count = 0;
         int previousAvailable = inputStream.available();
         while (previousAvailable > 0) {
@@ -4468,8 +4092,8 @@ public class PdfJsonConversionService {
         }
     }
 
-    private Map<String, PDFont> buildFontMap(
-            PDDocument document, List<PdfJsonFont> fonts, String jobId) throws IOException {
+    private Map<String, PDFont> buildFontMap(PDDocument document, List<PdfJsonFont> fonts, String jobId)
+            throws IOException {
         Map<String, PDFont> fontMap = new HashMap<>();
         if (fonts != null) {
             for (PdfJsonFont fontModel : fonts) {
@@ -4480,15 +4104,12 @@ public class PdfJsonConversionService {
                 if (loadedFont != null && fontModel.getId() != null) {
                     // Use null jobId for map keys - JSON->PDF doesn't need job-scoped lookups
                     // The jobId is only used internally for Type3 cache isolation
-                    fontMap.put(
-                            buildFontKey(null, fontModel.getPageNumber(), fontModel.getId()),
-                            loadedFont);
+                    fontMap.put(buildFontKey(null, fontModel.getPageNumber(), fontModel.getId()), loadedFont);
                 }
             }
         }
 
-        boolean fallbackPresent =
-                fonts != null && fonts.stream().anyMatch(f -> FALLBACK_FONT_ID.equals(f.getId()));
+        boolean fallbackPresent = fonts != null && fonts.stream().anyMatch(f -> FALLBACK_FONT_ID.equals(f.getId()));
         if (!fallbackPresent) {
             PdfJsonFont fallbackModel = fallbackFontService.buildFallbackFontModel();
             if (fonts != null) {
@@ -4498,11 +4119,10 @@ public class PdfJsonConversionService {
             PDFont fallbackFont = createFontFromModel(document, fallbackModel, jobId);
             fontMap.put(buildFontKey(null, -1, FALLBACK_FONT_ID), fallbackFont);
         } else if (!fontMap.containsKey(buildFontKey(null, -1, FALLBACK_FONT_ID))) {
-            PdfJsonFont fallbackModel =
-                    fonts.stream()
-                            .filter(f -> FALLBACK_FONT_ID.equals(f.getId()))
-                            .findFirst()
-                            .orElse(null);
+            PdfJsonFont fallbackModel = fonts.stream()
+                    .filter(f -> FALLBACK_FONT_ID.equals(f.getId()))
+                    .findFirst()
+                    .orElse(null);
             if (fallbackModel == null) {
                 fallbackModel = fallbackFontService.buildFallbackFontModel();
                 fonts.add(fallbackModel);
@@ -4514,8 +4134,7 @@ public class PdfJsonConversionService {
         return fontMap;
     }
 
-    private PDFont createFontFromModel(PDDocument document, PdfJsonFont fontModel, String jobId)
-            throws IOException {
+    private PDFont createFontFromModel(PDDocument document, PdfJsonFont fontModel, String jobId) throws IOException {
         if (fontModel == null || fontModel.getId() == null) {
             return null;
         }
@@ -4533,22 +4152,19 @@ public class PdfJsonConversionService {
                 fontModel.getPdfProgram() != null && !fontModel.getPdfProgram().isBlank(),
                 fontModel.getWebProgram() != null && !fontModel.getWebProgram().isBlank());
 
-        String originalFormat =
-                fontModel.getProgramFormat() != null
-                        ? fontModel.getProgramFormat().toLowerCase(Locale.ROOT)
-                        : null;
+        String originalFormat = fontModel.getProgramFormat() != null
+                ? fontModel.getProgramFormat().toLowerCase(Locale.ROOT)
+                : null;
 
         String program = fontModel.getProgram();
         String webProgram = fontModel.getWebProgram();
         String pdfProgram = fontModel.getPdfProgram();
-        String webFormat =
-                fontModel.getWebProgramFormat() != null
-                        ? fontModel.getWebProgramFormat().toLowerCase(Locale.ROOT)
-                        : null;
-        String pdfFormat =
-                fontModel.getPdfProgramFormat() != null
-                        ? fontModel.getPdfProgramFormat().toLowerCase(Locale.ROOT)
-                        : null;
+        String webFormat = fontModel.getWebProgramFormat() != null
+                ? fontModel.getWebProgramFormat().toLowerCase(Locale.ROOT)
+                : null;
+        String pdfFormat = fontModel.getPdfProgramFormat() != null
+                ? fontModel.getPdfProgramFormat().toLowerCase(Locale.ROOT)
+                : null;
 
         List<FontByteSource> baseCandidates = new ArrayList<>();
         List<FontByteSource> deferredWebCandidates = new ArrayList<>();
@@ -4563,10 +4179,7 @@ public class PdfJsonConversionService {
                     baseCandidates.add(new FontByteSource(bytes, pdfFormat, "pdfProgram"));
                 }
             } catch (IllegalArgumentException ex) {
-                log.warn(
-                        "Failed to decode pdfProgram for {}: {}",
-                        fontModel.getId(),
-                        ex.getMessage());
+                log.warn("Failed to decode pdfProgram for {}: {}", fontModel.getId(), ex.getMessage());
             }
         }
 
@@ -4576,10 +4189,9 @@ public class PdfJsonConversionService {
                 if (bytes.length > 0) {
                     // Prefer the converted blob when the original program is CFF/Type1C, because
                     // PDFBox expects TrueType/OpenType data during reconstruction.
-                    boolean preferWeb =
-                            originalFormat == null
-                                    || isCffFormat(originalFormat)
-                                    || "cidfonttype0c".equals(originalFormat);
+                    boolean preferWeb = originalFormat == null
+                            || isCffFormat(originalFormat)
+                            || "cidfonttype0c".equals(originalFormat);
                     FontByteSource source = new FontByteSource(bytes, webFormat, "webProgram");
                     if (preferWeb) {
                         baseCandidates.add(source);
@@ -4591,10 +4203,7 @@ public class PdfJsonConversionService {
                     }
                 }
             } catch (IllegalArgumentException ex) {
-                log.warn(
-                        "Failed to decode webProgram for {}: {}",
-                        fontModel.getId(),
-                        ex.getMessage());
+                log.warn("Failed to decode webProgram for {}: {}", fontModel.getId(), ex.getMessage());
             }
         }
 
@@ -4607,10 +4216,7 @@ public class PdfJsonConversionService {
                     baseCandidates.add(new FontByteSource(bytes, originalFormat, "program"));
                 }
             } catch (IllegalArgumentException ex) {
-                log.warn(
-                        "Failed to decode font program for {}: {}",
-                        fontModel.getId(),
-                        ex.getMessage());
+                log.warn("Failed to decode font program for {}: {}", fontModel.getId(), ex.getMessage());
             }
         }
 
@@ -4638,18 +4244,15 @@ public class PdfJsonConversionService {
         }
         orderedCandidates.addAll(baseCandidates);
 
-        boolean isType3Font =
-                fontModel.getSubtype() != null && "type3".equalsIgnoreCase(fontModel.getSubtype());
+        boolean isType3Font = fontModel.getSubtype() != null && "type3".equalsIgnoreCase(fontModel.getSubtype());
         if (isType3Font) {
             // Generate new UID with current jobId to prevent cache collisions across conversions
-            String type3CacheKey =
-                    buildFontKey(jobId, fontModel.getPageNumber(), fontModel.getId());
+            String type3CacheKey = buildFontKey(jobId, fontModel.getPageNumber(), fontModel.getId());
 
             // Update fontModel UID so runtime lookups use the same key
             fontModel.setUid(type3CacheKey);
 
-            cacheType3NormalizedFont(
-                    document, fontModel, orderedCandidates, originalFormat, type3CacheKey);
+            cacheType3NormalizedFont(document, fontModel, orderedCandidates, originalFormat, type3CacheKey);
             PDFont cachedNormalized = type3NormalizedFontCache.get(type3CacheKey);
             if (cachedNormalized != null) {
                 log.debug("Using cached normalized font for Type3 {}", fontModel.getId());
@@ -4665,9 +4268,7 @@ public class PdfJsonConversionService {
             // These fonts often use ToUnicode CMap which is preserved in the dictionary
             String subtype = fontModel.getSubtype();
             boolean preferDictionary =
-                    subtype != null
-                            && (subtype.equalsIgnoreCase("TrueType")
-                                    || subtype.equalsIgnoreCase("Type0"));
+                    subtype != null && (subtype.equalsIgnoreCase("TrueType") || subtype.equalsIgnoreCase("Type0"));
 
             if (preferDictionary) {
                 PDFont restored = restoreFontFromDictionary(document, fontModel);
@@ -4679,13 +4280,10 @@ public class PdfJsonConversionService {
                     return restored;
                 }
                 // If dictionary restoration fails, fall back to font program bytes
-                log.debug(
-                        "Font {} cosDictionary restoration failed, trying font program bytes",
-                        fontModel.getId());
+                log.debug("Font {} cosDictionary restoration failed, trying font program bytes", fontModel.getId());
             }
 
-            PDFont loaded =
-                    loadFirstAvailableFont(document, fontModel, orderedCandidates, originalFormat);
+            PDFont loaded = loadFirstAvailableFont(document, fontModel, orderedCandidates, originalFormat);
             if (loaded != null) {
                 return loaded;
             }
@@ -4709,9 +4307,7 @@ public class PdfJsonConversionService {
             }
 
             try {
-                PDFont font =
-                        loadFontFromSource(
-                                document, fontModel, source, originalFormat, false, false, false);
+                PDFont font = loadFontFromSource(document, fontModel, source, originalFormat, false, false, false);
                 if (font != null) {
                     return font;
                 }
@@ -4741,9 +4337,7 @@ public class PdfJsonConversionService {
                     applyAdditionalFontMetadata(document, font, fontModel);
                     return font;
                 }
-                log.warn(
-                        "Standard 14 font mapping for {} returned null, using fallback",
-                        standardName);
+                log.warn("Standard 14 font mapping for {} returned null, using fallback", standardName);
             } catch (IllegalArgumentException ex) {
                 log.warn("Unknown Standard 14 font {}, using fallback", standardName);
             }
@@ -4781,9 +4375,7 @@ public class PdfJsonConversionService {
             return;
         }
         for (FontByteSource source : candidates) {
-            PDFont font =
-                    loadFontFromSource(
-                            document, fontModel, source, originalFormat, true, true, true);
+            PDFont font = loadFontFromSource(document, fontModel, source, originalFormat, true, true, true);
             if (font != null) {
                 type3NormalizedFontCache.put(cacheKey, font);
                 log.debug(
@@ -4797,15 +4389,10 @@ public class PdfJsonConversionService {
     }
 
     private PDFont loadFirstAvailableFont(
-            PDDocument document,
-            PdfJsonFont fontModel,
-            List<FontByteSource> candidates,
-            String originalFormat)
+            PDDocument document, PdfJsonFont fontModel, List<FontByteSource> candidates, String originalFormat)
             throws IOException {
         for (FontByteSource source : candidates) {
-            PDFont font =
-                    loadFontFromSource(
-                            document, fontModel, source, originalFormat, false, false, false);
+            PDFont font = loadFontFromSource(document, fontModel, source, originalFormat, false, false, false);
             if (font != null) {
                 return font;
             }
@@ -4900,8 +4487,7 @@ public class PdfJsonConversionService {
         }
     }
 
-    private PDFont restoreFontFromDictionary(PDDocument document, PdfJsonFont fontModel)
-            throws IOException {
+    private PDFont restoreFontFromDictionary(PDDocument document, PdfJsonFont fontModel) throws IOException {
         if (fontModel.getCosDictionary() == null) {
             log.debug("[FONT-RESTORE] Font {} has no cosDictionary", fontModel.getId());
             return null;
@@ -4930,18 +4516,14 @@ public class PdfJsonConversionService {
         // Validate that dictionary contains required font keys
         if (!cosDictionary.containsKey(org.apache.pdfbox.cos.COSName.TYPE)
                 || !cosDictionary.containsKey(org.apache.pdfbox.cos.COSName.SUBTYPE)) {
-            log.debug(
-                    "[FONT-RESTORE] Font {} cosDictionary missing required Type or Subtype keys",
-                    fontModel.getId());
+            log.debug("[FONT-RESTORE] Font {} cosDictionary missing required Type or Subtype keys", fontModel.getId());
             return null;
         }
 
         try {
             PDFont font = PDFontFactory.createFont(cosDictionary);
             if (font == null) {
-                log.debug(
-                        "[FONT-RESTORE] Font {} PDFontFactory returned null for valid dictionary",
-                        fontModel.getId());
+                log.debug("[FONT-RESTORE] Font {} PDFontFactory returned null for valid dictionary", fontModel.getId());
                 return null;
             }
 
@@ -4988,13 +4570,11 @@ public class PdfJsonConversionService {
             return false;
         }
         String normalized = format.toLowerCase(Locale.ROOT);
-        return normalized.contains("type1c")
-                || normalized.contains("cidfonttype0c")
-                || "cff".equals(normalized);
+        return normalized.contains("type1c") || normalized.contains("cidfonttype0c") || "cff".equals(normalized);
     }
 
-    private void applyAdditionalFontMetadata(
-            PDDocument document, PDFont font, PdfJsonFont fontModel) throws IOException {
+    private void applyAdditionalFontMetadata(PDDocument document, PDFont font, PdfJsonFont fontModel)
+            throws IOException {
         if (fontModel.getToUnicode() != null && !fontModel.getToUnicode().isBlank()) {
             byte[] bytes = Base64.getDecoder().decode(fontModel.getToUnicode());
             PDStream toUnicodeStream = new PDStream(document);
@@ -5020,8 +4600,7 @@ public class PdfJsonConversionService {
         }
     }
 
-    private void applyTextMatrix(PDPageContentStream contentStream, PdfJsonTextElement element)
-            throws IOException {
+    private void applyTextMatrix(PDPageContentStream contentStream, PdfJsonTextElement element) throws IOException {
         float[] matrix = element.getTextMatrix();
         if (matrix != null && matrix.length == 6) {
             float fontScale = resolveFontMatrixSize(element);
@@ -5070,8 +4649,7 @@ public class PdfJsonConversionService {
         return safeFloat(element.getFontSize(), 12f);
     }
 
-    private void applyRenderingMode(PDPageContentStream contentStream, Integer renderingMode)
-            throws IOException {
+    private void applyRenderingMode(PDPageContentStream contentStream, Integer renderingMode) throws IOException {
         if (renderingMode == null) {
             return;
         }
@@ -5152,36 +4730,31 @@ public class PdfJsonConversionService {
             Bounds bounds = computeBounds(ctm);
             float[] matrixValues = toMatrixValues(ctm);
 
-            PdfJsonImageElement element =
-                    PdfJsonImageElement.builder()
-                            .id(UUID.randomUUID().toString())
-                            .objectName(
-                                    currentXObjectName != null
-                                            ? currentXObjectName.getName()
-                                            : null)
-                            .inlineImage(!(pdImage instanceof PDImageXObject))
-                            .nativeWidth(pdImage.getWidth())
-                            .nativeHeight(pdImage.getHeight())
-                            .x(bounds.left)
-                            .y(bounds.bottom)
-                            .width(bounds.width())
-                            .height(bounds.height())
-                            .left(bounds.left)
-                            .right(bounds.right)
-                            .top(bounds.top)
-                            .bottom(bounds.bottom)
-                            .transform(matrixValues)
-                            .zOrder(-1_000_000 + imageCounter)
-                            .imageData(encoded.base64())
-                            .imageFormat(encoded.format())
-                            .build();
+            PdfJsonImageElement element = PdfJsonImageElement.builder()
+                    .id(UUID.randomUUID().toString())
+                    .objectName(currentXObjectName != null ? currentXObjectName.getName() : null)
+                    .inlineImage(!(pdImage instanceof PDImageXObject))
+                    .nativeWidth(pdImage.getWidth())
+                    .nativeHeight(pdImage.getHeight())
+                    .x(bounds.left)
+                    .y(bounds.bottom)
+                    .width(bounds.width())
+                    .height(bounds.height())
+                    .left(bounds.left)
+                    .right(bounds.right)
+                    .top(bounds.top)
+                    .bottom(bounds.bottom)
+                    .transform(matrixValues)
+                    .zOrder(-1_000_000 + imageCounter)
+                    .imageData(encoded.base64())
+                    .imageFormat(encoded.format())
+                    .build();
             imageCounter++;
             imagesByPage.computeIfAbsent(pageNumber, key -> new ArrayList<>()).add(element);
         }
 
         @Override
-        public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3)
-                throws IOException {
+        public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) throws IOException {
             // Not needed for image extraction
         }
 
@@ -5201,8 +4774,7 @@ public class PdfJsonConversionService {
         }
 
         @Override
-        public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
-                throws IOException {
+        public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) throws IOException {
             // Not needed for image extraction
         }
 
@@ -5242,8 +4814,7 @@ public class PdfJsonConversionService {
         }
 
         @Override
-        protected void processOperator(Operator operator, List<COSBase> operands)
-                throws IOException {
+        protected void processOperator(Operator operator, List<COSBase> operands) throws IOException {
             if (OperatorName.DRAW_OBJECT.equals(operator.getName())
                     && !operands.isEmpty()
                     && operands.get(0) instanceof COSName name) {
@@ -5386,13 +4957,10 @@ public class PdfJsonConversionService {
                 if (imageElement == null) {
                     continue;
                 }
-                int order =
-                        imageElement.getZOrder() != null
-                                ? imageElement.getZOrder()
-                                : Integer.MIN_VALUE / 2 + imageIndex;
-                drawables.add(
-                        new DrawableElement(
-                                DrawableType.IMAGE, null, imageElement, order, sequence++));
+                int order = imageElement.getZOrder() != null
+                        ? imageElement.getZOrder()
+                        : Integer.MIN_VALUE / 2 + imageIndex;
+                drawables.add(new DrawableElement(DrawableType.IMAGE, null, imageElement, order, sequence++));
                 imageIndex++;
             }
         }
@@ -5403,20 +4971,13 @@ public class PdfJsonConversionService {
                 if (textElement == null) {
                     continue;
                 }
-                int order =
-                        textElement.getZOrder() != null
-                                ? textElement.getZOrder()
-                                : 1_000_000 + textIndex;
-                drawables.add(
-                        new DrawableElement(
-                                DrawableType.TEXT, textElement, null, order, sequence++));
+                int order = textElement.getZOrder() != null ? textElement.getZOrder() : 1_000_000 + textIndex;
+                drawables.add(new DrawableElement(DrawableType.TEXT, textElement, null, order, sequence++));
                 textIndex++;
             }
         }
 
-        drawables.sort(
-                Comparator.comparingInt(DrawableElement::zOrder)
-                        .thenComparingInt(DrawableElement::sequence));
+        drawables.sort(Comparator.comparingInt(DrawableElement::zOrder).thenComparingInt(DrawableElement::sequence));
         return drawables;
     }
 
@@ -5426,14 +4987,15 @@ public class PdfJsonConversionService {
             PdfJsonImageElement element,
             Map<String, PDImageXObject> cache)
             throws IOException {
-        if (element == null || element.getImageData() == null || element.getImageData().isBlank()) {
+        if (element == null
+                || element.getImageData() == null
+                || element.getImageData().isBlank()) {
             return;
         }
 
-        String cacheKey =
-                element.getId() != null && !element.getId().isBlank()
-                        ? element.getId()
-                        : Integer.toHexString(System.identityHashCode(element));
+        String cacheKey = element.getId() != null && !element.getId().isBlank()
+                ? element.getId()
+                : Integer.toHexString(System.identityHashCode(element));
         PDImageXObject image = cache.get(cacheKey);
         if (image == null) {
             image = createImageXObject(document, element);
@@ -5445,14 +5007,13 @@ public class PdfJsonConversionService {
 
         float[] transform = element.getTransform();
         if (transform != null && transform.length == 6) {
-            Matrix matrix =
-                    new Matrix(
-                            safeFloat(transform[0], 1f),
-                            safeFloat(transform[1], 0f),
-                            safeFloat(transform[2], 0f),
-                            safeFloat(transform[3], 1f),
-                            safeFloat(transform[4], 0f),
-                            safeFloat(transform[5], 0f));
+            Matrix matrix = new Matrix(
+                    safeFloat(transform[0], 1f),
+                    safeFloat(transform[1], 0f),
+                    safeFloat(transform[2], 0f),
+                    safeFloat(transform[3], 1f),
+                    safeFloat(transform[4], 0f),
+                    safeFloat(transform[5], 0f));
             contentStream.drawImage(image, matrix);
             return;
         }
@@ -5471,8 +5032,7 @@ public class PdfJsonConversionService {
         contentStream.drawImage(image, left, bottom, width, height);
     }
 
-    private PDImageXObject createImageXObject(PDDocument document, PdfJsonImageElement element)
-            throws IOException {
+    private PDImageXObject createImageXObject(PDDocument document, PdfJsonImageElement element) throws IOException {
         byte[] data;
         try {
             data = Base64.getDecoder().decode(element.getImageData());
@@ -5480,7 +5040,8 @@ public class PdfJsonConversionService {
             log.debug("Failed to decode image element: {}", ex.getMessage());
             return null;
         }
-        String name = element.getId() != null ? element.getId() : UUID.randomUUID().toString();
+        String name =
+                element.getId() != null ? element.getId() : UUID.randomUUID().toString();
         return PDImageXObject.createFromByteArray(document, data, name);
     }
 
@@ -5563,19 +5124,16 @@ public class PdfJsonConversionService {
         protected void startPage(PDPage page) throws IOException {
             super.startPage(page);
             currentPage = getCurrentPageNo();
-            currentFontResources =
-                    pageFontResources.getOrDefault(currentPage, Collections.emptyMap());
+            currentFontResources = pageFontResources.getOrDefault(currentPage, Collections.emptyMap());
             currentZOrderCounter = 0;
         }
 
         @Override
-        protected void writeString(String text, List<TextPosition> textPositions)
-                throws IOException {
+        protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
             if (textPositions == null || textPositions.isEmpty()) {
                 return;
             }
-            List<PdfJsonTextElement> pageElements =
-                    textByPage.computeIfAbsent(currentPage, key -> new ArrayList<>());
+            List<PdfJsonTextElement> pageElements = textByPage.computeIfAbsent(currentPage, key -> new ArrayList<>());
 
             TextRunAccumulator accumulator = null;
             for (TextPosition position : textPositions) {
@@ -5602,8 +5160,8 @@ public class PdfJsonConversionService {
             }
         }
 
-        private PdfJsonTextElement createTextElement(
-                TextPosition position, String fontId, PDFont pdfont) throws IOException {
+        private PdfJsonTextElement createTextElement(TextPosition position, String fontId, PDFont pdfont)
+                throws IOException {
             PdfJsonTextElement element = new PdfJsonTextElement();
             element.setText(position.getUnicode());
             element.setFontId(fontId);
@@ -5827,11 +5385,9 @@ public class PdfJsonConversionService {
 
             void append(PdfJsonTextElement element, TextPosition position) {
                 textBuilder.append(element.getText());
-                float width =
-                        element.getWidth() != null ? element.getWidth() : position.getWidthDirAdj();
+                float width = element.getWidth() != null ? element.getWidth() : position.getWidthDirAdj();
                 totalWidth += width;
-                float height =
-                        element.getHeight() != null ? element.getHeight() : position.getHeightDir();
+                float height = element.getHeight() != null ? element.getHeight() : position.getHeightDir();
                 if (height > maxHeight) {
                     maxHeight = height;
                 }
@@ -5843,9 +5399,7 @@ public class PdfJsonConversionService {
                 if (codes == null) return;
                 int needed = charCodeLen + codes.length;
                 if (needed > charCodeBuf.length) {
-                    charCodeBuf =
-                            java.util.Arrays.copyOf(
-                                    charCodeBuf, Math.max(needed, charCodeBuf.length * 2));
+                    charCodeBuf = java.util.Arrays.copyOf(charCodeBuf, Math.max(needed, charCodeBuf.length * 2));
                 }
                 System.arraycopy(codes, 0, charCodeBuf, charCodeLen, codes.length);
                 charCodeLen += codes.length;
@@ -5861,12 +5415,11 @@ public class PdfJsonConversionService {
                 result.setWidth(totalWidth);
                 result.setHeight(maxHeight);
                 if (baseMatrix != null && baseMatrix.length == 6) {
-                    float[] matrix =
-                            new float[] {
-                                orientationA, orientationB,
-                                orientationC, orientationD,
-                                startXCoord, startYCoord
-                            };
+                    float[] matrix = new float[] {
+                        orientationA, orientationB,
+                        orientationC, orientationD,
+                        startXCoord, startYCoord
+                    };
                     result.setTextMatrix(matrix);
                     result.setX(null);
                     result.setY(null);
@@ -5927,8 +5480,7 @@ public class PdfJsonConversionService {
             }
             String key = buildFontKey(jobId, currentPage, fontId);
             if (!fonts.containsKey(key)) {
-                fonts.put(
-                        key, buildFontModel(document, font, fontId, currentPage, fontCache, jobId));
+                fonts.put(key, buildFontModel(document, font, fontId, currentPage, fontCache, jobId));
             }
             return fontId;
         }
@@ -5953,9 +5505,7 @@ public class PdfJsonConversionService {
                 }
             } catch (IOException ex) {
                 log.debug(
-                        "[ColorCapture] Failed to convert color space {} to RGB: {}",
-                        colorSpaceName,
-                        ex.getMessage());
+                        "[ColorCapture] Failed to convert color space {} to RGB: {}", colorSpaceName, ex.getMessage());
             }
             return PdfJsonTextColor.builder()
                     .colorSpace(colorSpaceName)
@@ -6020,12 +5570,10 @@ public class PdfJsonConversionService {
         // Fallback to request attribute (for sync jobs)
         try {
             org.springframework.web.context.request.RequestAttributes attrs =
-                    org.springframework.web.context.request.RequestContextHolder
-                            .getRequestAttributes();
+                    org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
             if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes) {
                 jakarta.servlet.http.HttpServletRequest request =
-                        ((org.springframework.web.context.request.ServletRequestAttributes) attrs)
-                                .getRequest();
+                        ((org.springframework.web.context.request.ServletRequestAttributes) attrs).getRequest();
                 jobId = (String) request.getAttribute("jobId");
                 if (jobId != null) {
                     log.debug("Retrieved jobId from request attribute: {}", jobId);
@@ -6046,25 +5594,20 @@ public class PdfJsonConversionService {
      */
     private void reportProgressToTaskManager(String jobId, PdfJsonConversionProgress progress) {
         try {
-            log.debug(
-                    "Reporting progress for job {}: {}% - {}",
-                    jobId, progress.getPercent(), progress.getStage());
+            log.debug("Reporting progress for job {}: {}% - {}", jobId, progress.getPercent(), progress.getStage());
             // Add progress note to job
             String note;
             if (progress.getCurrent() != null && progress.getTotal() != null) {
-                note =
-                        String.format(
-                                "[%d%%] %s: %s (%d/%d)",
-                                progress.getPercent(),
-                                progress.getStage(),
-                                progress.getMessage(),
-                                progress.getCurrent(),
-                                progress.getTotal());
+                note = String.format(
+                        "[%d%%] %s: %s (%d/%d)",
+                        progress.getPercent(),
+                        progress.getStage(),
+                        progress.getMessage(),
+                        progress.getCurrent(),
+                        progress.getTotal());
             } else {
-                note =
-                        String.format(
-                                "[%d%%] %s: %s",
-                                progress.getPercent(), progress.getStage(), progress.getMessage());
+                note = String.format(
+                        "[%d%%] %s: %s", progress.getPercent(), progress.getStage(), progress.getMessage());
             }
             boolean added = taskManager.addNote(jobId, note);
             if (!added) {
@@ -6106,14 +5649,12 @@ public class PdfJsonConversionService {
             this.pdfSize = pdfSize;
             this.metadata = metadata;
             // Create defensive copies to prevent mutation of shared maps
-            this.fonts =
-                    fonts != null
-                            ? new java.util.concurrent.ConcurrentHashMap<>(fonts)
-                            : new java.util.concurrent.ConcurrentHashMap<>();
-            this.pageFontResources =
-                    pageFontResources != null
-                            ? new java.util.concurrent.ConcurrentHashMap<>(pageFontResources)
-                            : new java.util.concurrent.ConcurrentHashMap<>();
+            this.fonts = fonts != null
+                    ? new java.util.concurrent.ConcurrentHashMap<>(fonts)
+                    : new java.util.concurrent.ConcurrentHashMap<>();
+            this.pageFontResources = pageFontResources != null
+                    ? new java.util.concurrent.ConcurrentHashMap<>(pageFontResources)
+                    : new java.util.concurrent.ConcurrentHashMap<>();
             this.timestamp = System.currentTimeMillis();
         }
 
@@ -6160,16 +5701,10 @@ public class PdfJsonConversionService {
             return withUpdatedFonts(nextBytes, this.fonts);
         }
 
-        public CachedPdfDocument withUpdatedFonts(
-                byte[] nextBytes, Map<String, PdfJsonFont> nextFonts) {
+        public CachedPdfDocument withUpdatedFonts(byte[] nextBytes, Map<String, PdfJsonFont> nextFonts) {
             Map<String, PdfJsonFont> fontsToUse = nextFonts != null ? nextFonts : this.fonts;
             return new CachedPdfDocument(
-                    nextBytes,
-                    null,
-                    nextBytes != null ? nextBytes.length : 0,
-                    metadata,
-                    fontsToUse,
-                    pageFontResources);
+                    nextBytes, null, nextBytes != null ? nextBytes.length : 0, metadata, fontsToUse, pageFontResources);
         }
 
         public void close() {
@@ -6183,27 +5718,24 @@ public class PdfJsonConversionService {
      * Extracts document metadata, fonts, and page dimensions without page content. Caches the PDF
      * bytes for subsequent page requests.
      */
-    public void extractDocumentMetadata(MultipartFile file, String jobId, OutputStream out)
-            throws IOException {
+    public void extractDocumentMetadata(MultipartFile file, String jobId, OutputStream out) throws IOException {
         if (file == null) {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
 
-        Consumer<PdfJsonConversionProgress> progress =
-                jobId != null
-                        ? (p) -> {
-                            log.debug(
-                                    "Progress: [{}%] {} - {}{}",
-                                    p.getPercent(),
-                                    p.getStage(),
-                                    p.getMessage(),
-                                    (p.getCurrent() != null && p.getTotal() != null)
-                                            ? String.format(
-                                                    " (%d/%d)", p.getCurrent(), p.getTotal())
-                                            : "");
-                            reportProgressToTaskManager(jobId, p);
-                        }
-                        : (p) -> {};
+        Consumer<PdfJsonConversionProgress> progress = jobId != null
+                ? (p) -> {
+                    log.debug(
+                            "Progress: [{}%] {} - {}{}",
+                            p.getPercent(),
+                            p.getStage(),
+                            p.getMessage(),
+                            (p.getCurrent() != null && p.getTotal() != null)
+                                    ? String.format(" (%d/%d)", p.getCurrent(), p.getTotal())
+                                    : "");
+                    reportProgressToTaskManager(jobId, p);
+                }
+                : (p) -> {};
 
         // Read PDF bytes once for processing and caching
         byte[] pdfBytes = file.getBytes();
@@ -6212,8 +5744,7 @@ public class PdfJsonConversionService {
             int totalPages = document.getNumberOfPages();
 
             // Extract fonts
-            progress.accept(
-                    PdfJsonConversionProgress.of(30, "fonts", "Collecting font information"));
+            progress.accept(PdfJsonConversionProgress.of(30, "fonts", "Collecting font information"));
             Map<String, PdfJsonFont> fonts = new LinkedHashMap<>();
             Map<Integer, Map<PDFont, String>> pageFontResources = new HashMap<>();
             Map<COSBase, FontModelCacheEntry> fontCache = new IdentityHashMap<>();
@@ -6233,8 +5764,7 @@ public class PdfJsonConversionService {
 
             List<PdfJsonFont> serializedFonts = cloneFontList(fonts.values());
             serializedFonts.sort(
-                    Comparator.comparing(
-                            PdfJsonFont::getUid, Comparator.nullsLast(Comparator.naturalOrder())));
+                    Comparator.comparing(PdfJsonFont::getUid, Comparator.nullsLast(Comparator.naturalOrder())));
             dedupeFontPayloads(serializedFonts);
             stripFontProgramPayloads(serializedFonts);
             stripFontCosStreamData(serializedFonts);
@@ -6261,8 +5791,7 @@ public class PdfJsonConversionService {
 
             // Cache PDF bytes, metadata, and fonts for lazy page loading
             if (jobId != null) {
-                CachedPdfDocument cached =
-                        buildCachedDocument(jobId, pdfBytes, docMetadata, fonts, pageFontResources);
+                CachedPdfDocument cached = buildCachedDocument(jobId, pdfBytes, docMetadata, fonts, pageFontResources);
                 putCachedDocument(jobId, cached);
                 log.debug(
                         "Cached PDF bytes ({} bytes, {} pages, {} fonts) for lazy loading, jobId: {} (diskBacked={})",
@@ -6276,16 +5805,14 @@ public class PdfJsonConversionService {
                 scheduleDocumentCleanup(jobId);
             }
 
-            progress.accept(
-                    PdfJsonConversionProgress.of(100, "complete", "Metadata extraction complete"));
+            progress.accept(PdfJsonConversionProgress.of(100, "complete", "Metadata extraction complete"));
 
             objectMapper.writeValue(out, docMetadata);
         }
     }
 
     /** Extracts a single page from cached PDF bytes. Re-loads the PDF for each request. */
-    public void extractSinglePage(String jobId, int pageNumber, OutputStream out)
-            throws IOException {
+    public void extractSinglePage(String jobId, int pageNumber, OutputStream out) throws IOException {
         CachedPdfDocument cached = getCachedDocument(jobId);
         if (cached == null) {
             throw new stirling.software.SPDF.exception.CacheUnavailableException(
@@ -6296,8 +5823,7 @@ public class PdfJsonConversionService {
         int totalPages = cached.getMetadata().getPageDimensions().size();
 
         if (pageIndex < 0 || pageIndex >= totalPages) {
-            throw new IllegalArgumentException(
-                    "Page number " + pageNumber + " out of range (1-" + totalPages + ")");
+            throw new IllegalArgumentException("Page number " + pageNumber + " out of range (1-" + totalPages + ")");
         }
 
         log.debug(
@@ -6318,20 +5844,18 @@ public class PdfJsonConversionService {
 
             // Extract text on-demand using cached fonts (ensures consistent font UIDs)
             // Create thread-local copies to prevent mutation of cached maps
-            Map<String, PdfJsonFont> threadLocalFonts =
-                    new java.util.concurrent.ConcurrentHashMap<>(cached.getFonts());
+            Map<String, PdfJsonFont> threadLocalFonts = new java.util.concurrent.ConcurrentHashMap<>(cached.getFonts());
             Map<Integer, Map<PDFont, String>> threadLocalPageFontResources =
                     new java.util.concurrent.ConcurrentHashMap<>(cached.getPageFontResources());
 
             Map<Integer, List<PdfJsonTextElement>> textByPage = new LinkedHashMap<>();
-            TextCollectingStripper stripper =
-                    new TextCollectingStripper(
-                            document,
-                            threadLocalFonts,
-                            textByPage,
-                            threadLocalPageFontResources,
-                            new IdentityHashMap<>(),
-                            jobId);
+            TextCollectingStripper stripper = new TextCollectingStripper(
+                    document,
+                    threadLocalFonts,
+                    textByPage,
+                    threadLocalPageFontResources,
+                    new IdentityHashMap<>(),
+                    jobId);
             stripper.setStartPage(pageNumber);
             stripper.setEndPage(pageNumber);
             stripper.setSortByPosition(true);
@@ -6348,13 +5872,9 @@ public class PdfJsonConversionService {
 
                     PDRectangle rect = annotation.getRectangle();
                     if (rect != null) {
-                        ann.setRect(
-                                new float[] {
-                                    rect.getLowerLeftX(),
-                                    rect.getLowerLeftY(),
-                                    rect.getUpperRightX(),
-                                    rect.getUpperRightY()
-                                });
+                        ann.setRect(new float[] {
+                            rect.getLowerLeftX(), rect.getLowerLeftY(), rect.getUpperRightX(), rect.getUpperRightY()
+                        });
                     }
 
                     COSName appearanceState = annotation.getAppearanceState();
@@ -6377,16 +5897,13 @@ public class PdfJsonConversionService {
                         ann.setSubject(subj.getString());
                     }
 
-                    COSString creationDateStr =
-                            (COSString) annotDict.getDictionaryObject(COSName.CREATION_DATE);
+                    COSString creationDateStr = (COSString) annotDict.getDictionaryObject(COSName.CREATION_DATE);
                     if (creationDateStr != null) {
                         try {
-                            Calendar creationDate =
-                                    DateConverter.toCalendar(creationDateStr.getString());
+                            Calendar creationDate = DateConverter.toCalendar(creationDateStr.getString());
                             ann.setCreationDate(formatCalendar(creationDate));
                         } catch (Exception e) {
-                            log.debug(
-                                    "Failed to parse annotation creation date: {}", e.getMessage());
+                            log.debug("Failed to parse annotation creation date: {}", e.getMessage());
                         }
                     }
 
@@ -6396,19 +5913,14 @@ public class PdfJsonConversionService {
                             Calendar modDate = DateConverter.toCalendar(modDateStr.getString());
                             ann.setModificationDate(formatCalendar(modDate));
                         } catch (Exception e) {
-                            log.debug(
-                                    "Failed to parse annotation modification date: {}",
-                                    e.getMessage());
+                            log.debug("Failed to parse annotation modification date: {}", e.getMessage());
                         }
                     }
 
                     // For cached page extraction, skip rawData to avoid huge payloads
                     annotations.add(ann);
                 } catch (Exception e) {
-                    log.warn(
-                            "Failed to extract annotation on page {}: {}",
-                            pageNumber,
-                            e.getMessage());
+                    log.warn("Failed to extract annotation on page {}: {}", pageNumber, e.getMessage());
                 }
             }
             pageModel.setAnnotations(annotations);
@@ -6416,8 +5928,7 @@ public class PdfJsonConversionService {
             // Extract images on-demand
             Map<Integer, List<PdfJsonImageElement>> singlePageImages = new LinkedHashMap<>();
             ImageCollectingEngine engine =
-                    new ImageCollectingEngine(
-                            page, pageNumber, singlePageImages, new IdentityHashMap<>());
+                    new ImageCollectingEngine(page, pageNumber, singlePageImages, new IdentityHashMap<>());
             engine.processPage(page);
             List<PdfJsonImageElement> images = singlePageImages.getOrDefault(pageNumber, List.of());
             pageModel.setImageElements(images);
@@ -6440,8 +5951,7 @@ public class PdfJsonConversionService {
         }
     }
 
-    public void extractPageFonts(String jobId, int pageNumber, OutputStream out)
-            throws IOException {
+    public void extractPageFonts(String jobId, int pageNumber, OutputStream out) throws IOException {
         CachedPdfDocument cached = getCachedDocument(jobId);
         if (cached == null) {
             throw new stirling.software.SPDF.exception.CacheUnavailableException(
@@ -6450,13 +5960,11 @@ public class PdfJsonConversionService {
 
         int totalPages = cached.getMetadata().getPageDimensions().size();
         if (pageNumber < 1 || pageNumber > totalPages) {
-            throw new IllegalArgumentException(
-                    String.format("pageNumber must be between 1 and %d", totalPages));
+            throw new IllegalArgumentException(String.format("pageNumber must be between 1 and %d", totalPages));
         }
 
         Map<Integer, Map<PDFont, String>> pageFontResources = cached.getPageFontResources();
-        Map<PDFont, String> pageMap =
-                pageFontResources != null ? pageFontResources.get(pageNumber) : null;
+        Map<PDFont, String> pageMap = pageFontResources != null ? pageFontResources.get(pageNumber) : null;
         if (pageMap == null || pageMap.isEmpty()) {
             objectMapper.writeValue(out, Collections.emptyList());
             return;
@@ -6484,9 +5992,7 @@ public class PdfJsonConversionService {
             PdfJsonFont clone = cloneFont(font);
             pageFonts.add(clone != null ? clone : font);
         }
-        pageFonts.sort(
-                Comparator.comparing(
-                        PdfJsonFont::getUid, Comparator.nullsLast(Comparator.naturalOrder())));
+        pageFonts.sort(Comparator.comparing(PdfJsonFont::getUid, Comparator.nullsLast(Comparator.naturalOrder())));
         objectMapper.writeValue(out, pageFonts);
     }
 
@@ -6498,10 +6004,7 @@ public class PdfJsonConversionService {
         log.debug("Looking up cache for jobId: {}", jobId);
         CachedPdfDocument cached = getCachedDocument(jobId);
         if (cached == null) {
-            log.error(
-                    "Cache not found for jobId: {}. Available cache keys: {}",
-                    jobId,
-                    documentCache.keySet());
+            log.error("Cache not found for jobId: {}. Available cache keys: {}", jobId, documentCache.keySet());
             throw new stirling.software.SPDF.exception.CacheUnavailableException(
                     "No cached document available for jobId: " + jobId);
         }
@@ -6511,9 +6014,7 @@ public class PdfJsonConversionService {
                 cached.getPdfSize(),
                 cached.isDiskBacked());
         if (updates == null || updates.getPages() == null || updates.getPages().isEmpty()) {
-            log.debug(
-                    "Incremental export requested with no page updates; returning cached PDF for jobId {}",
-                    jobId);
+            log.debug("Incremental export requested with no page updates; returning cached PDF for jobId {}", jobId);
             outputStream.write(cached.getPdfBytes());
             return;
         }
@@ -6521,12 +6022,10 @@ public class PdfJsonConversionService {
         try (PDDocument document = pdfDocumentFactory.load(cached.getPdfBytes(), true)) {
             Map<String, PdfJsonFont> mergedFonts = new LinkedHashMap<>();
             if (cached.getFonts() != null) {
-                cached.getFonts()
-                        .forEach(
-                                (key, value) -> {
-                                    PdfJsonFont clone = cloneFont(value);
-                                    mergedFonts.put(key, clone != null ? clone : value);
-                                });
+                cached.getFonts().forEach((key, value) -> {
+                    PdfJsonFont clone = cloneFont(value);
+                    mergedFonts.put(key, clone != null ? clone : value);
+                });
             }
             if (updates.getFonts() != null) {
                 for (PdfJsonFont font : updates.getFonts()) {
@@ -6559,29 +6058,21 @@ public class PdfJsonConversionService {
                 }
                 Integer pageNumber = pageModel.getPageNumber();
                 if (pageNumber == null) {
-                    log.warn(
-                            "Skipping incremental page update without pageNumber for jobId {}",
-                            jobId);
+                    log.warn("Skipping incremental page update without pageNumber for jobId {}", jobId);
                     continue;
                 }
                 int pageIndex = pageNumber - 1;
                 if (pageIndex < 0 || pageIndex >= document.getNumberOfPages()) {
-                    log.warn(
-                            "Skipping incremental update for out-of-range page {} (jobId {})",
-                            pageNumber,
-                            jobId);
+                    log.warn("Skipping incremental update for out-of-range page {} (jobId {})", pageNumber, jobId);
                     continue;
                 }
                 PDPage page = document.getPage(pageIndex);
-                replacePageContentFromModel(
-                        document, page, pageModel, fontMap, fontModelsCopy, pageNumber);
+                replacePageContentFromModel(document, page, pageModel, fontMap, fontModelsCopy, pageNumber);
                 updatedPages.add(pageIndex);
             }
 
             if (updatedPages.isEmpty()) {
-                log.debug(
-                        "Incremental export for jobId {} resulted in no page updates; returning cached PDF",
-                        jobId);
+                log.debug("Incremental export for jobId {} resulted in no page updates; returning cached PDF", jobId);
                 outputStream.write(cached.getPdfBytes());
                 return;
             }
@@ -6590,13 +6081,8 @@ public class PdfJsonConversionService {
             document.save(baos);
             byte[] updatedBytes = baos.toByteArray();
 
-            CachedPdfDocument updated =
-                    buildCachedDocument(
-                            jobId,
-                            updatedBytes,
-                            cached.getMetadata(),
-                            mergedFonts,
-                            cached.getPageFontResources());
+            CachedPdfDocument updated = buildCachedDocument(
+                    jobId, updatedBytes, cached.getMetadata(), mergedFonts, cached.getPageFontResources());
             putCachedDocument(jobId, updated);
 
             // Clear Type3 cache entries for this incremental update
@@ -6684,12 +6170,9 @@ public class PdfJsonConversionService {
             List<PdfJsonFont> fontModels,
             int pageNumberValue)
             throws IOException {
-        boolean preserveExistingAnnotations =
-                shouldPreserveExistingAnnotations(pageModel.getAnnotations());
-        boolean preserveExistingContentStreams =
-                shouldPreserveExistingContentStreams(pageModel.getContentStreams());
-        boolean preserveExistingResources =
-                shouldPreserveExistingResources(pageModel.getResources());
+        boolean preserveExistingAnnotations = shouldPreserveExistingAnnotations(pageModel.getAnnotations());
+        boolean preserveExistingContentStreams = shouldPreserveExistingContentStreams(pageModel.getContentStreams());
+        boolean preserveExistingResources = shouldPreserveExistingResources(pageModel.getResources());
 
         PDRectangle currentBox = page.getMediaBox();
         float fallbackWidth = currentBox != null ? currentBox.getWidth() : 612f;
@@ -6721,19 +6204,16 @@ public class PdfJsonConversionService {
             }
         }
 
-        List<PdfJsonImageElement> imageElements =
-                pageModel.getImageElements() != null
-                        ? new ArrayList<>(pageModel.getImageElements())
-                        : new ArrayList<>();
+        List<PdfJsonImageElement> imageElements = pageModel.getImageElements() != null
+                ? new ArrayList<>(pageModel.getImageElements())
+                : new ArrayList<>();
 
         if (!preservedStreams.isEmpty() && !imageElements.isEmpty()) {
             reconstructImageXObjects(document, page, preservedStreams, imageElements);
         }
 
         List<PdfJsonTextElement> textElements =
-                pageModel.getTextElements() != null
-                        ? new ArrayList<>(pageModel.getTextElements())
-                        : new ArrayList<>();
+                pageModel.getTextElements() != null ? new ArrayList<>(pageModel.getTextElements()) : new ArrayList<>();
 
         PreflightResult preflightResult =
                 preflightTextElements(document, fontMap, fontModels, textElements, pageNumberValue);
@@ -6743,35 +6223,31 @@ public class PdfJsonConversionService {
 
         Map<String, PdfJsonFont> fontLookup = buildFontModelLookup(fontModels);
 
-        AppendMode appendMode =
-                preservedStreams.isEmpty() ? AppendMode.OVERWRITE : AppendMode.APPEND;
+        AppendMode appendMode = preservedStreams.isEmpty() ? AppendMode.OVERWRITE : AppendMode.APPEND;
 
-        RegenerateMode regenerateMode =
-                determineRegenerateMode(
-                        document,
-                        page,
-                        preservedStreams,
-                        textElements,
-                        imageElements,
-                        preflightResult,
-                        fontLookup,
-                        pageNumberValue);
+        RegenerateMode regenerateMode = determineRegenerateMode(
+                document,
+                page,
+                preservedStreams,
+                textElements,
+                imageElements,
+                preflightResult,
+                fontLookup,
+                pageNumberValue);
 
         if (regenerateMode == RegenerateMode.REUSE_EXISTING) {
             if (!preserveExistingAnnotations) {
                 page.getAnnotations().clear();
-                List<PdfJsonAnnotation> annotations =
-                        pageModel.getAnnotations() != null
-                                ? new ArrayList<>(pageModel.getAnnotations())
-                                : new ArrayList<>();
+                List<PdfJsonAnnotation> annotations = pageModel.getAnnotations() != null
+                        ? new ArrayList<>(pageModel.getAnnotations())
+                        : new ArrayList<>();
                 restoreAnnotations(document, page, annotations);
             }
             return;
         }
 
         if (regenerateMode == RegenerateMode.REGENERATE_WITH_VECTOR_OVERLAY) {
-            PDStream vectorStream =
-                    extractVectorGraphics(document, preservedStreams, imageElements);
+            PDStream vectorStream = extractVectorGraphics(document, preservedStreams, imageElements);
             if (vectorStream != null) {
                 page.setContents(Collections.singletonList(vectorStream));
                 appendMode = AppendMode.APPEND;
@@ -6785,21 +6261,13 @@ public class PdfJsonConversionService {
         }
 
         regeneratePageContent(
-                document,
-                page,
-                textElements,
-                imageElements,
-                fontMap,
-                fontModels,
-                pageNumberValue,
-                appendMode);
+                document, page, textElements, imageElements, fontMap, fontModels, pageNumberValue, appendMode);
 
         if (!preserveExistingAnnotations) {
             page.getAnnotations().clear();
-            List<PdfJsonAnnotation> annotations =
-                    pageModel.getAnnotations() != null
-                            ? new ArrayList<>(pageModel.getAnnotations())
-                            : new ArrayList<>();
+            List<PdfJsonAnnotation> annotations = pageModel.getAnnotations() != null
+                    ? new ArrayList<>(pageModel.getAnnotations())
+                    : new ArrayList<>();
             restoreAnnotations(document, page, annotations);
         }
     }
@@ -6831,8 +6299,7 @@ public class PdfJsonConversionService {
 
         if (hasText && !preflightResult.usesFallback()) {
             boolean rewriteSucceeded =
-                    rewriteTextOperators(
-                            document, page, textElements, false, true, fontLookup, pageNumberValue);
+                    rewriteTextOperators(document, page, textElements, false, true, fontLookup, pageNumberValue);
             if (rewriteSucceeded) {
                 return RegenerateMode.REUSE_EXISTING;
             }
@@ -6943,16 +6410,14 @@ public class PdfJsonConversionService {
 
     /** Schedules automatic cleanup of cached documents after 30 minutes. */
     private void scheduleDocumentCleanup(String jobId) {
-        Thread.ofVirtual()
-                .start(
-                        () -> {
-                            try {
-                                Thread.sleep(TimeUnit.MINUTES.toMillis(30));
-                                clearCachedDocument(jobId);
-                                log.debug("Auto-cleaned cached document for jobId: {}", jobId);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                        });
+        Thread.ofVirtual().start(() -> {
+            try {
+                Thread.sleep(TimeUnit.MINUTES.toMillis(30));
+                clearCachedDocument(jobId);
+                log.debug("Auto-cleaned cached document for jobId: {}", jobId);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
     }
 }

@@ -28,12 +28,10 @@ public interface WorkflowParticipantRepository extends JpaRepository<WorkflowPar
     Optional<WorkflowParticipant> findByWorkflowSessionAndUser(WorkflowSession session, User user);
 
     /** Find participant by session and email */
-    Optional<WorkflowParticipant> findByWorkflowSessionAndEmail(
-            WorkflowSession session, String email);
+    Optional<WorkflowParticipant> findByWorkflowSessionAndEmail(WorkflowSession session, String email);
 
     /** Find all participants with a specific status in a session */
-    List<WorkflowParticipant> findByWorkflowSessionAndStatus(
-            WorkflowSession session, ParticipantStatus status);
+    List<WorkflowParticipant> findByWorkflowSessionAndStatus(WorkflowSession session, ParticipantStatus status);
 
     /** Find all sessions where a user is a participant */
     List<WorkflowParticipant> findByUserOrderByLastUpdatedDesc(User user);
@@ -58,10 +56,8 @@ public interface WorkflowParticipantRepository extends JpaRepository<WorkflowPar
     List<WorkflowParticipant> findPendingNotifications();
 
     /** Delete participant by ID and session owner (for authorization) */
-    @Query(
-            "DELETE FROM WorkflowParticipant p WHERE p.id = :participantId AND p.workflowSession.owner = :owner")
-    void deleteByIdAndSessionOwner(
-            @Param("participantId") Long participantId, @Param("owner") User owner);
+    @Query("DELETE FROM WorkflowParticipant p WHERE p.id = :participantId AND p.workflowSession.owner = :owner")
+    void deleteByIdAndSessionOwner(@Param("participantId") Long participantId, @Param("owner") User owner);
 
     /**
      * Null out the user reference for all participants linked to the given user. Used during user

@@ -168,14 +168,11 @@ class PdfUtilsMoreTest {
             doc.addPage(new PDPage(new PDRectangle(20f, 20f)));
             when(factory.load(bytes)).thenReturn(doc);
 
-            try (MockedStatic<ApplicationContextProvider> ctx =
-                    Mockito.mockStatic(ApplicationContextProvider.class)) {
+            try (MockedStatic<ApplicationContextProvider> ctx = Mockito.mockStatic(ApplicationContextProvider.class)) {
                 ctx.when(() -> ApplicationContextProvider.getBean(ApplicationProperties.class))
                         .thenReturn(propsWithMaxDpi(200));
 
-                byte[] out =
-                        PdfUtils.convertFromPdf(
-                                factory, bytes, "png", ImageType.RGB, true, 72, "doc", true);
+                byte[] out = PdfUtils.convertFromPdf(factory, bytes, "png", ImageType.RGB, true, 72, "doc", true);
                 assertThat(out).isNotEmpty();
             }
         }
@@ -186,24 +183,14 @@ class PdfUtilsMoreTest {
             byte[] bytes = new byte[] {1, 2, 3};
             CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
 
-            try (MockedStatic<ApplicationContextProvider> ctx =
-                    Mockito.mockStatic(ApplicationContextProvider.class)) {
+            try (MockedStatic<ApplicationContextProvider> ctx = Mockito.mockStatic(ApplicationContextProvider.class)) {
                 ctx.when(() -> ApplicationContextProvider.getBean(ApplicationProperties.class))
                         .thenReturn(propsWithMaxDpi(100));
 
                 // 150 exceeds the configured limit of 100, so the limit check fires before loading.
                 org.junit.jupiter.api.Assertions.assertThrows(
                         IllegalArgumentException.class,
-                        () ->
-                                PdfUtils.convertFromPdf(
-                                        factory,
-                                        bytes,
-                                        "png",
-                                        ImageType.RGB,
-                                        true,
-                                        150,
-                                        "doc",
-                                        true));
+                        () -> PdfUtils.convertFromPdf(factory, bytes, "png", ImageType.RGB, true, 150, "doc", true));
             }
         }
 
@@ -218,9 +205,7 @@ class PdfUtilsMoreTest {
             doc.addPage(new PDPage(new PDRectangle(20f, 30f)));
             when(factory.load(bytes)).thenReturn(doc);
 
-            byte[] out =
-                    PdfUtils.convertFromPdf(
-                            factory, bytes, "png", ImageType.RGB, true, 36, "doc", true);
+            byte[] out = PdfUtils.convertFromPdf(factory, bytes, "png", ImageType.RGB, true, 36, "doc", true);
             assertThat(out).isNotEmpty();
         }
 
@@ -235,9 +220,7 @@ class PdfUtilsMoreTest {
             doc.addPage(rotated);
             when(factory.load(bytes)).thenReturn(doc);
 
-            byte[] out =
-                    PdfUtils.convertFromPdf(
-                            factory, bytes, "png", ImageType.RGB, true, 36, "doc", true);
+            byte[] out = PdfUtils.convertFromPdf(factory, bytes, "png", ImageType.RGB, true, 36, "doc", true);
             assertThat(out).isNotEmpty();
         }
     }
@@ -251,8 +234,7 @@ class PdfUtilsMoreTest {
         @Test
         @DisplayName("renders using the configured max DPI when properties are present")
         void usesConfiguredDpi() throws IOException {
-            try (MockedStatic<ApplicationContextProvider> ctx =
-                    Mockito.mockStatic(ApplicationContextProvider.class)) {
+            try (MockedStatic<ApplicationContextProvider> ctx = Mockito.mockStatic(ApplicationContextProvider.class)) {
                 ctx.when(() -> ApplicationContextProvider.getBean(ApplicationProperties.class))
                         .thenReturn(propsWithMaxDpi(72));
 
@@ -278,12 +260,9 @@ class PdfUtilsMoreTest {
             CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
             when(factory.createNewDocument()).thenReturn(new PDDocument());
 
-            MockMultipartFile tiff =
-                    new MockMultipartFile("file", "scan.tiff", "image/tiff", multiFrameTiff());
+            MockMultipartFile tiff = new MockMultipartFile("file", "scan.tiff", "image/tiff", multiFrameTiff());
 
-            byte[] pdfOut =
-                    PdfUtils.imageToPdf(
-                            new MultipartFile[] {tiff}, "fillPage", false, "color", factory);
+            byte[] pdfOut = PdfUtils.imageToPdf(new MultipartFile[] {tiff}, "fillPage", false, "color", factory);
 
             assertThat(pdfOut).isNotEmpty();
             try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
@@ -297,16 +276,10 @@ class PdfUtilsMoreTest {
             CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
             when(factory.createNewDocument()).thenReturn(new PDDocument());
 
-            MockMultipartFile tif =
-                    new MockMultipartFile(
-                            "file",
-                            "scan.tif",
-                            MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                            multiFrameTiff());
+            MockMultipartFile tif = new MockMultipartFile(
+                    "file", "scan.tif", MediaType.APPLICATION_OCTET_STREAM_VALUE, multiFrameTiff());
 
-            byte[] pdfOut =
-                    PdfUtils.imageToPdf(
-                            new MultipartFile[] {tif}, "fillPage", false, "color", factory);
+            byte[] pdfOut = PdfUtils.imageToPdf(new MultipartFile[] {tif}, "fillPage", false, "color", factory);
 
             try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
                 assertThat(doc.getNumberOfPages()).isEqualTo(2);

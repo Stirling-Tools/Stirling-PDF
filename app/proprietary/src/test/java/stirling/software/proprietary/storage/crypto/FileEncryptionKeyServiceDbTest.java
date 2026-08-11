@@ -32,8 +32,11 @@ class FileEncryptionKeyServiceDbTest {
     private static final String MASTER =
             Base64.getEncoder().encodeToString("0123456789abcdef0123456789abcdef".getBytes());
 
-    @Autowired private FileEncryptionKeyRepository repository;
-    @Autowired private PlatformTransactionManager transactionManager;
+    @Autowired
+    private FileEncryptionKeyRepository repository;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     @AfterEach
     void wipe() {
@@ -43,8 +46,7 @@ class FileEncryptionKeyServiceDbTest {
     private FileEncryptionKeyService newService() {
         TransactionTemplate requiresNew = new TransactionTemplate(transactionManager);
         requiresNew.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        return new FileEncryptionKeyService(
-                repository, new FileEncryptionMasterKey(MASTER, false), requiresNew);
+        return new FileEncryptionKeyService(repository, new FileEncryptionMasterKey(MASTER, false), requiresNew);
     }
 
     private static User teamUser(long teamId) {
@@ -64,33 +66,26 @@ class FileEncryptionKeyServiceDbTest {
         // "Node B" raced: it computed its key version BEFORE A's commit was visible, so it
         // attempts the same (scope, version) row. Only that read is faked; the flush, the
         // unique-constraint violation, and the recovery all run against the real database.
-        FileEncryptionKeyRepository raceTimedRepo =
-                org.mockito.Mockito.mock(
-                        FileEncryptionKeyRepository.class,
-                        org.mockito.AdditionalAnswers.delegatesTo(repository));
+        FileEncryptionKeyRepository raceTimedRepo = org.mockito.Mockito.mock(
+                FileEncryptionKeyRepository.class, org.mockito.AdditionalAnswers.delegatesTo(repository));
         org.mockito.Mockito.doReturn(java.util.Optional.empty())
                 .when(raceTimedRepo)
-                .findFirstByScopeTypeAndScopeIdOrderByKeyVersionDesc(
-                        FileEncryptionKey.ScopeType.TEAM, 42L);
+                .findFirstByScopeTypeAndScopeIdOrderByKeyVersionDesc(FileEncryptionKey.ScopeType.TEAM, 42L);
 
         TransactionTemplate requiresNew = new TransactionTemplate(transactionManager);
         requiresNew.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         FileEncryptionKeyService raced =
-                new FileEncryptionKeyService(
-                        raceTimedRepo, new FileEncryptionMasterKey(MASTER, false), requiresNew);
+                new FileEncryptionKeyService(raceTimedRepo, new FileEncryptionMasterKey(MASTER, false), requiresNew);
 
         // Inside a caller transaction (the WorkflowSessionService shape): the duplicate insert
         // must be absorbed by createActive's own REQUIRES_NEW transaction, recover to the
         // winner's row, and leave the caller transaction committable.
         TransactionTemplate callerTx = new TransactionTemplate(transactionManager);
-        FileEncryptionKey resolved =
-                callerTx.execute(
-                        status -> {
-                            FileEncryptionKey row =
-                                    raced.createActive(FileEncryptionKey.ScopeType.TEAM, 42L);
-                            assertThat(status.isRollbackOnly()).isFalse();
-                            return row;
-                        });
+        FileEncryptionKey resolved = callerTx.execute(status -> {
+            FileEncryptionKey row = raced.createActive(FileEncryptionKey.ScopeType.TEAM, 42L);
+            assertThat(status.isRollbackOnly()).isFalse();
+            return row;
+        });
 
         assertThat(resolved.getKeyId()).isEqualTo(winner.getKeyId());
         assertThat(repository.count()).isEqualTo(1);

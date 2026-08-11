@@ -47,13 +47,16 @@ public class FileEncryptionKeyService {
      */
     private final TransactionOperations keyCreationTx;
 
-    private final Cache<UUID, byte[]> unwrapCache =
-            Caffeine.newBuilder().expireAfterWrite(CACHE_TTL).maximumSize(10_000).build();
-    private final Cache<String, UUID> activeScopeCache =
-            Caffeine.newBuilder().expireAfterWrite(CACHE_TTL).maximumSize(10_000).build();
+    private final Cache<UUID, byte[]> unwrapCache = Caffeine.newBuilder()
+            .expireAfterWrite(CACHE_TTL)
+            .maximumSize(10_000)
+            .build();
+    private final Cache<String, UUID> activeScopeCache = Caffeine.newBuilder()
+            .expireAfterWrite(CACHE_TTL)
+            .maximumSize(10_000)
+            .build();
 
-    public FileEncryptionKeyService(
-            FileEncryptionKeyRepository repository, FileEncryptionMasterKey masterKey) {
+    public FileEncryptionKeyService(FileEncryptionKeyRepository repository, FileEncryptionMasterKey masterKey) {
         this(repository, masterKey, TransactionOperations.withoutTransaction());
     }
 
@@ -96,17 +99,13 @@ public class FileEncryptionKeyService {
         if (cached != null) {
             return cached;
         }
-        FileEncryptionKey row =
-                repository
-                        .findById(keyId)
-                        .orElseThrow(
-                                () ->
-                                        new StorageEncryptionException(
-                                                "No encryption key "
-                                                        + keyId
-                                                        + " — the key registry does not match the"
-                                                        + " stored data (restored from an older"
-                                                        + " database backup?)"));
+        FileEncryptionKey row = repository
+                .findById(keyId)
+                .orElseThrow(() -> new StorageEncryptionException("No encryption key "
+                        + keyId
+                        + " — the key registry does not match the"
+                        + " stored data (restored from an older"
+                        + " database backup?)"));
         if (row.getStatus() == FileEncryptionKey.Status.DISABLED) {
             throw new StorageKeyRevokedException(
                     "Encryption key " + keyId + " is disabled; access to this content is revoked");
@@ -122,30 +121,28 @@ public class FileEncryptionKeyService {
         repository
                 .findFirstByStatus(FileEncryptionKey.Status.ACTIVE)
                 .or(() -> repository.findFirstByStatus(FileEncryptionKey.Status.RETIRED))
-                .ifPresent(
-                        row -> {
-                            try {
-                                unwrapRow(row);
-                            } catch (StorageEncryptionException e) {
-                                throw new IllegalStateException(
-                                        "The configured file encryption key (fingerprint "
-                                                + masterKey.fingerprint()
-                                                + ") cannot unwrap existing key "
-                                                + row.getKeyId()
-                                                + ". Refusing to start with a mismatched key —"
-                                                + " restore the original"
-                                                + " STIRLING_FILE_ENCRYPTION_KEY /"
-                                                + " file-encryption.key.",
-                                        e);
-                            }
-                        });
+                .ifPresent(row -> {
+                    try {
+                        unwrapRow(row);
+                    } catch (StorageEncryptionException e) {
+                        throw new IllegalStateException(
+                                "The configured file encryption key (fingerprint "
+                                        + masterKey.fingerprint()
+                                        + ") cannot unwrap existing key "
+                                        + row.getKeyId()
+                                        + ". Refusing to start with a mismatched key —"
+                                        + " restore the original"
+                                        + " STIRLING_FILE_ENCRYPTION_KEY /"
+                                        + " file-encryption.key.",
+                                e);
+                    }
+                });
     }
 
-    private FileEncryptionKey findOrCreateActive(
-            FileEncryptionKey.ScopeType scopeType, long scopeId) throws StorageEncryptionException {
+    private FileEncryptionKey findOrCreateActive(FileEncryptionKey.ScopeType scopeType, long scopeId)
+            throws StorageEncryptionException {
         return repository
-                .findFirstByScopeTypeAndScopeIdAndStatus(
-                        scopeType, scopeId, FileEncryptionKey.Status.ACTIVE)
+                .findFirstByScopeTypeAndScopeIdAndStatus(scopeType, scopeId, FileEncryptionKey.Status.ACTIVE)
                 .orElseGet(() -> createActive(scopeType, scopeId));
     }
 
@@ -158,51 +155,38 @@ public class FileEncryptionKeyService {
         row.setKeyId(UUID.randomUUID());
         row.setScopeType(scopeType);
         row.setScopeId(scopeId);
-        int version =
-                repository
-                                .findFirstByScopeTypeAndScopeIdOrderByKeyVersionDesc(
-                                        scopeType, scopeId)
-                                .map(FileEncryptionKey::getKeyVersion)
-                                .orElse(0)
-                        + 1;
+        int version = repository
+                        .findFirstByScopeTypeAndScopeIdOrderByKeyVersionDesc(scopeType, scopeId)
+                        .map(FileEncryptionKey::getKeyVersion)
+                        .orElse(0)
+                + 1;
         row.setKeyVersion(version);
-        row.setWrappedKey(
-                Base64.getEncoder().encodeToString(masterKey.wrap(kek, aadFor(row.getKeyId()))));
+        row.setWrappedKey(Base64.getEncoder().encodeToString(masterKey.wrap(kek, aadFor(row.getKeyId()))));
         row.setMasterKeyVersion(FileEncryptionMasterKey.CURRENT_VERSION);
         row.setStatus(FileEncryptionKey.Status.ACTIVE);
         try {
             // saveAndFlush inside a fresh transaction so a unique-constraint violation surfaces
             // right here (not at some outer commit) and the caller's transaction stays healthy.
             FileEncryptionKey saved = keyCreationTx.execute(status -> repository.saveAndFlush(row));
-            log.info(
-                    "Created storage encryption key {} for {}:{}",
-                    saved.getKeyId(),
-                    scopeType,
-                    scopeId);
+            log.info("Created storage encryption key {} for {}:{}", saved.getKeyId(), scopeType, scopeId);
             unwrapCache.put(saved.getKeyId(), kek);
             return saved;
         } catch (DataIntegrityViolationException raced) {
             // Another node created the scope key concurrently; use theirs.
             return repository
-                    .findFirstByScopeTypeAndScopeIdAndStatus(
-                            scopeType, scopeId, FileEncryptionKey.Status.ACTIVE)
+                    .findFirstByScopeTypeAndScopeIdAndStatus(scopeType, scopeId, FileEncryptionKey.Status.ACTIVE)
                     .orElseThrow(() -> raced);
         }
     }
 
     private byte[] unwrapRow(FileEncryptionKey row) throws StorageEncryptionException {
         try {
-            byte[] kek =
-                    masterKey.unwrap(
-                            Base64.getDecoder().decode(row.getWrappedKey()),
-                            aadFor(row.getKeyId()));
+            byte[] kek = masterKey.unwrap(Base64.getDecoder().decode(row.getWrappedKey()), aadFor(row.getKeyId()));
             unwrapCache.put(row.getKeyId(), kek);
             return kek;
         } catch (GeneralSecurityException e) {
             throw new StorageEncryptionException(
-                    "Failed to unwrap encryption key "
-                            + row.getKeyId()
-                            + " — master key mismatch or corrupted key row",
+                    "Failed to unwrap encryption key " + row.getKeyId() + " — master key mismatch or corrupted key row",
                     e);
         }
     }

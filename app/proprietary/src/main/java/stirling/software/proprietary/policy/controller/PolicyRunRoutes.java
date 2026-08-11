@@ -78,8 +78,6 @@ public final class PolicyRunRoutes {
             return false;
         }
         String idSegment = rel.substring(0, rel.length() - suffix.length());
-        return idSegment.length() > 1
-                && idSegment.charAt(0) == '/'
-                && idSegment.indexOf('/', 1) < 0;
+        return idSegment.length() > 1 && idSegment.charAt(0) == '/' && idSegment.indexOf('/', 1) < 0;
     }
 }

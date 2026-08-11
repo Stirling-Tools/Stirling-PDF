@@ -69,11 +69,9 @@ public class ScannerEffectController {
     private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
     private static final long RENDER_CLONE_IN_MEMORY_THRESHOLD = 16 * 1024 * 1024; // 16 MB
 
-    private static final ThreadLocal<BufferCache> BUFFER_CACHE =
-            ThreadLocal.withInitial(BufferCache::new);
+    private static final ThreadLocal<BufferCache> BUFFER_CACHE = ThreadLocal.withInitial(BufferCache::new);
 
-    private static int calculateSafeResolution(
-            float pageWidthPts, float pageHeightPts, int resolution) {
+    private static int calculateSafeResolution(float pageWidthPts, float pageHeightPts, int resolution) {
         int projectedWidth = (int) Math.ceil(pageWidthPts * resolution / 72.0);
         int projectedHeight = (int) Math.ceil(pageHeightPts * resolution / 72.0);
         long projectedPixels = (long) projectedWidth * projectedHeight;
@@ -96,16 +94,12 @@ public class ScannerEffectController {
         return request.getResolution();
     }
 
-    private static BufferedImage renderPageSafely(PDFRenderer renderer, int pageIndex, int dpi)
-            throws IOException {
-        return ExceptionUtils.handleOomRendering(
-                pageIndex + 1, dpi, () -> renderer.renderImageWithDPI(pageIndex, dpi));
+    private static BufferedImage renderPageSafely(PDFRenderer renderer, int pageIndex, int dpi) throws IOException {
+        return ExceptionUtils.handleOomRendering(pageIndex + 1, dpi, () -> renderer.renderImageWithDPI(pageIndex, dpi));
     }
 
-    private static BufferedImage convertColorspace(
-            BufferedImage image, ScannerEffectRequest.Colorspace colorspace) {
-        BufferedImage result =
-                new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+    private static BufferedImage convertColorspace(BufferedImage image, ScannerEffectRequest.Colorspace colorspace) {
+        BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g = result.createGraphics();
         g.drawImage(image, 0, 0, null);
         g.dispose();
@@ -135,21 +129,13 @@ public class ScannerEffectController {
         float endGrey = 0.6f + 0.3f * ThreadLocalRandom.current().nextFloat();
 
         Color startColor =
-                new Color(
-                        Math.round(startGrey * 255),
-                        Math.round(startGrey * 255),
-                        Math.round(startGrey * 255));
-        Color endColor =
-                new Color(
-                        Math.round(endGrey * 255),
-                        Math.round(endGrey * 255),
-                        Math.round(endGrey * 255));
+                new Color(Math.round(startGrey * 255), Math.round(startGrey * 255), Math.round(startGrey * 255));
+        Color endColor = new Color(Math.round(endGrey * 255), Math.round(endGrey * 255), Math.round(endGrey * 255));
 
         return new GradientConfig(vertical, startColor, endColor);
     }
 
-    private static BufferedImage addBorderWithGradient(
-            BufferedImage image, int borderPx, GradientConfig gradient) {
+    private static BufferedImage addBorderWithGradient(BufferedImage image, int borderPx, GradientConfig gradient) {
         int width = image.getWidth() + 2 * borderPx;
         int height = image.getHeight() + 2 * borderPx;
 
@@ -188,8 +174,7 @@ public class ScannerEffectController {
         return lut;
     }
 
-    private static void fillWithGradient(
-            int[] pixels, int width, int height, int[] gradientLUT, boolean vertical) {
+    private static void fillWithGradient(int[] pixels, int width, int height, int[] gradientLUT, boolean vertical) {
         if (vertical) {
             for (int y = 0; y < height; y++) {
                 Arrays.fill(pixels, y * width, (y + 1) * width, gradientLUT[y]);
@@ -208,8 +193,7 @@ public class ScannerEffectController {
         return baseRotation + (ThreadLocalRandom.current().nextDouble() * 2 - 1) * rotateVariance;
     }
 
-    private static BufferedImage rotateImage(
-            BufferedImage image, double rotation, GradientConfig gradient) {
+    private static BufferedImage rotateImage(BufferedImage image, double rotation, GradientConfig gradient) {
         if (rotation == 0) {
             return image;
         }
@@ -232,8 +216,7 @@ public class ScannerEffectController {
         transform.translate((rotW - w) / 2.0, (rotH - h) / 2.0);
         transform.rotate(radians, w / 2.0, h / 2.0);
 
-        g.setRenderingHint(
-                RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.drawImage(image, transform, null);
@@ -252,11 +235,7 @@ public class ScannerEffectController {
     }
 
     private static BufferedImage applyAllEffectsSinglePass(
-            BufferedImage image,
-            float brightness,
-            float contrast,
-            boolean yellowish,
-            double noise) {
+            BufferedImage image, float brightness, float contrast, boolean yellowish, double noise) {
         int width = image.getWidth();
         int height = image.getHeight();
         BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -289,33 +268,12 @@ public class ScannerEffectController {
             }
 
             if (applyNoise) {
-                r =
-                        Math.min(
-                                255,
-                                Math.max(
-                                        0,
-                                        r
-                                                + (int)
-                                                        (ThreadLocalRandom.current().nextGaussian()
-                                                                * scaledStrength)));
-                g =
-                        Math.min(
-                                255,
-                                Math.max(
-                                        0,
-                                        g
-                                                + (int)
-                                                        (ThreadLocalRandom.current().nextGaussian()
-                                                                * scaledStrength)));
-                b =
-                        Math.min(
-                                255,
-                                Math.max(
-                                        0,
-                                        b
-                                                + (int)
-                                                        (ThreadLocalRandom.current().nextGaussian()
-                                                                * scaledStrength)));
+                r = Math.min(
+                        255, Math.max(0, r + (int) (ThreadLocalRandom.current().nextGaussian() * scaledStrength)));
+                g = Math.min(
+                        255, Math.max(0, g + (int) (ThreadLocalRandom.current().nextGaussian() * scaledStrength)));
+                b = Math.min(
+                        255, Math.max(0, b + (int) (ThreadLocalRandom.current().nextGaussian() * scaledStrength)));
             }
 
             dstPixels[i] = (r << 16) | (g << 8) | b;
@@ -325,11 +283,7 @@ public class ScannerEffectController {
     }
 
     private static BufferedImage softenEdges(
-            BufferedImage image,
-            int featherRadius,
-            Color startColor,
-            Color endColor,
-            boolean vertical) {
+            BufferedImage image, int featherRadius, Color startColor, Color endColor, boolean vertical) {
         int width = image.getWidth();
         int height = image.getHeight();
         BufferedImage output = new BufferedImage(width, height, image.getType());
@@ -337,9 +291,7 @@ public class ScannerEffectController {
         int[] srcPixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         int[] dstPixels = ((DataBufferInt) output.getRaster().getDataBuffer()).getData();
 
-        int[] gradientLUT =
-                createGradientLUT(
-                        width, height, new GradientConfig(vertical, startColor, endColor));
+        int[] gradientLUT = createGradientLUT(width, height, new GradientConfig(vertical, startColor, endColor));
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int dx = Math.min(x, width - 1 - x);
@@ -462,22 +414,16 @@ public class ScannerEffectController {
         }
     }
 
-    private static void writeProcessedPagesToDocument(
-            List<ProcessedPage> pages, PDDocument document) throws IOException {
+    private static void writeProcessedPagesToDocument(List<ProcessedPage> pages, PDDocument document)
+            throws IOException {
         for (ProcessedPage page : pages) {
             PDPage newPage = new PDPage(new PDRectangle(page.origW, page.origH));
             document.addPage(newPage);
 
             try (PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document,
-                            newPage,
-                            PDPageContentStream.AppendMode.OVERWRITE,
-                            true,
-                            true)) {
+                    new PDPageContentStream(document, newPage, PDPageContentStream.AppendMode.OVERWRITE, true, true)) {
                 PDImageXObject pdImage = LosslessFactory.createFromImage(document, page.image);
-                contentStream.drawImage(
-                        pdImage, page.offsetX, page.offsetY, page.drawW, page.drawH);
+                contentStream.drawImage(pdImage, page.offsetX, page.offsetY, page.drawW, page.drawH);
             }
 
             page.image.flush();
@@ -504,8 +450,7 @@ public class ScannerEffectController {
             float pageWidthPts = pageSize.getWidth();
             float pageHeightPts = pageSize.getHeight();
 
-            int safeResolution =
-                    calculateSafeResolution(pageWidthPts, pageHeightPts, renderResolution);
+            int safeResolution = calculateSafeResolution(pageWidthPts, pageHeightPts, renderResolution);
 
             BufferedImage image = renderingResources.renderPage(pageIndex, safeResolution);
             BufferedImage processed = convertColorspace(image, colorspace);
@@ -536,16 +481,10 @@ public class ScannerEffectController {
 
             int featherRadius = Math.max(10, Math.round(Math.min(rotW, rotH) * 0.02f));
             BufferedImage softened =
-                    softenEdges(
-                            rotated,
-                            featherRadius,
-                            gradient.startColor,
-                            gradient.endColor,
-                            gradient.vertical);
+                    softenEdges(rotated, featherRadius, gradient.startColor, gradient.endColor, gradient.vertical);
 
             BufferedImage blurred = applyGaussianBlur(softened, blur);
-            BufferedImage adjusted =
-                    applyAllEffectsSinglePass(blurred, brightness, contrast, yellowish, noise);
+            BufferedImage adjusted = applyAllEffectsSinglePass(blurred, brightness, contrast, yellowish, noise);
 
             softened.flush();
             blurred.flush();
@@ -555,8 +494,7 @@ public class ScannerEffectController {
             }
             return new ProcessedPage(adjusted, origW, origH, offsetX, offsetY, drawW, drawH);
         } catch (IOException e) {
-            throw ExceptionUtils.wrapException(
-                    e, "scanner effect processing for page " + (pageIndex + 1));
+            throw ExceptionUtils.wrapException(e, "scanner effect processing for page " + (pageIndex + 1));
         } catch (OutOfMemoryError | NegativeArraySizeException e) {
             throw ExceptionUtils.createOutOfMemoryDpiException(pageIndex + 1, renderResolution, e);
         }
@@ -569,11 +507,10 @@ public class ScannerEffectController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Apply scanner effect to PDF",
-            description =
-                    "Applies various effects to simulate a scanned document, including rotation,"
-                            + " noise, and edge softening.")
-    public ResponseEntity<Resource> scannerEffect(
-            @Valid @ModelAttribute ScannerEffectRequest request) throws IOException {
+            description = "Applies various effects to simulate a scanned document, including rotation,"
+                    + " noise, and edge softening.")
+    public ResponseEntity<Resource> scannerEffect(@Valid @ModelAttribute ScannerEffectRequest request)
+            throws IOException {
         MultipartFile file = request.getFileInput();
 
         List<Path> tempFiles = new ArrayList<>();
@@ -616,8 +553,7 @@ public class ScannerEffectController {
             final Path sharedPdfPath = sharedPdfBytes == null ? processingInput : null;
 
             int maxSafeDpi = 500; // Default maximum safe DPI
-            ApplicationProperties properties =
-                    ApplicationContextProvider.getBean(ApplicationProperties.class);
+            ApplicationProperties properties = ApplicationContextProvider.getBean(ApplicationProperties.class);
             if (properties != null && properties.getSystem() != null) {
                 maxSafeDpi = properties.getSystem().getMaxDPI();
             }
@@ -630,70 +566,52 @@ public class ScannerEffectController {
                         maxSafeDpi);
             }
 
-            try (PDDocument document =
-                            sharedPdfBytes != null
-                                    ? pdfDocumentFactory.load(sharedPdfBytes)
-                                    : pdfDocumentFactory.load(processingInput);
+            try (PDDocument document = sharedPdfBytes != null
+                            ? pdfDocumentFactory.load(sharedPdfBytes)
+                            : pdfDocumentFactory.load(processingInput);
                     PDDocument outputDocument = new PDDocument()) {
 
                 int totalPages = document.getNumberOfPages();
                 if (totalPages == 0) {
                     throw ExceptionUtils.createIllegalArgumentException(
-                            "error.emptyDocument",
-                            "The provided PDF contains no pages to process.");
+                            "error.emptyDocument", "The provided PDF contains no pages to process.");
                 }
                 int configuredParallelism =
                         Math.min(64, Math.max(2, Runtime.getRuntime().availableProcessors() * 2));
                 int desiredParallelism = Math.max(1, Math.min(totalPages, configuredParallelism));
 
-                try (ManagedForkJoinPool managedPool =
-                        new ManagedForkJoinPool(desiredParallelism)) {
+                try (ManagedForkJoinPool managedPool = new ManagedForkJoinPool(desiredParallelism)) {
                     ForkJoinPool customPool = managedPool.getPool();
 
-                    Queue<RenderingResources> renderingResourcesToClose =
-                            new ConcurrentLinkedQueue<>();
-                    ThreadLocal<RenderingResources> renderingResources =
-                            ThreadLocal.withInitial(
-                                    () -> {
-                                        try {
-                                            RenderingResources resources =
-                                                    sharedPdfBytes != null
-                                                            ? RenderingResources.fromBytes(
-                                                                    pdfDocumentFactory,
-                                                                    sharedPdfBytes)
-                                                            : RenderingResources.fromPath(
-                                                                    pdfDocumentFactory,
-                                                                    sharedPdfPath);
-                                            renderingResourcesToClose.add(resources);
-                                            return resources;
-                                        } catch (IOException e) {
-                                            throw new UncheckedIOException(
-                                                    "Failed to prepare rendering resources", e);
-                                        }
-                                    });
+                    Queue<RenderingResources> renderingResourcesToClose = new ConcurrentLinkedQueue<>();
+                    ThreadLocal<RenderingResources> renderingResources = ThreadLocal.withInitial(() -> {
+                        try {
+                            RenderingResources resources = sharedPdfBytes != null
+                                    ? RenderingResources.fromBytes(pdfDocumentFactory, sharedPdfBytes)
+                                    : RenderingResources.fromPath(pdfDocumentFactory, sharedPdfPath);
+                            renderingResourcesToClose.add(resources);
+                            return resources;
+                        } catch (IOException e) {
+                            throw new UncheckedIOException("Failed to prepare rendering resources", e);
+                        }
+                    });
                     List<ProcessedPage> processedPages;
                     try {
-                        List<Callable<ProcessedPage>> tasks =
-                                IntStream.range(0, totalPages)
-                                        .mapToObj(
-                                                i ->
-                                                        (Callable<ProcessedPage>)
-                                                                () ->
-                                                                        processPage(
-                                                                                i,
-                                                                                renderingResources
-                                                                                        .get(),
-                                                                                baseRotation,
-                                                                                rotateVariance,
-                                                                                borderPx,
-                                                                                brightness,
-                                                                                contrast,
-                                                                                blur,
-                                                                                noise,
-                                                                                yellowish,
-                                                                                renderResolution,
-                                                                                colorspace))
-                                        .toList();
+                        List<Callable<ProcessedPage>> tasks = IntStream.range(0, totalPages)
+                                .mapToObj(i -> (Callable<ProcessedPage>) () -> processPage(
+                                        i,
+                                        renderingResources.get(),
+                                        baseRotation,
+                                        rotateVariance,
+                                        borderPx,
+                                        brightness,
+                                        contrast,
+                                        blur,
+                                        noise,
+                                        yellowish,
+                                        renderResolution,
+                                        colorspace))
+                                .toList();
 
                         List<Future<ProcessedPage>> futures = customPool.invokeAll(tasks);
                         processedPages = new ArrayList<>(totalPages);
@@ -719,8 +637,7 @@ public class ScannerEffectController {
 
                     return WebResponseUtils.pdfDocToWebResponse(
                             outputDocument,
-                            GeneralUtils.generateFilename(
-                                    file.getOriginalFilename(), "_scanner_effect.pdf"),
+                            GeneralUtils.generateFilename(file.getOriginalFilename(), "_scanner_effect.pdf"),
                             tempFileManager);
                 }
             }
@@ -746,13 +663,11 @@ public class ScannerEffectController {
             this.renderer.setImageDownscalingOptimizationThreshold(0.5f);
         }
 
-        static RenderingResources fromBytes(CustomPDFDocumentFactory factory, byte[] pdfBytes)
-                throws IOException {
+        static RenderingResources fromBytes(CustomPDFDocumentFactory factory, byte[] pdfBytes) throws IOException {
             return new RenderingResources(factory.load(pdfBytes, true));
         }
 
-        static RenderingResources fromPath(CustomPDFDocumentFactory factory, Path pdfPath)
-                throws IOException {
+        static RenderingResources fromPath(CustomPDFDocumentFactory factory, Path pdfPath) throws IOException {
             return new RenderingResources(factory.load(pdfPath, true));
         }
 
@@ -832,13 +747,7 @@ public class ScannerEffectController {
         final float origW, origH, offsetX, offsetY, drawW, drawH;
 
         ProcessedPage(
-                BufferedImage image,
-                float origW,
-                float origH,
-                float offsetX,
-                float offsetY,
-                float drawW,
-                float drawH) {
+                BufferedImage image, float origW, float origH, float offsetX, float offsetY, float drawW, float drawH) {
             this.image = image;
             this.origW = origW;
             this.origH = origH;

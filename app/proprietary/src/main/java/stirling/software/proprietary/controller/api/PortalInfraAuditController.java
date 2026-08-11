@@ -37,11 +37,9 @@ public class PortalInfraAuditController {
             // Return 403 (not throw) so the tab shows its access message, not a generic 500.
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        InfraAuditLogResponse body =
-                scope.fullServer()
-                        ? portalInfraAuditService.serverAuditLog()
-                        : portalInfraAuditService.scopedAuditLog(
-                                scope.cacheKey(), scope.principals());
+        InfraAuditLogResponse body = scope.fullServer()
+                ? portalInfraAuditService.serverAuditLog()
+                : portalInfraAuditService.scopedAuditLog(scope.cacheKey(), scope.principals());
         return ResponseEntity.ok(body);
     }
 }

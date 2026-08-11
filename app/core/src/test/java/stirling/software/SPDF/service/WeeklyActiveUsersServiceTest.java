@@ -67,12 +67,10 @@ class WeeklyActiveUsersServiceTest {
         service.recordBrowserAccess("old-browser");
 
         // Manipulate the internal map to set an old timestamp
-        Field activeBrowsersField =
-                WeeklyActiveUsersService.class.getDeclaredField("activeBrowsers");
+        Field activeBrowsersField = WeeklyActiveUsersService.class.getDeclaredField("activeBrowsers");
         activeBrowsersField.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Map<String, Instant> activeBrowsers =
-                (Map<String, Instant>) activeBrowsersField.get(service);
+        Map<String, Instant> activeBrowsers = (Map<String, Instant>) activeBrowsersField.get(service);
         activeBrowsers.put("old-browser", Instant.now().minus(8, ChronoUnit.DAYS));
 
         // Add a fresh browser
@@ -89,12 +87,10 @@ class WeeklyActiveUsersServiceTest {
     void performCleanup_removesOldEntries() throws Exception {
         service.recordBrowserAccess("old-browser");
 
-        Field activeBrowsersField =
-                WeeklyActiveUsersService.class.getDeclaredField("activeBrowsers");
+        Field activeBrowsersField = WeeklyActiveUsersService.class.getDeclaredField("activeBrowsers");
         activeBrowsersField.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Map<String, Instant> activeBrowsers =
-                (Map<String, Instant>) activeBrowsersField.get(service);
+        Map<String, Instant> activeBrowsers = (Map<String, Instant>) activeBrowsersField.get(service);
         activeBrowsers.put("old-browser", Instant.now().minus(8, ChronoUnit.DAYS));
 
         service.performCleanup();

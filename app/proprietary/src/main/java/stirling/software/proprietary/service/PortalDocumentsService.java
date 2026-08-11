@@ -66,12 +66,9 @@ public class PortalDocumentsService {
             boolean automation = isAutomation(data);
             String policyName = asString(data.get("policyName"));
             String origin = asString(data.get("__origin"));
-            String source =
-                    automation
-                            ? (policyName != null && !policyName.isBlank()
-                                    ? "Policy: " + policyName
-                                    : "Policy automation")
-                            : sourceLabel(origin, asString(data.get("__apiKeyLabel")));
+            String source = automation
+                    ? (policyName != null && !policyName.isBlank() ? "Policy: " + policyName : "Policy automation")
+                    : sourceLabel(origin, asString(data.get("__apiKeyLabel")));
             String product = automation ? "Automation" : productLabel(source);
             String action = prettyTool(path);
             boolean failed = isFailure(data);
@@ -89,36 +86,38 @@ public class PortalDocumentsService {
                 if (name == null || name.isBlank()) {
                     continue;
                 }
-                documents.add(
-                        toDocument(
-                                eventId + "-" + idx++,
-                                name,
-                                asString(fileMap.get("type")),
-                                product,
-                                action,
-                                event.principal(),
-                                failed,
-                                source,
-                                ts));
+                documents.add(toDocument(
+                        eventId + "-" + idx++,
+                        name,
+                        asString(fileMap.get("type")),
+                        product,
+                        action,
+                        event.principal(),
+                        failed,
+                        source,
+                        ts));
                 if (!failed && ts != null && ts.isAfter(dayAgo)) {
                     processedToday++;
                 }
             }
         }
 
-        int processed =
-                (int) documents.stream().filter(d -> "processed".equals(d.getStatus())).count();
+        int processed = (int) documents.stream()
+                .filter(d -> "processed".equals(d.getStatus()))
+                .count();
         int errors = documents.size() - processed;
 
-        PortalDocumentsSummaryDto summary =
-                PortalDocumentsSummaryDto.builder()
-                        .totalInQueue(documents.size())
-                        .processed(processed)
-                        .errors(errors)
-                        .processedToday(processedToday)
-                        .build();
+        PortalDocumentsSummaryDto summary = PortalDocumentsSummaryDto.builder()
+                .totalInQueue(documents.size())
+                .processed(processed)
+                .errors(errors)
+                .processedToday(processedToday)
+                .build();
 
-        return PortalDocumentsResponseDto.builder().summary(summary).documents(documents).build();
+        return PortalDocumentsResponseDto.builder()
+                .summary(summary)
+                .documents(documents)
+                .build();
     }
 
     /** Build one activity row from a single file inside one processing event. */
@@ -132,14 +131,13 @@ public class PortalDocumentsService {
             boolean failed,
             String source,
             Instant timestamp) {
-        PortalDocAuditEventDto op =
-                PortalDocAuditEventDto.builder()
-                        .id(rowId + "-op")
-                        .kind(failed ? "flagged" : "extracted")
-                        .time(relativeTime(timestamp))
-                        .actor(user)
-                        .detail(failed ? action + " failed" : action + " via " + source)
-                        .build();
+        PortalDocAuditEventDto op = PortalDocAuditEventDto.builder()
+                .id(rowId + "-op")
+                .kind(failed ? "flagged" : "extracted")
+                .time(relativeTime(timestamp))
+                .actor(user)
+                .detail(failed ? action + " failed" : action + " via " + source)
+                .build();
 
         return PortalReviewDocumentDto.builder()
                 .id("doc-" + rowId)
@@ -177,9 +175,7 @@ public class PortalDocumentsService {
     private static String sourceLabel(String origin, String apiKeyLabel) {
         if ("API".equals(origin)) {
             // Attribute to the specific named key when known, else the generic API channel.
-            return apiKeyLabel != null && !apiKeyLabel.isBlank()
-                    ? "API key · " + apiKeyLabel
-                    : "API integration";
+            return apiKeyLabel != null && !apiKeyLabel.isBlank() ? "API key · " + apiKeyLabel : "API integration";
         }
         if ("SYSTEM".equals(origin)) {
             return "System";

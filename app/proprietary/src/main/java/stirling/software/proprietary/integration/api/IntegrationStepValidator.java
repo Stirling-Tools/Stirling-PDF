@@ -35,13 +35,12 @@ public class IntegrationStepValidator implements PipelineStepValidator {
      * #INTEGRATION_PREFIX} that is absent here is rejected rather than waved through, so a new
      * endpoint cannot quietly skip this check by forgetting to register.
      */
-    private static final Map<String, IntegrationType> STEP_CONNECTION_TYPES =
-            Map.of(
-                    "/api/v1/integration/external-api-call", IntegrationType.API,
-                    "/api/v1/integration/purview-apply-label", IntegrationType.PURVIEW,
-                    "/api/v1/integration/purview-read-label", IntegrationType.PURVIEW,
-                    "/api/v1/integration/consigno-submit", IntegrationType.CONSIGNO,
-                    "/api/v1/integration/consigno-fetch-signed", IntegrationType.CONSIGNO);
+    private static final Map<String, IntegrationType> STEP_CONNECTION_TYPES = Map.of(
+            "/api/v1/integration/external-api-call", IntegrationType.API,
+            "/api/v1/integration/purview-apply-label", IntegrationType.PURVIEW,
+            "/api/v1/integration/purview-read-label", IntegrationType.PURVIEW,
+            "/api/v1/integration/consigno-submit", IntegrationType.CONSIGNO,
+            "/api/v1/integration/consigno-fetch-signed", IntegrationType.CONSIGNO);
 
     private final ApiConnectionResolver connectionResolver;
 
@@ -55,11 +54,9 @@ public class IntegrationStepValidator implements PipelineStepValidator {
         if (type == null) {
             throw new IllegalArgumentException("unknown integration step: " + operation);
         }
-        Long connectionId =
-                ApiConnectionResolver.connectionId(step.parameters().get(CONNECTION_ID_PARAM));
+        Long connectionId = ApiConnectionResolver.connectionId(step.parameters().get(CONNECTION_ID_PARAM));
         if (connectionId == null) {
-            throw new IllegalArgumentException(
-                    operation + " requires a '" + CONNECTION_ID_PARAM + "' parameter");
+            throw new IllegalArgumentException(operation + " requires a '" + CONNECTION_ID_PARAM + "' parameter");
         }
         // Throws if the connection is missing, the wrong type, disabled, or not usable by the
         // caller. The parsed settings are discarded: this call is the check.

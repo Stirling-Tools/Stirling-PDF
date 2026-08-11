@@ -55,13 +55,10 @@ public class ConvertPDFToExcelController {
     @ToolIO(produces = ToolFormat.EXCEL)
     @Operation(
             summary = "Convert a PDF to an Excel spreadsheet (XLSX)",
-            description =
-                    "Extracts tabular data from each page of a PDF and writes it into an Excel"
-                            + " workbook, one sheet per table.")
-    public ResponseEntity<Resource> pdfToExcel(@ModelAttribute PDFWithPageNums request)
-            throws Exception {
-        String baseName =
-                GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
+            description = "Extracts tabular data from each page of a PDF and writes it into an Excel"
+                    + " workbook, one sheet per table.")
+    public ResponseEntity<Resource> pdfToExcel(@ModelAttribute PDFWithPageNums request) throws Exception {
+        String baseName = GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
 
         TempFile tempOut = tempFileManager.createManagedTempFile(".xlsx");
         try (PDDocument document = pdfDocumentFactory.load(request);
@@ -78,11 +75,9 @@ public class ConvertPDFToExcelController {
 
                 for (int tableIdx = 0; tableIdx < tables.size(); tableIdx++) {
                     Table table = tables.get(tableIdx);
-                    String sheetName =
-                            tables.size() == 1
-                                    ? String.format(Locale.ROOT, "Page %d", pageNum)
-                                    : String.format(
-                                            Locale.ROOT, "Page %d Table %d", pageNum, tableIdx + 1);
+                    String sheetName = tables.size() == 1
+                            ? String.format(Locale.ROOT, "Page %d", pageNum)
+                            : String.format(Locale.ROOT, "Page %d Table %d", pageNum, tableIdx + 1);
 
                     sheetName = getUniqueSheetName(workbook, sheetName);
                     Sheet sheet = workbook.createSheet(sheetName);
@@ -114,8 +109,7 @@ public class ConvertPDFToExcelController {
         }
 
         MediaType mediaType =
-                MediaType.parseMediaType(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         return WebResponseUtils.fileToWebResponse(tempOut, baseName + ".xlsx", mediaType);
     }
 

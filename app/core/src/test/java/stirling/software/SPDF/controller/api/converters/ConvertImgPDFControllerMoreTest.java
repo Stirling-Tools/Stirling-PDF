@@ -47,10 +47,17 @@ import stirling.software.common.util.WebResponseUtils;
 @DisplayName("ConvertImgPDFController additional branch tests")
 class ConvertImgPDFControllerMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @InjectMocks private ConvertImgPDFController controller;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @InjectMocks
+    private ConvertImgPDFController controller;
 
     private static byte[] tinyPdfBytes(int pages) throws IOException {
         try (PDDocument doc = new PDDocument();
@@ -76,8 +83,7 @@ class ConvertImgPDFControllerMoreTest {
     class GetMediaType {
 
         private String invoke(String format) throws Exception {
-            Method m =
-                    ConvertImgPDFController.class.getDeclaredMethod("getMediaType", String.class);
+            Method m = ConvertImgPDFController.class.getDeclaredMethod("getMediaType", String.class);
             m.setAccessible(true);
             return (String) m.invoke(controller, format);
         }
@@ -105,8 +111,7 @@ class ConvertImgPDFControllerMoreTest {
         @Test
         @DisplayName("blank colorType and empty fitOption fall back to color/fillPage")
         void blankDefaults() throws Exception {
-            MockMultipartFile img =
-                    new MockMultipartFile("fileInput", "p.jpg", "image/jpeg", "x".getBytes());
+            MockMultipartFile img = new MockMultipartFile("fileInput", "p.jpg", "image/jpeg", "x".getBytes());
             ConvertToPdfRequest request = new ConvertToPdfRequest();
             request.setFileInput(new MockMultipartFile[] {img});
             request.setColorType("   ");
@@ -118,17 +123,14 @@ class ConvertImgPDFControllerMoreTest {
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                pu.when(
-                                () ->
-                                        PdfUtils.imageToPdf(
-                                                any(MockMultipartFile[].class),
-                                                eq("fillPage"),
-                                                eq(false),
-                                                eq("color"),
-                                                eq(pdfDocumentFactory)))
+                pu.when(() -> PdfUtils.imageToPdf(
+                                any(MockMultipartFile[].class),
+                                eq("fillPage"),
+                                eq(false),
+                                eq("color"),
+                                eq(pdfDocumentFactory)))
                         .thenReturn(pdfBytes);
                 gu.when(() -> GeneralUtils.generateFilename("p.jpg", "_converted.pdf"))
                         .thenReturn("p_converted.pdf");
@@ -139,24 +141,20 @@ class ConvertImgPDFControllerMoreTest {
 
                 assertThat(response).isSameAs(expected);
                 // Blank colorType -> "color"; empty fitOption -> "fillPage".
-                pu.verify(
-                        () ->
-                                PdfUtils.imageToPdf(
-                                        any(MockMultipartFile[].class),
-                                        eq("fillPage"),
-                                        eq(false),
-                                        eq("color"),
-                                        eq(pdfDocumentFactory)));
+                pu.verify(() -> PdfUtils.imageToPdf(
+                        any(MockMultipartFile[].class),
+                        eq("fillPage"),
+                        eq(false),
+                        eq("color"),
+                        eq(pdfDocumentFactory)));
             }
         }
 
         @Test
         @DisplayName("multiple images use the first filename for the output")
         void multipleImagesUseFirstName() throws Exception {
-            MockMultipartFile a =
-                    new MockMultipartFile("fileInput", "first.png", "image/png", "a".getBytes());
-            MockMultipartFile b =
-                    new MockMultipartFile("fileInput", "second.png", "image/png", "b".getBytes());
+            MockMultipartFile a = new MockMultipartFile("fileInput", "first.png", "image/png", "a".getBytes());
+            MockMultipartFile b = new MockMultipartFile("fileInput", "second.png", "image/png", "b".getBytes());
             ConvertToPdfRequest request = new ConvertToPdfRequest();
             request.setFileInput(new MockMultipartFile[] {a, b});
             request.setColorType("color");
@@ -168,17 +166,14 @@ class ConvertImgPDFControllerMoreTest {
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                pu.when(
-                                () ->
-                                        PdfUtils.imageToPdf(
-                                                any(MockMultipartFile[].class),
-                                                eq("fillPage"),
-                                                eq(false),
-                                                eq("color"),
-                                                eq(pdfDocumentFactory)))
+                pu.when(() -> PdfUtils.imageToPdf(
+                                any(MockMultipartFile[].class),
+                                eq("fillPage"),
+                                eq(false),
+                                eq("color"),
+                                eq(pdfDocumentFactory)))
                         .thenReturn(pdfBytes);
                 gu.when(() -> GeneralUtils.generateFilename("first.png", "_converted.pdf"))
                         .thenReturn("first_converted.pdf");
@@ -201,8 +196,7 @@ class ConvertImgPDFControllerMoreTest {
         @DisplayName("a specific page-number list is parsed and rendered")
         void specificPageList() throws Exception {
             byte[] pdfBytes = tinyPdfBytes(3);
-            MockMultipartFile file =
-                    new MockMultipartFile("fileInput", "src.pdf", "application/pdf", pdfBytes);
+            MockMultipartFile file = new MockMultipartFile("fileInput", "src.pdf", "application/pdf", pdfBytes);
 
             ConvertToImageRequest request = new ConvertToImageRequest();
             request.setFileInput(file);
@@ -214,34 +208,26 @@ class ConvertImgPDFControllerMoreTest {
             request.setIncludeAnnotations(false);
 
             // rearrangePdfPages loads a real document and selects pages 1 and 3.
-            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
-                    .thenReturn(tinyDoc(3));
+            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(tinyDoc(3));
 
             byte[] imageBytes = "img".getBytes();
             ResponseEntity<byte[]> expected = ResponseEntity.ok(imageBytes);
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                pu.when(
-                                () ->
-                                        PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("PNG"),
-                                                eq(ImageType.RGB),
-                                                eq(true),
-                                                eq(72),
-                                                any(String.class),
-                                                eq(false)))
+                pu.when(() -> PdfUtils.convertFromPdf(
+                                eq(pdfDocumentFactory),
+                                any(byte[].class),
+                                eq("PNG"),
+                                eq(ImageType.RGB),
+                                eq(true),
+                                eq(72),
+                                any(String.class),
+                                eq(false)))
                         .thenReturn(imageBytes);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.bytesToWebResponse(
-                                                eq(imageBytes),
-                                                any(String.class),
-                                                any(MediaType.class)))
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(
+                                eq(imageBytes), any(String.class), any(MediaType.class)))
                         .thenReturn(expected);
 
                 ResponseEntity<?> response = controller.convertToImage(request);

@@ -30,9 +30,7 @@ public class McpAudienceValidator implements OAuth2TokenValidator<Jwt> {
             accepted.add(expectedResourceId);
         }
         if (additionalAudiences != null) {
-            additionalAudiences.stream()
-                    .filter(a -> a != null && !a.isBlank())
-                    .forEach(accepted::add);
+            additionalAudiences.stream().filter(a -> a != null && !a.isBlank()).forEach(accepted::add);
         }
         this.acceptedAudiences = accepted;
     }
@@ -40,23 +38,21 @@ public class McpAudienceValidator implements OAuth2TokenValidator<Jwt> {
     @Override
     public OAuth2TokenValidatorResult validate(Jwt token) {
         if (acceptedAudiences.isEmpty()) {
-            return OAuth2TokenValidatorResult.failure(
-                    new OAuth2Error(
-                            "invalid_token",
-                            "MCP audience binding is not configured; rejecting all tokens until"
-                                    + " mcp.auth.resource-id or mcp.auth.accepted-audiences is set.",
-                            null));
+            return OAuth2TokenValidatorResult.failure(new OAuth2Error(
+                    "invalid_token",
+                    "MCP audience binding is not configured; rejecting all tokens until"
+                            + " mcp.auth.resource-id or mcp.auth.accepted-audiences is set.",
+                    null));
         }
         List<String> aud = token.getAudience();
         if (aud == null || aud.stream().noneMatch(acceptedAudiences::contains)) {
-            return OAuth2TokenValidatorResult.failure(
-                    new OAuth2Error(
-                            "invalid_token",
-                            "Token audience does not include this server's resource id or an"
-                                    + " accepted audience ("
-                                    + String.join(", ", acceptedAudiences)
-                                    + ").",
-                            null));
+            return OAuth2TokenValidatorResult.failure(new OAuth2Error(
+                    "invalid_token",
+                    "Token audience does not include this server's resource id or an"
+                            + " accepted audience ("
+                            + String.join(", ", acceptedAudiences)
+                            + ").",
+                    null));
         }
         return OAuth2TokenValidatorResult.success();
     }

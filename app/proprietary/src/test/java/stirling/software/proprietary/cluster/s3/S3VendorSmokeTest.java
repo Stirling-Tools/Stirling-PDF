@@ -49,20 +49,17 @@ class S3VendorSmokeTest {
             cfg.setRegion(System.getenv().getOrDefault("S3_SMOKE_REGION", "us-east-1"));
             cfg.setAccessKey(requireEnv("S3_SMOKE_KEY"));
             cfg.setSecretKey(requireEnv("S3_SMOKE_SECRET"));
-            cfg.setPathStyleAccess(
-                    Boolean.parseBoolean(
-                            System.getenv().getOrDefault("S3_SMOKE_PATHSTYLE", "false")));
+            cfg.setPathStyleAccess(Boolean.parseBoolean(System.getenv().getOrDefault("S3_SMOKE_PATHSTYLE", "false")));
             cfg.setAllowPrivateEndpoints(
-                    Boolean.parseBoolean(
-                            System.getenv().getOrDefault("S3_SMOKE_ALLOWPRIVATE", "false")));
+                    Boolean.parseBoolean(System.getenv().getOrDefault("S3_SMOKE_ALLOWPRIVATE", "false")));
         } else {
             vendorLabel = "localstack";
-            localstack =
-                    new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.8"))
-                            .withServices(LocalStackContainer.Service.S3);
+            localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.8"))
+                    .withServices(LocalStackContainer.Service.S3);
             localstack.start();
-            cfg.setEndpoint(
-                    localstack.getEndpointOverride(LocalStackContainer.Service.S3).toString());
+            cfg.setEndpoint(localstack
+                    .getEndpointOverride(LocalStackContainer.Service.S3)
+                    .toString());
             cfg.setBucket("stirling-smoke");
             cfg.setRegion(localstack.getRegion());
             cfg.setAccessKey(localstack.getAccessKey());
@@ -94,8 +91,7 @@ class S3VendorSmokeTest {
         S3FileStore store = new S3FileStore(bundle.client(), bucket, "smoke/", false);
         byte[] payload = ("hello from " + vendorLabel).getBytes(StandardCharsets.UTF_8);
 
-        FileStore.Stored stored =
-                store.store(new ByteArrayInputStream(payload), "smoke-payload.txt");
+        FileStore.Stored stored = store.store(new ByteArrayInputStream(payload), "smoke-payload.txt");
         try {
             assertThat(stored.size()).isEqualTo(payload.length);
             assertThat(store.exists(stored.fileId())).isTrue();
@@ -114,19 +110,18 @@ class S3VendorSmokeTest {
 
         bundle.client().putObject(p -> p.bucket(bucket).key(key), RequestBody.fromBytes(payload));
         try {
-            PresignedGetObjectRequest presigned =
-                    bundle.presigner()
-                            .presignGetObject(
-                                    GetObjectPresignRequest.builder()
-                                            .signatureDuration(Duration.ofMinutes(5))
-                                            .getObjectRequest(g -> g.bucket(bucket).key(key))
-                                            .build());
+            PresignedGetObjectRequest presigned = bundle.presigner()
+                    .presignGetObject(GetObjectPresignRequest.builder()
+                            .signatureDuration(Duration.ofMinutes(5))
+                            .getObjectRequest(g -> g.bucket(bucket).key(key))
+                            .build());
 
-            HttpResponse<byte[]> resp =
-                    HttpClient.newHttpClient()
-                            .send(
-                                    HttpRequest.newBuilder(presigned.url().toURI()).GET().build(),
-                                    HttpResponse.BodyHandlers.ofByteArray());
+            HttpResponse<byte[]> resp = HttpClient.newHttpClient()
+                    .send(
+                            HttpRequest.newBuilder(presigned.url().toURI())
+                                    .GET()
+                                    .build(),
+                            HttpResponse.BodyHandlers.ofByteArray());
 
             assertThat(resp.statusCode()).isEqualTo(200);
             assertThat(resp.body()).isEqualTo(payload);
@@ -138,8 +133,7 @@ class S3VendorSmokeTest {
     private static String requireEnv(String name) {
         String value = System.getenv(name);
         if (value == null || value.isBlank()) {
-            throw new IllegalStateException(
-                    name + " env var must be set when S3_SMOKE_ENDPOINT is set");
+            throw new IllegalStateException(name + " env var must be set when S3_SMOKE_ENDPOINT is set");
         }
         return value;
     }

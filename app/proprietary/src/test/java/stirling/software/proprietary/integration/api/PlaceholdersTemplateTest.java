@@ -38,8 +38,7 @@ class PlaceholdersTemplateTest {
     void buildsConsignOsWorkflowPayload() {
         // Lifted from the ConsignO Cloud API reference: the document rides base64 in
         // documents[0].data, and `certifio` is the Notarius professional-certificate signer.
-        String template =
-                """
+        String template = """
                 {
                   "name": "{{document.filename}}",
                   "status": 1,
@@ -67,7 +66,8 @@ class PlaceholdersTemplateTest {
         assertThat(body.at("/status").isNumber()).isTrue();
         assertThat(body.at("/status").asInt()).isEqualTo(1);
         assertThat(body.at("/documents/0/name").asString()).isEqualTo("contract.pdf");
-        assertThat(new String(Base64.getDecoder().decode(body.at("/documents/0/data").asString())))
+        assertThat(new String(
+                        Base64.getDecoder().decode(body.at("/documents/0/data").asString())))
                 .isEqualTo("%PDF-1.7");
         assertThat(body.at("/actions/0/signer/type").asString()).isEqualTo("certifio");
         assertThat(body.at("/actions/0/ref").asString()).isEqualTo("1");
@@ -75,10 +75,7 @@ class PlaceholdersTemplateTest {
 
     @Test
     void resolvesInsideNestedObjectsAndArrays() {
-        JsonNode body =
-                resolve(
-                        "{\"a\":{\"b\":[{\"c\":\"{{document.filename}}\"},"
-                                + "\"{{run.policyName}}\"]}}");
+        JsonNode body = resolve("{\"a\":{\"b\":[{\"c\":\"{{document.filename}}\"}," + "\"{{run.policyName}}\"]}}");
 
         assertThat(body.at("/a/b/0/c").asString()).isEqualTo("contract.pdf");
         assertThat(body.at("/a/b/1").asString()).isEqualTo("Signature run");

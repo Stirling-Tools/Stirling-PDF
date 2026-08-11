@@ -12,12 +12,11 @@ public final class NetworkIdentities {
 
     /** A stable, unique key for a remote file: {@code protocol://host:port[/share]/path}. */
     public static String identity(NetworkConfig config, String path) {
-        StringBuilder id =
-                new StringBuilder(config.protocol().name().toLowerCase())
-                        .append("://")
-                        .append(config.host())
-                        .append(':')
-                        .append(config.port());
+        StringBuilder id = new StringBuilder(config.protocol().name().toLowerCase())
+                .append("://")
+                .append(config.host())
+                .append(':')
+                .append(config.port());
         if (config.share() != null && !config.share().isBlank()) {
             id.append('/').append(trimSlashes(config.share()));
         }

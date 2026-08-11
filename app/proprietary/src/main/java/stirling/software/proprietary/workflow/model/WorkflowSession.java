@@ -98,11 +98,7 @@ public class WorkflowSession implements Serializable {
     @Column(name = "finalized", nullable = false)
     private boolean finalized = false;
 
-    @OneToMany(
-            mappedBy = "workflowSession",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "workflowSession", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<WorkflowParticipant> participants = new ArrayList<>();
 
     // Workflow-specific settings stored as JSON for flexibility

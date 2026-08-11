@@ -64,8 +64,7 @@ class MetadataRequestTest {
             assertThat(req.getSubject()).isEqualTo("subject text");
             assertThat(req.getTitle()).isEqualTo("My Title");
             assertThat(req.getTrapped()).isEqualTo("True");
-            assertThat(req.getAllRequestParams())
-                    .containsExactlyEntriesOf(Map.of("customKey1", "customValue1"));
+            assertThat(req.getAllRequestParams()).containsExactlyEntriesOf(Map.of("customKey1", "customValue1"));
         }
 
         @Test

@@ -41,20 +41,15 @@ public class SourceOverviewService {
         Map<String, DocStats> docStats =
                 docCounter.statsFor(sources.stream().map(Source::id).toList());
 
-        List<SourceView> persisted =
-                sources.stream()
-                        .map(
-                                source ->
-                                        toView(
-                                                source,
-                                                referencesBySource.getOrDefault(
-                                                        source.id(), List.of()),
-                                                docStats.getOrDefault(source.id(), DocStats.ZERO)))
-                        .sorted(
-                                Comparator.comparingInt(SourceView::referenceCount)
-                                        .reversed()
-                                        .thenComparing(SourceView::name))
-                        .toList();
+        List<SourceView> persisted = sources.stream()
+                .map(source -> toView(
+                        source,
+                        referencesBySource.getOrDefault(source.id(), List.of()),
+                        docStats.getOrDefault(source.id(), DocStats.ZERO)))
+                .sorted(Comparator.comparingInt(SourceView::referenceCount)
+                        .reversed()
+                        .thenComparing(SourceView::name))
+                .toList();
 
         // The editor is a built-in source: always present and pinned first. The KPI strip counts
         // only the connections a team configures, so the editor is left out of the KPIs.
@@ -75,8 +70,7 @@ public class SourceOverviewService {
 
     /** The 30-day daily editor document series (oldest first) for the caller's team. */
     public List<Long> editorDailySeries() {
-        return docCounter.dailySeriesFor(
-                EditorSource.counterKey(sourceAccessGuard.currentTeamId()));
+        return docCounter.dailySeriesFor(EditorSource.counterKey(sourceAccessGuard.currentTeamId()));
     }
 
     /**
@@ -87,11 +81,10 @@ public class SourceOverviewService {
     private SourceView editorView(List<Policy> policies) {
         String key = EditorSource.counterKey(sourceAccessGuard.currentTeamId());
         DocStats docs = docCounter.statsFor(List.of(key)).getOrDefault(key, DocStats.ZERO);
-        List<SourceView.PolicyRef> refs =
-                policies.stream()
-                        .filter(SourceOverviewService::runsFromEditor)
-                        .map(policy -> new SourceView.PolicyRef(policy.id(), policy.name()))
-                        .toList();
+        List<SourceView.PolicyRef> refs = policies.stream()
+                .filter(SourceOverviewService::runsFromEditor)
+                .map(policy -> new SourceView.PolicyRef(policy.id(), policy.name()))
+                .toList();
         return new SourceView(
                 EditorSource.ID,
                 "Editor",
@@ -134,12 +127,10 @@ public class SourceOverviewService {
         return bySource;
     }
 
-    private static SourceView toView(
-            Source source, List<Policy> referencingPolicies, DocStats docs) {
-        List<SourceView.PolicyRef> refs =
-                referencingPolicies.stream()
-                        .map(policy -> new SourceView.PolicyRef(policy.id(), policy.name()))
-                        .toList();
+    private static SourceView toView(Source source, List<Policy> referencingPolicies, DocStats docs) {
+        List<SourceView.PolicyRef> refs = referencingPolicies.stream()
+                .map(policy -> new SourceView.PolicyRef(policy.id(), policy.name()))
+                .toList();
         return new SourceView(
                 source.id(),
                 source.name(),
@@ -178,10 +169,7 @@ public class SourceOverviewService {
     private static List<SourceView.DetailRow> configRows(Source source) {
         Map<String, Object> masked = SecretMasker.mask(source.options());
         return source.options().keySet().stream()
-                .map(
-                        key ->
-                                new SourceView.DetailRow(
-                                        humanize(key), String.valueOf(masked.get(key))))
+                .map(key -> new SourceView.DetailRow(humanize(key), String.valueOf(masked.get(key))))
                 .toList();
     }
 
@@ -194,7 +182,8 @@ public class SourceOverviewService {
 
     private static List<SourceKpi> buildKpis(List<SourceView> sources) {
         long total = sources.size();
-        long inUse = sources.stream().filter(source -> source.referenceCount() > 0).count();
+        long inUse =
+                sources.stream().filter(source -> source.referenceCount() > 0).count();
         long orphaned = total - inUse;
         return List.of(
                 new SourceKpi(total, "connections"),

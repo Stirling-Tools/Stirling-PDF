@@ -45,15 +45,23 @@ class IntegrationConfigServiceTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    @Mock private IntegrationConfigRepository repository;
-    @Mock private OwnershipService ownership;
-    @Mock private SecretMasker secretMasker;
+    @Mock
+    private IntegrationConfigRepository repository;
+
+    @Mock
+    private OwnershipService ownership;
+
+    @Mock
+    private SecretMasker secretMasker;
 
     @Mock
     private stirling.software.proprietary.access.repository.ResourceGrantRepository grantRepository;
 
-    @Mock private IntegrationConfigValidator validator;
-    @Mock private IntegrationConfigUsageCheck usageCheck;
+    @Mock
+    private IntegrationConfigValidator validator;
+
+    @Mock
+    private IntegrationConfigUsageCheck usageCheck;
 
     private final stirling.software.common.model.ApplicationProperties applicationProperties =
             new stirling.software.common.model.ApplicationProperties();
@@ -62,15 +70,14 @@ class IntegrationConfigServiceTest {
 
     @BeforeEach
     void setUp() {
-        service =
-                new IntegrationConfigService(
-                        repository,
-                        ownership,
-                        secretMasker,
-                        grantRepository,
-                        applicationProperties,
-                        List.of(validator),
-                        List.of(usageCheck));
+        service = new IntegrationConfigService(
+                repository,
+                ownership,
+                secretMasker,
+                grantRepository,
+                applicationProperties,
+                List.of(validator),
+                List.of(usageCheck));
     }
 
     @Test
@@ -81,16 +88,10 @@ class IntegrationConfigServiceTest {
                 .when(validator)
                 .validate(any());
 
-        assertThatThrownBy(
-                        () ->
-                                service.create(
-                                        request(IntegrationType.MCP, OwnerScope.USER, null),
-                                        user(7)))
+        assertThatThrownBy(() -> service.create(request(IntegrationType.MCP, OwnerScope.USER, null), user(7)))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode())
-                                        .isEqualTo(HttpStatus.BAD_REQUEST));
+                .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                        .isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
     @Test
@@ -99,8 +100,7 @@ class IntegrationConfigServiceTest {
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(ownership.isAdmin(any())).thenReturn(true);
 
-        IntegrationConfig created =
-                service.create(request(IntegrationType.API, OwnerScope.USER, null), user(7));
+        IntegrationConfig created = service.create(request(IntegrationType.API, OwnerScope.USER, null), user(7));
 
         assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.API);
     }
@@ -111,11 +111,7 @@ class IntegrationConfigServiceTest {
         // that is admin authoring power, not self-serve config like a vendor preset.
         when(ownership.isAdmin(any())).thenReturn(false);
 
-        assertThatThrownBy(
-                        () ->
-                                service.create(
-                                        request(IntegrationType.API, OwnerScope.USER, null),
-                                        user(7)))
+        assertThatThrownBy(() -> service.create(request(IntegrationType.API, OwnerScope.USER, null), user(7)))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
@@ -126,11 +122,7 @@ class IntegrationConfigServiceTest {
         applicationProperties.getPolicies().setAllowCustomApiIntegrations(false);
 
         // Off for everyone, admins included.
-        assertThatThrownBy(
-                        () ->
-                                service.create(
-                                        request(IntegrationType.API, OwnerScope.USER, null),
-                                        user(7)))
+        assertThatThrownBy(() -> service.create(request(IntegrationType.API, OwnerScope.USER, null), user(7)))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
@@ -145,8 +137,7 @@ class IntegrationConfigServiceTest {
         when(secretMasker.sanitize(any())).thenReturn(Map.of());
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        IntegrationConfig created =
-                service.create(request(IntegrationType.PURVIEW, OwnerScope.USER, null), user(7));
+        IntegrationConfig created = service.create(request(IntegrationType.PURVIEW, OwnerScope.USER, null), user(7));
 
         assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.PURVIEW);
     }
@@ -161,12 +152,7 @@ class IntegrationConfigServiceTest {
         when(ownership.canManage(any(), eq(cfg), any())).thenReturn(true);
         when(ownership.isAdmin(any())).thenReturn(false);
 
-        assertThatThrownBy(
-                        () ->
-                                service.update(
-                                        5L,
-                                        request(IntegrationType.API, OwnerScope.USER, null),
-                                        user(7)))
+        assertThatThrownBy(() -> service.update(5L, request(IntegrationType.API, OwnerScope.USER, null), user(7)))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
@@ -188,10 +174,8 @@ class IntegrationConfigServiceTest {
 
         assertThatThrownBy(() -> service.delete(9L, user(7)))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode())
-                                        .isEqualTo(HttpStatus.CONFLICT));
+                .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                        .isEqualTo(HttpStatus.CONFLICT));
         verify(repository, org.mockito.Mockito.never()).delete(any(IntegrationConfig.class));
     }
 
@@ -201,13 +185,11 @@ class IntegrationConfigServiceTest {
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         User user = user(7);
 
-        IntegrationConfig created =
-                service.create(request(IntegrationType.MCP, OwnerScope.USER, null), user);
+        IntegrationConfig created = service.create(request(IntegrationType.MCP, OwnerScope.USER, null), user);
 
         assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.MCP);
         assertThat(created.getName()).isEqualTo("name");
-        verify(ownership)
-                .assignOwnership(eq(created), eq(OwnerScope.USER), isNull(), eq(user), any());
+        verify(ownership).assignOwnership(eq(created), eq(OwnerScope.USER), isNull(), eq(user), any());
         verify(secretMasker).sanitize(any());
     }
 
@@ -217,24 +199,14 @@ class IntegrationConfigServiceTest {
         cfg.setConfig("{\"bucket\":\"old\",\"secretKey\":\"REAL\"}");
         when(repository.findById(2L)).thenReturn(Optional.of(cfg));
         when(ownership.canManage(any(), eq(cfg), any())).thenReturn(true);
-        when(secretMasker.merge(any(), any()))
-                .thenReturn(Map.of("bucket", "new", "secretKey", "REAL"));
+        when(secretMasker.merge(any(), any())).thenReturn(Map.of("bucket", "new", "secretKey", "REAL"));
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        IntegrationConfigRequest req =
-                new IntegrationConfigRequest(
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        Map.of("bucket", "new", "secretKey", "********"));
+        IntegrationConfigRequest req = new IntegrationConfigRequest(
+                null, null, null, null, null, null, null, Map.of("bucket", "new", "secretKey", "********"));
         service.update(2L, req, user(7));
 
-        Map<String, Object> stored =
-                MAPPER.readValue(cfg.getConfig(), new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> stored = MAPPER.readValue(cfg.getConfig(), new TypeReference<Map<String, Object>>() {});
         assertThat(stored.get("bucket")).isEqualTo("new");
         assertThat(stored.get("secretKey")).isEqualTo("REAL");
     }
@@ -245,12 +217,7 @@ class IntegrationConfigServiceTest {
         when(repository.findById(3L)).thenReturn(Optional.of(cfg));
         when(ownership.canManage(any(), eq(cfg), any())).thenReturn(false);
 
-        assertThatThrownBy(
-                        () ->
-                                service.update(
-                                        3L,
-                                        request(IntegrationType.S3, OwnerScope.USER, null),
-                                        user(7)))
+        assertThatThrownBy(() -> service.update(3L, request(IntegrationType.S3, OwnerScope.USER, null), user(7)))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
@@ -291,8 +258,7 @@ class IntegrationConfigServiceTest {
         when(ownership.canManage(any(), eq(cfg), any())).thenReturn(true);
         when(ownership.isAdmin(any())).thenReturn(false);
 
-        IntegrationConfigRequest req =
-                new IntegrationConfigRequest(null, null, null, null, null, true, null, null);
+        IntegrationConfigRequest req = new IntegrationConfigRequest(null, null, null, null, null, true, null, null);
 
         assertThatThrownBy(() -> service.update(5L, req, user(7)))
                 .isInstanceOf(ResponseStatusException.class)
@@ -307,10 +273,7 @@ class IntegrationConfigServiceTest {
         User user = user(7);
         when(ownership.isAdmin(user)).thenReturn(false);
 
-        assertThatThrownBy(
-                        () ->
-                                service.create(
-                                        request(IntegrationType.S3, OwnerScope.USER, null), user))
+        assertThatThrownBy(() -> service.create(request(IntegrationType.S3, OwnerScope.USER, null), user))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
@@ -323,8 +286,7 @@ class IntegrationConfigServiceTest {
         User admin = user(1);
         when(ownership.isAdmin(admin)).thenReturn(true);
 
-        IntegrationConfig created =
-                service.create(request(IntegrationType.S3, OwnerScope.USER, null), admin);
+        IntegrationConfig created = service.create(request(IntegrationType.S3, OwnerScope.USER, null), admin);
 
         assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.S3);
     }
@@ -336,11 +298,9 @@ class IntegrationConfigServiceTest {
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         User leader = user(7);
 
-        IntegrationConfig created =
-                service.create(request(IntegrationType.S3, OwnerScope.TEAM, 3L), leader);
+        IntegrationConfig created = service.create(request(IntegrationType.S3, OwnerScope.TEAM, 3L), leader);
 
-        verify(ownership)
-                .assignOwnership(eq(created), eq(OwnerScope.TEAM), eq(3L), eq(leader), any());
+        verify(ownership).assignOwnership(eq(created), eq(OwnerScope.TEAM), eq(3L), eq(leader), any());
     }
 
     @Test
@@ -348,8 +308,7 @@ class IntegrationConfigServiceTest {
         when(secretMasker.sanitize(any())).thenReturn(Map.of("token", "t"));
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        IntegrationConfig created =
-                service.create(request(IntegrationType.MCP, OwnerScope.USER, null), user(7));
+        IntegrationConfig created = service.create(request(IntegrationType.MCP, OwnerScope.USER, null), user(7));
 
         assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.MCP);
     }
@@ -367,8 +326,7 @@ class IntegrationConfigServiceTest {
     }
 
     private IntegrationConfigRequest request(IntegrationType type, OwnerScope scope, Long teamId) {
-        return new IntegrationConfigRequest(
-                type, "name", scope, teamId, null, null, null, Map.of("bucket", "b"));
+        return new IntegrationConfigRequest(type, "name", scope, teamId, null, null, null, Map.of("bucket", "b"));
     }
 
     private User user(long id) {

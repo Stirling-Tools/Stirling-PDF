@@ -23,15 +23,13 @@ public class ValkeyDistributedLock implements DistributedLock {
 
     private static final String PREFIX = "stirling:lock:";
 
-    private static final RedisScript<Long> RELEASE_SCRIPT =
-            new DefaultRedisScript<>(
-                    "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
-                    Long.class);
+    private static final RedisScript<Long> RELEASE_SCRIPT = new DefaultRedisScript<>(
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+            Long.class);
 
-    private static final RedisScript<Long> RENEW_SCRIPT =
-            new DefaultRedisScript<>(
-                    "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('pexpire', KEYS[1], ARGV[2]) else return 0 end",
-                    Long.class);
+    private static final RedisScript<Long> RENEW_SCRIPT = new DefaultRedisScript<>(
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('pexpire', KEYS[1], ARGV[2]) else return 0 end",
+            Long.class);
 
     private final StringRedisTemplate template;
 
@@ -70,10 +68,7 @@ public class ValkeyDistributedLock implements DistributedLock {
             try {
                 template.execute(RELEASE_SCRIPT, Collections.singletonList(key), value);
             } catch (RuntimeException ex) {
-                log.warn(
-                        "Lock release failed for {} (lease will TTL-expire): {}",
-                        key,
-                        ex.getMessage());
+                log.warn("Lock release failed for {} (lease will TTL-expire): {}", key, ex.getMessage());
             }
         }
 
@@ -83,18 +78,11 @@ public class ValkeyDistributedLock implements DistributedLock {
                 return false;
             }
             try {
-                Long result =
-                        template.execute(
-                                RENEW_SCRIPT,
-                                Collections.singletonList(key),
-                                value,
-                                Long.toString(leaseTime.toMillis()));
+                Long result = template.execute(
+                        RENEW_SCRIPT, Collections.singletonList(key), value, Long.toString(leaseTime.toMillis()));
                 return result != null && result == 1L;
             } catch (RuntimeException ex) {
-                log.warn(
-                        "Lock renew failed for {} (treated as lost lease): {}",
-                        key,
-                        ex.getMessage());
+                log.warn("Lock renew failed for {} (treated as lost lease): {}", key, ex.getMessage());
                 return false;
             }
         }

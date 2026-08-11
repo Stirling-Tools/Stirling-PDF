@@ -54,15 +54,32 @@ class AuthControllerMoreTest {
     private MockMvc mockMvc;
     private ApplicationProperties.Security securityProperties;
 
-    @Mock private UserService userService;
-    @Mock private JwtServiceInterface jwtService;
-    @Mock private CustomUserDetailsService userDetailsService;
-    @Mock private LoginAttemptService loginAttemptService;
-    @Mock private MfaService mfaService;
-    @Mock private TotpService totpService;
-    @Mock private RefreshRateLimitService refreshRateLimitService;
-    @Mock private ResourceAccessService resourceAccessService;
-    @Mock private TeamLeadLookup teamLeadLookup;
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private JwtServiceInterface jwtService;
+
+    @Mock
+    private CustomUserDetailsService userDetailsService;
+
+    @Mock
+    private LoginAttemptService loginAttemptService;
+
+    @Mock
+    private MfaService mfaService;
+
+    @Mock
+    private TotpService totpService;
+
+    @Mock
+    private RefreshRateLimitService refreshRateLimitService;
+
+    @Mock
+    private ResourceAccessService resourceAccessService;
+
+    @Mock
+    private TeamLeadLookup teamLeadLookup;
 
     @BeforeEach
     void setUp() {
@@ -74,20 +91,19 @@ class AuthControllerMoreTest {
         ApplicationProperties applicationProperties = new ApplicationProperties();
         applicationProperties.setSecurity(securityProperties);
 
-        AuthController controller =
-                new AuthController(
-                        userService,
-                        jwtService,
-                        userDetailsService,
-                        loginAttemptService,
-                        mfaService,
-                        totpService,
-                        refreshRateLimitService,
-                        securityProperties,
-                        applicationProperties,
-                        new stirling.software.proprietary.service.AiUserDataService(null),
-                        resourceAccessService,
-                        teamLeadLookup);
+        AuthController controller = new AuthController(
+                userService,
+                jwtService,
+                userDetailsService,
+                loginAttemptService,
+                mfaService,
+                totpService,
+                refreshRateLimitService,
+                securityProperties,
+                applicationProperties,
+                new stirling.software.proprietary.service.AiUserDataService(null),
+                resourceAccessService,
+                teamLeadLookup);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -116,10 +132,9 @@ class AuthControllerMoreTest {
         @Test
         @DisplayName("rejects a blank username")
         void blankUsername() throws Exception {
-            mockMvc.perform(
-                            post("/api/v1/auth/login")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(payload("  ", "pw"))))
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(payload("  ", "pw"))))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Username is required"));
         }
@@ -127,12 +142,9 @@ class AuthControllerMoreTest {
         @Test
         @DisplayName("rejects a missing password")
         void missingPassword() throws Exception {
-            mockMvc.perform(
-                            post("/api/v1/auth/login")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(
-                                            objectMapper.writeValueAsString(
-                                                    payload("user@example.com", ""))))
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(payload("user@example.com", ""))))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Password is required"));
         }
@@ -145,12 +157,9 @@ class AuthControllerMoreTest {
             when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(user);
             when(userService.isPasswordCorrect(user, "pw")).thenReturn(true);
 
-            mockMvc.perform(
-                            post("/api/v1/auth/login")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(
-                                            objectMapper.writeValueAsString(
-                                                    payload("user@example.com", "pw"))))
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(payload("user@example.com", "pw"))))
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.error").value("User account is disabled"));
         }
@@ -161,12 +170,9 @@ class AuthControllerMoreTest {
             when(userDetailsService.loadUserByUsername("user@example.com"))
                     .thenThrow(new UsernameNotFoundException("nope"));
 
-            mockMvc.perform(
-                            post("/api/v1/auth/login")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(
-                                            objectMapper.writeValueAsString(
-                                                    payload("user@example.com", "pw"))))
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(payload("user@example.com", "pw"))))
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.error").value("Invalid username or password"));
 
@@ -189,10 +195,9 @@ class AuthControllerMoreTest {
             when(mfaService.isMfaEnabled(user)).thenReturn(true);
             when(mfaService.getSecret(user)).thenReturn("");
 
-            mockMvc.perform(
-                            post("/api/v1/auth/login")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(p)))
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(p)))
                     .andExpect(status().isInternalServerError())
                     .andExpect(jsonPath("$.error").value("MFA configuration error"));
         }
@@ -209,10 +214,9 @@ class AuthControllerMoreTest {
             when(mfaService.getSecret(user)).thenReturn("SECRET");
             when(totpService.getValidTimeStep("SECRET", "000000")).thenReturn(null);
 
-            mockMvc.perform(
-                            post("/api/v1/auth/login")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(p)))
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(p)))
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.error").value("invalid_mfa_code"));
 
@@ -232,10 +236,9 @@ class AuthControllerMoreTest {
             when(totpService.getValidTimeStep("SECRET", "123456")).thenReturn(9L);
             when(mfaService.markTotpStepUsed(user, 9L)).thenReturn(false);
 
-            mockMvc.perform(
-                            post("/api/v1/auth/login")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(p)))
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(p)))
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.error").value("invalid_mfa_code"));
         }
@@ -284,8 +287,7 @@ class AuthControllerMoreTest {
         @Test
         @DisplayName("returns 404 when the target user is unknown")
         void userNotFound() throws Exception {
-            when(userService.findByUsernameIgnoreCaseWithSettings("ghost"))
-                    .thenReturn(Optional.empty());
+            when(userService.findByUsernameIgnoreCaseWithSettings("ghost")).thenReturn(Optional.empty());
 
             mockMvc.perform(post("/api/v1/auth/mfa/disable/admin/ghost"))
                     .andExpect(status().isNotFound())

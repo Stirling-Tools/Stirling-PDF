@@ -24,12 +24,10 @@ public final class DownstreamEntitlementError {
     private DownstreamEntitlementError() {}
 
     /** Matches the {@code "error":"CODE"} field of a small JSON error body. */
-    private static final Pattern ERROR_CODE_FIELD =
-            Pattern.compile("\"error\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern ERROR_CODE_FIELD = Pattern.compile("\"error\"\\s*:\\s*\"([^\"]+)\"");
 
     /** Matches the {@code "subscribed":true|false} field of a small JSON error body. */
-    private static final Pattern SUBSCRIBED_FIELD =
-            Pattern.compile("\"subscribed\"\\s*:\\s*(true|false)");
+    private static final Pattern SUBSCRIBED_FIELD = Pattern.compile("\"subscribed\"\\s*:\\s*(true|false)");
 
     /**
      * Pull the {@code error} sentinel out of a downstream 401/402 JSON body. Returns null for other

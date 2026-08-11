@@ -16,8 +16,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class LocalUsageServiceTest {
 
-    @Mock private UsageCounterRepository counters;
-    @Mock private EntitlementCache entitlementCache;
+    @Mock
+    private UsageCounterRepository counters;
+
+    @Mock
+    private EntitlementCache entitlementCache;
 
     private LocalUsageService service;
     private final LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
@@ -27,21 +30,13 @@ class LocalUsageServiceTest {
         service = new LocalUsageService(counters, entitlementCache);
     }
 
-    private static UsageCounter counter(
-            LocalDateTime period, String category, long cumulative, long synced) {
+    private static UsageCounter counter(LocalDateTime period, String category, long cumulative, long synced) {
         return new UsageCounter(period, category, cumulative, synced, LocalDateTime.now());
     }
 
     private static InstanceEntitlement entitledFor(LocalDateTime periodStart) {
         return new InstanceEntitlement(
-                true,
-                0,
-                0,
-                null,
-                EntitlementState.OK,
-                null,
-                periodStart,
-                periodStart.plusMonths(1));
+                true, 0, 0, null, EntitlementState.OK, null, periodStart, periodStart.plusMonths(1));
     }
 
     @Test
@@ -58,11 +53,10 @@ class LocalUsageServiceTest {
     void sumsPerCategoryUnsyncedDeltaForCurrentPeriod() {
         when(entitlementCache.current()).thenReturn(Optional.of(entitledFor(period)));
         when(counters.findByPeriodStart(period))
-                .thenReturn(
-                        List.of(
-                                counter(period, "API", 30L, 10L), // 20 unsynced
-                                counter(period, "AI", 4L, 4L), // 0 unsynced (all reported)
-                                counter(period, "AUTOMATION", 7L, 2L))); // 5 unsynced
+                .thenReturn(List.of(
+                        counter(period, "API", 30L, 10L), // 20 unsynced
+                        counter(period, "AI", 4L, 4L), // 0 unsynced (all reported)
+                        counter(period, "AUTOMATION", 7L, 2L))); // 5 unsynced
 
         LocalUsageService.LocalUsage usage = service.currentPeriodUnsynced();
 

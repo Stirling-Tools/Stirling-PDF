@@ -63,13 +63,12 @@ public class TimestampController {
     }
 
     /** Built-in TSA presets with labels — single source of truth for backend + frontend. */
-    public static final List<Map<String, String>> TSA_PRESETS =
-            List.of(
-                    Map.of("label", "DigiCert", "url", "http://timestamp.digicert.com"),
-                    Map.of("label", "Sectigo", "url", "http://timestamp.sectigo.com"),
-                    Map.of("label", "SSL.com", "url", "http://ts.ssl.com"),
-                    Map.of("label", "FreeTSA", "url", "https://freetsa.org/tsr"),
-                    Map.of("label", "MeSign", "url", "http://tsa.mesign.com"));
+    public static final List<Map<String, String>> TSA_PRESETS = List.of(
+            Map.of("label", "DigiCert", "url", "http://timestamp.digicert.com"),
+            Map.of("label", "Sectigo", "url", "http://timestamp.sectigo.com"),
+            Map.of("label", "SSL.com", "url", "http://ts.ssl.com"),
+            Map.of("label", "FreeTSA", "url", "https://freetsa.org/tsr"),
+            Map.of("label", "MeSign", "url", "http://tsa.mesign.com"));
 
     private static final Set<String> ALLOWED_TSA_PRESET_URLS =
             TSA_PRESETS.stream().map(p -> p.get("url")).collect(Collectors.toUnmodifiableSet());
@@ -89,21 +88,18 @@ public class TimestampController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add RFC 3161 document timestamp to a PDF",
-            description =
-                    "Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161"
-                            + " document timestamp into the PDF. Only a SHA-256 hash of the document is sent"
-                            + " to the TSA - the PDF itself never leaves the server.")
-    public ResponseEntity<Resource> timestampPdf(@ModelAttribute TimestampPdfRequest request)
-            throws Exception {
+            description = "Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161"
+                    + " document timestamp into the PDF. Only a SHA-256 hash of the document is sent"
+                    + " to the TSA - the PDF itself never leaves the server.")
+    public ResponseEntity<Resource> timestampPdf(@ModelAttribute TimestampPdfRequest request) throws Exception {
         MultipartFile inputFile = request.getFileInput();
         ApplicationProperties.Security.Timestamp tsConfig =
                 applicationProperties.getSecurity().getTimestamp();
 
         // Determine effective TSA URL: use request value if provided, otherwise config default
-        String tsaUrl =
-                (request.getTsaUrl() != null && !request.getTsaUrl().isBlank())
-                        ? request.getTsaUrl()
-                        : tsConfig.getDefaultTsaUrl();
+        String tsaUrl = (request.getTsaUrl() != null && !request.getTsaUrl().isBlank())
+                ? request.getTsaUrl()
+                : tsConfig.getDefaultTsaUrl();
 
         // Build allowed set: built-in presets + admin-configured custom URLs
         // Filter null/blank entries and validate protocol (TASK-6)
@@ -122,9 +118,7 @@ public class TimestampController {
 
         // Normalize for case-insensitive comparison (TASK-12)
         Set<String> normalizedAllowed =
-                allowedUrls.stream()
-                        .map(TimestampController::normalizeTsaUrl)
-                        .collect(Collectors.toSet());
+                allowedUrls.stream().map(TimestampController::normalizeTsaUrl).collect(Collectors.toSet());
 
         // Validate TSA URL against allowed set to prevent SSRF
         if (!normalizedAllowed.contains(normalizeTsaUrl(tsaUrl))) {
@@ -135,8 +129,7 @@ public class TimestampController {
 
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
         try (PDDocument document = pdfDocumentFactory.load(inputFile);
-                OutputStream outputStream =
-                        java.nio.file.Files.newOutputStream(tempOutputFile.getPath())) {
+                OutputStream outputStream = java.nio.file.Files.newOutputStream(tempOutputFile.getPath())) {
             PDSignature signature = new PDSignature();
             signature.setType(COSName.DOC_TIME_STAMP);
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -152,8 +145,7 @@ public class TimestampController {
         }
 
         return WebResponseUtils.pdfFileToWebResponse(
-                tempOutputFile,
-                GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_timestamped.pdf"));
+                tempOutputFile, GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_timestamped.pdf"));
     }
 
     private byte[] requestTimestampToken(InputStream content, String tsaUrl) throws IOException {
@@ -196,12 +188,11 @@ public class TimestampController {
             if (responseCode != HttpURLConnection.HTTP_OK) {
                 // Read error stream for debugging (TASK-5)
                 String errorBody = readErrorStream(connection);
-                throw new IOException(
-                        "TSA server returned HTTP "
-                                + responseCode
-                                + " for URL: "
-                                + tsaUrl
-                                + (errorBody.isEmpty() ? "" : " — " + errorBody));
+                throw new IOException("TSA server returned HTTP "
+                        + responseCode
+                        + " for URL: "
+                        + tsaUrl
+                        + (errorBody.isEmpty() ? "" : " — " + errorBody));
             }
 
             // Read response with size limit to prevent OOM (TASK-4)
@@ -210,9 +201,7 @@ public class TimestampController {
                 responseBytes = in.readNBytes(MAX_TSA_RESPONSE_SIZE);
                 if (in.read() != -1) {
                     throw new IOException(
-                            "TSA response exceeds maximum allowed size of "
-                                    + MAX_TSA_RESPONSE_SIZE
-                                    + " bytes");
+                            "TSA response exceeds maximum allowed size of " + MAX_TSA_RESPONSE_SIZE + " bytes");
                 }
             }
 
@@ -223,8 +212,7 @@ public class TimestampController {
             TimeStampToken token = tsaResponse.getTimeStampToken();
             if (token == null) {
                 throw new IOException(
-                        "TSA server did not return a timestamp token. Status: "
-                                + tsaResponse.getStatus());
+                        "TSA server did not return a timestamp token. Status: " + tsaResponse.getStatus());
             }
 
             log.info(
@@ -237,9 +225,7 @@ public class TimestampController {
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {
-            throw new IOException(
-                    "Failed to obtain RFC 3161 timestamp from " + tsaUrl + ": " + e.getMessage(),
-                    e);
+            throw new IOException("Failed to obtain RFC 3161 timestamp from " + tsaUrl + ": " + e.getMessage(), e);
         } finally {
             // Always disconnect to release the underlying socket (TASK-1)
             if (connection != null) {

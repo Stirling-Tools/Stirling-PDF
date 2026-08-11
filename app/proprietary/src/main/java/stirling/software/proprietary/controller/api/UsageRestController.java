@@ -64,39 +64,36 @@ public class UsageRestController {
         }
 
         // Calculate totals
-        long totalVisits = endpointCounts.values().stream().mapToLong(Long::longValue).sum();
+        long totalVisits =
+                endpointCounts.values().stream().mapToLong(Long::longValue).sum();
         int totalEndpoints = endpointCounts.size();
 
         // Convert to list and sort by visit count (descending)
-        List<EndpointStatistic> statistics =
-                endpointCounts.entrySet().stream()
-                        .map(
-                                entry -> {
-                                    String endpoint = entry.getKey();
-                                    long visits = entry.getValue();
-                                    double percentage =
-                                            totalVisits > 0 ? (visits * 100.0 / totalVisits) : 0.0;
+        List<EndpointStatistic> statistics = endpointCounts.entrySet().stream()
+                .map(entry -> {
+                    String endpoint = entry.getKey();
+                    long visits = entry.getValue();
+                    double percentage = totalVisits > 0 ? (visits * 100.0 / totalVisits) : 0.0;
 
-                                    return EndpointStatistic.builder()
-                                            .endpoint(endpoint)
-                                            .visits((int) visits)
-                                            .percentage(Math.round(percentage * 10.0) / 10.0)
-                                            .build();
-                                })
-                        .sorted(Comparator.comparingInt(EndpointStatistic::getVisits).reversed())
-                        .toList();
+                    return EndpointStatistic.builder()
+                            .endpoint(endpoint)
+                            .visits((int) visits)
+                            .percentage(Math.round(percentage * 10.0) / 10.0)
+                            .build();
+                })
+                .sorted(Comparator.comparingInt(EndpointStatistic::getVisits).reversed())
+                .toList();
 
         // Apply limit if specified
         if (limit != null && limit > 0 && statistics.size() > limit) {
             statistics = statistics.subList(0, limit);
         }
 
-        EndpointStatisticsResponse response =
-                EndpointStatisticsResponse.builder()
-                        .endpoints(statistics)
-                        .totalEndpoints(totalEndpoints)
-                        .totalVisits((int) totalVisits)
-                        .build();
+        EndpointStatisticsResponse response = EndpointStatisticsResponse.builder()
+                .endpoints(statistics)
+                .totalEndpoints(totalEndpoints)
+                .totalVisits((int) totalVisits)
+                .build();
 
         return ResponseEntity.ok(response);
     }
@@ -180,12 +177,10 @@ public class UsageRestController {
             return auditRepository.findByTimestampAfter(start);
         } else if ("ui".equalsIgnoreCase(dataType)) {
             // UI data endpoints only
-            return auditRepository.findByTypeAndTimestampAfterForExport(
-                    AuditEventType.UI_DATA.name(), start);
+            return auditRepository.findByTypeAndTimestampAfterForExport(AuditEventType.UI_DATA.name(), start);
         } else if ("api".equalsIgnoreCase(dataType)) {
             // API = everything except UI_DATA (queried at DB level, not filtered in-memory)
-            return auditRepository.findAllExceptTypeAndTimestampAfterForExport(
-                    AuditEventType.UI_DATA.name(), start);
+            return auditRepository.findAllExceptTypeAndTimestampAfterForExport(AuditEventType.UI_DATA.name(), start);
         }
 
         return new ArrayList<>();

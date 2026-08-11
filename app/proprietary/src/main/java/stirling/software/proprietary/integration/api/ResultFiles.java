@@ -33,24 +33,19 @@ import stirling.software.common.util.ZipExtractionUtils;
 final class ResultFiles {
 
     /** Extensions we can name from a content type; anything else keeps the server's filename. */
-    private static final Map<String, String> EXTENSION_BY_TYPE =
-            Map.ofEntries(
-                    Map.entry("application/pdf", "pdf"),
-                    Map.entry("application/zip", "zip"),
-                    Map.entry("application/json", "json"),
-                    Map.entry("text/plain", "txt"),
-                    Map.entry("text/html", "html"),
-                    Map.entry("image/png", "png"),
-                    Map.entry("image/jpeg", "jpg"),
-                    Map.entry("image/tiff", "tiff"),
-                    Map.entry("application/msword", "doc"),
-                    Map.entry(
-                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            "docx"),
-                    Map.entry("application/vnd.ms-excel", "xls"),
-                    Map.entry(
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            "xlsx"));
+    private static final Map<String, String> EXTENSION_BY_TYPE = Map.ofEntries(
+            Map.entry("application/pdf", "pdf"),
+            Map.entry("application/zip", "zip"),
+            Map.entry("application/json", "json"),
+            Map.entry("text/plain", "txt"),
+            Map.entry("text/html", "html"),
+            Map.entry("image/png", "png"),
+            Map.entry("image/jpeg", "jpg"),
+            Map.entry("image/tiff", "tiff"),
+            Map.entry("application/msword", "doc"),
+            Map.entry("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"),
+            Map.entry("application/vnd.ms-excel", "xls"),
+            Map.entry("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"));
 
     private ResultFiles() {}
 
@@ -81,8 +76,8 @@ final class ResultFiles {
      * @throws IOException if nothing in the archive matches, naming what was there - a silent pick
      *     of the wrong file would be worse than a failed step
      */
-    static Resource selectFromArchive(
-            Resource archive, String select, TempFileManager tempFileManager) throws IOException {
+    static Resource selectFromArchive(Resource archive, String select, TempFileManager tempFileManager)
+            throws IOException {
         List<Resource> entries = ZipExtractionUtils.extractZip(archive, tempFileManager);
         if (entries.isEmpty()) {
             throw new IOException("The API returned an empty archive");
@@ -90,13 +85,12 @@ final class ResultFiles {
         Integer index = asIndex(select);
         if (index != null) {
             if (index < 0 || index >= entries.size()) {
-                throw new IOException(
-                        "'responseSelect' asked for entry "
-                                + index
-                                + " but the archive has "
-                                + entries.size()
-                                + ": "
-                                + names(entries));
+                throw new IOException("'responseSelect' asked for entry "
+                        + index
+                        + " but the archive has "
+                        + entries.size()
+                        + ": "
+                        + names(entries));
             }
             return entries.get(index);
         }
@@ -107,17 +101,15 @@ final class ResultFiles {
             }
         }
         if (matches.isEmpty()) {
-            throw new IOException(
-                    "'responseSelect' matched nothing in the archive; it holds " + names(entries));
+            throw new IOException("'responseSelect' matched nothing in the archive; it holds " + names(entries));
         }
         if (matches.size() > 1) {
             // Taking the first would be a coin toss the operator did not ask for.
-            throw new IOException(
-                    "'responseSelect' matched "
-                            + matches.size()
-                            + " entries ("
-                            + names(matches)
-                            + "); narrow it, or use an index");
+            throw new IOException("'responseSelect' matched "
+                    + matches.size()
+                    + " entries ("
+                    + names(matches)
+                    + "); narrow it, or use an index");
         }
         return matches.get(0);
     }
@@ -147,11 +139,10 @@ final class ResultFiles {
         }
         String name = filename.toLowerCase(Locale.ROOT);
         String pattern = glob.trim().toLowerCase(Locale.ROOT);
-        String regex =
-                java.util.Arrays.stream(pattern.split("\\*", -1))
-                        .map(java.util.regex.Pattern::quote)
-                        .reduce((a, b) -> a + ".*" + b)
-                        .orElse("");
+        String regex = java.util.Arrays.stream(pattern.split("\\*", -1))
+                .map(java.util.regex.Pattern::quote)
+                .reduce((a, b) -> a + ".*" + b)
+                .orElse("");
         return name.matches(regex);
     }
 

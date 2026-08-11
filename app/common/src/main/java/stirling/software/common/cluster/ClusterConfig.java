@@ -33,26 +33,24 @@ public class ClusterConfig {
         }
         String backplane = cluster.getBackplane();
         if ("valkey".equalsIgnoreCase(backplane)) {
-            String url = cluster.getValkey() == null ? null : cluster.getValkey().getUrl();
+            String url =
+                    cluster.getValkey() == null ? null : cluster.getValkey().getUrl();
             if (url == null || url.isBlank()) {
-                throw new IllegalStateException(
-                        "cluster.enabled=true with backplane=valkey requires"
-                                + " cluster.valkey.url to be set (e.g."
-                                + " redis://valkey:6379).");
+                throw new IllegalStateException("cluster.enabled=true with backplane=valkey requires"
+                        + " cluster.valkey.url to be set (e.g."
+                        + " redis://valkey:6379).");
             }
         } else if ("inprocess".equalsIgnoreCase(backplane)) {
             // enabled+inprocess only coordinates the local JVM; cross-node lookups will 410.
-            log.warn(
-                    "cluster.enabled=true with backplane=inprocess - only the local"
-                            + " JVM is coordinated. Cross-node lookups and the file proxy will fail."
-                            + " Use backplane=valkey for real multi-node deployments.");
+            log.warn("cluster.enabled=true with backplane=inprocess - only the local"
+                    + " JVM is coordinated. Cross-node lookups and the file proxy will fail."
+                    + " Use backplane=valkey for real multi-node deployments.");
         } else {
             // Fail fast on typos like "valky" so Spring doesn't later report a cryptic
             // "no ClusterBackplane bean" - the operator-facing error names the bad value.
-            throw new IllegalStateException(
-                    "cluster.enabled=true with unknown backplane '"
-                            + backplane
-                            + "'. Valid values: inprocess | valkey.");
+            throw new IllegalStateException("cluster.enabled=true with unknown backplane '"
+                    + backplane
+                    + "'. Valid values: inprocess | valkey.");
         }
         log.info(
                 "Cluster mode enabled (backplane={}, nodeRole={}, nodeId={}).",

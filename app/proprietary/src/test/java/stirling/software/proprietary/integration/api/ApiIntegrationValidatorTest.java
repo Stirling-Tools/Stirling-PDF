@@ -17,8 +17,7 @@ import stirling.software.common.model.ApplicationProperties;
  */
 class ApiIntegrationValidatorTest {
 
-    private final ApiIntegrationValidator validator =
-            new ApiIntegrationValidator(properties(false));
+    private final ApiIntegrationValidator validator = new ApiIntegrationValidator(properties(false));
 
     private static ApplicationProperties properties(boolean allowPrivate) {
         ApplicationProperties p = new ApplicationProperties();
@@ -36,8 +35,7 @@ class ApiIntegrationValidatorTest {
     void acceptsAnOrdinaryPublicHost() {
         // A public IP literal, so the check needs no network DNS (an unresolvable name would fail
         // closed at the resolve step, which is correct but not what this test is about).
-        assertThatCode(() -> validator.validate(config("https://1.1.1.1/v1")))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> validator.validate(config("https://1.1.1.1/v1"))).doesNotThrowAnyException();
     }
 
     @Test

@@ -64,21 +64,18 @@ public class PdfJsonImageService {
      * @throws IOException If image extraction fails
      */
     public Map<Integer, List<PdfJsonImageElement>> collectImages(
-            PDDocument document, int totalPages, Consumer<PdfJsonConversionProgress> progress)
-            throws IOException {
+            PDDocument document, int totalPages, Consumer<PdfJsonConversionProgress> progress) throws IOException {
         Map<Integer, List<PdfJsonImageElement>> imagesByPage = new LinkedHashMap<>();
         Map<COSBase, EncodedImage> imageCache = new IdentityHashMap<>();
         int pageNumber = 1;
         for (PDPage page : document.getPages()) {
-            ImageCollectingEngine engine =
-                    new ImageCollectingEngine(page, pageNumber, imagesByPage, imageCache);
+            ImageCollectingEngine engine = new ImageCollectingEngine(page, pageNumber, imagesByPage, imageCache);
             engine.processPage(page);
 
             // Update progress for image extraction (70-80%)
             int imageProgress = 70 + (int) ((pageNumber / (double) totalPages) * 10);
             progress.accept(
-                    PdfJsonConversionProgress.of(
-                            imageProgress, "images", "Extracting images", pageNumber, totalPages));
+                    PdfJsonConversionProgress.of(imageProgress, "images", "Extracting images", pageNumber, totalPages));
             pageNumber++;
         }
         return imagesByPage;
@@ -93,8 +90,8 @@ public class PdfJsonImageService {
      * @return List of image elements for this page
      * @throws IOException If image extraction fails
      */
-    public List<PdfJsonImageElement> extractImagesForPage(
-            PDDocument document, PDPage page, int pageNumber) throws IOException {
+    public List<PdfJsonImageElement> extractImagesForPage(PDDocument document, PDPage page, int pageNumber)
+            throws IOException {
         Map<Integer, List<PdfJsonImageElement>> imagesByPage = new LinkedHashMap<>();
         ImageCollectingEngine engine =
                 new ImageCollectingEngine(page, pageNumber, imagesByPage, new IdentityHashMap<>());
@@ -117,14 +114,15 @@ public class PdfJsonImageService {
             PdfJsonImageElement element,
             Map<String, PDImageXObject> cache)
             throws IOException {
-        if (element == null || element.getImageData() == null || element.getImageData().isBlank()) {
+        if (element == null
+                || element.getImageData() == null
+                || element.getImageData().isBlank()) {
             return;
         }
 
-        String cacheKey =
-                element.getId() != null && !element.getId().isBlank()
-                        ? element.getId()
-                        : Integer.toHexString(System.identityHashCode(element));
+        String cacheKey = element.getId() != null && !element.getId().isBlank()
+                ? element.getId()
+                : Integer.toHexString(System.identityHashCode(element));
         PDImageXObject image = cache.get(cacheKey);
         if (image == null) {
             image = createImageXObject(document, element);
@@ -136,14 +134,13 @@ public class PdfJsonImageService {
 
         float[] transform = element.getTransform();
         if (transform != null && transform.length == 6) {
-            Matrix matrix =
-                    new Matrix(
-                            safeFloat(transform[0], 1f),
-                            safeFloat(transform[1], 0f),
-                            safeFloat(transform[2], 0f),
-                            safeFloat(transform[3], 1f),
-                            safeFloat(transform[4], 0f),
-                            safeFloat(transform[5], 0f));
+            Matrix matrix = new Matrix(
+                    safeFloat(transform[0], 1f),
+                    safeFloat(transform[1], 0f),
+                    safeFloat(transform[2], 0f),
+                    safeFloat(transform[3], 1f),
+                    safeFloat(transform[4], 0f),
+                    safeFloat(transform[5], 0f));
             contentStream.drawImage(image, matrix);
             return;
         }
@@ -170,8 +167,7 @@ public class PdfJsonImageService {
      * @return The created image XObject
      * @throws IOException If image creation fails
      */
-    public PDImageXObject createImageXObject(PDDocument document, PdfJsonImageElement element)
-            throws IOException {
+    public PDImageXObject createImageXObject(PDDocument document, PdfJsonImageElement element) throws IOException {
         byte[] data;
         try {
             data = Base64.getDecoder().decode(element.getImageData());
@@ -179,7 +175,8 @@ public class PdfJsonImageService {
             log.debug("Failed to decode image element: {}", ex.getMessage());
             return null;
         }
-        String name = element.getId() != null ? element.getId() : UUID.randomUUID().toString();
+        String name =
+                element.getId() != null ? element.getId() : UUID.randomUUID().toString();
         return PDImageXObject.createFromByteArray(document, data, name);
     }
 
@@ -326,36 +323,31 @@ public class PdfJsonImageService {
             Bounds bounds = computeBounds(ctm);
             float[] matrixValues = toMatrixValues(ctm);
 
-            PdfJsonImageElement element =
-                    PdfJsonImageElement.builder()
-                            .id(UUID.randomUUID().toString())
-                            .objectName(
-                                    currentXObjectName != null
-                                            ? currentXObjectName.getName()
-                                            : null)
-                            .inlineImage(!(pdImage instanceof PDImageXObject))
-                            .nativeWidth(pdImage.getWidth())
-                            .nativeHeight(pdImage.getHeight())
-                            .x(bounds.left)
-                            .y(bounds.bottom)
-                            .width(bounds.width())
-                            .height(bounds.height())
-                            .left(bounds.left)
-                            .right(bounds.right)
-                            .top(bounds.top)
-                            .bottom(bounds.bottom)
-                            .transform(matrixValues)
-                            .zOrder(-1_000_000 + imageCounter)
-                            .imageData(encoded.base64())
-                            .imageFormat(encoded.format())
-                            .build();
+            PdfJsonImageElement element = PdfJsonImageElement.builder()
+                    .id(UUID.randomUUID().toString())
+                    .objectName(currentXObjectName != null ? currentXObjectName.getName() : null)
+                    .inlineImage(!(pdImage instanceof PDImageXObject))
+                    .nativeWidth(pdImage.getWidth())
+                    .nativeHeight(pdImage.getHeight())
+                    .x(bounds.left)
+                    .y(bounds.bottom)
+                    .width(bounds.width())
+                    .height(bounds.height())
+                    .left(bounds.left)
+                    .right(bounds.right)
+                    .top(bounds.top)
+                    .bottom(bounds.bottom)
+                    .transform(matrixValues)
+                    .zOrder(-1_000_000 + imageCounter)
+                    .imageData(encoded.base64())
+                    .imageFormat(encoded.format())
+                    .build();
             imageCounter++;
             imagesByPage.computeIfAbsent(pageNumber, key -> new ArrayList<>()).add(element);
         }
 
         @Override
-        public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3)
-                throws IOException {
+        public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) throws IOException {
             // Not needed for image extraction
         }
 
@@ -375,8 +367,7 @@ public class PdfJsonImageService {
         }
 
         @Override
-        public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
-                throws IOException {
+        public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) throws IOException {
             // Not needed for image extraction
         }
 
@@ -416,8 +407,7 @@ public class PdfJsonImageService {
         }
 
         @Override
-        protected void processOperator(Operator operator, List<COSBase> operands)
-                throws IOException {
+        protected void processOperator(Operator operator, List<COSBase> operands) throws IOException {
             if (OperatorName.DRAW_OBJECT.equals(operator.getName())
                     && !operands.isEmpty()
                     && operands.get(0) instanceof COSName name) {

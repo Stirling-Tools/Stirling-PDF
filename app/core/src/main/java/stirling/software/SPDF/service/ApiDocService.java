@@ -77,17 +77,15 @@ public class ApiDocService {
             apiDocsJson = response.getBody();
             apiDocsJsonRootNode = objectMapper.readTree(apiDocsJson);
             JsonNode paths = apiDocsJsonRootNode.path("paths");
-            paths.propertyStream()
-                    .forEach(
-                            entry -> {
-                                String path = entry.getKey();
-                                JsonNode pathNode = entry.getValue();
-                                if (pathNode.has("post")) {
-                                    JsonNode postNode = pathNode.get("post");
-                                    ApiEndpoint endpoint = new ApiEndpoint(path, postNode);
-                                    apiDocumentation.put(path, endpoint);
-                                }
-                            });
+            paths.propertyStream().forEach(entry -> {
+                String path = entry.getKey();
+                JsonNode pathNode = entry.getValue();
+                if (pathNode.has("post")) {
+                    JsonNode postNode = pathNode.get("post");
+                    ApiEndpoint endpoint = new ApiEndpoint(path, postNode);
+                    apiDocumentation.put(path, endpoint);
+                }
+            });
         } catch (Exception e) {
             // Handle exceptions
             log.error("Error grabbing swagger doc, body result {}", apiDocsJson);

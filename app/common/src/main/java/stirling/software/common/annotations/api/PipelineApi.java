@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/pipeline")
-@Tag(
-        name = "Pipeline",
-        description =
-                """
+@Tag(name = "Pipeline", description = """
                 Run several PDF operations in one configured pipeline instead of calling multiple endpoints yourself.
                 Useful when you always do the same steps in sequence (for example: convert → OCR → compress → watermark).
 

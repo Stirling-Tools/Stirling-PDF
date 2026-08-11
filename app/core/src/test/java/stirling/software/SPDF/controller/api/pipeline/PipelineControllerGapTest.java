@@ -59,11 +59,14 @@ import tools.jackson.databind.ObjectMapper;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PipelineControllerGapTest {
 
-    @Mock private PipelineProcessor processor;
+    @Mock
+    private PipelineProcessor processor;
 
-    @Mock private PostHogService postHogService;
+    @Mock
+    private PostHogService postHogService;
 
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private TempFileManager tempFileManager;
 
     private ObjectMapper objectMapper;
     private PipelineController controller;
@@ -71,15 +74,13 @@ class PipelineControllerGapTest {
     // Real temp files handed back by the mocked TempFileManager; cleaned up after each test.
     private final List<Path> createdTempFiles = new ArrayList<>();
 
-    private static final String VALID_JSON =
-            "{\"name\":\"test-pipeline\",\"pipeline\":["
-                    + "{\"operation\":\"/api/v1/misc/repair\",\"parameters\":{}}]}";
+    private static final String VALID_JSON = "{\"name\":\"test-pipeline\",\"pipeline\":["
+            + "{\"operation\":\"/api/v1/misc/repair\",\"parameters\":{}}]}";
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        controller =
-                new PipelineController(processor, objectMapper, postHogService, tempFileManager);
+        controller = new PipelineController(processor, objectMapper, postHogService, tempFileManager);
     }
 
     /**
@@ -88,14 +89,12 @@ class PipelineControllerGapTest {
      * short-circuit can assert {@code verifyNoInteractions(tempFileManager)}.
      */
     private void stubTempFiles() throws IOException {
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        invocation -> {
-                            String suffix = invocation.getArgument(0);
-                            Path p = Files.createTempFile("pipeline-gap-test-", suffix);
-                            createdTempFiles.add(p);
-                            return p.toFile();
-                        });
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(invocation -> {
+            String suffix = invocation.getArgument(0);
+            Path p = Files.createTempFile("pipeline-gap-test-", suffix);
+            createdTempFiles.add(p);
+            return p.toFile();
+        });
     }
 
     @AfterEach
@@ -114,8 +113,7 @@ class PipelineControllerGapTest {
     }
 
     private MockMultipartFile pdf(String name) {
-        return new MockMultipartFile(
-                "fileInput", name, "application/pdf", ("content of " + name).getBytes());
+        return new MockMultipartFile("fileInput", name, "application/pdf", ("content of " + name).getBytes());
     }
 
     private MultipartFile[] oneFile() {
@@ -230,8 +228,7 @@ class PipelineControllerGapTest {
         void singleOutput_capturesAnalytics() throws Exception {
             stubTempFiles();
             MultipartFile[] files = oneFile();
-            when(processor.generateInputFiles(files))
-                    .thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
+            when(processor.generateInputFiles(files)).thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
 
             PipelineResult result = new PipelineResult();
             result.setOutputFiles(List.of(namedResource("result.pdf", "body".getBytes())));
@@ -258,8 +255,7 @@ class PipelineControllerGapTest {
         void multipleOutputs_returnsZipResponse() throws Exception {
             stubTempFiles();
             MultipartFile[] files = oneFile();
-            when(processor.generateInputFiles(files))
-                    .thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
+            when(processor.generateInputFiles(files)).thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
 
             Resource a = namedResource("a.pdf", "alpha".getBytes(StandardCharsets.UTF_8));
             Resource b = namedResource("b.pdf", "bravo".getBytes(StandardCharsets.UTF_8));
@@ -286,8 +282,7 @@ class PipelineControllerGapTest {
         void multipleOutputs_duplicateNames_areDeduped() throws Exception {
             stubTempFiles();
             MultipartFile[] files = oneFile();
-            when(processor.generateInputFiles(files))
-                    .thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
+            when(processor.generateInputFiles(files)).thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
 
             Resource first = namedResource("dup.pdf", "first".getBytes(StandardCharsets.UTF_8));
             Resource second = namedResource("dup.pdf", "second".getBytes(StandardCharsets.UTF_8));
@@ -312,9 +307,7 @@ class PipelineControllerGapTest {
             try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(all))) {
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
-                    out.put(
-                            entry.getName(),
-                            new String(zis.readAllBytes(), StandardCharsets.UTF_8));
+                    out.put(entry.getName(), new String(zis.readAllBytes(), StandardCharsets.UTF_8));
                     zis.closeEntry();
                 }
             }
@@ -341,10 +334,8 @@ class PipelineControllerGapTest {
         @DisplayName("returns null when the pipeline run throws")
         void pipelineRunThrows_returnsNull() throws Exception {
             MultipartFile[] files = oneFile();
-            when(processor.generateInputFiles(files))
-                    .thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
-            when(processor.runPipelineAgainstFiles(any(), any()))
-                    .thenThrow(new RuntimeException("pipeline failed"));
+            when(processor.generateInputFiles(files)).thenReturn(List.of(namedResource("input.pdf", "in".getBytes())));
+            when(processor.runPipelineAgainstFiles(any(), any())).thenThrow(new RuntimeException("pipeline failed"));
 
             ResponseEntity<Resource> response = controller.handleData(request(files, VALID_JSON));
 
@@ -371,10 +362,9 @@ class PipelineControllerGapTest {
         @DisplayName("multiple operation names are extracted in order for analytics")
         void multipleOperations_extractedInOrder() throws Exception {
             MultipartFile[] files = oneFile();
-            String json =
-                    "{\"name\":\"multi\",\"pipeline\":["
-                            + "{\"operation\":\"/api/v1/misc/repair\",\"parameters\":{}},"
-                            + "{\"operation\":\"/api/v1/security/sanitize-pdf\",\"parameters\":{}}]}";
+            String json = "{\"name\":\"multi\",\"pipeline\":["
+                    + "{\"operation\":\"/api/v1/misc/repair\",\"parameters\":{}},"
+                    + "{\"operation\":\"/api/v1/security/sanitize-pdf\",\"parameters\":{}}]}";
 
             // Stop after analytics by returning no input files.
             when(processor.generateInputFiles(files)).thenReturn(null);

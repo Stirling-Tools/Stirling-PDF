@@ -20,16 +20,14 @@ public interface WorkflowSessionRepository extends JpaRepository<WorkflowSession
     Optional<WorkflowSession> findBySessionId(String sessionId);
 
     /** Find workflow session by unique session ID with participants eagerly loaded */
-    @Query(
-            "SELECT ws FROM WorkflowSession ws LEFT JOIN FETCH ws.participants WHERE ws.sessionId = :sessionId")
+    @Query("SELECT ws FROM WorkflowSession ws LEFT JOIN FETCH ws.participants WHERE ws.sessionId = :sessionId")
     Optional<WorkflowSession> findBySessionIdWithParticipants(@Param("sessionId") String sessionId);
 
     /** Find all workflow sessions owned by a specific user */
     List<WorkflowSession> findByOwnerOrderByCreatedAtDesc(User owner);
 
     /** Find all workflow sessions of a specific type for a user */
-    List<WorkflowSession> findByOwnerAndWorkflowTypeOrderByCreatedAtDesc(
-            User owner, WorkflowType workflowType);
+    List<WorkflowSession> findByOwnerAndWorkflowTypeOrderByCreatedAtDesc(User owner, WorkflowType workflowType);
 
     /** Find all workflow sessions with a specific status */
     List<WorkflowSession> findByStatusOrderByCreatedAtDesc(WorkflowStatus status);
@@ -46,10 +44,8 @@ public interface WorkflowSessionRepository extends JpaRepository<WorkflowSession
     boolean existsBySessionId(String sessionId);
 
     /** Find sessions that need cleanup (e.g., old cancelled sessions) */
-    @Query(
-            "SELECT ws FROM WorkflowSession ws WHERE ws.status = 'CANCELLED' AND ws.updatedAt < :cutoffDate")
-    List<WorkflowSession> findCancelledSessionsOlderThan(
-            @Param("cutoffDate") java.time.LocalDateTime cutoffDate);
+    @Query("SELECT ws FROM WorkflowSession ws WHERE ws.status = 'CANCELLED' AND ws.updatedAt < :cutoffDate")
+    List<WorkflowSession> findCancelledSessionsOlderThan(@Param("cutoffDate") java.time.LocalDateTime cutoffDate);
 
     /** Count active sessions for a user */
     @Query(

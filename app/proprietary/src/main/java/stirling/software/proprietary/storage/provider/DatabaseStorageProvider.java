@@ -37,9 +37,7 @@ public class DatabaseStorageProvider implements StorageProvider {
     @Override
     public Resource load(String storageKey) throws IOException {
         StoredFileBlob blob =
-                storedFileBlobRepository
-                        .findById(storageKey)
-                        .orElseThrow(() -> new IOException("File not found"));
+                storedFileBlobRepository.findById(storageKey).orElseThrow(() -> new IOException("File not found"));
         return new ByteArrayResource(blob.getData());
     }
 

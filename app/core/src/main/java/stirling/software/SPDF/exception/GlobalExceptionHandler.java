@@ -187,8 +187,7 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return a ProblemDetail with timestamp and path properties set
      */
-    private static ProblemDetail createBaseProblemDetail(
-            HttpStatus status, String detail, HttpServletRequest request) {
+    private static ProblemDetail createBaseProblemDetail(HttpStatus status, String detail, HttpServletRequest request) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
         problemDetail.setProperty("timestamp", Instant.now());
         problemDetail.setProperty("path", request.getRequestURI());
@@ -268,19 +267,11 @@ public class GlobalExceptionHandler {
      * @param errorCode the error code (optional)
      */
     private static void logException(
-            String level,
-            String category,
-            HttpServletRequest request,
-            Exception ex,
-            String errorCode) {
-        String message =
-                errorCode != null
-                        ? String.format(
-                                "%s error at %s: %s (%s)",
-                                category, request.getRequestURI(), ex.getMessage(), errorCode)
-                        : String.format(
-                                "%s error at %s: %s",
-                                category, request.getRequestURI(), ex.getMessage());
+            String level, String category, HttpServletRequest request, Exception ex, String errorCode) {
+        String message = errorCode != null
+                ? String.format(
+                        "%s error at %s: %s (%s)", category, request.getRequestURI(), ex.getMessage(), errorCode)
+                : String.format("%s error at %s: %s", category, request.getRequestURI(), ex.getMessage());
 
         switch (level.toLowerCase()) {
             case "warn" -> log.warn(message);
@@ -326,14 +317,11 @@ public class GlobalExceptionHandler {
      *     compatibility)
      */
     @ExceptionHandler(PdfPasswordException.class)
-    public ResponseEntity<ProblemDetail> handlePdfPassword(
-            PdfPasswordException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handlePdfPassword(PdfPasswordException ex, HttpServletRequest request) {
         logException("warn", "PDF password", request, ex, ex.getErrorCode());
 
-        String title =
-                getLocalizedMessage("error.pdfPassword.title", ErrorTitles.PDF_PASSWORD_DEFAULT);
-        return createProblemDetailResponse(
-                ex, HttpStatus.BAD_REQUEST, ErrorTypes.PDF_PASSWORD, title, request);
+        String title = getLocalizedMessage("error.pdfPassword.title", ErrorTitles.PDF_PASSWORD_DEFAULT);
+        return createProblemDetailResponse(ex, HttpStatus.BAD_REQUEST, ErrorTypes.PDF_PASSWORD, title, request);
     }
 
     /**
@@ -348,9 +336,7 @@ public class GlobalExceptionHandler {
             GhostscriptException ex, HttpServletRequest request) {
         logException("warn", "Ghostscript", request, ex, ex.getErrorCode());
 
-        String title =
-                getLocalizedMessage(
-                        "error.ghostscriptCompression.title", ErrorTitles.GHOSTSCRIPT_DEFAULT);
+        String title = getLocalizedMessage("error.ghostscriptCompression.title", ErrorTitles.GHOSTSCRIPT_DEFAULT);
         return createProblemDetailResponse(
                 ex, HttpStatus.INTERNAL_SERVER_ERROR, ErrorTypes.GHOSTSCRIPT, title, request);
     }
@@ -363,13 +349,10 @@ public class GlobalExceptionHandler {
      * @return ProblemDetail with HTTP 503 SERVICE_UNAVAILABLE
      */
     @ExceptionHandler(FfmpegRequiredException.class)
-    public ResponseEntity<ProblemDetail> handleFfmpegRequired(
-            FfmpegRequiredException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleFfmpegRequired(FfmpegRequiredException ex, HttpServletRequest request) {
         logException("warn", "FFmpeg unavailable", request, ex, ex.getErrorCode());
 
-        String title =
-                getLocalizedMessage(
-                        "error.ffmpegRequired.title", ErrorTitles.FFMPEG_REQUIRED_DEFAULT);
+        String title = getLocalizedMessage("error.ffmpegRequired.title", ErrorTitles.FFMPEG_REQUIRED_DEFAULT);
         return createProblemDetailResponse(
                 ex, HttpStatus.SERVICE_UNAVAILABLE, ErrorTypes.FFMPEG_REQUIRED, title, request);
     }
@@ -389,13 +372,8 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with appropriate HTTP status
      */
-    @ExceptionHandler({
-        PdfCorruptedException.class,
-        PdfEncryptionException.class,
-        OutOfMemoryDpiException.class
-    })
-    public ResponseEntity<ProblemDetail> handlePdfAndDpiExceptions(
-            BaseAppException ex, HttpServletRequest request) {
+    @ExceptionHandler({PdfCorruptedException.class, PdfEncryptionException.class, OutOfMemoryDpiException.class})
+    public ResponseEntity<ProblemDetail> handlePdfAndDpiExceptions(BaseAppException ex, HttpServletRequest request) {
 
         HttpStatus status;
         String type;
@@ -406,25 +384,19 @@ public class GlobalExceptionHandler {
             // Use BAD_REQUEST for better client compatibility (was 422/507)
             status = HttpStatus.BAD_REQUEST;
             type = ErrorTypes.OUT_OF_MEMORY_DPI;
-            title =
-                    getLocalizedMessage(
-                            "error.outOfMemoryDpi.title", ErrorTitles.OUT_OF_MEMORY_DPI_DEFAULT);
+            title = getLocalizedMessage("error.outOfMemoryDpi.title", ErrorTitles.OUT_OF_MEMORY_DPI_DEFAULT);
             category = "Out of Memory DPI";
         } else if (ex instanceof PdfCorruptedException) {
             // Use BAD_REQUEST for better client compatibility (was 422)
             status = HttpStatus.BAD_REQUEST;
             type = ErrorTypes.PDF_CORRUPTED;
-            title =
-                    getLocalizedMessage(
-                            "error.pdfCorrupted.title", ErrorTitles.PDF_CORRUPTED_DEFAULT);
+            title = getLocalizedMessage("error.pdfCorrupted.title", ErrorTitles.PDF_CORRUPTED_DEFAULT);
             category = "PDF Corrupted";
         } else if (ex instanceof PdfEncryptionException) {
             // Use BAD_REQUEST for better client compatibility (was 422)
             status = HttpStatus.BAD_REQUEST;
             type = ErrorTypes.PDF_ENCRYPTION;
-            title =
-                    getLocalizedMessage(
-                            "error.pdfEncryption.title", ErrorTitles.PDF_ENCRYPTION_DEFAULT);
+            title = getLocalizedMessage("error.pdfEncryption.title", ErrorTitles.PDF_ENCRYPTION_DEFAULT);
             category = "PDF Encryption";
         } else {
             status = HttpStatus.BAD_REQUEST;
@@ -452,11 +424,7 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with HTTP 400 BAD_REQUEST
      */
-    @ExceptionHandler({
-        CbrFormatException.class,
-        CbzFormatException.class,
-        EmlFormatException.class
-    })
+    @ExceptionHandler({CbrFormatException.class, CbzFormatException.class, EmlFormatException.class})
     public ResponseEntity<ProblemDetail> handleFormatExceptions(
             BaseValidationException ex, HttpServletRequest request) {
 
@@ -478,9 +446,7 @@ public class GlobalExceptionHandler {
             category = "EML format";
         } else {
             type = ErrorTypes.FORMAT_ERROR;
-            title =
-                    getLocalizedMessage(
-                            "error.formatError.title", ErrorTitles.FORMAT_ERROR_DEFAULT);
+            title = getLocalizedMessage("error.formatError.title", ErrorTitles.FORMAT_ERROR_DEFAULT);
             category = "Format";
         }
 
@@ -496,13 +462,10 @@ public class GlobalExceptionHandler {
      * @return ProblemDetail with HTTP 400 BAD_REQUEST
      */
     @ExceptionHandler(BaseValidationException.class)
-    public ResponseEntity<ProblemDetail> handleValidation(
-            BaseValidationException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleValidation(BaseValidationException ex, HttpServletRequest request) {
         logException("warn", "Validation", request, ex, ex.getErrorCode());
-        String title =
-                getLocalizedMessage("error.validation.title", ErrorTitles.VALIDATION_DEFAULT);
-        return createProblemDetailResponse(
-                ex, HttpStatus.BAD_REQUEST, ErrorTypes.VALIDATION, title, request);
+        String title = getLocalizedMessage("error.validation.title", ErrorTitles.VALIDATION_DEFAULT);
+        return createProblemDetailResponse(ex, HttpStatus.BAD_REQUEST, ErrorTypes.VALIDATION, title, request);
     }
 
     /**
@@ -513,11 +476,9 @@ public class GlobalExceptionHandler {
      * @return ProblemDetail with HTTP 500 INTERNAL_SERVER_ERROR
      */
     @ExceptionHandler(BaseAppException.class)
-    public ResponseEntity<ProblemDetail> handleBaseApp(
-            BaseAppException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleBaseApp(BaseAppException ex, HttpServletRequest request) {
         logException("error", "Application", request, ex, ex.getErrorCode());
-        String title =
-                getLocalizedMessage("error.application.title", ErrorTitles.APPLICATION_DEFAULT);
+        String title = getLocalizedMessage("error.application.title", ErrorTitles.APPLICATION_DEFAULT);
         return createProblemDetailResponse(
                 ex, HttpStatus.INTERNAL_SERVER_ERROR, ErrorTypes.APPLICATION, title, request);
     }
@@ -542,22 +503,14 @@ public class GlobalExceptionHandler {
                 request.getRequestURI(),
                 ex.getBindingResult().getErrorCount());
 
-        List<String> errors =
-                ex.getBindingResult().getFieldErrors().stream()
-                        .map(
-                                error ->
-                                        String.format(
-                                                "%s: %s",
-                                                error.getField(), error.getDefaultMessage()))
-                        .toList();
+        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> String.format("%s: %s", error.getField(), error.getDefaultMessage()))
+                .toList();
 
-        String title =
-                getLocalizedMessage(
-                        "error.validation.title", ErrorTitles.REQUEST_VALIDATION_FAILED_DEFAULT);
+        String title = getLocalizedMessage("error.validation.title", ErrorTitles.REQUEST_VALIDATION_FAILED_DEFAULT);
         String detail = getLocalizedMessage("error.validation.detail", "Validation failed");
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, detail, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.BAD_REQUEST, detail, request);
         problemDetail.setType(URI.create(ErrorTypes.VALIDATION));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -569,8 +522,7 @@ public class GlobalExceptionHandler {
                         "Review the 'errors' list and correct the specified fields.",
                         "Ensure data types and formats match the API schema.",
                         "Resend the request after fixing validation issues."));
-        problemDetail.setProperty(
-                "actionRequired", "Correct the invalid fields and resend the request.");
+        problemDetail.setProperty("actionRequired", "Correct the invalid fields and resend the request.");
 
         return ResponseEntity.badRequest().contentType(PROBLEM_JSON).body(problemDetail);
     }
@@ -591,21 +543,17 @@ public class GlobalExceptionHandler {
             MissingServletRequestParameterException ex, HttpServletRequest request) {
         log.warn("Missing parameter at {}: {}", request.getRequestURI(), ex.getParameterName());
 
-        String message =
-                getLocalizedMessage(
-                        "error.missingParameter.detail",
-                        String.format(
-                                "Required parameter '%s' of type '%s' is missing",
-                                ex.getParameterName(), ex.getParameterType()),
-                        ex.getParameterName(),
-                        ex.getParameterType());
+        String message = getLocalizedMessage(
+                "error.missingParameter.detail",
+                String.format(
+                        "Required parameter '%s' of type '%s' is missing",
+                        ex.getParameterName(), ex.getParameterType()),
+                ex.getParameterName(),
+                ex.getParameterType());
 
-        String title =
-                getLocalizedMessage(
-                        "error.missingParameter.title", ErrorTitles.MISSING_PARAMETER_DEFAULT);
+        String title = getLocalizedMessage("error.missingParameter.title", ErrorTitles.MISSING_PARAMETER_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, message, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.BAD_REQUEST, message, request);
         problemDetail.setType(URI.create(ErrorTypes.MISSING_PARAMETER));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -619,8 +567,7 @@ public class GlobalExceptionHandler {
                         "Verify the parameter name is spelled correctly.",
                         "Provide a value matching the required type."));
         problemDetail.setProperty(
-                "actionRequired",
-                String.format("Add the required '%s' parameter and retry.", ex.getParameterName()));
+                "actionRequired", String.format("Add the required '%s' parameter and retry.", ex.getParameterName()));
 
         return ResponseEntity.badRequest().contentType(PROBLEM_JSON).body(problemDetail);
     }
@@ -643,18 +590,14 @@ public class GlobalExceptionHandler {
             MissingServletRequestPartException ex, HttpServletRequest request) {
         log.warn("Missing file part at {}: {}", request.getRequestURI(), ex.getRequestPartName());
 
-        String message =
-                getLocalizedMessage(
-                        "error.missingFile.detail",
-                        String.format(
-                                "Required file part '%s' is missing", ex.getRequestPartName()),
-                        ex.getRequestPartName());
+        String message = getLocalizedMessage(
+                "error.missingFile.detail",
+                String.format("Required file part '%s' is missing", ex.getRequestPartName()),
+                ex.getRequestPartName());
 
-        String title =
-                getLocalizedMessage("error.missingFile.title", ErrorTitles.MISSING_FILE_DEFAULT);
+        String title = getLocalizedMessage("error.missingFile.title", ErrorTitles.MISSING_FILE_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, message, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.BAD_REQUEST, message, request);
         problemDetail.setType(URI.create(ErrorTypes.MISSING_FILE));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -667,8 +610,7 @@ public class GlobalExceptionHandler {
                         "Ensure the field name matches the API specification.",
                         "Check that your client is sending multipart data correctly."));
         problemDetail.setProperty(
-                "actionRequired",
-                String.format("Attach the '%s' file part and retry.", ex.getRequestPartName()));
+                "actionRequired", String.format("Attach the '%s' file part and retry.", ex.getRequestPartName()));
 
         return ResponseEntity.badRequest().contentType(PROBLEM_JSON).body(problemDetail);
     }
@@ -692,23 +634,16 @@ public class GlobalExceptionHandler {
         log.warn("File upload size exceeded at {}", request.getRequestURI());
 
         long maxSize = ex.getMaxUploadSize();
-        String message =
-                maxSize > 0
-                        ? getLocalizedMessage(
-                                "error.fileTooLarge.detail",
-                                String.format(
-                                        "File size exceeds maximum allowed limit of %d MB",
-                                        maxSize / (1024 * 1024)),
-                                maxSize / (1024 * 1024))
-                        : getLocalizedMessage(
-                                "error.fileTooLarge.detailUnknown",
-                                "File size exceeds maximum allowed limit");
+        String message = maxSize > 0
+                ? getLocalizedMessage(
+                        "error.fileTooLarge.detail",
+                        String.format("File size exceeds maximum allowed limit of %d MB", maxSize / (1024 * 1024)),
+                        maxSize / (1024 * 1024))
+                : getLocalizedMessage("error.fileTooLarge.detailUnknown", "File size exceeds maximum allowed limit");
 
-        String title =
-                getLocalizedMessage("error.fileTooLarge.title", ErrorTitles.FILE_TOO_LARGE_DEFAULT);
+        String title = getLocalizedMessage("error.fileTooLarge.title", ErrorTitles.FILE_TOO_LARGE_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.CONTENT_TOO_LARGE, message, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.CONTENT_TOO_LARGE, message, request);
         problemDetail.setType(URI.create(ErrorTypes.FILE_TOO_LARGE));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -723,8 +658,7 @@ public class GlobalExceptionHandler {
                         "Compress or reduce the resolution of the file before uploading.",
                         "Split the file into smaller parts if possible.",
                         "Contact the administrator to increase the upload limit if necessary."));
-        problemDetail.setProperty(
-                "actionRequired", "Reduce the file size to be within the upload limit.");
+        problemDetail.setProperty("actionRequired", "Reduce the file size to be within the upload limit.");
 
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
                 .contentType(PROBLEM_JSON)
@@ -746,26 +680,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ProblemDetail> handleMethodNotSupported(
             HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
-        log.warn(
-                "Method not supported at {}: {} not allowed",
-                request.getRequestURI(),
-                ex.getMethod());
+        log.warn("Method not supported at {}: {} not allowed", request.getRequestURI(), ex.getMethod());
 
-        String message =
-                getLocalizedMessage(
-                        "error.methodNotAllowed.detail",
-                        String.format(
-                                "HTTP method '%s' is not supported for this endpoint. Supported methods: %s",
-                                ex.getMethod(), String.join(", ", ex.getSupportedMethods())),
-                        ex.getMethod(),
-                        String.join(", ", ex.getSupportedMethods()));
+        String message = getLocalizedMessage(
+                "error.methodNotAllowed.detail",
+                String.format(
+                        "HTTP method '%s' is not supported for this endpoint. Supported methods: %s",
+                        ex.getMethod(), String.join(", ", ex.getSupportedMethods())),
+                ex.getMethod(),
+                String.join(", ", ex.getSupportedMethods()));
 
-        String title =
-                getLocalizedMessage(
-                        "error.methodNotAllowed.title", ErrorTitles.METHOD_NOT_ALLOWED_DEFAULT);
+        String title = getLocalizedMessage("error.methodNotAllowed.title", ErrorTitles.METHOD_NOT_ALLOWED_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.METHOD_NOT_ALLOWED, message, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.METHOD_NOT_ALLOWED, message, request);
         problemDetail.setType(URI.create(ErrorTypes.METHOD_NOT_ALLOWED));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -801,25 +728,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ProblemDetail> handleMediaTypeNotSupported(
             HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
-        log.warn(
-                "Media type not supported at {}: {}", request.getRequestURI(), ex.getContentType());
+        log.warn("Media type not supported at {}: {}", request.getRequestURI(), ex.getContentType());
 
-        String message =
-                getLocalizedMessage(
-                        "error.unsupportedMediaType.detail",
-                        String.format(
-                                "Media type '%s' is not supported. Supported media types: %s",
-                                ex.getContentType(), ex.getSupportedMediaTypes()),
-                        String.valueOf(ex.getContentType()),
-                        ex.getSupportedMediaTypes().toString());
+        String message = getLocalizedMessage(
+                "error.unsupportedMediaType.detail",
+                String.format(
+                        "Media type '%s' is not supported. Supported media types: %s",
+                        ex.getContentType(), ex.getSupportedMediaTypes()),
+                String.valueOf(ex.getContentType()),
+                ex.getSupportedMediaTypes().toString());
 
         String title =
-                getLocalizedMessage(
-                        "error.unsupportedMediaType.title",
-                        ErrorTitles.UNSUPPORTED_MEDIA_TYPE_DEFAULT);
+                getLocalizedMessage("error.unsupportedMediaType.title", ErrorTitles.UNSUPPORTED_MEDIA_TYPE_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE, message, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE, message, request);
         problemDetail.setType(URI.create(ErrorTypes.UNSUPPORTED_MEDIA_TYPE));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -832,8 +754,7 @@ public class GlobalExceptionHandler {
                         "Set the Content-Type header to a supported media type.",
                         "When sending JSON, use 'application/json'.",
                         "Check that the request body matches the declared Content-Type."));
-        problemDetail.setProperty(
-                "actionRequired", "Change the Content-Type to a supported value.");
+        problemDetail.setProperty("actionRequired", "Change the Content-Type to a supported value.");
 
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                 .contentType(PROBLEM_JSON)
@@ -855,9 +776,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
     public void handleMediaTypeNotAcceptable(
-            HttpMediaTypeNotAcceptableException ex,
-            HttpServletRequest request,
-            HttpServletResponse response)
+            HttpMediaTypeNotAcceptableException ex, HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
         log.warn(
@@ -913,25 +832,19 @@ public class GlobalExceptionHandler {
             HttpMessageNotReadableException ex, HttpServletRequest request) {
         log.warn("Malformed request body at {}: {}", request.getRequestURI(), ex.getMessage());
 
-        String message =
-                getLocalizedMessage(
-                        "error.malformedRequest.detail",
-                        "Malformed JSON request or invalid request body format");
+        String message = getLocalizedMessage(
+                "error.malformedRequest.detail", "Malformed JSON request or invalid request body format");
         Throwable cause = ex.getCause();
         if (cause != null && cause.getMessage() != null) {
-            message =
-                    getLocalizedMessage(
-                            "error.malformedRequest.detailWithCause",
-                            "Invalid request body: " + cause.getMessage(),
-                            cause.getMessage());
+            message = getLocalizedMessage(
+                    "error.malformedRequest.detailWithCause",
+                    "Invalid request body: " + cause.getMessage(),
+                    cause.getMessage());
         }
 
-        String title =
-                getLocalizedMessage(
-                        "error.malformedRequest.title", ErrorTitles.MALFORMED_REQUEST_DEFAULT);
+        String title = getLocalizedMessage("error.malformedRequest.title", ErrorTitles.MALFORMED_REQUEST_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, message, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.BAD_REQUEST, message, request);
         problemDetail.setType(URI.create(ErrorTypes.MALFORMED_REQUEST));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -959,23 +872,18 @@ public class GlobalExceptionHandler {
      * @return ProblemDetail with HTTP 404 NOT_FOUND
      */
     @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ProblemDetail> handleNotFound(
-            NoHandlerFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleNotFound(NoHandlerFoundException ex, HttpServletRequest request) {
         log.warn("Endpoint not found: {} {}", ex.getHttpMethod(), ex.getRequestURL());
 
-        String message =
-                getLocalizedMessage(
-                        "error.notFound.detail",
-                        String.format(
-                                "No endpoint found for %s %s",
-                                ex.getHttpMethod(), ex.getRequestURL()),
-                        ex.getHttpMethod(),
-                        ex.getRequestURL());
+        String message = getLocalizedMessage(
+                "error.notFound.detail",
+                String.format("No endpoint found for %s %s", ex.getHttpMethod(), ex.getRequestURL()),
+                ex.getHttpMethod(),
+                ex.getRequestURL());
 
         String title = getLocalizedMessage("error.notFound.title", ErrorTitles.NOT_FOUND_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.NOT_FOUND, message, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.NOT_FOUND, message, request);
         problemDetail.setType(URI.create(ErrorTypes.NOT_FOUND));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -1008,17 +916,13 @@ public class GlobalExceptionHandler {
         }
 
         String title = getLocalizedMessage("error.notFound.title", ErrorTitles.NOT_FOUND_DEFAULT);
-        String detail =
-                getLocalizedMessage(
-                        "error.notFound.detail",
-                        String.format(
-                                "No endpoint found for %s %s",
-                                request.getMethod(), request.getRequestURI()),
-                        request.getMethod(),
-                        request.getRequestURI());
+        String detail = getLocalizedMessage(
+                "error.notFound.detail",
+                String.format("No endpoint found for %s %s", request.getMethod(), request.getRequestURI()),
+                request.getMethod(),
+                request.getRequestURI());
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.NOT_FOUND, detail, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.NOT_FOUND, detail, request);
         problemDetail.setType(URI.create(ErrorTypes.NOT_FOUND));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title);
@@ -1053,12 +957,9 @@ public class GlobalExceptionHandler {
             IllegalArgumentException ex, HttpServletRequest request) {
         log.warn("Invalid argument at {}: {}", request.getRequestURI(), ex.getMessage());
 
-        String title =
-                getLocalizedMessage(
-                        "error.invalidArgument.title", ErrorTitles.INVALID_ARGUMENT_DEFAULT);
+        String title = getLocalizedMessage("error.invalidArgument.title", ErrorTitles.INVALID_ARGUMENT_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
         problemDetail.setType(URI.create(ErrorTypes.INVALID_ARGUMENT));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -1095,10 +996,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ProblemDetail> handleResponseStatusException(
             ResponseStatusException ex, HttpServletRequest request) {
-        HttpStatus status =
-                HttpStatus.resolve(ex.getStatusCode().value()) != null
-                        ? HttpStatus.valueOf(ex.getStatusCode().value())
-                        : HttpStatus.INTERNAL_SERVER_ERROR;
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value()) != null
+                ? HttpStatus.valueOf(ex.getStatusCode().value())
+                : HttpStatus.INTERNAL_SERVER_ERROR;
         String reason = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
         ProblemDetail problemDetail = createBaseProblemDetail(status, reason, request);
         problemDetail.setType(URI.create("/errors/" + status.value()));
@@ -1106,25 +1006,15 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("title", status.getReasonPhrase());
         // 5xx is operator-relevant; 4xx is a normal client-rejection - log at the right level.
         if (status.is5xxServerError()) {
-            log.error(
-                    "ResponseStatusException {} at {}: {}",
-                    status.value(),
-                    request.getRequestURI(),
-                    reason,
-                    ex);
+            log.error("ResponseStatusException {} at {}: {}", status.value(), request.getRequestURI(), reason, ex);
         } else {
-            log.debug(
-                    "ResponseStatusException {} at {}: {}",
-                    status.value(),
-                    request.getRequestURI(),
-                    reason);
+            log.debug("ResponseStatusException {} at {}: {}", status.value(), request.getRequestURI(), reason);
         }
         return ResponseEntity.status(status).contentType(PROBLEM_JSON).body(problemDetail);
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ProblemDetail> handleRuntimeException(
-            RuntimeException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
 
         // Check if this RuntimeException wraps a typed exception from job execution
         Throwable cause = ex.getCause();
@@ -1161,22 +1051,14 @@ public class GlobalExceptionHandler {
         }
 
         // Not a wrapped exception - treat as unexpected error
-        log.error(
-                "Unexpected RuntimeException at {}: {}",
-                request.getRequestURI(),
-                ex.getMessage(),
-                ex);
+        log.error("Unexpected RuntimeException at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
 
         String userMessage =
-                getLocalizedMessage(
-                        "error.unexpected",
-                        "An unexpected error occurred. Please try again later.");
+                getLocalizedMessage("error.unexpected", "An unexpected error occurred. Please try again later.");
 
-        String title =
-                getLocalizedMessage("error.unexpected.title", ErrorTitles.UNEXPECTED_DEFAULT);
+        String title = getLocalizedMessage("error.unexpected.title", ErrorTitles.UNEXPECTED_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, userMessage, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, userMessage, request);
         problemDetail.setType(URI.create(ErrorTypes.UNEXPECTED));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title);
@@ -1189,8 +1071,7 @@ public class GlobalExceptionHandler {
                         "If the problem persists, contact support with the timestamp and path.",
                         "Check service status or logs for outages."));
         problemDetail.setProperty(
-                "actionRequired",
-                "Retry later; if persistent, contact support with the error details.");
+                "actionRequired", "Retry later; if persistent, contact support with the error details.");
 
         if (isDevelopmentMode()) {
             problemDetail.setProperty("debugMessage", ex.getMessage());
@@ -1217,8 +1098,7 @@ public class GlobalExceptionHandler {
      * @return ProblemDetail with HTTP 500 INTERNAL_SERVER_ERROR
      */
     @ExceptionHandler(IOException.class)
-    public ResponseEntity<ProblemDetail> handleIOException(
-            IOException ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleIOException(IOException ex, HttpServletRequest request) {
 
         // Broken pipe / connection reset means the client disconnected.
         // Attempting to write a ProblemDetail response will fail because the
@@ -1230,8 +1110,7 @@ public class GlobalExceptionHandler {
         }
 
         // Check if this is a PDF-specific error and wrap it appropriately
-        IOException processedException =
-                ExceptionUtils.handlePdfException(ex, request.getRequestURI());
+        IOException processedException = ExceptionUtils.handlePdfException(ex, request.getRequestURI());
 
         // If it was wrapped as a specific PDF exception, the more specific handler will catch it on
         // retry
@@ -1241,21 +1120,14 @@ public class GlobalExceptionHandler {
 
         // Check if this is a NoSuchFileException (temp file was deleted prematurely)
         if (ex instanceof java.nio.file.NoSuchFileException) {
-            log.error(
-                    "Temporary file not found at {}: {}",
-                    request.getRequestURI(),
-                    ex.getMessage(),
-                    ex);
+            log.error("Temporary file not found at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
 
-            String message =
-                    getLocalizedMessage(
-                            "error.tempFileNotFound.detail",
-                            "The temporary file was not found. This may indicate a processing error or cleanup issue. Please try again.");
-            String title =
-                    getLocalizedMessage("error.tempFileNotFound.title", "Temporary File Not Found");
+            String message = getLocalizedMessage(
+                    "error.tempFileNotFound.detail",
+                    "The temporary file was not found. This may indicate a processing error or cleanup issue. Please try again.");
+            String title = getLocalizedMessage("error.tempFileNotFound.title", "Temporary File Not Found");
 
-            ProblemDetail problemDetail =
-                    createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
+            ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
             problemDetail.setType(URI.create("https://stirlingpdf.com/errors/temp-file-not-found"));
             problemDetail.setTitle(title);
             problemDetail.setProperty("title", title);
@@ -1269,17 +1141,14 @@ public class GlobalExceptionHandler {
 
         log.error("IO error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
 
-        String message =
-                getLocalizedMessage(
-                        "error.ioError.detail", "An error occurred while processing the file");
+        String message = getLocalizedMessage("error.ioError.detail", "An error occurred while processing the file");
         if (ex.getMessage() != null && !ex.getMessage().isBlank()) {
             message = ex.getMessage();
         }
 
         String title = getLocalizedMessage("error.ioError.title", ErrorTitles.IO_ERROR_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, message, request);
         problemDetail.setType(URI.create(ErrorTypes.IO_ERROR));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -1325,15 +1194,11 @@ public class GlobalExceptionHandler {
         }
 
         String userMessage =
-                getLocalizedMessage(
-                        "error.unexpected",
-                        "An unexpected error occurred. Please try again later.");
+                getLocalizedMessage("error.unexpected", "An unexpected error occurred. Please try again later.");
 
-        String title =
-                getLocalizedMessage("error.unexpected.title", ErrorTitles.UNEXPECTED_DEFAULT);
+        String title = getLocalizedMessage("error.unexpected.title", ErrorTitles.UNEXPECTED_DEFAULT);
 
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, userMessage, request);
+        ProblemDetail problemDetail = createBaseProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, userMessage, request);
         problemDetail.setType(URI.create(ErrorTypes.UNEXPECTED));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -1346,8 +1211,7 @@ public class GlobalExceptionHandler {
                         "If the problem persists, contact support with the timestamp and path.",
                         "Check service status or logs for outages."));
         problemDetail.setProperty(
-                "actionRequired",
-                "Retry later; if persistent, contact support with the error details.");
+                "actionRequired", "Retry later; if persistent, contact support with the error details.");
 
         // Only expose detailed error info in development mode
         if (isDevelopmentMode()) {
@@ -1420,16 +1284,14 @@ public class GlobalExceptionHandler {
      * @param hintKey the i18n key for hints (should contain "|" separated hints)
      * @param defaultHints the default hints if i18n key is not found
      */
-    private void addStandardHints(
-            ProblemDetail problemDetail, String hintKey, List<String> defaultHints) {
+    private void addStandardHints(ProblemDetail problemDetail, String hintKey, List<String> defaultHints) {
         String localizedHints = getLocalizedMessage(hintKey, null);
         if (localizedHints != null) {
             problemDetail.setProperty(
                     "hints",
-                    List.of(
-                            RegexPatternUtils.getInstance()
-                                    .getPipeDelimiterPattern()
-                                    .split(localizedHints)));
+                    List.of(RegexPatternUtils.getInstance()
+                            .getPipeDelimiterPattern()
+                            .split(localizedHints)));
         } else {
             problemDetail.setProperty("hints", defaultHints);
         }

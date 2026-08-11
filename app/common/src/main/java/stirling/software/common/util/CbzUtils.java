@@ -44,9 +44,7 @@ public class CbzUtils {
             cbzFile.transferTo(tempFile.getFile());
 
             // Early ZIP validity check using ZipInputStream (fail fast on non-zip content)
-            try (BufferedInputStream bis =
-                            new BufferedInputStream(
-                                    new java.io.FileInputStream(tempFile.getFile()));
+            try (BufferedInputStream bis = new BufferedInputStream(new java.io.FileInputStream(tempFile.getFile()));
                     ZipInputStream zis = new ZipInputStream(bis)) {
                 if (zis.getNextEntry() == null) {
                     throw ExceptionUtils.createCbzEmptyException();
@@ -82,20 +80,11 @@ public class CbzUtils {
                         byte[] imageBytes = imgBaos.toByteArray();
                         try {
                             PDImageXObject pdImage =
-                                    PDImageXObject.createFromByteArray(
-                                            document, imageBytes, imageName);
-                            PDPage page =
-                                    new PDPage(
-                                            new PDRectangle(
-                                                    pdImage.getWidth(), pdImage.getHeight()));
+                                    PDImageXObject.createFromByteArray(document, imageBytes, imageName);
+                            PDPage page = new PDPage(new PDRectangle(pdImage.getWidth(), pdImage.getHeight()));
                             document.addPage(page);
-                            try (PDPageContentStream contentStream =
-                                    new PDPageContentStream(
-                                            document,
-                                            page,
-                                            PDPageContentStream.AppendMode.OVERWRITE,
-                                            true,
-                                            true)) {
+                            try (PDPageContentStream contentStream = new PDPageContentStream(
+                                    document, page, PDPageContentStream.AppendMode.OVERWRITE, true, true)) {
                                 contentStream.drawImage(pdImage, 0, 0);
                             }
                         } catch (IOException e) {
@@ -130,9 +119,7 @@ public class CbzUtils {
                                 throw e;
                             }
                         } catch (IOException e) {
-                            log.warn(
-                                    "Ghostscript optimization failed, returning unoptimized PDF",
-                                    e);
+                            log.warn("Ghostscript optimization failed, returning unoptimized PDF", e);
                         }
                     }
 
@@ -178,14 +165,14 @@ public class CbzUtils {
         }
 
         String extension = FilenameUtils.getExtension(filename).toLowerCase(Locale.ROOT);
-        return "cbz".equals(extension)
-                || "zip".equals(extension)
-                || "cbr".equals(extension)
-                || "rar".equals(extension);
+        return "cbz".equals(extension) || "zip".equals(extension) || "cbr".equals(extension) || "rar".equals(extension);
     }
 
     private boolean isImageFile(String filename) {
-        return RegexPatternUtils.getInstance().getImageFilePattern().matcher(filename).matches();
+        return RegexPatternUtils.getInstance()
+                .getImageFilePattern()
+                .matcher(filename)
+                .matches();
     }
 
     private class NaturalOrderComparator implements Comparator<String> {

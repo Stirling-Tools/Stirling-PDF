@@ -35,10 +35,17 @@ import stirling.software.proprietary.security.repository.JwtSigningKeyRepository
 @ExtendWith(MockitoExtension.class)
 class KeyPersistenceServiceInterfaceTest {
 
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private ApplicationProperties.Security security;
-    @Mock private ApplicationProperties.Security.Jwt jwtConfig;
-    @Mock private JwtSigningKeyRepository keyRepository;
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private ApplicationProperties.Security security;
+
+    @Mock
+    private ApplicationProperties.Security.Jwt jwtConfig;
+
+    @Mock
+    private JwtSigningKeyRepository keyRepository;
 
     private KeyPersistenceService keyPersistenceService;
     private KeyPair testKeyPair;
@@ -57,8 +64,7 @@ class KeyPersistenceServiceInterfaceTest {
         lenient().when(jwtConfig.isEnableKeystore()).thenReturn(true);
         lenient().when(keyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         // clusterEnabled=true so the convergence-reload path is exercised.
-        keyPersistenceService =
-                new KeyPersistenceService(applicationProperties, cacheManager, keyRepository, true);
+        keyPersistenceService = new KeyPersistenceService(applicationProperties, cacheManager, keyRepository, true);
     }
 
     private JwtSigningKeyEntity entityFrom(String keyId) {
@@ -127,8 +133,7 @@ class KeyPersistenceServiceInterfaceTest {
     void eligibleForCleanupIsSourcedFromTheDb() {
         when(keyRepository.findByCreatedAtBefore(any())).thenReturn(List.of(entityFrom("old-key")));
 
-        List<JwtVerificationKey> stale =
-                keyPersistenceService.getKeysEligibleForCleanup(java.time.LocalDateTime.now());
+        List<JwtVerificationKey> stale = keyPersistenceService.getKeysEligibleForCleanup(java.time.LocalDateTime.now());
 
         assertEquals(1, stale.size());
         assertEquals("old-key", stale.get(0).getKeyId());
@@ -138,13 +143,11 @@ class KeyPersistenceServiceInterfaceTest {
     void reloadAdoptsTheNewestKeyAPeerMinted() {
         // Boot with our own key active, then a peer mints a newer one in the shared DB.
         when(keyRepository.count()).thenReturn(1L);
-        when(keyRepository.findAllByOrderByCreatedAtDesc())
-                .thenReturn(List.of(entityFrom("jwt-key-local-old")));
+        when(keyRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(entityFrom("jwt-key-local-old")));
         keyPersistenceService.initializeKeystore();
         assertEquals("jwt-key-local-old", keyPersistenceService.getActiveKey().getKeyId());
 
-        when(keyRepository.findFirstByOrderByCreatedAtDesc())
-                .thenReturn(Optional.of(entityFrom("jwt-key-peer-new")));
+        when(keyRepository.findFirstByOrderByCreatedAtDesc()).thenReturn(Optional.of(entityFrom("jwt-key-peer-new")));
 
         keyPersistenceService.reloadActiveKeyFromDb();
 
@@ -155,8 +158,7 @@ class KeyPersistenceServiceInterfaceTest {
     @Test
     void reloadDoesNothingOffCluster() {
         KeyPersistenceService singleNode =
-                new KeyPersistenceService(
-                        applicationProperties, cacheManager, keyRepository, false);
+                new KeyPersistenceService(applicationProperties, cacheManager, keyRepository, false);
 
         singleNode.reloadActiveKeyFromDb();
 
@@ -167,12 +169,10 @@ class KeyPersistenceServiceInterfaceTest {
     @Test
     void reloadIsANoOpWhenAlreadyHoldingTheNewestKey() {
         when(keyRepository.count()).thenReturn(1L);
-        when(keyRepository.findAllByOrderByCreatedAtDesc())
-                .thenReturn(List.of(entityFrom("jwt-key-current")));
+        when(keyRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(entityFrom("jwt-key-current")));
         keyPersistenceService.initializeKeystore();
 
-        when(keyRepository.findFirstByOrderByCreatedAtDesc())
-                .thenReturn(Optional.of(entityFrom("jwt-key-current")));
+        when(keyRepository.findFirstByOrderByCreatedAtDesc()).thenReturn(Optional.of(entityFrom("jwt-key-current")));
 
         keyPersistenceService.reloadActiveKeyFromDb();
 

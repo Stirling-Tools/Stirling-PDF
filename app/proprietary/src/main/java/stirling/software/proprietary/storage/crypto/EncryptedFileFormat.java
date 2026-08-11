@@ -38,12 +38,7 @@ public final class EncryptedFileFormat {
 
     private EncryptedFileFormat() {}
 
-    public record Header(
-            byte formatVersion,
-            byte cipherSuite,
-            UUID keyId,
-            long plaintextLength,
-            byte[] wrappedDek) {
+    public record Header(byte formatVersion, byte cipherSuite, UUID keyId, long plaintextLength, byte[] wrappedDek) {
 
         public byte[] serialize() {
             ByteBuffer buffer = ByteBuffer.allocate(HEADER_LENGTH);
@@ -91,12 +86,11 @@ public final class EncryptedFileFormat {
                 || suite != SUITE_AES_GCM_HKDF_1MIB
                 || plaintextLength < 0
                 || wrappedDekLength != WRAPPED_DEK_LENGTH) {
-            throw new StorageEncryptionException(
-                    "Unsupported storage-encryption header (version="
-                            + version
-                            + ", suite="
-                            + suite
-                            + "). This build cannot read the file.");
+            throw new StorageEncryptionException("Unsupported storage-encryption header (version="
+                    + version
+                    + ", suite="
+                    + suite
+                    + "). This build cannot read the file.");
         }
         byte[] wrappedDek = new byte[wrappedDekLength];
         buffer.get(wrappedDek);

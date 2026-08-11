@@ -16,10 +16,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode
 public class PDFFile {
 
-    @Schema(
-            description = "The input PDF file",
-            contentMediaType = MediaType.APPLICATION_PDF_VALUE,
-            format = "binary")
+    @Schema(description = "The input PDF file", contentMediaType = MediaType.APPLICATION_PDF_VALUE, format = "binary")
     private MultipartFile fileInput;
 
     @Schema(

@@ -10,17 +10,17 @@ import tools.jackson.databind.JsonNode;
 public class ApiEndpoint {
     private final String name;
     private Map<String, JsonNode> parameters;
-    @Getter private final String description;
+
+    @Getter
+    private final String description;
 
     public ApiEndpoint(String name, JsonNode postNode) {
         this.name = name;
         this.parameters = new HashMap<>();
-        postNode.path("parameters")
-                .forEach(
-                        paramNode -> {
-                            String paramName = paramNode.path("name").asString("");
-                            parameters.put(paramName, paramNode);
-                        });
+        postNode.path("parameters").forEach(paramNode -> {
+            String paramName = paramNode.path("name").asString("");
+            parameters.put(paramName, paramNode);
+        });
         this.description = postNode.path("description").asString("");
     }
 

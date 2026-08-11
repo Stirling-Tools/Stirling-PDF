@@ -38,36 +38,25 @@ class LanguageServiceTest {
 
     @Test
     void testGetSupportedLanguages_NoRestrictions() {
-        Set<String> expectedLanguages =
-                new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
+        Set<String> expectedLanguages = new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
         Resource[] mockResources = createMockResources(expectedLanguages);
         ((LanguageServiceForTest) languageService).setMockResources(mockResources);
         when(applicationProperties.getUi().getLanguages()).thenReturn(Collections.emptyList());
         Set<String> supportedLanguages = languageService.getSupportedLanguages();
-        assertEquals(
-                expectedLanguages,
-                supportedLanguages,
-                "Should return all languages when no restrictions");
+        assertEquals(expectedLanguages, supportedLanguages, "Should return all languages when no restrictions");
     }
 
     @Test
     void testGetSupportedLanguages_WithRestrictions() {
-        Set<String> expectedLanguages =
-                new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
+        Set<String> expectedLanguages = new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
         Set<String> allowedLanguages = new HashSet<>(Arrays.asList("en_US", "fr_FR"));
         Resource[] mockResources = createMockResources(expectedLanguages);
         ((LanguageServiceForTest) languageService).setMockResources(mockResources);
-        when(applicationProperties.getUi().getLanguages())
-                .thenReturn(Arrays.asList("en_US", "fr_FR"));
+        when(applicationProperties.getUi().getLanguages()).thenReturn(Arrays.asList("en_US", "fr_FR"));
         Set<String> supportedLanguages = languageService.getSupportedLanguages();
-        assertEquals(
-                allowedLanguages, supportedLanguages, "Should return only whitelisted languages");
-        assertFalse(
-                supportedLanguages.contains("en_GB"),
-                "en_GB should NOT be included when not in whitelist");
-        assertFalse(
-                supportedLanguages.contains("de_DE"),
-                "de_DE should NOT be included when not in whitelist");
+        assertEquals(allowedLanguages, supportedLanguages, "Should return only whitelisted languages");
+        assertFalse(supportedLanguages.contains("en_GB"), "en_GB should NOT be included when not in whitelist");
+        assertFalse(supportedLanguages.contains("de_DE"), "de_DE should NOT be included when not in whitelist");
     }
 
     @Test
@@ -99,9 +88,7 @@ class LanguageServiceTest {
         assertTrue(supportedLanguages.contains("en_US"), "en_US should be included");
         assertTrue(supportedLanguages.contains("fr_FR"), "fr_FR should be included");
         assertTrue(supportedLanguages.contains("en_GB"), "en_GB should always be included");
-        assertFalse(
-                supportedLanguages.contains("not_a_messages_file"),
-                "Invalid format should be excluded");
+        assertFalse(supportedLanguages.contains("not_a_messages_file"), "Invalid format should be excluded");
     }
 
     @Test
@@ -126,8 +113,7 @@ class LanguageServiceTest {
     void testGetSupportedLanguages_WhitelistWithNoMatchingResources() {
         Resource[] resources = {createMockResource("messages_en_US.properties")};
         ((LanguageServiceForTest) languageService).setMockResources(resources);
-        when(applicationProperties.getUi().getLanguages())
-                .thenReturn(Arrays.asList("fr_FR", "de_DE"));
+        when(applicationProperties.getUi().getLanguages()).thenReturn(Arrays.asList("fr_FR", "de_DE"));
         Set<String> supportedLanguages = languageService.getSupportedLanguages();
         assertTrue(supportedLanguages.isEmpty());
     }
@@ -144,12 +130,10 @@ class LanguageServiceTest {
     @Test
     void testGetSupportedLanguages_WhitelistExactlyMatchesResources() {
         Resource[] resources = {
-            createMockResource("messages_en_US.properties"),
-            createMockResource("messages_fr_FR.properties")
+            createMockResource("messages_en_US.properties"), createMockResource("messages_fr_FR.properties")
         };
         ((LanguageServiceForTest) languageService).setMockResources(resources);
-        when(applicationProperties.getUi().getLanguages())
-                .thenReturn(Arrays.asList("en_US", "fr_FR"));
+        when(applicationProperties.getUi().getLanguages()).thenReturn(Arrays.asList("en_US", "fr_FR"));
         Set<String> supportedLanguages = languageService.getSupportedLanguages();
         assertEquals(2, supportedLanguages.size());
         assertTrue(supportedLanguages.contains("en_US"));

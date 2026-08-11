@@ -52,15 +52,14 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
         // If ReplaceAndInvert is HighContrastColor option, then get the colors of text and
         // background from static
         if (replaceAndInvert == ReplaceAndInvert.HIGH_CONTRAST_COLOR) {
-            String[] colors =
-                    HighContrastColorReplaceDecider.getColors(
-                            replaceAndInvert, highContrastColorCombination);
+            String[] colors = HighContrastColorReplaceDecider.getColors(replaceAndInvert, highContrastColorCombination);
             this.textColor = colors[0];
             this.backgroundColor = colors[1];
         }
 
         // Create a temporary file, with the original filename from the multipart file
-        File file = Files.createTempFile("temp", getFileInput().getOriginalFilename()).toFile();
+        File file = Files.createTempFile("temp", getFileInput().getOriginalFilename())
+                .toFile();
 
         // Transfer the content of the multipart file to the file
         getFileInput().transferTo(file);
@@ -73,13 +72,11 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
 
                 PdfTextStripperCustom pdfTextStripperCustom = new PdfTextStripperCustom();
                 // Get text positions
-                List<List<TextPosition>> charactersByArticle =
-                        pdfTextStripperCustom.processPageCustom(page);
+                List<List<TextPosition>> charactersByArticle = pdfTextStripperCustom.processPageCustom(page);
 
                 // Begin a new content stream
                 PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+                        new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
                 // Set the new text color
                 contentStream.setNonStrokingColor(Color.decode(this.textColor));
@@ -130,16 +127,14 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
                 contentStream.close();
                 // Use a content stream to overlay the background color
                 try (PDPageContentStream contentStreamBg =
-                        new PDPageContentStream(
-                                document,
-                                page,
-                                PDPageContentStream.AppendMode.PREPEND,
-                                true,
-                                true)) {
+                        new PDPageContentStream(document, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
                     // Set background color (e.g., light yellow)
                     contentStreamBg.setNonStrokingColor(Color.decode(this.backgroundColor));
                     contentStreamBg.addRect(
-                            0, 0, page.getMediaBox().getWidth(), page.getMediaBox().getHeight());
+                            0,
+                            0,
+                            page.getMediaBox().getWidth(),
+                            page.getMediaBox().getHeight());
                     contentStreamBg.fill();
                 }
             }
@@ -148,8 +143,7 @@ public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {
             document.save(byteArrayOutputStream);
 
             // Prepare the modified PDF for download
-            ByteArrayInputStream inputStream =
-                    new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
             InputStreamResource resource = new InputStreamResource(inputStream);
             return resource;
         } finally {

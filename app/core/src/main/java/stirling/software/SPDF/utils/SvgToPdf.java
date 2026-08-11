@@ -104,14 +104,12 @@ public class SvgToPdf {
                     return;
                 }
                 throw new SecurityException(
-                        "External resource loading is disabled for SVG to PDF conversion: "
-                                + resourceURL);
+                        "External resource loading is disabled for SVG to PDF conversion: " + resourceURL);
             }
         };
     }
 
-    private GraphicsNode buildGvtWithTimeout(BridgeContext ctx, SVGDocument svgDoc)
-            throws IOException {
+    private GraphicsNode buildGvtWithTimeout(BridgeContext ctx, SVGDocument svgDoc) throws IOException {
         GVTBuilder builder = new GVTBuilder();
         ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
@@ -122,26 +120,22 @@ public class SvgToPdf {
             return future.get(RENDERING_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             future.cancel(true);
-            throw new IOException(
-                    "SVG rendering timed out after "
-                            + RENDERING_TIMEOUT_SECONDS
-                            + " seconds. The SVG may be too complex.");
+            throw new IOException("SVG rendering timed out after "
+                    + RENDERING_TIMEOUT_SECONDS
+                    + " seconds. The SVG may be too complex.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("SVG rendering was interrupted", e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             throw new IOException(
-                    "SVG rendering failed: "
-                            + (cause != null ? cause.getMessage() : e.getMessage()),
-                    cause);
+                    "SVG rendering failed: " + (cause != null ? cause.getMessage() : e.getMessage()), cause);
         } finally {
             executor.shutdownNow();
         }
     }
 
-    private byte[] renderToPdf(GraphicsNode rootNode, float width, float height)
-            throws IOException {
+    private byte[] renderToPdf(GraphicsNode rootNode, float width, float height) throws IOException {
         try (PDDocument document = new PDDocument();
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
@@ -202,9 +196,7 @@ public class SvgToPdf {
 
             document.save(outputStream);
             byte[] result = outputStream.toByteArray();
-            log.debug(
-                    "Combined SVG to PDF conversion complete, output size: {} bytes",
-                    result.length);
+            log.debug("Combined SVG to PDF conversion complete, output size: {} bytes", result.length);
             return result;
         }
     }

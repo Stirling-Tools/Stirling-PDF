@@ -41,15 +41,7 @@ class InProcessPolicyStoreTest {
     void savingWithAnExistingIdUpdatesInPlace() {
         Policy created = store.save(policy(null, "before", null, true));
 
-        store.save(
-                new Policy(
-                        created.id(),
-                        "after",
-                        "owner",
-                        true,
-                        List.of(),
-                        List.of(),
-                        OutputSpec.inline()));
+        store.save(new Policy(created.id(), "after", "owner", true, List.of(), List.of(), OutputSpec.inline()));
 
         assertEquals(1, store.all().size());
         assertEquals("after", store.get(created.id()).orElseThrow().name());
@@ -78,10 +70,9 @@ class InProcessPolicyStoreTest {
     }
 
     private static Policy policy(String id, String name, String triggerType, boolean enabled) {
-        PipelineInput input =
-                triggerType == null
-                        ? PipelineInput.manual("src")
-                        : new PipelineInput("src", new TriggerConfig(triggerType, Map.of()));
+        PipelineInput input = triggerType == null
+                ? PipelineInput.manual("src")
+                : new PipelineInput("src", new TriggerConfig(triggerType, Map.of()));
         return new Policy(
                 id,
                 name,

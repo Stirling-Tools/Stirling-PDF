@@ -39,25 +39,24 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class ConvertPdfJsonControllerTest {
 
-    @Mock private PdfJsonConversionService pdfJsonConversionService;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private PdfJsonConversionService pdfJsonConversionService;
 
-    @InjectMocks private ConvertPdfJsonController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private ConvertPdfJsonController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private static byte[] drainBody(ResponseEntity<Resource> response) throws IOException {
@@ -80,18 +79,16 @@ class ConvertPdfJsonControllerTest {
     void convertPdfToJson_success() throws Exception {
         byte[] jsonBytes = "{\"pages\":[]}".getBytes();
         MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "doc.pdf", "application/pdf", "content".getBytes());
+                new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "content".getBytes());
         PDFFile request = new PDFFile();
         request.setFileInput(pdfFile);
 
         // Service writes directly to the OutputStream passed by the controller
-        doAnswer(
-                        inv -> {
-                            OutputStream os = inv.getArgument(2, OutputStream.class);
-                            os.write(jsonBytes);
-                            return null;
-                        })
+        doAnswer(inv -> {
+                    OutputStream os = inv.getArgument(2, OutputStream.class);
+                    os.write(jsonBytes);
+                    return null;
+                })
                 .when(pdfJsonConversionService)
                 .convertPdfToJson(eq(pdfFile), eq(false), any(OutputStream.class));
 
@@ -105,25 +102,22 @@ class ConvertPdfJsonControllerTest {
     void convertPdfToJson_lightweightMode() throws Exception {
         byte[] jsonBytes = "{\"pages\":[]}".getBytes();
         MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "doc.pdf", "application/pdf", "content".getBytes());
+                new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "content".getBytes());
         PDFFile request = new PDFFile();
         request.setFileInput(pdfFile);
 
-        doAnswer(
-                        inv -> {
-                            OutputStream os = inv.getArgument(2, OutputStream.class);
-                            os.write(jsonBytes);
-                            return null;
-                        })
+        doAnswer(inv -> {
+                    OutputStream os = inv.getArgument(2, OutputStream.class);
+                    os.write(jsonBytes);
+                    return null;
+                })
                 .when(pdfJsonConversionService)
                 .convertPdfToJson(eq(pdfFile), eq(true), any(OutputStream.class));
 
         ResponseEntity<Resource> response = controller.convertPdfToJson(request, true);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(pdfJsonConversionService)
-                .convertPdfToJson(eq(pdfFile), eq(true), any(OutputStream.class));
+        verify(pdfJsonConversionService).convertPdfToJson(eq(pdfFile), eq(true), any(OutputStream.class));
     }
 
     @Test
@@ -138,17 +132,15 @@ class ConvertPdfJsonControllerTest {
     void convertJsonToPdf_success() throws Exception {
         byte[] pdfBytes = "pdf-content".getBytes();
         MockMultipartFile jsonFile =
-                new MockMultipartFile(
-                        "fileInput", "doc.json", "application/json", "{\"pages\":[]}".getBytes());
+                new MockMultipartFile("fileInput", "doc.json", "application/json", "{\"pages\":[]}".getBytes());
         GeneralFile request = new GeneralFile();
         request.setFileInput(jsonFile);
 
-        doAnswer(
-                        inv -> {
-                            OutputStream os = inv.getArgument(1, OutputStream.class);
-                            os.write(pdfBytes);
-                            return null;
-                        })
+        doAnswer(inv -> {
+                    OutputStream os = inv.getArgument(1, OutputStream.class);
+                    os.write(pdfBytes);
+                    return null;
+                })
                 .when(pdfJsonConversionService)
                 .convertJsonToPdf(eq(jsonFile), any(OutputStream.class));
 
@@ -170,17 +162,15 @@ class ConvertPdfJsonControllerTest {
     void extractPdfMetadata_success() throws Exception {
         byte[] jsonBytes = "{\"metadata\":{}}".getBytes();
         MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "doc.pdf", "application/pdf", "content".getBytes());
+                new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "content".getBytes());
         PDFFile request = new PDFFile();
         request.setFileInput(pdfFile);
 
-        doAnswer(
-                        inv -> {
-                            OutputStream os = inv.getArgument(2, OutputStream.class);
-                            os.write(jsonBytes);
-                            return null;
-                        })
+        doAnswer(inv -> {
+                    OutputStream os = inv.getArgument(2, OutputStream.class);
+                    os.write(jsonBytes);
+                    return null;
+                })
                 .when(pdfJsonConversionService)
                 .extractDocumentMetadata(eq(pdfFile), any(String.class), any(OutputStream.class));
 
@@ -206,12 +196,11 @@ class ConvertPdfJsonControllerTest {
         byte[] jsonBytes = "{\"content\":[]}".getBytes();
         String jobId = "test-job-id";
 
-        doAnswer(
-                        inv -> {
-                            OutputStream os = inv.getArgument(2, OutputStream.class);
-                            os.write(jsonBytes);
-                            return null;
-                        })
+        doAnswer(inv -> {
+                    OutputStream os = inv.getArgument(2, OutputStream.class);
+                    os.write(jsonBytes);
+                    return null;
+                })
                 .when(pdfJsonConversionService)
                 .extractSinglePage(eq(jobId), anyInt(), any(OutputStream.class));
 
@@ -226,12 +215,11 @@ class ConvertPdfJsonControllerTest {
         byte[] jsonBytes = "{\"fonts\":[]}".getBytes();
         String jobId = "test-job-id";
 
-        doAnswer(
-                        inv -> {
-                            OutputStream os = inv.getArgument(2, OutputStream.class);
-                            os.write(jsonBytes);
-                            return null;
-                        })
+        doAnswer(inv -> {
+                    OutputStream os = inv.getArgument(2, OutputStream.class);
+                    os.write(jsonBytes);
+                    return null;
+                })
                 .when(pdfJsonConversionService)
                 .extractPageFonts(eq(jobId), anyInt(), any(OutputStream.class));
 

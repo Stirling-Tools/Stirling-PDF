@@ -66,10 +66,14 @@ class PolicyExecutorTest {
     private static final String SPLIT = "/api/v1/general/split-pages";
     private static final String MERGE = "/api/v1/general/merge-pdfs";
 
-    @Mock private InternalApiClient internalApiClient;
-    @Mock private ToolMetadataService toolMetadataService;
+    @Mock
+    private InternalApiClient internalApiClient;
 
-    @TempDir Path tempDir;
+    @Mock
+    private ToolMetadataService toolMetadataService;
+
+    @TempDir
+    Path tempDir;
 
     private TempFileManager tempFileManager;
     private PolicyExecutor executor;
@@ -81,9 +85,7 @@ class PolicyExecutorTest {
         props.getSystem().getTempFileManagement().setPrefix("policy-test-");
         tempFileManager = new TempFileManager(new TempFileRegistry(), props);
         ObjectMapper objectMapper = JsonMapper.builder().build();
-        executor =
-                new PolicyExecutor(
-                        internalApiClient, toolMetadataService, tempFileManager, objectMapper);
+        executor = new PolicyExecutor(internalApiClient, toolMetadataService, tempFileManager, objectMapper);
     }
 
     @Test
@@ -94,21 +96,17 @@ class PolicyExecutorTest {
         stubEndpoint(COMPRESS, pdf("compressed", "compressed.pdf"));
 
         List<Integer> steps = new ArrayList<>();
-        PolicyProgressListener listener =
-                new PolicyProgressListener() {
-                    @Override
-                    public void onStepStart(int stepIndex, int stepCount, String operation) {
-                        steps.add(stepIndex);
-                    }
-                };
+        PolicyProgressListener listener = new PolicyProgressListener() {
+            @Override
+            public void onStepStart(int stepIndex, int stepCount, String operation) {
+                steps.add(stepIndex);
+            }
+        };
 
-        PolicyExecutionResult result =
-                executor.execute(
-                        definition(
-                                new PipelineStep(ROTATE, Map.of()),
-                                new PipelineStep(COMPRESS, Map.of())),
-                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                        listener);
+        PolicyExecutionResult result = executor.execute(
+                definition(new PipelineStep(ROTATE, Map.of()), new PipelineStep(COMPRESS, Map.of())),
+                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                listener);
 
         assertEquals(1, result.files().size());
         assertEquals("compressed.pdf", result.files().get(0).getFilename());
@@ -124,11 +122,10 @@ class PolicyExecutorTest {
         when(toolMetadataService.shouldUnpackZipResponse(MERGE)).thenReturn(false);
         stubEndpoint(MERGE, pdf("merged", "merged.pdf"));
 
-        PolicyExecutionResult result =
-                executor.execute(
-                        definition(new PipelineStep(MERGE, Map.of())),
-                        PolicyInputs.of(List.of(pdf("a", "a.pdf"), pdf("b", "b.pdf"))),
-                        PolicyProgressListener.NOOP);
+        PolicyExecutionResult result = executor.execute(
+                definition(new PipelineStep(MERGE, Map.of())),
+                PolicyInputs.of(List.of(pdf("a", "a.pdf"), pdf("b", "b.pdf"))),
+                PolicyProgressListener.NOOP);
 
         assertEquals(1, result.files().size());
         verify(internalApiClient, times(1)).post(eq(MERGE), any());
@@ -140,11 +137,10 @@ class PolicyExecutorTest {
         when(toolMetadataService.shouldUnpackZipResponse(ROTATE)).thenReturn(false);
         stubEndpoint(ROTATE, pdf("rotated", "rotated.pdf"));
 
-        PolicyExecutionResult result =
-                executor.execute(
-                        definition(new PipelineStep(ROTATE, Map.of())),
-                        PolicyInputs.of(List.of(pdf("a", "a.pdf"), pdf("b", "b.pdf"))),
-                        PolicyProgressListener.NOOP);
+        PolicyExecutionResult result = executor.execute(
+                definition(new PipelineStep(ROTATE, Map.of())),
+                PolicyInputs.of(List.of(pdf("a", "a.pdf"), pdf("b", "b.pdf"))),
+                PolicyProgressListener.NOOP);
 
         assertEquals(2, result.files().size());
         verify(internalApiClient, times(2)).post(eq(ROTATE), any());
@@ -160,25 +156,18 @@ class PolicyExecutorTest {
         when(toolMetadataService.shouldUnpackZipResponse(createPdf)).thenReturn(false);
         stubEndpoint(createPdf, pdf("generated", "purchase-order.pdf"));
 
-        PolicyExecutionResult result =
-                executor.execute(
-                        definition(
-                                new PipelineStep(
-                                        createPdf,
-                                        Map.of(
-                                                "document",
-                                                "{\"title\":\"PO\",\"sections\":[]}",
-                                                "filename",
-                                                "purchase-order.pdf"))),
-                        PolicyInputs.of(List.of()),
-                        PolicyProgressListener.NOOP);
+        PolicyExecutionResult result = executor.execute(
+                definition(new PipelineStep(
+                        createPdf,
+                        Map.of("document", "{\"title\":\"PO\",\"sections\":[]}", "filename", "purchase-order.pdf"))),
+                PolicyInputs.of(List.of()),
+                PolicyProgressListener.NOOP);
 
         assertEquals(1, result.files().size());
         assertEquals("purchase-order.pdf", result.files().get(0).getFilename());
 
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
-                ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor = ArgumentCaptor.forClass(MultiValueMap.class);
         verify(internalApiClient, times(1)).post(eq(createPdf), bodyCaptor.capture());
         // No document stream: the body carries only the generator's parameters, no fileInput.
         assertNull(bodyCaptor.getValue().get("fileInput"));
@@ -188,17 +177,12 @@ class PolicyExecutorTest {
     void zipResponseIsUnpackedIntoIndividualFiles() throws IOException {
         when(toolMetadataService.isMultiInput(SPLIT)).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(SPLIT)).thenReturn(true);
-        stubEndpoint(
-                SPLIT,
-                zip(
-                        "doc.zip",
-                        List.of(new Entry("page-1.pdf", "one"), new Entry("page-2.pdf", "two"))));
+        stubEndpoint(SPLIT, zip("doc.zip", List.of(new Entry("page-1.pdf", "one"), new Entry("page-2.pdf", "two"))));
 
-        PolicyExecutionResult result =
-                executor.execute(
-                        definition(new PipelineStep(SPLIT, Map.of())),
-                        PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
-                        PolicyProgressListener.NOOP);
+        PolicyExecutionResult result = executor.execute(
+                definition(new PipelineStep(SPLIT, Map.of())),
+                PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
+                PolicyProgressListener.NOOP);
 
         assertEquals(2, result.files().size());
         assertEquals("page-1.pdf", result.files().get(0).getFilename());
@@ -226,8 +210,7 @@ class PolicyExecutorTest {
                 PolicyProgressListener.NOOP);
 
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
-                ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor = ArgumentCaptor.forClass(MultiValueMap.class);
         verify(internalApiClient).post(eq(editText), bodyCaptor.capture());
         MultiValueMap<String, Object> body = bodyCaptor.getValue();
 
@@ -244,12 +227,9 @@ class PolicyExecutorTest {
         when(toolMetadataService.shouldUnpackZipResponse(addStamp)).thenReturn(false);
         stubEndpoint(addStamp, pdf("stamped", "stamped.pdf"));
 
-        PipelineStep step =
-                new PipelineStep(addStamp, Map.of("opacity", 0.5), Map.of("stampImage", "logo"));
-        PolicyInputs inputs =
-                new PolicyInputs(
-                        List.of(pdf("doc", "doc.pdf")),
-                        Map.of("logo", List.of(pdf("logo-bytes", "logo.png"))));
+        PipelineStep step = new PipelineStep(addStamp, Map.of("opacity", 0.5), Map.of("stampImage", "logo"));
+        PolicyInputs inputs = new PolicyInputs(
+                List.of(pdf("doc", "doc.pdf")), Map.of("logo", List.of(pdf("logo-bytes", "logo.png"))));
 
         executor.execute(
                 new PipelineDefinition("stamp", List.of(step), OutputSpec.inline()),
@@ -257,8 +237,7 @@ class PolicyExecutorTest {
                 PolicyProgressListener.NOOP);
 
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
-                ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor = ArgumentCaptor.forClass(MultiValueMap.class);
         verify(internalApiClient).post(eq(addStamp), bodyCaptor.capture());
         MultiValueMap<String, Object> body = bodyCaptor.getValue();
         // The document goes to fileInput; the supporting image is bound to its named field and is
@@ -274,15 +253,12 @@ class PolicyExecutorTest {
         when(toolMetadataService.isMultiInput(addStamp)).thenReturn(false);
         PipelineStep step = new PipelineStep(addStamp, Map.of(), Map.of("stampImage", "logo"));
 
-        IOException ex =
-                assertThrows(
-                        IOException.class,
-                        () ->
-                                executor.execute(
-                                        new PipelineDefinition(
-                                                "stamp", List.of(step), OutputSpec.inline()),
-                                        PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
-                                        PolicyProgressListener.NOOP));
+        IOException ex = assertThrows(
+                IOException.class,
+                () -> executor.execute(
+                        new PipelineDefinition("stamp", List.of(step), OutputSpec.inline()),
+                        PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
+                        PolicyProgressListener.NOOP));
         assertTrue(ex.getMessage().contains("logo"));
     }
 
@@ -291,14 +267,12 @@ class PolicyExecutorTest {
         String compress = "/api/v1/misc/compress-pdf";
         when(toolMetadataService.getExtensionTypes(false, compress)).thenReturn(List.of("pdf"));
 
-        IOException ex =
-                assertThrows(
-                        IOException.class,
-                        () ->
-                                executor.execute(
-                                        definition(new PipelineStep(compress, Map.of())),
-                                        PolicyInputs.of(List.of(pdf("img", "image.png"))),
-                                        PolicyProgressListener.NOOP));
+        IOException ex = assertThrows(
+                IOException.class,
+                () -> executor.execute(
+                        definition(new PipelineStep(compress, Map.of())),
+                        PolicyInputs.of(List.of(pdf("img", "image.png"))),
+                        PolicyProgressListener.NOOP));
         assertTrue(ex.getMessage().contains("image.png"));
         // Type check happens before any dispatch.
         verify(internalApiClient, never()).post(anyString(), any());
@@ -312,11 +286,10 @@ class PolicyExecutorTest {
         when(toolMetadataService.shouldUnpackZipResponse(compress)).thenReturn(false);
         stubEndpoint(compress, pdf("compressed", "compressed.pdf"));
 
-        PolicyExecutionResult result =
-                executor.execute(
-                        definition(new PipelineStep(compress, Map.of())),
-                        PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
-                        PolicyProgressListener.NOOP);
+        PolicyExecutionResult result = executor.execute(
+                definition(new PipelineStep(compress, Map.of())),
+                PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
+                PolicyProgressListener.NOOP);
 
         assertEquals(1, result.files().size());
         verify(internalApiClient, times(1)).post(eq(compress), any());
@@ -328,11 +301,10 @@ class PolicyExecutorTest {
         when(toolMetadataService.isMultiInput(filter)).thenReturn(false);
         stubEndpoint(filter, pdf("", "filtered.pdf")); // empty body => filtered out
 
-        PolicyExecutionResult result =
-                executor.execute(
-                        definition(new PipelineStep(filter, Map.of())),
-                        PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
-                        PolicyProgressListener.NOOP);
+        PolicyExecutionResult result = executor.execute(
+                definition(new PipelineStep(filter, Map.of())),
+                PolicyInputs.of(List.of(pdf("doc", "doc.pdf"))),
+                PolicyProgressListener.NOOP);
 
         assertEquals(0, result.files().size());
     }
@@ -341,30 +313,25 @@ class PolicyExecutorTest {
     void timeoutFromAStepPropagates() {
         when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
         when(internalApiClient.post(eq(ROTATE), any()))
-                .thenThrow(
-                        new InternalApiTimeoutException(
-                                ROTATE,
-                                java.time.Duration.ofSeconds(300),
-                                new IOException("Read timed out")));
+                .thenThrow(new InternalApiTimeoutException(
+                        ROTATE, java.time.Duration.ofSeconds(300), new IOException("Read timed out")));
 
         assertThrows(
                 InternalApiTimeoutException.class,
-                () ->
-                        executor.execute(
-                                definition(new PipelineStep(ROTATE, Map.of())),
-                                PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
-                                PolicyProgressListener.NOOP));
+                () -> executor.execute(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
+                        PolicyProgressListener.NOOP));
     }
 
     @Test
     void emptyPipelineIsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        executor.execute(
-                                new PipelineDefinition("empty", List.of(), OutputSpec.inline()),
-                                PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
-                                PolicyProgressListener.NOOP));
+                () -> executor.execute(
+                        new PipelineDefinition("empty", List.of(), OutputSpec.inline()),
+                        PolicyInputs.of(List.of(pdf("in", "in.pdf"))),
+                        PolicyProgressListener.NOOP));
     }
 
     // --- helpers ---

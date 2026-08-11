@@ -33,8 +33,7 @@ public class MobileScannerService {
 
     public MobileScannerService() throws IOException {
         // Create temp directory for mobile scanner uploads
-        this.tempDirectory =
-                Path.of(System.getProperty("java.io.tmpdir"), "stirling-mobile-scanner");
+        this.tempDirectory = Path.of(System.getProperty("java.io.tmpdir"), "stirling-mobile-scanner");
         Files.createDirectories(tempDirectory);
         log.info("Mobile scanner temp directory: {}", tempDirectory);
     }
@@ -53,10 +52,7 @@ public class MobileScannerService {
 
         log.info("Created mobile scanner session: {}", sessionId);
         return new SessionInfo(
-                sessionId,
-                session.createdAt,
-                session.createdAt + SESSION_TIMEOUT_MS,
-                SESSION_TIMEOUT_MS);
+                sessionId, session.createdAt, session.createdAt + SESSION_TIMEOUT_MS, SESSION_TIMEOUT_MS);
     }
 
     /**
@@ -94,8 +90,7 @@ public class MobileScannerService {
     public void uploadFiles(String sessionId, List<MultipartFile> files) throws IOException {
         validateSessionId(sessionId);
 
-        SessionData session =
-                activeSessions.computeIfAbsent(sessionId, id -> new SessionData(sessionId));
+        SessionData session = activeSessions.computeIfAbsent(sessionId, id -> new SessionData(sessionId));
 
         // Create session directory
         Path sessionDir = getSafeSessionDirectory(sessionId);
@@ -126,10 +121,7 @@ public class MobileScannerService {
             while (Files.exists(filePath)) {
                 String nameWithoutExt =
                         FILE_EXTENSION_PATTERN.matcher(safeFilename).replaceFirst("");
-                String ext =
-                        safeFilename.contains(".")
-                                ? safeFilename.substring(safeFilename.lastIndexOf('.'))
-                                : "";
+                String ext = safeFilename.contains(".") ? safeFilename.substring(safeFilename.lastIndexOf('.')) : "";
                 safeFilename = nameWithoutExt + "-" + counter + ext;
                 filePath = sessionDir.resolve(safeFilename).normalize().toAbsolutePath();
                 if (!filePath.startsWith(sessionDir)) {
@@ -140,11 +132,7 @@ public class MobileScannerService {
 
             file.transferTo(filePath);
             session.addFile(new FileMetadata(safeFilename, file.getSize(), file.getContentType()));
-            log.info(
-                    "Uploaded file for session {}: {} ({} bytes)",
-                    sessionId,
-                    safeFilename,
-                    file.getSize());
+            log.info("Uploaded file for session {}: {} ({} bytes)", sessionId, safeFilename, file.getSize());
         }
 
         session.updateLastAccess();
@@ -226,27 +214,20 @@ public class MobileScannerService {
                 if (Files.exists(sessionDir)) {
                     // Delete all files in session directory
                     try (var paths = Files.walk(sessionDir)) {
-                        paths.sorted(
-                                        (a, b) ->
-                                                -a.compareTo(
-                                                        b)) // Reverse order to delete files before
+                        paths.sorted((a, b) -> -a.compareTo(b)) // Reverse order to delete files before
                                 // directory
-                                .forEach(
-                                        path -> {
-                                            try {
-                                                Files.deleteIfExists(path);
-                                            } catch (IOException e) {
-                                                log.warn("Failed to delete file: {}", path, e);
-                                            }
-                                        });
+                                .forEach(path -> {
+                                    try {
+                                        Files.deleteIfExists(path);
+                                    } catch (IOException e) {
+                                        log.warn("Failed to delete file: {}", path, e);
+                                    }
+                                });
                     }
                 }
                 log.info("Deleted session: {}", sessionId);
             } catch (IllegalArgumentException e) {
-                log.warn(
-                        "Refused to delete session with invalid sessionId '{}': {}",
-                        sessionId,
-                        e.getMessage());
+                log.warn("Refused to delete session with invalid sessionId '{}': {}", sessionId, e.getMessage());
             } catch (IOException e) {
                 log.error("Error deleting session directory: {}", sessionId, e);
             }
@@ -259,12 +240,11 @@ public class MobileScannerService {
         long now = System.currentTimeMillis();
         List<String> expiredSessions = new ArrayList<>();
 
-        activeSessions.forEach(
-                (sessionId, session) -> {
-                    if (now - session.getLastAccessTime() > SESSION_TIMEOUT_MS) {
-                        expiredSessions.add(sessionId);
-                    }
-                });
+        activeSessions.forEach((sessionId, session) -> {
+            if (now - session.getLastAccessTime() > SESSION_TIMEOUT_MS) {
+                expiredSessions.add(sessionId);
+            }
+        });
 
         if (!expiredSessions.isEmpty()) {
             log.info("Cleaning up {} expired mobile scanner sessions", expiredSessions.size());
@@ -330,8 +310,7 @@ public class MobileScannerService {
 
         // Additional validation: reject filenames with path separators or parent references
         if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
-            throw new IOException(
-                    "Invalid filename: contains path separators or parent references");
+            throw new IOException("Invalid filename: contains path separators or parent references");
         }
 
         Path sessionDir = getSafeSessionDirectory(sessionId);

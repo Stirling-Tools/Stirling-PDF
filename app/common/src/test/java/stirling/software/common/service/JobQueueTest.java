@@ -22,10 +22,10 @@ class JobQueueTest {
 
     private JobQueue jobQueue;
 
-    @Mock private ResourceMonitor resourceMonitor;
+    @Mock
+    private ResourceMonitor resourceMonitor;
 
-    private final AtomicReference<ResourceStatus> statusRef =
-            new AtomicReference<>(ResourceStatus.OK);
+    private final AtomicReference<ResourceStatus> statusRef = new AtomicReference<>(ResourceStatus.OK);
 
     @BeforeEach
     void setUp() {

@@ -58,8 +58,7 @@ public class ConvertOfficeController {
     private final TempFileManager tempFileManager;
 
     private boolean isUnoconvertAvailable() {
-        return endpointConfiguration.isGroupEnabled("Unoconvert")
-                || endpointConfiguration.isGroupEnabled("Python");
+        return endpointConfiguration.isGroupEnabled("Unoconvert") || endpointConfiguration.isGroupEnabled("Python");
     }
 
     public File convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
@@ -93,8 +92,7 @@ public class ConvertOfficeController {
             String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
             Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
         } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
-            byte[] sanitized =
-                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
+            byte[] sanitized = officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
             Files.write(inputPath, sanitized);
         } else {
             Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
@@ -115,14 +113,11 @@ public class ConvertOfficeController {
                     command.add(inputPath.toString());
                     command.add(outputPath.toString());
 
-                    result =
-                            ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                                    .runCommandWithOutputHandling(command);
+                    result = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                            .runCommandWithOutputHandling(command);
                 } catch (IOException e) {
                     unoconvertException = e;
-                    log.warn(
-                            "Unoconvert command failed ({}). Falling back to soffice command.",
-                            e.getMessage());
+                    log.warn("Unoconvert command failed ({}). Falling back to soffice command.", e.getMessage());
                 }
             }
 
@@ -131,7 +126,8 @@ public class ConvertOfficeController {
                 libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
                 List<String> command = new ArrayList<>();
                 command.add(runtimePathConfig.getSOfficePath());
-                command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
+                command.add(
+                        "-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
                 command.add("--headless");
                 command.add("--nologo");
                 command.add("--convert-to");
@@ -141,9 +137,8 @@ public class ConvertOfficeController {
                 command.add(inputPath.toString());
 
                 try {
-                    result =
-                            ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                                    .runCommandWithOutputHandling(command);
+                    result = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                            .runCommandWithOutputHandling(command);
                 } catch (IOException e) {
                     if (unoconvertException != null) {
                         e.addSuppressed(unoconvertException);
@@ -164,15 +159,12 @@ public class ConvertOfficeController {
                 // Some LibreOffice versions may deviate with exotic names – as a fallback, we try
                 // to find any .pdf in the workDir
                 try (var stream = Files.list(workDir)) {
-                    Path fallback =
-                            stream.filter(
-                                            p ->
-                                                    p.getFileName()
-                                                            .toString()
-                                                            .toLowerCase(Locale.ROOT)
-                                                            .endsWith(".pdf"))
-                                    .findFirst()
-                                    .orElse(null);
+                    Path fallback = stream.filter(p -> p.getFileName()
+                                    .toString()
+                                    .toLowerCase(Locale.ROOT)
+                                    .endsWith(".pdf"))
+                            .findFirst()
+                            .orElse(null);
                     if (fallback == null) {
                         throw new IllegalStateException("No PDF produced.");
                     }
@@ -215,8 +207,7 @@ public class ConvertOfficeController {
     @Operation(
             summary = "Convert a file to a PDF using LibreOffice",
             description = "This endpoint converts a given file to a PDF using LibreOffice API")
-    public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile)
-            throws Exception {
+    public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile) throws Exception {
         MultipartFile inputFile = generalFile.getFileInput();
         // unused but can start server instance if startup time is to long
         // LibreOfficeListener.getInstance().start();
@@ -229,11 +220,8 @@ public class ConvertOfficeController {
             try (PDDocument doc = pdfDocumentFactory.load(file)) {
                 doc.save(tempOut.getFile());
             }
-            String filename =
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_convertedToPDF.pdf");
-            ResponseEntity<Resource> response =
-                    WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
+            String filename = GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_convertedToPDF.pdf");
+            ResponseEntity<Resource> response = WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
             tempOut = null;
             return response;
         } catch (Exception e) {

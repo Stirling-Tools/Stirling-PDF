@@ -41,8 +41,7 @@ class ProviderUtilsTest {
 
     public static Stream<Arguments> providerParams() {
         Provider generic = null;
-        var google =
-                new GoogleProvider(null, "clientSecret", List.of("scope"), UsernameAttribute.EMAIL);
+        var google = new GoogleProvider(null, "clientSecret", List.of("scope"), UsernameAttribute.EMAIL);
         var github = new GitHubProvider("clientId", "", List.of("scope"), UsernameAttribute.LOGIN);
 
         return Stream.of(Arguments.of(generic), Arguments.of(google), Arguments.of(github));

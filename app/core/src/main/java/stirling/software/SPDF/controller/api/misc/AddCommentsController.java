@@ -77,13 +77,11 @@ public class AddCommentsController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add sticky-note comments to a PDF at specified positions or anchored text",
-            description =
-                    "Attaches PDF Text (sticky-note) annotations to the document. Each CommentSpec"
-                            + " can either supply absolute coordinates or an `anchorText` hint; when provided,"
-                            + " the tool locates the first matching line on the target page and anchors the"
-                            + " icon there (falling back to the coordinates if no match).")
-    public ResponseEntity<Resource> addComments(@ModelAttribute AddCommentsRequest request)
-            throws IOException {
+            description = "Attaches PDF Text (sticky-note) annotations to the document. Each CommentSpec"
+                    + " can either supply absolute coordinates or an `anchorText` hint; when provided,"
+                    + " the tool locates the first matching line on the target page and anchors the"
+                    + " icon there (falling back to the coordinates if no match).")
+    public ResponseEntity<Resource> addComments(@ModelAttribute AddCommentsRequest request) throws IOException {
 
         MultipartFile file = request.getFileInput();
         if (file == null || file.isEmpty()) {
@@ -114,8 +112,7 @@ public class AddCommentsController {
                 throw e;
             }
             return WebResponseUtils.pdfFileToWebResponse(
-                    tempOut,
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_commented.pdf"));
+                    tempOut, GeneralUtils.generateFilename(file.getOriginalFilename(), "_commented.pdf"));
         }
     }
 
@@ -154,8 +151,7 @@ public class AddCommentsController {
         // PdfCommentAgentOrchestrator for its chunk-based placement.
         float iconX = box.x();
         float iconY = box.y() + box.height() - ANCHOR_ICON_SIZE;
-        return new AnnotationLocation(
-                d.pageIndex, iconX, iconY, ANCHOR_ICON_SIZE, ANCHOR_ICON_SIZE);
+        return new AnnotationLocation(d.pageIndex, iconX, iconY, ANCHOR_ICON_SIZE, ANCHOR_ICON_SIZE);
     }
 
     /**

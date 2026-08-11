@@ -16,7 +16,8 @@ class TempFileRegistryTest {
 
     private TempFileRegistry registry;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {

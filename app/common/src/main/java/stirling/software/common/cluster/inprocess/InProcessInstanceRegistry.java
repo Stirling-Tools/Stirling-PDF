@@ -21,9 +21,7 @@ public class InProcessInstanceRegistry implements InstanceRegistry {
     @Override
     public Optional<ClusterNode> lookup(String nodeId) {
         ClusterNode current = self.get();
-        return current != null && current.nodeId().equals(nodeId)
-                ? Optional.of(current)
-                : Optional.empty();
+        return current != null && current.nodeId().equals(nodeId) ? Optional.of(current) : Optional.empty();
     }
 
     @Override

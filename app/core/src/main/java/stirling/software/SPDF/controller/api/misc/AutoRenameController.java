@@ -49,115 +49,103 @@ public class AutoRenameController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Extract header from PDF file",
-            description =
-                    "This endpoint accepts a PDF file and attempts to extract its title or header"
-                            + " based on heuristics.")
-    public ResponseEntity<Resource> extractHeader(@ModelAttribute ExtractHeaderRequest request)
-            throws Exception {
+            description = "This endpoint accepts a PDF file and attempts to extract its title or header"
+                    + " based on heuristics.")
+    public ResponseEntity<Resource> extractHeader(@ModelAttribute ExtractHeaderRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
         boolean useFirstTextAsFallback = Boolean.TRUE.equals(request.getUseFirstTextAsFallback());
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {
-            PDFTextStripper reader =
-                    new PDFTextStripper() {
-                        List<LineInfo> lineInfos = new ArrayList<>();
-                        StringBuilder lineBuilder = new StringBuilder();
-                        float lastY = -1;
-                        float maxFontSizeInLine = 0.0f;
-                        int lineCount = 0;
+            PDFTextStripper reader = new PDFTextStripper() {
+                List<LineInfo> lineInfos = new ArrayList<>();
+                StringBuilder lineBuilder = new StringBuilder();
+                float lastY = -1;
+                float maxFontSizeInLine = 0.0f;
+                int lineCount = 0;
 
-                        @Override
-                        protected void processTextPosition(TextPosition text) {
-                            if (lastY != text.getY() && lineCount < LINE_LIMIT) {
-                                processLine();
-                                lineBuilder = new StringBuilder(text.getUnicode());
-                                maxFontSizeInLine = text.getFontSizeInPt();
-                                lastY = text.getY();
-                                lineCount++;
-                            } else if (lineCount < LINE_LIMIT) {
-                                lineBuilder.append(text.getUnicode());
-                                if (text.getFontSizeInPt() > maxFontSizeInLine) {
-                                    maxFontSizeInLine = text.getFontSizeInPt();
-                                }
-                            }
+                @Override
+                protected void processTextPosition(TextPosition text) {
+                    if (lastY != text.getY() && lineCount < LINE_LIMIT) {
+                        processLine();
+                        lineBuilder = new StringBuilder(text.getUnicode());
+                        maxFontSizeInLine = text.getFontSizeInPt();
+                        lastY = text.getY();
+                        lineCount++;
+                    } else if (lineCount < LINE_LIMIT) {
+                        lineBuilder.append(text.getUnicode());
+                        if (text.getFontSizeInPt() > maxFontSizeInLine) {
+                            maxFontSizeInLine = text.getFontSizeInPt();
                         }
+                    }
+                }
 
-                        private void processLine() {
-                            if (!lineBuilder.isEmpty() && lineCount < LINE_LIMIT) {
-                                lineInfos.add(
-                                        new LineInfo(lineBuilder.toString(), maxFontSizeInLine));
-                            }
+                private void processLine() {
+                    if (!lineBuilder.isEmpty() && lineCount < LINE_LIMIT) {
+                        lineInfos.add(new LineInfo(lineBuilder.toString(), maxFontSizeInLine));
+                    }
+                }
+
+                @Override
+                public String getText(PDDocument doc) throws IOException {
+                    this.lineInfos.clear();
+                    this.lineBuilder = new StringBuilder();
+                    this.lastY = -1;
+                    this.maxFontSizeInLine = 0.0f;
+                    this.lineCount = 0;
+                    super.getText(doc);
+                    processLine(); // Process the last line
+
+                    // Merge lines with same font size
+                    List<LineInfo> mergedLineInfos = new ArrayList<>();
+                    for (int i = 0; i < lineInfos.size(); i++) {
+                        StringBuilder mergedText = new StringBuilder(lineInfos.get(i).text);
+                        float fontSize = lineInfos.get(i).fontSize;
+                        while (i + 1 < lineInfos.size() && lineInfos.get(i + 1).fontSize == fontSize) {
+                            mergedText.append(" ").append(lineInfos.get(i + 1).text);
+                            i++;
                         }
+                        mergedLineInfos.add(new LineInfo(mergedText.toString(), fontSize));
+                    }
 
-                        @Override
-                        public String getText(PDDocument doc) throws IOException {
-                            this.lineInfos.clear();
-                            this.lineBuilder = new StringBuilder();
-                            this.lastY = -1;
-                            this.maxFontSizeInLine = 0.0f;
-                            this.lineCount = 0;
-                            super.getText(doc);
-                            processLine(); // Process the last line
+                    // Sort lines by font size in descending order and get the first one
+                    mergedLineInfos.sort(
+                            Comparator.comparing((LineInfo li) -> li.fontSize).reversed());
+                    String title = mergedLineInfos.isEmpty() ? null : mergedLineInfos.get(0).text;
 
-                            // Merge lines with same font size
-                            List<LineInfo> mergedLineInfos = new ArrayList<>();
-                            for (int i = 0; i < lineInfos.size(); i++) {
-                                StringBuilder mergedText = new StringBuilder(lineInfos.get(i).text);
-                                float fontSize = lineInfos.get(i).fontSize;
-                                while (i + 1 < lineInfos.size()
-                                        && lineInfos.get(i + 1).fontSize == fontSize) {
-                                    mergedText.append(" ").append(lineInfos.get(i + 1).text);
-                                    i++;
-                                }
-                                mergedLineInfos.add(new LineInfo(mergedText.toString(), fontSize));
-                            }
+                    return title != null
+                            ? title
+                            : (useFirstTextAsFallback
+                                    ? (mergedLineInfos.isEmpty()
+                                            ? null
+                                            : mergedLineInfos.get(mergedLineInfos.size() - 1).text)
+                                    : null);
+                }
 
-                            // Sort lines by font size in descending order and get the first one
-                            mergedLineInfos.sort(
-                                    Comparator.comparing((LineInfo li) -> li.fontSize).reversed());
-                            String title =
-                                    mergedLineInfos.isEmpty() ? null : mergedLineInfos.get(0).text;
+                class LineInfo {
+                    String text;
+                    float fontSize;
 
-                            return title != null
-                                    ? title
-                                    : (useFirstTextAsFallback
-                                            ? (mergedLineInfos.isEmpty()
-                                                    ? null
-                                                    : mergedLineInfos.get(
-                                                                    mergedLineInfos.size() - 1)
-                                                            .text)
-                                            : null);
-                        }
-
-                        class LineInfo {
-                            String text;
-                            float fontSize;
-
-                            LineInfo(String text, float fontSize) {
-                                this.text = text;
-                                this.fontSize = fontSize;
-                            }
-                        }
-                    };
+                    LineInfo(String text, float fontSize) {
+                        this.text = text;
+                        this.fontSize = fontSize;
+                    }
+                }
+            };
 
             String header = reader.getText(document);
 
             // Sanitize the header string by removing characters not allowed in a filename.
             if (header != null && header.length() < 255) {
-                header =
-                        RegexPatternUtils.getInstance()
-                                .getSafeFilenamePattern()
-                                .matcher(header)
-                                .replaceAll("")
-                                .trim();
-                return WebResponseUtils.pdfDocToWebResponse(
-                        document, header + ".pdf", tempFileManager);
+                header = RegexPatternUtils.getInstance()
+                        .getSafeFilenamePattern()
+                        .matcher(header)
+                        .replaceAll("")
+                        .trim();
+                return WebResponseUtils.pdfDocToWebResponse(document, header + ".pdf", tempFileManager);
             } else {
                 log.info("File has no good title to be found");
                 return WebResponseUtils.pdfDocToWebResponse(
-                        document,
-                        Filenames.toSimpleFileName(file.getOriginalFilename()),
-                        tempFileManager);
+                        document, Filenames.toSimpleFileName(file.getOriginalFilename()), tempFileManager);
             }
         }
     }

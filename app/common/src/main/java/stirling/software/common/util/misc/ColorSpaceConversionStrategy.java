@@ -24,9 +24,7 @@ public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy 
     private final TempFileManager tempFileManager;
 
     public ColorSpaceConversionStrategy(
-            MultipartFile file,
-            ReplaceAndInvert replaceAndInvert,
-            TempFileManager tempFileManager) {
+            MultipartFile file, ReplaceAndInvert replaceAndInvert, TempFileManager tempFileManager) {
         super(file, replaceAndInvert);
         this.tempFileManager = tempFileManager;
     }
@@ -59,17 +57,15 @@ public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy 
 
             log.debug("Executing Ghostscript command for CMYK conversion: {}", command);
 
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(command);
+            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    .runCommandWithOutputHandling(command);
 
             if (result.getRc() != 0) {
                 log.error(
                         "Ghostscript CMYK conversion failed with return code: {}. Output: {}",
                         result.getRc(),
                         result.getMessages());
-                throw new IOException(
-                        "CMYK color space conversion failed: " + result.getMessages());
+                throw new IOException("CMYK color space conversion failed: " + result.getMessages());
             }
 
             log.info("CMYK color space conversion completed successfully");
@@ -79,8 +75,7 @@ public class ColorSpaceConversionStrategy extends ReplaceAndInvertColorStrategy 
 
         } catch (Exception e) {
             log.warn("CMYK color space conversion failed", e);
-            throw new IOException(
-                    "Failed to convert PDF to CMYK color space: " + e.getMessage(), e);
+            throw new IOException("Failed to convert PDF to CMYK color space: " + e.getMessage(), e);
         }
     }
 }

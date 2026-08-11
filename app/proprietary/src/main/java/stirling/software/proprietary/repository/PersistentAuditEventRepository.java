@@ -19,26 +19,21 @@ import stirling.software.proprietary.model.security.PersistentAuditEvent;
 public interface PersistentAuditEventRepository extends JpaRepository<PersistentAuditEvent, Long> {
 
     // Basic queries
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                    + " :principal, '%'))")
-    Page<PersistentAuditEvent> findByPrincipal(
-            @Param("principal") String principal, Pageable pageable);
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+            + " :principal, '%'))")
+    Page<PersistentAuditEvent> findByPrincipal(@Param("principal") String principal, Pageable pageable);
 
     Page<PersistentAuditEvent> findByType(String type, Pageable pageable);
 
-    Page<PersistentAuditEvent> findByTimestampBetween(
-            Instant startDate, Instant endDate, Pageable pageable);
+    Page<PersistentAuditEvent> findByTimestampBetween(Instant startDate, Instant endDate, Pageable pageable);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                    + " :principal, '%')) AND e.type = :type")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+            + " :principal, '%')) AND e.type = :type")
     Page<PersistentAuditEvent> findByPrincipalAndType(
             @Param("principal") String principal, @Param("type") String type, Pageable pageable);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                    + " :principal, '%')) AND e.timestamp BETWEEN :startDate AND :endDate")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+            + " :principal, '%')) AND e.timestamp BETWEEN :startDate AND :endDate")
     Page<PersistentAuditEvent> findByPrincipalAndTimestampBetween(
             @Param("principal") String principal,
             @Param("startDate") Instant startDate,
@@ -48,10 +43,9 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     Page<PersistentAuditEvent> findByTypeAndTimestampBetween(
             String type, Instant startDate, Instant endDate, Pageable pageable);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                    + " :principal, '%')) AND e.type = :type AND e.timestamp BETWEEN :startDate AND"
-                    + " :endDate")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+            + " :principal, '%')) AND e.type = :type AND e.timestamp BETWEEN :startDate AND"
+            + " :endDate")
     Page<PersistentAuditEvent> findByPrincipalAndTypeAndTimestampBetween(
             @Param("principal") String principal,
             @Param("type") String type,
@@ -60,9 +54,8 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
             Pageable pageable);
 
     // Non-paged versions for export
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                    + " :principal, '%'))")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+            + " :principal, '%'))")
     List<PersistentAuditEvent> findAllByPrincipalForExport(@Param("principal") String principal);
 
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type = :type")
@@ -79,32 +72,26 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.timestamp > :startDate")
     List<PersistentAuditEvent> findByTimestampAfter(@Param("startDate") Instant startDate);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                    + " :principal, '%')) AND e.type = :type")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+            + " :principal, '%')) AND e.type = :type")
     List<PersistentAuditEvent> findAllByPrincipalAndTypeForExport(
             @Param("principal") String principal, @Param("type") String type);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                    + " :principal, '%')) AND e.timestamp BETWEEN :startDate AND :endDate")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+            + " :principal, '%')) AND e.timestamp BETWEEN :startDate AND :endDate")
     List<PersistentAuditEvent> findAllByPrincipalAndTimestampBetweenForExport(
             @Param("principal") String principal,
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE e.type = :type AND e.timestamp BETWEEN"
-                    + " :startDate AND :endDate")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type = :type AND e.timestamp BETWEEN"
+            + " :startDate AND :endDate")
     List<PersistentAuditEvent> findAllByTypeAndTimestampBetweenForExport(
-            @Param("type") String type,
-            @Param("startDate") Instant startDate,
-            @Param("endDate") Instant endDate);
+            @Param("type") String type, @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
-                    + " :principal, '%')) AND e.type = :type AND e.timestamp BETWEEN :startDate AND"
-                    + " :endDate")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE UPPER(e.principal) LIKE UPPER(CONCAT('%',"
+            + " :principal, '%')) AND e.type = :type AND e.timestamp BETWEEN :startDate AND"
+            + " :endDate")
     List<PersistentAuditEvent> findAllByPrincipalAndTypeAndTimestampBetweenForExport(
             @Param("principal") String principal,
             @Param("type") String type,
@@ -128,34 +115,26 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     @Query("SELECT e.principal, COUNT(e) FROM PersistentAuditEvent e GROUP BY e.principal")
     List<Object[]> countByPrincipal();
 
-    @Query(
-            "SELECT e.type, COUNT(e) FROM PersistentAuditEvent e WHERE e.timestamp BETWEEN"
-                    + " :startDate AND :endDate GROUP BY e.type")
-    List<Object[]> countByTypeBetween(
-            @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
+    @Query("SELECT e.type, COUNT(e) FROM PersistentAuditEvent e WHERE e.timestamp BETWEEN"
+            + " :startDate AND :endDate GROUP BY e.type")
+    List<Object[]> countByTypeBetween(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
-    @Query(
-            "SELECT e.principal, COUNT(e) FROM PersistentAuditEvent e WHERE e.timestamp BETWEEN"
-                    + " :startDate AND :endDate GROUP BY e.principal")
-    List<Object[]> countByPrincipalBetween(
-            @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
+    @Query("SELECT e.principal, COUNT(e) FROM PersistentAuditEvent e WHERE e.timestamp BETWEEN"
+            + " :startDate AND :endDate GROUP BY e.principal")
+    List<Object[]> countByPrincipalBetween(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
     // Portable time-bucketing using YEAR/MONTH/DAY functions (works across most dialects)
-    @Query(
-            "SELECT YEAR(e.timestamp), MONTH(e.timestamp), DAY(e.timestamp), COUNT(e) "
-                    + "FROM PersistentAuditEvent e "
-                    + "WHERE e.timestamp BETWEEN :startDate AND :endDate "
-                    + "GROUP BY YEAR(e.timestamp), MONTH(e.timestamp), DAY(e.timestamp) "
-                    + "ORDER BY YEAR(e.timestamp), MONTH(e.timestamp), DAY(e.timestamp)")
-    List<Object[]> histogramByDayBetween(
-            @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
+    @Query("SELECT YEAR(e.timestamp), MONTH(e.timestamp), DAY(e.timestamp), COUNT(e) "
+            + "FROM PersistentAuditEvent e "
+            + "WHERE e.timestamp BETWEEN :startDate AND :endDate "
+            + "GROUP BY YEAR(e.timestamp), MONTH(e.timestamp), DAY(e.timestamp) "
+            + "ORDER BY YEAR(e.timestamp), MONTH(e.timestamp), DAY(e.timestamp)")
+    List<Object[]> histogramByDayBetween(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
-    @Query(
-            "SELECT HOUR(e.timestamp), COUNT(e) FROM PersistentAuditEvent e WHERE e.timestamp"
-                    + " BETWEEN :startDate AND :endDate GROUP BY HOUR(e.timestamp) ORDER BY"
-                    + " HOUR(e.timestamp)")
-    List<Object[]> histogramByHourBetween(
-            @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
+    @Query("SELECT HOUR(e.timestamp), COUNT(e) FROM PersistentAuditEvent e WHERE e.timestamp"
+            + " BETWEEN :startDate AND :endDate GROUP BY HOUR(e.timestamp) ORDER BY"
+            + " HOUR(e.timestamp)")
+    List<Object[]> histogramByHourBetween(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
     // Get distinct event types for filtering
     @Query("SELECT DISTINCT e.type FROM PersistentAuditEvent e ORDER BY e.type")
@@ -164,9 +143,7 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     @Query("SELECT DISTINCT e.principal FROM PersistentAuditEvent e ORDER BY e.principal")
     List<String> findDistinctPrincipals();
 
-    @Query(
-            "SELECT DISTINCT e.principal FROM PersistentAuditEvent e WHERE e.type = :type ORDER BY"
-                    + " e.principal")
+    @Query("SELECT DISTINCT e.principal FROM PersistentAuditEvent e WHERE e.type = :type ORDER BY" + " e.principal")
     List<String> findDistinctPrincipalsByType(@Param("type") String type);
 
     // Top/Latest helpers & existence checks
@@ -181,18 +158,15 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     Page<PersistentAuditEvent> findByTypeIn(@Param("types") List<String> types, Pageable pageable);
 
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.principal IN :principals")
-    Page<PersistentAuditEvent> findByPrincipalIn(
-            @Param("principals") List<String> principals, Pageable pageable);
+    Page<PersistentAuditEvent> findByPrincipalIn(@Param("principals") List<String> principals, Pageable pageable);
 
     // Noise-excluding scans for the portal: keep the page window full of meaningful events so the
     // list doesn't shrink as read/polling noise (UI_DATA/HTTP_REQUEST) grows in the recent window.
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type NOT IN :excludedTypes")
-    Page<PersistentAuditEvent> findByTypeNotIn(
-            @Param("excludedTypes") List<String> excludedTypes, Pageable pageable);
+    Page<PersistentAuditEvent> findByTypeNotIn(@Param("excludedTypes") List<String> excludedTypes, Pageable pageable);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE e.type NOT IN :excludedTypes AND e.principal"
-                    + " IN :principals")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type NOT IN :excludedTypes AND e.principal"
+            + " IN :principals")
     Page<PersistentAuditEvent> findByTypeNotInAndPrincipalIn(
             @Param("excludedTypes") List<String> excludedTypes,
             @Param("principals") List<String> principals,
@@ -214,12 +188,9 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
             @Param("endDate") Instant endDate,
             Pageable pageable);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.principal IN :principals")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.principal IN :principals")
     Page<PersistentAuditEvent> findByTypeInAndPrincipalIn(
-            @Param("types") List<String> types,
-            @Param("principals") List<String> principals,
-            Pageable pageable);
+            @Param("types") List<String> types, @Param("principals") List<String> principals, Pageable pageable);
 
     @Query(
             "SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.principal IN :principals AND e.timestamp BETWEEN :startDate AND :endDate")
@@ -235,8 +206,7 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     List<PersistentAuditEvent> findByTypeInForExport(@Param("types") List<String> types);
 
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.principal IN :principals")
-    List<PersistentAuditEvent> findByPrincipalInForExport(
-            @Param("principals") List<String> principals);
+    List<PersistentAuditEvent> findByPrincipalInForExport(@Param("principals") List<String> principals);
 
     @Query(
             "SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.timestamp BETWEEN :startDate AND :endDate")
@@ -252,8 +222,7 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.principal IN :principals")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type IN :types AND e.principal IN :principals")
     List<PersistentAuditEvent> findByTypeInAndPrincipalInForExport(
             @Param("types") List<String> types, @Param("principals") List<String> principals);
 
@@ -269,43 +238,34 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type != :excludeType")
     List<PersistentAuditEvent> findAllExceptTypeForExport(@Param("excludeType") String excludeType);
 
-    @Query(
-            "SELECT e FROM PersistentAuditEvent e WHERE e.type != :excludeType AND e.timestamp > :startDate")
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type != :excludeType AND e.timestamp > :startDate")
     List<PersistentAuditEvent> findAllExceptTypeAndTimestampAfterForExport(
             @Param("excludeType") String excludeType, @Param("startDate") Instant startDate);
 
     // Free-editor fleet usage: count genuine free-UI operations (source = "WEB") by type.
-    @Query(
-            "SELECT COUNT(e) FROM PersistentAuditEvent e "
-                    + "WHERE e.type IN :types AND e.source = :source AND e.timestamp > :since")
+    @Query("SELECT COUNT(e) FROM PersistentAuditEvent e "
+            + "WHERE e.type IN :types AND e.source = :source AND e.timestamp > :since")
     long countByTypeInAndSourceAndTimestampAfter(
-            @Param("types") List<String> types,
-            @Param("source") String source,
-            @Param("since") Instant since);
+            @Param("types") List<String> types, @Param("source") String source, @Param("since") Instant since);
 
-    @Query(
-            "SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
-                    + "WHERE e.source = :source AND e.type <> :excludeType AND e.timestamp > :since")
+    @Query("SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
+            + "WHERE e.source = :source AND e.type <> :excludeType AND e.timestamp > :since")
     long countDistinctPrincipalsBySourceExcludingTypeAfter(
-            @Param("source") String source,
-            @Param("excludeType") String excludeType,
-            @Param("since") Instant since);
+            @Param("source") String source, @Param("excludeType") String excludeType, @Param("since") Instant since);
 
     // Team-scoped (SaaS) variants: same free-UI counts, constrained to a team's member principals.
-    @Query(
-            "SELECT COUNT(e) FROM PersistentAuditEvent e "
-                    + "WHERE e.type IN :types AND e.source = :source "
-                    + "AND e.principal IN :principals AND e.timestamp > :since")
+    @Query("SELECT COUNT(e) FROM PersistentAuditEvent e "
+            + "WHERE e.type IN :types AND e.source = :source "
+            + "AND e.principal IN :principals AND e.timestamp > :since")
     long countByTypeInAndSourceAndPrincipalInAndTimestampAfter(
             @Param("types") List<String> types,
             @Param("source") String source,
             @Param("principals") List<String> principals,
             @Param("since") Instant since);
 
-    @Query(
-            "SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
-                    + "WHERE e.source = :source AND e.type <> :excludeType "
-                    + "AND e.principal IN :principals AND e.timestamp > :since")
+    @Query("SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
+            + "WHERE e.source = :source AND e.type <> :excludeType "
+            + "AND e.principal IN :principals AND e.timestamp > :since")
     long countDistinctPrincipalsBySourceExcludingTypeAndPrincipalInAfter(
             @Param("source") String source,
             @Param("excludeType") String excludeType,

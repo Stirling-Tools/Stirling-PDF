@@ -29,7 +29,8 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class JpaSourceStoreTest {
 
-    @Mock private SourceRepository repository;
+    @Mock
+    private SourceRepository repository;
 
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
     private JpaSourceStore store;
@@ -41,16 +42,8 @@ class JpaSourceStoreTest {
 
     @Test
     void saveAssignsAnIdAndPersistsTheSourceAsJson() {
-        Source saved =
-                store.save(
-                        new Source(
-                                null,
-                                "Claims intake",
-                                "folder",
-                                Map.of("directory", "/in/claims"),
-                                true,
-                                "alice",
-                                7L));
+        Source saved = store.save(
+                new Source(null, "Claims intake", "folder", Map.of("directory", "/in/claims"), true, "alice", 7L));
 
         assertNotNull(saved.id());
         ArgumentCaptor<SourceEntity> captor = ArgumentCaptor.forClass(SourceEntity.class);
@@ -67,8 +60,7 @@ class JpaSourceStoreTest {
 
     @Test
     void getDeserializesTheSourceFromJson() {
-        Source source =
-                new Source("s1", "Claims", "folder", Map.of("directory", "/in"), true, "alice", 1L);
+        Source source = new Source("s1", "Claims", "folder", Map.of("directory", "/in"), true, "alice", 1L);
         when(repository.findById("s1")).thenReturn(Optional.of(entityFor(source)));
 
         assertEquals(source, store.get("s1").orElseThrow());

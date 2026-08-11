@@ -42,12 +42,17 @@ import tools.jackson.databind.ObjectMapper;
 @ExtendWith(MockitoExtension.class)
 class EditTableOfContentsControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @Mock private ObjectMapper objectMapper;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private ObjectMapper objectMapper;
 
-    @InjectMocks private EditTableOfContentsController editTableOfContentsController;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private EditTableOfContentsController editTableOfContentsController;
 
     private MockMultipartFile mockFile;
     private PDDocument mockDocument;
@@ -60,24 +65,14 @@ class EditTableOfContentsControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
-        mockFile =
-                new MockMultipartFile(
-                        "file",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
+        mockFile = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, "PDF content".getBytes());
         mockDocument = mock(PDDocument.class);
         mockCatalog = mock(PDDocumentCatalog.class);
         mockPages = mock(PDPageTree.class);
@@ -103,8 +98,7 @@ class EditTableOfContentsControllerTest {
         when(mockOutlineItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
@@ -128,8 +122,7 @@ class EditTableOfContentsControllerTest {
         when(mockCatalog.getDocumentOutline()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
@@ -165,8 +158,7 @@ class EditTableOfContentsControllerTest {
         when(childItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
@@ -179,8 +171,7 @@ class EditTableOfContentsControllerTest {
         assertEquals(1, parentBookmark.get("pageNumber"));
 
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> children =
-                (List<Map<String, Object>>) parentBookmark.get("children");
+        List<Map<String, Object>> children = (List<Map<String, Object>>) parentBookmark.get("children");
         assertEquals(1, children.size());
 
         Map<String, Object> childBookmark = children.get(0);
@@ -204,8 +195,7 @@ class EditTableOfContentsControllerTest {
         when(mockOutlineItem.getNextSibling()).thenReturn(null);
 
         // When
-        ResponseEntity<List<Map<String, Object>>> response =
-                editTableOfContentsController.extractBookmarks(mockFile);
+        ResponseEntity<List<Map<String, Object>>> response = editTableOfContentsController.extractBookmarks(mockFile);
 
         // Then
         assertNotNull(response);
@@ -237,33 +227,29 @@ class EditTableOfContentsControllerTest {
 
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
         when(objectMapper.readValue(
-                        eq(request.getBookmarkData()),
-                        ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
+                        eq(request.getBookmarkData()), ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
                 .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockDocument.getNumberOfPages()).thenReturn(5);
         when(mockDocument.getPage(0)).thenReturn(mockPage1);
 
         lenient()
-                .doAnswer(
-                        inv -> {
-                            File f = inv.getArgument(0);
-                            java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
-                            return null;
-                        })
+                .doAnswer(inv -> {
+                    File f = inv.getArgument(0);
+                    java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
+                    return null;
+                })
                 .when(mockDocument)
                 .save(any(File.class));
 
         // When
-        ResponseEntity<Resource> result =
-                editTableOfContentsController.editTableOfContents(request);
+        ResponseEntity<Resource> result = editTableOfContentsController.editTableOfContents(request);
 
         // Then
         assertNotNull(result);
         assertNotNull(result.getBody());
 
-        ArgumentCaptor<PDDocumentOutline> outlineCaptor =
-                ArgumentCaptor.forClass(PDDocumentOutline.class);
+        ArgumentCaptor<PDDocumentOutline> outlineCaptor = ArgumentCaptor.forClass(PDDocumentOutline.class);
         verify(mockCatalog).setDocumentOutline(outlineCaptor.capture());
 
         PDDocumentOutline capturedOutline = outlineCaptor.getValue();
@@ -278,9 +264,8 @@ class EditTableOfContentsControllerTest {
         EditTableOfContentsRequest request = new EditTableOfContentsRequest();
         request.setFileInput(mockFile);
 
-        String bookmarkJson =
-                "[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[{\"title\":\"Section"
-                        + " 1.1\",\"pageNumber\":2,\"children\":[]}]}]";
+        String bookmarkJson = "[{\"title\":\"Chapter 1\",\"pageNumber\":1,\"children\":[{\"title\":\"Section"
+                + " 1.1\",\"pageNumber\":2,\"children\":[]}]}]";
         request.setBookmarkData(bookmarkJson);
 
         List<BookmarkItem> bookmarks = new ArrayList<>();
@@ -299,9 +284,7 @@ class EditTableOfContentsControllerTest {
         bookmarks.add(parentBookmark);
 
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
-        when(objectMapper.readValue(
-                        eq(bookmarkJson),
-                        ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
+        when(objectMapper.readValue(eq(bookmarkJson), ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
                 .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockDocument.getNumberOfPages()).thenReturn(5);
@@ -309,18 +292,16 @@ class EditTableOfContentsControllerTest {
         when(mockDocument.getPage(1)).thenReturn(mockPage2);
 
         lenient()
-                .doAnswer(
-                        inv -> {
-                            File f = inv.getArgument(0);
-                            java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
-                            return null;
-                        })
+                .doAnswer(inv -> {
+                    File f = inv.getArgument(0);
+                    java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
+                    return null;
+                })
                 .when(mockDocument)
                 .save(any(File.class));
 
         // When
-        ResponseEntity<Resource> result =
-                editTableOfContentsController.editTableOfContents(request);
+        ResponseEntity<Resource> result = editTableOfContentsController.editTableOfContents(request);
 
         // Then
         assertNotNull(result);
@@ -333,9 +314,8 @@ class EditTableOfContentsControllerTest {
         // Given
         EditTableOfContentsRequest request = new EditTableOfContentsRequest();
         request.setFileInput(mockFile);
-        request.setBookmarkData(
-                "[{\"title\":\"Chapter 1\",\"pageNumber\":-5,\"children\":[]},{\"title\":\"Chapter"
-                        + " 2\",\"pageNumber\":100,\"children\":[]}]");
+        request.setBookmarkData("[{\"title\":\"Chapter 1\",\"pageNumber\":-5,\"children\":[]},{\"title\":\"Chapter"
+                + " 2\",\"pageNumber\":100,\"children\":[]}]");
 
         List<BookmarkItem> bookmarks = new ArrayList<>();
 
@@ -354,8 +334,7 @@ class EditTableOfContentsControllerTest {
 
         when(pdfDocumentFactory.load(mockFile)).thenReturn(mockDocument);
         when(objectMapper.readValue(
-                        eq(request.getBookmarkData()),
-                        ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
+                        eq(request.getBookmarkData()), ArgumentMatchers.<TypeReference<List<BookmarkItem>>>any()))
                 .thenReturn(bookmarks);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
         when(mockDocument.getNumberOfPages()).thenReturn(5);
@@ -363,18 +342,16 @@ class EditTableOfContentsControllerTest {
         when(mockDocument.getPage(4)).thenReturn(mockPage2); // For page number exceeding bounds
 
         lenient()
-                .doAnswer(
-                        inv -> {
-                            File f = inv.getArgument(0);
-                            java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
-                            return null;
-                        })
+                .doAnswer(inv -> {
+                    File f = inv.getArgument(0);
+                    java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
+                    return null;
+                })
                 .when(mockDocument)
                 .save(any(File.class));
 
         // When
-        ResponseEntity<Resource> result =
-                editTableOfContentsController.editTableOfContents(request);
+        ResponseEntity<Resource> result = editTableOfContentsController.editTableOfContents(request);
 
         // Then
         assertNotNull(result);
@@ -394,14 +371,11 @@ class EditTableOfContentsControllerTest {
         when(mockDocument.getPage(2)).thenReturn(mockPage1); // 0-indexed
 
         // When
-        Method createOutlineItemMethod =
-                EditTableOfContentsController.class.getDeclaredMethod(
-                        "createOutlineItem", PDDocument.class, BookmarkItem.class);
+        Method createOutlineItemMethod = EditTableOfContentsController.class.getDeclaredMethod(
+                "createOutlineItem", PDDocument.class, BookmarkItem.class);
         createOutlineItemMethod.setAccessible(true);
         PDOutlineItem result =
-                (PDOutlineItem)
-                        createOutlineItemMethod.invoke(
-                                editTableOfContentsController, mockDocument, bookmark);
+                (PDOutlineItem) createOutlineItemMethod.invoke(editTableOfContentsController, mockDocument, bookmark);
 
         // Then
         assertNotNull(result);
@@ -431,24 +405,18 @@ class EditTableOfContentsControllerTest {
         EditTableOfContentsRequest request = new EditTableOfContentsRequest();
         request.setFileInput(mockFile);
 
-        when(pdfDocumentFactory.load(mockFile))
-                .thenThrow(new RuntimeException("Failed to load PDF"));
+        when(pdfDocumentFactory.load(mockFile)).thenThrow(new RuntimeException("Failed to load PDF"));
 
         // When & Then
-        assertThrows(
-                RuntimeException.class,
-                () -> editTableOfContentsController.editTableOfContents(request));
+        assertThrows(RuntimeException.class, () -> editTableOfContentsController.editTableOfContents(request));
     }
 
     @Test
     void testExtractBookmarks_IOExceptionDuringLoad_ThrowsException() throws Exception {
         // Given
-        when(pdfDocumentFactory.load(mockFile))
-                .thenThrow(new RuntimeException("Failed to load PDF"));
+        when(pdfDocumentFactory.load(mockFile)).thenThrow(new RuntimeException("Failed to load PDF"));
 
         // When & Then
-        assertThrows(
-                RuntimeException.class,
-                () -> editTableOfContentsController.extractBookmarks(mockFile));
+        assertThrows(RuntimeException.class, () -> editTableOfContentsController.extractBookmarks(mockFile));
     }
 }

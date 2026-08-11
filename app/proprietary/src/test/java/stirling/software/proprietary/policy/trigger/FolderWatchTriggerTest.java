@@ -52,46 +52,41 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 @ExtendWith(MockitoExtension.class)
 class FolderWatchTriggerTest {
 
-    @Mock private PolicyStore policyStore;
-    @Mock private PolicyRunner policyRunner;
-    @Mock private InputSource folderSource;
+    @Mock
+    private PolicyStore policyStore;
 
-    @TempDir Path tempDir;
+    @Mock
+    private PolicyRunner policyRunner;
+
+    @Mock
+    private InputSource folderSource;
+
+    @TempDir
+    Path tempDir;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
     private FolderWatchTrigger trigger;
 
     @BeforeEach
     void setUp() {
-        trigger =
-                new FolderWatchTrigger(
-                        policyStore,
-                        policyRunner,
-                        List.of(folderSource),
-                        sourceStore,
-                        new ApplicationProperties());
+        trigger = new FolderWatchTrigger(
+                policyStore, policyRunner, List.of(folderSource), sourceStore, new ApplicationProperties());
         lenient().when(folderSource.supports(any())).thenReturn(true);
-        lenient()
-                .when(folderSource.watchTargets(any()))
-                .thenAnswer(
-                        invocation -> {
-                            InputSpec spec = invocation.getArgument(0);
-                            Object dir = spec.options().get("directory");
-                            if (dir == null) {
-                                throw new IllegalArgumentException(
-                                        "folder input requires a 'directory' option");
-                            }
-                            return List.of(Path.of(dir.toString()));
-                        });
+        lenient().when(folderSource.watchTargets(any())).thenAnswer(invocation -> {
+            InputSpec spec = invocation.getArgument(0);
+            Object dir = spec.options().get("directory");
+            if (dir == null) {
+                throw new IllegalArgumentException("folder input requires a 'directory' option");
+            }
+            return List.of(Path.of(dir.toString()));
+        });
     }
 
     @Test
     void validateRejectsInputWithNoWatchableSource() {
-        PolicyBinding binding =
-                bindings(folderWatch("p1", List.of(new InputSpec("folder", Map.of())))).get(0);
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> trigger.validate(binding.policy(), binding.input()));
+        PolicyBinding binding = bindings(folderWatch("p1", List.of(new InputSpec("folder", Map.of()))))
+                .get(0);
+        assertThrows(IllegalArgumentException.class, () -> trigger.validate(binding.policy(), binding.input()));
     }
 
     @Test
@@ -158,13 +153,10 @@ class FolderWatchTriggerTest {
         try {
             trigger.watchService = service;
 
-            when(policyStore.findBindingsByTriggerType("folder-watch"))
-                    .thenReturn(bindings(a, b, m));
+            when(policyStore.findBindingsByTriggerType("folder-watch")).thenReturn(bindings(a, b, m));
             trigger.syncRegistrations();
             // Existing dirs are watched; the non-existent one is skipped.
-            assertEquals(
-                    Set.of(normalized(dirA.toString()), normalized(dirB.toString())),
-                    trigger.watchedDirs());
+            assertEquals(Set.of(normalized(dirA.toString()), normalized(dirB.toString())), trigger.watchedDirs());
 
             // b's input is removed: its registration is cancelled, a remains.
             when(policyStore.findBindingsByTriggerType("folder-watch")).thenReturn(bindings(a));
@@ -206,31 +198,19 @@ class FolderWatchTriggerTest {
     /** Every (policy, input) binding across the given policies, as the store would return them. */
     private static List<PolicyBinding> bindings(Policy... policies) {
         return Arrays.stream(policies)
-                .flatMap(
-                        policy -> policy.inputs().stream().map(in -> new PolicyBinding(policy, in)))
+                .flatMap(policy -> policy.inputs().stream().map(in -> new PolicyBinding(policy, in)))
                 .toList();
     }
 
     /** Persists each spec as a source and returns a folder-watch policy referencing them by id. */
     private Policy folderWatch(String id, List<InputSpec> sources) {
-        List<PipelineInput> inputs =
-                sources.stream()
-                        .map(
-                                spec ->
-                                        new PipelineInput(
-                                                sourceStore
-                                                        .save(
-                                                                new Source(
-                                                                        null,
-                                                                        "src",
-                                                                        spec.type(),
-                                                                        spec.options(),
-                                                                        true,
-                                                                        "owner",
-                                                                        null))
-                                                        .id(),
-                                                new TriggerConfig("folder-watch", Map.of())))
-                        .toList();
+        List<PipelineInput> inputs = sources.stream()
+                .map(spec -> new PipelineInput(
+                        sourceStore
+                                .save(new Source(null, "src", spec.type(), spec.options(), true, "owner", null))
+                                .id(),
+                        new TriggerConfig("folder-watch", Map.of())))
+                .toList();
         return new Policy(
                 id,
                 "watcher",

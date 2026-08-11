@@ -32,10 +32,14 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class TimestampControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private TimestampController controller;
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @InjectMocks
+    private TimestampController controller;
 
     private ApplicationProperties.Security security;
     private ApplicationProperties.Security.Timestamp tsConfig;
@@ -49,12 +53,9 @@ class TimestampControllerTest {
 
         when(applicationProperties.getSecurity()).thenReturn(security);
 
-        mockPdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        new byte[] {0x25, 0x50, 0x44, 0x46}); // %PDF header
+        mockPdfFile = new MockMultipartFile(
+                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {0x25, 0x50, 0x44, 0x46
+                }); // %PDF header
     }
 
     private TimestampPdfRequest createRequest(String tsaUrl) {
@@ -82,12 +83,11 @@ class TimestampControllerTest {
             // Mock PDF loading to avoid actual TSA call — we only test validation here
             PDDocument mockDoc = mock(PDDocument.class);
             when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
-            doAnswer(
-                            inv -> {
-                                ByteArrayOutputStream baos = inv.getArgument(0);
-                                baos.write(new byte[] {0x25, 0x50, 0x44, 0x46});
-                                return null;
-                            })
+            doAnswer(inv -> {
+                        ByteArrayOutputStream baos = inv.getArgument(0);
+                        baos.write(new byte[] {0x25, 0x50, 0x44, 0x46});
+                        return null;
+                    })
                     .when(mockDoc)
                     .saveIncremental(any(ByteArrayOutputStream.class));
             doNothing().when(mockDoc).close();
@@ -102,9 +102,7 @@ class TimestampControllerTest {
                 fail("Preset URL should be in the allowlist: " + presetUrl);
             } catch (Exception e) {
                 // IOException from TSA contact is expected in test env — validation passed
-                assertFalse(
-                        e instanceof IllegalArgumentException,
-                        "Should not reject preset URL: " + presetUrl);
+                assertFalse(e instanceof IllegalArgumentException, "Should not reject preset URL: " + presetUrl);
             }
         }
 
@@ -114,8 +112,7 @@ class TimestampControllerTest {
             TimestampPdfRequest request = createRequest("http://evil.internal.corp/ssrf");
 
             IllegalArgumentException ex =
-                    assertThrows(
-                            IllegalArgumentException.class, () -> controller.timestampPdf(request));
+                    assertThrows(IllegalArgumentException.class, () -> controller.timestampPdf(request));
             assertTrue(ex.getMessage().contains("not in the allowed list"));
         }
 
@@ -166,11 +163,9 @@ class TimestampControllerTest {
         @Test
         @DisplayName("Should reject URL not in admin custom list")
         void shouldRejectUrlNotInAdminList() {
-            tsConfig.setCustomTsaUrls(
-                    new ArrayList<>(List.of("https://allowed-tsa.corp.com/timestamp")));
+            tsConfig.setCustomTsaUrls(new ArrayList<>(List.of("https://allowed-tsa.corp.com/timestamp")));
 
-            TimestampPdfRequest request =
-                    createRequest("https://not-allowed-tsa.evil.com/timestamp");
+            TimestampPdfRequest request = createRequest("https://not-allowed-tsa.evil.com/timestamp");
 
             assertThrows(IllegalArgumentException.class, () -> controller.timestampPdf(request));
         }

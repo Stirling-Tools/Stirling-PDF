@@ -23,15 +23,13 @@ import org.junit.jupiter.api.Test;
 
 class SvgToPdfTest {
 
-    private static final String SIMPLE_SVG =
-            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">"
-                    + "<rect width=\"100\" height=\"100\" fill=\"red\"/>"
-                    + "</svg>";
+    private static final String SIMPLE_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">"
+            + "<rect width=\"100\" height=\"100\" fill=\"red\"/>"
+            + "</svg>";
 
-    private static final String SIMPLE_SVG_2 =
-            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"150\">"
-                    + "<circle cx=\"100\" cy=\"75\" r=\"50\" fill=\"blue\"/>"
-                    + "</svg>";
+    private static final String SIMPLE_SVG_2 = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"150\">"
+            + "<circle cx=\"100\" cy=\"75\" r=\"50\" fill=\"blue\"/>"
+            + "</svg>";
 
     @Test
     void convert_withValidSvg_returnsPdfBytes() throws IOException {
@@ -41,8 +39,7 @@ class SvgToPdfTest {
         assertNotNull(result);
         assertTrue(result.length > 0);
         // PDF files start with %PDF
-        String header =
-                new String(result, 0, Math.min(5, result.length), StandardCharsets.US_ASCII);
+        String header = new String(result, 0, Math.min(5, result.length), StandardCharsets.US_ASCII);
         assertTrue(header.startsWith("%PDF"), "Output should be a valid PDF");
     }
 
@@ -78,9 +75,7 @@ class SvgToPdfTest {
 
     @Test
     void combineIntoPdf_withEmptyList_throwsIOException() {
-        IOException ex =
-                assertThrows(
-                        IOException.class, () -> SvgToPdf.combineIntoPdf(Collections.emptyList()));
+        IOException ex = assertThrows(IOException.class, () -> SvgToPdf.combineIntoPdf(Collections.emptyList()));
         assertTrue(ex.getMessage().contains("empty or null"));
     }
 
@@ -91,17 +86,14 @@ class SvgToPdfTest {
 
         assertNotNull(result);
         assertTrue(result.length > 0);
-        String header =
-                new String(result, 0, Math.min(5, result.length), StandardCharsets.US_ASCII);
+        String header = new String(result, 0, Math.min(5, result.length), StandardCharsets.US_ASCII);
         assertTrue(header.startsWith("%PDF"));
     }
 
     @Test
     void combineIntoPdf_withMultipleSvgs_returnsPdf() throws IOException {
         List<byte[]> svgs =
-                List.of(
-                        SIMPLE_SVG.getBytes(StandardCharsets.UTF_8),
-                        SIMPLE_SVG_2.getBytes(StandardCharsets.UTF_8));
+                List.of(SIMPLE_SVG.getBytes(StandardCharsets.UTF_8), SIMPLE_SVG_2.getBytes(StandardCharsets.UTF_8));
         byte[] result = SvgToPdf.combineIntoPdf(svgs);
 
         assertNotNull(result);
@@ -110,11 +102,8 @@ class SvgToPdfTest {
 
     @Test
     void combineIntoPdf_skipsNullEntries() throws IOException {
-        List<byte[]> svgs =
-                Arrays.asList(
-                        SIMPLE_SVG.getBytes(StandardCharsets.UTF_8),
-                        null,
-                        SIMPLE_SVG_2.getBytes(StandardCharsets.UTF_8));
+        List<byte[]> svgs = Arrays.asList(
+                SIMPLE_SVG.getBytes(StandardCharsets.UTF_8), null, SIMPLE_SVG_2.getBytes(StandardCharsets.UTF_8));
         byte[] result = SvgToPdf.combineIntoPdf(svgs);
 
         assertNotNull(result);
@@ -147,12 +136,11 @@ class SvgToPdfTest {
         ImageIO.write(red, "png", external.toFile());
 
         try {
-            String svg =
-                    "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-                            + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"100\" height=\"100\">"
-                            + "<image x=\"0\" y=\"0\" width=\"100\" height=\"100\" xlink:href=\""
-                            + external.toUri()
-                            + "\"/></svg>";
+            String svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" "
+                    + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"100\" height=\"100\">"
+                    + "<image x=\"0\" y=\"0\" width=\"100\" height=\"100\" xlink:href=\""
+                    + external.toUri()
+                    + "\"/></svg>";
 
             byte[] pdf;
             try {
@@ -167,9 +155,7 @@ class SvgToPdfTest {
                 int r = (rgb >> 16) & 0xff;
                 int gg = (rgb >> 8) & 0xff;
                 int b = rgb & 0xff;
-                assertFalse(
-                        r > 200 && gg < 60 && b < 60,
-                        "External file image must not be rendered into the PDF");
+                assertFalse(r > 200 && gg < 60 && b < 60, "External file image must not be rendered into the PDF");
             }
         } finally {
             Files.deleteIfExists(external);
@@ -180,13 +166,10 @@ class SvgToPdfTest {
     // SVG). Vector data: images decode via batik-bridge without batik-codec, so this exercises the
     // data: security allowance independent of raster codecs.
     private static String svgWithInlineRedImage() {
-        String innerSvg =
-                "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">"
-                        + "<rect width=\"100\" height=\"100\" fill=\"red\"/></svg>";
-        String dataUri =
-                "data:image/svg+xml;base64,"
-                        + Base64.getEncoder()
-                                .encodeToString(innerSvg.getBytes(StandardCharsets.UTF_8));
+        String innerSvg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">"
+                + "<rect width=\"100\" height=\"100\" fill=\"red\"/></svg>";
+        String dataUri = "data:image/svg+xml;base64,"
+                + Base64.getEncoder().encodeToString(innerSvg.getBytes(StandardCharsets.UTF_8));
         return "<svg xmlns=\"http://www.w3.org/2000/svg\" "
                 + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"100\" height=\"100\">"
                 + "<image x=\"0\" y=\"0\" width=\"100\" height=\"100\" xlink:href=\""
@@ -205,18 +188,15 @@ class SvgToPdfTest {
             int b = rgb & 0xff;
             assertTrue(
                     r > 200 && gg < 60 && b < 60,
-                    "Inline data: image must be rendered into the PDF (center rgb="
-                            + Integer.toHexString(rgb)
-                            + ")");
+                    "Inline data: image must be rendered into the PDF (center rgb=" + Integer.toHexString(rgb) + ")");
         }
     }
 
     @Test
     void combineIntoPdf_keepsPageWithInlineDataUriImage() throws IOException {
-        List<byte[]> svgs =
-                List.of(
-                        SIMPLE_SVG.getBytes(StandardCharsets.UTF_8),
-                        svgWithInlineRedImage().getBytes(StandardCharsets.UTF_8));
+        List<byte[]> svgs = List.of(
+                SIMPLE_SVG.getBytes(StandardCharsets.UTF_8),
+                svgWithInlineRedImage().getBytes(StandardCharsets.UTF_8));
         byte[] pdf = SvgToPdf.combineIntoPdf(svgs);
         try (PDDocument doc = Loader.loadPDF(pdf)) {
             assertEquals(2, doc.getNumberOfPages(), "inline data: image page must not be dropped");

@@ -26,8 +26,7 @@ public class PdfJsonConversionProgress {
                 .build();
     }
 
-    public static PdfJsonConversionProgress of(
-            int percent, String stage, String message, int current, int total) {
+    public static PdfJsonConversionProgress of(int percent, String stage, String message, int current, int total) {
         return PdfJsonConversionProgress.builder()
                 .percent(percent)
                 .stage(stage)

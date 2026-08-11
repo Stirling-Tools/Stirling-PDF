@@ -27,8 +27,7 @@ import stirling.software.common.model.tool.ToolIOWhen;
  * published text is unchanged without anyone maintaining it.
  */
 @Component
-public class ToolIOOperationCustomizer
-        implements GlobalOperationCustomizer, GlobalOpenApiCustomizer {
+public class ToolIOOperationCustomizer implements GlobalOperationCustomizer, GlobalOpenApiCustomizer {
 
     public static final String EXTENSION_NAME = "x-stirling-io";
     public static final String VOCABULARY_EXTENSION_NAME = "x-stirling-io-vocabulary";
@@ -66,14 +65,18 @@ public class ToolIOOperationCustomizer
     }
 
     private static List<Map<String, Object>> cases(ToolIO declaration) {
-        return Arrays.stream(declaration.cases()).map(ToolIOOperationCustomizer::toCase).toList();
+        return Arrays.stream(declaration.cases())
+                .map(ToolIOOperationCustomizer::toCase)
+                .toList();
     }
 
     private static Map<String, Object> toCase(ToolIOCase rule) {
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put(
                 "when",
-                Arrays.stream(rule.when()).map(ToolIOOperationCustomizer::toCondition).toList());
+                Arrays.stream(rule.when())
+                        .map(ToolIOOperationCustomizer::toCondition)
+                        .toList());
         entry.put("produces", rule.produces().name());
         entry.put("arity", rule.arity().name());
         return entry;
@@ -91,15 +94,12 @@ public class ToolIOOperationCustomizer
     }
 
     private static String appendSummaryLine(String description, ToolIO declaration) {
-        String summary =
-                "Input:"
-                        + String.join("/", names(declaration.accepts()))
-                        + " Output:"
-                        + declaration.produces().name()
-                        + " Type:"
-                        + declaration.arity().name();
-        return description == null || description.isBlank()
-                ? summary
-                : description.trim() + " " + summary;
+        String summary = "Input:"
+                + String.join("/", names(declaration.accepts()))
+                + " Output:"
+                + declaration.produces().name()
+                + " Type:"
+                + declaration.arity().name();
+        return description == null || description.isBlank() ? summary : description.trim() + " " + summary;
     }
 }

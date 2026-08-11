@@ -51,11 +51,9 @@ public class WebhookInputSource implements InputSource {
     }
 
     @Override
-    public Map<String, Object> prepareOptionsForSave(
-            Map<String, Object> options, boolean isCreate) {
-        boolean hasId =
-                options.get(WebhookConfig.WEBHOOK_ID_OPTION) != null
-                        && !options.get(WebhookConfig.WEBHOOK_ID_OPTION).toString().isBlank();
+    public Map<String, Object> prepareOptionsForSave(Map<String, Object> options, boolean isCreate) {
+        boolean hasId = options.get(WebhookConfig.WEBHOOK_ID_OPTION) != null
+                && !options.get(WebhookConfig.WEBHOOK_ID_OPTION).toString().isBlank();
         if (!isCreate && hasId) {
             return options;
         }
@@ -76,10 +74,9 @@ public class WebhookInputSource implements InputSource {
         Path canonicalDir = FolderIdentities.canonicalDir(dir);
         List<Path> present = listFiles(dir);
 
-        ctx.reportPresent(
-                present.stream()
-                        .map(file -> FolderIdentities.identity(canonicalDir, dir, file))
-                        .toList());
+        ctx.reportPresent(present.stream()
+                .map(file -> FolderIdentities.identity(canonicalDir, dir, file))
+                .toList());
 
         List<ResolvedInput> work = new ArrayList<>();
         for (Path file : present) {
@@ -99,10 +96,9 @@ public class WebhookInputSource implements InputSource {
             if (!claimed) {
                 continue;
             }
-            work.add(
-                    new ResolvedInput(
-                            PolicyInputs.of(List.of(fileResource(file))),
-                            success -> completeConsumed(ctx, identity, file, gate, success)));
+            work.add(new ResolvedInput(
+                    PolicyInputs.of(List.of(fileResource(file))),
+                    success -> completeConsumed(ctx, identity, file, gate, success)));
         }
         return work;
     }

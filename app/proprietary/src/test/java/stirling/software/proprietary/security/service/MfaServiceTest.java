@@ -15,10 +15,14 @@ import stirling.software.proprietary.security.model.User;
 @ExtendWith(MockitoExtension.class)
 class MfaServiceTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private DatabaseServiceInterface databaseService;
+    @Mock
+    private UserRepository userRepository;
 
-    @InjectMocks private MfaService mfaService;
+    @Mock
+    private DatabaseServiceInterface databaseService;
+
+    @InjectMocks
+    private MfaService mfaService;
 
     @Test
     void setSecretStoresSecretAndDisablesMfa() throws Exception {

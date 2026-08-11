@@ -27,9 +27,7 @@ public class AccountLinkService {
     private final EntitlementCache entitlementCache;
 
     public AccountLinkService(
-            AccountLinkClient client,
-            DeviceCredentialStore credentialStore,
-            EntitlementCache entitlementCache) {
+            AccountLinkClient client, DeviceCredentialStore credentialStore, EntitlementCache entitlementCache) {
         this.client = client;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
@@ -58,19 +56,16 @@ public class AccountLinkService {
      * still proceeds (admin's intent must win); the orphan row can be revoked from the portal.
      */
     public void unlink() {
-        credentialStore
-                .get()
-                .ifPresent(
-                        c -> {
-                            boolean ok = client.revokeSelf(c.getDeviceId(), c.getDeviceSecret());
-                            if (!ok) {
-                                log.warn(
-                                        "Account-link: SaaS self-revoke failed for device {};"
-                                                + " clearing locally anyway (admin can revoke"
-                                                + " from the portal).",
-                                        c.getDeviceId());
-                            }
-                        });
+        credentialStore.get().ifPresent(c -> {
+            boolean ok = client.revokeSelf(c.getDeviceId(), c.getDeviceSecret());
+            if (!ok) {
+                log.warn(
+                        "Account-link: SaaS self-revoke failed for device {};"
+                                + " clearing locally anyway (admin can revoke"
+                                + " from the portal).",
+                        c.getDeviceId());
+            }
+        });
         credentialStore.clear();
         entitlementCache.invalidate();
         log.info("Account-link: instance unlinked");
@@ -78,15 +73,11 @@ public class AccountLinkService {
 
     public LinkStatus status() {
         Optional<DeviceCredential> cred = credentialStore.get();
-        return cred.map(
-                        c ->
-                                new LinkStatus(
-                                        true,
-                                        c.getDeviceId(),
-                                        c.getTeamId(),
-                                        c.getLinkedAt() != null
-                                                ? c.getLinkedAt().toString()
-                                                : null))
+        return cred.map(c -> new LinkStatus(
+                        true,
+                        c.getDeviceId(),
+                        c.getTeamId(),
+                        c.getLinkedAt() != null ? c.getLinkedAt().toString() : null))
                 .orElseGet(() -> new LinkStatus(false, null, null, null));
     }
 }

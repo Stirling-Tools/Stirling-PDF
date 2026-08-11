@@ -60,8 +60,7 @@ public final class Type3FontSignatureCalculator {
     }
 
     private static void updateCharProcs(MessageDigest digest, PDType3Font font) throws IOException {
-        COSDictionary charProcs =
-                (COSDictionary) font.getCOSObject().getDictionaryObject(COSName.CHAR_PROCS);
+        COSDictionary charProcs = (COSDictionary) font.getCOSObject().getDictionaryObject(COSName.CHAR_PROCS);
         if (charProcs == null || charProcs.size() == 0) {
             updateInt(digest, 0);
             return;
@@ -83,9 +82,7 @@ public final class Type3FontSignatureCalculator {
             }
 
             COSStream stream =
-                    charProcs.getDictionaryObject(glyphName) instanceof COSStream cosStream
-                            ? cosStream
-                            : null;
+                    charProcs.getDictionaryObject(glyphName) instanceof COSStream cosStream ? cosStream : null;
             if (stream != null) {
                 byte[] payload = readAllBytes(stream);
                 updateInt(digest, payload.length);

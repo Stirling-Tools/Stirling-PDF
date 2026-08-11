@@ -72,11 +72,7 @@ public class PdfCommentAgentOrchestrator {
      * orchestrator) can surface a chat-style summary alongside the file.
      */
     public record AnnotatedPdf(
-            byte[] bytes,
-            String fileName,
-            int annotationsApplied,
-            int instructionsReceived,
-            String rationale) {}
+            byte[] bytes, String fileName, int annotationsApplied, int instructionsReceived, String rationale) {}
 
     private final AiEngineClient aiEngineClient;
     private final PdfTextChunkExtractor pdfTextChunkExtractor;
@@ -119,8 +115,7 @@ public class PdfCommentAgentOrchestrator {
         }
         if (trimmedPrompt.length() > MAX_PROMPT_LEN) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Prompt exceeds maximum length of " + MAX_PROMPT_LEN + " characters");
+                    HttpStatus.BAD_REQUEST, "Prompt exceeds maximum length of " + MAX_PROMPT_LEN + " characters");
         }
 
         String sessionId = UUID.randomUUID().toString();
@@ -133,8 +128,7 @@ public class PdfCommentAgentOrchestrator {
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
             List<TextChunk> chunks = pdfTextChunkExtractor.extract(document);
             if (chunks.isEmpty()) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "PDF has no extractable text");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "PDF has no extractable text");
             }
             log.info(
                     "[pdf-comment-agent] session={} extracted {} chunks across {} pages",
@@ -142,8 +136,7 @@ public class PdfCommentAgentOrchestrator {
                     chunks.size(),
                     document.getNumberOfPages());
 
-            PdfCommentEngineResponse engineResponse =
-                    requestComments(sessionId, trimmedPrompt, chunks);
+            PdfCommentEngineResponse engineResponse = requestComments(sessionId, trimmedPrompt, chunks);
             List<PdfCommentInstruction> instructions =
                     engineResponse.comments() == null ? List.of() : engineResponse.comments();
 
@@ -170,11 +163,7 @@ public class PdfCommentAgentOrchestrator {
                     outputName,
                     annotatedBytes.length);
             return new AnnotatedPdf(
-                    annotatedBytes,
-                    outputName,
-                    applied,
-                    instructions.size(),
-                    engineResponse.rationale());
+                    annotatedBytes, outputName, applied, instructions.size(), engineResponse.rationale());
         }
     }
 
@@ -182,14 +171,12 @@ public class PdfCommentAgentOrchestrator {
     // Engine round-trip
     // -----------------------------------------------------------------------
 
-    private PdfCommentEngineResponse requestComments(
-            String sessionId, String prompt, List<TextChunk> chunks) throws IOException {
-        PdfCommentEngineRequest engineRequest =
-                new PdfCommentEngineRequest(sessionId, prompt, chunks);
+    private PdfCommentEngineResponse requestComments(String sessionId, String prompt, List<TextChunk> chunks)
+            throws IOException {
+        PdfCommentEngineRequest engineRequest = new PdfCommentEngineRequest(sessionId, prompt, chunks);
         String requestBody = objectMapper.writeValueAsString(engineRequest);
         String responseBody = aiEngineClient.post(GENERATE_PATH, requestBody, currentUserId());
-        PdfCommentEngineResponse engineResponse =
-                objectMapper.readValue(responseBody, PdfCommentEngineResponse.class);
+        PdfCommentEngineResponse engineResponse = objectMapper.readValue(responseBody, PdfCommentEngineResponse.class);
 
         List<PdfCommentInstruction> instructions =
                 engineResponse.comments() == null ? List.of() : engineResponse.comments();
@@ -222,18 +209,12 @@ public class PdfCommentAgentOrchestrator {
         List<StickyNoteSpec> specs = new ArrayList<>(instructions.size());
         for (PdfCommentInstruction inst : instructions) {
             if (inst == null || inst.chunkId() == null || inst.commentText() == null) {
-                log.warn(
-                        "[pdf-comment-agent] session={} skipping malformed instruction: {}",
-                        sessionId,
-                        inst);
+                log.warn("[pdf-comment-agent] session={} skipping malformed instruction: {}", sessionId, inst);
                 continue;
             }
             TextChunk chunk = chunksById.get(inst.chunkId());
             if (chunk == null) {
-                log.warn(
-                        "[pdf-comment-agent] session={} unknown chunkId={} - skipping",
-                        sessionId,
-                        inst.chunkId());
+                log.warn("[pdf-comment-agent] session={} unknown chunkId={} - skipping", sessionId, inst.chunkId());
                 continue;
             }
 
@@ -241,8 +222,7 @@ public class PdfCommentAgentOrchestrator {
             float iconX = chunk.x();
             float iconY = chunk.y() + chunk.height() - ANNOTATION_SIZE;
             AnnotationLocation loc =
-                    new AnnotationLocation(
-                            chunk.page(), iconX, iconY, ANNOTATION_SIZE, ANNOTATION_SIZE);
+                    new AnnotationLocation(chunk.page(), iconX, iconY, ANNOTATION_SIZE, ANNOTATION_SIZE);
             specs.add(new StickyNoteSpec(loc, inst.commentText(), inst.author(), inst.subject()));
         }
         return specs;

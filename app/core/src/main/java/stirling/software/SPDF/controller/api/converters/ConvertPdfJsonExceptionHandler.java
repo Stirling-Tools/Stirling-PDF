@@ -27,22 +27,19 @@ public class ConvertPdfJsonExceptionHandler {
     @ResponseBody
     public ResponseEntity<byte[]> handleCacheUnavailable(CacheUnavailableException ex) {
         try {
-            byte[] body =
-                    objectMapper.writeValueAsBytes(
-                            java.util.Map.of(
-                                    "error", "cache_unavailable",
-                                    "action", "reupload",
-                                    "message", ex.getMessage()));
+            byte[] body = objectMapper.writeValueAsBytes(java.util.Map.of(
+                    "error", "cache_unavailable",
+                    "action", "reupload",
+                    "message", ex.getMessage()));
             return ResponseEntity.status(HttpStatus.GONE)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body);
         } catch (Exception e) {
             log.warn("Failed to serialize cache_unavailable response", e);
-            var fallbackBody =
-                    java.util.Map.of(
-                            "error", "cache_unavailable",
-                            "action", "reupload",
-                            "message", String.valueOf(ex.getMessage()));
+            var fallbackBody = java.util.Map.of(
+                    "error", "cache_unavailable",
+                    "action", "reupload",
+                    "message", String.valueOf(ex.getMessage()));
             try {
                 return ResponseEntity.status(HttpStatus.GONE)
                         .contentType(MediaType.APPLICATION_JSON)

@@ -46,23 +46,13 @@ public record PolicyRunView(
                     case FAILED -> PolicyRunStatus.FAILED;
                     case RUNNING, PENDING -> PolicyRunStatus.RUNNING;
                 };
-        List<ResultFile> outputs =
-                entry.fileIds() == null
-                        ? List.of()
-                        : entry.fileIds().stream()
-                                .map(id -> ResultFile.builder().fileId(id).build())
-                                .toList();
+        List<ResultFile> outputs = entry.fileIds() == null
+                ? List.of()
+                : entry.fileIds().stream()
+                        .map(id -> ResultFile.builder().fileId(id).build())
+                        .toList();
         long createdAt = entry.createdAt() == null ? 0L : entry.createdAt().toEpochMilli();
         return new PolicyRunView(
-                entry.jobId(),
-                meta.get("policyId"),
-                status,
-                0,
-                0,
-                entry.error(),
-                null,
-                null,
-                outputs,
-                createdAt);
+                entry.jobId(), meta.get("policyId"), status, 0, 0, entry.error(), null, null, outputs, createdAt);
     }
 }

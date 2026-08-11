@@ -51,59 +51,48 @@ public final class S3Clients {
     /** Build a client+presigner pair from the shared S3 config block. */
     public static Bundle build(ApplicationProperties.Storage.S3 cfg, String usage) {
         if (cfg == null) {
-            throw new IllegalStateException(
-                    usage + " requires storage.s3.* configuration to be set");
+            throw new IllegalStateException(usage + " requires storage.s3.* configuration to be set");
         }
         if (cfg.getBucket() == null || cfg.getBucket().isBlank()) {
             throw new IllegalStateException(usage + " requires storage.s3.bucket to be set");
         }
-        String region =
-                cfg.getRegion() == null || cfg.getRegion().isBlank()
-                        ? "us-east-1"
-                        : cfg.getRegion();
+        String region = cfg.getRegion() == null || cfg.getRegion().isBlank() ? "us-east-1" : cfg.getRegion();
 
-        S3Configuration s3Configuration =
-                S3Configuration.builder().pathStyleAccessEnabled(cfg.isPathStyleAccess()).build();
+        S3Configuration s3Configuration = S3Configuration.builder()
+                .pathStyleAccessEnabled(cfg.isPathStyleAccess())
+                .build();
 
-        RequestChecksumCalculation requestChecksum =
-                parseRequestChecksum(cfg.getRequestChecksumCalculation());
-        ResponseChecksumValidation responseChecksum =
-                parseResponseChecksum(cfg.getResponseChecksumValidation());
+        RequestChecksumCalculation requestChecksum = parseRequestChecksum(cfg.getRequestChecksumCalculation());
+        ResponseChecksumValidation responseChecksum = parseResponseChecksum(cfg.getResponseChecksumValidation());
 
-        S3ClientBuilder clientBuilder =
-                S3Client.builder()
-                        .httpClient(UrlConnectionHttpClient.create())
-                        .region(Region.of(region))
-                        .serviceConfiguration(s3Configuration)
-                        .requestChecksumCalculation(requestChecksum)
-                        .responseChecksumValidation(responseChecksum);
+        S3ClientBuilder clientBuilder = S3Client.builder()
+                .httpClient(UrlConnectionHttpClient.create())
+                .region(Region.of(region))
+                .serviceConfiguration(s3Configuration)
+                .requestChecksumCalculation(requestChecksum)
+                .responseChecksumValidation(responseChecksum);
 
         S3Presigner.Builder presignerBuilder =
-                S3Presigner.builder()
-                        .region(Region.of(region))
-                        .serviceConfiguration(s3Configuration);
+                S3Presigner.builder().region(Region.of(region)).serviceConfiguration(s3Configuration);
 
         if (cfg.getEndpoint() != null && !cfg.getEndpoint().isBlank()) {
             URI endpoint;
             try {
                 endpoint = new URI(cfg.getEndpoint());
             } catch (URISyntaxException e) {
-                throw new IllegalStateException(
-                        "Invalid storage.s3.endpoint: " + cfg.getEndpoint(), e);
+                throw new IllegalStateException("Invalid storage.s3.endpoint: " + cfg.getEndpoint(), e);
             }
             validateEndpointHost(endpoint, cfg.isAllowPrivateEndpoints());
             clientBuilder.endpointOverride(endpoint);
             presignerBuilder.endpointOverride(endpoint);
         }
 
-        boolean hasStaticCreds =
-                cfg.getAccessKey() != null
-                        && !cfg.getAccessKey().isBlank()
-                        && cfg.getSecretKey() != null
-                        && !cfg.getSecretKey().isBlank();
+        boolean hasStaticCreds = cfg.getAccessKey() != null
+                && !cfg.getAccessKey().isBlank()
+                && cfg.getSecretKey() != null
+                && !cfg.getSecretKey().isBlank();
         if (hasStaticCreds) {
-            AwsBasicCredentials credentials =
-                    AwsBasicCredentials.create(cfg.getAccessKey(), cfg.getSecretKey());
+            AwsBasicCredentials credentials = AwsBasicCredentials.create(cfg.getAccessKey(), cfg.getSecretKey());
             StaticCredentialsProvider provider = StaticCredentialsProvider.create(credentials);
             clientBuilder.credentialsProvider(provider);
             presignerBuilder.credentialsProvider(provider);
@@ -117,9 +106,7 @@ public final class S3Clients {
                 usage,
                 cfg.getBucket(),
                 region,
-                cfg.getEndpoint() == null || cfg.getEndpoint().isBlank()
-                        ? "<aws-default>"
-                        : cfg.getEndpoint(),
+                cfg.getEndpoint() == null || cfg.getEndpoint().isBlank() ? "<aws-default>" : cfg.getEndpoint(),
                 cfg.isPathStyleAccess());
 
         return new Bundle(clientBuilder.build(), presignerBuilder.build());
@@ -137,8 +124,7 @@ public final class S3Clients {
                 endpoint,
                 allowPrivate,
                 "storage.s3.endpoint",
-                "set storage.s3.allow-private-endpoints=true to opt in"
-                        + " (e.g. for MinIO or in-cluster S3).");
+                "set storage.s3.allow-private-endpoints=true to opt in" + " (e.g. for MinIO or in-cluster S3).");
     }
 
     /**
@@ -146,8 +132,7 @@ public final class S3Clients {
      * block (e.g. per-source policy config), with the setting named in messages supplied by the
      * caller.
      */
-    public static void validateEndpointHost(
-            URI endpoint, boolean allowPrivate, String settingName, String optInHint) {
+    public static void validateEndpointHost(URI endpoint, boolean allowPrivate, String settingName, String optInHint) {
         if (allowPrivate) {
             return;
         }
@@ -159,19 +144,17 @@ public final class S3Clients {
         try {
             addresses = InetAddress.getAllByName(host);
         } catch (UnknownHostException e) {
-            throw new IllegalStateException(
-                    "Unable to resolve " + settingName + " host '" + host + "'", e);
+            throw new IllegalStateException("Unable to resolve " + settingName + " host '" + host + "'", e);
         }
         for (InetAddress address : addresses) {
             if (isPrivateOrLocal(address)) {
-                throw new IllegalStateException(
-                        settingName
-                                + " host '"
-                                + host
-                                + "' resolves to private/link-local address "
-                                + address.getHostAddress()
-                                + "; "
-                                + optInHint);
+                throw new IllegalStateException(settingName
+                        + " host '"
+                        + host
+                        + "' resolves to private/link-local address "
+                        + address.getHostAddress()
+                        + "; "
+                        + optInHint);
             }
         }
     }
@@ -189,8 +172,7 @@ public final class S3Clients {
             return RequestChecksumCalculation.WHEN_SUPPORTED;
         }
         try {
-            return RequestChecksumCalculation.valueOf(
-                    value.trim().toUpperCase(java.util.Locale.ROOT));
+            return RequestChecksumCalculation.valueOf(value.trim().toUpperCase(java.util.Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             log.warn(
                     "Unknown storage.s3.request-checksum-calculation value '{}', falling back to WHEN_SUPPORTED",
@@ -204,8 +186,7 @@ public final class S3Clients {
             return ResponseChecksumValidation.WHEN_SUPPORTED;
         }
         try {
-            return ResponseChecksumValidation.valueOf(
-                    value.trim().toUpperCase(java.util.Locale.ROOT));
+            return ResponseChecksumValidation.valueOf(value.trim().toUpperCase(java.util.Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             log.warn(
                     "Unknown storage.s3.response-checksum-validation value '{}', falling back to WHEN_SUPPORTED",

@@ -39,11 +39,11 @@ import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AdminLicenseControllerTest {
 
-    @Mock private LicenseKeyChecker licenseKeyChecker;
+    @Mock
+    private LicenseKeyChecker licenseKeyChecker;
 
     @Mock
-    private stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier
-            keygenLicenseVerifier;
+    private stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier keygenLicenseVerifier;
 
     private ApplicationProperties applicationProperties;
 
@@ -53,8 +53,7 @@ class AdminLicenseControllerTest {
     void setUp() {
         applicationProperties = new ApplicationProperties();
         controller = new AdminLicenseController();
-        org.springframework.test.util.ReflectionTestUtils.setField(
-                controller, "licenseKeyChecker", licenseKeyChecker);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "licenseKeyChecker", licenseKeyChecker);
         org.springframework.test.util.ReflectionTestUtils.setField(
                 controller, "keygenLicenseVerifier", keygenLicenseVerifier);
         org.springframework.test.util.ReflectionTestUtils.setField(
@@ -87,8 +86,7 @@ class AdminLicenseControllerTest {
         @DisplayName("returns 500 when fingerprint generation throws")
         void returnsErrorOnException() {
             try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
-                mocked.when(GeneralUtils::generateMachineFingerprint)
-                        .thenThrow(new RuntimeException("boom"));
+                mocked.when(GeneralUtils::generateMachineFingerprint).thenThrow(new RuntimeException("boom"));
 
                 ResponseEntity<Map<String, String>> response = controller.getInstallationId();
 
@@ -134,8 +132,7 @@ class AdminLicenseControllerTest {
             when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
 
             try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
-                ResponseEntity<Map<String, Object>> response =
-                        controller.saveLicenseKey(Map.of("licenseKey", "free"));
+                ResponseEntity<Map<String, Object>> response = controller.saveLicenseKey(Map.of("licenseKey", "free"));
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 assertThat(body(response)).containsEntry("licenseType", "NORMAL");
@@ -146,11 +143,9 @@ class AdminLicenseControllerTest {
         @Test
         @DisplayName("returns 500 when license checker is unavailable")
         void checkerUnavailable_returnsError() {
-            org.springframework.test.util.ReflectionTestUtils.setField(
-                    controller, "licenseKeyChecker", null);
+            org.springframework.test.util.ReflectionTestUtils.setField(controller, "licenseKeyChecker", null);
 
-            ResponseEntity<Map<String, Object>> response =
-                    controller.saveLicenseKey(Map.of("licenseKey", "x"));
+            ResponseEntity<Map<String, Object>> response = controller.saveLicenseKey(Map.of("licenseKey", "x"));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
             assertThat(body(response)).containsEntry("success", false);
@@ -159,13 +154,10 @@ class AdminLicenseControllerTest {
         @Test
         @DisplayName("returns 400 when activation throws")
         void activationThrows_returnsBadRequest() throws IOException {
-            doThrow(new IOException("disk full"))
-                    .when(licenseKeyChecker)
-                    .updateLicenseKey(anyString());
+            doThrow(new IOException("disk full")).when(licenseKeyChecker).updateLicenseKey(anyString());
 
             try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
-                ResponseEntity<Map<String, Object>> response =
-                        controller.saveLicenseKey(Map.of("licenseKey", "x"));
+                ResponseEntity<Map<String, Object>> response = controller.saveLicenseKey(Map.of("licenseKey", "x"));
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
                 assertThat(body(response)).containsEntry("success", false);
@@ -180,8 +172,7 @@ class AdminLicenseControllerTest {
         @Test
         @DisplayName("returns 500 when checker unavailable")
         void checkerUnavailable_returnsError() {
-            org.springframework.test.util.ReflectionTestUtils.setField(
-                    controller, "licenseKeyChecker", null);
+            org.springframework.test.util.ReflectionTestUtils.setField(controller, "licenseKeyChecker", null);
 
             ResponseEntity<Map<String, Object>> response = controller.resyncLicense();
 
@@ -251,8 +242,7 @@ class AdminLicenseControllerTest {
         @Test
         @DisplayName("returns NORMAL with hasKey false when no checker and no key")
         void noCheckerNoKey_returnsNormal() {
-            org.springframework.test.util.ReflectionTestUtils.setField(
-                    controller, "licenseKeyChecker", null);
+            org.springframework.test.util.ReflectionTestUtils.setField(controller, "licenseKeyChecker", null);
 
             ResponseEntity<Map<String, Object>> response = controller.getLicenseInfo();
 
@@ -282,8 +272,7 @@ class AdminLicenseControllerTest {
         @DisplayName("filename with path separators is rejected")
         void pathTraversalFilename_rejected() {
             MultipartFile file =
-                    new MockMultipartFile(
-                            "file", "../evil.lic", null, "data".getBytes(StandardCharsets.UTF_8));
+                    new MockMultipartFile("file", "../evil.lic", null, "data".getBytes(StandardCharsets.UTF_8));
 
             ResponseEntity<Map<String, Object>> response = controller.uploadLicenseFile(file);
 
@@ -295,8 +284,7 @@ class AdminLicenseControllerTest {
         @DisplayName("invalid extension is rejected")
         void invalidExtension_rejected() {
             MultipartFile file =
-                    new MockMultipartFile(
-                            "file", "license.txt", null, "data".getBytes(StandardCharsets.UTF_8));
+                    new MockMultipartFile("file", "license.txt", null, "data".getBytes(StandardCharsets.UTF_8));
 
             ResponseEntity<Map<String, Object>> response = controller.uploadLicenseFile(file);
 
@@ -319,12 +307,8 @@ class AdminLicenseControllerTest {
         @Test
         @DisplayName("content without certificate header is rejected")
         void invalidHeader_rejected() {
-            MultipartFile file =
-                    new MockMultipartFile(
-                            "file",
-                            "license.lic",
-                            null,
-                            "not a certificate".getBytes(StandardCharsets.UTF_8));
+            MultipartFile file = new MockMultipartFile(
+                    "file", "license.lic", null, "not a certificate".getBytes(StandardCharsets.UTF_8));
 
             ResponseEntity<Map<String, Object>> response = controller.uploadLicenseFile(file);
 
@@ -337,12 +321,10 @@ class AdminLicenseControllerTest {
         void validFile_savedAndActivated(@TempDir Path tempDir) throws IOException {
             String content = "-----BEGIN LICENSE FILE-----\nABC123\n-----END LICENSE FILE-----";
             MultipartFile file =
-                    new MockMultipartFile(
-                            "file", "license.lic", null, content.getBytes(StandardCharsets.UTF_8));
+                    new MockMultipartFile("file", "license.lic", null, content.getBytes(StandardCharsets.UTF_8));
             when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
 
-            try (MockedStatic<InstallationPathConfig> mocked =
-                    mockStatic(InstallationPathConfig.class)) {
+            try (MockedStatic<InstallationPathConfig> mocked = mockStatic(InstallationPathConfig.class)) {
                 mocked.when(InstallationPathConfig::getConfigPath).thenReturn(tempDir.toString());
 
                 ResponseEntity<Map<String, Object>> response = controller.uploadLicenseFile(file);
@@ -363,12 +345,10 @@ class AdminLicenseControllerTest {
 
             String content = "-----BEGIN LICENSE FILE-----\nNEW\n-----END LICENSE FILE-----";
             MultipartFile file =
-                    new MockMultipartFile(
-                            "file", "license.cert", null, content.getBytes(StandardCharsets.UTF_8));
+                    new MockMultipartFile("file", "license.cert", null, content.getBytes(StandardCharsets.UTF_8));
             when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
 
-            try (MockedStatic<InstallationPathConfig> mocked =
-                    mockStatic(InstallationPathConfig.class)) {
+            try (MockedStatic<InstallationPathConfig> mocked = mockStatic(InstallationPathConfig.class)) {
                 mocked.when(InstallationPathConfig::getConfigPath).thenReturn(tempDir.toString());
 
                 ResponseEntity<Map<String, Object>> response = controller.uploadLicenseFile(file);
@@ -384,14 +364,10 @@ class AdminLicenseControllerTest {
         void activationThrows_returnsBadRequest(@TempDir Path tempDir) throws IOException {
             String content = "-----BEGIN LICENSE FILE-----\nX\n-----END LICENSE FILE-----";
             MultipartFile file =
-                    new MockMultipartFile(
-                            "file", "license.lic", null, content.getBytes(StandardCharsets.UTF_8));
-            doThrow(new RuntimeException("bad license"))
-                    .when(licenseKeyChecker)
-                    .updateLicenseKey(any());
+                    new MockMultipartFile("file", "license.lic", null, content.getBytes(StandardCharsets.UTF_8));
+            doThrow(new RuntimeException("bad license")).when(licenseKeyChecker).updateLicenseKey(any());
 
-            try (MockedStatic<InstallationPathConfig> mocked =
-                    mockStatic(InstallationPathConfig.class)) {
+            try (MockedStatic<InstallationPathConfig> mocked = mockStatic(InstallationPathConfig.class)) {
                 mocked.when(InstallationPathConfig::getConfigPath).thenReturn(tempDir.toString());
 
                 ResponseEntity<Map<String, Object>> response = controller.uploadLicenseFile(file);

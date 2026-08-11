@@ -63,49 +63,37 @@ public class AuditRestController {
             @RequestParam(value = "pageSize", defaultValue = "30") int pageSize,
             @RequestParam(value = "eventType", required = false) String[] eventTypes,
             @RequestParam(value = "username", required = false) String[] usernames,
-            @RequestParam(value = "startDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
                     LocalDate startDate,
-            @RequestParam(value = "endDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
                     LocalDate endDate) {
 
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by("timestamp").descending());
         Page<PersistentAuditEvent> events;
 
         // Convert arrays to lists
-        List<String> eventTypeList =
-                (eventTypes != null && eventTypes.length > 0) ? Arrays.asList(eventTypes) : null;
-        List<String> usernameList =
-                (usernames != null && usernames.length > 0) ? Arrays.asList(usernames) : null;
+        List<String> eventTypeList = (eventTypes != null && eventTypes.length > 0) ? Arrays.asList(eventTypes) : null;
+        List<String> usernameList = (usernames != null && usernames.length > 0) ? Arrays.asList(usernames) : null;
 
         Instant startInstant = null;
         Instant endInstant = null;
         if (startDate != null && endDate != null) {
             startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            endInstant = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+            endInstant =
+                    endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
         }
 
         // Apply filters based on provided parameters
-        if (eventTypeList != null
-                && usernameList != null
-                && startInstant != null
-                && endInstant != null) {
-            events =
-                    auditRepository.findByTypeInAndPrincipalInAndTimestampBetween(
-                            eventTypeList, usernameList, startInstant, endInstant, pageable);
+        if (eventTypeList != null && usernameList != null && startInstant != null && endInstant != null) {
+            events = auditRepository.findByTypeInAndPrincipalInAndTimestampBetween(
+                    eventTypeList, usernameList, startInstant, endInstant, pageable);
         } else if (eventTypeList != null && usernameList != null) {
-            events =
-                    auditRepository.findByTypeInAndPrincipalIn(
-                            eventTypeList, usernameList, pageable);
+            events = auditRepository.findByTypeInAndPrincipalIn(eventTypeList, usernameList, pageable);
         } else if (eventTypeList != null && startInstant != null && endInstant != null) {
-            events =
-                    auditRepository.findByTypeInAndTimestampBetween(
-                            eventTypeList, startInstant, endInstant, pageable);
+            events = auditRepository.findByTypeInAndTimestampBetween(eventTypeList, startInstant, endInstant, pageable);
         } else if (usernameList != null && startInstant != null && endInstant != null) {
-            events =
-                    auditRepository.findByPrincipalInAndTimestampBetween(
-                            usernameList, startInstant, endInstant, pageable);
+            events = auditRepository.findByPrincipalInAndTimestampBetween(
+                    usernameList, startInstant, endInstant, pageable);
         } else if (startInstant != null && endInstant != null) {
             events = auditRepository.findByTimestampBetween(startInstant, endInstant, pageable);
         } else if (eventTypeList != null) {
@@ -120,14 +108,13 @@ public class AuditRestController {
         List<AuditEventDto> eventDtos =
                 events.getContent().stream().map(this::convertToDto).toList();
 
-        AuditEventsResponse response =
-                AuditEventsResponse.builder()
-                        .events(eventDtos)
-                        .totalEvents((int) events.getTotalElements())
-                        .page(events.getNumber())
-                        .pageSize(events.getSize())
-                        .totalPages(events.getTotalPages())
-                        .build();
+        AuditEventsResponse response = AuditEventsResponse.builder()
+                .events(eventDtos)
+                .totalEvents((int) events.getTotalElements())
+                .page(events.getNumber())
+                .pageSize(events.getSize())
+                .totalPages(events.getTotalPages())
+                .build();
 
         return ResponseEntity.ok(response);
     }
@@ -163,57 +150,42 @@ public class AuditRestController {
 
         // Count events by type
         Map<String, Long> eventsByType =
-                events.stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        PersistentAuditEvent::getType, Collectors.counting()));
+                events.stream().collect(Collectors.groupingBy(PersistentAuditEvent::getType, Collectors.counting()));
 
         // Count events by principal (user)
-        Map<String, Long> eventsByUser =
-                events.stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        PersistentAuditEvent::getPrincipal, Collectors.counting()));
+        Map<String, Long> eventsByUser = events.stream()
+                .collect(Collectors.groupingBy(PersistentAuditEvent::getPrincipal, Collectors.counting()));
 
         // Count events by day
-        Map<String, Long> eventsByDay =
-                events.stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        e ->
-                                                LocalDateTime.ofInstant(
-                                                                e.getTimestamp(),
-                                                                ZoneId.systemDefault())
-                                                        .format(DateTimeFormatter.ISO_LOCAL_DATE),
-                                        Collectors.counting()));
+        Map<String, Long> eventsByDay = events.stream()
+                .collect(Collectors.groupingBy(
+                        e -> LocalDateTime.ofInstant(e.getTimestamp(), ZoneId.systemDefault())
+                                .format(DateTimeFormatter.ISO_LOCAL_DATE),
+                        Collectors.counting()));
 
         // Convert to ChartData format
-        ChartData eventsByTypeChart =
-                ChartData.builder()
-                        .labels(new ArrayList<>(eventsByType.keySet()))
-                        .values(eventsByType.values().stream().map(Long::intValue).toList())
-                        .build();
+        ChartData eventsByTypeChart = ChartData.builder()
+                .labels(new ArrayList<>(eventsByType.keySet()))
+                .values(eventsByType.values().stream().map(Long::intValue).toList())
+                .build();
 
-        ChartData eventsByUserChart =
-                ChartData.builder()
-                        .labels(new ArrayList<>(eventsByUser.keySet()))
-                        .values(eventsByUser.values().stream().map(Long::intValue).toList())
-                        .build();
+        ChartData eventsByUserChart = ChartData.builder()
+                .labels(new ArrayList<>(eventsByUser.keySet()))
+                .values(eventsByUser.values().stream().map(Long::intValue).toList())
+                .build();
 
         // Sort events by day for time series
         TreeMap<String, Long> sortedEventsByDay = new TreeMap<>(eventsByDay);
-        ChartData eventsOverTimeChart =
-                ChartData.builder()
-                        .labels(new ArrayList<>(sortedEventsByDay.keySet()))
-                        .values(sortedEventsByDay.values().stream().map(Long::intValue).toList())
-                        .build();
+        ChartData eventsOverTimeChart = ChartData.builder()
+                .labels(new ArrayList<>(sortedEventsByDay.keySet()))
+                .values(sortedEventsByDay.values().stream().map(Long::intValue).toList())
+                .build();
 
-        AuditChartsData chartsData =
-                AuditChartsData.builder()
-                        .eventsByType(eventsByTypeChart)
-                        .eventsByUser(eventsByUserChart)
-                        .eventsOverTime(eventsOverTimeChart)
-                        .build();
+        AuditChartsData chartsData = AuditChartsData.builder()
+                .eventsByType(eventsByTypeChart)
+                .eventsByUser(eventsByUserChart)
+                .eventsOverTime(eventsOverTimeChart)
+                .build();
 
         return ResponseEntity.ok(chartsData);
     }
@@ -252,7 +224,8 @@ public class AuditRestController {
         // Use the countByPrincipal query to get unique principals
         List<Object[]> principalCounts = auditRepository.countByPrincipal();
 
-        List<String> users = principalCounts.stream().map(arr -> (String) arr[0]).sorted().toList();
+        List<String> users =
+                principalCounts.stream().map(arr -> (String) arr[0]).sorted().toList();
 
         return ResponseEntity.ok(users);
     }
@@ -289,8 +262,7 @@ public class AuditRestController {
         Instant prevStart = start.minus(java.time.Duration.ofDays(days));
 
         List<PersistentAuditEvent> currentEvents = auditRepository.findByTimestampAfter(start);
-        List<PersistentAuditEvent> prevEvents =
-                auditRepository.findAllByTimestampBetweenForExport(prevStart, start);
+        List<PersistentAuditEvent> prevEvents = auditRepository.findAllByTimestampBetweenForExport(prevStart, start);
 
         // Compute metrics for current period
         AuditMetrics currentMetrics = computeMetrics(currentEvents);
@@ -308,24 +280,23 @@ public class AuditRestController {
             hourlyDistribution.put(String.format("%02d", hour), count);
         }
 
-        return ResponseEntity.ok(
-                AuditStatsData.builder()
-                        .totalEvents(currentMetrics.totalEvents)
-                        .prevTotalEvents(prevMetrics.totalEvents)
-                        .uniqueUsers(currentMetrics.uniqueUsers)
-                        .prevUniqueUsers(prevMetrics.uniqueUsers)
-                        .successRate(currentMetrics.successRate)
-                        .prevSuccessRate(prevMetrics.successRate)
-                        .avgLatencyMs(currentMetrics.avgLatencyMs)
-                        .prevAvgLatencyMs(prevMetrics.avgLatencyMs)
-                        .errorCount(currentMetrics.errorCount)
-                        .topEventType(currentMetrics.topEventType)
-                        .topUser(currentMetrics.topUser)
-                        .eventsByType(currentMetrics.eventsByType)
-                        .eventsByUser(currentMetrics.eventsByUser)
-                        .topTools(currentMetrics.topTools)
-                        .hourlyDistribution(hourlyDistribution)
-                        .build());
+        return ResponseEntity.ok(AuditStatsData.builder()
+                .totalEvents(currentMetrics.totalEvents)
+                .prevTotalEvents(prevMetrics.totalEvents)
+                .uniqueUsers(currentMetrics.uniqueUsers)
+                .prevUniqueUsers(prevMetrics.uniqueUsers)
+                .successRate(currentMetrics.successRate)
+                .prevSuccessRate(prevMetrics.successRate)
+                .avgLatencyMs(currentMetrics.avgLatencyMs)
+                .prevAvgLatencyMs(prevMetrics.avgLatencyMs)
+                .errorCount(currentMetrics.errorCount)
+                .topEventType(currentMetrics.topEventType)
+                .topUser(currentMetrics.topUser)
+                .eventsByType(currentMetrics.eventsByType)
+                .eventsByUser(currentMetrics.eventsByUser)
+                .topTools(currentMetrics.topTools)
+                .hourlyDistribution(hourlyDistribution)
+                .build());
     }
 
     /** Compute metrics from a list of audit events. */
@@ -336,17 +307,11 @@ public class AuditRestController {
 
         // Count by type
         Map<String, Long> eventsByType =
-                events.stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        PersistentAuditEvent::getType, Collectors.counting()));
+                events.stream().collect(Collectors.groupingBy(PersistentAuditEvent::getType, Collectors.counting()));
 
         // Count by principal (user)
-        Map<String, Long> eventsByUser =
-                events.stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        PersistentAuditEvent::getPrincipal, Collectors.counting()));
+        Map<String, Long> eventsByUser = events.stream()
+                .collect(Collectors.groupingBy(PersistentAuditEvent::getPrincipal, Collectors.counting()));
 
         // Parse JSON data once for success rate, latency, tool extraction, and error counting
         long successCount = 0;
@@ -457,30 +422,22 @@ public class AuditRestController {
         }
 
         // Get top event type
-        String topEventType =
-                eventsByType.entrySet().stream()
-                        .max((e1, e2) -> Long.compare(e1.getValue(), e2.getValue()))
-                        .map(Map.Entry::getKey)
-                        .orElse("");
+        String topEventType = eventsByType.entrySet().stream()
+                .max((e1, e2) -> Long.compare(e1.getValue(), e2.getValue()))
+                .map(Map.Entry::getKey)
+                .orElse("");
 
         // Get top user
-        String topUser =
-                eventsByUser.entrySet().stream()
-                        .max((e1, e2) -> Long.compare(e1.getValue(), e2.getValue()))
-                        .map(Map.Entry::getKey)
-                        .orElse("");
+        String topUser = eventsByUser.entrySet().stream()
+                .max((e1, e2) -> Long.compare(e1.getValue(), e2.getValue()))
+                .map(Map.Entry::getKey)
+                .orElse("");
 
         // Sort and limit top tools to 10
-        Map<String, Long> topToolsSorted =
-                topTools.entrySet().stream()
-                        .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
-                        .limit(10)
-                        .collect(
-                                Collectors.toMap(
-                                        Map.Entry::getKey,
-                                        Map.Entry::getValue,
-                                        (e1, e2) -> e1,
-                                        LinkedHashMap::new));
+        Map<String, Long> topToolsSorted = topTools.entrySet().stream()
+                .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
+                .limit(10)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
         return AuditMetrics.builder()
                 .totalEvents(events.size())
@@ -515,48 +472,36 @@ public class AuditRestController {
             @RequestParam(value = "fields", required = false) String fields,
             @RequestParam(value = "eventType", required = false) String[] eventTypes,
             @RequestParam(value = "username", required = false) String[] usernames,
-            @RequestParam(value = "startDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
                     LocalDate startDate,
-            @RequestParam(value = "endDate", required = false)
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
                     LocalDate endDate) {
 
         // Get data with same filtering as getAuditEvents
         List<PersistentAuditEvent> events;
 
         // Convert arrays to lists
-        List<String> eventTypeList =
-                (eventTypes != null && eventTypes.length > 0) ? Arrays.asList(eventTypes) : null;
-        List<String> usernameList =
-                (usernames != null && usernames.length > 0) ? Arrays.asList(usernames) : null;
+        List<String> eventTypeList = (eventTypes != null && eventTypes.length > 0) ? Arrays.asList(eventTypes) : null;
+        List<String> usernameList = (usernames != null && usernames.length > 0) ? Arrays.asList(usernames) : null;
 
         Instant startInstant = null;
         Instant endInstant = null;
         if (startDate != null && endDate != null) {
             startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-            endInstant = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+            endInstant =
+                    endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
         }
 
-        if (eventTypeList != null
-                && usernameList != null
-                && startInstant != null
-                && endInstant != null) {
-            events =
-                    auditRepository.findByTypeInAndPrincipalInAndTimestampBetweenForExport(
-                            eventTypeList, usernameList, startInstant, endInstant);
+        if (eventTypeList != null && usernameList != null && startInstant != null && endInstant != null) {
+            events = auditRepository.findByTypeInAndPrincipalInAndTimestampBetweenForExport(
+                    eventTypeList, usernameList, startInstant, endInstant);
         } else if (eventTypeList != null && usernameList != null) {
-            events =
-                    auditRepository.findByTypeInAndPrincipalInForExport(
-                            eventTypeList, usernameList);
+            events = auditRepository.findByTypeInAndPrincipalInForExport(eventTypeList, usernameList);
         } else if (eventTypeList != null && startInstant != null && endInstant != null) {
-            events =
-                    auditRepository.findByTypeInAndTimestampBetweenForExport(
-                            eventTypeList, startInstant, endInstant);
+            events = auditRepository.findByTypeInAndTimestampBetweenForExport(eventTypeList, startInstant, endInstant);
         } else if (usernameList != null && startInstant != null && endInstant != null) {
-            events =
-                    auditRepository.findByPrincipalInAndTimestampBetweenForExport(
-                            usernameList, startInstant, endInstant);
+            events = auditRepository.findByPrincipalInAndTimestampBetweenForExport(
+                    usernameList, startInstant, endInstant);
         } else if (startInstant != null && endInstant != null) {
             events = auditRepository.findAllByTimestampBetweenForExport(startInstant, endInstant);
         } else if (eventTypeList != null) {
@@ -667,8 +612,7 @@ public class AuditRestController {
         byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("text/csv;charset=UTF-8"));
-        headers.setContentDispositionFormData(
-                "attachment", "audit_export_" + System.currentTimeMillis() + ".csv");
+        headers.setContentDispositionFormData("attachment", "audit_export_" + System.currentTimeMillis() + ".csv");
 
         return ResponseEntity.ok().headers(headers).body(csvBytes);
     }
@@ -695,8 +639,7 @@ public class AuditRestController {
         return ResponseEntity.ok().headers(headers).body(csvBytes);
     }
 
-    private Map<String, String> extractEventData(
-            PersistentAuditEvent event, DateTimeFormatter formatter) {
+    private Map<String, String> extractEventData(PersistentAuditEvent event, DateTimeFormatter formatter) {
         Map<String, String> data = new HashMap<>();
 
         data.put("date", formatter.format(event.getTimestamp()));
@@ -735,9 +678,7 @@ public class AuditRestController {
 
                 // Extract operation result if present
                 if (eventData.containsKey("result")) {
-                    data.put(
-                            "operationresults",
-                            String.valueOf(eventData.getOrDefault("result", "")));
+                    data.put("operationresults", String.valueOf(eventData.getOrDefault("result", "")));
                 }
 
                 // Extract tool from path
@@ -751,8 +692,7 @@ public class AuditRestController {
 
                 // Extract file information
                 @SuppressWarnings("unchecked")
-                List<Map<String, Object>> files =
-                        (List<Map<String, Object>>) eventData.get("files");
+                List<Map<String, Object>> files = (List<Map<String, Object>>) eventData.get("files");
                 if (files != null && !files.isEmpty()) {
                     Map<String, Object> firstFile = files.get(0);
                     data.put("documentname", String.valueOf(firstFile.getOrDefault("name", "")));
@@ -891,12 +831,10 @@ public class AuditRestController {
             // Delete all audit events
             auditRepository.deleteAll();
             log.warn("All audit data has been cleared by admin user");
-            return ResponseEntity.ok()
-                    .body(Map.of("message", "All audit data has been cleared successfully"));
+            return ResponseEntity.ok().body(Map.of("message", "All audit data has been cleared successfully"));
         } catch (Exception e) {
             log.error("Error clearing audit data", e);
-            return ResponseEntity.internalServerError()
-                    .body("Failed to clear audit data: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Failed to clear audit data: " + e.getMessage());
         }
     }
 }

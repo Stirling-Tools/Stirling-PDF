@@ -13,5 +13,4 @@ import java.util.List;
  * @param ocrText OCRmyPDF output text (null if not requested or OCR not available).
  * @param ocrConfidence Mean character confidence from OCRmyPDF, 0.0–1.0 (null if OCR not run).
  */
-public record Folio(
-        int page, String text, List<String> tables, String ocrText, Double ocrConfidence) {}
+public record Folio(int page, String text, List<String> tables, String ocrText, Double ocrConfidence) {}

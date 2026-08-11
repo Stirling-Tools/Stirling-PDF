@@ -44,11 +44,17 @@ import stirling.software.common.model.ApplicationProperties;
 @DisplayName("TelegramPipelineBot helper coverage")
 class TelegramPipelineBotExtraTest {
 
-    @Mock private TelegramBotsApi telegramBotsApi;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private TelegramBotsApi telegramBotsApi;
 
-    @TempDir Path watchedRoot;
-    @TempDir Path finishedRoot;
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @TempDir
+    Path watchedRoot;
+
+    @TempDir
+    Path finishedRoot;
 
     private ApplicationProperties.Telegram telegramProps;
     private TelegramPipelineBot bot;
@@ -66,13 +72,9 @@ class TelegramPipelineBotExtraTest {
         applicationProperties.setTelegram(telegramProps);
 
         when(runtimePathConfig.getPipelineWatchedFoldersPath()).thenReturn(watchedRoot.toString());
-        when(runtimePathConfig.getPipelineFinishedFoldersPath())
-                .thenReturn(finishedRoot.toString());
+        when(runtimePathConfig.getPipelineFinishedFoldersPath()).thenReturn(finishedRoot.toString());
 
-        bot =
-                spy(
-                        new TelegramPipelineBot(
-                                applicationProperties, runtimePathConfig, telegramBotsApi));
+        bot = spy(new TelegramPipelineBot(applicationProperties, runtimePathConfig, telegramBotsApi));
     }
 
     private Object invoke(String name, Class<?>[] sig, Object... args) throws Exception {
@@ -82,12 +84,7 @@ class TelegramPipelineBotExtraTest {
     }
 
     private boolean feedback(FeedbackEnum kind, String chatType) throws Exception {
-        return (boolean)
-                invoke(
-                        "feedback",
-                        new Class<?>[] {FeedbackEnum.class, String.class},
-                        kind,
-                        chatType);
+        return (boolean) invoke("feedback", new Class<?>[] {FeedbackEnum.class, String.class}, kind, chatType);
     }
 
     @Nested
@@ -153,12 +150,7 @@ class TelegramPipelineBotExtraTest {
         @Test
         @DisplayName("builds an https api.telegram.org url embedding the bot token and file path")
         void buildsUrl() throws Exception {
-            URL url =
-                    (URL)
-                            invoke(
-                                    "buildDownloadUrl",
-                                    new Class<?>[] {String.class},
-                                    "documents/file_1.pdf");
+            URL url = (URL) invoke("buildDownloadUrl", new Class<?>[] {String.class}, "documents/file_1.pdf");
             assertThat(url.getProtocol()).isEqualTo("https");
             assertThat(url.getHost()).isEqualTo("api.telegram.org");
             assertThat(url.getPath()).contains("/file/botsecret-token/");
@@ -195,17 +187,11 @@ class TelegramPipelineBotExtraTest {
     class PipelineOutputMatching {
 
         private boolean matchesBaseName(String base, Path file) throws Exception {
-            return (boolean)
-                    invoke(
-                            "matchesBaseName",
-                            new Class<?>[] {String.class, Path.class},
-                            base,
-                            file);
+            return (boolean) invoke("matchesBaseName", new Class<?>[] {String.class, Path.class}, base, file);
         }
 
         private boolean isNewerThan(Path path, Instant since) throws Exception {
-            return (boolean)
-                    invoke("isNewerThan", new Class<?>[] {Path.class, Instant.class}, path, since);
+            return (boolean) invoke("isNewerThan", new Class<?>[] {Path.class, Instant.class}, path, since);
         }
 
         @Test
@@ -243,22 +229,16 @@ class TelegramPipelineBotExtraTest {
 
             @SuppressWarnings("unchecked")
             List<Path> results =
-                    (List<Path>)
-                            invoke(
-                                    "waitForPipelineOutputs",
-                                    new Class<?>[] {pipelineFileInfoClass()},
-                                    info);
+                    (List<Path>) invoke("waitForPipelineOutputs", new Class<?>[] {pipelineFileInfoClass()}, info);
 
             assertThat(results).contains(out);
         }
 
         private Class<?> pipelineFileInfoClass() throws Exception {
-            return Class.forName(
-                    "stirling.software.SPDF.service.telegram.TelegramPipelineBot$PipelineFileInfo");
+            return Class.forName("stirling.software.SPDF.service.telegram.TelegramPipelineBot$PipelineFileInfo");
         }
 
-        private Object newPipelineFileInfo(Path file, String base, Instant savedAt)
-                throws Exception {
+        private Object newPipelineFileInfo(Path file, String base, Instant savedAt) throws Exception {
             Class<?> cls = pipelineFileInfoClass();
             var ctor = cls.getDeclaredConstructor(Path.class, String.class, Instant.class);
             ctor.setAccessible(true);

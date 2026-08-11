@@ -46,34 +46,29 @@ class ShowJavascriptTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ShowJavascript showJavascript;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private ShowJavascript showJavascript;
 
     private MockMultipartFile pdfFile;
     private PDFFile request;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
-        pdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
+        pdfFile = new MockMultipartFile(
+                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, "PDF content".getBytes());
         request = new PDFFile();
         request.setFileInput(pdfFile);
     }
@@ -86,28 +81,19 @@ class ShowJavascriptTest {
         when(catalog.getNames()).thenReturn(null);
         when(pdfDocumentFactory.load(pdfFile)).thenReturn(mockDoc);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponse =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponse = mockStatic(WebResponseUtils.class)) {
             ResponseEntity<Resource> expectedResponse = streamingOk("no js".getBytes());
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.fileToWebResponse(
-                                            any(TempFile.class),
-                                            eq("test.pdf.js"),
-                                            eq(MediaType.TEXT_PLAIN)))
+                    .when(() -> WebResponseUtils.fileToWebResponse(
+                            any(TempFile.class), eq("test.pdf.js"), eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = showJavascript.extractHeader(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            mockedWebResponse.verify(
-                    () ->
-                            WebResponseUtils.fileToWebResponse(
-                                    any(TempFile.class),
-                                    eq("test.pdf.js"),
-                                    eq(MediaType.TEXT_PLAIN)));
+            mockedWebResponse.verify(() -> WebResponseUtils.fileToWebResponse(
+                    any(TempFile.class), eq("test.pdf.js"), eq(MediaType.TEXT_PLAIN)));
         }
     }
 
@@ -128,27 +114,18 @@ class ShowJavascriptTest {
         when(jsTree.getNames()).thenReturn(jsMap);
         when(pdfDocumentFactory.load(pdfFile)).thenReturn(mockDoc);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponse =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponse = mockStatic(WebResponseUtils.class)) {
             ResponseEntity<Resource> expectedResponse = streamingOk("js content".getBytes());
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.fileToWebResponse(
-                                            any(TempFile.class),
-                                            eq("test.pdf.js"),
-                                            eq(MediaType.TEXT_PLAIN)))
+                    .when(() -> WebResponseUtils.fileToWebResponse(
+                            any(TempFile.class), eq("test.pdf.js"), eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = showJavascript.extractHeader(request);
 
             assertNotNull(response);
-            mockedWebResponse.verify(
-                    () ->
-                            WebResponseUtils.fileToWebResponse(
-                                    any(TempFile.class),
-                                    eq("test.pdf.js"),
-                                    eq(MediaType.TEXT_PLAIN)));
+            mockedWebResponse.verify(() -> WebResponseUtils.fileToWebResponse(
+                    any(TempFile.class), eq("test.pdf.js"), eq(MediaType.TEXT_PLAIN)));
         }
     }
 
@@ -158,25 +135,18 @@ class ShowJavascriptTest {
         when(mockDoc.getDocumentCatalog()).thenReturn(null);
         when(pdfDocumentFactory.load(pdfFile)).thenReturn(mockDoc);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponse =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponse = mockStatic(WebResponseUtils.class)) {
             ResponseEntity<Resource> expectedResponse = streamingOk("no js".getBytes());
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.fileToWebResponse(
-                                            any(TempFile.class),
-                                            anyString(),
-                                            eq(MediaType.TEXT_PLAIN)))
+                    .when(() -> WebResponseUtils.fileToWebResponse(
+                            any(TempFile.class), anyString(), eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = showJavascript.extractHeader(request);
 
             assertNotNull(response);
-            mockedWebResponse.verify(
-                    () ->
-                            WebResponseUtils.fileToWebResponse(
-                                    any(TempFile.class), anyString(), eq(MediaType.TEXT_PLAIN)));
+            mockedWebResponse.verify(() ->
+                    WebResponseUtils.fileToWebResponse(any(TempFile.class), anyString(), eq(MediaType.TEXT_PLAIN)));
         }
     }
 
@@ -197,25 +167,18 @@ class ShowJavascriptTest {
         when(jsTree.getNames()).thenReturn(jsMap2);
         when(pdfDocumentFactory.load(pdfFile)).thenReturn(mockDoc);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponse =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponse = mockStatic(WebResponseUtils.class)) {
             ResponseEntity<Resource> expectedResponse = streamingOk("no js".getBytes());
             mockedWebResponse
-                    .when(
-                            () ->
-                                    WebResponseUtils.fileToWebResponse(
-                                            any(TempFile.class),
-                                            anyString(),
-                                            eq(MediaType.TEXT_PLAIN)))
+                    .when(() -> WebResponseUtils.fileToWebResponse(
+                            any(TempFile.class), anyString(), eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = showJavascript.extractHeader(request);
 
             assertNotNull(response);
-            mockedWebResponse.verify(
-                    () ->
-                            WebResponseUtils.fileToWebResponse(
-                                    any(TempFile.class), anyString(), eq(MediaType.TEXT_PLAIN)));
+            mockedWebResponse.verify(() ->
+                    WebResponseUtils.fileToWebResponse(any(TempFile.class), anyString(), eq(MediaType.TEXT_PLAIN)));
         }
     }
 

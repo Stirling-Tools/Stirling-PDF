@@ -18,11 +18,7 @@ import java.util.regex.Pattern;
  * labelling here goes through the published metadata contract instead.
  */
 public record PurviewConnectionSettings(
-        String tenantId,
-        String clientId,
-        String clientSecret,
-        String graphBaseUrl,
-        String loginBaseUrl) {
+        String tenantId, String clientId, String clientSecret, String graphBaseUrl, String loginBaseUrl) {
 
     static final String TENANT_ID_OPTION = "tenantId";
     static final String CLIENT_ID_OPTION = "clientId";
@@ -35,8 +31,7 @@ public record PurviewConnectionSettings(
     public static final String DEFAULT_LOGIN_BASE_URL = "https://login.microsoftonline.com";
 
     /** Entra tenant ids are GUIDs; the value ends up in document metadata, so it is checked. */
-    private static final Pattern GUID =
-            Pattern.compile("^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$");
+    private static final Pattern GUID = Pattern.compile("^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$");
 
     public static PurviewConnectionSettings from(Map<String, Object> options) {
         String tenantId = trimmed(options.get(TENANT_ID_OPTION));
@@ -45,8 +40,7 @@ public record PurviewConnectionSettings(
         }
         if (!GUID.matcher(tenantId).matches()) {
             throw new IllegalArgumentException(
-                    "purview config 'tenantId' must be a GUID, e.g."
-                            + " cb46c030-1825-4e81-a295-151c039dbf02");
+                    "purview config 'tenantId' must be a GUID, e.g." + " cb46c030-1825-4e81-a295-151c039dbf02");
         }
         String clientId = trimmed(options.get(CLIENT_ID_OPTION));
         String clientSecret = trimmed(options.get(CLIENT_SECRET_OPTION));
@@ -54,8 +48,7 @@ public record PurviewConnectionSettings(
         // a confusing place to discover it.
         if ((clientId == null) != (clientSecret == null)) {
             throw new IllegalArgumentException(
-                    "purview config needs both 'clientId' and 'clientSecret' to read the label"
-                            + " list, or neither");
+                    "purview config needs both 'clientId' and 'clientSecret' to read the label" + " list, or neither");
         }
         return new PurviewConnectionSettings(
                 tenantId.toLowerCase(Locale.ROOT),
@@ -85,10 +78,6 @@ public record PurviewConnectionSettings(
     /** Never prints the client secret, so an accidental log line cannot leak it. */
     @Override
     public String toString() {
-        return "PurviewConnectionSettings[tenantId="
-                + tenantId
-                + ", canListLabels="
-                + canListLabels()
-                + "]";
+        return "PurviewConnectionSettings[tenantId=" + tenantId + ", canListLabels=" + canListLabels() + "]";
     }
 }

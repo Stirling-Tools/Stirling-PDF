@@ -41,7 +41,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToPDFATest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @SuppressWarnings("unchecked")
     private static <T> T invokePrivateMethod(String methodName, Object... args) throws Exception {
@@ -64,8 +65,7 @@ class ConvertPDFToPDFATest {
             return (T) method.invoke(null, args);
         } catch (NoSuchMethodException e) {
             for (Method method : ConvertPDFToPDFA.class.getDeclaredMethods()) {
-                if (method.getName().equals(methodName)
-                        && method.getParameterCount() == args.length) {
+                if (method.getName().equals(methodName) && method.getParameterCount() == args.length) {
                     method.setAccessible(true);
                     return (T) method.invoke(null, args);
                 }
@@ -90,8 +90,7 @@ class ConvertPDFToPDFATest {
         return document;
     }
 
-    private PDDocument createPdfWithMetadata(String title, String author, String creator)
-            throws IOException {
+    private PDDocument createPdfWithMetadata(String title, String author, String creator) throws IOException {
         PDDocument document = createSimplePdf();
 
         PDDocumentInformation info = new PDDocumentInformation();
@@ -209,8 +208,7 @@ class ConvertPDFToPDFATest {
         @Test
         @DisplayName("Should preserve Dublin Core creator information")
         void shouldPreserveDublinCoreCreatorInformation() throws Exception {
-            PDDocument document =
-                    createPdfWithMetadata("Test PDF", "Test Author", "Original Creator");
+            PDDocument document = createPdfWithMetadata("Test PDF", "Test Author", "Original Creator");
 
             invokePrivateMethod("mergeAndAddXmpMetadata", document, 1);
 
@@ -539,11 +537,10 @@ class ConvertPDFToPDFATest {
         void shouldHandleEmptyPdfDocument() {
             PDDocument document = new PDDocument();
 
-            assertDoesNotThrow(
-                    () -> {
-                        invokePrivateMethod("mergeAndAddXmpMetadata", document, 1);
-                        document.close();
-                    });
+            assertDoesNotThrow(() -> {
+                invokePrivateMethod("mergeAndAddXmpMetadata", document, 1);
+                document.close();
+            });
         }
 
         @Test
@@ -558,10 +555,9 @@ class ConvertPDFToPDFATest {
             COSDictionary simpleDict = new COSDictionary();
             simpleDict.setItem(COSName.JAVA_SCRIPT, COSName.A);
 
-            assertDoesNotThrow(
-                    () -> {
-                        invokePrivateMethod("sanitizePdfA", simpleDict, 1);
-                    });
+            assertDoesNotThrow(() -> {
+                invokePrivateMethod("sanitizePdfA", simpleDict, 1);
+            });
 
             assertThat(simpleDict.containsKey(COSName.JAVA_SCRIPT)).isFalse();
 

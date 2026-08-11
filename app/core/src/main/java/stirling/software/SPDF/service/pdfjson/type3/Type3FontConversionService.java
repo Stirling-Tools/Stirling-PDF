@@ -26,8 +26,7 @@ public class Type3FontConversionService {
             return Collections.emptyList();
         }
         if (strategies == null || strategies.isEmpty()) {
-            log.debug(
-                    "[TYPE3] No conversion strategies registered for font {}", request.getFontId());
+            log.debug("[TYPE3] No conversion strategies registered for font {}", request.getFontId());
             return Collections.emptyList();
         }
 
@@ -37,14 +36,12 @@ public class Type3FontConversionService {
             if (strategy == null) {
                 continue;
             }
-            PdfJsonFontConversionCandidate candidate =
-                    runStrategy(
-                            strategy,
-                            request,
-                            glyphContext == null
-                                    ? (glyphContext =
-                                            new Type3GlyphContext(request, glyphExtractor))
-                                    : glyphContext);
+            PdfJsonFontConversionCandidate candidate = runStrategy(
+                    strategy,
+                    request,
+                    glyphContext == null
+                            ? (glyphContext = new Type3GlyphContext(request, glyphExtractor))
+                            : glyphContext);
             if (candidate != null) {
                 candidates.add(candidate);
             }
@@ -53,9 +50,7 @@ public class Type3FontConversionService {
     }
 
     private PdfJsonFontConversionCandidate runStrategy(
-            Type3ConversionStrategy strategy,
-            Type3ConversionRequest request,
-            Type3GlyphContext glyphContext) {
+            Type3ConversionStrategy strategy, Type3ConversionRequest request, Type3GlyphContext glyphContext) {
         if (!strategy.isAvailable()) {
             return PdfJsonFontConversionCandidate.builder()
                     .strategyId(strategy.getId())
@@ -92,9 +87,7 @@ public class Type3FontConversionService {
             PdfJsonFontConversionCandidate result = strategy.convert(request, glyphContext);
             if (result == null) {
                 log.info(
-                        "[TYPE3] Strategy {} returned null result for font {}",
-                        strategy.getId(),
-                        request.getFontUid());
+                        "[TYPE3] Strategy {} returned null result for font {}", strategy.getId(), request.getFontUid());
                 return PdfJsonFontConversionCandidate.builder()
                         .strategyId(strategy.getId())
                         .strategyLabel(strategy.getLabel())

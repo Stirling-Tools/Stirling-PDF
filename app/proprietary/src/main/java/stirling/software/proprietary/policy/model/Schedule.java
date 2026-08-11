@@ -117,8 +117,7 @@ public sealed interface Schedule {
                     }
                 }
             }
-            throw new IllegalStateException(
-                    "unreachable: a month with the chosen day recurs yearly");
+            throw new IllegalStateException("unreachable: a month with the chosen day recurs yearly");
         }
     }
 

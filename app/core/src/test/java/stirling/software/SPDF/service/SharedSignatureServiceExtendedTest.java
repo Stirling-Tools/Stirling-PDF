@@ -23,14 +23,15 @@ import tools.jackson.databind.json.JsonMapper;
 
 class SharedSignatureServiceExtendedTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
+
     private SharedSignatureService service;
     private static final String TEST_USER = "testuser";
 
     @BeforeEach
     void setUp() {
-        try (MockedStatic<InstallationPathConfig> mocked =
-                mockStatic(InstallationPathConfig.class)) {
+        try (MockedStatic<InstallationPathConfig> mocked = mockStatic(InstallationPathConfig.class)) {
             mocked.when(InstallationPathConfig::getSignaturesPath).thenReturn(tempDir.toString());
             service = new SharedSignatureService(JsonMapper.builder().build());
         }
@@ -83,8 +84,7 @@ class SharedSignatureServiceExtendedTest {
         request.setType("canvas");
         request.setScope(null);
         byte[] imageBytes = new byte[] {1, 2, 3};
-        request.setDataUrl(
-                "data:image/png;base64," + Base64.getEncoder().encodeToString(imageBytes));
+        request.setDataUrl("data:image/png;base64," + Base64.getEncoder().encodeToString(imageBytes));
 
         SavedSignatureResponse response = service.saveSignature(TEST_USER, request);
         assertEquals("personal", response.getScope());
@@ -98,8 +98,7 @@ class SharedSignatureServiceExtendedTest {
         request.setType("canvas");
         request.setScope("");
         byte[] imageBytes = new byte[] {1, 2, 3};
-        request.setDataUrl(
-                "data:image/png;base64," + Base64.getEncoder().encodeToString(imageBytes));
+        request.setDataUrl("data:image/png;base64," + Base64.getEncoder().encodeToString(imageBytes));
 
         SavedSignatureResponse response = service.saveSignature(TEST_USER, request);
         assertEquals("personal", response.getScope());
@@ -112,11 +111,9 @@ class SharedSignatureServiceExtendedTest {
         request.setLabel("Test");
         request.setType("canvas");
         byte[] imageBytes = new byte[] {1, 2, 3};
-        request.setDataUrl(
-                "data:image/gif;base64," + Base64.getEncoder().encodeToString(imageBytes));
+        request.setDataUrl("data:image/gif;base64," + Base64.getEncoder().encodeToString(imageBytes));
 
-        assertThrows(
-                IllegalArgumentException.class, () -> service.saveSignature(TEST_USER, request));
+        assertThrows(IllegalArgumentException.class, () -> service.saveSignature(TEST_USER, request));
     }
 
     @Test
@@ -127,8 +124,7 @@ class SharedSignatureServiceExtendedTest {
         request.setType("canvas");
         request.setDataUrl("data:image/png;base64,AAAA");
 
-        assertThrows(
-                IllegalArgumentException.class, () -> service.saveSignature(TEST_USER, request));
+        assertThrows(IllegalArgumentException.class, () -> service.saveSignature(TEST_USER, request));
     }
 
     @Test
@@ -159,14 +155,8 @@ class SharedSignatureServiceExtendedTest {
         List<SavedSignatureResponse> sigs = service.getSavedSignatures(TEST_USER);
         assertEquals(2, sigs.size());
 
-        boolean hasPersonal =
-                sigs.stream()
-                        .anyMatch(
-                                s -> "personal".equals(s.getScope()) && "mysig".equals(s.getId()));
-        boolean hasShared =
-                sigs.stream()
-                        .anyMatch(
-                                s -> "shared".equals(s.getScope()) && "company".equals(s.getId()));
+        boolean hasPersonal = sigs.stream().anyMatch(s -> "personal".equals(s.getScope()) && "mysig".equals(s.getId()));
+        boolean hasShared = sigs.stream().anyMatch(s -> "shared".equals(s.getScope()) && "company".equals(s.getId()));
         assertTrue(hasPersonal);
         assertTrue(hasShared);
     }
@@ -199,36 +189,26 @@ class SharedSignatureServiceExtendedTest {
 
     @Test
     void deleteSignature_notFound_throwsFileNotFoundException() {
-        assertThrows(
-                FileNotFoundException.class,
-                () -> service.deleteSignature(TEST_USER, "nonexistent"));
+        assertThrows(FileNotFoundException.class, () -> service.deleteSignature(TEST_USER, "nonexistent"));
     }
 
     @Test
     void deleteSignature_invalidId_throwsIllegalArgument() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.deleteSignature(TEST_USER, "../hack"));
+        assertThrows(IllegalArgumentException.class, () -> service.deleteSignature(TEST_USER, "../hack"));
     }
 
     @Test
     void validateFileName_withSlash_throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.hasAccessToFile(TEST_USER, "path/file.png"));
+        assertThrows(IllegalArgumentException.class, () -> service.hasAccessToFile(TEST_USER, "path/file.png"));
     }
 
     @Test
     void validateFileName_withBackslash_throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.hasAccessToFile(TEST_USER, "path\\file.png"));
+        assertThrows(IllegalArgumentException.class, () -> service.hasAccessToFile(TEST_USER, "path\\file.png"));
     }
 
     @Test
     void validateFileName_withSpecialChars_throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service.hasAccessToFile(TEST_USER, "file name.png"));
+        assertThrows(IllegalArgumentException.class, () -> service.hasAccessToFile(TEST_USER, "file name.png"));
     }
 }

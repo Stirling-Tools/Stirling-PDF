@@ -74,8 +74,7 @@ class JobControllerOwnershipTest {
     }
 
     private JobController makeController(ClusterBackplane backplane, JobStore store) {
-        JobController c =
-                new JobController(taskManager, fileStorage, jobQueue, request, backplane, store);
+        JobController c = new JobController(taskManager, fileStorage, jobQueue, request, backplane, store);
         ReflectionTestUtils.setField(c, "stickyMissRecorder", stickyMissRecorder);
         return c;
     }
@@ -106,9 +105,8 @@ class JobControllerOwnershipTest {
     }
 
     @Test
-    @DisplayName(
-            "downloadFile peer-owned → full sticky-410 contract"
-                    + " (status + Retry-After + payload + metric + storage untouched)")
+    @DisplayName("downloadFile peer-owned → full sticky-410 contract"
+            + " (status + Retry-After + payload + metric + storage untouched)")
     void downloadFile_peerOwned_fullStickyContract() throws Exception {
         when(clusterBackplane.localNodeId()).thenReturn(LOCAL_NODE);
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
@@ -141,13 +139,11 @@ class JobControllerOwnershipTest {
 
     @ParameterizedTest(name = "downloadFile {0} -> 200, no sticky-miss")
     @MethodSource("downloadHappyPathScenarios")
-    void downloadFile_happyPath_returnsOkAndNoMetric(
-            String scenario, String ownerNodeId, boolean entryPresent) throws Exception {
+    void downloadFile_happyPath_returnsOkAndNoMetric(String scenario, String ownerNodeId, boolean entryPresent)
+            throws Exception {
         when(clusterBackplane.localNodeId()).thenReturn(LOCAL_NODE);
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
-        when(jobStore.get(JOB_ID))
-                .thenReturn(
-                        entryPresent ? Optional.of(entryOwnedBy(ownerNodeId)) : Optional.empty());
+        when(jobStore.get(JOB_ID)).thenReturn(entryPresent ? Optional.of(entryOwnedBy(ownerNodeId)) : Optional.empty());
         when(fileStorage.retrieveBytes(FILE_ID)).thenReturn("payload".getBytes());
 
         ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
@@ -196,11 +192,10 @@ class JobControllerOwnershipTest {
         when(jobStore.get(JOB_ID)).thenReturn(Optional.of(entryOwnedBy(PEER_NODE)));
         switch (endpoint) {
             case DOWNLOAD_FILE, GET_FILE_METADATA ->
-                    when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
-            case GET_JOB_RESULT ->
-                    when(taskManager.getJobResult(JOB_ID)).thenReturn(completedJobWithFile());
+                when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
+            case GET_JOB_RESULT -> when(taskManager.getJobResult(JOB_ID)).thenReturn(completedJobWithFile());
             case GET_JOB_STATUS, GET_JOB_FILES ->
-                    when(taskManager.getJobResult(JOB_ID)).thenReturn(null);
+                when(taskManager.getJobResult(JOB_ID)).thenReturn(null);
             case CANCEL_JOB -> {
                 when(jobQueue.isJobQueued(JOB_ID)).thenReturn(false);
                 when(taskManager.getJobResult(JOB_ID)).thenReturn(null);
@@ -293,9 +288,7 @@ class JobControllerOwnershipTest {
     }
 
     @Test
-    @DisplayName(
-            "cluster-mode but localNodeId is null → no NPE; 410 because owner is set and"
-                    + " differs from blank")
+    @DisplayName("cluster-mode but localNodeId is null → no NPE; 410 because owner is set and" + " differs from blank")
     void clusterBackplanePresent_butLocalNodeIdNull_falsBackGracefully() throws Exception {
         when(clusterBackplane.localNodeId()).thenReturn(null);
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
@@ -327,9 +320,7 @@ class JobControllerOwnershipTest {
     }
 
     @Test
-    @DisplayName(
-            "downloadFile: peer-owned + ownership-denied → 410 (NOT 403) so we don't leak"
-                    + " file existence")
+    @DisplayName("downloadFile: peer-owned + ownership-denied → 410 (NOT 403) so we don't leak" + " file existence")
     void downloadFile_peerOwned_ownershipDenied_returns410NotForbidden() throws Exception {
         when(clusterBackplane.localNodeId()).thenReturn(LOCAL_NODE);
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
@@ -347,9 +338,7 @@ class JobControllerOwnershipTest {
     }
 
     @Test
-    @DisplayName(
-            "getJobStatus: peer-owned + ownership-denied → 410 (NOT 403) so we don't leak"
-                    + " job existence")
+    @DisplayName("getJobStatus: peer-owned + ownership-denied → 410 (NOT 403) so we don't leak" + " job existence")
     void getJobStatus_peerOwned_ownershipDenied_returns410NotForbidden() {
         when(clusterBackplane.localNodeId()).thenReturn(LOCAL_NODE);
         when(jobStore.get(JOB_ID)).thenReturn(Optional.of(entryOwnedBy(PEER_NODE)));
@@ -365,9 +354,7 @@ class JobControllerOwnershipTest {
     }
 
     @Test
-    @DisplayName(
-            "cancelJob: peer-owned + ownership-denied → 410 (NOT 403) so we don't leak job"
-                    + " existence")
+    @DisplayName("cancelJob: peer-owned + ownership-denied → 410 (NOT 403) so we don't leak job" + " existence")
     void cancelJob_peerOwned_ownershipDenied_returns410NotForbidden() {
         when(clusterBackplane.localNodeId()).thenReturn(LOCAL_NODE);
         when(jobQueue.isJobQueued(JOB_ID)).thenReturn(false);
@@ -386,8 +373,7 @@ class JobControllerOwnershipTest {
 
     @Test
     @DisplayName(
-            "guardNonOwner caches JobStore.get within TTL window: second call same jobId hits"
-                    + " cache, not Valkey")
+            "guardNonOwner caches JobStore.get within TTL window: second call same jobId hits" + " cache, not Valkey")
     void guardNonOwner_cachesJobStoreLookupWithinTtl() throws Exception {
         when(clusterBackplane.localNodeId()).thenReturn(LOCAL_NODE);
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
@@ -403,9 +389,8 @@ class JobControllerOwnershipTest {
     }
 
     @Test
-    @DisplayName(
-            "guardNonOwner: JobStore.get throws (Valkey timeout) → falls through to local-disk"
-                    + " path, no 500 leaks to caller")
+    @DisplayName("guardNonOwner: JobStore.get throws (Valkey timeout) → falls through to local-disk"
+            + " path, no 500 leaks to caller")
     void guardNonOwner_jobStoreException_fallsThroughToLocalPath() throws Exception {
         when(taskManager.findJobKeyByFileId(FILE_ID)).thenReturn(JOB_ID);
         when(jobStore.get(JOB_ID)).thenThrow(new RuntimeException("Valkey command timeout"));
@@ -444,12 +429,10 @@ class JobControllerOwnershipTest {
     }
 
     @Test
-    @DisplayName(
-            "downloadFile: findJobKeyByFileId throws (backplane down) → 503 + Retry-After,"
-                    + " not 404/500, storage untouched")
+    @DisplayName("downloadFile: findJobKeyByFileId throws (backplane down) → 503 + Retry-After,"
+            + " not 404/500, storage untouched")
     void downloadFile_findJobKeyThrows_returns503Retryable() throws Exception {
-        when(taskManager.findJobKeyByFileId(FILE_ID))
-                .thenThrow(new RuntimeException("Valkey command timeout"));
+        when(taskManager.findJobKeyByFileId(FILE_ID)).thenThrow(new RuntimeException("Valkey command timeout"));
 
         ResponseEntity<?> response = makeController().downloadFile(FILE_ID);
 
@@ -461,12 +444,9 @@ class JobControllerOwnershipTest {
     }
 
     @Test
-    @DisplayName(
-            "getFileMetadata: findJobKeyByFileId throws (backplane down) → 503 + Retry-After,"
-                    + " not 404/500")
+    @DisplayName("getFileMetadata: findJobKeyByFileId throws (backplane down) → 503 + Retry-After," + " not 404/500")
     void getFileMetadata_findJobKeyThrows_returns503Retryable() throws Exception {
-        when(taskManager.findJobKeyByFileId(FILE_ID))
-                .thenThrow(new RuntimeException("Valkey command timeout"));
+        when(taskManager.findJobKeyByFileId(FILE_ID)).thenThrow(new RuntimeException("Valkey command timeout"));
 
         ResponseEntity<?> response = makeController().getFileMetadata(FILE_ID);
 

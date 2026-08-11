@@ -15,11 +15,9 @@ import stirling.software.common.model.api.misc.ReplaceAndInvert;
 class ReplaceAndInvertColorStrategyTest {
 
     // A concrete implementation of the abstract class for testing
-    private static class ConcreteReplaceAndInvertColorStrategy
-            extends ReplaceAndInvertColorStrategy {
+    private static class ConcreteReplaceAndInvertColorStrategy extends ReplaceAndInvertColorStrategy {
 
-        public ConcreteReplaceAndInvertColorStrategy(
-                MultipartFile file, ReplaceAndInvert replaceAndInvert) {
+        public ConcreteReplaceAndInvertColorStrategy(MultipartFile file, ReplaceAndInvert replaceAndInvert) {
             super(file, replaceAndInvert);
         }
 
@@ -34,36 +32,27 @@ class ReplaceAndInvertColorStrategyTest {
     void testConstructor() {
         // Arrange
         MultipartFile mockFile =
-                new MockMultipartFile(
-                        "file",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "test content".getBytes());
+                new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, "test content".getBytes());
         ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.CUSTOM_COLOR;
 
         // Act
-        ReplaceAndInvertColorStrategy strategy =
-                new ConcreteReplaceAndInvertColorStrategy(mockFile, replaceAndInvert);
+        ReplaceAndInvertColorStrategy strategy = new ConcreteReplaceAndInvertColorStrategy(mockFile, replaceAndInvert);
 
         // Assert
         assertNotNull(strategy, "Strategy should be initialized");
         assertEquals(mockFile, strategy.getFileInput(), "File input should be set correctly");
         assertEquals(
-                replaceAndInvert,
-                strategy.getReplaceAndInvert(),
-                "ReplaceAndInvert option should be set correctly");
+                replaceAndInvert, strategy.getReplaceAndInvert(), "ReplaceAndInvert option should be set correctly");
     }
 
     @Test
     void testReplace() throws IOException {
         // Arrange
         byte[] content = "test pdf content".getBytes();
-        MultipartFile mockFile =
-                new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, content);
+        MultipartFile mockFile = new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, content);
         ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.CUSTOM_COLOR;
 
-        ReplaceAndInvertColorStrategy strategy =
-                new ConcreteReplaceAndInvertColorStrategy(mockFile, replaceAndInvert);
+        ReplaceAndInvertColorStrategy strategy = new ConcreteReplaceAndInvertColorStrategy(mockFile, replaceAndInvert);
 
         // Act
         InputStreamResource result = strategy.replace();
@@ -76,17 +65,9 @@ class ReplaceAndInvertColorStrategyTest {
     void testGettersAndSetters() {
         // Arrange
         MultipartFile mockFile1 =
-                new MockMultipartFile(
-                        "file1",
-                        "test1.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "content1".getBytes());
+                new MockMultipartFile("file1", "test1.pdf", MediaType.APPLICATION_PDF_VALUE, "content1".getBytes());
         MultipartFile mockFile2 =
-                new MockMultipartFile(
-                        "file2",
-                        "test2.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "content2".getBytes());
+                new MockMultipartFile("file2", "test2.pdf", MediaType.APPLICATION_PDF_VALUE, "content2".getBytes());
 
         // Act
         ReplaceAndInvertColorStrategy strategy =

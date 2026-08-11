@@ -45,12 +45,11 @@ public class GeneralUtils {
     private static final BigDecimal LONG_MAX_DECIMAL = BigDecimal.valueOf(Long.MAX_VALUE);
 
     private final Set<String> DEFAULT_VALID_SCRIPTS = Set.of("png_to_webp.py", "split_photos.py");
-    private final Set<String> DEFAULT_VALID_PIPELINE =
-            Set.of(
-                    "OCR images.json",
-                    "Prepare-pdfs-for-email.json",
-                    "Pre-publish-sanitization.json",
-                    "split-rotate-auto-rename.json");
+    private final Set<String> DEFAULT_VALID_PIPELINE = Set.of(
+            "OCR images.json",
+            "Prepare-pdfs-for-email.json",
+            "Pre-publish-sanitization.json",
+            "split-rotate-auto-rename.json");
 
     private final String DEFAULT_WEBUI_CONFIGS_DIR = "defaultWebUIConfigs";
     private final String PYTHON_SCRIPTS_DIR = "python";
@@ -183,8 +182,7 @@ public class GeneralUtils {
      * @param suffix the suffix to append to each processed filename
      * @param processor consumer to handle each processed filename, may be null
      */
-    public void processFilenames(
-            List<String> filenames, String suffix, java.util.function.Consumer<String> processor) {
+    public void processFilenames(List<String> filenames, String suffix, java.util.function.Consumer<String> processor) {
         if (filenames == null || processor == null) {
             return;
         }
@@ -211,23 +209,19 @@ public class GeneralUtils {
     }
 
     public void deleteDirectory(Path path) throws IOException {
-        Files.walkFileTree(
-                path,
-                new SimpleFileVisitor<>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                            throws IOException {
-                        Files.deleteIfExists(file);
-                        return FileVisitResult.CONTINUE;
-                    }
+        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.deleteIfExists(file);
+                return FileVisitResult.CONTINUE;
+            }
 
-                    @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                            throws IOException {
-                        Files.deleteIfExists(dir);
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.deleteIfExists(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     public String convertToFileName(String name) {
@@ -249,8 +243,8 @@ public class GeneralUtils {
     }
 
     // Get resources from a location pattern
-    public Resource[] getResourcesFromLocationPattern(
-            String locationPattern, ResourceLoader resourceLoader) throws Exception {
+    public Resource[] getResourcesFromLocationPattern(String locationPattern, ResourceLoader resourceLoader)
+            throws Exception {
         // Normalize the path for file resources
         String pattern = locationPattern;
         if (pattern.startsWith("file:")) {
@@ -258,8 +252,7 @@ public class GeneralUtils {
             Path normalizePath = Path.of(rawPath).normalize();
             pattern = "file:" + normalizePath.toString().replace("\\", "/") + "/*";
         }
-        return ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
-                .getResources(pattern);
+        return ResourcePatternUtils.getResourcePatternResolver(resourceLoader).getResources(pattern);
     }
 
     /**
@@ -270,8 +263,7 @@ public class GeneralUtils {
      */
     public boolean isValidURL(String urlStr) {
         try {
-            Urls.create(
-                    urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
+            Urls.create(urlStr, Urls.HTTP_PROTOCOLS, HostValidator.DENY_COMMON_INFRASTRUCTURE_TARGETS);
             return true;
         } catch (MalformedURLException e) {
             return false;
@@ -352,10 +344,7 @@ public class GeneralUtils {
         try {
             InetAddress[] addresses = InetAddress.getAllByName(host);
             if (addresses.length > MAX_DNS_ADDRESSES) {
-                log.debug(
-                        "Blocking URL to host {} due to excessive DNS records (>{})",
-                        host,
-                        MAX_DNS_ADDRESSES);
+                log.debug("Blocking URL to host {} due to excessive DNS records (>{})", host, MAX_DNS_ADDRESSES);
                 return true;
             }
             for (InetAddress address : addresses) {
@@ -398,8 +387,7 @@ public class GeneralUtils {
                 return true;
             }
             if (isIPv4MappedAddress(rawAddress) || inet6Address.isIPv4CompatibleAddress()) {
-                byte[] ipv4 =
-                        Arrays.copyOfRange(rawAddress, rawAddress.length - 4, rawAddress.length);
+                byte[] ipv4 = Arrays.copyOfRange(rawAddress, rawAddress.length - 4, rawAddress.length);
                 return isPrivateOrReservedIPv4(ipv4);
             }
         }
@@ -628,8 +616,7 @@ public class GeneralUtils {
         } else if (bytes < 1024L * 1024L * 1024L * 1024L) {
             return String.format(Locale.ROOT, "%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
         } else {
-            return String.format(
-                    Locale.ROOT, "%.2f TB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
+            return String.format(Locale.ROOT, "%.2f TB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
         }
     }
 
@@ -669,8 +656,7 @@ public class GeneralUtils {
                 result.addAll(handlePart(page, totalPages, offset));
             }
             if (result.size() > maxSize) {
-                throw new IllegalArgumentException(
-                        "Page list exceeds maximum allowed size of " + maxSize);
+                throw new IllegalArgumentException("Page list exceeds maximum allowed size of " + maxSize);
             }
         }
         return new ArrayList<>(result);
@@ -720,11 +706,7 @@ public class GeneralUtils {
                     results.add(intResult);
                 }
             } catch (Exception e) {
-                log.debug(
-                        "Failed to evaluate expression '{}' for n={}: {}",
-                        expression,
-                        n,
-                        e.getMessage());
+                log.debug("Failed to evaluate expression '{}' for n={}: {}", expression, n, e.getMessage());
                 // Continue with next value instead of breaking
             }
         }
@@ -742,15 +724,11 @@ public class GeneralUtils {
             }
         }
         String sanitizedExpression = sb.toString();
-        String multiplyByOpeningRoundBracketPattern =
-                "([0-9n)])\\("; // example: n(n-1), 9(n-1), (n-1)(n-2)
-        sanitizedExpression =
-                sanitizedExpression.replaceAll(multiplyByOpeningRoundBracketPattern, "$1*(");
+        String multiplyByOpeningRoundBracketPattern = "([0-9n)])\\("; // example: n(n-1), 9(n-1), (n-1)(n-2)
+        sanitizedExpression = sanitizedExpression.replaceAll(multiplyByOpeningRoundBracketPattern, "$1*(");
 
-        String multiplyByClosingRoundBracketPattern =
-                "\\)([0-9n)])"; // example: (n-1)n, (n-1)9, (n-1)(n-2)
-        sanitizedExpression =
-                sanitizedExpression.replaceAll(multiplyByClosingRoundBracketPattern, ")*$1");
+        String multiplyByClosingRoundBracketPattern = "\\)([0-9n)])"; // example: (n-1)n, (n-1)9, (n-1)(n-2)
+        sanitizedExpression = sanitizedExpression.replaceAll(multiplyByClosingRoundBracketPattern, ")*$1");
 
         sanitizedExpression = insertMultiplicationBeforeN(sanitizedExpression, nValue);
         return sanitizedExpression;
@@ -762,9 +740,7 @@ public class GeneralUtils {
         for (int i = 0; i < expression.length(); i++) {
             char c = expression.charAt(i);
             sb.append(c);
-            if (Character.isDigit(c)
-                    && i + 1 < expression.length()
-                    && expression.charAt(i + 1) == 'n') {
+            if (Character.isDigit(c) && i + 1 < expression.length() && expression.charAt(i + 1) == 'n') {
                 sb.append('*');
             }
         }
@@ -810,10 +786,9 @@ public class GeneralUtils {
             String[] rangeParts = part.split("-");
             try {
                 int start = Integer.parseInt(rangeParts[0]);
-                int end =
-                        (rangeParts.length > 1 && !rangeParts[1].isEmpty())
-                                ? Integer.parseInt(rangeParts[1])
-                                : totalPages;
+                int end = (rangeParts.length > 1 && !rangeParts[1].isEmpty())
+                        ? Integer.parseInt(rangeParts[1])
+                        : totalPages;
                 for (int i = start; i <= end; i++) {
                     if (i >= 1 && i <= totalPages) {
                         partResult.add(i - 1 + offset);
@@ -973,8 +948,7 @@ public class GeneralUtils {
      * @throws IOException if an I/O error occurs during file operations
      */
     public void extractPipeline() throws IOException {
-        Path pipelineDir =
-                Path.of(InstallationPathConfig.getPipelinePath(), DEFAULT_WEBUI_CONFIGS_DIR);
+        Path pipelineDir = Path.of(InstallationPathConfig.getPipelinePath(), DEFAULT_WEBUI_CONFIGS_DIR);
         Files.createDirectories(pipelineDir);
 
         for (String name : DEFAULT_VALID_PIPELINE) {
@@ -983,9 +957,7 @@ public class GeneralUtils {
                 throw new IllegalArgumentException("Invalid pipeline file name: " + name);
             }
             Path target = pipelineDir.resolve(name);
-            ClassPathResource res =
-                    new ClassPathResource(
-                            "static/pipeline/" + DEFAULT_WEBUI_CONFIGS_DIR + "/" + name);
+            ClassPathResource res = new ClassPathResource("static/pipeline/" + DEFAULT_WEBUI_CONFIGS_DIR + "/" + name);
             if (!res.exists()) {
                 log.error("Resource not found: {}", res.getPath());
                 throw new IOException("Resource not found: " + res.getPath());
@@ -1011,25 +983,21 @@ public class GeneralUtils {
             throw new IllegalArgumentException("scriptName must not be null or empty");
         }
         if (scriptName.contains("..") || scriptName.contains("/")) {
-            throw new IllegalArgumentException(
-                    "scriptName must not contain path traversal characters");
+            throw new IllegalArgumentException("scriptName must not contain path traversal characters");
         }
         if (!Path.of(scriptName).getFileName().toString().equals(scriptName)) {
-            throw new IllegalArgumentException(
-                    "scriptName must not contain path traversal characters");
+            throw new IllegalArgumentException("scriptName must not contain path traversal characters");
         }
 
         if (!DEFAULT_VALID_SCRIPTS.contains(scriptName)) {
-            throw new IllegalArgumentException(
-                    "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
+            throw new IllegalArgumentException("scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
         }
 
         Path scriptsDir = Path.of(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);
         Files.createDirectories(scriptsDir);
 
         Path target = scriptsDir.resolve(scriptName);
-        ClassPathResource res =
-                new ClassPathResource("static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName);
+        ClassPathResource res = new ClassPathResource("static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName);
         if (!res.exists()) {
             log.error("Resource not found: {}", res.getPath());
             throw new IOException("Resource not found: " + res.getPath());
@@ -1053,10 +1021,7 @@ public class GeneralUtils {
             try {
                 Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE);
             } catch (AtomicMoveNotSupportedException e) {
-                log.warn(
-                        "Atomic move not supported, falling back to non-atomic move for {}",
-                        target,
-                        e);
+                log.warn("Atomic move not supported, falling back to non-atomic move for {}", target, e);
                 Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (FileAlreadyExistsException e) {
@@ -1138,23 +1103,19 @@ public class GeneralUtils {
             command.add("-sOutputFile=" + tempOutput.toString());
             command.add(tempInput.toString());
 
-            ProcessExecutor.ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(command);
+            ProcessExecutor.ProcessExecutorResult result = ProcessExecutor.getInstance(
+                            ProcessExecutor.Processes.GHOSTSCRIPT)
+                    .runCommandWithOutputHandling(command);
 
             ExceptionUtils.GhostscriptException detectedError =
                     ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());
             if (detectedError != null) {
-                log.warn(
-                        "Ghostscript ebook optimization reported a critical error: {}",
-                        detectedError.getMessage());
+                log.warn("Ghostscript ebook optimization reported a critical error: {}", detectedError.getMessage());
                 throw detectedError;
             }
 
             if (result.getRc() != 0) {
-                log.warn(
-                        "Ghostscript ebook optimization failed with return code: {}",
-                        result.getRc());
+                log.warn("Ghostscript ebook optimization failed with return code: {}", result.getRc());
                 throw ExceptionUtils.createGhostscriptCompressionException(result.getMessages());
             }
 
@@ -1236,17 +1197,16 @@ public class GeneralUtils {
 
             try {
                 byte[] mac = iface.getHardwareAddress();
-                infos.add(
-                        new NetworkInterfaceInfo(
-                                iface.getName(),
-                                iface.getDisplayName(),
-                                iface.getIndex(),
-                                iface.isUp(),
-                                iface.isLoopback(),
-                                iface.isPointToPoint(),
-                                iface.isVirtual(),
-                                mac != null && mac.length > 0,
-                                siteLocalIpv4s));
+                infos.add(new NetworkInterfaceInfo(
+                        iface.getName(),
+                        iface.getDisplayName(),
+                        iface.getIndex(),
+                        iface.isUp(),
+                        iface.isLoopback(),
+                        iface.isPointToPoint(),
+                        iface.isVirtual(),
+                        mac != null && mac.length > 0,
+                        siteLocalIpv4s));
             } catch (SocketException e) {
                 log.debug("Skipping interface {} while scanning for local IP", iface.getName(), e);
             }
@@ -1258,20 +1218,11 @@ public class GeneralUtils {
         return interfaces.stream()
                 .filter(i -> i.up() && !i.loopback() && !i.pointToPoint() && !i.virtual())
                 .filter(i -> !isLikelyVirtualInterface(i.name(), i.displayName()))
-                .flatMap(
-                        i ->
-                                i.siteLocalIpv4s().stream()
-                                        .map(
-                                                ip ->
-                                                        new ScoredAddress(
-                                                                ip,
-                                                                scoreInterface(i, ip),
-                                                                i.index())))
-                .max(
-                        Comparator.comparingInt(ScoredAddress::score)
-                                .thenComparing(
-                                        Comparator.comparingInt(ScoredAddress::interfaceIndex)
-                                                .reversed()))
+                .flatMap(i ->
+                        i.siteLocalIpv4s().stream().map(ip -> new ScoredAddress(ip, scoreInterface(i, ip), i.index())))
+                .max(Comparator.comparingInt(ScoredAddress::score)
+                        .thenComparing(Comparator.comparingInt(ScoredAddress::interfaceIndex)
+                                .reversed()))
                 .map(ScoredAddress::ip)
                 .orElse(null);
     }
@@ -1298,8 +1249,7 @@ public class GeneralUtils {
         String n = name == null ? "" : name.toLowerCase(Locale.ROOT);
         String d = displayName == null ? "" : displayName.toLowerCase(Locale.ROOT);
         String[] namePrefixes = {
-            "tun", "tap", "utun", "veth", "virbr", "vmnet", "docker", "br-", "wg", "ppp", "awdl",
-            "llw"
+            "tun", "tap", "utun", "veth", "virbr", "vmnet", "docker", "br-", "wg", "ppp", "awdl", "llw"
         };
         for (String prefix : namePrefixes) {
             if (n.startsWith(prefix)) {

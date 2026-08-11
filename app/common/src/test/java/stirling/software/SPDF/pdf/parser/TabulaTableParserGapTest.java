@@ -77,8 +77,7 @@ class TabulaTableParserGapTest {
             try (PDDocument doc = Loader.loadPDF(pdf)) {
                 List<TableFragment> result = parser.parse(doc, new RawPage(1, 0f, 0f, List.of()));
                 assertNotNull(result);
-                assertTrue(
-                        result.isEmpty(), "borderless text must not be detected in lattice mode");
+                assertTrue(result.isEmpty(), "borderless text must not be detected in lattice mode");
             }
         }
 
@@ -101,11 +100,9 @@ class TabulaTableParserGapTest {
         @Test
         @DisplayName("page with text yields at least one well-formed fragment")
         void streamOnTextProducesFragment() throws Exception {
-            byte[] pdf =
-                    pdfWithText(new String[] {"Name Age City", "Alice 30 Paris", "Bob 25 Rome"});
+            byte[] pdf = pdfWithText(new String[] {"Name Age City", "Alice 30 Paris", "Bob 25 Rome"});
             try (PDDocument doc = Loader.loadPDF(pdf)) {
-                List<TableFragment> fragments =
-                        parser.parseStream(doc, new RawPage(1, 0f, 0f, List.of()));
+                List<TableFragment> fragments = parser.parseStream(doc, new RawPage(1, 0f, 0f, List.of()));
                 assertNotNull(fragments);
                 assertFalse(fragments.isEmpty(), "stream mode always builds a table from text");
                 assertFragmentWellFormed(fragments.get(0), 1, 0);
@@ -117,8 +114,7 @@ class TabulaTableParserGapTest {
         void streamFragmentIdFormat() throws Exception {
             byte[] pdf = pdfWithText(new String[] {"col1 col2", "a b"});
             try (PDDocument doc = Loader.loadPDF(pdf)) {
-                List<TableFragment> fragments =
-                        parser.parseStream(doc, new RawPage(1, 0f, 0f, List.of()));
+                List<TableFragment> fragments = parser.parseStream(doc, new RawPage(1, 0f, 0f, List.of()));
                 assertFalse(fragments.isEmpty());
                 assertEquals("tbl-p1-0", fragments.get(0).tableId());
                 assertEquals(1, fragments.get(0).pageNumber());
@@ -130,8 +126,7 @@ class TabulaTableParserGapTest {
         void streamRowsMatchRawRows() throws Exception {
             byte[] pdf = pdfWithText(new String[] {"x y", "1 2", "3 4"});
             try (PDDocument doc = Loader.loadPDF(pdf)) {
-                List<TableFragment> fragments =
-                        parser.parseStream(doc, new RawPage(1, 0f, 0f, List.of()));
+                List<TableFragment> fragments = parser.parseStream(doc, new RawPage(1, 0f, 0f, List.of()));
                 assertFalse(fragments.isEmpty());
                 TableFragment f = fragments.get(0);
                 assertEquals(f.rawRows().size(), f.rows().size());
@@ -150,11 +145,9 @@ class TabulaTableParserGapTest {
         void latticeDetectsBorderedTable() throws Exception {
             byte[] pdf = pdfWithGrid();
             try (PDDocument doc = Loader.loadPDF(pdf)) {
-                List<TableFragment> fragments =
-                        parser.parse(doc, new RawPage(1, 0f, 0f, List.of()));
+                List<TableFragment> fragments = parser.parse(doc, new RawPage(1, 0f, 0f, List.of()));
                 assertNotNull(fragments);
-                assertFalse(
-                        fragments.isEmpty(), "a clean ruled grid must be detected in lattice mode");
+                assertFalse(fragments.isEmpty(), "a clean ruled grid must be detected in lattice mode");
                 TableFragment f = fragments.get(0);
                 assertFragmentWellFormed(f, 1, 0);
                 assertTrue(f.columnCount() >= 1, "a detected grid must have at least one column");
@@ -179,8 +172,7 @@ class TabulaTableParserGapTest {
         void latticeCellTextIsNormalised() throws Exception {
             byte[] pdf = pdfWithGrid();
             try (PDDocument doc = Loader.loadPDF(pdf)) {
-                List<TableFragment> fragments =
-                        parser.parse(doc, new RawPage(1, 0f, 0f, List.of()));
+                List<TableFragment> fragments = parser.parse(doc, new RawPage(1, 0f, 0f, List.of()));
                 assertFalse(fragments.isEmpty());
                 for (List<String> row : fragments.get(0).rawRows()) {
                     for (String cell : row) {
@@ -220,9 +212,7 @@ class TabulaTableParserGapTest {
                 parser.parseStream(doc, new RawPage(1, 0f, 0f, List.of()));
                 // ObjectExtractor.close() would close the underlying COSDocument; the parser must
                 // not.
-                assertFalse(
-                        doc.getDocument().isClosed(),
-                        "parser must not close the caller's document");
+                assertFalse(doc.getDocument().isClosed(), "parser must not close the caller's document");
                 assertEquals(1, doc.getNumberOfPages());
             }
         }
@@ -231,8 +221,7 @@ class TabulaTableParserGapTest {
     // ── helpers ──────────────────────────────────────────────────────────────
 
     /** Asserts every field of a fragment satisfies the documented contract. */
-    private static void assertFragmentWellFormed(
-            TableFragment f, int expectedPage, int expectedIndex) {
+    private static void assertFragmentWellFormed(TableFragment f, int expectedPage, int expectedIndex) {
         assertNotNull(f);
         assertEquals(expectedPage, f.pageNumber());
         assertEquals("tbl-p" + expectedPage + "-" + expectedIndex, f.tableId());

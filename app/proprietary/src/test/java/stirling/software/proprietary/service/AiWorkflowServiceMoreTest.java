@@ -61,16 +61,32 @@ class AiWorkflowServiceMoreTest {
     private static final String ROTATE_ENDPOINT = "/api/v1/general/rotate-pdf";
     private static final String ORCHESTRATOR = "/api/v1/orchestrator";
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private AiEngineClient aiEngineClient;
-    @Mock private PdfContentExtractor pdfContentExtractor;
-    @Mock private InternalApiClient internalApiClient;
-    @Mock private FileStorage fileStorage;
-    @Mock private ToolMetadataService toolMetadataService;
-    @Mock private FileIdStrategy fileIdStrategy;
-    @Mock private AiEngineEndpointResolver endpointResolver;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @TempDir Path tempDir;
+    @Mock
+    private AiEngineClient aiEngineClient;
+
+    @Mock
+    private PdfContentExtractor pdfContentExtractor;
+
+    @Mock
+    private InternalApiClient internalApiClient;
+
+    @Mock
+    private FileStorage fileStorage;
+
+    @Mock
+    private ToolMetadataService toolMetadataService;
+
+    @Mock
+    private FileIdStrategy fileIdStrategy;
+
+    @Mock
+    private AiEngineEndpointResolver endpointResolver;
+
+    @TempDir
+    Path tempDir;
 
     private ObjectMapper objectMapper;
     private AiWorkflowService service;
@@ -89,21 +105,19 @@ class AiWorkflowServiceMoreTest {
         lenient().when(endpointResolver.getEnabledEndpointUrls()).thenReturn(List.of());
 
         PolicyExecutor policyExecutor =
-                new PolicyExecutor(
-                        internalApiClient, toolMetadataService, tempFileManager, objectMapper);
-        service =
-                new AiWorkflowService(
-                        pdfDocumentFactory,
-                        aiEngineClient,
-                        pdfContentExtractor,
-                        objectMapper,
-                        fileStorage,
-                        tempFileManager,
-                        fileIdStrategy,
-                        endpointResolver,
-                        policyExecutor,
-                        null,
-                        new ApplicationProperties());
+                new PolicyExecutor(internalApiClient, toolMetadataService, tempFileManager, objectMapper);
+        service = new AiWorkflowService(
+                pdfDocumentFactory,
+                aiEngineClient,
+                pdfContentExtractor,
+                objectMapper,
+                fileStorage,
+                tempFileManager,
+                fileIdStrategy,
+                endpointResolver,
+                policyExecutor,
+                null,
+                new ApplicationProperties());
     }
 
     @Nested
@@ -113,8 +127,7 @@ class AiWorkflowServiceMoreTest {
         @Test
         @DisplayName("throws when an uploaded file is empty")
         void emptyFileThrows() {
-            MockMultipartFile empty =
-                    new MockMultipartFile("fileInput", "empty.pdf", "application/pdf", new byte[0]);
+            MockMultipartFile empty = new MockMultipartFile("fileInput", "empty.pdf", "application/pdf", new byte[0]);
             assertThatThrownBy(() -> service.orchestrate(requestFor(empty, "do it")))
                     .isInstanceOf(IllegalArgumentException.class);
         }
@@ -128,8 +141,7 @@ class AiWorkflowServiceMoreTest {
         @DisplayName("ANSWER returns the engine response unchanged")
         void answerOutcome() throws IOException {
             stubOrchestrator("{\"outcome\":\"answer\",\"answer\":\"42\"}");
-            AiWorkflowResponse result =
-                    service.orchestrate(requestFor(pdf("a.pdf", "x"), "question"));
+            AiWorkflowResponse result = service.orchestrate(requestFor(pdf("a.pdf", "x"), "question"));
             assertThat(result.getOutcome()).isEqualTo(AiWorkflowOutcome.ANSWER);
             assertThat(result.getAnswer()).isEqualTo("42");
         }
@@ -146,8 +158,7 @@ class AiWorkflowServiceMoreTest {
         @DisplayName("CANNOT_DO is terminal")
         void cannotDoOutcome() throws IOException {
             stubOrchestrator("{\"outcome\":\"cannot_do\",\"reason\":\"no\"}");
-            AiWorkflowResponse result =
-                    service.orchestrate(requestFor(pdf("a.pdf", "x"), "impossible"));
+            AiWorkflowResponse result = service.orchestrate(requestFor(pdf("a.pdf", "x"), "impossible"));
             assertThat(result.getOutcome()).isEqualTo(AiWorkflowOutcome.CANNOT_DO);
         }
 
@@ -155,8 +166,7 @@ class AiWorkflowServiceMoreTest {
         @DisplayName("NOT_FOUND is terminal")
         void notFoundOutcome() throws IOException {
             stubOrchestrator("{\"outcome\":\"not_found\"}");
-            AiWorkflowResponse result =
-                    service.orchestrate(requestFor(pdf("a.pdf", "x"), "missing"));
+            AiWorkflowResponse result = service.orchestrate(requestFor(pdf("a.pdf", "x"), "missing"));
             assertThat(result.getOutcome()).isEqualTo(AiWorkflowOutcome.NOT_FOUND);
         }
     }
@@ -182,12 +192,10 @@ class AiWorkflowServiceMoreTest {
         @Test
         @DisplayName("unknown requested file id surfaces a clear CANNOT_CONTINUE")
         void unknownFileId() throws IOException {
-            stubOrchestrator(
-                    """
+            stubOrchestrator("""
                     {"outcome":"need_content","files":[{"file":{"id":"ghost","name":"ghost.pdf"}}]}
                     """);
-            AiWorkflowResponse result =
-                    service.orchestrate(requestFor(pdf("real.pdf", "x"), "extract"));
+            AiWorkflowResponse result = service.orchestrate(requestFor(pdf("real.pdf", "x"), "extract"));
             assertThat(result.getOutcome()).isEqualTo(AiWorkflowOutcome.CANNOT_CONTINUE);
             assertThat(result.getReason()).contains("ghost.pdf");
         }
@@ -201,21 +209,18 @@ class AiWorkflowServiceMoreTest {
         @DisplayName("empty filesToIngest yields CANNOT_CONTINUE")
         void emptyIngestList() throws IOException {
             stubOrchestrator("{\"outcome\":\"need_ingest\",\"reason\":\"r\",\"filesToIngest\":[]}");
-            AiWorkflowResponse result =
-                    service.orchestrate(requestFor(pdf("a.pdf", "x"), "ingest"));
+            AiWorkflowResponse result = service.orchestrate(requestFor(pdf("a.pdf", "x"), "ingest"));
             assertThat(result.getOutcome()).isEqualTo(AiWorkflowOutcome.CANNOT_CONTINUE);
         }
 
         @Test
         @DisplayName("ingest for an unknown file id yields CANNOT_CONTINUE")
         void unknownIngestFile() throws IOException {
-            stubOrchestrator(
-                    """
+            stubOrchestrator("""
                     {"outcome":"need_ingest","resumeWith":"q",
                      "filesToIngest":[{"id":"nope","name":"nope.pdf"}]}
                     """);
-            AiWorkflowResponse result =
-                    service.orchestrate(requestFor(pdf("a.pdf", "x"), "ingest"));
+            AiWorkflowResponse result = service.orchestrate(requestFor(pdf("a.pdf", "x"), "ingest"));
             assertThat(result.getOutcome()).isEqualTo(AiWorkflowOutcome.CANNOT_CONTINUE);
             assertThat(result.getReason()).contains("nope.pdf");
         }
@@ -236,8 +241,7 @@ class AiWorkflowServiceMoreTest {
         @Test
         @DisplayName("a step with no tool endpoint yields CANNOT_CONTINUE")
         void stepWithoutTool() throws IOException {
-            stubOrchestrator(
-                    "{\"outcome\":\"plan\",\"summary\":\"s\",\"steps\":[{\"parameters\":{}}]}");
+            stubOrchestrator("{\"outcome\":\"plan\",\"summary\":\"s\",\"steps\":[{\"parameters\":{}}]}");
             AiWorkflowResponse result = service.orchestrate(requestFor(pdf("a.pdf", "x"), "plan"));
             assertThat(result.getOutcome()).isEqualTo(AiWorkflowOutcome.CANNOT_CONTINUE);
             assertThat(result.getReason()).contains("step 1");
@@ -246,21 +250,17 @@ class AiWorkflowServiceMoreTest {
         @Test
         @DisplayName("HttpServerErrorException detail is surfaced from the JSON body")
         void httpServerErrorDetailSurfaced() throws IOException {
-            stubOrchestrator(
-                    """
+            stubOrchestrator("""
                     {"outcome":"plan","summary":"s",
                      "steps":[{"tool":"%s","parameters":{}}]}
-                    """
-                            .formatted(ROTATE_ENDPOINT));
+                    """.formatted(ROTATE_ENDPOINT));
             when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
-            HttpServerErrorException boom =
-                    HttpServerErrorException.create(
-                            HttpStatus.INTERNAL_SERVER_ERROR,
-                            "err",
-                            org.springframework.http.HttpHeaders.EMPTY,
-                            "{\"detail\":\"Ghostscript is not installed\"}"
-                                    .getBytes(StandardCharsets.UTF_8),
-                            StandardCharsets.UTF_8);
+            HttpServerErrorException boom = HttpServerErrorException.create(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "err",
+                    org.springframework.http.HttpHeaders.EMPTY,
+                    "{\"detail\":\"Ghostscript is not installed\"}".getBytes(StandardCharsets.UTF_8),
+                    StandardCharsets.UTF_8);
             when(internalApiClient.post(eq(ROTATE_ENDPOINT), any())).thenThrow(boom);
 
             AiWorkflowResponse result = service.orchestrate(requestFor(pdf("a.pdf", "x"), "plan"));
@@ -276,24 +276,19 @@ class AiWorkflowServiceMoreTest {
         @Test
         @DisplayName("a 402 PAYG_LIMIT_REACHED tool error becomes a structured CANNOT_CONTINUE")
         void paygLimitMappedFromToolCall() throws IOException {
-            stubOrchestrator(
-                    """
+            stubOrchestrator("""
                     {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"r"}
-                    """
-                            .formatted(ROTATE_ENDPOINT));
+                    """.formatted(ROTATE_ENDPOINT));
             when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
-            HttpClientErrorException payg =
-                    HttpClientErrorException.create(
-                            HttpStatus.PAYMENT_REQUIRED,
-                            "Payment Required",
-                            org.springframework.http.HttpHeaders.EMPTY,
-                            "{\"error\":\"PAYG_LIMIT_REACHED\",\"subscribed\":false}"
-                                    .getBytes(StandardCharsets.UTF_8),
-                            StandardCharsets.UTF_8);
+            HttpClientErrorException payg = HttpClientErrorException.create(
+                    HttpStatus.PAYMENT_REQUIRED,
+                    "Payment Required",
+                    org.springframework.http.HttpHeaders.EMPTY,
+                    "{\"error\":\"PAYG_LIMIT_REACHED\",\"subscribed\":false}".getBytes(StandardCharsets.UTF_8),
+                    StandardCharsets.UTF_8);
             when(internalApiClient.post(eq(ROTATE_ENDPOINT), any())).thenThrow(payg);
 
-            AiWorkflowResponse result =
-                    service.orchestrate(requestFor(pdf("a.pdf", "x"), "rotate"));
+            AiWorkflowResponse result = service.orchestrate(requestFor(pdf("a.pdf", "x"), "rotate"));
 
             assertThat(result.getOutcome()).isEqualTo(AiWorkflowOutcome.CANNOT_CONTINUE);
             assertThat(result.getErrorCode()).isEqualTo("PAYG_LIMIT_REACHED");
@@ -308,13 +303,11 @@ class AiWorkflowServiceMoreTest {
         @Test
         @DisplayName("an error event surfaces as an IOException")
         void errorEventThrows() throws IOException {
-            doAnswer(
-                            inv -> {
-                                Consumer<String> consumer = inv.getArgument(3);
-                                consumer.accept(
-                                        "{\"event\":\"error\",\"message\":\"engine exploded\"}");
-                                return null;
-                            })
+            doAnswer(inv -> {
+                        Consumer<String> consumer = inv.getArgument(3);
+                        consumer.accept("{\"event\":\"error\",\"message\":\"engine exploded\"}");
+                        return null;
+                    })
                     .when(aiEngineClient)
                     .streamPost(eq(ORCHESTRATOR), anyString(), nullable(String.class), any());
 
@@ -340,39 +333,31 @@ class AiWorkflowServiceMoreTest {
         void progressAndHeartbeatForwarded() throws IOException {
             List<String> phases = new ArrayList<>();
             int[] heartbeats = {0};
-            doAnswer(
-                            inv -> {
-                                Consumer<String> consumer = inv.getArgument(3);
-                                consumer.accept(
-                                        "{\"event\":\"progress\",\"phase\":\"whole_doc_read_started\","
-                                                + "\"question\":\"q\",\"pages\":3,\"slices\":1}");
-                                consumer.accept("{\"event\":\"heartbeat\"}");
-                                consumer.accept("{\"event\":\"mystery\"}");
-                                consumer.accept(
-                                        wrapAsResultEvent(
-                                                "{\"outcome\":\"answer\",\"answer\":\"ok\"}"));
-                                return null;
-                            })
+            doAnswer(inv -> {
+                        Consumer<String> consumer = inv.getArgument(3);
+                        consumer.accept("{\"event\":\"progress\",\"phase\":\"whole_doc_read_started\","
+                                + "\"question\":\"q\",\"pages\":3,\"slices\":1}");
+                        consumer.accept("{\"event\":\"heartbeat\"}");
+                        consumer.accept("{\"event\":\"mystery\"}");
+                        consumer.accept(wrapAsResultEvent("{\"outcome\":\"answer\",\"answer\":\"ok\"}"));
+                        return null;
+                    })
                     .when(aiEngineClient)
                     .streamPost(eq(ORCHESTRATOR), anyString(), nullable(String.class), any());
 
-            AiWorkflowService.ProgressListener listener =
-                    new AiWorkflowService.ProgressListener() {
-                        @Override
-                        public void onProgress(
-                                stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent
-                                        event) {
-                            phases.add(String.valueOf(event.getPhase()));
-                        }
+            AiWorkflowService.ProgressListener listener = new AiWorkflowService.ProgressListener() {
+                @Override
+                public void onProgress(stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent event) {
+                    phases.add(String.valueOf(event.getPhase()));
+                }
 
-                        @Override
-                        public void onHeartbeat() {
-                            heartbeats[0]++;
-                        }
-                    };
+                @Override
+                public void onHeartbeat() {
+                    heartbeats[0]++;
+                }
+            };
 
-            AiWorkflowResponse result =
-                    service.orchestrate(requestFor(pdf("a.pdf", "x"), "go"), listener);
+            AiWorkflowResponse result = service.orchestrate(requestFor(pdf("a.pdf", "x"), "go"), listener);
 
             assertThat(result.getOutcome()).isEqualTo(AiWorkflowOutcome.ANSWER);
             assertThat(heartbeats[0]).isEqualTo(1);
@@ -382,15 +367,12 @@ class AiWorkflowServiceMoreTest {
         @Test
         @DisplayName("a malformed (non-JSON) stream line is skipped without aborting")
         void malformedLineSkipped() throws IOException {
-            doAnswer(
-                            inv -> {
-                                Consumer<String> consumer = inv.getArgument(3);
-                                consumer.accept("this is not json {");
-                                consumer.accept(
-                                        wrapAsResultEvent(
-                                                "{\"outcome\":\"answer\",\"answer\":\"ok\"}"));
-                                return null;
-                            })
+            doAnswer(inv -> {
+                        Consumer<String> consumer = inv.getArgument(3);
+                        consumer.accept("this is not json {");
+                        consumer.accept(wrapAsResultEvent("{\"outcome\":\"answer\",\"answer\":\"ok\"}"));
+                        return null;
+                    })
                     .when(aiEngineClient)
                     .streamPost(eq(ORCHESTRATOR), anyString(), nullable(String.class), any());
 
@@ -402,12 +384,11 @@ class AiWorkflowServiceMoreTest {
     // --- helpers (mirrors AiWorkflowServiceTest) ---
 
     private void stubOrchestrator(String responseJson) throws IOException {
-        doAnswer(
-                        inv -> {
-                            Consumer<String> consumer = inv.getArgument(3);
-                            consumer.accept(wrapAsResultEvent(responseJson));
-                            return null;
-                        })
+        doAnswer(inv -> {
+                    Consumer<String> consumer = inv.getArgument(3);
+                    consumer.accept(wrapAsResultEvent(responseJson));
+                    return null;
+                })
                 .when(aiEngineClient)
                 .streamPost(eq(ORCHESTRATOR), anyString(), nullable(String.class), any());
     }

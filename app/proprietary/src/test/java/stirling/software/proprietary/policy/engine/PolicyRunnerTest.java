@@ -56,9 +56,14 @@ import stirling.software.proprietary.policy.source.SourceStore;
 @ExtendWith(MockitoExtension.class)
 class PolicyRunnerTest {
 
-    @Mock private PolicyEngine policyEngine;
-    @Mock private InputSource folderSource;
-    @Mock private ProcessedLedger processedLedger;
+    @Mock
+    private PolicyEngine policyEngine;
+
+    @Mock
+    private InputSource folderSource;
+
+    @Mock
+    private ProcessedLedger processedLedger;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
     private final InProcessSourceDocCounter docCounter = new InProcessSourceDocCounter();
@@ -66,13 +71,7 @@ class PolicyRunnerTest {
 
     @BeforeEach
     void setUp() {
-        runner =
-                new PolicyRunner(
-                        policyEngine,
-                        List.of(folderSource),
-                        sourceStore,
-                        docCounter,
-                        processedLedger);
+        runner = new PolicyRunner(policyEngine, List.of(folderSource), sourceStore, docCounter, processedLedger);
     }
 
     @Test
@@ -94,13 +93,8 @@ class PolicyRunnerTest {
     @Test
     void reportsWhatTheSweepSkippedSoAnEmptyTriggerExplainsItself() throws Exception {
         InProcessProcessedLedger ledger = new InProcessProcessedLedger();
-        PolicyRunner reporting =
-                new PolicyRunner(
-                        policyEngine,
-                        List.of(folderSource),
-                        sourceStore,
-                        new InProcessSourceDocCounter(),
-                        ledger);
+        PolicyRunner reporting = new PolicyRunner(
+                policyEngine, List.of(folderSource), sourceStore, new InProcessSourceDocCounter(), ledger);
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         // One file already processed at its current version, one parked by a failed run.
@@ -109,14 +103,12 @@ class PolicyRunnerTest {
         ledger.claim("p1", "/in/failed.pdf", "g2", null);
         ledger.settle("p1", "/in/failed.pdf", "g2", null, false);
         when(folderSource.supports(spec)).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any()))
-                .thenAnswer(
-                        invocation -> {
-                            ResolveContext ctx = invocation.getArgument(1);
-                            ctx.reportPresent(List.of("/in/done.pdf", "/in/failed.pdf"));
-                            // Both are at their settled versions, so neither claims.
-                            return List.of();
-                        });
+        when(folderSource.resolve(eq(spec), any())).thenAnswer(invocation -> {
+            ResolveContext ctx = invocation.getArgument(1);
+            ctx.reportPresent(List.of("/in/done.pdf", "/in/failed.pdf"));
+            // Both are at their settled versions, so neither claims.
+            return List.of();
+        });
 
         SweepOutcome outcome = reporting.run(policy);
 
@@ -133,10 +125,8 @@ class PolicyRunnerTest {
         Policy policy = policy(List.of(spec));
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any()))
-                .thenReturn(
-                        List.of(
-                                ResolvedInput.of(PolicyInputs.of(List.of())),
-                                ResolvedInput.of(PolicyInputs.of(List.of()))));
+                .thenReturn(List.of(
+                        ResolvedInput.of(PolicyInputs.of(List.of())), ResolvedInput.of(PolicyInputs.of(List.of()))));
         when(policyEngine.runPolicy(any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
@@ -154,8 +144,7 @@ class PolicyRunnerTest {
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
-        when(policyEngine.runPolicy(any(), any(), any()))
-                .thenReturn(new PolicyRunHandle("r", completion));
+        when(policyEngine.runPolicy(any(), any(), any())).thenReturn(new PolicyRunHandle("r", completion));
 
         runner.run(policy);
 
@@ -175,8 +164,7 @@ class PolicyRunnerTest {
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
-        when(policyEngine.runPolicy(any(), any(), any()))
-                .thenReturn(new PolicyRunHandle("r", completion));
+        when(policyEngine.runPolicy(any(), any(), any())).thenReturn(new PolicyRunHandle("r", completion));
 
         runner.run(policy);
         completion.completeExceptionally(new RuntimeException("boom"));
@@ -201,13 +189,11 @@ class PolicyRunnerTest {
         Policy policy = policy(List.of(spec));
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.listsExhaustively()).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any()))
-                .thenAnswer(
-                        invocation -> {
-                            ResolveContext ctx = invocation.getArgument(1);
-                            ctx.reportPresent(List.of("/in/a.pdf", "/in/b.pdf"));
-                            return List.of();
-                        });
+        when(folderSource.resolve(eq(spec), any())).thenAnswer(invocation -> {
+            ResolveContext ctx = invocation.getArgument(1);
+            ctx.reportPresent(List.of("/in/a.pdf", "/in/b.pdf"));
+            return List.of();
+        });
 
         runner.run(policy);
 
@@ -222,8 +208,7 @@ class PolicyRunnerTest {
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         when(folderSource.supports(spec)).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any()))
-                .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
+        when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
         when(policyEngine.runPolicy(any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
@@ -301,21 +286,17 @@ class PolicyRunnerTest {
 
     @Test
     void runWithRecordsSuppliedDocsAgainstTheEditorSourceForThePolicyTeam() {
-        Policy policy =
-                new Policy(
-                        "p1",
-                        "p",
-                        "owner",
-                        true,
-                        List.of(),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        OutputSpec.inline(),
-                        7L);
+        Policy policy = new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                List.of(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline(),
+                7L);
         PolicyInputs inputs =
-                PolicyInputs.of(
-                        List.of(
-                                new ByteArrayResource("a".getBytes()),
-                                new ByteArrayResource("b".getBytes())));
+                PolicyInputs.of(List.of(new ByteArrayResource("a".getBytes()), new ByteArrayResource("b".getBytes())));
         when(policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
@@ -327,8 +308,9 @@ class PolicyRunnerTest {
 
     /** Persists each spec as a source and returns a policy referencing them by id. */
     private Policy policy(List<InputSpec> sources) {
-        List<String> sourceIds =
-                sources.stream().map(spec -> sourceStore.save(sourceFrom(spec)).id()).toList();
+        List<String> sourceIds = sources.stream()
+                .map(spec -> sourceStore.save(sourceFrom(spec)).id())
+                .toList();
         return policyReferencing(sourceIds);
     }
 

@@ -24,9 +24,7 @@ class JPDFiumSmokeTest {
         }
 
         try (PdfDocument doc = PdfDocument.open(pdf)) {
-            assertTrue(
-                    doc.pageCount() >= 1,
-                    "PdfDocument should report at least one page for example.pdf");
+            assertTrue(doc.pageCount() >= 1, "PdfDocument should report at least one page for example.pdf");
         }
     }
 }

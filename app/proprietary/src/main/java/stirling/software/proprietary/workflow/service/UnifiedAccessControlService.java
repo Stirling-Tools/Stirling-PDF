@@ -48,8 +48,7 @@ public class UnifiedAccessControlService {
         }
 
         // Try as workflow participant token
-        Optional<WorkflowParticipant> participantOpt =
-                workflowParticipantRepository.findByShareToken(token);
+        Optional<WorkflowParticipant> participantOpt = workflowParticipantRepository.findByShareToken(token);
         if (participantOpt.isPresent()) {
             return validateParticipant(participantOpt.get(), user);
         }
@@ -151,8 +150,7 @@ public class UnifiedAccessControlService {
         // Check for workflow participant access
         if (file.getWorkflowSession() != null) {
             Optional<WorkflowParticipant> participant =
-                    workflowParticipantRepository.findByWorkflowSessionAndUser(
-                            file.getWorkflowSession(), user);
+                    workflowParticipantRepository.findByWorkflowSessionAndUser(file.getWorkflowSession(), user);
             return participant.isPresent()
                     && !participant.get().isExpired()
                     && participant.get().getWorkflowSession().isActive();
@@ -190,12 +188,8 @@ public class UnifiedAccessControlService {
         }
 
         public static AccessValidationResult allowed(
-                StoredFile file,
-                ShareAccessRole role,
-                WorkflowParticipant participant,
-                boolean isWorkflowAccess) {
-            return new AccessValidationResult(
-                    true, null, file, role, participant, isWorkflowAccess);
+                StoredFile file, ShareAccessRole role, WorkflowParticipant participant, boolean isWorkflowAccess) {
+            return new AccessValidationResult(true, null, file, role, participant, isWorkflowAccess);
         }
 
         public static AccessValidationResult denied(String reason) {

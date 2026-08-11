@@ -78,16 +78,14 @@ class EmlParserTest {
         @Test
         @DisplayName("should throw on empty input")
         void emptyInput() {
-            assertThrows(
-                    Exception.class, () -> EmlParser.extractEmailContent(new byte[0], null, null));
+            assertThrows(Exception.class, () -> EmlParser.extractEmailContent(new byte[0], null, null));
         }
 
         @Test
         @DisplayName("should throw on invalid content that is not EML or MSG")
         void invalidContent() {
             byte[] randomBytes = "This is not an email file at all.".getBytes();
-            assertThrows(
-                    Exception.class, () -> EmlParser.extractEmailContent(randomBytes, null, null));
+            assertThrows(Exception.class, () -> EmlParser.extractEmailContent(randomBytes, null, null));
         }
     }
 }

@@ -43,8 +43,7 @@ final class FtpFileClient implements RemoteFileClient {
             int reply = ftp.getReplyCode();
             if (!FTPReply.isPositiveCompletion(reply)) {
                 ftp.disconnect();
-                throw new IOException(
-                        "FTP server " + config.host() + " refused connection: " + reply);
+                throw new IOException("FTP server " + config.host() + " refused connection: " + reply);
             }
             if (ftp instanceof FTPSClient ftps) {
                 // Encrypt the data channel too, not only the control channel.
@@ -82,8 +81,7 @@ final class FtpFileClient implements RemoteFileClient {
         return files;
     }
 
-    private void collect(String directory, boolean recursive, int depth, List<RemoteFile> out)
-            throws IOException {
+    private void collect(String directory, boolean recursive, int depth, List<RemoteFile> out) throws IOException {
         FTPFile[] entries = ftp.listFiles(directory);
         for (FTPFile entry : entries) {
             if (out.size() >= MAX_FILES) {

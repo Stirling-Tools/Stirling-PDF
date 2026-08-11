@@ -52,22 +52,15 @@ public class ResourceGrantController {
     @GetMapping("/grants/by-principal")
     public ResponseEntity<?> listByPrincipal(
             @RequestParam PrincipalType principalType, @RequestParam Long principalId) {
-        List<ResourceGrant> grants =
-                accessService.listGrantsForPrincipal(principalType, principalId);
+        List<ResourceGrant> grants = accessService.listGrantsForPrincipal(principalType, principalId);
         return ResponseEntity.ok(grants.stream().map(this::toDto).toList());
     }
 
     @PostMapping("/grants")
-    public ResponseEntity<?> create(
-            @RequestBody GrantRequest request, @AuthenticationPrincipal User admin) {
-        if (request.resourceType() == null
-                || request.principalType() == null
-                || request.principalId() == null) {
+    public ResponseEntity<?> create(@RequestBody GrantRequest request, @AuthenticationPrincipal User admin) {
+        if (request.resourceType() == null || request.principalType() == null || request.principalId() == null) {
             return ResponseEntity.badRequest()
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "resourceType, principalType and principalId are required"));
+                    .body(Map.of("error", "resourceType, principalType and principalId are required"));
         }
         // PORTAL is a singleton (empty resourceId); every other type must name a resource.
         boolean portal = request.resourceType() == ResourceType.PORTAL;
@@ -80,17 +73,10 @@ public class ResourceGrantController {
         if (principalError != null) {
             return ResponseEntity.badRequest().body(Map.of("error", principalError));
         }
-        AccessPermission permission =
-                request.permission() == null ? AccessPermission.USE : request.permission();
+        AccessPermission permission = request.permission() == null ? AccessPermission.USE : request.permission();
         String resourceId = portal ? "" : request.resourceId();
-        ResourceGrant grant =
-                accessService.grant(
-                        request.resourceType(),
-                        resourceId,
-                        request.principalType(),
-                        principalId,
-                        permission,
-                        admin);
+        ResourceGrant grant = accessService.grant(
+                request.resourceType(), resourceId, request.principalType(), principalId, permission, admin);
         return ResponseEntity.ok(toDto(grant));
     }
 

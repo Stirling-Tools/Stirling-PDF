@@ -67,41 +67,31 @@ public class ValkeyJobStore implements JobStore {
             fields.put("error", entry.error());
         }
         fields.put("fileIds", writeJson(entry.fileIds() == null ? List.of() : entry.fileIds()));
-        fields.put(
-                "resultMeta",
-                writeJson(entry.resultMeta() == null ? Map.of() : entry.resultMeta()));
+        fields.put("resultMeta", writeJson(entry.resultMeta() == null ? Map.of() : entry.resultMeta()));
 
         // Build pipelined MULTI/EXEC so the hash, its TTL, and every reverse-index entry
         // commit atomically.
-        template.execute(
-                (RedisCallback<Object>)
-                        connection -> {
-                            connection.multi();
-                            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-                            Map<byte[], byte[]> hashBytes = new LinkedHashMap<>();
-                            for (Map.Entry<String, String> f : fields.entrySet()) {
-                                hashBytes.put(
-                                        f.getKey().getBytes(StandardCharsets.UTF_8),
-                                        f.getValue().getBytes(StandardCharsets.UTF_8));
-                            }
-                            connection.hashCommands().hMSet(keyBytes, hashBytes);
-                            connection.keyCommands().pExpire(keyBytes, ttlMs);
-                            if (entry.fileIds() != null) {
-                                for (String fileId : entry.fileIds()) {
-                                    byte[] idxKey =
-                                            (FILE_INDEX_PREFIX + fileId)
-                                                    .getBytes(StandardCharsets.UTF_8);
-                                    connection
-                                            .stringCommands()
-                                            .set(
-                                                    idxKey,
-                                                    entry.jobId().getBytes(StandardCharsets.UTF_8));
-                                    connection.keyCommands().pExpire(idxKey, ttlMs);
-                                }
-                            }
-                            connection.exec();
-                            return null;
-                        });
+        template.execute((RedisCallback<Object>) connection -> {
+            connection.multi();
+            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+            Map<byte[], byte[]> hashBytes = new LinkedHashMap<>();
+            for (Map.Entry<String, String> f : fields.entrySet()) {
+                hashBytes.put(
+                        f.getKey().getBytes(StandardCharsets.UTF_8),
+                        f.getValue().getBytes(StandardCharsets.UTF_8));
+            }
+            connection.hashCommands().hMSet(keyBytes, hashBytes);
+            connection.keyCommands().pExpire(keyBytes, ttlMs);
+            if (entry.fileIds() != null) {
+                for (String fileId : entry.fileIds()) {
+                    byte[] idxKey = (FILE_INDEX_PREFIX + fileId).getBytes(StandardCharsets.UTF_8);
+                    connection.stringCommands().set(idxKey, entry.jobId().getBytes(StandardCharsets.UTF_8));
+                    connection.keyCommands().pExpire(idxKey, ttlMs);
+                }
+            }
+            connection.exec();
+            return null;
+        });
     }
 
     @Override
@@ -120,51 +110,34 @@ public class ValkeyJobStore implements JobStore {
         String jobKey = JOB_PREFIX + jobId;
         byte[] jobKeyBytes = jobKey.getBytes(StandardCharsets.UTF_8);
         for (int attempt = 0; attempt < 2; attempt++) {
-            Boolean committed =
-                    template.execute(
-                            (RedisCallback<Boolean>)
-                                    connection -> {
-                                        connection.watch(jobKeyBytes);
-                                        // Read the single fileIds field with hGet rather than
-                                        // hGetAll + map.get: hGetAll returns a Map<byte[],byte[]>
-                                        // whose keys compare by identity, so a fresh
-                                        // "fileIds".getBytes() lookup never matches and the reverse
-                                        // index would be left orphaned. hGet resolves the field
-                                        // server-side.
-                                        byte[] fileIdsBytes =
-                                                connection
-                                                        .hashCommands()
-                                                        .hGet(
-                                                                jobKeyBytes,
-                                                                "fileIds"
-                                                                        .getBytes(
-                                                                                StandardCharsets
-                                                                                        .UTF_8));
-                                        List<byte[]> keysToDelete = new ArrayList<>();
-                                        keysToDelete.add(jobKeyBytes);
-                                        if (fileIdsBytes != null) {
-                                            List<String> fileIds =
-                                                    readJsonList(
-                                                            new String(
-                                                                    fileIdsBytes,
-                                                                    StandardCharsets.UTF_8),
-                                                            jobKey);
-                                            for (String fileId : fileIds) {
-                                                keysToDelete.add(
-                                                        (FILE_INDEX_PREFIX + fileId)
-                                                                .getBytes(StandardCharsets.UTF_8));
-                                            }
-                                        }
-                                        connection.multi();
-                                        for (byte[] key : keysToDelete) {
-                                            connection.keyCommands().del(key);
-                                        }
-                                        List<Object> results = connection.exec();
-                                        // exec() returns null when WATCH detected a concurrent
-                                        // write; spring-data-redis surfaces this as either null
-                                        // or empty depending on the driver path.
-                                        return results != null && !results.isEmpty();
-                                    });
+            Boolean committed = template.execute((RedisCallback<Boolean>) connection -> {
+                connection.watch(jobKeyBytes);
+                // Read the single fileIds field with hGet rather than
+                // hGetAll + map.get: hGetAll returns a Map<byte[],byte[]>
+                // whose keys compare by identity, so a fresh
+                // "fileIds".getBytes() lookup never matches and the reverse
+                // index would be left orphaned. hGet resolves the field
+                // server-side.
+                byte[] fileIdsBytes =
+                        connection.hashCommands().hGet(jobKeyBytes, "fileIds".getBytes(StandardCharsets.UTF_8));
+                List<byte[]> keysToDelete = new ArrayList<>();
+                keysToDelete.add(jobKeyBytes);
+                if (fileIdsBytes != null) {
+                    List<String> fileIds = readJsonList(new String(fileIdsBytes, StandardCharsets.UTF_8), jobKey);
+                    for (String fileId : fileIds) {
+                        keysToDelete.add((FILE_INDEX_PREFIX + fileId).getBytes(StandardCharsets.UTF_8));
+                    }
+                }
+                connection.multi();
+                for (byte[] key : keysToDelete) {
+                    connection.keyCommands().del(key);
+                }
+                List<Object> results = connection.exec();
+                // exec() returns null when WATCH detected a concurrent
+                // write; spring-data-redis surfaces this as either null
+                // or empty depending on the driver path.
+                return results != null && !results.isEmpty();
+            });
             if (Boolean.TRUE.equals(committed)) {
                 return;
             }
@@ -189,7 +162,8 @@ public class ValkeyJobStore implements JobStore {
     @Override
     public Collection<JobStoreEntry> all() {
         // SCAN, not KEYS - KEYS blocks the Valkey server for the duration of the walk.
-        ScanOptions options = ScanOptions.scanOptions().match(JOB_PREFIX + "*").count(256).build();
+        ScanOptions options =
+                ScanOptions.scanOptions().match(JOB_PREFIX + "*").count(256).build();
         List<JobStoreEntry> result = new ArrayList<>();
         try (Cursor<String> cursor = template.scan(options)) {
             while (cursor.hasNext()) {
@@ -212,9 +186,7 @@ public class ValkeyJobStore implements JobStore {
         Instant completedAt = parseInstant(entries.get("completedAt"), key, "completedAt");
         List<String> fileIds = parseList(entries.get("fileIds"), key);
         Map<String, String> resultMeta = parseMap(entries.get("resultMeta"), key);
-        String stateName =
-                String.valueOf(
-                        entries.getOrDefault("state", JobStoreEntry.JobState.PENDING.name()));
+        String stateName = String.valueOf(entries.getOrDefault("state", JobStoreEntry.JobState.PENDING.name()));
         JobStoreEntry.JobState state;
         try {
             state = JobStoreEntry.JobState.valueOf(stateName);
@@ -223,17 +195,10 @@ public class ValkeyJobStore implements JobStore {
             state = JobStoreEntry.JobState.PENDING;
         }
         String owningNodeId = String.valueOf(entries.getOrDefault("owningNodeId", ""));
-        String error = entries.get("error") == null ? null : entries.get("error").toString();
-        return Optional.of(
-                new JobStoreEntry(
-                        jobId.toString(),
-                        state,
-                        owningNodeId,
-                        createdAt,
-                        completedAt,
-                        error,
-                        fileIds,
-                        resultMeta));
+        String error =
+                entries.get("error") == null ? null : entries.get("error").toString();
+        return Optional.of(new JobStoreEntry(
+                jobId.toString(), state, owningNodeId, createdAt, completedAt, error, fileIds, resultMeta));
     }
 
     private Instant parseInstant(Object v, String key, String field) {
@@ -243,11 +208,7 @@ public class ValkeyJobStore implements JobStore {
         try {
             return Instant.parse(v.toString());
         } catch (RuntimeException e) {
-            log.warn(
-                    "JobStore {} field '{}' has malformed timestamp '{}' - treating as missing",
-                    key,
-                    field,
-                    v);
+            log.warn("JobStore {} field '{}' has malformed timestamp '{}' - treating as missing", key, field, v);
             return null;
         }
     }
@@ -266,10 +227,7 @@ public class ValkeyJobStore implements JobStore {
         try {
             return MAPPER.readValue(v.toString(), MAP_STRING);
         } catch (JsonProcessingException e) {
-            log.warn(
-                    "JobStore {} field 'resultMeta' is not valid JSON '{}' - treating as empty",
-                    key,
-                    v);
+            log.warn("JobStore {} field 'resultMeta' is not valid JSON '{}' - treating as empty", key, v);
             return new HashMap<>();
         }
     }
@@ -287,10 +245,7 @@ public class ValkeyJobStore implements JobStore {
             List<String> parsed = MAPPER.readValue(json, LIST_STRING);
             return parsed == null ? new ArrayList<>() : parsed;
         } catch (JsonProcessingException e) {
-            log.warn(
-                    "JobStore {} field 'fileIds' is not valid JSON '{}' - treating as empty",
-                    key,
-                    json);
+            log.warn("JobStore {} field 'fileIds' is not valid JSON '{}' - treating as empty", key, json);
             return new ArrayList<>();
         }
     }

@@ -29,8 +29,7 @@ class ProcessExecutorGapTest {
 
     // ----- reflection helpers -------------------------------------------------
 
-    private void invokeValidateCommand(ProcessExecutor executor, List<String> command)
-            throws Exception {
+    private void invokeValidateCommand(ProcessExecutor executor, List<String> command) throws Exception {
         Method method = ProcessExecutor.class.getDeclaredMethod("validateCommand", List.class);
         method.setAccessible(true);
         try {
@@ -41,8 +40,7 @@ class ProcessExecutorGapTest {
     }
 
     @SuppressWarnings("unchecked")
-    private List<String> invokeStripUnoEndpointArgs(ProcessExecutor executor, List<String> command)
-            throws Exception {
+    private List<String> invokeStripUnoEndpointArgs(ProcessExecutor executor, List<String> command) throws Exception {
         Method method = ProcessExecutor.class.getDeclaredMethod("stripUnoEndpointArgs", List.class);
         method.setAccessible(true);
         return (List<String>) method.invoke(executor, command);
@@ -54,19 +52,14 @@ class ProcessExecutorGapTest {
             List<String> command,
             ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint)
             throws Exception {
-        Method method =
-                ProcessExecutor.class.getDeclaredMethod(
-                        "applyUnoServerEndpoint",
-                        List.class,
-                        ApplicationProperties.ProcessExecutor.UnoServerEndpoint.class);
+        Method method = ProcessExecutor.class.getDeclaredMethod(
+                "applyUnoServerEndpoint", List.class, ApplicationProperties.ProcessExecutor.UnoServerEndpoint.class);
         method.setAccessible(true);
         return (List<String>) method.invoke(executor, command, endpoint);
     }
 
-    private boolean invokeShouldUseUnoServerPool(ProcessExecutor executor, List<String> command)
-            throws Exception {
-        Method method =
-                ProcessExecutor.class.getDeclaredMethod("shouldUseUnoServerPool", List.class);
+    private boolean invokeShouldUseUnoServerPool(ProcessExecutor executor, List<String> command) throws Exception {
+        Method method = ProcessExecutor.class.getDeclaredMethod("shouldUseUnoServerPool", List.class);
         method.setAccessible(true);
         return (boolean) method.invoke(executor, command);
     }
@@ -94,14 +87,11 @@ class ProcessExecutorGapTest {
         @Test
         @DisplayName("absolute path executable that does not exist is rejected")
         void absolutePathExecutableMissing() {
-            String bogus =
-                    System.getProperty("os.name").toLowerCase().contains("win")
-                            ? "C:\\definitely\\does\\not\\exist\\tool.exe"
-                            : "/definitely/does/not/exist/tool";
-            IllegalArgumentException ex =
-                    assertThrows(
-                            IllegalArgumentException.class,
-                            () -> invokeValidateCommand(qpdfExecutor(), List.of(bogus)));
+            String bogus = System.getProperty("os.name").toLowerCase().contains("win")
+                    ? "C:\\definitely\\does\\not\\exist\\tool.exe"
+                    : "/definitely/does/not/exist/tool";
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class, () -> invokeValidateCommand(qpdfExecutor(), List.of(bogus)));
             assertTrue(ex.getMessage().contains("does not exist"));
         }
 
@@ -111,10 +101,8 @@ class ProcessExecutorGapTest {
             String dirPath = tempDir.toString();
             // Ensure the path contains a separator so the path-based validation branch is taken.
             assertTrue(dirPath.contains("/") || dirPath.contains("\\"));
-            IllegalArgumentException ex =
-                    assertThrows(
-                            IllegalArgumentException.class,
-                            () -> invokeValidateCommand(qpdfExecutor(), List.of(dirPath)));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class, () -> invokeValidateCommand(qpdfExecutor(), List.of(dirPath)));
             assertTrue(ex.getMessage().contains("not a regular file"));
         }
 
@@ -131,12 +119,9 @@ class ProcessExecutorGapTest {
         @Test
         @DisplayName("path traversal anywhere in the executable is rejected")
         void pathTraversalInExecutable() {
-            IllegalArgumentException ex =
-                    assertThrows(
-                            IllegalArgumentException.class,
-                            () ->
-                                    invokeValidateCommand(
-                                            qpdfExecutor(), List.of("/usr/bin/../bin/tool")));
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> invokeValidateCommand(qpdfExecutor(), List.of("/usr/bin/../bin/tool")));
             assertTrue(ex.getMessage().contains("path traversal"));
         }
 
@@ -166,9 +151,7 @@ class ProcessExecutorGapTest {
             List<String> command = new ArrayList<>();
             command.add(null);
             // null arg is caught by the per-arg null check before the executable check.
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> invokeValidateCommand(qpdfExecutor(), command));
+            assertThrows(IllegalArgumentException.class, () -> invokeValidateCommand(qpdfExecutor(), command));
         }
     }
 
@@ -181,19 +164,18 @@ class ProcessExecutorGapTest {
         @Test
         @DisplayName("removes space-separated --host/--port/--host-location/--protocol pairs")
         void stripsSpaceSeparatedArgs() throws Exception {
-            List<String> input =
-                    List.of(
-                            "unoconvert",
-                            "--host",
-                            "1.2.3.4",
-                            "--port",
-                            "9999",
-                            "--host-location",
-                            "remote",
-                            "--protocol",
-                            "https",
-                            "in.docx",
-                            "out.pdf");
+            List<String> input = List.of(
+                    "unoconvert",
+                    "--host",
+                    "1.2.3.4",
+                    "--port",
+                    "9999",
+                    "--host-location",
+                    "remote",
+                    "--protocol",
+                    "https",
+                    "in.docx",
+                    "out.pdf");
             List<String> result = invokeStripUnoEndpointArgs(qpdfExecutor(), input);
             assertEquals(List.of("unoconvert", "in.docx", "out.pdf"), result);
         }
@@ -201,14 +183,13 @@ class ProcessExecutorGapTest {
         @Test
         @DisplayName("removes equals-form --host=.../--port=... arguments")
         void stripsEqualsFormArgs() throws Exception {
-            List<String> input =
-                    List.of(
-                            "unoconvert",
-                            "--host=5.6.7.8",
-                            "--port=4002",
-                            "--host-location=local",
-                            "--protocol=http",
-                            "doc.odt");
+            List<String> input = List.of(
+                    "unoconvert",
+                    "--host=5.6.7.8",
+                    "--port=4002",
+                    "--host-location=local",
+                    "--protocol=http",
+                    "doc.odt");
             List<String> result = invokeStripUnoEndpointArgs(qpdfExecutor(), input);
             assertEquals(List.of("unoconvert", "doc.odt"), result);
         }
@@ -248,31 +229,19 @@ class ProcessExecutorGapTest {
     class ApplyUnoServerEndpointTests {
 
         @Test
-        @DisplayName(
-                "injects --host/--port after the executable, defaults omit host-location and protocol")
+        @DisplayName("injects --host/--port after the executable, defaults omit host-location and protocol")
         void injectsHostAndPortWithDefaults() throws Exception {
             List<String> command = List.of("unoconvert", "in.docx", "out.pdf");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("9.9.9.9", 7777, "auto", "http");
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep = endpoint("9.9.9.9", 7777, "auto", "http");
             List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(
-                    List.of(
-                            "unoconvert",
-                            "--host",
-                            "9.9.9.9",
-                            "--port",
-                            "7777",
-                            "in.docx",
-                            "out.pdf"),
-                    result);
+            assertEquals(List.of("unoconvert", "--host", "9.9.9.9", "--port", "7777", "in.docx", "out.pdf"), result);
         }
 
         @Test
         @DisplayName("non-default host-location and protocol are injected")
         void injectsHostLocationAndProtocolWhenNonDefault() throws Exception {
             List<String> command = List.of("unoconvert", "in.docx");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("10.0.0.5", 2200, "remote", "https");
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep = endpoint("10.0.0.5", 2200, "remote", "https");
             List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
             assertEquals(
                     List.of(
@@ -293,12 +262,9 @@ class ProcessExecutorGapTest {
         @DisplayName("blank host falls back to 127.0.0.1 and non-positive port falls back to 2003")
         void appliesHostAndPortFallbacks() throws Exception {
             List<String> command = List.of("unoconvert", "in.docx");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("   ", 0, "auto", "http");
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep = endpoint("   ", 0, "auto", "http");
             List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(
-                    List.of("unoconvert", "--host", "127.0.0.1", "--port", "2003", "in.docx"),
-                    result);
+            assertEquals(List.of("unoconvert", "--host", "127.0.0.1", "--port", "2003", "in.docx"), result);
         }
 
         @Test
@@ -309,9 +275,7 @@ class ProcessExecutorGapTest {
                     endpoint("1.1.1.1", 3000, "sideways", "gopher");
             List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
             // Both invalid -> normalised to defaults (auto/http) -> neither injected.
-            assertEquals(
-                    List.of("unoconvert", "--host", "1.1.1.1", "--port", "3000", "in.docx"),
-                    result);
+            assertEquals(List.of("unoconvert", "--host", "1.1.1.1", "--port", "3000", "in.docx"), result);
         }
 
         @Test
@@ -340,12 +304,9 @@ class ProcessExecutorGapTest {
         @DisplayName("existing endpoint args are stripped before re-injection")
         void stripsExistingEndpointArgsBeforeInjecting() throws Exception {
             List<String> command = List.of("unoconvert", "--host", "old", "--port", "1", "in.docx");
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("2.2.2.2", 2222, "auto", "http");
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep = endpoint("2.2.2.2", 2222, "auto", "http");
             List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
-            assertEquals(
-                    List.of("unoconvert", "--host", "2.2.2.2", "--port", "2222", "in.docx"),
-                    result);
+            assertEquals(List.of("unoconvert", "--host", "2.2.2.2", "--port", "2222", "in.docx"), result);
         }
 
         @Test
@@ -360,8 +321,7 @@ class ProcessExecutorGapTest {
         @DisplayName("empty command returns the command unchanged")
         void emptyCommandReturnedUnchanged() throws Exception {
             List<String> command = List.of();
-            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep =
-                    endpoint("1.1.1.1", 2003, "auto", "http");
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep = endpoint("1.1.1.1", 2003, "auto", "http");
             List<String> result = invokeApplyUnoServerEndpoint(qpdfExecutor(), command, ep);
             assertEquals(command, result);
         }
@@ -380,30 +340,24 @@ class ProcessExecutorGapTest {
         }
 
         @Test
-        @DisplayName(
-                "false for non-LIBRE_OFFICE process type even with a pool and unoconvert command")
+        @DisplayName("false for non-LIBRE_OFFICE process type even with a pool and unoconvert command")
         void falseForNonLibreOfficeProcessType() throws Exception {
             ProcessExecutor.setUnoServerPool(nonEmptyPool());
-            assertFalse(
-                    invokeShouldUseUnoServerPool(qpdfExecutor(), List.of("unoconvert", "in.docx")));
+            assertFalse(invokeShouldUseUnoServerPool(qpdfExecutor(), List.of("unoconvert", "in.docx")));
         }
 
         @Test
         @DisplayName("false when no pool is configured")
         void falseWhenPoolNull() throws Exception {
             ProcessExecutor.setUnoServerPool(null);
-            assertFalse(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(), List.of("unoconvert", "in.docx")));
+            assertFalse(invokeShouldUseUnoServerPool(libreOfficeExecutor(), List.of("unoconvert", "in.docx")));
         }
 
         @Test
         @DisplayName("false when the configured pool is empty")
         void falseWhenPoolEmpty() throws Exception {
             ProcessExecutor.setUnoServerPool(new UnoServerPool(List.of()));
-            assertFalse(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(), List.of("unoconvert", "in.docx")));
+            assertFalse(invokeShouldUseUnoServerPool(libreOfficeExecutor(), List.of("unoconvert", "in.docx")));
         }
 
         @Test
@@ -419,41 +373,32 @@ class ProcessExecutorGapTest {
         void trueForUnoconvertCommand() throws Exception {
             ProcessExecutor.setUnoServerPool(nonEmptyPool());
             assertTrue(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(), List.of("unoconvert", "in.docx", "out.pdf")));
+                    invokeShouldUseUnoServerPool(libreOfficeExecutor(), List.of("unoconvert", "in.docx", "out.pdf")));
         }
 
         @Test
         @DisplayName("true for a unoconvert path with directories and a .exe extension")
         void trueForUnoconvertWithPathAndExeExtension() throws Exception {
             ProcessExecutor.setUnoServerPool(nonEmptyPool());
-            assertTrue(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(),
-                            List.of("C:\\tools\\bin\\unoconvert.exe", "in.docx")));
-            assertTrue(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(),
-                            List.of("/usr/local/bin/unoconvert", "in.docx")));
+            assertTrue(invokeShouldUseUnoServerPool(
+                    libreOfficeExecutor(), List.of("C:\\tools\\bin\\unoconvert.exe", "in.docx")));
+            assertTrue(invokeShouldUseUnoServerPool(
+                    libreOfficeExecutor(), List.of("/usr/local/bin/unoconvert", "in.docx")));
         }
 
         @Test
         @DisplayName("true for the legacy 'unoconv' executable name")
         void trueForLegacyUnoconv() throws Exception {
             ProcessExecutor.setUnoServerPool(nonEmptyPool());
-            assertTrue(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(), List.of("unoconv", "in.docx")));
+            assertTrue(invokeShouldUseUnoServerPool(libreOfficeExecutor(), List.of("unoconv", "in.docx")));
         }
 
         @Test
         @DisplayName("false for soffice, which must not be routed through the pool")
         void falseForSoffice() throws Exception {
             ProcessExecutor.setUnoServerPool(nonEmptyPool());
-            assertFalse(
-                    invokeShouldUseUnoServerPool(
-                            libreOfficeExecutor(),
-                            List.of("/usr/bin/soffice", "--headless", "in.docx")));
+            assertFalse(invokeShouldUseUnoServerPool(
+                    libreOfficeExecutor(), List.of("/usr/bin/soffice", "--headless", "in.docx")));
         }
     }
 
@@ -468,22 +413,15 @@ class ProcessExecutorGapTest {
         void containsExpectedValues() {
             ProcessExecutor.Processes[] values = ProcessExecutor.Processes.values();
             assertEquals(13, values.length);
-            assertEquals(
-                    ProcessExecutor.Processes.LIBRE_OFFICE,
-                    ProcessExecutor.Processes.valueOf("LIBRE_OFFICE"));
-            assertEquals(
-                    ProcessExecutor.Processes.CFF_CONVERTER,
-                    ProcessExecutor.Processes.valueOf("CFF_CONVERTER"));
-            assertEquals(
-                    ProcessExecutor.Processes.FFMPEG, ProcessExecutor.Processes.valueOf("FFMPEG"));
+            assertEquals(ProcessExecutor.Processes.LIBRE_OFFICE, ProcessExecutor.Processes.valueOf("LIBRE_OFFICE"));
+            assertEquals(ProcessExecutor.Processes.CFF_CONVERTER, ProcessExecutor.Processes.valueOf("CFF_CONVERTER"));
+            assertEquals(ProcessExecutor.Processes.FFMPEG, ProcessExecutor.Processes.valueOf("FFMPEG"));
         }
 
         @Test
         @DisplayName("valueOf rejects an unknown name")
         void valueOfRejectsUnknown() {
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ProcessExecutor.Processes.valueOf("NOT_A_PROCESS"));
+            assertThrows(IllegalArgumentException.class, () -> ProcessExecutor.Processes.valueOf("NOT_A_PROCESS"));
         }
 
         @Test
@@ -508,8 +446,7 @@ class ProcessExecutorGapTest {
         @DisplayName("single-arg getInstance delegates to liveUpdates=true and is cached")
         void singleArgDelegatesAndCaches() {
             ProcessExecutor a = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT);
-            ProcessExecutor b =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT, true);
+            ProcessExecutor b = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT, true);
             assertSame(a, b);
         }
 
@@ -517,10 +454,8 @@ class ProcessExecutorGapTest {
         @DisplayName("the liveUpdates flag of the first call wins because the instance is cached")
         void firstCallWinsForCachedInstance() {
             // First resolution for this type fixes its configuration.
-            ProcessExecutor first =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF, false);
-            ProcessExecutor second =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF, true);
+            ProcessExecutor first = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF, false);
+            ProcessExecutor second = ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF, true);
             assertSame(first, second);
         }
     }
@@ -590,9 +525,7 @@ class ProcessExecutorGapTest {
         @DisplayName("empty command is rejected before any process is started")
         void emptyCommandRejected() {
             ProcessExecutor exec = qpdfExecutor();
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> exec.runCommandWithOutputHandling(List.of()));
+            assertThrows(IllegalArgumentException.class, () -> exec.runCommandWithOutputHandling(List.of()));
         }
 
         @Test
@@ -608,14 +541,11 @@ class ProcessExecutorGapTest {
         @DisplayName("absolute non-existent executable is rejected before any process is started")
         void missingAbsoluteExecutableRejected() {
             ProcessExecutor exec = qpdfExecutor();
-            String bogus =
-                    System.getProperty("os.name").toLowerCase().contains("win")
-                            ? "C:\\no\\such\\tool.exe"
-                            : "/no/such/tool";
-            IllegalArgumentException ex =
-                    assertThrows(
-                            IllegalArgumentException.class,
-                            () -> exec.runCommandWithOutputHandling(List.of(bogus)));
+            String bogus = System.getProperty("os.name").toLowerCase().contains("win")
+                    ? "C:\\no\\such\\tool.exe"
+                    : "/no/such/tool";
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class, () -> exec.runCommandWithOutputHandling(List.of(bogus)));
             assertTrue(ex.getMessage().contains("does not exist"));
         }
 
@@ -624,9 +554,7 @@ class ProcessExecutorGapTest {
         void validationThrowsIllegalArgumentNotIOException() {
             ProcessExecutor exec = qpdfExecutor();
             Exception thrown =
-                    assertThrows(
-                            Exception.class,
-                            () -> exec.runCommandWithOutputHandling(List.of("qpdf", "x\ny")));
+                    assertThrows(Exception.class, () -> exec.runCommandWithOutputHandling(List.of("qpdf", "x\ny")));
             assertInstanceOf(IllegalArgumentException.class, thrown);
             assertFalse(thrown instanceof IOException);
         }

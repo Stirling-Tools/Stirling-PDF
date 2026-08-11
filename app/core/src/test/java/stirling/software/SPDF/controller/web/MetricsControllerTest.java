@@ -41,8 +41,7 @@ class MetricsControllerTest {
 
     private MetricsController createController(Optional<WeeklyActiveUsersService> wauService) {
         MetricsController ctrl =
-                new MetricsController(
-                        applicationProperties, meterRegistry, endpointInspector, wauService);
+                new MetricsController(applicationProperties, meterRegistry, endpointInspector, wauService);
         ctrl.init();
         return ctrl;
     }

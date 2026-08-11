@@ -15,8 +15,7 @@ public class HandleDataRequest {
     private MultipartFile[] fileInput;
 
     @Schema(
-            description =
-                    "Pipeline configuration in JSON format containing name and operations list",
+            description = "Pipeline configuration in JSON format containing name and operations list",
             type = "string",
             example =
                     "{\\\"name\\\":\\\"Prepare-pdfs-for-email\\\",\\\"pipeline\\\":[{\\\"operation\\\":\\\"/api/v1/misc/repair\\\",\\\"parameters\\\":{}},{\\\"operation\\\":\\\"/api/v1/security/sanitize-pdf\\\",\\\"parameters\\\":{\\\"removeJavaScript\\\":true,\\\"removeEmbeddedFiles\\\":false}},{\\\"operation\\\":\\\"/api/v1/misc/compress-pdf\\\",\\\"parameters\\\":{\\\"optimizeLevel\\\":2}}]}",

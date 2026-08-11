@@ -75,9 +75,7 @@ class LanguageServiceBasicTest {
 
         // Verify filtering
         assertTrue(supportedLanguages.contains("en_US"), "Valid language should be included");
-        assertFalse(
-                supportedLanguages.contains("invalid_file"),
-                "Invalid filename should be filtered out");
+        assertFalse(supportedLanguages.contains("invalid_file"), "Invalid filename should be filtered out");
     }
 
     @Test
@@ -94,8 +92,7 @@ class LanguageServiceBasicTest {
         ((LanguageServiceForTest) languageService).setMockResources(mockResources);
 
         // Allow only specific languages - strict whitelist
-        when(applicationProperties.getUi().getLanguages())
-                .thenReturn(Arrays.asList("en_US", "fr_FR"));
+        when(applicationProperties.getUi().getLanguages()).thenReturn(Arrays.asList("en_US", "fr_FR"));
 
         // Execute the method
         Set<String> supportedLanguages = languageService.getSupportedLanguages();
@@ -103,9 +100,7 @@ class LanguageServiceBasicTest {
         // Verify filtering by restrictions
         assertTrue(supportedLanguages.contains("en_US"), "Allowed language should be included");
         assertTrue(supportedLanguages.contains("fr_FR"), "Allowed language should be included");
-        assertFalse(
-                supportedLanguages.contains("en_GB"),
-                "en_GB should NOT be included when not in whitelist");
+        assertFalse(supportedLanguages.contains("en_GB"), "en_GB should NOT be included when not in whitelist");
         assertFalse(supportedLanguages.contains("de_DE"), "Restricted language should be excluded");
     }
 

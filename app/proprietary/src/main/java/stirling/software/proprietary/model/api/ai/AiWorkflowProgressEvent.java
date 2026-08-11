@@ -32,27 +32,16 @@ public class AiWorkflowProgressEvent {
     private AiEngineProgressDetail engineDetail;
 
     public static AiWorkflowProgressEvent of(AiWorkflowPhase phase) {
-        return new AiWorkflowProgressEvent(
-                phase, System.currentTimeMillis(), null, null, null, null);
+        return new AiWorkflowProgressEvent(phase, System.currentTimeMillis(), null, null, null, null);
     }
 
     public static AiWorkflowProgressEvent executingTool(String tool, int stepIndex, int stepCount) {
         return new AiWorkflowProgressEvent(
-                AiWorkflowPhase.EXECUTING_TOOL,
-                System.currentTimeMillis(),
-                tool,
-                stepIndex,
-                stepCount,
-                null);
+                AiWorkflowPhase.EXECUTING_TOOL, System.currentTimeMillis(), tool, stepIndex, stepCount, null);
     }
 
     public static AiWorkflowProgressEvent engineProgress(AiEngineProgressDetail detail) {
         return new AiWorkflowProgressEvent(
-                AiWorkflowPhase.ENGINE_PROGRESS,
-                System.currentTimeMillis(),
-                null,
-                null,
-                null,
-                detail);
+                AiWorkflowPhase.ENGINE_PROGRESS, System.currentTimeMillis(), null, null, null, detail);
     }
 }

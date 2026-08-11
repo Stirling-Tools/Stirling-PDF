@@ -67,26 +67,20 @@ public class WorkflowParticipantController {
     private final MetadataEncryptionService metadataEncryptionService;
     private final CertificateSubmissionValidator certificateSubmissionValidator;
 
-    private static final DateTimeFormatter ISO_UTC =
-            DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC);
+    private static final DateTimeFormatter ISO_UTC = DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC);
 
     @Operation(
             summary = "Get workflow session details by participant token",
             description = "Allows participants to view session details using their share token")
     @GetMapping(value = "/session", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<WorkflowSessionResponse> getSessionByToken(
-            @RequestParam("token") @NotBlank String token) {
+    public ResponseEntity<WorkflowSessionResponse> getSessionByToken(@RequestParam("token") @NotBlank String token) {
 
         workflowSessionService.ensureSigningEnabled();
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(token)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
+        WorkflowParticipant participant = participantRepository
+                .findByShareToken(token)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid or expired participant token"));
 
         // Check if participant is expired
         if (participant.isExpired()) {
@@ -96,8 +90,7 @@ public class WorkflowParticipantController {
         // Mark as viewed if not already
         if (participant.getStatus() == ParticipantStatus.PENDING
                 || participant.getStatus() == ParticipantStatus.NOTIFIED) {
-            workflowSessionService.updateParticipantStatus(
-                    participant.getId(), ParticipantStatus.VIEWED);
+            workflowSessionService.updateParticipantStatus(participant.getId(), ParticipantStatus.VIEWED);
         }
 
         WorkflowSession session = participant.getWorkflowSession();
@@ -106,53 +99,40 @@ public class WorkflowParticipantController {
         return ResponseEntity.ok(WorkflowMapper.toResponse(session, null, false));
     }
 
-    @Operation(
-            summary = "Get participant details by token",
-            description = "Returns participant-specific information")
+    @Operation(summary = "Get participant details by token", description = "Returns participant-specific information")
     @GetMapping(value = "/details", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ParticipantResponse> getParticipantDetails(
-            @RequestParam("token") @NotBlank String token) {
+    public ResponseEntity<ParticipantResponse> getParticipantDetails(@RequestParam("token") @NotBlank String token) {
 
         workflowSessionService.ensureSigningEnabled();
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(token)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
+        WorkflowParticipant participant = participantRepository
+                .findByShareToken(token)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid or expired participant token"));
 
         return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
     }
 
     @Operation(
             summary = "Submit signature (wet signature and/or certificate)",
-            description =
-                    "Participants submit their signature data and certificate information for signing")
+            description = "Participants submit their signature data and certificate information for signing")
     @PostMapping(
             value = "/submit-signature",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ParticipantResponse> submitSignature(
-            @ModelAttribute SignatureSubmissionRequest request) {
+    public ResponseEntity<ParticipantResponse> submitSignature(@ModelAttribute SignatureSubmissionRequest request) {
 
         workflowSessionService.ensureSigningEnabled();
 
-        if (request.getParticipantToken() == null || request.getParticipantToken().isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Participant token is required");
+        if (request.getParticipantToken() == null
+                || request.getParticipantToken().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Participant token is required");
         }
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(request.getParticipantToken())
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
+        WorkflowParticipant participant = participantRepository
+                .findByShareToken(request.getParticipantToken())
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid or expired participant token"));
 
         // Check if participant can still submit
         if (participant.isExpired()) {
@@ -160,13 +140,11 @@ public class WorkflowParticipantController {
         }
 
         if (participant.hasCompleted()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Participant has already completed their action");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Participant has already completed their action");
         }
 
         if (!participant.getWorkflowSession().isActive()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Workflow session is no longer active");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Workflow session is no longer active");
         }
 
         try {
@@ -189,8 +167,7 @@ public class WorkflowParticipantController {
             throw e;
         } catch (Exception e) {
             log.error("Error submitting signature for participant {}", participant.getEmail(), e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to submit signature", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to submit signature", e);
         }
     }
 
@@ -204,18 +181,13 @@ public class WorkflowParticipantController {
 
         workflowSessionService.ensureSigningEnabled();
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(token)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
+        WorkflowParticipant participant = participantRepository
+                .findByShareToken(token)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid or expired participant token"));
 
         if (participant.hasCompleted()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Participant has already completed their action");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Participant has already completed their action");
         }
 
         // Update status to DECLINED
@@ -223,11 +195,9 @@ public class WorkflowParticipantController {
 
         // Add decline reason to notifications
         if (reason != null && !reason.isBlank()) {
-            workflowSessionService.addParticipantNotification(
-                    participant.getId(), "Declined: " + reason);
+            workflowSessionService.addParticipantNotification(participant.getId(), "Declined: " + reason);
         } else {
-            workflowSessionService.addParticipantNotification(
-                    participant.getId(), "Declined participation");
+            workflowSessionService.addParticipantNotification(participant.getId(), "Declined participation");
         }
 
         participant = participantRepository.save(participant);
@@ -240,22 +210,16 @@ public class WorkflowParticipantController {
         return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
     }
 
-    @Operation(
-            summary = "Get original PDF for review",
-            description = "Participant downloads the original document")
+    @Operation(summary = "Get original PDF for review", description = "Participant downloads the original document")
     @GetMapping(value = "/document", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> getDocument(@RequestParam("token") @NotBlank String token) {
 
         workflowSessionService.ensureSigningEnabled();
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(token)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
+        WorkflowParticipant participant = participantRepository
+                .findByShareToken(token)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid or expired participant token"));
 
         if (participant.isExpired()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
@@ -277,17 +241,15 @@ public class WorkflowParticipantController {
 
         } catch (IOException e) {
             log.error("Error retrieving document for participant", e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve document", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve document", e);
         }
     }
 
     @Operation(
             summary = "Pre-validate a certificate before submission",
-            description =
-                    "Validates that the provided certificate is loadable, not expired, and can "
-                            + "successfully sign a document. Returns validation details so the "
-                            + "participant can confirm the correct certificate before committing.")
+            description = "Validates that the provided certificate is loadable, not expired, and can "
+                    + "successfully sign a document. Returns validation details so the "
+                    + "participant can confirm the correct certificate before committing.")
     @PostMapping(
             value = "/validate-certificate",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -304,11 +266,8 @@ public class WorkflowParticipantController {
         participantRepository
                 .findByShareToken(participantToken)
                 .filter(p -> !p.isExpired())
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.FORBIDDEN,
-                                        "Invalid or expired participant token"));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid or expired participant token"));
 
         // Require a file for non-SERVER/non-USER_CERT types — this is a request error, not a
         // validation failure
@@ -316,8 +275,7 @@ public class WorkflowParticipantController {
                 && !"USER_CERT".equalsIgnoreCase(certType)
                 && (p12File == null || p12File.isEmpty())
                 && (jksFile == null || jksFile.isEmpty())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "No certificate file provided");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No certificate file provided");
         }
 
         try {
@@ -329,44 +287,30 @@ public class WorkflowParticipantController {
             }
 
             CertificateInfo info =
-                    certificateSubmissionValidator.validateAndExtractInfo(
-                            keystoreBytes, certType, password);
+                    certificateSubmissionValidator.validateAndExtractInfo(keystoreBytes, certType, password);
 
             if (info == null) {
                 // SERVER type — nothing to validate
-                return ResponseEntity.ok(
-                        new CertificateValidationResponse(
-                                true, null, null, null, null, false, null));
+                return ResponseEntity.ok(new CertificateValidationResponse(true, null, null, null, null, false, null));
             }
 
-            return ResponseEntity.ok(
-                    new CertificateValidationResponse(
-                            true,
-                            info.subjectName(),
-                            info.issuerName(),
-                            info.notAfter() != null ? info.notAfter().toInstant().toString() : null,
-                            info.notBefore() != null
-                                    ? info.notBefore().toInstant().toString()
-                                    : null,
-                            info.selfSigned(),
-                            null));
+            return ResponseEntity.ok(new CertificateValidationResponse(
+                    true,
+                    info.subjectName(),
+                    info.issuerName(),
+                    info.notAfter() != null ? info.notAfter().toInstant().toString() : null,
+                    info.notBefore() != null ? info.notBefore().toInstant().toString() : null,
+                    info.selfSigned(),
+                    null));
 
         } catch (ResponseStatusException e) {
             // Validation failure — return 200 with valid:false so the frontend can display inline
             return ResponseEntity.ok(
-                    new CertificateValidationResponse(
-                            false, null, null, null, null, false, e.getReason()));
+                    new CertificateValidationResponse(false, null, null, null, null, false, e.getReason()));
         } catch (IOException e) {
             log.error("Error reading certificate file during pre-validation", e);
-            return ResponseEntity.ok(
-                    new CertificateValidationResponse(
-                            false,
-                            null,
-                            null,
-                            null,
-                            null,
-                            false,
-                            "Failed to read certificate file"));
+            return ResponseEntity.ok(new CertificateValidationResponse(
+                    false, null, null, null, null, false, "Failed to read certificate file"));
         }
     }
 
@@ -374,8 +318,7 @@ public class WorkflowParticipantController {
      * Builds metadata map from signature submission request. Includes certificate submission and
      * wet signature data.
      */
-    private Map<String, Object> buildSubmissionMetadata(SignatureSubmissionRequest request)
-            throws IOException {
+    private Map<String, Object> buildSubmissionMetadata(SignatureSubmissionRequest request) throws IOException {
         Map<String, Object> metadata = new HashMap<>();
 
         // Validate certificate before storing — throws 400 if invalid, expired, or wrong password
@@ -396,8 +339,7 @@ public class WorkflowParticipantController {
         if (request.getCertType() != null) {
             Map<String, Object> certSubmission = new HashMap<>();
             certSubmission.put("certType", request.getCertType());
-            certSubmission.put(
-                    "password", metadataEncryptionService.encrypt(request.getPassword()));
+            certSubmission.put("password", metadataEncryptionService.encrypt(request.getPassword()));
             certSubmission.put("showSignature", request.getShowSignature());
             certSubmission.put("pageNumber", request.getPageNumber());
             certSubmission.put("location", request.getLocation());
@@ -408,31 +350,31 @@ public class WorkflowParticipantController {
             if (request.getP12File() != null && !request.getP12File().isEmpty()) {
                 certSubmission.put(
                         "p12Keystore",
-                        metadataEncryptionService.encryptBytes(request.getP12File().getBytes()));
+                        metadataEncryptionService.encryptBytes(
+                                request.getP12File().getBytes()));
             }
             if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
                 certSubmission.put(
                         "jksKeystore",
-                        metadataEncryptionService.encryptBytes(request.getJksFile().getBytes()));
+                        metadataEncryptionService.encryptBytes(
+                                request.getJksFile().getBytes()));
             }
 
             metadata.put("certificateSubmission", certSubmission);
         }
 
         // Add wet signatures data if provided - parse once and store as List directly
-        if (request.getWetSignaturesData() != null && !request.getWetSignaturesData().isBlank()) {
+        if (request.getWetSignaturesData() != null
+                && !request.getWetSignaturesData().isBlank()) {
             if (request.getWetSignaturesData().length() > 5 * 1024 * 1024) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "Wet signatures data exceeds maximum allowed size");
             }
             @SuppressWarnings("unchecked")
-            java.util.List<Map<String, Object>> wetSigs =
-                    objectMapper.readValue(
-                            request.getWetSignaturesData(),
-                            new TypeReference<java.util.List<Map<String, Object>>>() {});
+            java.util.List<Map<String, Object>> wetSigs = objectMapper.readValue(
+                    request.getWetSignaturesData(), new TypeReference<java.util.List<Map<String, Object>>>() {});
             if (wetSigs.size() > WetSignatureMetadata.MAX_SIGNATURES_PER_PARTICIPANT) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Too many wet signatures submitted");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Too many wet signatures submitted");
             }
             metadata.put("wetSignatures", wetSigs);
         }

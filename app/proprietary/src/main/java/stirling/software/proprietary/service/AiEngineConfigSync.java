@@ -39,9 +39,8 @@ public class AiEngineConfigSync {
     private final ObjectMapper objectMapper;
 
     // Single worker keeps pushes strictly ordered; virtual (daemon) thread never blocks shutdown.
-    private final ExecutorService pushExecutor =
-            Executors.newSingleThreadExecutor(
-                    Thread.ofVirtual().name("ai-engine-config-sync").factory());
+    private final ExecutorService pushExecutor = Executors.newSingleThreadExecutor(
+            Thread.ofVirtual().name("ai-engine-config-sync").factory());
 
     @PreDestroy
     void shutdown() {
@@ -55,9 +54,8 @@ public class AiEngineConfigSync {
             return;
         }
         if (!cfg.isPushConfigToEngine()) {
-            log.debug(
-                    "Skipping AI engine config push: aiEngine.pushConfigToEngine is disabled"
-                            + " (the engine is configured from its own environment)");
+            log.debug("Skipping AI engine config push: aiEngine.pushConfigToEngine is disabled"
+                    + " (the engine is configured from its own environment)");
             return;
         }
         // Engine may still be booting; push off-thread with retries so startup never blocks.
@@ -80,10 +78,9 @@ public class AiEngineConfigSync {
                     || !cfg.isEnabled()) {
                 return;
             }
-            Set<String> engineKeys =
-                    pendingAiEngine.keySet().stream()
-                            .filter(AiEngineConfigSync::isEngineRelevantKey)
-                            .collect(Collectors.toSet());
+            Set<String> engineKeys = pendingAiEngine.keySet().stream()
+                    .filter(AiEngineConfigSync::isEngineRelevantKey)
+                    .collect(Collectors.toSet());
             if (engineKeys.isEmpty()) {
                 return;
             }
@@ -157,11 +154,7 @@ public class AiEngineConfigSync {
                 log.info("Pushed AI engine configuration on startup (attempt {})", attempt);
                 return;
             } catch (Exception e) {
-                log.warn(
-                        "AI engine config push failed (attempt {}/{}): {}",
-                        attempt,
-                        MAX_ATTEMPTS,
-                        e.getMessage());
+                log.warn("AI engine config push failed (attempt {}/{}): {}", attempt, MAX_ATTEMPTS, e.getMessage());
                 if (attempt < MAX_ATTEMPTS) {
                     try {
                         Thread.sleep(RETRY_DELAY_MS);
@@ -228,13 +221,12 @@ public class AiEngineConfigSync {
      */
     private void keepEnvForUnconfiguredIdentity(ObjectNode root, Set<String> touchedKeys) {
         if (root.get("models") instanceof ObjectNode models) {
-            boolean configured =
-                    touchedIdentity(touchedKeys, MODEL_IDENTITY_KEYS)
-                            || !isBlank(text(models, "apiKey"))
-                            || !isBlank(text(models, "baseUrl"))
-                            || !DEFAULT_MODELS.getProvider().equals(text(models, "provider"))
-                            || !DEFAULT_MODELS.getSmartModel().equals(text(models, "smartModel"))
-                            || !DEFAULT_MODELS.getFastModel().equals(text(models, "fastModel"));
+            boolean configured = touchedIdentity(touchedKeys, MODEL_IDENTITY_KEYS)
+                    || !isBlank(text(models, "apiKey"))
+                    || !isBlank(text(models, "baseUrl"))
+                    || !DEFAULT_MODELS.getProvider().equals(text(models, "provider"))
+                    || !DEFAULT_MODELS.getSmartModel().equals(text(models, "smartModel"))
+                    || !DEFAULT_MODELS.getFastModel().equals(text(models, "fastModel"));
             if (!configured) {
                 models.put("provider", "");
                 models.put("smartModel", "");
@@ -244,14 +236,11 @@ public class AiEngineConfigSync {
             }
         }
         if (root.get("rag") instanceof ObjectNode rag) {
-            boolean configured =
-                    touchedIdentity(touchedKeys, RAG_IDENTITY_KEYS)
-                            || !isBlank(text(rag, "embeddingApiKey"))
-                            || !isBlank(text(rag, "embeddingBaseUrl"))
-                            || !DEFAULT_RAG
-                                    .getEmbeddingProvider()
-                                    .equals(text(rag, "embeddingProvider"))
-                            || !DEFAULT_RAG.getEmbeddingModel().equals(text(rag, "embeddingModel"));
+            boolean configured = touchedIdentity(touchedKeys, RAG_IDENTITY_KEYS)
+                    || !isBlank(text(rag, "embeddingApiKey"))
+                    || !isBlank(text(rag, "embeddingBaseUrl"))
+                    || !DEFAULT_RAG.getEmbeddingProvider().equals(text(rag, "embeddingProvider"))
+                    || !DEFAULT_RAG.getEmbeddingModel().equals(text(rag, "embeddingModel"));
             if (!configured) {
                 rag.put("embeddingProvider", "");
                 rag.put("embeddingModel", "");
@@ -261,20 +250,18 @@ public class AiEngineConfigSync {
         }
     }
 
-    private static final Set<String> MODEL_IDENTITY_KEYS =
-            Set.of(
-                    "aiEngine.models.provider",
-                    "aiEngine.models.smartModel",
-                    "aiEngine.models.fastModel",
-                    "aiEngine.models.apiKey",
-                    "aiEngine.models.baseUrl");
+    private static final Set<String> MODEL_IDENTITY_KEYS = Set.of(
+            "aiEngine.models.provider",
+            "aiEngine.models.smartModel",
+            "aiEngine.models.fastModel",
+            "aiEngine.models.apiKey",
+            "aiEngine.models.baseUrl");
 
-    private static final Set<String> RAG_IDENTITY_KEYS =
-            Set.of(
-                    "aiEngine.rag.embeddingProvider",
-                    "aiEngine.rag.embeddingModel",
-                    "aiEngine.rag.embeddingApiKey",
-                    "aiEngine.rag.embeddingBaseUrl");
+    private static final Set<String> RAG_IDENTITY_KEYS = Set.of(
+            "aiEngine.rag.embeddingProvider",
+            "aiEngine.rag.embeddingModel",
+            "aiEngine.rag.embeddingApiKey",
+            "aiEngine.rag.embeddingBaseUrl");
 
     private static boolean touchedIdentity(Set<String> touchedKeys, Set<String> identityKeys) {
         return touchedKeys.stream().anyMatch(identityKeys::contains);

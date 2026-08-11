@@ -16,13 +16,13 @@ import stirling.software.common.configuration.RuntimePathConfig;
 
 class FileMonitorTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private FileMonitor createFileMonitor(Path watchDir) throws IOException {
         Predicate<Path> acceptAll = path -> true;
         RuntimePathConfig runtimePathConfig = mock(RuntimePathConfig.class);
-        when(runtimePathConfig.getPipelineWatchedFoldersPaths())
-                .thenReturn(List.of(watchDir.toString()));
+        when(runtimePathConfig.getPipelineWatchedFoldersPaths()).thenReturn(List.of(watchDir.toString()));
         return new FileMonitor(acceptAll, runtimePathConfig);
     }
 

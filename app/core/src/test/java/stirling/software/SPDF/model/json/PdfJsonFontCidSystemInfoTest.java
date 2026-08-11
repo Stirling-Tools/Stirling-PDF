@@ -29,12 +29,11 @@ class PdfJsonFontCidSystemInfoTest {
     @Test
     @DisplayName("builder and setters round-trip")
     void builderAndSetters() {
-        PdfJsonFontCidSystemInfo info =
-                PdfJsonFontCidSystemInfo.builder()
-                        .registry("Adobe")
-                        .ordering("Identity")
-                        .supplement(0)
-                        .build();
+        PdfJsonFontCidSystemInfo info = PdfJsonFontCidSystemInfo.builder()
+                .registry("Adobe")
+                .ordering("Identity")
+                .supplement(0)
+                .build();
         assertThat(info.getRegistry()).isEqualTo("Adobe");
         assertThat(info.getOrdering()).isEqualTo("Identity");
         assertThat(info.getSupplement()).isZero();
@@ -46,11 +45,14 @@ class PdfJsonFontCidSystemInfoTest {
     @Test
     @DisplayName("equals/hashCode/toString")
     void equality() {
-        PdfJsonFontCidSystemInfo a = PdfJsonFontCidSystemInfo.builder().registry("Adobe").build();
-        PdfJsonFontCidSystemInfo b = PdfJsonFontCidSystemInfo.builder().registry("Adobe").build();
+        PdfJsonFontCidSystemInfo a =
+                PdfJsonFontCidSystemInfo.builder().registry("Adobe").build();
+        PdfJsonFontCidSystemInfo b =
+                PdfJsonFontCidSystemInfo.builder().registry("Adobe").build();
         assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
 
-        PdfJsonFontCidSystemInfo c = PdfJsonFontCidSystemInfo.builder().registry("MS").build();
+        PdfJsonFontCidSystemInfo c =
+                PdfJsonFontCidSystemInfo.builder().registry("MS").build();
         assertThat(a).isNotEqualTo(c).isNotEqualTo(null).isNotEqualTo("string");
         assertThat(a.toString()).contains("PdfJsonFontCidSystemInfo").contains("Adobe");
     }

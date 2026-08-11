@@ -27,17 +27,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user =
-                userRepository
-                        .findByUsername(username)
-                        .orElseThrow(
-                                () ->
-                                        new UsernameNotFoundException(
-                                                "No user found with username: " + username));
+        User user = userRepository
+                .findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("No user found with username: " + username));
 
         if (loginAttemptService.isBlocked(username)) {
-            throw new LockedException(
-                    "Your account has been locked due to too many failed login attempts.");
+            throw new LockedException("Your account has been locked due to too many failed login attempts.");
         }
 
         // TODO: Remove for SaaS - Handle legacy users without authenticationType (from versions <
@@ -61,8 +56,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             userRepository.save(user);
         }
 
-        AuthenticationType userAuthenticationType =
-                AuthenticationType.valueOf(authTypeStr.toUpperCase(Locale.ROOT));
+        AuthenticationType userAuthenticationType = AuthenticationType.valueOf(authTypeStr.toUpperCase(Locale.ROOT));
         if (!user.hasPassword() && userAuthenticationType == AuthenticationType.WEB) {
             throw new IllegalArgumentException("Password must not be null");
         }
@@ -78,11 +72,10 @@ public class CustomUserDetailsService implements UserDetailsService {
      */
     private AuthenticationType determinePreferredSSOType() {
         // Check what SSO types are enabled and prefer in order: OAUTH2 > SAML2 > fallback to OAUTH2
-        boolean oauth2Enabled =
-                securityProperties.getOauth2() != null
-                        && securityProperties.getOauth2().getEnabled();
-        boolean saml2Enabled =
-                securityProperties.getSaml2() != null && securityProperties.getSaml2().getEnabled();
+        boolean oauth2Enabled = securityProperties.getOauth2() != null
+                && securityProperties.getOauth2().getEnabled();
+        boolean saml2Enabled = securityProperties.getSaml2() != null
+                && securityProperties.getSaml2().getEnabled();
 
         if (oauth2Enabled) {
             return AuthenticationType.OAUTH2;

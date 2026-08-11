@@ -21,26 +21,25 @@ class MultipartBodyTest {
         // The publisher is what actually goes on the wire.
         java.net.http.HttpRequest.BodyPublisher publisher = body.build();
         StringBuilder out = new StringBuilder();
-        publisher.subscribe(
-                new java.util.concurrent.Flow.Subscriber<>() {
-                    @Override
-                    public void onSubscribe(java.util.concurrent.Flow.Subscription s) {
-                        s.request(Long.MAX_VALUE);
-                    }
+        publisher.subscribe(new java.util.concurrent.Flow.Subscriber<>() {
+            @Override
+            public void onSubscribe(java.util.concurrent.Flow.Subscription s) {
+                s.request(Long.MAX_VALUE);
+            }
 
-                    @Override
-                    public void onNext(java.nio.ByteBuffer item) {
-                        byte[] bytes = new byte[item.remaining()];
-                        item.get(bytes);
-                        out.append(new String(bytes, StandardCharsets.UTF_8));
-                    }
+            @Override
+            public void onNext(java.nio.ByteBuffer item) {
+                byte[] bytes = new byte[item.remaining()];
+                item.get(bytes);
+                out.append(new String(bytes, StandardCharsets.UTF_8));
+            }
 
-                    @Override
-                    public void onError(Throwable t) {}
+            @Override
+            public void onError(Throwable t) {}
 
-                    @Override
-                    public void onComplete() {}
-                });
+            @Override
+            public void onComplete() {}
+        });
         return out.toString();
     }
 
@@ -67,11 +66,7 @@ class MultipartBodyTest {
     void writesTheDocumentUnderItsFieldNameAndFilename() throws IOException {
         MultipartBody body = new MultipartBody();
         body.addFields(Map.of("policy", "strict"));
-        body.addFile(
-                "file",
-                "claim.pdf",
-                "application/pdf",
-                "%PDF-1.7".getBytes(StandardCharsets.UTF_8));
+        body.addFile("file", "claim.pdf", "application/pdf", "%PDF-1.7".getBytes(StandardCharsets.UTF_8));
 
         String rendered = render(body);
         assertThat(rendered).contains("name=\"policy\"").contains("strict");
@@ -105,7 +100,6 @@ class MultipartBodyTest {
     @Test
     void eachBodyGetsItsOwnBoundary() {
         // A value cannot end its own part because it cannot know the boundary in advance.
-        assertThat(new MultipartBody().contentType())
-                .isNotEqualTo(new MultipartBody().contentType());
+        assertThat(new MultipartBody().contentType()).isNotEqualTo(new MultipartBody().contentType());
     }
 }

@@ -59,22 +59,24 @@ class AutoSplitPdfControllerTest {
 
     private static final String VALID_QR = "https://stirlingpdf.com";
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private ApplicationProperties applicationProperties;
     private AutoSplitPdfController controller;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {
         applicationProperties = new ApplicationProperties();
         // Keep maxDPI at the QR detection DPI so the high-DPI retry path is skipped (fast tests).
         applicationProperties.getSystem().setMaxDPI(150);
-        controller =
-                new AutoSplitPdfController(
-                        pdfDocumentFactory, tempFileManager, applicationProperties);
+        controller = new AutoSplitPdfController(pdfDocumentFactory, tempFileManager, applicationProperties);
     }
 
     // ---------------------------------------------------------------------
@@ -121,8 +123,7 @@ class AutoSplitPdfControllerTest {
     /**
      * A PDF where every page draws the supplied image (used so embedded-image extraction works).
      */
-    private static PDDocument docWithImageOnEachPage(BufferedImage img, int pages)
-            throws Exception {
+    private static PDDocument docWithImageOnEachPage(BufferedImage img, int pages) throws Exception {
         PDDocument doc = new PDDocument();
         for (int i = 0; i < pages; i++) {
             PDPage page = new PDPage(new PDRectangle(200, 200));
@@ -149,9 +150,8 @@ class AutoSplitPdfControllerTest {
 
     private static AutoSplitPdfRequest request(byte[] pdfBytes, Boolean duplex) {
         AutoSplitPdfRequest req = new AutoSplitPdfRequest();
-        req.setFileInput(
-                new org.springframework.mock.web.MockMultipartFile(
-                        "fileInput", "input.pdf", "application/pdf", pdfBytes));
+        req.setFileInput(new org.springframework.mock.web.MockMultipartFile(
+                "fileInput", "input.pdf", "application/pdf", pdfBytes));
         req.setDuplexMode(duplex);
         return req;
     }
@@ -159,9 +159,8 @@ class AutoSplitPdfControllerTest {
     /** Make tempFileManager.createTempFile(".zip") create a real file inside the JUnit temp dir. */
     private void wireRealTempFile() throws Exception {
         when(tempFileManager.createTempFile(".zip"))
-                .thenAnswer(
-                        invocation ->
-                                Files.createTempFile(tempDir, "stirling-test", ".zip").toFile());
+                .thenAnswer(invocation ->
+                        Files.createTempFile(tempDir, "stirling-test", ".zip").toFile());
     }
 
     private static List<String> zipEntryNames(byte[] zipBytes) throws Exception {
@@ -184,8 +183,7 @@ class AutoSplitPdfControllerTest {
 
     // reflection invokers for the private (static) helpers ------------------
 
-    private static Object invokeStatic(String name, Class<?>[] types, Object... args)
-            throws Exception {
+    private static Object invokeStatic(String name, Class<?>[] types, Object... args) throws Exception {
         Method m = AutoSplitPdfController.class.getDeclaredMethod(name, types);
         m.setAccessible(true);
         try {
@@ -222,8 +220,7 @@ class AutoSplitPdfControllerTest {
         @Test
         @DisplayName("empty array is treated as blank")
         void emptyArrayIsBlank() throws Exception {
-            Object result =
-                    invokeStatic("isBlankImage", new Class<?>[] {int[].class}, (Object) new int[0]);
+            Object result = invokeStatic("isBlankImage", new Class<?>[] {int[].class}, (Object) new int[0]);
             assertEquals(Boolean.TRUE, result);
         }
 
@@ -232,8 +229,7 @@ class AutoSplitPdfControllerTest {
         void uniformIsBlank() throws Exception {
             int[] pixels = new int[1000];
             java.util.Arrays.fill(pixels, 0xFFFFFF);
-            Object result =
-                    invokeStatic("isBlankImage", new Class<?>[] {int[].class}, (Object) pixels);
+            Object result = invokeStatic("isBlankImage", new Class<?>[] {int[].class}, (Object) pixels);
             assertEquals(Boolean.TRUE, result);
         }
 
@@ -244,17 +240,14 @@ class AutoSplitPdfControllerTest {
             java.util.Arrays.fill(pixels, 0xFFFFFF);
             // step = max(1, 1000/20) = 50, so index 500 is sampled
             pixels[500] = 0x000000;
-            Object result =
-                    invokeStatic("isBlankImage", new Class<?>[] {int[].class}, (Object) pixels);
+            Object result = invokeStatic("isBlankImage", new Class<?>[] {int[].class}, (Object) pixels);
             assertEquals(Boolean.FALSE, result);
         }
 
         @Test
         @DisplayName("single pixel array is blank")
         void singlePixelIsBlank() throws Exception {
-            Object result =
-                    invokeStatic(
-                            "isBlankImage", new Class<?>[] {int[].class}, (Object) new int[] {7});
+            Object result = invokeStatic("isBlankImage", new Class<?>[] {int[].class}, (Object) new int[] {7});
             assertEquals(Boolean.TRUE, result);
         }
     }
@@ -271,11 +264,7 @@ class AutoSplitPdfControllerTest {
         @DisplayName("small images are returned unchanged (same instance)")
         void smallUnchanged() throws Exception {
             BufferedImage img = solidImage(100, 80, Color.GRAY);
-            Object result =
-                    invokeStatic(
-                            "downscaleIfNeeded",
-                            new Class<?>[] {BufferedImage.class},
-                            (Object) img);
+            Object result = invokeStatic("downscaleIfNeeded", new Class<?>[] {BufferedImage.class}, (Object) img);
             assertSame(img, result);
         }
 
@@ -287,11 +276,7 @@ class AutoSplitPdfControllerTest {
             // total pixel count is below the limit so we only assert the <= branch with a
             // realistic non-trivial size.
             BufferedImage img = solidImage(5000, 5000, Color.WHITE); // 25M < 100M
-            Object result =
-                    invokeStatic(
-                            "downscaleIfNeeded",
-                            new Class<?>[] {BufferedImage.class},
-                            (Object) img);
+            Object result = invokeStatic("downscaleIfNeeded", new Class<?>[] {BufferedImage.class}, (Object) img);
             assertSame(img, result);
         }
     }
@@ -308,8 +293,7 @@ class AutoSplitPdfControllerTest {
         @DisplayName("page with no resources returns 0")
         void noResourcesZero() throws Exception {
             PDPage page = new PDPage(new PDRectangle(200, 200));
-            Object result =
-                    invokeStatic("countPageImages", new Class<?>[] {PDPage.class}, (Object) page);
+            Object result = invokeStatic("countPageImages", new Class<?>[] {PDPage.class}, (Object) page);
             assertEquals(0, result);
         }
 
@@ -318,9 +302,7 @@ class AutoSplitPdfControllerTest {
         void oneImage() throws Exception {
             try (PDDocument doc = docWithImageOnEachPage(solidImage(40, 40, Color.RED), 1)) {
                 PDPage page = doc.getPage(0);
-                Object result =
-                        invokeStatic(
-                                "countPageImages", new Class<?>[] {PDPage.class}, (Object) page);
+                Object result = invokeStatic("countPageImages", new Class<?>[] {PDPage.class}, (Object) page);
                 assertEquals(1, result);
             }
         }
@@ -338,8 +320,7 @@ class AutoSplitPdfControllerTest {
         @DisplayName("decodeQRCode returns the encoded text for a real QR image")
         void decodeRealQr() throws Exception {
             BufferedImage qr = qrImage(VALID_QR, 250);
-            Object result =
-                    invokeStatic("decodeQRCode", new Class<?>[] {BufferedImage.class}, (Object) qr);
+            Object result = invokeStatic("decodeQRCode", new Class<?>[] {BufferedImage.class}, (Object) qr);
             assertEquals(VALID_QR, result);
         }
 
@@ -347,9 +328,7 @@ class AutoSplitPdfControllerTest {
         @DisplayName("decodeQRCode returns null for a blank image")
         void decodeBlankReturnsNull() throws Exception {
             BufferedImage blank = solidImage(120, 120, Color.WHITE);
-            Object result =
-                    invokeStatic(
-                            "decodeQRCode", new Class<?>[] {BufferedImage.class}, (Object) blank);
+            Object result = invokeStatic("decodeQRCode", new Class<?>[] {BufferedImage.class}, (Object) blank);
             assertNull(result);
         }
 
@@ -364,9 +343,7 @@ class AutoSplitPdfControllerTest {
             g.setColor(Color.BLACK);
             g.fillRect(0, 60, 120, 60);
             g.dispose();
-            Object result =
-                    invokeStatic(
-                            "decodeQRCode", new Class<?>[] {BufferedImage.class}, (Object) image);
+            Object result = invokeStatic("decodeQRCode", new Class<?>[] {BufferedImage.class}, (Object) image);
             assertNull(result);
         }
 
@@ -379,12 +356,7 @@ class AutoSplitPdfControllerTest {
             int[] pixels = new int[w * h];
             qr.getRGB(0, 0, w, h, pixels, 0, w);
             Object result =
-                    invokeStatic(
-                            "tryDecodeQR",
-                            new Class<?>[] {int[].class, int.class, int.class},
-                            pixels,
-                            w,
-                            h);
+                    invokeStatic("tryDecodeQR", new Class<?>[] {int[].class, int.class, int.class}, pixels, w, h);
             assertEquals(VALID_QR, result);
         }
 
@@ -399,12 +371,7 @@ class AutoSplitPdfControllerTest {
                 pixels[i] = (i % 2 == 0) ? 0xFFFFFF : 0x000000;
             }
             Object result =
-                    invokeStatic(
-                            "tryDecodeQR",
-                            new Class<?>[] {int[].class, int.class, int.class},
-                            pixels,
-                            w,
-                            h);
+                    invokeStatic("tryDecodeQR", new Class<?>[] {int[].class, int.class, int.class}, pixels, w, h);
             assertNull(result);
         }
     }
@@ -421,9 +388,7 @@ class AutoSplitPdfControllerTest {
         @DisplayName("page with no images returns null")
         void noImagesNull() throws Exception {
             PDPage page = new PDPage(new PDRectangle(200, 200));
-            Object result =
-                    invokeStatic(
-                            "checkPageImagesDirect", new Class<?>[] {PDPage.class}, (Object) page);
+            Object result = invokeStatic("checkPageImagesDirect", new Class<?>[] {PDPage.class}, (Object) page);
             assertNull(result);
         }
 
@@ -434,11 +399,7 @@ class AutoSplitPdfControllerTest {
             BufferedImage qr = qrImage(VALID_QR, 250);
             try (PDDocument doc = docWithImageOnEachPage(qr, 1)) {
                 PDPage page = doc.getPage(0);
-                Object result =
-                        invokeStatic(
-                                "checkPageImagesDirect",
-                                new Class<?>[] {PDPage.class},
-                                (Object) page);
+                Object result = invokeStatic("checkPageImagesDirect", new Class<?>[] {PDPage.class}, (Object) page);
                 assertEquals(VALID_QR, result);
             }
         }
@@ -449,11 +410,7 @@ class AutoSplitPdfControllerTest {
             BufferedImage plain = solidImage(80, 80, Color.WHITE);
             try (PDDocument doc = docWithImageOnEachPage(plain, 1)) {
                 PDPage page = doc.getPage(0);
-                Object result =
-                        invokeStatic(
-                                "checkPageImagesDirect",
-                                new Class<?>[] {PDPage.class},
-                                (Object) page);
+                Object result = invokeStatic("checkPageImagesDirect", new Class<?>[] {PDPage.class}, (Object) page);
                 assertNull(result);
             }
         }
@@ -478,8 +435,7 @@ class AutoSplitPdfControllerTest {
         @Test
         @DisplayName("falls back to the default detection DPI when applicationProperties is null")
         void fallsBackWhenNull() throws Exception {
-            AutoSplitPdfController noProps =
-                    new AutoSplitPdfController(pdfDocumentFactory, tempFileManager, null);
+            AutoSplitPdfController noProps = new AutoSplitPdfController(pdfDocumentFactory, tempFileManager, null);
             Method m = AutoSplitPdfController.class.getDeclaredMethod("getSystemMaxDpi");
             m.setAccessible(true);
             Object result = m.invoke(noProps);
@@ -544,8 +500,7 @@ class AutoSplitPdfControllerTest {
 
             AutoSplitPdfRequest req = new AutoSplitPdfRequest();
             req.setFileInput(
-                    new org.springframework.mock.web.MockMultipartFile(
-                            "fileInput", "myfile", "application/pdf", pdf));
+                    new org.springframework.mock.web.MockMultipartFile("fileInput", "myfile", "application/pdf", pdf));
             req.setDuplexMode(false);
 
             ResponseEntity<Resource> response = controller.autoSplitPdf(req);
@@ -585,10 +540,10 @@ class AutoSplitPdfControllerTest {
         @DisplayName("loader failure propagates and the temp file is closed")
         void loaderFailurePropagates() throws Exception {
             byte[] pdf = docToBytes(simpleDoc(1));
-            File created = Files.createTempFile(tempDir, "stirling-fail", ".zip").toFile();
+            File created =
+                    Files.createTempFile(tempDir, "stirling-fail", ".zip").toFile();
             when(tempFileManager.createTempFile(".zip")).thenReturn(created);
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenThrow(new java.io.IOException("boom"));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenThrow(new java.io.IOException("boom"));
 
             AutoSplitPdfRequest req = request(pdf, false);
 
@@ -624,8 +579,7 @@ class AutoSplitPdfControllerTest {
         @DisplayName("the well-known divider URLs are recognised")
         @SuppressWarnings("unchecked")
         void recognisedUrls() throws Exception {
-            java.lang.reflect.Field f =
-                    AutoSplitPdfController.class.getDeclaredField("VALID_QR_CONTENTS");
+            java.lang.reflect.Field f = AutoSplitPdfController.class.getDeclaredField("VALID_QR_CONTENTS");
             f.setAccessible(true);
             Set<String> valid = new HashSet<>((Set<String>) f.get(null));
             assertTrue(valid.contains("https://stirlingpdf.com"));

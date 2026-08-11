@@ -58,12 +58,7 @@ class PdfLazyLoadingServiceMoreTest {
         metadataService = mock(PdfJsonMetadataService.class);
         imageService = mock(PdfJsonImageService.class);
         service =
-                new PdfLazyLoadingService(
-                        pdfDocumentFactory,
-                        objectMapper,
-                        taskManager,
-                        metadataService,
-                        imageService);
+                new PdfLazyLoadingService(pdfDocumentFactory, objectMapper, taskManager, metadataService, imageService);
     }
 
     @SuppressWarnings("unchecked")
@@ -87,10 +82,8 @@ class PdfLazyLoadingServiceMoreTest {
         metadata.setPageDimensions(dims);
 
         Class<?> cachedClass =
-                Class.forName(
-                        "stirling.software.SPDF.service.pdfjson.PdfLazyLoadingService$CachedPdfDocument");
-        Constructor<?> ctor =
-                cachedClass.getDeclaredConstructor(byte[].class, PdfJsonDocumentMetadata.class);
+                Class.forName("stirling.software.SPDF.service.pdfjson.PdfLazyLoadingService$CachedPdfDocument");
+        Constructor<?> ctor = cachedClass.getDeclaredConstructor(byte[].class, PdfJsonDocumentMetadata.class);
         ctor.setAccessible(true);
         Object cached = ctor.newInstance(pdfBytes, metadata);
         cache().put(jobId, cached);
@@ -129,12 +122,11 @@ class PdfLazyLoadingServiceMoreTest {
             List<PdfJsonImageElement> images = new ArrayList<>();
             when(imageService.extractImagesForPage(any(), any(), eq(2))).thenReturn(images);
 
-            doAnswer(
-                            inv -> {
-                                OutputStream os = inv.getArgument(0, OutputStream.class);
-                                os.write(new byte[] {'p', 'g'});
-                                return null;
-                            })
+            doAnswer(inv -> {
+                        OutputStream os = inv.getArgument(0, OutputStream.class);
+                        os.write(new byte[] {'p', 'g'});
+                        return null;
+                    })
                     .when(objectMapper)
                     .writeValue(any(OutputStream.class), any());
 
@@ -165,17 +157,15 @@ class PdfLazyLoadingServiceMoreTest {
             seedCache("job-hi", tinyPdfBytes(1), 1);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThatThrownBy(
-                            () ->
-                                    service.extractSinglePage(
-                                            "job-hi",
-                                            5,
-                                            cos -> null,
-                                            page -> new ArrayList<>(),
-                                            cos -> cos,
-                                            (doc, pageNum) -> new ArrayList<>(),
-                                            (doc, pageNum) -> new ArrayList<>(),
-                                            out))
+            assertThatThrownBy(() -> service.extractSinglePage(
+                            "job-hi",
+                            5,
+                            cos -> null,
+                            page -> new ArrayList<>(),
+                            cos -> cos,
+                            (doc, pageNum) -> new ArrayList<>(),
+                            (doc, pageNum) -> new ArrayList<>(),
+                            out))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("out of range");
 
@@ -189,17 +179,15 @@ class PdfLazyLoadingServiceMoreTest {
             seedCache("job-lo", tinyPdfBytes(2), 2);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThatThrownBy(
-                            () ->
-                                    service.extractSinglePage(
-                                            "job-lo",
-                                            0,
-                                            cos -> null,
-                                            page -> new ArrayList<>(),
-                                            cos -> cos,
-                                            (doc, pageNum) -> new ArrayList<>(),
-                                            (doc, pageNum) -> new ArrayList<>(),
-                                            out))
+            assertThatThrownBy(() -> service.extractSinglePage(
+                            "job-lo",
+                            0,
+                            cos -> null,
+                            page -> new ArrayList<>(),
+                            cos -> cos,
+                            (doc, pageNum) -> new ArrayList<>(),
+                            (doc, pageNum) -> new ArrayList<>(),
+                            out))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("out of range");
         }

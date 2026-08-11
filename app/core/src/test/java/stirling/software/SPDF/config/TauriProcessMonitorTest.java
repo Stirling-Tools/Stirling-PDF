@@ -25,8 +25,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 @DisplayName("TauriProcessMonitor")
 class TauriProcessMonitorTest {
 
-    private static Object invokePrivate(TauriProcessMonitor monitor, String name, Object... args)
-            throws Exception {
+    private static Object invokePrivate(TauriProcessMonitor monitor, String name, Object... args) throws Exception {
         Method method = findMethod(name);
         method.setAccessible(true);
         return method.invoke(monitor, args);
@@ -41,8 +40,7 @@ class TauriProcessMonitorTest {
         throw new IllegalStateException("Method not found: " + name);
     }
 
-    private static void setField(TauriProcessMonitor monitor, String name, Object value)
-            throws Exception {
+    private static void setField(TauriProcessMonitor monitor, String name, Object value) throws Exception {
         Field field = TauriProcessMonitor.class.getDeclaredField(name);
         field.setAccessible(true);
         field.set(monitor, value);
@@ -103,8 +101,7 @@ class TauriProcessMonitorTest {
             TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
 
             try (MockedStatic<ProcessHandle> ph = mockStatic(ProcessHandle.class)) {
-                ph.when(() -> ProcessHandle.of(999L))
-                        .thenReturn(Optional.of(mock(ProcessHandle.class)));
+                ph.when(() -> ProcessHandle.of(999L)).thenReturn(Optional.of(mock(ProcessHandle.class)));
                 Object result = invokePrivate(monitor, "isProcessAlive", "999");
                 assertThat((Boolean) result).isTrue();
             }
@@ -175,8 +172,7 @@ class TauriProcessMonitorTest {
             setField(monitor, "parentProcessId", "999");
 
             try (MockedStatic<ProcessHandle> ph = mockStatic(ProcessHandle.class)) {
-                ph.when(() -> ProcessHandle.of(999L))
-                        .thenReturn(Optional.of(mock(ProcessHandle.class)));
+                ph.when(() -> ProcessHandle.of(999L)).thenReturn(Optional.of(mock(ProcessHandle.class)));
 
                 invokePrivate(monitor, "checkParentProcess");
 
@@ -256,8 +252,7 @@ class TauriProcessMonitorTest {
             TauriProcessMonitor monitor = new TauriProcessMonitor(mock(ApplicationContext.class));
             ScheduledExecutorService scheduler = mock(ScheduledExecutorService.class);
             when(scheduler.isShutdown()).thenReturn(false);
-            when(scheduler.awaitTermination(eq(2L), eq(TimeUnit.SECONDS)))
-                    .thenThrow(new InterruptedException("boom"));
+            when(scheduler.awaitTermination(eq(2L), eq(TimeUnit.SECONDS))).thenThrow(new InterruptedException("boom"));
             setField(monitor, "scheduler", scheduler);
 
             monitor.cleanup();

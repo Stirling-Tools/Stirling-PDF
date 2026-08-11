@@ -53,10 +53,8 @@ public class JpaProcessedLedger implements ProcessedLedger {
         Map<String, ClaimState> states = new HashMap<>();
         List<String> hashes = List.copyOf(identityByHash.keySet());
         for (int from = 0; from < hashes.size(); from += STAMP_CHUNK) {
-            List<ProcessedFileEntity> rows =
-                    repository.findByPolicyIdAndIdentityHashIn(
-                            policyId,
-                            hashes.subList(from, Math.min(from + STAMP_CHUNK, hashes.size())));
+            List<ProcessedFileEntity> rows = repository.findByPolicyIdAndIdentityHashIn(
+                    policyId, hashes.subList(from, Math.min(from + STAMP_CHUNK, hashes.size())));
             for (ProcessedFileEntity row : rows) {
                 states.put(
                         identityByHash.get(row.getIdentityHash()),
@@ -68,24 +66,19 @@ public class JpaProcessedLedger implements ProcessedLedger {
 
     @Override
     public boolean claim(
-            String policyId,
-            String identity,
-            String gate,
-            Supplier<String> contentHash,
-            ClaimState observed) {
+            String policyId, String identity, String gate, Supplier<String> contentHash, ClaimState observed) {
         String identityHash = IdentityHasher.identityHash(identity);
         long now = nowMillis.get();
         if (observed == null) {
             try {
-                repository.saveAndFlush(
-                        new ProcessedFileEntity(
-                                policyId,
-                                identityHash,
-                                identity,
-                                gate,
-                                contentHash == null ? null : contentHash.get(),
-                                ProcessedFileStatus.PROCESSING,
-                                now));
+                repository.saveAndFlush(new ProcessedFileEntity(
+                        policyId,
+                        identityHash,
+                        identity,
+                        gate,
+                        contentHash == null ? null : contentHash.get(),
+                        ProcessedFileStatus.PROCESSING,
+                        now));
                 return true;
             } catch (DataIntegrityViolationException concurrentClaim) {
                 return false;
@@ -96,9 +89,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
         }
         if (gate.equals(observed.gate())) {
             if (observed.status() == ProcessedFileStatus.INTERRUPTED) {
-                return repository.retryInterruptedAtGate(
-                                policyId, identityHash, gate, MAX_ATTEMPTS, now)
-                        > 0;
+                return repository.retryInterruptedAtGate(policyId, identityHash, gate, MAX_ATTEMPTS, now) > 0;
             }
             return false;
         }
@@ -108,8 +99,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
         String hash = contentHash.get();
         if (hash.equals(observed.contentHash())) {
             if (observed.status() == ProcessedFileStatus.INTERRUPTED) {
-                return repository.retryInterruptedSameContent(
-                                policyId, identityHash, gate, hash, MAX_ATTEMPTS, now)
+                return repository.retryInterruptedSameContent(policyId, identityHash, gate, hash, MAX_ATTEMPTS, now)
                         > 0;
             }
             repository.refreshGate(policyId, identityHash, gate, hash, now);
@@ -119,12 +109,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
     }
 
     @Override
-    public void settle(
-            String policyId,
-            String identity,
-            String finalGate,
-            String finalContentHash,
-            boolean success) {
+    public void settle(String policyId, String identity, String finalGate, String finalContentHash, boolean success) {
         upsertSettled(
                 policyId,
                 identity,
@@ -148,11 +133,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
      * brand new.
      */
     private void upsertSettled(
-            String policyId,
-            String identity,
-            String gate,
-            String contentHash,
-            ProcessedFileStatus status) {
+            String policyId, String identity, String gate, String contentHash, ProcessedFileStatus status) {
         String identityHash = IdentityHasher.identityHash(identity);
         long now = nowMillis.get();
         if (repository.settle(policyId, identityHash, gate, contentHash, status, now) > 0) {
@@ -160,8 +141,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
         }
         try {
             ProcessedFileEntity row =
-                    new ProcessedFileEntity(
-                            policyId, identityHash, identity, gate, contentHash, status, now);
+                    new ProcessedFileEntity(policyId, identityHash, identity, gate, contentHash, status, now);
             repository.saveAndFlush(row);
         } catch (DataIntegrityViolationException concurrentInsert) {
             repository.settle(policyId, identityHash, gate, contentHash, status, now);
@@ -179,13 +159,11 @@ public class JpaProcessedLedger implements ProcessedLedger {
         if (identities.isEmpty()) {
             return;
         }
-        List<String> hashes = identities.stream().map(IdentityHasher::identityHash).toList();
+        List<String> hashes =
+                identities.stream().map(IdentityHasher::identityHash).toList();
         long now = nowMillis.get();
         for (int from = 0; from < hashes.size(); from += STAMP_CHUNK) {
-            repository.stampSeen(
-                    policyId,
-                    hashes.subList(from, Math.min(from + STAMP_CHUNK, hashes.size())),
-                    now);
+            repository.stampSeen(policyId, hashes.subList(from, Math.min(from + STAMP_CHUNK, hashes.size())), now);
         }
     }
 

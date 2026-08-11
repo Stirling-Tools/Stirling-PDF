@@ -46,9 +46,14 @@ import jakarta.servlet.http.HttpServletRequest;
 @DisplayName("GlobalExceptionHandler extra coverage")
 class GlobalExceptionHandlerMoreTest {
 
-    @Mock private MessageSource messageSource;
-    @Mock private Environment environment;
-    @Mock private HttpServletRequest request;
+    @Mock
+    private MessageSource messageSource;
+
+    @Mock
+    private Environment environment;
+
+    @Mock
+    private HttpServletRequest request;
 
     private GlobalExceptionHandler handler;
 
@@ -94,8 +99,7 @@ class GlobalExceptionHandlerMoreTest {
         @DisplayName("returns 415 with content type properties")
         void returns415() {
             HttpMediaTypeNotSupportedException ex =
-                    new HttpMediaTypeNotSupportedException(
-                            MediaType.TEXT_PLAIN, List.of(MediaType.APPLICATION_JSON));
+                    new HttpMediaTypeNotSupportedException(MediaType.TEXT_PLAIN, List.of(MediaType.APPLICATION_JSON));
 
             ResponseEntity<ProblemDetail> resp = handler.handleMediaTypeNotSupported(ex, request);
 
@@ -115,8 +119,7 @@ class GlobalExceptionHandlerMoreTest {
         @Test
         @DisplayName("returns 400 for malformed body without a cause")
         void noCause() {
-            HttpMessageNotReadableException ex =
-                    new HttpMessageNotReadableException("bad json", httpInput());
+            HttpMessageNotReadableException ex = new HttpMessageNotReadableException("bad json", httpInput());
 
             ResponseEntity<ProblemDetail> resp = handler.handleMessageNotReadable(ex, request);
 
@@ -126,9 +129,8 @@ class GlobalExceptionHandlerMoreTest {
         @Test
         @DisplayName("includes cause detail when present")
         void withCause() {
-            HttpMessageNotReadableException ex =
-                    new HttpMessageNotReadableException(
-                            "bad json", new RuntimeException("unexpected token"), httpInput());
+            HttpMessageNotReadableException ex = new HttpMessageNotReadableException(
+                    "bad json", new RuntimeException("unexpected token"), httpInput());
 
             ResponseEntity<ProblemDetail> resp = handler.handleMessageNotReadable(ex, request);
 
@@ -144,8 +146,7 @@ class GlobalExceptionHandlerMoreTest {
         @Test
         @DisplayName("propagates a 4xx status and reason")
         void clientError() {
-            ResponseStatusException ex =
-                    new ResponseStatusException(HttpStatus.CONFLICT, "already exists");
+            ResponseStatusException ex = new ResponseStatusException(HttpStatus.CONFLICT, "already exists");
 
             ResponseEntity<ProblemDetail> resp = handler.handleResponseStatusException(ex, request);
 
@@ -162,8 +163,7 @@ class GlobalExceptionHandlerMoreTest {
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
             // null reason falls back to the status reason phrase
-            assertThat(resp.getBody().getDetail())
-                    .isEqualTo(HttpStatus.BAD_GATEWAY.getReasonPhrase());
+            assertThat(resp.getBody().getDetail()).isEqualTo(HttpStatus.BAD_GATEWAY.getReasonPhrase());
         }
     }
 
@@ -194,13 +194,11 @@ class GlobalExceptionHandlerMoreTest {
         @DisplayName("active profiles are scanned once and cached across calls")
         void cachedAcrossCalls() {
             when(environment.getActiveProfiles()).thenReturn(new String[] {"dev"});
-            jakarta.servlet.http.HttpServletResponse response =
-                    mock(jakarta.servlet.http.HttpServletResponse.class);
+            jakarta.servlet.http.HttpServletResponse response = mock(jakarta.servlet.http.HttpServletResponse.class);
             when(response.isCommitted()).thenReturn(false);
 
             // First call computes and caches dev mode = true.
-            ResponseEntity<ProblemDetail> first =
-                    handler.handleGenericException(new Exception("a"), request, response);
+            ResponseEntity<ProblemDetail> first = handler.handleGenericException(new Exception("a"), request, response);
             // Second call should reuse the cached value (still includes debug info).
             ResponseEntity<ProblemDetail> second =
                     handler.handleGenericException(new Exception("b"), request, response);

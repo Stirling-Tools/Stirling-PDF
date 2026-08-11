@@ -25,16 +25,18 @@ import stirling.software.proprietary.security.repository.TeamMembershipRepositor
 @ExtendWith(MockitoExtension.class)
 class TeamMembershipServiceTest {
 
-    @Mock private TeamMembershipRepository membershipRepository;
-    @Mock private org.springframework.core.env.Environment environment;
+    @Mock
+    private TeamMembershipRepository membershipRepository;
 
-    @InjectMocks private TeamMembershipService service;
+    @Mock
+    private org.springframework.core.env.Environment environment;
+
+    @InjectMocks
+    private TeamMembershipService service;
 
     @org.junit.jupiter.api.BeforeEach
     void notSaas() {
-        org.mockito.Mockito.lenient()
-                .when(environment.getActiveProfiles())
-                .thenReturn(new String[] {});
+        org.mockito.Mockito.lenient().when(environment.getActiveProfiles()).thenReturn(new String[] {});
     }
 
     @Test

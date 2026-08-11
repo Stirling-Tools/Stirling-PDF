@@ -39,13 +39,11 @@ class JobContextTest {
     void threadIsolation() throws Exception {
         JobContext.setJobId("main-job");
 
-        Thread other =
-                new Thread(
-                        () -> {
-                            assertNull(JobContext.getJobId());
-                            JobContext.setJobId("other-job");
-                            assertEquals("other-job", JobContext.getJobId());
-                        });
+        Thread other = new Thread(() -> {
+            assertNull(JobContext.getJobId());
+            JobContext.setJobId("other-job");
+            assertEquals("other-job", JobContext.getJobId());
+        });
         other.start();
         other.join();
 

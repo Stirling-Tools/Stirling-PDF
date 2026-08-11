@@ -61,8 +61,11 @@ import stirling.software.common.util.WebResponseUtils;
 @DisplayName("UnlockPDFFormsController field/XFA branches")
 class UnlockPDFFormsControllerMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private UnlockPDFFormsController controller;
 
@@ -103,8 +106,7 @@ class UnlockPDFFormsControllerMoreTest {
         }
     }
 
-    private static final String XFA_XML =
-            "<xdp><template><field access=\"readOnly\"/></template></xdp>";
+    private static final String XFA_XML = "<xdp><template><field access=\"readOnly\"/></template></xdp>";
 
     private static byte[] formPdfWithXfaStream() throws IOException {
         try (PDDocument doc = new PDDocument();
@@ -112,10 +114,7 @@ class UnlockPDFFormsControllerMoreTest {
             doc.addPage(new PDPage(PDRectangle.A4));
             PDAcroForm acroForm = new PDAcroForm(doc);
             doc.getDocumentCatalog().setAcroForm(acroForm);
-            PDStream xfaStream =
-                    new PDStream(
-                            doc,
-                            new ByteArrayInputStream(XFA_XML.getBytes(StandardCharsets.UTF_8)));
+            PDStream xfaStream = new PDStream(doc, new ByteArrayInputStream(XFA_XML.getBytes(StandardCharsets.UTF_8)));
             acroForm.getCOSObject().setItem(COSName.XFA, xfaStream.getCOSObject());
             doc.save(baos);
             return baos.toByteArray();
@@ -130,10 +129,7 @@ class UnlockPDFFormsControllerMoreTest {
             doc.getDocumentCatalog().setAcroForm(acroForm);
             COSArray xfaArray = new COSArray();
             xfaArray.add(new COSString("template"));
-            PDStream xfaStream =
-                    new PDStream(
-                            doc,
-                            new ByteArrayInputStream(XFA_XML.getBytes(StandardCharsets.UTF_8)));
+            PDStream xfaStream = new PDStream(doc, new ByteArrayInputStream(XFA_XML.getBytes(StandardCharsets.UTF_8)));
             xfaArray.add(xfaStream.getCOSObject());
             acroForm.getCOSObject().setItem(COSName.XFA, xfaArray);
             doc.save(baos);
@@ -143,44 +139,32 @@ class UnlockPDFFormsControllerMoreTest {
 
     private static PDFFile request(byte[] pdf) {
         PDFFile file = new PDFFile();
-        file.setFileInput(
-                new MockMultipartFile(
-                        "fileInput", "form.pdf", MediaType.APPLICATION_PDF_VALUE, pdf));
+        file.setFileInput(new MockMultipartFile("fileInput", "form.pdf", MediaType.APPLICATION_PDF_VALUE, pdf));
         return file;
     }
 
     /** Loads the upload bytes as a real document and captures it for post-call inspection. */
     private List<PDDocument> wireCapturingLoad() throws IOException {
         List<PDDocument> captured = new ArrayList<>();
-        when(pdfDocumentFactory.load(any(PDFFile.class)))
-                .thenAnswer(
-                        inv -> {
-                            PDDocument doc =
-                                    Loader.loadPDF(
-                                            ((PDFFile) inv.getArgument(0))
-                                                    .getFileInput()
-                                                    .getBytes());
-                            captured.add(doc);
-                            return doc;
-                        });
+        when(pdfDocumentFactory.load(any(PDFFile.class))).thenAnswer(inv -> {
+            PDDocument doc =
+                    Loader.loadPDF(((PDFFile) inv.getArgument(0)).getFileInput().getBytes());
+            captured.add(doc);
+            return doc;
+        });
         return captured;
     }
 
     private static MockedStatic<WebResponseUtils> stubResponse(List<String> capturedNames) {
         MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class);
-        wr.when(
-                        () ->
-                                WebResponseUtils.pdfDocToWebResponse(
-                                        any(PDDocument.class),
-                                        anyString(),
-                                        any(TempFileManager.class)))
-                .thenAnswer(
-                        inv -> {
-                            if (capturedNames != null) {
-                                capturedNames.add(inv.getArgument(1));
-                            }
-                            return ResponseEntity.ok(new ByteArrayResource("ok".getBytes()));
-                        });
+        wr.when(() -> WebResponseUtils.pdfDocToWebResponse(
+                        any(PDDocument.class), anyString(), any(TempFileManager.class)))
+                .thenAnswer(inv -> {
+                    if (capturedNames != null) {
+                        capturedNames.add(inv.getArgument(1));
+                    }
+                    return ResponseEntity.ok(new ByteArrayResource("ok".getBytes()));
+                });
         return wr;
     }
 
@@ -193,8 +177,7 @@ class UnlockPDFFormsControllerMoreTest {
         void clearsReadOnly() throws Exception {
             List<PDDocument> captured = wireCapturingLoad();
             try (MockedStatic<WebResponseUtils> ignored = stubResponse(null)) {
-                ResponseEntity<Resource> response =
-                        controller.unlockPDFForms(request(formPdf(true, false)));
+                ResponseEntity<Resource> response = controller.unlockPDFForms(request(formPdf(true, false)));
                 assertEquals(HttpStatus.OK, response.getStatusCode());
             }
             PDAcroForm acroForm = captured.get(0).getDocumentCatalog().getAcroForm();
@@ -226,8 +209,7 @@ class UnlockPDFFormsControllerMoreTest {
         void rewritesXfaStream() throws Exception {
             wireCapturingLoad();
             try (MockedStatic<WebResponseUtils> ignored = stubResponse(null)) {
-                ResponseEntity<Resource> response =
-                        controller.unlockPDFForms(request(formPdfWithXfaStream()));
+                ResponseEntity<Resource> response = controller.unlockPDFForms(request(formPdfWithXfaStream()));
                 assertEquals(HttpStatus.OK, response.getStatusCode());
             }
         }
@@ -237,8 +219,7 @@ class UnlockPDFFormsControllerMoreTest {
         void rewritesXfaArray() throws Exception {
             wireCapturingLoad();
             try (MockedStatic<WebResponseUtils> ignored = stubResponse(null)) {
-                ResponseEntity<Resource> response =
-                        controller.unlockPDFForms(request(formPdfWithXfaArray()));
+                ResponseEntity<Resource> response = controller.unlockPDFForms(request(formPdfWithXfaArray()));
                 assertEquals(HttpStatus.OK, response.getStatusCode());
             }
         }
@@ -251,8 +232,7 @@ class UnlockPDFFormsControllerMoreTest {
         List<String> names = new ArrayList<>();
         ResponseEntity<Resource> stub = ResponseEntity.ok(new ByteArrayResource("ok".getBytes()));
         try (MockedStatic<WebResponseUtils> wr = stubResponse(names)) {
-            ResponseEntity<Resource> response =
-                    controller.unlockPDFForms(request(formPdf(true, false)));
+            ResponseEntity<Resource> response = controller.unlockPDFForms(request(formPdf(true, false)));
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(names.get(0).contains("_unlocked_forms.pdf"));
             assertSame(stub.getStatusCode(), response.getStatusCode());

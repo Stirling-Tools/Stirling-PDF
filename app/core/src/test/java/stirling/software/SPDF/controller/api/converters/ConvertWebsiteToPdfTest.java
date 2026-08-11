@@ -63,9 +63,15 @@ public class ConvertWebsiteToPdfTest {
     }
 
     private static final Pattern PDF_FILENAME_PATTERN = Pattern.compile("[A-Za-z0-9_]+\\.pdf");
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private RuntimePathConfig runtimePathConfig;
-    @Mock private TempFileManager tempFileManager;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private ApplicationProperties applicationProperties;
     private ConvertWebsiteToPDF sut;
@@ -74,18 +80,13 @@ public class ConvertWebsiteToPdfTest {
     @BeforeEach
     void setUp() throws Exception {
         mocks = MockitoAnnotations.openMocks(this);
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
 
         // Enable feature (adjust structure for your project if necessary)
         applicationProperties = new ApplicationProperties();
@@ -96,12 +97,7 @@ public class ConvertWebsiteToPdfTest {
         when(pdfDocumentFactory.load(any(File.class))).thenReturn(new PDDocument());
 
         // Build SUT
-        sut =
-                new ConvertWebsiteToPDF(
-                        pdfDocumentFactory,
-                        runtimePathConfig,
-                        applicationProperties,
-                        tempFileManager);
+        sut = new ConvertWebsiteToPDF(pdfDocumentFactory, runtimePathConfig, applicationProperties, tempFileManager);
 
         // Provide RequestContext for ServletUriComponentsBuilder
         MockHttpServletRequest req = new MockHttpServletRequest();
@@ -127,9 +123,7 @@ public class ConvertWebsiteToPdfTest {
         assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
         URI location = resp.getHeaders().getLocation();
         assertNotNull(location, "Location header expected");
-        assertTrue(
-                location.getQuery() != null
-                        && location.getQuery().contains("error=error.invalidUrlFormat"));
+        assertTrue(location.getQuery() != null && location.getQuery().contains("error=error.invalidUrlFormat"));
     }
 
     @Test
@@ -143,9 +137,7 @@ public class ConvertWebsiteToPdfTest {
         assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
         URI location = resp.getHeaders().getLocation();
         assertNotNull(location, "Location header expected");
-        assertTrue(
-                location.getQuery() != null
-                        && location.getQuery().contains("error=error.urlNotReachable"));
+        assertTrue(location.getQuery() != null && location.getQuery().contains("error=error.urlNotReachable"));
     }
 
     @Test
@@ -161,15 +153,12 @@ public class ConvertWebsiteToPdfTest {
         assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
         URI location = resp.getHeaders().getLocation();
         assertNotNull(location, "Location header expected");
-        assertTrue(
-                location.getQuery() != null
-                        && location.getQuery().contains("error=error.endpointDisabled"));
+        assertTrue(location.getQuery() != null && location.getQuery().contains("error=error.endpointDisabled"));
     }
 
     @Test
     void convertURLToFileName_sanitizes_and_appends_pdf() throws Exception {
-        Method m =
-                ConvertWebsiteToPDF.class.getDeclaredMethod("convertURLToFileName", String.class);
+        Method m = ConvertWebsiteToPDF.class.getDeclaredMethod("convertURLToFileName", String.class);
         m.setAccessible(true);
 
         String in = "https://ex-ample.com/path?q=1&x=y#frag";
@@ -184,13 +173,11 @@ public class ConvertWebsiteToPdfTest {
 
     @Test
     void convertURLToFileName_truncates_to_50_chars_before_pdf_suffix() throws Exception {
-        Method m =
-                ConvertWebsiteToPDF.class.getDeclaredMethod("convertURLToFileName", String.class);
+        Method m = ConvertWebsiteToPDF.class.getDeclaredMethod("convertURLToFileName", String.class);
         m.setAccessible(true);
 
         // Very long URL -> triggers truncation
-        String longUrl =
-                "https://very-very-long-domain.example.com/some/really/long/path/with?many=params&and=chars";
+        String longUrl = "https://very-very-long-domain.example.com/some/really/long/path/with?many=params&and=chars";
         String out = (String) m.invoke(sut, longUrl);
 
         assertTrue(out.endsWith(".pdf"));
@@ -221,8 +208,7 @@ public class ConvertWebsiteToPdfTest {
             ArgumentCaptor<List<String>> cmdCaptor = ArgumentCaptor.forClass(List.class);
 
             ProcessExecutorResult dummyResult = Mockito.mock(ProcessExecutorResult.class);
-            when(mockExec.runCommandWithOutputHandling(cmdCaptor.capture()))
-                    .thenReturn(dummyResult);
+            when(mockExec.runCommandWithOutputHandling(cmdCaptor.capture())).thenReturn(dummyResult);
 
             ResponseEntity<?> resp = sut.urlToPdf(request);
 
@@ -243,9 +229,7 @@ public class ConvertWebsiteToPdfTest {
             assertNotNull(outPathStr);
 
             // Temp file must be deleted in finally
-            assertFalse(
-                    Files.exists(Path.of(htmlPathStr)),
-                    "Temp HTML file should be deleted after the call");
+            assertFalse(Files.exists(Path.of(htmlPathStr)), "Temp HTML file should be deleted after the call");
         }
     }
 
@@ -271,18 +255,11 @@ public class ConvertWebsiteToPdfTest {
 
             files.when(() -> Files.createTempFile("url_input_", ".html")).thenReturn(htmlTemp);
             files.when(() -> Files.createTempFile("output_", ".pdf")).thenReturn(preCreatedTemp);
-            files.when(() -> Files.createTempFile(eq("test"), anyString()))
-                    .thenReturn(preCreatedTemp);
-            files.when(
-                            () ->
-                                    Files.writeString(
-                                            eq(htmlTemp),
-                                            anyString(),
-                                            eq(java.nio.charset.StandardCharsets.UTF_8)))
+            files.when(() -> Files.createTempFile(eq("test"), anyString())).thenReturn(preCreatedTemp);
+            files.when(() -> Files.writeString(eq(htmlTemp), anyString(), eq(java.nio.charset.StandardCharsets.UTF_8)))
                     .thenReturn(htmlTemp);
             files.when(() -> Files.deleteIfExists(htmlTemp)).thenReturn(true);
-            files.when(() -> Files.deleteIfExists(preCreatedTemp))
-                    .thenThrow(new IOException("fail delete"));
+            files.when(() -> Files.deleteIfExists(preCreatedTemp)).thenThrow(new IOException("fail delete"));
             files.when(() -> Files.exists(preCreatedTemp)).thenReturn(true);
             files.when(() -> Files.size(any(Path.class))).thenReturn(100L);
             files.when(() -> Files.copy(any(Path.class), any(java.io.OutputStream.class)))
@@ -299,9 +276,7 @@ public class ConvertWebsiteToPdfTest {
 
             assertNotNull(resp, "Response should not be null");
             assertEquals(HttpStatus.OK, resp.getStatusCode());
-            assertTrue(
-                    Files.exists(preCreatedTemp),
-                    "Temp file should still exist despite delete IOException");
+            assertTrue(Files.exists(preCreatedTemp), "Temp file should still exist despite delete IOException");
         } finally {
             try {
                 Files.deleteIfExists(preCreatedTemp);
@@ -336,8 +311,7 @@ public class ConvertWebsiteToPdfTest {
 
         try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
                 MockedStatic<HttpClient> httpClient =
-                        mockHttpClientReturning(
-                                "<link rel=\"attachment\" href=\"file:///etc/passwd\">")) {
+                        mockHttpClientReturning("<link rel=\"attachment\" href=\"file:///etc/passwd\">")) {
 
             gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
             gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
@@ -347,9 +321,7 @@ public class ConvertWebsiteToPdfTest {
             assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
             URI location = resp.getHeaders().getLocation();
             assertNotNull(location, "Location header expected");
-            assertTrue(
-                    location.getQuery() != null
-                            && location.getQuery().contains("error=error.disallowedUrlContent"));
+            assertTrue(location.getQuery() != null && location.getQuery().contains("error=error.disallowedUrlContent"));
         }
     }
 }

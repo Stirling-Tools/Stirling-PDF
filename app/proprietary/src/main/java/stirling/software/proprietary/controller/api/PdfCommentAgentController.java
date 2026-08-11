@@ -56,10 +56,7 @@ public class PdfCommentAgentController {
             value = "/pdf-comment-agent",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_PDF_VALUE)
-    @Operation(
-            summary = "Annotate a PDF with AI-generated sticky-note comments",
-            description =
-                    """
+    @Operation(summary = "Annotate a PDF with AI-generated sticky-note comments", description = """
                     Runs the PDF Comment Agent against the supplied PDF. Java extracts positioned
                     text chunks from the document, ships them (with the user's prompt) to the
                     AI engine, then applies the returned comments as standard PDF Text
@@ -69,27 +66,19 @@ public class PdfCommentAgentController {
                     Content-Type: application/pdf.
                     """)
     public ResponseEntity<Resource> pdfCommentAgent(
-            @Parameter(description = "The PDF document to annotate", required = true)
-                    @RequestParam("fileInput")
+            @Parameter(description = "The PDF document to annotate", required = true) @RequestParam("fileInput")
                     MultipartFile fileInput,
-            @Parameter(
-                            description =
-                                    "Natural-language instructions for the AI — what to comment on",
-                            required = true)
+            @Parameter(description = "Natural-language instructions for the AI — what to comment on", required = true)
                     @RequestParam("prompt")
                     String prompt)
             throws IOException {
         aiFeatureGate.requirePdfComment();
 
         String originalFilename = fileInput.getOriginalFilename();
-        String safeName =
-                originalFilename != null
-                        ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
-                        : "<unnamed>";
-        log.info(
-                "[pdf-comment-agent] request file={} promptLen={}",
-                safeName,
-                prompt == null ? 0 : prompt.length());
+        String safeName = originalFilename != null
+                ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
+                : "<unnamed>";
+        log.info("[pdf-comment-agent] request file={} promptLen={}", safeName, prompt == null ? 0 : prompt.length());
 
         // ResponseStatusException (validation errors) propagates to Spring's default handler;
         // IOException is re-thrown to produce a 500. Other RuntimeExceptions likewise propagate.

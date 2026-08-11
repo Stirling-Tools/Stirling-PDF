@@ -27,8 +27,7 @@ class AllTextLineExtractorTest {
 
     private void writeAt(float x, float y, String text) throws IOException {
         try (PDPageContentStream cs =
-                new PDPageContentStream(
-                        doc, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
             cs.beginText();
             cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 11);
             cs.newLineAtOffset(x, y);

@@ -56,17 +56,38 @@ import tools.jackson.databind.json.JsonMapper;
 @DisplayName("ProprietaryUIDataController (additional coverage)")
 class ProprietaryUIDataControllerMoreTest {
 
-    @Mock private SessionPersistentRegistry sessionPersistentRegistry;
-    @Mock private UserRepository userRepository;
-    @Mock private TeamRepository teamRepository;
-    @Mock private TeamMembershipRepository teamMembershipRepository;
-    @Mock private SessionRepository sessionRepository;
-    @Mock private DatabaseServiceInterface databaseService;
-    @Mock private UserLicenseSettingsService licenseSettingsService;
-    @Mock private PersistentAuditEventRepository auditRepository;
-    @Mock private MfaService mfaService;
-    @Mock private LoginAttemptService loginAttemptService;
-    @Mock private ResourceAccessService resourceAccessService;
+    @Mock
+    private SessionPersistentRegistry sessionPersistentRegistry;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private TeamRepository teamRepository;
+
+    @Mock
+    private TeamMembershipRepository teamMembershipRepository;
+
+    @Mock
+    private SessionRepository sessionRepository;
+
+    @Mock
+    private DatabaseServiceInterface databaseService;
+
+    @Mock
+    private UserLicenseSettingsService licenseSettingsService;
+
+    @Mock
+    private PersistentAuditEventRepository auditRepository;
+
+    @Mock
+    private MfaService mfaService;
+
+    @Mock
+    private LoginAttemptService loginAttemptService;
+
+    @Mock
+    private ResourceAccessService resourceAccessService;
 
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
@@ -84,23 +105,22 @@ class ProprietaryUIDataControllerMoreTest {
         auditConfig = new AuditConfigurationProperties(applicationProperties);
         objectMapper = JsonMapper.builder().build();
 
-        controller =
-                new ProprietaryUIDataController(
-                        applicationProperties,
-                        auditConfig,
-                        sessionPersistentRegistry,
-                        userRepository,
-                        teamRepository,
-                        teamMembershipRepository,
-                        sessionRepository,
-                        databaseService,
-                        objectMapper,
-                        false,
-                        licenseSettingsService,
-                        auditRepository,
-                        mfaService,
-                        loginAttemptService,
-                        resourceAccessService);
+        controller = new ProprietaryUIDataController(
+                applicationProperties,
+                auditConfig,
+                sessionPersistentRegistry,
+                userRepository,
+                teamRepository,
+                teamMembershipRepository,
+                sessionRepository,
+                databaseService,
+                objectMapper,
+                false,
+                licenseSettingsService,
+                auditRepository,
+                mfaService,
+                loginAttemptService,
+                resourceAccessService);
     }
 
     private static User normalUser(Long id, String username) {
@@ -181,8 +201,7 @@ class ProprietaryUIDataControllerMoreTest {
         @Test
         @DisplayName("returns 401 when principal type is unrecognized")
         void unknownPrincipal() {
-            Authentication auth =
-                    new UsernamePasswordAuthenticationToken("plain-string", null, List.of());
+            Authentication auth = new UsernamePasswordAuthenticationToken("plain-string", null, List.of());
 
             ResponseEntity<AccountData> response = controller.getAccountData(auth);
 
@@ -195,8 +214,7 @@ class ProprietaryUIDataControllerMoreTest {
             User user = normalUser(1L, "ghost@example.com");
             when(userRepository.findByUsernameIgnoreCaseWithSettings("ghost@example.com"))
                     .thenReturn(Optional.empty());
-            Authentication auth =
-                    new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+            Authentication auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
 
             ResponseEntity<AccountData> response = controller.getAccountData(auth);
 
@@ -213,10 +231,8 @@ class ProprietaryUIDataControllerMoreTest {
             lenient().when(mfaService.isMfaEnabled(user)).thenReturn(false);
             lenient().when(mfaService.isMfaRequired(user)).thenReturn(false);
 
-            OAuth2User oAuth2User =
-                    new DefaultOAuth2User(List.of(), Map.of("sub", "oauthuser"), "sub");
-            Authentication auth =
-                    new UsernamePasswordAuthenticationToken(oAuth2User, null, List.of());
+            OAuth2User oAuth2User = new DefaultOAuth2User(List.of(), Map.of("sub", "oauthuser"), "sub");
+            Authentication auth = new UsernamePasswordAuthenticationToken(oAuth2User, null, List.of());
 
             ResponseEntity<AccountData> response = controller.getAccountData(auth);
 
@@ -234,10 +250,8 @@ class ProprietaryUIDataControllerMoreTest {
             lenient().when(mfaService.isMfaRequired(user)).thenReturn(false);
 
             CustomSaml2AuthenticatedPrincipal principal =
-                    new CustomSaml2AuthenticatedPrincipal(
-                            "samluser", Map.of(), "nameId", List.of(), "response");
-            Authentication auth =
-                    new UsernamePasswordAuthenticationToken(principal, null, List.of());
+                    new CustomSaml2AuthenticatedPrincipal("samluser", Map.of(), "nameId", List.of(), "response");
+            Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
 
             ResponseEntity<AccountData> response = controller.getAccountData(auth);
 
@@ -254,8 +268,7 @@ class ProprietaryUIDataControllerMoreTest {
         @DisplayName("aggregates users, teams and license limits")
         void aggregates() {
             User user = normalUser(1L, "bob");
-            when(userRepository.findAllWithTeamAndAuthorities())
-                    .thenReturn(new java.util.ArrayList<>(List.of(user)));
+            when(userRepository.findAllWithTeamAndAuthorities()).thenReturn(new java.util.ArrayList<>(List.of(user)));
             when(sessionPersistentRegistry.getMaxInactiveInterval()).thenReturn(3600);
             when(teamRepository.findAll()).thenReturn(List.of());
 
@@ -311,8 +324,7 @@ class ProprietaryUIDataControllerMoreTest {
             when(teamRepository.findById(5L)).thenReturn(Optional.of(team));
             when(userRepository.findAllByTeamId(5L)).thenReturn(List.of());
             when(userRepository.findAllWithTeamAndAuthorities()).thenReturn(List.of());
-            when(sessionRepository.findLatestSessionByTeamId(5L))
-                    .thenReturn(Collections.emptyList());
+            when(sessionRepository.findLatestSessionByTeamId(5L)).thenReturn(Collections.emptyList());
 
             ResponseEntity<TeamDetailsData> response = controller.getTeamDetailsData(5L);
 
@@ -325,8 +337,7 @@ class ProprietaryUIDataControllerMoreTest {
         void internalTeamForbidden() {
             Team team = new Team();
             team.setId(6L);
-            team.setName(
-                    stirling.software.proprietary.security.service.TeamService.INTERNAL_TEAM_NAME);
+            team.setName(stirling.software.proprietary.security.service.TeamService.INTERNAL_TEAM_NAME);
             when(teamRepository.findById(6L)).thenReturn(Optional.of(team));
 
             ResponseEntity<TeamDetailsData> response = controller.getTeamDetailsData(6L);
@@ -339,8 +350,7 @@ class ProprietaryUIDataControllerMoreTest {
         void teamMissing() {
             when(teamRepository.findById(99L)).thenReturn(Optional.empty());
 
-            org.assertj.core.api.Assertions.assertThatThrownBy(
-                            () -> controller.getTeamDetailsData(99L))
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> controller.getTeamDetailsData(99L))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Team not found");
         }
@@ -356,8 +366,7 @@ class ProprietaryUIDataControllerMoreTest {
             when(databaseService.getBackupList()).thenReturn(List.of());
             when(databaseService.getH2Version()).thenReturn("2.2.224");
 
-            ResponseEntity<ProprietaryUIDataController.DatabaseData> response =
-                    controller.getDatabaseData();
+            ResponseEntity<ProprietaryUIDataController.DatabaseData> response = controller.getDatabaseData();
 
             assertThat(response.getBody().getDatabaseVersion()).isEqualTo("2.2.224");
             assertThat(response.getBody().isVersionUnknown()).isFalse();

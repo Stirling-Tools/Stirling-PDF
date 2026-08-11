@@ -35,9 +35,7 @@ public class StirlingAiTool implements McpTool {
     private final ObjectProvider<AiEngineClient> engineClientProvider;
 
     public StirlingAiTool(
-            ObjectMapper mapper,
-            ObjectProvider<McpToolCatalog> catalog,
-            ObjectProvider<AiEngineClient> engineClient) {
+            ObjectMapper mapper, ObjectProvider<McpToolCatalog> catalog, ObjectProvider<AiEngineClient> engineClient) {
         this.mapper = mapper;
         this.catalogProvider = catalog;
         this.engineClientProvider = engineClient;
@@ -114,18 +112,15 @@ public class StirlingAiTool implements McpTool {
         }
         if (!context.hasScope(meta.requiredScope())) {
             return McpResponses.error(
-                    mapper,
-                    "Insufficient scope: this capability requires '" + meta.requiredScope() + "'.");
+                    mapper, "Insufficient scope: this capability requires '" + meta.requiredScope() + "'.");
         }
         AiEngineClient client = engineClientProvider.getIfAvailable();
         if (client == null) {
-            return McpResponses.error(
-                    mapper, "AI engine client is not configured - enable aiEngine in settings.");
+            return McpResponses.error(mapper, "AI engine client is not configured - enable aiEngine in settings.");
         }
         if (meta.endpointPath() == null) {
             return McpResponses.error(
-                    mapper,
-                    "Capability '" + opId + "' has no route configured in the engine manifest.");
+                    mapper, "Capability '" + opId + "' has no route configured in the engine manifest.");
         }
         JsonNode params = arguments.get("parameters");
         String body = (params == null ? mapper.createObjectNode() : params).toString();
@@ -134,8 +129,7 @@ public class StirlingAiTool implements McpTool {
             return McpResponses.text(mapper, response);
         } catch (IOException e) {
             log.warn("MCP AI capability '{}' engine request failed", opId, e);
-            return McpResponses.error(
-                    mapper, "Engine request failed for capability '" + opId + "'.");
+            return McpResponses.error(mapper, "Engine request failed for capability '" + opId + "'.");
         }
     }
 

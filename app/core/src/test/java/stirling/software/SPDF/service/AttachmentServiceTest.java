@@ -35,8 +35,7 @@ class AttachmentServiceTest {
             document.setDocumentId(100L);
             var attachments = List.of(mock(MultipartFile.class));
             when(attachments.get(0).getOriginalFilename()).thenReturn("test.txt");
-            when(attachments.get(0).getInputStream())
-                    .thenReturn(new ByteArrayInputStream("Test content".getBytes()));
+            when(attachments.get(0).getInputStream()).thenReturn(new ByteArrayInputStream("Test content".getBytes()));
             when(attachments.get(0).getSize()).thenReturn(12L);
             when(attachments.get(0).getContentType()).thenReturn("text/plain");
             PDDocument result = attachmentService.addAttachment(document, attachments);
@@ -54,13 +53,11 @@ class AttachmentServiceTest {
             var attachment2 = mock(MultipartFile.class);
             var attachments = List.of(attachment1, attachment2);
             when(attachment1.getOriginalFilename()).thenReturn("document.pdf");
-            when(attachment1.getInputStream())
-                    .thenReturn(new ByteArrayInputStream("PDF content".getBytes()));
+            when(attachment1.getInputStream()).thenReturn(new ByteArrayInputStream("PDF content".getBytes()));
             when(attachment1.getSize()).thenReturn(15L);
             when(attachment1.getContentType()).thenReturn(MediaType.APPLICATION_PDF_VALUE);
             when(attachment2.getOriginalFilename()).thenReturn("image.jpg");
-            when(attachment2.getInputStream())
-                    .thenReturn(new ByteArrayInputStream("Image content".getBytes()));
+            when(attachment2.getInputStream()).thenReturn(new ByteArrayInputStream("Image content".getBytes()));
             when(attachment2.getSize()).thenReturn(20L);
             when(attachment2.getContentType()).thenReturn(MediaType.IMAGE_JPEG_VALUE);
             PDDocument result = attachmentService.addAttachment(document, attachments);
@@ -75,8 +72,7 @@ class AttachmentServiceTest {
             document.setDocumentId(100L);
             var attachments = List.of(mock(MultipartFile.class));
             when(attachments.get(0).getOriginalFilename()).thenReturn("image.jpg");
-            when(attachments.get(0).getInputStream())
-                    .thenReturn(new ByteArrayInputStream("Image content".getBytes()));
+            when(attachments.get(0).getInputStream()).thenReturn(new ByteArrayInputStream("Image content".getBytes()));
             when(attachments.get(0).getSize()).thenReturn(25L);
             when(attachments.get(0).getContentType()).thenReturn("");
             PDDocument result = attachmentService.addAttachment(document, attachments);
@@ -90,8 +86,7 @@ class AttachmentServiceTest {
         try (var document = new PDDocument()) {
             var attachments = List.of(mock(MultipartFile.class));
             when(attachments.get(0).getOriginalFilename()).thenReturn("file.bin");
-            when(attachments.get(0).getInputStream())
-                    .thenReturn(new ByteArrayInputStream("binary".getBytes()));
+            when(attachments.get(0).getInputStream()).thenReturn(new ByteArrayInputStream("binary".getBytes()));
             when(attachments.get(0).getSize()).thenReturn(6L);
             when(attachments.get(0).getContentType()).thenReturn(null);
             PDDocument result = attachmentService.addAttachment(document, attachments);
@@ -125,17 +120,12 @@ class AttachmentServiceTest {
     void extractAttachments_SanitizesFilenamesAndExtractsData() throws IOException {
         attachmentService = new AttachmentService(1024 * 1024, 5 * 1024 * 1024);
         try (var document = new PDDocument()) {
-            var maliciousAttachment =
-                    new MockMultipartFile(
-                            "file",
-                            "..\\evil/../../tricky.txt",
-                            MediaType.TEXT_PLAIN_VALUE,
-                            "danger".getBytes());
+            var maliciousAttachment = new MockMultipartFile(
+                    "file", "..\\evil/../../tricky.txt", MediaType.TEXT_PLAIN_VALUE, "danger".getBytes());
             attachmentService.addAttachment(document, List.of(maliciousAttachment));
             Optional<byte[]> extracted = attachmentService.extractAttachments(document);
             assertTrue(extracted.isPresent());
-            try (var zipInputStream =
-                    new ZipInputStream(new ByteArrayInputStream(extracted.get()))) {
+            try (var zipInputStream = new ZipInputStream(new ByteArrayInputStream(extracted.get()))) {
                 ZipEntry entry = zipInputStream.getNextEntry();
                 assertNotNull(entry);
                 String sanitizedName = entry.getName();
@@ -153,12 +143,8 @@ class AttachmentServiceTest {
     void extractAttachments_SkipsAttachmentsExceedingSizeLimit() throws IOException {
         attachmentService = new AttachmentService(4, 10);
         try (var document = new PDDocument()) {
-            var oversizedAttachment =
-                    new MockMultipartFile(
-                            "file",
-                            "large.bin",
-                            MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                            "too big".getBytes());
+            var oversizedAttachment = new MockMultipartFile(
+                    "file", "large.bin", MediaType.APPLICATION_OCTET_STREAM_VALUE, "too big".getBytes());
             attachmentService.addAttachment(document, List.of(oversizedAttachment));
             Optional<byte[]> extracted = attachmentService.extractAttachments(document);
             assertTrue(extracted.isEmpty());
@@ -169,17 +155,12 @@ class AttachmentServiceTest {
     void extractAttachments_EnforcesTotalSizeLimit() throws IOException {
         attachmentService = new AttachmentService(10, 9);
         try (var document = new PDDocument()) {
-            var first =
-                    new MockMultipartFile(
-                            "file", "first.txt", MediaType.TEXT_PLAIN_VALUE, "12345".getBytes());
-            var second =
-                    new MockMultipartFile(
-                            "file", "second.txt", MediaType.TEXT_PLAIN_VALUE, "67890".getBytes());
+            var first = new MockMultipartFile("file", "first.txt", MediaType.TEXT_PLAIN_VALUE, "12345".getBytes());
+            var second = new MockMultipartFile("file", "second.txt", MediaType.TEXT_PLAIN_VALUE, "67890".getBytes());
             attachmentService.addAttachment(document, List.of(first, second));
             Optional<byte[]> extracted = attachmentService.extractAttachments(document);
             assertTrue(extracted.isPresent());
-            try (var zipInputStream =
-                    new ZipInputStream(new ByteArrayInputStream(extracted.get()))) {
+            try (var zipInputStream = new ZipInputStream(new ByteArrayInputStream(extracted.get()))) {
                 ZipEntry firstEntry = zipInputStream.getNextEntry();
                 assertNotNull(firstEntry);
                 assertEquals("first.txt", firstEntry.getName());
@@ -202,12 +183,8 @@ class AttachmentServiceTest {
     void extractAttachments_MultipleFiles() throws IOException {
         attachmentService = new AttachmentService(1024 * 1024, 5 * 1024 * 1024);
         try (var document = new PDDocument()) {
-            var file1 =
-                    new MockMultipartFile(
-                            "file", "a.txt", MediaType.TEXT_PLAIN_VALUE, "aaa".getBytes());
-            var file2 =
-                    new MockMultipartFile(
-                            "file", "b.txt", MediaType.TEXT_PLAIN_VALUE, "bbb".getBytes());
+            var file1 = new MockMultipartFile("file", "a.txt", MediaType.TEXT_PLAIN_VALUE, "aaa".getBytes());
+            var file2 = new MockMultipartFile("file", "b.txt", MediaType.TEXT_PLAIN_VALUE, "bbb".getBytes());
             attachmentService.addAttachment(document, List.of(file1, file2));
             Optional<byte[]> extracted = attachmentService.extractAttachments(document);
             assertTrue(extracted.isPresent());
@@ -232,12 +209,8 @@ class AttachmentServiceTest {
     @Test
     void listAttachments_WithAttachments() throws IOException {
         try (var document = new PDDocument()) {
-            var file1 =
-                    new MockMultipartFile(
-                            "file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, "pdf".getBytes());
-            var file2 =
-                    new MockMultipartFile(
-                            "file", "text.txt", MediaType.TEXT_PLAIN_VALUE, "text".getBytes());
+            var file1 = new MockMultipartFile("file", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, "pdf".getBytes());
+            var file2 = new MockMultipartFile("file", "text.txt", MediaType.TEXT_PLAIN_VALUE, "text".getBytes());
             attachmentService.addAttachment(document, List.of(file1, file2));
             List<AttachmentInfo> result = attachmentService.listAttachments(document);
             assertEquals(2, result.size());
@@ -252,11 +225,7 @@ class AttachmentServiceTest {
     void listAttachments_ChecksAttachmentInfoFields() throws IOException {
         try (var document = new PDDocument()) {
             var file =
-                    new MockMultipartFile(
-                            "file",
-                            "report.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "content".getBytes());
+                    new MockMultipartFile("file", "report.pdf", MediaType.APPLICATION_PDF_VALUE, "content".getBytes());
             attachmentService.addAttachment(document, List.of(file));
             List<AttachmentInfo> result = attachmentService.listAttachments(document);
             assertEquals(1, result.size());
@@ -271,9 +240,7 @@ class AttachmentServiceTest {
     @Test
     void renameAttachment_Success() throws IOException {
         try (var document = new PDDocument()) {
-            var file =
-                    new MockMultipartFile(
-                            "file", "old.txt", MediaType.TEXT_PLAIN_VALUE, "data".getBytes());
+            var file = new MockMultipartFile("file", "old.txt", MediaType.TEXT_PLAIN_VALUE, "data".getBytes());
             attachmentService.addAttachment(document, List.of(file));
             PDDocument result = attachmentService.renameAttachment(document, "old.txt", "new.txt");
             assertNotNull(result);
@@ -286,9 +253,7 @@ class AttachmentServiceTest {
     @Test
     void renameAttachment_NotFoundThrowsException() throws IOException {
         try (var document = new PDDocument()) {
-            var file =
-                    new MockMultipartFile(
-                            "file", "exists.txt", MediaType.TEXT_PLAIN_VALUE, "data".getBytes());
+            var file = new MockMultipartFile("file", "exists.txt", MediaType.TEXT_PLAIN_VALUE, "data".getBytes());
             attachmentService.addAttachment(document, List.of(file));
             assertThrows(
                     IllegalArgumentException.class,
@@ -299,9 +264,7 @@ class AttachmentServiceTest {
     @Test
     void renameAttachment_EmptyDocumentThrowsException() throws IOException {
         try (var document = new PDDocument()) {
-            var file =
-                    new MockMultipartFile(
-                            "file", "temp.txt", MediaType.TEXT_PLAIN_VALUE, "x".getBytes());
+            var file = new MockMultipartFile("file", "temp.txt", MediaType.TEXT_PLAIN_VALUE, "x".getBytes());
             attachmentService.addAttachment(document, List.of(file));
             attachmentService.deleteAttachment(document, "temp.txt");
             assertThrows(
@@ -313,9 +276,7 @@ class AttachmentServiceTest {
     @Test
     void deleteAttachment_Success() throws IOException {
         try (var document = new PDDocument()) {
-            var file =
-                    new MockMultipartFile(
-                            "file", "delete_me.txt", MediaType.TEXT_PLAIN_VALUE, "bye".getBytes());
+            var file = new MockMultipartFile("file", "delete_me.txt", MediaType.TEXT_PLAIN_VALUE, "bye".getBytes());
             attachmentService.addAttachment(document, List.of(file));
             PDDocument result = attachmentService.deleteAttachment(document, "delete_me.txt");
             assertNotNull(result);
@@ -327,25 +288,18 @@ class AttachmentServiceTest {
     @Test
     void deleteAttachment_NotFoundThrowsException() throws IOException {
         try (var document = new PDDocument()) {
-            var file =
-                    new MockMultipartFile(
-                            "file", "keep.txt", MediaType.TEXT_PLAIN_VALUE, "stay".getBytes());
+            var file = new MockMultipartFile("file", "keep.txt", MediaType.TEXT_PLAIN_VALUE, "stay".getBytes());
             attachmentService.addAttachment(document, List.of(file));
             assertThrows(
-                    IllegalArgumentException.class,
-                    () -> attachmentService.deleteAttachment(document, "nope.txt"));
+                    IllegalArgumentException.class, () -> attachmentService.deleteAttachment(document, "nope.txt"));
         }
     }
 
     @Test
     void deleteAttachment_OneOfMultiple() throws IOException {
         try (var document = new PDDocument()) {
-            var file1 =
-                    new MockMultipartFile(
-                            "file", "keep.txt", MediaType.TEXT_PLAIN_VALUE, "keep".getBytes());
-            var file2 =
-                    new MockMultipartFile(
-                            "file", "remove.txt", MediaType.TEXT_PLAIN_VALUE, "remove".getBytes());
+            var file1 = new MockMultipartFile("file", "keep.txt", MediaType.TEXT_PLAIN_VALUE, "keep".getBytes());
+            var file2 = new MockMultipartFile("file", "remove.txt", MediaType.TEXT_PLAIN_VALUE, "remove".getBytes());
             attachmentService.addAttachment(document, List.of(file1, file2));
             attachmentService.deleteAttachment(document, "remove.txt");
             List<AttachmentInfo> remaining = attachmentService.listAttachments(document);
@@ -358,12 +312,8 @@ class AttachmentServiceTest {
     void roundTrip_AddListExtractDelete() throws IOException {
         attachmentService = new AttachmentService(1024 * 1024, 5 * 1024 * 1024);
         try (var document = new PDDocument()) {
-            var file =
-                    new MockMultipartFile(
-                            "file",
-                            "roundtrip.txt",
-                            MediaType.TEXT_PLAIN_VALUE,
-                            "round trip data".getBytes());
+            var file = new MockMultipartFile(
+                    "file", "roundtrip.txt", MediaType.TEXT_PLAIN_VALUE, "round trip data".getBytes());
             attachmentService.addAttachment(document, List.of(file));
             List<AttachmentInfo> listed = attachmentService.listAttachments(document);
             assertEquals(1, listed.size());

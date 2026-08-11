@@ -24,34 +24,26 @@ public class ParticipantRateLimitInterceptor implements HandlerInterceptor {
     private final ConcurrentHashMap<String, long[]> requestCounts = new ConcurrentHashMap<>();
 
     @Override
-    public boolean preHandle(
-            HttpServletRequest request, HttpServletResponse response, Object handler)
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
 
         String ip = getClientIp(request);
         long now = System.currentTimeMillis();
 
-        long[] entry =
-                requestCounts.compute(
-                        ip,
-                        (key, existing) -> {
-                            if (existing == null || now - existing[1] >= WINDOW_MS) {
-                                return new long[] {1, now};
-                            }
-                            existing[0]++;
-                            return existing;
-                        });
+        long[] entry = requestCounts.compute(ip, (key, existing) -> {
+            if (existing == null || now - existing[1] >= WINDOW_MS) {
+                return new long[] {1, now};
+            }
+            existing[0]++;
+            return existing;
+        });
 
         if (entry[0] > MAX_REQUESTS_PER_MINUTE) {
-            log.warn(
-                    "Rate limit exceeded for IP {} on participant endpoint {}",
-                    ip,
-                    request.getRequestURI());
+            log.warn("Rate limit exceeded for IP {} on participant endpoint {}", ip, request.getRequestURI());
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setHeader("Retry-After", "60");
             response.setContentType("application/json");
-            response.getWriter()
-                    .write("{\"error\":\"Rate limit exceeded. Try again in 60 seconds.\"}");
+            response.getWriter().write("{\"error\":\"Rate limit exceeded. Try again in 60 seconds.\"}");
             return false;
         }
         return true;

@@ -17,9 +17,11 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @ExtendWith(MockitoExtension.class)
 class BlankPageControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private BlankPageController blankPageController;
+    @InjectMocks
+    private BlankPageController blankPageController;
 
     @Test
     void isBlankImage_allWhite_returnsTrue() {

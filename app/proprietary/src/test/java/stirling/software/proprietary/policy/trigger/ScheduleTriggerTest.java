@@ -44,19 +44,18 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class ScheduleTriggerTest {
 
-    @Mock private PolicyStore policyStore;
-    @Mock private PolicyRunner policyRunner;
+    @Mock
+    private PolicyStore policyStore;
+
+    @Mock
+    private PolicyRunner policyRunner;
 
     private ScheduleTrigger trigger;
 
     @BeforeEach
     void setUp() {
-        trigger =
-                new ScheduleTrigger(
-                        policyStore,
-                        policyRunner,
-                        JsonMapper.builder().build(),
-                        new ApplicationProperties());
+        trigger = new ScheduleTrigger(
+                policyStore, policyRunner, JsonMapper.builder().build(), new ApplicationProperties());
     }
 
     @Test
@@ -109,8 +108,7 @@ class ScheduleTriggerTest {
 
     @Test
     void doesNotFireBeforeTheNextScheduledTime() {
-        PolicyBinding binding =
-                scheduled("p1", new Schedule.Daily(LocalTime.of(3, 0))); // 03:00 UTC daily
+        PolicyBinding binding = scheduled("p1", new Schedule.Daily(LocalTime.of(3, 0))); // 03:00 UTC daily
         when(policyStore.findBindingsByTriggerType("schedule")).thenReturn(List.of(binding));
 
         Instant t0 = Instant.parse("2026-06-05T10:00:00Z");
@@ -123,8 +121,7 @@ class ScheduleTriggerTest {
     @Test
     void firesWeeklyOnAChosenDay() {
         // 2026-06-05 is a Friday; the next Monday 09:00 is the soonest firing.
-        PolicyBinding binding =
-                scheduled("p1", new Schedule.Weekly(Set.of(DayOfWeek.MONDAY), LocalTime.of(9, 0)));
+        PolicyBinding binding = scheduled("p1", new Schedule.Weekly(Set.of(DayOfWeek.MONDAY), LocalTime.of(9, 0)));
         when(policyStore.findBindingsByTriggerType("schedule")).thenReturn(List.of(binding));
 
         Instant friday = Instant.parse("2026-06-05T10:00:00Z");
@@ -147,19 +144,14 @@ class ScheduleTriggerTest {
     @Test
     void validateRejectsMissingSchedule() {
         PolicyBinding binding = scheduledWithRawOptions("p1", Map.of());
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> trigger.validate(binding.policy(), binding.input()));
+        assertThrows(IllegalArgumentException.class, () -> trigger.validate(binding.policy(), binding.input()));
     }
 
     @Test
     void validateRejectsAnInvalidSchedule() {
-        Map<String, Object> options =
-                Map.of("schedule", Map.of("type", "every", "count", -5, "unit", "MINUTES"));
+        Map<String, Object> options = Map.of("schedule", Map.of("type", "every", "count", -5, "unit", "MINUTES"));
         PolicyBinding binding = scheduledWithRawOptions("p1", options);
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> trigger.validate(binding.policy(), binding.input()));
+        assertThrows(IllegalArgumentException.class, () -> trigger.validate(binding.policy(), binding.input()));
     }
 
     @Test
@@ -177,15 +169,14 @@ class ScheduleTriggerTest {
 
     private static PolicyBinding scheduledWithRawOptions(String id, Map<String, Object> options) {
         PipelineInput input = new PipelineInput("s1", new TriggerConfig("schedule", options));
-        Policy policy =
-                new Policy(
-                        id,
-                        "nightly",
-                        "owner",
-                        true,
-                        List.of(input),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        OutputSpec.inline());
+        Policy policy = new Policy(
+                id,
+                "nightly",
+                "owner",
+                true,
+                List.of(input),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline());
         return new PolicyBinding(policy, input);
     }
 }

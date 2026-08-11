@@ -18,18 +18,9 @@ public class InProcessSourceStore implements SourceStore {
     @Override
     public Source save(Source source) {
         String id =
-                source.id() == null || source.id().isBlank()
-                        ? UUID.randomUUID().toString()
-                        : source.id();
-        Source stored =
-                new Source(
-                        id,
-                        source.name(),
-                        source.type(),
-                        source.options(),
-                        source.enabled(),
-                        source.owner(),
-                        source.teamId());
+                source.id() == null || source.id().isBlank() ? UUID.randomUUID().toString() : source.id();
+        Source stored = new Source(
+                id, source.name(), source.type(), source.options(), source.enabled(), source.owner(), source.teamId());
         sources.put(id, stored);
         return stored;
     }

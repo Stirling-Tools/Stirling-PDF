@@ -21,8 +21,7 @@ public class PdfMetricsService {
     private long lastOperations;
     private long lastPdfs;
 
-    public PdfMetricsService(
-            PostHogService postHogService, ApplicationProperties applicationProperties) {
+    public PdfMetricsService(PostHogService postHogService, ApplicationProperties applicationProperties) {
         this.postHogService = postHogService;
         this.applicationProperties = applicationProperties;
     }

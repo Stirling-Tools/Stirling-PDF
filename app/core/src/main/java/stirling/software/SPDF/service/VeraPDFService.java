@@ -30,15 +30,13 @@ import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 public class VeraPDFService {
 
     private static final String NOT_PDFA_STANDARD_ID = "not-pdfa";
-    private static final String NOT_PDFA_STANDARD_NAME =
-            "Not PDF/A (no PDF/A identification metadata)";
+    private static final String NOT_PDFA_STANDARD_NAME = "Not PDF/A (no PDF/A identification metadata)";
 
     private static PDFVerificationResult convertToVerificationResult(
             ValidationResult result, PDFAFlavour declaredFlavour, PDFAFlavour validationFlavour) {
         PDFVerificationResult verificationResult = new PDFVerificationResult();
 
-        PDFAFlavour validationProfile =
-                validationFlavour != null ? validationFlavour : result.getPDFAFlavour();
+        PDFAFlavour validationProfile = validationFlavour != null ? validationFlavour : result.getPDFAFlavour();
         boolean validationIsPdfa = isPdfaFlavour(validationProfile);
 
         if (validationProfile != null) {
@@ -77,12 +75,11 @@ public class VeraPDFService {
             baseName = "Unknown standard";
         }
 
-        String standardDisplay =
-                formatStandardDisplay(
-                        baseName,
-                        verificationResult.getTotalFailures(),
-                        isPdfaFlavour(declaredFlavour),
-                        validationIsPdfa && declaredFlavour == null);
+        String standardDisplay = formatStandardDisplay(
+                baseName,
+                verificationResult.getTotalFailures(),
+                isPdfaFlavour(declaredFlavour),
+                validationIsPdfa && declaredFlavour == null);
         verificationResult.setStandardName(standardDisplay);
         verificationResult.setComplianceSummary(standardDisplay);
 
@@ -95,8 +92,7 @@ public class VeraPDFService {
         return verificationResult;
     }
 
-    private static PDFVerificationResult.ValidationIssue createValidationIssue(
-            TestAssertion assertion) {
+    private static PDFVerificationResult.ValidationIssue createValidationIssue(TestAssertion assertion) {
         PDFVerificationResult.ValidationIssue issue = new PDFVerificationResult.ValidationIssue();
 
         if (assertion.getRuleId() != null) {
@@ -141,8 +137,7 @@ public class VeraPDFService {
 
         PDFVerificationResult errorResult = new PDFVerificationResult();
 
-        PDFAFlavour declaredForResult =
-                isPdfaFlavour(validationFlavour) ? declaredFlavour : validationFlavour;
+        PDFAFlavour declaredForResult = isPdfaFlavour(validationFlavour) ? declaredFlavour : validationFlavour;
 
         if (declaredForResult != null) {
             errorResult.setStandard(declaredForResult.getId());
@@ -153,22 +148,16 @@ public class VeraPDFService {
             errorResult.setStandardName(NOT_PDFA_STANDARD_NAME);
             errorResult.setDeclaredPdfa(false);
         } else {
-            errorResult.setStandard(
-                    validationFlavour != null ? validationFlavour.getId() : NOT_PDFA_STANDARD_ID);
+            errorResult.setStandard(validationFlavour != null ? validationFlavour.getId() : NOT_PDFA_STANDARD_ID);
             errorResult.setStandardName(
-                    (validationFlavour != null
-                                    ? getStandardName(validationFlavour)
-                                    : "Unknown standard")
+                    (validationFlavour != null ? getStandardName(validationFlavour) : "Unknown standard")
                             + " with errors");
             errorResult.setDeclaredPdfa(false);
         }
 
-        errorResult.setValidationProfile(
-                validationFlavour != null ? validationFlavour.getId() : NOT_PDFA_STANDARD_ID);
+        errorResult.setValidationProfile(validationFlavour != null ? validationFlavour.getId() : NOT_PDFA_STANDARD_ID);
         errorResult.setValidationProfileName(
-                validationFlavour != null
-                        ? getStandardName(validationFlavour)
-                        : "Unknown standard");
+                validationFlavour != null ? getStandardName(validationFlavour) : "Unknown standard");
         errorResult.setComplianceSummary(errorResult.getStandardName());
         errorResult.setCompliant(false);
 
@@ -211,10 +200,8 @@ public class VeraPDFService {
         boolean hasValidPdfaMetadata = false;
         if (isPdfaFlavour(declaredFlavour)) {
             try (PDFAParser quickParser =
-                    Foundries.defaultInstance()
-                            .createParser(new ByteArrayInputStream(pdfBytes), declaredFlavour)) {
-                PDFAValidator quickValidator =
-                        Foundries.defaultInstance().createValidator(declaredFlavour, false);
+                    Foundries.defaultInstance().createParser(new ByteArrayInputStream(pdfBytes), declaredFlavour)) {
+                PDFAValidator quickValidator = Foundries.defaultInstance().createValidator(declaredFlavour, false);
                 ValidationResult quickResult = quickValidator.validate(quickParser);
 
                 // Check if the document has the PDF/A Identification extension schema (clause
@@ -223,17 +210,14 @@ public class VeraPDFService {
                 // If either of these errors is present, the document is NOT a declared PDF/A
                 hasValidPdfaMetadata = true;
                 for (TestAssertion assertion : quickResult.getTestAssertions()) {
-                    if (assertion.getStatus() == TestAssertion.Status.FAILED
-                            && assertion.getRuleId() != null) {
+                    if (assertion.getStatus() == TestAssertion.Status.FAILED && assertion.getRuleId() != null) {
                         String clause = assertion.getRuleId().getClause();
                         int testNumber = assertion.getRuleId().getTestNumber();
 
                         // Missing XMP metadata entirely (clause 6.7.2, test 1)
                         if ("6.7.2".equals(clause) && testNumber == 1) {
                             hasValidPdfaMetadata = false;
-                            log.debug(
-                                    "Document lacks XMP metadata (6.7.2): {}",
-                                    assertion.getMessage());
+                            log.debug("Document lacks XMP metadata (6.7.2): {}", assertion.getMessage());
                             break;
                         }
 
@@ -241,8 +225,7 @@ public class VeraPDFService {
                         if ("6.7.11".equals(clause) && testNumber == 1) {
                             hasValidPdfaMetadata = false;
                             log.debug(
-                                    "Document lacks PDF/A identification in XMP (6.7.11): {}",
-                                    assertion.getMessage());
+                                    "Document lacks PDF/A identification in XMP (6.7.11): {}", assertion.getMessage());
                             break;
                         }
                     }
@@ -279,8 +262,7 @@ public class VeraPDFService {
                             flavour.getId());
                 }
             } else if (PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_UA)
-                    || PDFFlavours.isFlavourFamily(
-                            flavour, PDFAFlavour.SpecificationFamily.WTPDF)) {
+                    || PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.WTPDF)) {
                 flavoursToValidate.add(flavour);
             }
         }
@@ -296,12 +278,10 @@ public class VeraPDFService {
 
         for (PDFAFlavour flavour : flavoursToValidate) {
             try (PDFAParser parser =
-                    Foundries.defaultInstance()
-                            .createParser(new ByteArrayInputStream(pdfBytes), flavour)) {
+                    Foundries.defaultInstance().createParser(new ByteArrayInputStream(pdfBytes), flavour)) {
 
                 PDFAFlavour parserDeclared = firstFlavour(detectedFlavours(parser));
-                PDFAValidator validator =
-                        Foundries.defaultInstance().createValidator(flavour, false);
+                PDFAValidator validator = Foundries.defaultInstance().createValidator(flavour, false);
                 ValidationResult result = validator.validate(parser);
 
                 PDFAFlavour declaredForResult =
@@ -312,9 +292,7 @@ public class VeraPDFService {
                 results.add(convertToVerificationResult(result, declaredForResult, flavour));
             } catch (Exception e) {
                 log.error("Error validating standard {}: {}", flavour.getId(), e.getMessage());
-                results.add(
-                        buildErrorResult(
-                                declaredFlavour, flavour, "Validation error: " + e.getMessage()));
+                results.add(buildErrorResult(declaredFlavour, flavour, "Validation error: " + e.getMessage()));
             }
         }
 
@@ -322,8 +300,7 @@ public class VeraPDFService {
     }
 
     private static boolean isPdfaFlavour(PDFAFlavour flavour) {
-        return flavour != null
-                && PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_A);
+        return flavour != null && PDFFlavours.isFlavourFamily(flavour, PDFAFlavour.SpecificationFamily.PDF_A);
     }
 
     // veraPDF 1.30+ returns an empty flavour list for non-PDF/A files, where getFlavour() throws
@@ -338,10 +315,7 @@ public class VeraPDFService {
     }
 
     private static String formatStandardDisplay(
-            String baseName,
-            int errorCount,
-            boolean declaredPdfa,
-            boolean inferredPdfaWithoutDeclaration) {
+            String baseName, int errorCount, boolean declaredPdfa, boolean inferredPdfaWithoutDeclaration) {
 
         if (inferredPdfaWithoutDeclaration) {
             return NOT_PDFA_STANDARD_NAME;
@@ -365,10 +339,7 @@ public class VeraPDFService {
 
         // PDF/A standards - Fixed: proper length check and parentheses
         if (!id.isEmpty()
-                && (id.charAt(0) == '1'
-                        || id.charAt(0) == '2'
-                        || id.charAt(0) == '3'
-                        || id.charAt(0) == '4')) {
+                && (id.charAt(0) == '1' || id.charAt(0) == '2' || id.charAt(0) == '3' || id.charAt(0) == '4')) {
             return "PDF/A-" + part + (level.isEmpty() ? "" : level);
         }
         // PDF/UA standards

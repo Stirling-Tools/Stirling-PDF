@@ -27,7 +27,8 @@ class Type3FontConversionServiceTest {
     void synthesize_nullFont_returnsEmpty() {
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
         Type3FontConversionService service = new Type3FontConversionService(List.of(), extractor);
-        Type3ConversionRequest request = Type3ConversionRequest.builder().font(null).build();
+        Type3ConversionRequest request =
+                Type3ConversionRequest.builder().font(null).build();
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertTrue(result.isEmpty());
     }
@@ -35,8 +36,7 @@ class Type3FontConversionServiceTest {
     @Test
     void synthesize_noStrategies_returnsEmpty() {
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
-        Type3FontConversionService service =
-                new Type3FontConversionService(Collections.emptyList(), extractor);
+        Type3FontConversionService service = new Type3FontConversionService(Collections.emptyList(), extractor);
         PDType3Font font = mock(PDType3Font.class);
         Type3ConversionRequest request =
                 Type3ConversionRequest.builder().font(font).fontId("F1").build();
@@ -63,11 +63,13 @@ class Type3FontConversionServiceTest {
         when(strategy.getLabel()).thenReturn("Test Strategy");
 
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
-        Type3FontConversionService service =
-                new Type3FontConversionService(List.of(strategy), extractor);
+        Type3FontConversionService service = new Type3FontConversionService(List.of(strategy), extractor);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder().font(font).fontId("F1").pageNumber(1).build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .pageNumber(1)
+                .build();
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
@@ -83,11 +85,13 @@ class Type3FontConversionServiceTest {
         when(strategy.getLabel()).thenReturn("Test Strategy");
 
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
-        Type3FontConversionService service =
-                new Type3FontConversionService(List.of(strategy), extractor);
+        Type3FontConversionService service = new Type3FontConversionService(List.of(strategy), extractor);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder().font(font).fontId("F1").pageNumber(1).build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .pageNumber(1)
+                .build();
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
@@ -96,11 +100,10 @@ class Type3FontConversionServiceTest {
 
     @Test
     void synthesize_successfulConversion() throws IOException {
-        PdfJsonFontConversionCandidate candidate =
-                PdfJsonFontConversionCandidate.builder()
-                        .status(PdfJsonFontConversionStatus.SUCCESS)
-                        .message("OK")
-                        .build();
+        PdfJsonFontConversionCandidate candidate = PdfJsonFontConversionCandidate.builder()
+                .status(PdfJsonFontConversionStatus.SUCCESS)
+                .message("OK")
+                .build();
         Type3ConversionStrategy strategy = mock(Type3ConversionStrategy.class);
         when(strategy.isAvailable()).thenReturn(true);
         when(strategy.supports(any(), any())).thenReturn(true);
@@ -109,11 +112,13 @@ class Type3FontConversionServiceTest {
         when(strategy.getLabel()).thenReturn("Test Strategy");
 
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
-        Type3FontConversionService service =
-                new Type3FontConversionService(List.of(strategy), extractor);
+        Type3FontConversionService service = new Type3FontConversionService(List.of(strategy), extractor);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder().font(font).fontId("F1").pageNumber(1).build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .pageNumber(1)
+                .build();
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
@@ -131,16 +136,14 @@ class Type3FontConversionServiceTest {
         when(strategy.getLabel()).thenReturn("Test Strategy");
 
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
-        Type3FontConversionService service =
-                new Type3FontConversionService(List.of(strategy), extractor);
+        Type3FontConversionService service = new Type3FontConversionService(List.of(strategy), extractor);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder()
-                        .font(font)
-                        .fontId("F1")
-                        .fontUid("uid1")
-                        .pageNumber(1)
-                        .build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .fontUid("uid1")
+                .pageNumber(1)
+                .build();
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
@@ -157,16 +160,14 @@ class Type3FontConversionServiceTest {
         when(strategy.getLabel()).thenReturn("Test Strategy");
 
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
-        Type3FontConversionService service =
-                new Type3FontConversionService(List.of(strategy), extractor);
+        Type3FontConversionService service = new Type3FontConversionService(List.of(strategy), extractor);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder()
-                        .font(font)
-                        .fontId("F1")
-                        .fontUid("uid1")
-                        .pageNumber(1)
-                        .build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .fontUid("uid1")
+                .pageNumber(1)
+                .build();
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
@@ -183,16 +184,14 @@ class Type3FontConversionServiceTest {
         when(strategy.getLabel()).thenReturn("Test Strategy");
 
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
-        Type3FontConversionService service =
-                new Type3FontConversionService(List.of(strategy), extractor);
+        Type3FontConversionService service = new Type3FontConversionService(List.of(strategy), extractor);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder()
-                        .font(font)
-                        .fontId("F1")
-                        .fontUid("uid1")
-                        .pageNumber(1)
-                        .build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .fontUid("uid1")
+                .pageNumber(1)
+                .build();
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());
@@ -202,11 +201,10 @@ class Type3FontConversionServiceTest {
 
     @Test
     void synthesize_nullStrategyInList_isSkipped() throws IOException {
-        PdfJsonFontConversionCandidate candidate =
-                PdfJsonFontConversionCandidate.builder()
-                        .status(PdfJsonFontConversionStatus.SUCCESS)
-                        .message("OK")
-                        .build();
+        PdfJsonFontConversionCandidate candidate = PdfJsonFontConversionCandidate.builder()
+                .status(PdfJsonFontConversionStatus.SUCCESS)
+                .message("OK")
+                .build();
         Type3ConversionStrategy goodStrategy = mock(Type3ConversionStrategy.class);
         when(goodStrategy.isAvailable()).thenReturn(true);
         when(goodStrategy.supports(any(), any())).thenReturn(true);
@@ -221,8 +219,11 @@ class Type3FontConversionServiceTest {
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
         Type3FontConversionService service = new Type3FontConversionService(strategies, extractor);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder().font(font).fontId("F1").pageNumber(1).build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .pageNumber(1)
+                .build();
 
         List<PdfJsonFontConversionCandidate> result = service.synthesize(request);
         assertEquals(1, result.size());

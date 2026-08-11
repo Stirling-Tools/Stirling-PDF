@@ -22,21 +22,16 @@ class CustomColorReplaceStrategyTest {
     @BeforeEach
     void setUp() {
         // Create a mock file
-        mockFile =
-                new MockMultipartFile(
-                        "file",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "test pdf content".getBytes());
+        mockFile = new MockMultipartFile(
+                "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, "test pdf content".getBytes());
 
         // Initialize strategy with custom colors
-        strategy =
-                new CustomColorReplaceStrategy(
-                        mockFile,
-                        ReplaceAndInvert.CUSTOM_COLOR,
-                        "000000", // Black text color
-                        "FFFFFF", // White background color
-                        null); // Not using high contrast combination for CUSTOM_COLOR
+        strategy = new CustomColorReplaceStrategy(
+                mockFile,
+                ReplaceAndInvert.CUSTOM_COLOR,
+                "000000", // Black text color
+                "FFFFFF", // White background color
+                null); // Not using high contrast combination for CUSTOM_COLOR
     }
 
     @Test
@@ -54,8 +49,7 @@ class CustomColorReplaceStrategyTest {
     void testCheckSupportedFontForCharacter() throws Exception {
         // Use reflection to access private method
         Method method =
-                CustomColorReplaceStrategy.class.getDeclaredMethod(
-                        "checkSupportedFontForCharacter", String.class);
+                CustomColorReplaceStrategy.class.getDeclaredMethod("checkSupportedFontForCharacter", String.class);
         method.setAccessible(true);
 
         // Test with ASCII character which should be supported by standard fonts
@@ -66,13 +60,12 @@ class CustomColorReplaceStrategyTest {
     @Test
     void testHighContrastColors() {
         // Create a new strategy with HIGH_CONTRAST_COLOR setting
-        CustomColorReplaceStrategy highContrastStrategy =
-                new CustomColorReplaceStrategy(
-                        mockFile,
-                        ReplaceAndInvert.HIGH_CONTRAST_COLOR,
-                        null, // These will be overridden by the high contrast settings
-                        null,
-                        HighContrastColorCombination.BLACK_TEXT_ON_WHITE);
+        CustomColorReplaceStrategy highContrastStrategy = new CustomColorReplaceStrategy(
+                mockFile,
+                ReplaceAndInvert.HIGH_CONTRAST_COLOR,
+                null, // These will be overridden by the high contrast settings
+                null,
+                HighContrastColorCombination.BLACK_TEXT_ON_WHITE);
 
         // Verify the colors after replace() is called
         try {
@@ -87,8 +80,7 @@ class CustomColorReplaceStrategyTest {
             }
 
             // Use reflection to access private fields
-            java.lang.reflect.Field textColorField =
-                    CustomColorReplaceStrategy.class.getDeclaredField("textColor");
+            java.lang.reflect.Field textColorField = CustomColorReplaceStrategy.class.getDeclaredField("textColor");
             textColorField.setAccessible(true);
             java.lang.reflect.Field backgroundColorField =
                     CustomColorReplaceStrategy.class.getDeclaredField("backgroundColor");
@@ -100,8 +92,7 @@ class CustomColorReplaceStrategyTest {
             // For BLACK_TEXT_ON_WHITE, text color should be "0" and background color should be
             // "16777215"
             assertEquals("0", textColor, "Text color should be black (0)");
-            assertEquals(
-                    "16777215", backgroundColor, "Background color should be white (16777215)");
+            assertEquals("16777215", backgroundColor, "Background color should be white (16777215)");
 
         } catch (Exception e) {
             // If we get here, the test failed

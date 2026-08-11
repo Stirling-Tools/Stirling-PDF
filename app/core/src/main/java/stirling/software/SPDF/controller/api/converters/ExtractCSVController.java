@@ -54,16 +54,18 @@ public class ExtractCSVController {
     @ToolIO(produces = ToolFormat.CSV, arity = ToolArity.SIMO)
     @Operation(
             summary = "Extracts a CSV document from a PDF",
-            description =
-                    "This operation takes an input PDF file and returns CSV file of whole page.")
+            description = "This operation takes an input PDF file and returns CSV file of whole page.")
     public ResponseEntity<?> pdfToCsv(@ModelAttribute PDFWithPageNums request) throws Exception {
         String baseName = getBaseName(request.getFileInput().getOriginalFilename());
         List<CsvEntry> csvEntries = new ArrayList<>();
 
         try (PDDocument document = pdfDocumentFactory.load(request)) {
             List<Integer> pages = request.getPageNumbersList(document, true);
-            CSVFormat format =
-                    CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
+            CSVFormat format = CSVFormat.EXCEL
+                    .builder()
+                    .setEscape('"')
+                    .setQuoteMode(QuoteMode.ALL)
+                    .build();
 
             for (int pageNum : pages) {
                 log.info("{}", pageNum);
@@ -76,9 +78,7 @@ public class ExtractCSVController {
                             printer.printRecord(row);
                         }
                     }
-                    csvEntries.add(
-                            new CsvEntry(
-                                    generateEntryName(baseName, pageNum, i + 1), sw.toString()));
+                    csvEntries.add(new CsvEntry(generateEntryName(baseName, pageNum, i + 1), sw.toString()));
                 }
             }
 
@@ -92,8 +92,7 @@ public class ExtractCSVController {
         }
     }
 
-    private ResponseEntity<byte[]> createZipResponse(List<CsvEntry> entries, String baseName)
-            throws Exception {
+    private ResponseEntity<byte[]> createZipResponse(List<CsvEntry> entries, String baseName) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
             for (CsvEntry entry : entries) {
@@ -105,17 +104,14 @@ public class ExtractCSVController {
         }
 
         return WebResponseUtils.bytesToWebResponse(
-                baos.toByteArray(),
-                baseName + "_extracted.zip",
-                MediaType.APPLICATION_OCTET_STREAM);
+                baos.toByteArray(), baseName + "_extracted.zip", MediaType.APPLICATION_OCTET_STREAM);
     }
 
     private ResponseEntity<String> createCsvResponse(CsvEntry entry, String baseName) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(
-                ContentDisposition.builder("attachment")
-                        .filename(baseName + "_extracted.csv")
-                        .build());
+        headers.setContentDisposition(ContentDisposition.builder("attachment")
+                .filename(baseName + "_extracted.csv")
+                .build());
         headers.setContentType(MediaType.parseMediaType("text/csv"));
 
         return ResponseEntity.ok().headers(headers).body(entry.content());

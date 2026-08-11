@@ -18,14 +18,11 @@ class S3IntegrationValidatorTest {
 
     @Test
     void acceptsACompleteConnection() {
-        assertThatCode(
-                        () ->
-                                validator(false)
-                                        .validate(
-                                                Map.of(
-                                                        "bucket", "inbox",
-                                                        "accessKeyId", "AKIAEXAMPLE",
-                                                        "secretAccessKey", "shh")))
+        assertThatCode(() -> validator(false)
+                        .validate(Map.of(
+                                "bucket", "inbox",
+                                "accessKeyId", "AKIAEXAMPLE",
+                                "secretAccessKey", "shh")))
                 .doesNotThrowAnyException();
     }
 
@@ -33,24 +30,20 @@ class S3IntegrationValidatorTest {
     void rejectsMissingCredentialsOrBucket() {
         assertThatThrownBy(() -> validator(false).validate(Map.of("bucket", "inbox")))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                validator(false)
-                                        .validate(
-                                                Map.of(
-                                                        "accessKeyId", "AKIAEXAMPLE",
-                                                        "secretAccessKey", "shh")))
+        assertThatThrownBy(() -> validator(false)
+                        .validate(Map.of(
+                                "accessKeyId", "AKIAEXAMPLE",
+                                "secretAccessKey", "shh")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void rejectsAPrivateEndpointWithoutTheOperatorOptIn() {
-        Map<String, Object> config =
-                Map.of(
-                        "bucket", "inbox",
-                        "accessKeyId", "AKIAEXAMPLE",
-                        "secretAccessKey", "shh",
-                        "endpoint", "http://localhost:9000");
+        Map<String, Object> config = Map.of(
+                "bucket", "inbox",
+                "accessKeyId", "AKIAEXAMPLE",
+                "secretAccessKey", "shh",
+                "endpoint", "http://localhost:9000");
 
         assertThatThrownBy(() -> validator(false).validate(config))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -60,7 +53,8 @@ class S3IntegrationValidatorTest {
 
     @Test
     void itOnlyClaimsTheS3Type() {
-        org.junit.jupiter.api.Assertions.assertEquals(IntegrationType.S3, validator(false).type());
+        org.junit.jupiter.api.Assertions.assertEquals(
+                IntegrationType.S3, validator(false).type());
     }
 
     private static S3IntegrationValidator validator(boolean allowPrivateEndpoints) {

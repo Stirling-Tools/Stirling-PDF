@@ -24,8 +24,7 @@ public class LocalDiskFileStore implements FileStore {
     // Files.* APIs (defence in depth on top of the resolve() prefix check, and silences CodeQL's
     // path-injection finding on the resolveOwner sidecar lookup).
     private static final Pattern UUID_PATTERN =
-            Pattern.compile(
-                    "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+            Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
     private final String baseDirPath;
     // Fixed-size lock stripes so concurrent store/delete on the same (or colliding) fileId

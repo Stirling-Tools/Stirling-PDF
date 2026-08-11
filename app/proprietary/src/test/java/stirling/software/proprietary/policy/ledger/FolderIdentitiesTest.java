@@ -19,7 +19,8 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class FolderIdentitiesTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @Test
     void identityAgreesAcrossASymlinkedAliasOfTheDirectory() throws IOException {
@@ -27,12 +28,9 @@ class FolderIdentitiesTest {
         Path alias = Files.createSymbolicLink(tempDir.resolve("alias"), real);
         Files.writeString(real.resolve("doc.pdf"), "data");
 
-        String viaReal =
-                FolderIdentities.identity(
-                        FolderIdentities.canonicalDir(real), real, real.resolve("doc.pdf"));
+        String viaReal = FolderIdentities.identity(FolderIdentities.canonicalDir(real), real, real.resolve("doc.pdf"));
         String viaAlias =
-                FolderIdentities.identity(
-                        FolderIdentities.canonicalDir(alias), alias, alias.resolve("doc.pdf"));
+                FolderIdentities.identity(FolderIdentities.canonicalDir(alias), alias, alias.resolve("doc.pdf"));
 
         assertEquals(viaReal, viaAlias);
     }
@@ -43,8 +41,7 @@ class FolderIdentitiesTest {
         Path nested = Files.createDirectories(dir.resolve("sub")).resolve("doc.pdf");
         Files.writeString(nested, "data");
 
-        String identity =
-                FolderIdentities.identity(FolderIdentities.canonicalDir(dir), dir, nested);
+        String identity = FolderIdentities.identity(FolderIdentities.canonicalDir(dir), dir, nested);
 
         assertTrue(identity.endsWith("sub" + java.io.File.separator + "doc.pdf"));
     }

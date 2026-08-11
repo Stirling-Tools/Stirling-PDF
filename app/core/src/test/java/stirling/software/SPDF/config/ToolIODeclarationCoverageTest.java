@@ -37,30 +37,28 @@ import stirling.software.common.model.tool.ToolIOSpec;
 class ToolIODeclarationCoverageTest {
 
     /** The namespaces whose endpoints act on documents. */
-    private static final List<String> TOOL_NAMESPACES =
-            List.of(
-                    "/api/v1/general/",
-                    "/api/v1/misc/",
-                    "/api/v1/security/",
-                    "/api/v1/convert/",
-                    "/api/v1/filter/",
-                    "/api/v1/integration/");
+    private static final List<String> TOOL_NAMESPACES = List.of(
+            "/api/v1/general/",
+            "/api/v1/misc/",
+            "/api/v1/security/",
+            "/api/v1/convert/",
+            "/api/v1/filter/",
+            "/api/v1/integration/");
 
     /**
      * Not document transforms, so nothing to declare. A path exempts everything nested under it.
      * Keep it short: if you are adding a real tool, annotate it instead.
      */
-    private static final List<String> EXEMPT =
-            List.of(
-                    // Interactive editing sessions: page fragments and cache handles, not
-                    // documents.
-                    "/api/v1/convert/pdf/text-editor",
-                    "/api/v1/convert/text-editor/pdf",
-                    // Signing sessions, certificate checks and hardware token enumeration; the
-                    // signing tool itself is /api/v1/security/cert-sign, which is declared.
-                    "/api/v1/security/cert-sign/sessions",
-                    "/api/v1/security/cert-sign/validate-certificate",
-                    "/api/v1/security/cert-sign/hardware");
+    private static final List<String> EXEMPT = List.of(
+            // Interactive editing sessions: page fragments and cache handles, not
+            // documents.
+            "/api/v1/convert/pdf/text-editor",
+            "/api/v1/convert/text-editor/pdf",
+            // Signing sessions, certificate checks and hardware token enumeration; the
+            // signing tool itself is /api/v1/security/cert-sign, which is declared.
+            "/api/v1/security/cert-sign/sessions",
+            "/api/v1/security/cert-sign/validate-certificate",
+            "/api/v1/security/cert-sign/hardware");
 
     private record Scan(Set<String> required, Map<String, ToolIOSpec> declared) {}
 
@@ -69,18 +67,16 @@ class ToolIODeclarationCoverageTest {
 
     @Test
     void everyToolEndpointDeclaresItsIo() {
-        List<String> missing =
-                SCAN.required().stream()
-                        .filter(path -> !DECLARED.containsKey(path))
-                        .sorted()
-                        .toList();
+        List<String> missing = SCAN.required().stream()
+                .filter(path -> !DECLARED.containsKey(path))
+                .sorted()
+                .toList();
         assertTrue(
                 missing.isEmpty(),
-                () ->
-                        "These tool endpoints are missing a @ToolIO declaration. Add one so a"
-                                + " pipeline containing them can be checked before it runs, or"
-                                + " exempt them in EXEMPT with a reason:\n  "
-                                + String.join("\n  ", missing));
+                () -> "These tool endpoints are missing a @ToolIO declaration. Add one so a"
+                        + " pipeline containing them can be checked before it runs, or"
+                        + " exempt them in EXEMPT with a reason:\n  "
+                        + String.join("\n  ", missing));
     }
 
     @ParameterizedTest
@@ -122,12 +118,7 @@ class ToolIODeclarationCoverageTest {
     }
 
     @ParameterizedTest
-    @ValueSource(
-            strings = {
-                "/api/v1/general/merge-pdfs",
-                "/api/v1/general/overlay-pdfs",
-                "/api/v1/convert/img/pdf"
-            })
+    @ValueSource(strings = {"/api/v1/general/merge-pdfs", "/api/v1/general/overlay-pdfs", "/api/v1/convert/img/pdf"})
     void multiInputEndpointsTakeEveryFileAtOnce(String path) {
         assertTrue(spec(path).arity().isMultiInput(), path);
     }
@@ -168,7 +159,8 @@ class ToolIODeclarationCoverageTest {
         ToolIOSpec spec = spec("/api/v1/security/add-password");
         assertEquals(
                 ToolFormat.PDF_ENCRYPTED,
-                spec.resolveOutput(Map.of("password", "hunter2", "ownerPassword", "")).format());
+                spec.resolveOutput(Map.of("password", "hunter2", "ownerPassword", ""))
+                        .format());
     }
 
     @Test
@@ -187,15 +179,20 @@ class ToolIODeclarationCoverageTest {
         // endpoint as TEXT would pass RTF into text tools and reject it from the Word tools that
         // can actually open it.
         ToolIOSpec spec = spec("/api/v1/convert/pdf/text");
-        assertEquals(ToolFormat.TEXT, spec.resolveOutput(Map.of("outputFormat", "txt")).format());
-        assertEquals(ToolFormat.WORD, spec.resolveOutput(Map.of("outputFormat", "rtf")).format());
+        assertEquals(
+                ToolFormat.TEXT,
+                spec.resolveOutput(Map.of("outputFormat", "txt")).format());
+        assertEquals(
+                ToolFormat.WORD,
+                spec.resolveOutput(Map.of("outputFormat", "rtf")).format());
     }
 
     @Test
     void theHtmlRoundTripIsAValidChain() {
         // convert/pdf/html emits a ZIP of the page plus its assets, and convert/html/pdf takes one
         // back. Declaring only HTML would reject the round trip the two endpoints exist to support.
-        assertEquals(ToolFormat.ZIP, spec("/api/v1/convert/pdf/html").resolveOutput().format());
+        assertEquals(
+                ToolFormat.ZIP, spec("/api/v1/convert/pdf/html").resolveOutput().format());
         assertTrue(spec("/api/v1/convert/html/pdf").acceptsFormat(ToolFormat.ZIP));
         assertTrue(spec("/api/v1/convert/html/pdf").acceptsFormat(ToolFormat.HTML));
     }
@@ -212,45 +209,49 @@ class ToolIODeclarationCoverageTest {
         // default and is an image extension; the other three are not, and would otherwise fall
         // through to IMAGE and pass a chain that fails at run time.
         ToolIOSpec spec = spec("/api/v1/convert/pdf/vector");
-        assertEquals(ToolFormat.IMAGE, spec.resolveOutput(Map.of("outputFormat", "eps")).format());
         assertEquals(
-                ToolFormat.POSTSCRIPT, spec.resolveOutput(Map.of("outputFormat", "ps")).format());
-        assertEquals(ToolFormat.PCL, spec.resolveOutput(Map.of("outputFormat", "pcl")).format());
-        assertEquals(ToolFormat.XPS, spec.resolveOutput(Map.of("outputFormat", "xps")).format());
+                ToolFormat.IMAGE,
+                spec.resolveOutput(Map.of("outputFormat", "eps")).format());
+        assertEquals(
+                ToolFormat.POSTSCRIPT,
+                spec.resolveOutput(Map.of("outputFormat", "ps")).format());
+        assertEquals(
+                ToolFormat.PCL,
+                spec.resolveOutput(Map.of("outputFormat", "pcl")).format());
+        assertEquals(
+                ToolFormat.XPS,
+                spec.resolveOutput(Map.of("outputFormat", "xps")).format());
         // The request pattern accepts any casing, so the declaration must too.
         assertEquals(
-                ToolFormat.POSTSCRIPT, spec.resolveOutput(Map.of("outputFormat", "PS")).format());
+                ToolFormat.POSTSCRIPT,
+                spec.resolveOutput(Map.of("outputFormat", "PS")).format());
     }
 
     @Test
     void everyVectorOutputFormatHasACase() {
         // Guards the list above against a new allowableValue being added without a declaration.
-        Set<String> declared =
-                spec("/api/v1/convert/pdf/vector").cases().stream()
-                        .flatMap(rule -> rule.when().stream())
-                        .flatMap(when -> when.matches().stream())
-                        .collect(java.util.stream.Collectors.toSet());
+        Set<String> declared = spec("/api/v1/convert/pdf/vector").cases().stream()
+                .flatMap(rule -> rule.when().stream())
+                .flatMap(when -> when.matches().stream())
+                .collect(java.util.stream.Collectors.toSet());
         assertEquals(Set.of("ps", "pcl", "xps"), declared);
     }
 
     @Test
     void onlyRemovePasswordAcceptsAnEncryptedDocument() {
-        assertTrue(
-                spec("/api/v1/security/remove-password").acceptsFormat(ToolFormat.PDF_ENCRYPTED));
-        List<String> accepting =
-                DECLARED.entrySet().stream()
-                        .filter(e -> e.getValue().acceptsFormat(ToolFormat.PDF_ENCRYPTED))
-                        .map(Map.Entry::getKey)
-                        .filter(path -> !path.equals("/api/v1/security/remove-password"))
-                        .filter(path -> !spec(path).accepts().contains(ToolFormat.ANY))
-                        .sorted()
-                        .toList();
+        assertTrue(spec("/api/v1/security/remove-password").acceptsFormat(ToolFormat.PDF_ENCRYPTED));
+        List<String> accepting = DECLARED.entrySet().stream()
+                .filter(e -> e.getValue().acceptsFormat(ToolFormat.PDF_ENCRYPTED))
+                .map(Map.Entry::getKey)
+                .filter(path -> !path.equals("/api/v1/security/remove-password"))
+                .filter(path -> !spec(path).accepts().contains(ToolFormat.ANY))
+                .sorted()
+                .toList();
         assertTrue(
                 accepting.isEmpty(),
-                () ->
-                        "Only remove-password should accept an encrypted PDF. If one of these"
-                                + " genuinely handles encryption, say so in its @ToolIO:\n  "
-                                + String.join("\n  ", accepting));
+                () -> "Only remove-password should accept an encrypted PDF. If one of these"
+                        + " genuinely handles encryption, say so in its @ToolIO:\n  "
+                        + String.join("\n  ", accepting));
     }
 
     private static ToolIOSpec spec(String path) {
@@ -264,8 +265,7 @@ class ToolIODeclarationCoverageTest {
     private static Scan scan() {
         Set<String> required = new HashSet<>();
         Map<String, ToolIOSpec> declared = new HashMap<>();
-        ClassPathScanningCandidateComponentProvider scanner =
-                new ClassPathScanningCandidateComponentProvider(false);
+        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(RequestMapping.class, true, true));
 
         for (BeanDefinition definition : scanner.findCandidateComponents("stirling.software")) {
@@ -273,14 +273,12 @@ class ToolIODeclarationCoverageTest {
             if (controller == null) {
                 continue;
             }
-            RequestMapping base =
-                    AnnotatedElementUtils.findMergedAnnotation(controller, RequestMapping.class);
+            RequestMapping base = AnnotatedElementUtils.findMergedAnnotation(controller, RequestMapping.class);
             if (base == null || base.value().length == 0) {
                 continue;
             }
             for (Method method : controller.getDeclaredMethods()) {
-                ToolIO declaration =
-                        AnnotatedElementUtils.findMergedAnnotation(method, ToolIO.class);
+                ToolIO declaration = AnnotatedElementUtils.findMergedAnnotation(method, ToolIO.class);
                 for (String path : mappedPaths(method)) {
                     String full = join(base.value()[0], path);
                     if (!requiresDeclaration(full)) {
@@ -308,16 +306,14 @@ class ToolIODeclarationCoverageTest {
     }
 
     private static List<String> mappedPaths(Method method) {
-        RequestMapping mapping =
-                AnnotatedElementUtils.findMergedAnnotation(method, RequestMapping.class);
+        RequestMapping mapping = AnnotatedElementUtils.findMergedAnnotation(method, RequestMapping.class);
         if (mapping == null) {
             return List.of();
         }
-        boolean writes =
-                AnnotatedElementUtils.hasAnnotation(method, PostMapping.class)
-                        || AnnotatedElementUtils.hasAnnotation(method, PutMapping.class)
-                        || Set.of(mapping.method()).stream()
-                                .anyMatch(m -> m.name().equals("POST") || m.name().equals("PUT"));
+        boolean writes = AnnotatedElementUtils.hasAnnotation(method, PostMapping.class)
+                || AnnotatedElementUtils.hasAnnotation(method, PutMapping.class)
+                || Set.of(mapping.method()).stream()
+                        .anyMatch(m -> m.name().equals("POST") || m.name().equals("PUT"));
         if (!writes) {
             return List.of();
         }

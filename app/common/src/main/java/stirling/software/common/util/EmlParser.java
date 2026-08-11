@@ -40,8 +40,7 @@ public class EmlParser {
     private final String ATTACHMENT_PREFIX = "attachment-";
 
     public EmailContent extractEmailContent(
-            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
-            throws IOException {
+            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) throws IOException {
 
         EmlProcessingUtils.validateEmlInput(emlBytes);
 
@@ -73,15 +72,12 @@ public class EmlParser {
             throw e; // Re-throw IOException as-is
         } catch (Exception e) {
             throw new IOException(
-                    String.format(
-                            "Failed to parse EML file with Simple Java Mail: %s", e.getMessage()),
-                    e);
+                    String.format("Failed to parse EML file with Simple Java Mail: %s", e.getMessage()), e);
         }
     }
 
     private EmailContent buildEmailContent(
-            Email email, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
-            throws IOException {
+            Email email, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) throws IOException {
 
         EmailContent content = new EmailContent();
         content.setSubject(defaultString(email.getSubject()));
@@ -122,8 +118,7 @@ public class EmlParser {
     }
 
     private List<EmailAttachment> mapResources(
-            List<AttachmentResource> resources, EmlToPdfRequest request, boolean embedded)
-            throws IOException {
+            List<AttachmentResource> resources, EmlToPdfRequest request, boolean embedded) throws IOException {
 
         if (resources == null || resources.isEmpty()) {
             return List.of();
@@ -144,8 +139,7 @@ public class EmlParser {
                 unnamedCounter++;
             }
 
-            EmailAttachment attachment =
-                    toEmailAttachment(resource, request, embedded, unnamedCounter);
+            EmailAttachment attachment = toEmailAttachment(resource, request, embedded, unnamedCounter);
             if (attachment != null) {
                 mapped.add(attachment);
             }
@@ -167,8 +161,7 @@ public class EmlParser {
     }
 
     private EmailAttachment toEmailAttachment(
-            AttachmentResource resource, EmlToPdfRequest request, boolean embedded, int counter)
-            throws IOException {
+            AttachmentResource resource, EmlToPdfRequest request, boolean embedded, int counter) throws IOException {
 
         if (resource == null) {
             return null;
@@ -212,8 +205,7 @@ public class EmlParser {
         return attachment;
     }
 
-    private boolean shouldIncludeAttachmentData(
-            boolean embedded, EmlToPdfRequest request, ReadResult readResult) {
+    private boolean shouldIncludeAttachmentData(boolean embedded, EmlToPdfRequest request, ReadResult readResult) {
         // Always include embedded images for proper rendering
         if (embedded) {
             return readResult != null && readResult.data() != null;
@@ -266,8 +258,7 @@ public class EmlParser {
         };
     }
 
-    private ReadResult readData(DataSource dataSource, boolean embedded, EmlToPdfRequest request)
-            throws IOException {
+    private ReadResult readData(DataSource dataSource, boolean embedded, EmlToPdfRequest request) throws IOException {
         if (dataSource == null) {
             return null;
         }
@@ -303,9 +294,7 @@ public class EmlParser {
             }
         } catch (IOException e) {
             if (embedded) {
-                log.debug(
-                        "Failed to read embedded image, using empty placeholder: {}",
-                        e.getMessage());
+                log.debug("Failed to read embedded image, using empty placeholder: {}", e.getMessage());
                 return new ReadResult(new byte[0], 0);
             }
             throw e;
@@ -316,8 +305,7 @@ public class EmlParser {
         long count = alreadyRead;
 
         long skipped;
-        while (count < MAX_SIZE_ESTIMATION_BYTES
-                && (skipped = input.skip(MAX_SIZE_ESTIMATION_BYTES - count)) > 0) {
+        while (count < MAX_SIZE_ESTIMATION_BYTES && (skipped = input.skip(MAX_SIZE_ESTIMATION_BYTES - count)) > 0) {
             count += skipped;
         }
 
@@ -418,23 +406,21 @@ public class EmlParser {
         private List<EmailAttachment> attachments = new ArrayList<>();
 
         public void setHtmlBody(String htmlBody) {
-            this.htmlBody =
-                    htmlBody != null
-                            ? RegexPatternUtils.getInstance()
-                                    .getCarriageReturnPattern()
-                                    .matcher(htmlBody)
-                                    .replaceAll("")
-                            : null;
+            this.htmlBody = htmlBody != null
+                    ? RegexPatternUtils.getInstance()
+                            .getCarriageReturnPattern()
+                            .matcher(htmlBody)
+                            .replaceAll("")
+                    : null;
         }
 
         public void setTextBody(String textBody) {
-            this.textBody =
-                    textBody != null
-                            ? RegexPatternUtils.getInstance()
-                                    .getCarriageReturnPattern()
-                                    .matcher(textBody)
-                                    .replaceAll("")
-                            : null;
+            this.textBody = textBody != null
+                    ? RegexPatternUtils.getInstance()
+                            .getCarriageReturnPattern()
+                            .matcher(textBody)
+                            .replaceAll("")
+                    : null;
         }
     }
 

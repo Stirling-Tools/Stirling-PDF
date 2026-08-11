@@ -51,7 +51,8 @@ import stirling.software.proprietary.service.PdfContentExtractor.WorkflowArtifac
 @DisplayName("PdfContentExtractor")
 class PdfContentExtractorTest {
 
-    @Mock private TabulaTableParser tabulaTableParser;
+    @Mock
+    private TabulaTableParser tabulaTableParser;
 
     private PdfContentExtractor extractor;
 
@@ -122,8 +123,7 @@ class PdfContentExtractorTest {
         @DisplayName("returns TEXT for a text-only page")
         void textOnlyPageIsText() throws IOException {
             extractor = newExtractor();
-            try (PDDocument doc =
-                    textDocument("This is a fully text page with plenty of selectable words.")) {
+            try (PDDocument doc = textDocument("This is a fully text page with plenty of selectable words.")) {
                 assertThat(extractor.classifyPage(doc, 1)).isEqualTo(FolioType.TEXT);
             }
         }
@@ -199,20 +199,18 @@ class PdfContentExtractorTest {
         @DisplayName("converts each table fragment into a quoted CSV string")
         void fragmentsBecomeCsv() throws IOException {
             extractor = newExtractor();
-            TableFragment fragment =
-                    new TableFragment(
-                            "tbl-1",
-                            1,
-                            new Bounds(0, 0, 100, 100),
-                            List.of(),
-                            List.of(),
-                            List.of(List.of("a", "b"), List.of("c", "d")),
-                            2,
-                            1.0f,
-                            List.of(),
-                            null);
-            when(tabulaTableParser.parse(any(PDDocument.class), anyInt()))
-                    .thenReturn(List.of(fragment));
+            TableFragment fragment = new TableFragment(
+                    "tbl-1",
+                    1,
+                    new Bounds(0, 0, 100, 100),
+                    List.of(),
+                    List.of(),
+                    List.of(List.of("a", "b"), List.of("c", "d")),
+                    2,
+                    1.0f,
+                    List.of(),
+                    null);
+            when(tabulaTableParser.parse(any(PDDocument.class), anyInt())).thenReturn(List.of(fragment));
             try (PDDocument doc = textDocument("with table")) {
                 List<String> csv = extractor.extractTablesAsCsv(doc, 1);
                 assertThat(csv).hasSize(1);
@@ -279,7 +277,8 @@ class PdfContentExtractorTest {
         void noMatchReturnsEmpty() throws IOException {
             extractor = newExtractor();
             try (PDDocument doc = textDocument("nothing matches the query")) {
-                assertThat(extractor.findTextPositions(doc, "absent-term", false)).isEmpty();
+                assertThat(extractor.findTextPositions(doc, "absent-term", false))
+                        .isEmpty();
             }
         }
 
@@ -303,8 +302,7 @@ class PdfContentExtractorTest {
             extractor = newExtractor();
             try (PDDocument doc = textDocument("Alpha page one", "Beta page two")) {
                 LoadedFile lf = new LoadedFile("id-1", "doc.pdf", doc);
-                List<PdfContentResult> results =
-                        extractor.extractContent(List.of(lf), Map.of(), 10, 10_000);
+                List<PdfContentResult> results = extractor.extractContent(List.of(lf), Map.of(), 10, 10_000);
 
                 assertThat(results).hasSize(1);
                 ExtractedFileText fileText = (ExtractedFileText) results.get(0);
@@ -325,8 +323,7 @@ class PdfContentExtractorTest {
                 req.setPageNumbers(List.of(2));
 
                 LoadedFile lf = new LoadedFile("id-9", "scan.pdf", doc);
-                List<PdfContentResult> results =
-                        extractor.extractContent(List.of(lf), Map.of("id-9", req), 10, 10_000);
+                List<PdfContentResult> results = extractor.extractContent(List.of(lf), Map.of("id-9", req), 10, 10_000);
 
                 ExtractedFileText fileText = (ExtractedFileText) results.get(0);
                 assertThat(fileText.getPages()).hasSize(1);
@@ -344,8 +341,7 @@ class PdfContentExtractorTest {
                 req.setContentTypes(List.of(AiPdfContentType.IMAGES));
 
                 LoadedFile lf = new LoadedFile("id-3", "x.pdf", doc);
-                List<PdfContentResult> results =
-                        extractor.extractContent(List.of(lf), Map.of("id-3", req), 10, 10_000);
+                List<PdfContentResult> results = extractor.extractContent(List.of(lf), Map.of("id-3", req), 10, 10_000);
                 assertThat(results).isEmpty();
             }
         }
@@ -356,8 +352,7 @@ class PdfContentExtractorTest {
             extractor = newExtractor();
             try (PDDocument doc = textDocument("only page")) {
                 LoadedFile lf = new LoadedFile("id-z", "z.pdf", doc);
-                List<PdfContentResult> results =
-                        extractor.extractContent(List.of(lf), Map.of(), 0, 0);
+                List<PdfContentResult> results = extractor.extractContent(List.of(lf), Map.of(), 0, 0);
                 assertThat(results).isEmpty();
             }
         }
@@ -368,8 +363,7 @@ class PdfContentExtractorTest {
             extractor = newExtractor();
             try (PDDocument doc = textDocument("artifact source text")) {
                 LoadedFile lf = new LoadedFile("id-a", "a.pdf", doc);
-                List<PdfContentResult> results =
-                        extractor.extractContent(List.of(lf), Map.of(), 10, 10_000);
+                List<PdfContentResult> results = extractor.extractContent(List.of(lf), Map.of(), 10, 10_000);
 
                 List<WorkflowArtifact> artifacts = extractor.buildArtifacts(results);
                 assertThat(artifacts).hasSize(1);
@@ -388,8 +382,7 @@ class PdfContentExtractorTest {
             extractor = newExtractor();
             try (PDDocument doc = new PDDocument()) {
                 LoadedFile lf = new LoadedFile("id-empty", "empty.pdf", doc);
-                assertThatThrownBy(
-                                () -> extractor.extractContent(List.of(lf), Map.of(), 10, 10_000))
+                assertThatThrownBy(() -> extractor.extractContent(List.of(lf), Map.of(), 10, 10_000))
                         .isInstanceOf(RuntimeException.class);
             }
         }
@@ -404,10 +397,7 @@ class PdfContentExtractorTest {
                 req.setPageNumbers(List.of(99));
 
                 LoadedFile lf = new LoadedFile("id-oob", "oob.pdf", doc);
-                assertThatThrownBy(
-                                () ->
-                                        extractor.extractContent(
-                                                List.of(lf), Map.of("id-oob", req), 10, 10_000))
+                assertThatThrownBy(() -> extractor.extractContent(List.of(lf), Map.of("id-oob", req), 10, 10_000))
                         .isInstanceOf(IllegalArgumentException.class);
             }
         }

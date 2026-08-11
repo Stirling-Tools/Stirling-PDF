@@ -25,25 +25,28 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 @ExtendWith(MockitoExtension.class)
 class UsageSyncServiceTest {
 
-    @Mock private UsageCounterRepository counters;
-    @Mock private AccountLinkSyncStateRepository syncState;
-    @Mock private DeviceCredentialStore credentialStore;
-    @Mock private AccountLinkClient client;
-    @Mock private EntitlementCache entitlementCache;
+    @Mock
+    private UsageCounterRepository counters;
+
+    @Mock
+    private AccountLinkSyncStateRepository syncState;
+
+    @Mock
+    private DeviceCredentialStore credentialStore;
+
+    @Mock
+    private AccountLinkClient client;
+
+    @Mock
+    private EntitlementCache entitlementCache;
 
     private UsageSyncService service;
     private final LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
 
     @BeforeEach
     void setUp() {
-        service =
-                new UsageSyncService(
-                        counters,
-                        syncState,
-                        credentialStore,
-                        client,
-                        entitlementCache,
-                        new AccountLinkProperties());
+        service = new UsageSyncService(
+                counters, syncState, credentialStore, client, entitlementCache, new AccountLinkProperties());
     }
 
     @Test
@@ -51,8 +54,7 @@ class UsageSyncServiceTest {
         AccountLinkProperties props = new AccountLinkProperties();
         props.getMetering().setSyncIntervalHours(6);
         UsageSyncService svc =
-                new UsageSyncService(
-                        counters, syncState, credentialStore, client, entitlementCache, props);
+                new UsageSyncService(counters, syncState, credentialStore, client, entitlementCache, props);
 
         ScheduledTaskRegistrar registrar = new ScheduledTaskRegistrar();
         svc.configureTasks(registrar);
@@ -116,15 +118,13 @@ class UsageSyncServiceTest {
                 .thenReturn(List.of(counter(period, "API", 12L), counter(period, "AI", 4L)));
         when(syncState.findById(AccountLinkSyncState.SINGLETON_ID)).thenReturn(Optional.of(state));
         InstanceEntitlement fresh = entitled();
-        when(client.reportUsage(
-                        eq("dev-1"), eq("sec-1"), eq(6L), eq(period), eq(12L), eq(4L), eq(0L)))
+        when(client.reportUsage(eq("dev-1"), eq("sec-1"), eq(6L), eq(period), eq(12L), eq(4L), eq(0L)))
                 .thenReturn(fresh);
 
         service.syncNow();
 
         // Seq advanced from 5 → 6 and the report carried the per-category cumulative.
-        verify(client)
-                .reportUsage(eq("dev-1"), eq("sec-1"), eq(6L), eq(period), eq(12L), eq(4L), eq(0L));
+        verify(client).reportUsage(eq("dev-1"), eq("sec-1"), eq(6L), eq(period), eq(12L), eq(4L), eq(0L));
         // Only categories with usage are marked; AUTOMATION (0) is skipped.
         verify(counters).markSynced(period, "API", 12L);
         verify(counters).markSynced(period, "AI", 4L);

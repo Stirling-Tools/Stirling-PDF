@@ -49,11 +49,10 @@ public class MultiPageLayoutController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Merge multiple pages of a PDF document into a single page",
-            description =
-                    "This operation takes an input PDF file and the number of pages to merge into a"
-                            + " single sheet in the output PDF file.")
-    public ResponseEntity<Resource> mergeMultiplePagesIntoOne(
-            @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
+            description = "This operation takes an input PDF file and the number of pages to merge into a"
+                    + " single sheet in the output PDF file.")
+    public ResponseEntity<Resource> mergeMultiplePagesIntoOne(@ModelAttribute MergeMultiplePagesRequest request)
+            throws IOException {
 
         int MAX_PAGES = 100000;
         int MAX_COLS = 300;
@@ -71,9 +70,7 @@ public class MultiPageLayoutController {
         switch (mode) {
             case "DEFAULT":
                 pagesPerSheet = request.getPagesPerSheet();
-                if (pagesPerSheet != 2
-                        && pagesPerSheet
-                                != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
+                if (pagesPerSheet != 2 && pagesPerSheet != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.invalidFormat",
                             "Invalid {0} format: {1}",
@@ -113,17 +110,11 @@ public class MultiPageLayoutController {
         }
         if (cols > MAX_COLS) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidArgument",
-                    "Invalid {0} format: {1}",
-                    "cols",
-                    "must be less than " + MAX_COLS);
+                    "error.invalidArgument", "Invalid {0} format: {1}", "cols", "must be less than " + MAX_COLS);
         }
         if (rows > MAX_ROWS) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidArgument",
-                    "Invalid {0} format: {1}",
-                    "rows",
-                    "must be less than " + MAX_ROWS);
+                    "error.invalidArgument", "Invalid {0} format: {1}", "rows", "must be less than " + MAX_ROWS);
         }
 
         String orientation = request.getOrientation();
@@ -170,16 +161,9 @@ public class MultiPageLayoutController {
         int rightMargin = request.getRightMargin();
         int innerMargin = request.getInnerMargin();
 
-        if (topMargin < 0
-                || bottomMargin < 0
-                || leftMargin < 0
-                || rightMargin < 0
-                || innerMargin < 0) {
+        if (topMargin < 0 || bottomMargin < 0 || leftMargin < 0 || rightMargin < 0 || innerMargin < 0) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidFormat",
-                    "Invalid {0} format: {1}",
-                    "Margins",
-                    "only positive values are allowed");
+                    "error.invalidFormat", "Invalid {0} format: {1}", "Margins", "only positive values are allowed");
         }
 
         int borderWidth = request.getBorderWidth() == 0 ? 1 : request.getBorderWidth();
@@ -195,20 +179,15 @@ public class MultiPageLayoutController {
         MultipartFile file = request.getFileInput();
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
-            try (PDDocument newDocument =
-                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+            try (PDDocument newDocument = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
                 int totalPages = sourceDocument.getNumberOfPages();
                 LayerUtility layerUtility = new LayerUtility(newDocument);
 
                 // Margin between page and content:
                 float pageWidth =
-                        "PORTRAIT".equals(orientation)
-                                ? PDRectangle.A4.getWidth()
-                                : PDRectangle.A4.getHeight();
+                        "PORTRAIT".equals(orientation) ? PDRectangle.A4.getWidth() : PDRectangle.A4.getHeight();
                 float pageHeight =
-                        "PORTRAIT".equals(orientation)
-                                ? PDRectangle.A4.getHeight()
-                                : PDRectangle.A4.getWidth();
+                        "PORTRAIT".equals(orientation) ? PDRectangle.A4.getHeight() : PDRectangle.A4.getWidth();
 
                 // Calculate cell dimensions once (all output pages are A4) - declare outside try
                 // blocks
@@ -241,23 +220,15 @@ public class MultiPageLayoutController {
                 for (int i = 0; i < totalPages; i += pagesPerSheet) {
                     // Create a new output page for each group of pagesPerSheet
                     // Create a new A4 landscape rectangle that we use when orientation is landscape
-                    PDRectangle a4Landscape =
-                            new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
+                    PDRectangle a4Landscape = new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth());
                     PDPage newPage =
-                            "PORTRAIT".equals(orientation)
-                                    ? new PDPage(PDRectangle.A4)
-                                    : new PDPage(a4Landscape);
+                            "PORTRAIT".equals(orientation) ? new PDPage(PDRectangle.A4) : new PDPage(a4Landscape);
                     newDocument.addPage(newPage);
 
                     // Use try-with-resources for each content stream to ensure proper cleanup
                     // resetContext=true: Start with a clean graphics state for new content
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    newDocument,
-                                    newPage,
-                                    PDPageContentStream.AppendMode.APPEND,
-                                    true,
-                                    true)) {
+                    try (PDPageContentStream contentStream = new PDPageContentStream(
+                            newDocument, newPage, PDPageContentStream.AppendMode.APPEND, true, true)) {
 
                         if (addBorder) {
                             contentStream.setLineWidth(borderWidth);
@@ -293,32 +264,28 @@ public class MultiPageLayoutController {
                                 }
                             }
 
-                            float x =
-                                    leftMargin
-                                            + colIndex * cellWidth
-                                            + innerMargin
-                                            + (innerWidth - rect.getWidth() * scale) / 2;
-                            float y =
-                                    newPage.getMediaBox().getHeight()
-                                            - topMargin
-                                            - ((rowIndex + 1) * cellHeight
-                                                    - innerMargin
-                                                    - (innerHeight - rect.getHeight() * scale) / 2);
+                            float x = leftMargin
+                                    + colIndex * cellWidth
+                                    + innerMargin
+                                    + (innerWidth - rect.getWidth() * scale) / 2;
+                            float y = newPage.getMediaBox().getHeight()
+                                    - topMargin
+                                    - ((rowIndex + 1) * cellHeight
+                                            - innerMargin
+                                            - (innerHeight - rect.getHeight() * scale) / 2);
 
                             contentStream.saveGraphicsState();
                             contentStream.transform(Matrix.getTranslateInstance(x, y));
                             contentStream.transform(Matrix.getScaleInstance(scale, scale));
 
-                            PDFormXObject formXObject =
-                                    layerUtility.importPageAsForm(sourceDocument, pageIndex);
+                            PDFormXObject formXObject = layerUtility.importPageAsForm(sourceDocument, pageIndex);
                             contentStream.drawForm(formXObject);
 
                             contentStream.restoreGraphicsState();
 
                             if (addBorder) {
                                 // Draw border around each page
-                                contentStream.addRect(
-                                        x, y, rect.getWidth() * scale, rect.getHeight() * scale);
+                                contentStream.addRect(x, y, rect.getWidth() * scale, rect.getHeight() * scale);
                                 contentStream.stroke();
                             }
                         }
@@ -347,8 +314,7 @@ public class MultiPageLayoutController {
 
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
-                        GeneralUtils.generateFilename(
-                                file.getOriginalFilename(), "_multi_page_layout.pdf"),
+                        GeneralUtils.generateFilename(file.getOriginalFilename(), "_multi_page_layout.pdf"),
                         tempFileManager);
             } // newDocument is closed here
         } // sourceDocument is closed here

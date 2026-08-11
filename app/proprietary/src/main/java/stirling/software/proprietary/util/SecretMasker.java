@@ -17,12 +17,11 @@ public final class SecretMasker {
     /** The placeholder masked values are replaced with; reads as "a secret is set". */
     public static final String REDACTED = "********";
 
-    private static final Pattern SENSITIVE =
-            RegexPatternUtils.getInstance()
-                    .getPattern(
-                            // secret[_-]?access[_-]?key precedes plain secret so camelCase keys
-                            // like secretAccessKey (no word boundary after "secret") still match.
-                            "(?i)\\b(password|token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
+    private static final Pattern SENSITIVE = RegexPatternUtils.getInstance()
+            .getPattern(
+                    // secret[_-]?access[_-]?key precedes plain secret so camelCase keys
+                    // like secretAccessKey (no word boundary after "secret") still match.
+                    "(?i)\\b(password|token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
 
     private SecretMasker() {}
 
@@ -31,9 +30,7 @@ public final class SecretMasker {
 
         return in.entrySet().stream()
                 .filter(e -> e.getValue() != null)
-                .collect(
-                        Collectors.toMap(
-                                Map.Entry::getKey, e -> deepMaskValue(e.getKey(), e.getValue())));
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> deepMaskValue(e.getKey(), e.getValue())));
     }
 
     private static Object deepMask(Object value) {
@@ -41,9 +38,7 @@ public final class SecretMasker {
             return m.entrySet().stream()
                     .filter(e -> e.getValue() != null)
                     .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    e -> deepMaskValue((String) e.getKey(), e.getValue())));
+                            Collectors.toMap(Map.Entry::getKey, e -> deepMaskValue((String) e.getKey(), e.getValue())));
         } else if (value instanceof List<?> list) {
             return list.stream().map(SecretMasker::deepMask).toList();
         } else {
@@ -64,17 +59,12 @@ public final class SecretMasker {
      * sentinel with no stored counterpart is left as-is (it fails whatever validates it, rather
      * than silently passing an unset secret).
      */
-    public static Map<String, Object> restoreRedacted(
-            Map<String, Object> incoming, Map<String, Object> stored) {
+    public static Map<String, Object> restoreRedacted(Map<String, Object> incoming, Map<String, Object> stored) {
         if (incoming == null || stored == null) {
             return incoming;
         }
         Map<String, Object> merged = new LinkedHashMap<>(incoming);
-        merged.replaceAll(
-                (key, value) ->
-                        REDACTED.equals(value) && stored.containsKey(key)
-                                ? stored.get(key)
-                                : value);
+        merged.replaceAll((key, value) -> REDACTED.equals(value) && stored.containsKey(key) ? stored.get(key) : value);
         return merged;
     }
 }

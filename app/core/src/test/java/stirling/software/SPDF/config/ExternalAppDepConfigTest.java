@@ -23,8 +23,11 @@ import stirling.software.common.configuration.RuntimePathConfig;
 @ExtendWith(MockitoExtension.class)
 class ExternalAppDepConfigTest {
 
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
 
     private ExternalAppDepConfig config;
 
@@ -34,9 +37,7 @@ class ExternalAppDepConfigTest {
         when(runtimePathConfig.getUnoConvertPath()).thenReturn("/custom/unoconvert");
         when(runtimePathConfig.getCalibrePath()).thenReturn("/custom/calibre");
         when(runtimePathConfig.getOcrMyPdfPath()).thenReturn("/custom/ocrmypdf");
-        lenient()
-                .when(endpointConfiguration.getEndpointsForGroup(anyString()))
-                .thenReturn(Set.of());
+        lenient().when(endpointConfiguration.getEndpointsForGroup(anyString())).thenReturn(Set.of());
 
         config = new ExternalAppDepConfig(endpointConfiguration, runtimePathConfig);
     }
@@ -58,16 +59,14 @@ class ExternalAppDepConfigTest {
         when(endpointConfiguration.getEndpointsForGroup("Ghostscript")).thenReturn(endpoints);
 
         @SuppressWarnings("unchecked")
-        List<String> features =
-                (List<String>) invokePrivateMethod(config, "getAffectedFeatures", "Ghostscript");
+        List<String> features = (List<String>) invokePrivateMethod(config, "getAffectedFeatures", "Ghostscript");
 
         assertEquals(List.of("PDF To Html", "Image Extract"), features);
     }
 
     @Test
     void formatEndpointAsFeatureConvertsNames() throws Exception {
-        String formatted =
-                (String) invokePrivateMethod(config, "formatEndpointAsFeature", "pdf-img-extract");
+        String formatted = (String) invokePrivateMethod(config, "formatEndpointAsFeature", "pdf-img-extract");
 
         assertEquals("PDF Image Extract", formatted);
     }
@@ -85,10 +84,8 @@ class ExternalAppDepConfigTest {
 
     @Test
     void isWeasyprintMatchesConfiguredCommands() throws Exception {
-        boolean directMatch =
-                (boolean) invokePrivateMethod(config, "isWeasyprint", "/custom/weasyprint");
-        boolean nameContains =
-                (boolean) invokePrivateMethod(config, "isWeasyprint", "/usr/bin/weasyprint-cli");
+        boolean directMatch = (boolean) invokePrivateMethod(config, "isWeasyprint", "/custom/weasyprint");
+        boolean nameContains = (boolean) invokePrivateMethod(config, "isWeasyprint", "/usr/bin/weasyprint-cli");
         boolean differentCommand = (boolean) invokePrivateMethod(config, "isWeasyprint", "qpdf");
 
         assertTrue(directMatch);
@@ -114,19 +111,16 @@ class ExternalAppDepConfigTest {
         return (Map<String, List<String>>) field.get(config);
     }
 
-    private Object invokePrivateMethod(Object target, String methodName, Object... args)
-            throws Exception {
+    private Object invokePrivateMethod(Object target, String methodName, Object... args) throws Exception {
         Method method = findMatchingMethod(methodName, args);
         method.setAccessible(true);
         return method.invoke(target, args);
     }
 
-    private Method findMatchingMethod(String methodName, Object[] args)
-            throws NoSuchMethodException {
+    private Method findMatchingMethod(String methodName, Object[] args) throws NoSuchMethodException {
         Method[] methods = ExternalAppDepConfig.class.getDeclaredMethods();
         for (Method candidate : methods) {
-            if (!candidate.getName().equals(methodName)
-                    || candidate.getParameterCount() != args.length) {
+            if (!candidate.getName().equals(methodName) || candidate.getParameterCount() != args.length) {
                 continue;
             }
 
@@ -144,8 +138,7 @@ class ExternalAppDepConfigTest {
             }
         }
 
-        throw new NoSuchMethodException(
-                "No matching method found for " + methodName + " with provided arguments");
+        throw new NoSuchMethodException("No matching method found for " + methodName + " with provided arguments");
     }
 
     private boolean isParameterCompatible(Class<?> parameterType, Object arg) {

@@ -53,14 +53,12 @@ class PdfJsonFontServiceMoreTest {
     }
 
     private void stubRealTempFiles() throws Exception {
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            String suffix = inv.getArgument(0);
-                            File f = Files.createTempFile("fontsvc-test", suffix).toFile();
-                            f.deleteOnExit();
-                            return f;
-                        });
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> {
+            String suffix = inv.getArgument(0);
+            File f = Files.createTempFile("fontsvc-test", suffix).toFile();
+            f.deleteOnExit();
+            return f;
+        });
     }
 
     @Nested
@@ -74,9 +72,7 @@ class PdfJsonFontServiceMoreTest {
             // defaults: cffConverter.enabled = true, method = python
             PdfJsonFontService svc = new PdfJsonFontService(tempFileManager, props);
 
-            Method m =
-                    PdfJsonFontService.class.getDeclaredMethod(
-                            "initialiseCffConverterAvailability");
+            Method m = PdfJsonFontService.class.getDeclaredMethod("initialiseCffConverterAvailability");
             m.setAccessible(true);
             m.invoke(svc);
 
@@ -91,9 +87,7 @@ class PdfJsonFontServiceMoreTest {
             props.getPdfEditor().getCffConverter().setEnabled(false);
             PdfJsonFontService svc = new PdfJsonFontService(tempFileManager, props);
 
-            Method m =
-                    PdfJsonFontService.class.getDeclaredMethod(
-                            "initialiseCffConverterAvailability");
+            Method m = PdfJsonFontService.class.getDeclaredMethod("initialiseCffConverterAvailability");
             m.setAccessible(true);
             m.invoke(svc);
 
@@ -116,9 +110,7 @@ class PdfJsonFontServiceMoreTest {
         @Test
         @DisplayName("null or blank command returns false")
         void nullOrBlank_false() throws Exception {
-            assertEquals(
-                    false,
-                    invoke("isCommandAvailable", new Class<?>[] {String.class}, (Object) null));
+            assertEquals(false, invoke("isCommandAvailable", new Class<?>[] {String.class}, (Object) null));
             assertEquals(false, invoke("isCommandAvailable", new Class<?>[] {String.class}, "  "));
         }
 
@@ -143,17 +135,13 @@ class PdfJsonFontServiceMoreTest {
         void withoutToUnicode() throws Exception {
             setField("pythonCommand", "python3");
             setField("pythonScript", "/script.py");
-            String[] cmd =
-                    (String[])
-                            invoke(
-                                    "buildPythonCommand",
-                                    new Class<?>[] {String.class, String.class, String.class},
-                                    "in.cff",
-                                    "out.otf",
-                                    null);
-            assertThat(cmd)
-                    .containsExactly(
-                            "python3", "/script.py", "--input", "in.cff", "--output", "out.otf");
+            String[] cmd = (String[]) invoke(
+                    "buildPythonCommand",
+                    new Class<?>[] {String.class, String.class, String.class},
+                    "in.cff",
+                    "out.otf",
+                    null);
+            assertThat(cmd).containsExactly("python3", "/script.py", "--input", "in.cff", "--output", "out.otf");
         }
 
         @Test
@@ -161,14 +149,12 @@ class PdfJsonFontServiceMoreTest {
         void withToUnicode() throws Exception {
             setField("pythonCommand", "python3");
             setField("pythonScript", "/script.py");
-            String[] cmd =
-                    (String[])
-                            invoke(
-                                    "buildPythonCommand",
-                                    new Class<?>[] {String.class, String.class, String.class},
-                                    "in.cff",
-                                    "out.otf",
-                                    "uni.txt");
+            String[] cmd = (String[]) invoke(
+                    "buildPythonCommand",
+                    new Class<?>[] {String.class, String.class, String.class},
+                    "in.cff",
+                    "out.otf",
+                    "uni.txt");
             assertThat(cmd).contains("--to-unicode", "uni.txt");
             assertEquals(8, cmd.length);
         }
@@ -194,10 +180,7 @@ class PdfJsonFontServiceMoreTest {
                 when(result.getRc()).thenReturn(1);
                 when(result.getMessages()).thenReturn("boom");
                 when(exec.runCommandWithOutputHandling(anyList())).thenReturn(result);
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.CFF_CONVERTER))
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
                 assertNull(service.convertCffProgramToTrueType(new byte[] {1, 2, 3}, null));
@@ -215,36 +198,25 @@ class PdfJsonFontServiceMoreTest {
 
             // Capture the .otf temp file so the mocked process can populate it.
             File[] otfHolder = new File[1];
-            when(tempFileManager.createTempFile(anyString()))
-                    .thenAnswer(
-                            inv -> {
-                                String suffix = inv.getArgument(0);
-                                File f = Files.createTempFile("fontsvc-test", suffix).toFile();
-                                f.deleteOnExit();
-                                if (".otf".equals(suffix)) {
-                                    otfHolder[0] = f;
-                                }
-                                return f;
-                            });
+            when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> {
+                String suffix = inv.getArgument(0);
+                File f = Files.createTempFile("fontsvc-test", suffix).toFile();
+                f.deleteOnExit();
+                if (".otf".equals(suffix)) {
+                    otfHolder[0] = f;
+                }
+                return f;
+            });
 
             try (MockedStatic<ProcessExecutor> mocked = mockStatic(ProcessExecutor.class)) {
                 ProcessExecutor exec = mock(ProcessExecutor.class);
                 ProcessExecutorResult result = mock(ProcessExecutorResult.class);
                 when(result.getRc()).thenReturn(0);
-                when(exec.runCommandWithOutputHandling(anyList()))
-                        .thenAnswer(
-                                inv -> {
-                                    Files.write(
-                                            otfHolder[0].toPath(),
-                                            new byte[] {
-                                                (byte) 0x4F, (byte) 0x54, (byte) 0x54, (byte) 0x4F
-                                            });
-                                    return result;
-                                });
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.CFF_CONVERTER))
+                when(exec.runCommandWithOutputHandling(anyList())).thenAnswer(inv -> {
+                    Files.write(otfHolder[0].toPath(), new byte[] {(byte) 0x4F, (byte) 0x54, (byte) 0x54, (byte) 0x4F});
+                    return result;
+                });
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
                 byte[] out = service.convertCffProgramToTrueType(new byte[] {1, 2, 3}, null);
@@ -278,17 +250,15 @@ class PdfJsonFontServiceMoreTest {
             setField("pythonScript", "/script.py");
 
             File[] otfHolder = new File[1];
-            when(tempFileManager.createTempFile(anyString()))
-                    .thenAnswer(
-                            inv -> {
-                                String suffix = inv.getArgument(0);
-                                File f = Files.createTempFile("fontsvc-test", suffix).toFile();
-                                f.deleteOnExit();
-                                if (".otf".equals(suffix)) {
-                                    otfHolder[0] = f;
-                                }
-                                return f;
-                            });
+            when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> {
+                String suffix = inv.getArgument(0);
+                File f = Files.createTempFile("fontsvc-test", suffix).toFile();
+                f.deleteOnExit();
+                if (".otf".equals(suffix)) {
+                    otfHolder[0] = f;
+                }
+                return f;
+            });
 
             String toUnicode = Base64.getEncoder().encodeToString(new byte[] {10, 20, 30});
 
@@ -296,16 +266,11 @@ class PdfJsonFontServiceMoreTest {
                 ProcessExecutor exec = mock(ProcessExecutor.class);
                 ProcessExecutorResult result = mock(ProcessExecutorResult.class);
                 when(result.getRc()).thenReturn(0);
-                when(exec.runCommandWithOutputHandling(anyList()))
-                        .thenAnswer(
-                                inv -> {
-                                    Files.write(otfHolder[0].toPath(), new byte[] {1, 2, 3, 4, 5});
-                                    return result;
-                                });
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.CFF_CONVERTER))
+                when(exec.runCommandWithOutputHandling(anyList())).thenAnswer(inv -> {
+                    Files.write(otfHolder[0].toPath(), new byte[] {1, 2, 3, 4, 5});
+                    return result;
+                });
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
                 byte[] out = service.convertCffProgramToTrueType(new byte[] {9, 9}, toUnicode);
@@ -328,10 +293,7 @@ class PdfJsonFontServiceMoreTest {
                 ProcessExecutorResult result = mock(ProcessExecutorResult.class);
                 when(result.getRc()).thenReturn(2);
                 when(exec.runCommandWithOutputHandling(anyList())).thenReturn(result);
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.CFF_CONVERTER))
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
                 assertNull(service.convertCffProgramToTrueType(new byte[] {1, 2, 3}, null));
@@ -347,32 +309,25 @@ class PdfJsonFontServiceMoreTest {
             setField("fontforgeCommand", "fontforge");
 
             File[] ttfHolder = new File[1];
-            when(tempFileManager.createTempFile(anyString()))
-                    .thenAnswer(
-                            inv -> {
-                                String suffix = inv.getArgument(0);
-                                File f = Files.createTempFile("fontsvc-test", suffix).toFile();
-                                f.deleteOnExit();
-                                if (".ttf".equals(suffix)) {
-                                    ttfHolder[0] = f;
-                                }
-                                return f;
-                            });
+            when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> {
+                String suffix = inv.getArgument(0);
+                File f = Files.createTempFile("fontsvc-test", suffix).toFile();
+                f.deleteOnExit();
+                if (".ttf".equals(suffix)) {
+                    ttfHolder[0] = f;
+                }
+                return f;
+            });
 
             try (MockedStatic<ProcessExecutor> mocked = mockStatic(ProcessExecutor.class)) {
                 ProcessExecutor exec = mock(ProcessExecutor.class);
                 ProcessExecutorResult result = mock(ProcessExecutorResult.class);
                 when(result.getRc()).thenReturn(0);
-                when(exec.runCommandWithOutputHandling(anyList()))
-                        .thenAnswer(
-                                inv -> {
-                                    Files.write(ttfHolder[0].toPath(), new byte[] {7, 7, 7});
-                                    return result;
-                                });
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.CFF_CONVERTER))
+                when(exec.runCommandWithOutputHandling(anyList())).thenAnswer(inv -> {
+                    Files.write(ttfHolder[0].toPath(), new byte[] {7, 7, 7});
+                    return result;
+                });
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
                 byte[] out = service.convertCffProgramToTrueType(new byte[] {1, 2, 3}, null);
@@ -391,11 +346,7 @@ class PdfJsonFontServiceMoreTest {
         void notAvailable() throws Exception {
             setField("pythonCffConverterAvailable", false);
             assertNull(
-                    invoke(
-                            "convertCffUsingPython",
-                            new Class<?>[] {byte[].class, String.class},
-                            new byte[] {1},
-                            null));
+                    invoke("convertCffUsingPython", new Class<?>[] {byte[].class, String.class}, new byte[] {1}, null));
         }
 
         @Test
@@ -405,11 +356,7 @@ class PdfJsonFontServiceMoreTest {
             setField("pythonCommand", "  ");
             setField("pythonScript", "");
             assertNull(
-                    invoke(
-                            "convertCffUsingPython",
-                            new Class<?>[] {byte[].class, String.class},
-                            new byte[] {1},
-                            null));
+                    invoke("convertCffUsingPython", new Class<?>[] {byte[].class, String.class}, new byte[] {1}, null));
         }
     }
 
@@ -430,27 +377,21 @@ class PdfJsonFontServiceMoreTest {
             setField("fontForgeCffConverterAvailable", true);
             setField("fontforgeCommand", "fontforge");
             // createTempFile returns a file that we then delete so it does not exist.
-            when(tempFileManager.createTempFile(anyString()))
-                    .thenAnswer(
-                            inv -> {
-                                File f =
-                                        Files.createTempFile("fontsvc-test", inv.getArgument(0))
-                                                .toFile();
-                                if (".ttf".equals(inv.getArgument(0))) {
-                                    Files.deleteIfExists(f.toPath());
-                                }
-                                return f;
-                            });
+            when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> {
+                File f =
+                        Files.createTempFile("fontsvc-test", inv.getArgument(0)).toFile();
+                if (".ttf".equals(inv.getArgument(0))) {
+                    Files.deleteIfExists(f.toPath());
+                }
+                return f;
+            });
 
             try (MockedStatic<ProcessExecutor> mocked = mockStatic(ProcessExecutor.class)) {
                 ProcessExecutor exec = mock(ProcessExecutor.class);
                 ProcessExecutorResult result = mock(ProcessExecutorResult.class);
                 when(result.getRc()).thenReturn(0);
                 when(exec.runCommandWithOutputHandling(anyList())).thenReturn(result);
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.CFF_CONVERTER))
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
                 assertNull(service.convertCffUsingFontForge(new byte[] {1, 2, 3}));
@@ -469,10 +410,7 @@ class PdfJsonFontServiceMoreTest {
                 ProcessExecutorResult result = mock(ProcessExecutorResult.class);
                 when(result.getRc()).thenReturn(0);
                 when(exec.runCommandWithOutputHandling(anyList())).thenReturn(result);
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.CFF_CONVERTER))
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER))
                         .thenReturn(exec);
 
                 assertNull(service.convertCffUsingFontForge(new byte[] {1, 2, 3}));

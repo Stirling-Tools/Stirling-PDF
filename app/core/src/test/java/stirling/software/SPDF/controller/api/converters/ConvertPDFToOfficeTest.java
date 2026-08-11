@@ -53,31 +53,31 @@ class ConvertPDFToOfficeTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertPDFToOffice controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @InjectMocks
+    private ConvertPDFToOffice controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private MockMultipartFile createPdfFile() {
-        return new MockMultipartFile(
-                "fileInput", "document.pdf", "application/pdf", "pdf-content".getBytes());
+        return new MockMultipartFile("fileInput", "document.pdf", "application/pdf", "pdf-content".getBytes());
     }
 
     @Test
@@ -89,8 +89,7 @@ class ConvertPDFToOfficeTest {
 
         ResponseEntity<Resource> expectedResponse = streamingOk("pptx-content".getBytes());
 
-        try (MockedStatic<PDFToFile> mock =
-                Mockito.mockStatic(PDFToFile.class, Mockito.CALLS_REAL_METHODS)) {
+        try (MockedStatic<PDFToFile> mock = Mockito.mockStatic(PDFToFile.class, Mockito.CALLS_REAL_METHODS)) {
             PDFToFile pdfToFile = Mockito.mock(PDFToFile.class);
 
             // We can't easily mock the constructor, so test via the actual endpoint
@@ -119,16 +118,13 @@ class ConvertPDFToOfficeTest {
         ResponseEntity<Resource> expectedResponse = streamingOk("text content".getBytes());
 
         try (MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<WebResponseUtils> wrMock =
-                        Mockito.mockStatic(WebResponseUtils.class)) {
+                MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
 
             guMock.when(() -> GeneralUtils.generateFilename("document.pdf", ".txt"))
                     .thenReturn("document.txt");
 
-            wrMock.when(
-                            () ->
-                                    WebResponseUtils.fileToWebResponse(
-                                            any(TempFile.class), anyString(), any(MediaType.class)))
+            wrMock.when(() ->
+                            WebResponseUtils.fileToWebResponse(any(TempFile.class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request);

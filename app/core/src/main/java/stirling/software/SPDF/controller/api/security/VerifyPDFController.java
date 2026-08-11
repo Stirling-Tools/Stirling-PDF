@@ -36,22 +36,19 @@ public class VerifyPDFController {
     @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "Verify PDF Standards Compliance",
-            description =
-                    "Validates PDF files against the standards declared in their metadata."
-                            + " Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards from the"
-                            + " document's XMP metadata and validates compliance.")
+            description = "Validates PDF files against the standards declared in their metadata."
+                    + " Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards from the"
+                    + " document's XMP metadata and validates compliance.")
     @AutoJobPostMapping(
             value = "/verify-pdf",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
-    public ResponseEntity<List<PDFVerificationResult>> verifyPDF(
-            @ModelAttribute PDFVerificationRequest request) {
+    public ResponseEntity<List<PDFVerificationResult>> verifyPDF(@ModelAttribute PDFVerificationRequest request) {
 
         MultipartFile file = request.getFileInput();
 
         if (file == null || file.isEmpty()) {
-            throw ExceptionUtils.createRuntimeException(
-                    "error.pdfRequired", "PDF file is required", null);
+            throw ExceptionUtils.createRuntimeException("error.pdfRequired", "PDF file is required", null);
         }
 
         try {
@@ -84,10 +81,7 @@ public class VerifyPDFController {
         } catch (IOException e) {
             log.error("IO exception for file: {}", file.getOriginalFilename(), e);
             throw ExceptionUtils.createRuntimeException(
-                    "error.ioException",
-                    "IO error during PDF verification: {0}",
-                    e,
-                    e.getMessage());
+                    "error.ioException", "IO error during PDF verification: {0}", e, e.getMessage());
         }
     }
 }

@@ -35,13 +35,11 @@ class FormUtilsTest {
         return new SetupDocument(page, acroForm);
     }
 
-    private static void attachField(SetupDocument setup, PDTextField field, PDRectangle rectangle)
-            throws IOException {
+    private static void attachField(SetupDocument setup, PDTextField field, PDRectangle rectangle) throws IOException {
         attachWidget(setup, field, rectangle);
     }
 
-    private static void attachField(SetupDocument setup, PDCheckBox field, PDRectangle rectangle)
-            throws IOException {
+    private static void attachField(SetupDocument setup, PDCheckBox field, PDRectangle rectangle) throws IOException {
         field.setExportValues(List.of("Yes"));
         attachWidget(setup, field, rectangle);
     }
@@ -98,8 +96,7 @@ class FormUtilsTest {
             checkBox.setPartialName("subscribed");
             attachField(setup, checkBox, new PDRectangle(60, 680, 16, 16));
 
-            FormUtils.applyFieldValues(
-                    document, Map.of("company", "Stirling", "subscribed", true), false);
+            FormUtils.applyFieldValues(document, Map.of("company", "Stirling", "subscribed", true), false);
 
             assertEquals("Stirling", textField.getValueAsString());
             assertTrue(checkBox.isChecked());

@@ -50,13 +50,12 @@ class McpOperationExecutorTest {
     private ResponseEntity<Resource> pdfResponse(byte[] bytes) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        Resource body =
-                new ByteArrayResource(bytes) {
-                    @Override
-                    public String getFilename() {
-                        return "out.pdf";
-                    }
-                };
+        Resource body = new ByteArrayResource(bytes) {
+            @Override
+            public String getFilename() {
+                return "out.pdf";
+            }
+        };
         return ResponseEntity.ok().headers(headers).body(body);
     }
 
@@ -75,9 +74,7 @@ class McpOperationExecutorTest {
 
         ObjectNode args = mapper.createObjectNode();
         args.put("operation", "compress-pdf");
-        args.put(
-                "file",
-                Base64.getEncoder().encodeToString("INPUT".getBytes(StandardCharsets.UTF_8)));
+        args.put("file", Base64.getEncoder().encodeToString("INPUT".getBytes(StandardCharsets.UTF_8)));
         args.putObject("parameters").put("optimizeLevel", 2);
 
         ObjectNode result = executor.execute(compressOp(), args);
@@ -95,18 +92,13 @@ class McpOperationExecutorTest {
         ObjectNode resBlock = (ObjectNode) result.get("content").get(1);
         assertEquals("resource", resBlock.get("type").asText());
         String blob = resBlock.get("resource").get("blob").asText();
-        assertEquals(
-                "RESULT", new String(Base64.getDecoder().decode(blob), StandardCharsets.UTF_8));
+        assertEquals("RESULT", new String(Base64.getDecoder().decode(blob), StandardCharsets.UTF_8));
     }
 
     @Test
     void missingFile_returnsError() {
-        McpOperationExecutor executor =
-                new McpOperationExecutor(
-                        mapper,
-                        mock(InternalApiClient.class),
-                        mock(FileStorage.class),
-                        new ApplicationProperties());
+        McpOperationExecutor executor = new McpOperationExecutor(
+                mapper, mock(InternalApiClient.class), mock(FileStorage.class), new ApplicationProperties());
         ObjectNode args = mapper.createObjectNode();
         args.put("operation", "compress-pdf");
 
@@ -114,12 +106,7 @@ class McpOperationExecutorTest {
 
         assertTrue(result.path("isError").asBoolean(false));
         assertTrue(
-                result.get("content")
-                        .get(0)
-                        .get("text")
-                        .asText()
-                        .toLowerCase()
-                        .contains("input file"));
+                result.get("content").get(0).get("text").asText().toLowerCase().contains("input file"));
     }
 
     @Test
@@ -128,12 +115,10 @@ class McpOperationExecutorTest {
         FileStorage storage = mock(FileStorage.class);
         when(storage.fileExists("abc")).thenReturn(true);
         when(storage.retrieveBytes("abc")).thenReturn("INPUT".getBytes(StandardCharsets.UTF_8));
-        when(api.post(anyString(), any()))
-                .thenReturn(pdfResponse("OUT".getBytes(StandardCharsets.UTF_8)));
+        when(api.post(anyString(), any())).thenReturn(pdfResponse("OUT".getBytes(StandardCharsets.UTF_8)));
         when(storage.storeBytes(any(), anyString())).thenReturn("res");
 
-        McpOperationExecutor executor =
-                new McpOperationExecutor(mapper, api, storage, new ApplicationProperties());
+        McpOperationExecutor executor = new McpOperationExecutor(mapper, api, storage, new ApplicationProperties());
         ObjectNode args = mapper.createObjectNode();
         args.put("operation", "compress-pdf");
         args.put("fileId", "abc");

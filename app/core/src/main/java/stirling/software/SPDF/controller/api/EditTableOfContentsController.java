@@ -53,8 +53,8 @@ public class EditTableOfContentsController {
     @Operation(
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
-    public ResponseEntity<List<Map<String, Object>>> extractBookmarks(
-            @RequestParam("file") MultipartFile file) throws Exception {
+    public ResponseEntity<List<Map<String, Object>>> extractBookmarks(@RequestParam("file") MultipartFile file)
+            throws Exception {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDDocumentOutline outline = document.getDocumentCatalog().getDocumentOutline();
 
@@ -68,8 +68,8 @@ public class EditTableOfContentsController {
         }
     }
 
-    private List<Map<String, Object>> extractBookmarkItems(
-            PDDocument document, PDDocumentOutline outline) throws Exception {
+    private List<Map<String, Object>> extractBookmarkItems(PDDocument document, PDDocumentOutline outline)
+            throws Exception {
         List<Map<String, Object>> bookmarks = new ArrayList<>();
         PDOutlineItem current = outline.getFirstChild();
 
@@ -113,8 +113,7 @@ public class EditTableOfContentsController {
         return bookmarks;
     }
 
-    private Map<String, Object> processChild(PDDocument document, PDOutlineItem item)
-            throws Exception {
+    private Map<String, Object> processChild(PDDocument document, PDOutlineItem item) throws Exception {
         Map<String, Object> bookmark = new HashMap<>();
 
         // Get bookmark title
@@ -158,16 +157,15 @@ public class EditTableOfContentsController {
     @Operation(
             summary = "Edit Table of Contents",
             description = "Add or edit bookmarks/table of contents in a PDF document.")
-    public ResponseEntity<Resource> editTableOfContents(
-            @ModelAttribute EditTableOfContentsRequest request) throws Exception {
+    public ResponseEntity<Resource> editTableOfContents(@ModelAttribute EditTableOfContentsRequest request)
+            throws Exception {
         MultipartFile file = request.getFileInput();
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {
 
             // Parse the bookmark data from JSON
             List<BookmarkItem> bookmarks =
-                    objectMapper.readValue(
-                            request.getBookmarkData(), new TypeReference<List<BookmarkItem>>() {});
+                    objectMapper.readValue(request.getBookmarkData(), new TypeReference<List<BookmarkItem>>() {});
 
             // Create a new document outline
             PDDocumentOutline outline = new PDDocumentOutline();
@@ -183,8 +181,7 @@ public class EditTableOfContentsController {
         }
     }
 
-    private void addBookmarksToOutline(
-            PDDocument document, PDDocumentOutline outline, List<BookmarkItem> bookmarks) {
+    private void addBookmarksToOutline(PDDocument document, PDDocumentOutline outline, List<BookmarkItem> bookmarks) {
         for (BookmarkItem bookmark : bookmarks) {
             PDOutlineItem item = createOutlineItem(document, bookmark);
             outline.addLast(item);
@@ -195,8 +192,7 @@ public class EditTableOfContentsController {
         }
     }
 
-    private void addChildBookmarks(
-            PDDocument document, PDOutlineItem parent, List<BookmarkItem> children) {
+    private void addChildBookmarks(PDDocument document, PDOutlineItem parent, List<BookmarkItem> children) {
         for (BookmarkItem child : children) {
             PDOutlineItem item = createOutlineItem(document, child);
             parent.addLast(item);

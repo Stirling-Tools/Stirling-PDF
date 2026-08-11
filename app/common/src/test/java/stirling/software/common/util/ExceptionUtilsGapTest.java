@@ -105,8 +105,7 @@ class ExceptionUtilsGapTest {
         @Test
         @DisplayName("invalid format uses provided message when non-null")
         void cbrInvalidFormatWithMessage() {
-            CbrFormatException ex =
-                    ExceptionUtils.createCbrInvalidFormatException("custom cbr msg");
+            CbrFormatException ex = ExceptionUtils.createCbrInvalidFormatException("custom cbr msg");
             assertEquals("custom cbr msg", ex.getMessage());
             assertEquals(ErrorCode.CBR_INVALID_FORMAT.getCode(), ex.getErrorCode());
         }
@@ -145,8 +144,7 @@ class ExceptionUtilsGapTest {
         }
 
         @Test
-        @DisplayName(
-                "CbrFormatException is an IllegalArgumentException via BaseValidationException")
+        @DisplayName("CbrFormatException is an IllegalArgumentException via BaseValidationException")
         void cbrIsIllegalArgument() {
             CbrFormatException ex = ExceptionUtils.createNotCbrFileException();
             assertInstanceOf(IllegalArgumentException.class, ex);
@@ -228,9 +226,7 @@ class ExceptionUtilsGapTest {
         @Test
         @DisplayName("image read exception rejects null filename")
         void imageReadNullFilename() {
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.createImageReadException(null));
+            assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.createImageReadException(null));
         }
 
         @Test
@@ -251,8 +247,7 @@ class ExceptionUtilsGapTest {
         @DisplayName("processing interrupted wraps the InterruptedException cause")
         void processingInterrupted() {
             InterruptedException cause = new InterruptedException("stop");
-            IOException ex =
-                    ExceptionUtils.createProcessingInterruptedException("compression", cause);
+            IOException ex = ExceptionUtils.createProcessingInterruptedException("compression", cause);
             assertSame(cause, ex.getCause());
             assertTrue(ex.getMessage().contains("compression"));
         }
@@ -262,9 +257,7 @@ class ExceptionUtilsGapTest {
         void processingInterruptedNullArgs() {
             assertThrows(
                     IllegalArgumentException.class,
-                    () ->
-                            ExceptionUtils.createProcessingInterruptedException(
-                                    null, new InterruptedException()));
+                    () -> ExceptionUtils.createProcessingInterruptedException(null, new InterruptedException()));
             assertThrows(
                     IllegalArgumentException.class,
                     () -> ExceptionUtils.createProcessingInterruptedException("x", null));
@@ -276,8 +269,7 @@ class ExceptionUtilsGapTest {
             IOException ex = ExceptionUtils.createGhostscriptConversionException("png");
             assertNotNull(ex.getMessage());
             assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.createGhostscriptConversionException(null));
+                    IllegalArgumentException.class, () -> ExceptionUtils.createGhostscriptConversionException(null));
         }
     }
 
@@ -288,9 +280,7 @@ class ExceptionUtilsGapTest {
         @Test
         @DisplayName("invalid page size rejects null size")
         void invalidPageSizeNull() {
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.createInvalidPageSizeException(null));
+            assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.createInvalidPageSizeException(null));
         }
 
         @Test
@@ -332,8 +322,7 @@ class ExceptionUtilsGapTest {
         @DisplayName("createIllegalArgumentException(ErrorCode, args) formats default message")
         void illegalArgumentFromErrorCode() {
             IllegalArgumentException ex =
-                    ExceptionUtils.createIllegalArgumentException(
-                            ErrorCode.INVALID_PAGE_SIZE, "B7");
+                    ExceptionUtils.createIllegalArgumentException(ErrorCode.INVALID_PAGE_SIZE, "B7");
             assertTrue(ex.getMessage().contains("B7"));
         }
 
@@ -341,9 +330,7 @@ class ExceptionUtilsGapTest {
         @DisplayName("createIllegalArgumentException rejects null ErrorCode")
         void illegalArgumentFromNullErrorCode() {
             ErrorCode nullCode = null;
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.createIllegalArgumentException(nullCode));
+            assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.createIllegalArgumentException(nullCode));
         }
 
         @Test
@@ -353,27 +340,22 @@ class ExceptionUtilsGapTest {
                     IllegalArgumentException.class,
                     () -> ExceptionUtils.createFileProcessingException(null, new Exception()));
             assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.createFileProcessingException("op", null));
+                    IllegalArgumentException.class, () -> ExceptionUtils.createFileProcessingException("op", null));
         }
 
         @Test
         @DisplayName("createInvalidArgumentException rejects null name or value")
         void invalidArgumentNullArgs() {
             assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.createInvalidArgumentException(null, "v"));
+                    IllegalArgumentException.class, () -> ExceptionUtils.createInvalidArgumentException(null, "v"));
             assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.createInvalidArgumentException("n", null));
+                    IllegalArgumentException.class, () -> ExceptionUtils.createInvalidArgumentException("n", null));
         }
 
         @Test
         @DisplayName("createNullArgumentException rejects null argument name")
         void nullArgumentNullName() {
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.createNullArgumentException(null));
+            assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.createNullArgumentException(null));
         }
 
         @Test
@@ -387,8 +369,7 @@ class ExceptionUtilsGapTest {
         @Test
         @DisplayName("createRuntimeException without cause leaves cause null")
         void runtimeExceptionWithoutCause() {
-            RuntimeException ex =
-                    ExceptionUtils.createRuntimeException("key", "msg {0}", null, "B");
+            RuntimeException ex = ExceptionUtils.createRuntimeException("key", "msg {0}", null, "B");
             assertEquals("msg B", ex.getMessage());
             assertNull(ex.getCause());
         }
@@ -401,16 +382,13 @@ class ExceptionUtilsGapTest {
         @Test
         @DisplayName("rejects null cause")
         void nullCause() {
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.createPdfCorruptedException("ctx", null));
+            assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.createPdfCorruptedException("ctx", null));
         }
 
         @Test
         @DisplayName("empty context behaves like no context")
         void emptyContext() {
-            PdfCorruptedException ex =
-                    ExceptionUtils.createPdfCorruptedException("", new Exception("x"));
+            PdfCorruptedException ex = ExceptionUtils.createPdfCorruptedException("", new Exception("x"));
             assertTrue(ex.getMessage().contains("PDF file appears to be corrupted"));
             assertEquals(ErrorCode.PDF_CORRUPTED.getCode(), ex.getErrorCode());
         }
@@ -467,32 +445,22 @@ class ExceptionUtilsGapTest {
         @DisplayName("propagates IOException from the operation unchanged")
         void propagatesIoException() {
             IOException boom = new IOException("io boom");
-            IOException thrown =
-                    assertThrows(
-                            IOException.class,
-                            () ->
-                                    ExceptionUtils.handleOomRendering(
-                                            1,
-                                            300,
-                                            () -> {
-                                                throw boom;
-                                            }));
+            IOException thrown = assertThrows(
+                    IOException.class,
+                    () -> ExceptionUtils.handleOomRendering(1, 300, () -> {
+                        throw boom;
+                    }));
             assertSame(boom, thrown);
         }
 
         @Test
         @DisplayName("converts OutOfMemoryError to OutOfMemoryDpiException (with page)")
         void oomToDpiExceptionWithPage() {
-            OutOfMemoryDpiException thrown =
-                    assertThrows(
-                            OutOfMemoryDpiException.class,
-                            () ->
-                                    ExceptionUtils.handleOomRendering(
-                                            5,
-                                            300,
-                                            () -> {
-                                                throw new OutOfMemoryError("heap");
-                                            }));
+            OutOfMemoryDpiException thrown = assertThrows(
+                    OutOfMemoryDpiException.class,
+                    () -> ExceptionUtils.handleOomRendering(5, 300, () -> {
+                        throw new OutOfMemoryError("heap");
+                    }));
             assertEquals(ErrorCode.OUT_OF_MEMORY_DPI.getCode(), thrown.getErrorCode());
             assertInstanceOf(OutOfMemoryError.class, thrown.getCause());
         }
@@ -500,15 +468,11 @@ class ExceptionUtilsGapTest {
         @Test
         @DisplayName("converts NegativeArraySizeException to OutOfMemoryDpiException (no page)")
         void negativeArraySizeToDpiExceptionNoPage() {
-            OutOfMemoryDpiException thrown =
-                    assertThrows(
-                            OutOfMemoryDpiException.class,
-                            () ->
-                                    ExceptionUtils.handleOomRendering(
-                                            300,
-                                            () -> {
-                                                throw new NegativeArraySizeException("-1");
-                                            }));
+            OutOfMemoryDpiException thrown = assertThrows(
+                    OutOfMemoryDpiException.class,
+                    () -> ExceptionUtils.handleOomRendering(300, () -> {
+                        throw new NegativeArraySizeException("-1");
+                    }));
             assertEquals(ErrorCode.OUT_OF_MEMORY_DPI.getCode(), thrown.getErrorCode());
             assertInstanceOf(NegativeArraySizeException.class, thrown.getCause());
         }
@@ -522,8 +486,7 @@ class ExceptionUtilsGapTest {
         @DisplayName("page + dpi + Throwable wraps cause and sets code")
         void pageDpiThrowable() {
             Throwable cause = new IllegalStateException("too big");
-            OutOfMemoryDpiException ex =
-                    ExceptionUtils.createOutOfMemoryDpiException(4, 600, cause);
+            OutOfMemoryDpiException ex = ExceptionUtils.createOutOfMemoryDpiException(4, 600, cause);
             assertSame(cause, ex.getCause());
             assertEquals(ErrorCode.OUT_OF_MEMORY_DPI.getCode(), ex.getErrorCode());
         }
@@ -532,8 +495,7 @@ class ExceptionUtilsGapTest {
         @DisplayName("page + dpi + OutOfMemoryError overload wraps the error")
         void pageDpiOomError() {
             OutOfMemoryError cause = new OutOfMemoryError("oom");
-            OutOfMemoryDpiException ex =
-                    ExceptionUtils.createOutOfMemoryDpiException(2, 300, cause);
+            OutOfMemoryDpiException ex = ExceptionUtils.createOutOfMemoryDpiException(2, 300, cause);
             assertSame(cause, ex.getCause());
         }
 
@@ -594,8 +556,7 @@ class ExceptionUtilsGapTest {
         @DisplayName("detectGhostscriptCriticalError returns exception only for critical output")
         void detectCritical() {
             GhostscriptException critical =
-                    ExceptionUtils.detectGhostscriptCriticalError(
-                            "Page 1\ncould not draw this page");
+                    ExceptionUtils.detectGhostscriptCriticalError("Page 1\ncould not draw this page");
             assertNotNull(critical);
             assertEquals(ErrorCode.GHOSTSCRIPT_PAGE_DRAWING.getCode(), critical.getErrorCode());
         }
@@ -611,8 +572,7 @@ class ExceptionUtilsGapTest {
         @DisplayName("compression exception derived from cause message")
         void compressionFromCauseMessage() {
             GhostscriptException ex =
-                    ExceptionUtils.createGhostscriptCompressionException(
-                            new Exception("Page 2\npage drawing error"));
+                    ExceptionUtils.createGhostscriptCompressionException(new Exception("Page 2\npage drawing error"));
             assertEquals(ErrorCode.GHOSTSCRIPT_PAGE_DRAWING.getCode(), ex.getErrorCode());
         }
 
@@ -683,11 +643,8 @@ class ExceptionUtilsGapTest {
         @Test
         @DisplayName("rejects null exception or operation")
         void wrapNullArgs() {
-            assertThrows(
-                    IllegalArgumentException.class, () -> ExceptionUtils.wrapException(null, "op"));
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.wrapException(new Exception(), null));
+            assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.wrapException(null, "op"));
+            assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.wrapException(new Exception(), null));
         }
     }
 
@@ -709,18 +666,14 @@ class ExceptionUtilsGapTest {
         @Test
         @DisplayName("logException rejects null operation or exception")
         void logExceptionNullArgs() {
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> ExceptionUtils.logException(null, new Exception()));
-            assertThrows(
-                    IllegalArgumentException.class, () -> ExceptionUtils.logException("op", null));
+            assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.logException(null, new Exception()));
+            assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.logException("op", null));
         }
 
         @Test
         @DisplayName("handlePdfException rejects null exception")
         void handlePdfNull() {
-            assertThrows(
-                    IllegalArgumentException.class, () -> ExceptionUtils.handlePdfException(null));
+            assertThrows(IllegalArgumentException.class, () -> ExceptionUtils.handlePdfException(null));
         }
 
         @Test

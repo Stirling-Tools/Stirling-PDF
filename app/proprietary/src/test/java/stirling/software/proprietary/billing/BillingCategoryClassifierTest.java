@@ -8,8 +8,7 @@ class BillingCategoryClassifierTest {
 
     @Test
     void automationWinsOverEverything() {
-        assertEquals(
-                BillingCategory.AUTOMATION, BillingCategoryClassifier.classify(true, true, true));
+        assertEquals(BillingCategory.AUTOMATION, BillingCategoryClassifier.classify(true, true, true));
     }
 
     @Test
@@ -24,7 +23,6 @@ class BillingCategoryClassifierTest {
 
     @Test
     void bypassedWhenNoSignal() {
-        assertEquals(
-                BillingCategory.BYPASSED, BillingCategoryClassifier.classify(false, false, false));
+        assertEquals(BillingCategory.BYPASSED, BillingCategoryClassifier.classify(false, false, false));
     }
 }

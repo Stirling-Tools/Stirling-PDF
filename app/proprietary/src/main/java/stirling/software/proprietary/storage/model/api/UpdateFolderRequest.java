@@ -41,9 +41,7 @@ public class UpdateFolderRequest {
     private String color;
 
     @Size(max = 64)
-    @Pattern(
-            regexp = "^([a-z0-9_-]+)?$",
-            message = "icon must be a lowercase id (a-z, 0-9, '-' or '_') or empty")
+    @Pattern(regexp = "^([a-z0-9_-]+)?$", message = "icon must be a lowercase id (a-z, 0-9, '-' or '_') or empty")
     private String icon;
 
     /**

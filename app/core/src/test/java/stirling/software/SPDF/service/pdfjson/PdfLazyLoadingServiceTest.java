@@ -40,25 +40,15 @@ class PdfLazyLoadingServiceTest {
         imageService = mock(PdfJsonImageService.class);
 
         service =
-                new PdfLazyLoadingService(
-                        pdfDocumentFactory,
-                        objectMapper,
-                        taskManager,
-                        metadataService,
-                        imageService);
+                new PdfLazyLoadingService(pdfDocumentFactory, objectMapper, taskManager, metadataService, imageService);
     }
 
     @Test
     void extractDocumentMetadata_nullFile_throwsException() {
         assertThrows(
                 Exception.class,
-                () ->
-                        service.extractDocumentMetadata(
-                                null,
-                                "job1",
-                                new HashMap<>(),
-                                new HashMap<>(),
-                                new ByteArrayOutputStream()));
+                () -> service.extractDocumentMetadata(
+                        null, "job1", new HashMap<>(), new HashMap<>(), new ByteArrayOutputStream()));
     }
 
     @Test
@@ -87,16 +77,15 @@ class PdfLazyLoadingServiceTest {
     void extractSinglePage_nonExistentJob_throwsIllegalArgument() {
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        service.extractSinglePage(
-                                "nonexistent",
-                                1,
-                                cos -> null,
-                                page -> null,
-                                cos -> cos,
-                                (doc, pageNum) -> new java.util.ArrayList<>(),
-                                (doc, pageNum) -> new java.util.ArrayList<>(),
-                                new ByteArrayOutputStream()));
+                () -> service.extractSinglePage(
+                        "nonexistent",
+                        1,
+                        cos -> null,
+                        page -> null,
+                        cos -> cos,
+                        (doc, pageNum) -> new java.util.ArrayList<>(),
+                        (doc, pageNum) -> new java.util.ArrayList<>(),
+                        new ByteArrayOutputStream()));
     }
 
     @Test
@@ -117,12 +106,11 @@ class PdfLazyLoadingServiceTest {
         when(metadataService.extractXmpMetadata(any())).thenReturn(null);
         // Service now writes directly to the OutputStream using writeValue, not writeValueAsBytes.
         // ObjectMapper.writeValue(OutputStream, Object) — the OutputStream is argument 0.
-        doAnswer(
-                        inv -> {
-                            OutputStream os = inv.getArgument(0, OutputStream.class);
-                            os.write(new byte[] {'{', '}'});
-                            return null;
-                        })
+        doAnswer(inv -> {
+                    OutputStream os = inv.getArgument(0, OutputStream.class);
+                    os.write(new byte[] {'{', '}'});
+                    return null;
+                })
                 .when(objectMapper)
                 .writeValue(any(OutputStream.class), any());
         when(taskManager.addNote(any(), any())).thenReturn(true);

@@ -24,15 +24,12 @@ public class McpAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private final String metadataPath;
 
     public McpAuthenticationEntryPoint(String metadataPath) {
-        this.metadataPath =
-                metadataPath == null ? "/.well-known/oauth-protected-resource" : metadataPath;
+        this.metadataPath = metadataPath == null ? "/.well-known/oauth-protected-resource" : metadataPath;
     }
 
     @Override
     public void commence(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException)
+            HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException {
         // Tokenless 401 is the normal discovery handshake; only a rejected token is a real failure.
         boolean tokenPresented = request.getHeader("Authorization") != null;
@@ -68,10 +65,9 @@ public class McpAuthenticationEntryPoint implements AuthenticationEntryPoint {
             return null;
         }
         String description = error.getDescription();
-        String combined =
-                (description == null || description.isBlank())
-                        ? error.getErrorCode()
-                        : error.getErrorCode() + " - " + description;
+        String combined = (description == null || description.isBlank())
+                ? error.getErrorCode()
+                : error.getErrorCode() + " - " + description;
         return combined == null ? null : combined.replaceAll("[\\r\\n\"]", " ").trim();
     }
 
@@ -108,7 +104,6 @@ public class McpAuthenticationEntryPoint implements AuthenticationEntryPoint {
     }
 
     private static boolean isDefaultPort(String scheme, String port) {
-        return ("http".equals(scheme) && "80".equals(port))
-                || ("https".equals(scheme) && "443".equals(port));
+        return ("http".equals(scheme) && "80".equals(port)) || ("https".equals(scheme) && "443".equals(port));
     }
 }

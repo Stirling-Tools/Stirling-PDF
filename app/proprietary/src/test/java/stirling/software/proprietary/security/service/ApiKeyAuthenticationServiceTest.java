@@ -28,10 +28,17 @@ import stirling.software.proprietary.security.repository.ApiKeyRepository;
 @DisplayName("ApiKeyAuthenticationService")
 class ApiKeyAuthenticationServiceTest {
 
-    @Mock private ApiKeyRepository apiKeyRepository;
-    @Mock private ApiKeyUsageRecorder usageRecorder;
-    @Mock private UserRepository userRepository;
-    @InjectMocks private ApiKeyAuthenticationService service;
+    @Mock
+    private ApiKeyRepository apiKeyRepository;
+
+    @Mock
+    private ApiKeyUsageRecorder usageRecorder;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @InjectMocks
+    private ApiKeyAuthenticationService service;
 
     private User user(long id, boolean enabled) {
         User u = new User();
@@ -58,8 +65,7 @@ class ApiKeyAuthenticationServiceTest {
     @DisplayName("resolves an active multi-key to its owner and records usage")
     void resolvesActiveKey() {
         String raw = "raw-1";
-        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
-                .thenReturn(Optional.of(key(1, 7, true, null)));
+        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw))).thenReturn(Optional.of(key(1, 7, true, null)));
         when(userRepository.findById(7L)).thenReturn(Optional.of(user(7, true)));
 
         var result = service.authenticate(raw);
@@ -85,8 +91,7 @@ class ApiKeyAuthenticationServiceTest {
     @DisplayName("rejects a key whose owner is disabled")
     void rejectsDisabledOwner() {
         String raw = "raw-3";
-        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
-                .thenReturn(Optional.of(key(3, 8, true, null)));
+        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw))).thenReturn(Optional.of(key(3, 8, true, null)));
         when(userRepository.findById(8L)).thenReturn(Optional.of(user(8, false)));
 
         assertThat(service.authenticate(raw)).isEmpty();
@@ -120,14 +125,14 @@ class ApiKeyAuthenticationServiceTest {
         String raw = "raw-6";
         User owner = user(8, true);
         owner.addAuthority(new Authority(Role.ADMIN.getRoleId(), owner));
-        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
-                .thenReturn(Optional.of(key(6, 8, true, null)));
+        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw))).thenReturn(Optional.of(key(6, 8, true, null)));
         when(userRepository.findById(8L)).thenReturn(Optional.of(owner));
 
         var result = service.authenticate(raw);
 
-        List<String> auths =
-                result.get().authorities().stream().map(GrantedAuthority::getAuthority).toList();
+        List<String> auths = result.get().authorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
         assertThat(auths).contains(Role.ADMIN.getRoleId());
     }
 
@@ -136,8 +141,7 @@ class ApiKeyAuthenticationServiceTest {
     void revokeMigratedKeyRevokesRow() {
         String raw = "raw-9";
         ApiKey shadow = key(9, 1, true, null);
-        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
-                .thenReturn(Optional.of(shadow));
+        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw))).thenReturn(Optional.of(shadow));
 
         service.revokeMigratedKey(raw);
 

@@ -24,6 +24,5 @@ public interface KeyPersistenceServiceInterface {
 
     void removeKey(String keyId);
 
-    PublicKey decodePublicKey(String encodedKey)
-            throws NoSuchAlgorithmException, InvalidKeySpecException;
+    PublicKey decodePublicKey(String encodedKey) throws NoSuchAlgorithmException, InvalidKeySpecException;
 }

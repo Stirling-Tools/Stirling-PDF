@@ -36,12 +36,23 @@ import stirling.software.proprietary.security.repository.ApiKeyRepository;
 @DisplayName("ApiKeyManagementService")
 class ApiKeyManagementServiceTest {
 
-    @Mock private ApiKeyRepository apiKeyRepository;
-    @Mock private ApiKeyDailyUsageRepository usageRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private UserService userService;
-    @Mock private ApiKeyLegacyMigrator legacyMigrator;
-    @InjectMocks private ApiKeyManagementService service;
+    @Mock
+    private ApiKeyRepository apiKeyRepository;
+
+    @Mock
+    private ApiKeyDailyUsageRepository usageRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private ApiKeyLegacyMigrator legacyMigrator;
+
+    @InjectMocks
+    private ApiKeyManagementService service;
 
     private User caller;
 
@@ -51,9 +62,7 @@ class ApiKeyManagementServiceTest {
         caller.setId(1L);
         caller.setUsername("alice");
         lenient().when(userService.getCurrentUsername()).thenReturn("alice");
-        lenient()
-                .when(userService.findByUsernameIgnoreCase("alice"))
-                .thenReturn(Optional.of(caller));
+        lenient().when(userService.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(caller));
         lenient().when(apiKeyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         lenient().when(usageRepository.countForDayByIds(any(), anyLong())).thenReturn(List.of());
         lenient().when(usageRepository.sumSinceByIds(any(), anyLong())).thenReturn(List.of());
@@ -108,8 +117,7 @@ class ApiKeyManagementServiceTest {
     @Test
     @DisplayName("listing scopes keys to the caller by owner id")
     void personalKeysScopedToOwner() {
-        when(apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(1L))
-                .thenReturn(List.of(personalKey(10, 1L)));
+        when(apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of(personalKey(10, 1L)));
 
         PortalApiKeysResponse res = service.listVisibleKeys();
 
@@ -182,17 +190,15 @@ class ApiKeyManagementServiceTest {
     }
 
     @Test
-    @DisplayName(
-            "a non-owner cannot revoke someone else's key (404, not 403, so ids can't be probed)")
+    @DisplayName("a non-owner cannot revoke someone else's key (404, not 403, so ids can't be probed)")
     void revokeForeignKeyForbidden() {
         when(apiKeyRepository.findById(31L)).thenReturn(Optional.of(personalKey(31, 999L)));
 
         assertThatThrownBy(() -> service.revokeKey(31L))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
-                                        .isEqualTo(404));
+                .satisfies(e -> assertThat(
+                                ((ResponseStatusException) e).getStatusCode().value())
+                        .isEqualTo(404));
         verify(apiKeyRepository, never()).save(any());
     }
 }

@@ -38,11 +38,11 @@ public class IntegrationConfigController {
     private final IntegrationConfigService service;
 
     @GetMapping
-    public ResponseEntity<List<IntegrationConfigResponse>> list(
-            @AuthenticationPrincipal User user) {
+    public ResponseEntity<List<IntegrationConfigResponse>> list(@AuthenticationPrincipal User user) {
         requireUser(user);
-        return ResponseEntity.ok(
-                service.listVisible(user).stream().map(c -> service.toResponse(c, user)).toList());
+        return ResponseEntity.ok(service.listVisible(user).stream()
+                .map(c -> service.toResponse(c, user))
+                .toList());
     }
 
     @PostMapping
@@ -59,11 +59,9 @@ public class IntegrationConfigController {
      * regardless of what the client believed.
      */
     @GetMapping("/capabilities")
-    public ResponseEntity<IntegrationCapabilitiesResponse> capabilities(
-            @AuthenticationPrincipal User user) {
+    public ResponseEntity<IntegrationCapabilitiesResponse> capabilities(@AuthenticationPrincipal User user) {
         requireUser(user);
-        return ResponseEntity.ok(
-                new IntegrationCapabilitiesResponse(service.canAuthorCustomApi(user)));
+        return ResponseEntity.ok(new IntegrationCapabilitiesResponse(service.canAuthorCustomApi(user)));
     }
 
     /**
@@ -72,17 +70,14 @@ public class IntegrationConfigController {
     public record IntegrationCapabilitiesResponse(boolean customApi) {}
 
     @GetMapping("/{id}")
-    public ResponseEntity<IntegrationConfigResponse> get(
-            @PathVariable Long id, @AuthenticationPrincipal User user) {
+    public ResponseEntity<IntegrationConfigResponse> get(@PathVariable Long id, @AuthenticationPrincipal User user) {
         requireUser(user);
         return ResponseEntity.ok(service.toResponse(service.getForUse(id, user), user));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<IntegrationConfigResponse> update(
-            @PathVariable Long id,
-            @RequestBody IntegrationConfigRequest request,
-            @AuthenticationPrincipal User user) {
+            @PathVariable Long id, @RequestBody IntegrationConfigRequest request, @AuthenticationPrincipal User user) {
         requireUser(user);
         return ResponseEntity.ok(service.toResponse(service.update(id, request, user), user));
     }

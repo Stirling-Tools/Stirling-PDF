@@ -10,23 +10,20 @@ class SvgOverlayUtilTest {
 
     @Test
     void isSvgImage_withSvgTag_returnsTrue() {
-        byte[] bytes =
-                "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>".getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>".getBytes(StandardCharsets.UTF_8);
         assertTrue(SvgOverlayUtil.isSvgImage(bytes));
     }
 
     @Test
     void isSvgImage_withXmlDeclarationAndSvg_returnsTrue() {
-        byte[] bytes =
-                "<?xml version=\"1.0\"?><svg xmlns=\"http://www.w3.org/2000/svg\"></svg>"
-                        .getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = "<?xml version=\"1.0\"?><svg xmlns=\"http://www.w3.org/2000/svg\"></svg>"
+                .getBytes(StandardCharsets.UTF_8);
         assertTrue(SvgOverlayUtil.isSvgImage(bytes));
     }
 
     @Test
     void isSvgImage_withUpperCaseSvgTag_returnsTrue() {
-        byte[] bytes =
-                "<SVG xmlns=\"http://www.w3.org/2000/svg\"></SVG>".getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = "<SVG xmlns=\"http://www.w3.org/2000/svg\"></SVG>".getBytes(StandardCharsets.UTF_8);
         assertTrue(SvgOverlayUtil.isSvgImage(bytes));
     }
 
@@ -59,8 +56,7 @@ class SvgOverlayUtilTest {
 
     @Test
     void isSvgImage_withPdfBytes_returnsFalse() {
-        byte[] bytes =
-                "%PDF-1.4 some content here that is not SVG".getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = "%PDF-1.4 some content here that is not SVG".getBytes(StandardCharsets.UTF_8);
         assertFalse(SvgOverlayUtil.isSvgImage(bytes));
     }
 
@@ -74,8 +70,7 @@ class SvgOverlayUtilTest {
 
     @Test
     void isSvgImage_withBinaryContent_returnsFalse() {
-        byte[] bytes =
-                new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}; // PNG header
+        byte[] bytes = new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}; // PNG header
         assertFalse(SvgOverlayUtil.isSvgImage(bytes));
     }
 }

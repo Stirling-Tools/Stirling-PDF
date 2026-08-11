@@ -18,8 +18,7 @@ class ApplicationPropertiesDynamicYamlPropertySourceTest {
 
     @Test
     void loads_yaml_into_environment() throws Exception {
-        String yaml =
-                """
+        String yaml = """
                 \
                 ui:
                   appName: "My App"
@@ -29,8 +28,7 @@ class ApplicationPropertiesDynamicYamlPropertySourceTest {
         Path tmp = Files.createTempFile("spdf-settings-", ".yml");
         Files.writeString(tmp, yaml);
 
-        try (MockedStatic<InstallationPathConfig> mocked =
-                Mockito.mockStatic(InstallationPathConfig.class)) {
+        try (MockedStatic<InstallationPathConfig> mocked = Mockito.mockStatic(InstallationPathConfig.class)) {
             mocked.when(InstallationPathConfig::getSettingsPath).thenReturn(tmp.toString());
 
             ConfigurableEnvironment env = new StandardEnvironment();
@@ -46,8 +44,7 @@ class ApplicationPropertiesDynamicYamlPropertySourceTest {
     @Test
     void throws_when_settings_file_missing() {
         String missing = "/path/does/not/exist/spdf.yml";
-        try (MockedStatic<InstallationPathConfig> mocked =
-                Mockito.mockStatic(InstallationPathConfig.class)) {
+        try (MockedStatic<InstallationPathConfig> mocked = Mockito.mockStatic(InstallationPathConfig.class)) {
             mocked.when(InstallationPathConfig::getSettingsPath).thenReturn(missing);
 
             ConfigurableEnvironment env = new StandardEnvironment();

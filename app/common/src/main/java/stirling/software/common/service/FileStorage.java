@@ -51,8 +51,7 @@ public class FileStorage {
         }
         if (res != null && res.isFile()) {
             try {
-                FileStore.Stored stored =
-                        fileStore.store(res.getFile().toPath(), file.getOriginalFilename(), owner);
+                FileStore.Stored stored = fileStore.store(res.getFile().toPath(), file.getOriginalFilename(), owner);
                 log.debug("Stored file with ID: {} (fast path)", stored.fileId());
                 return stored.fileId();
             } catch (IOException ex) {
@@ -68,8 +67,7 @@ public class FileStorage {
     }
 
     public String storeBytes(byte[] bytes, String originalName) throws IOException {
-        FileStore.Stored stored =
-                fileStore.store(new ByteArrayInputStream(bytes), originalName, resolveOwner());
+        FileStore.Stored stored = fileStore.store(new ByteArrayInputStream(bytes), originalName, resolveOwner());
         log.debug("Stored byte array with ID: {}", stored.fileId());
         return stored.fileId();
     }
@@ -90,15 +88,13 @@ public class FileStorage {
         return fileStore.retrieve(fileId);
     }
 
-    public StoredFile storeInputStream(InputStream inputStream, String originalName)
-            throws IOException {
+    public StoredFile storeInputStream(InputStream inputStream, String originalName) throws IOException {
         FileStore.Stored stored = fileStore.store(inputStream, originalName, resolveOwner());
         log.debug("Stored input stream with ID: {}", stored.fileId());
         return new StoredFile(stored.fileId(), stored.size());
     }
 
-    public String storeFromStreamingBody(StreamingResponseBody body, String originalName)
-            throws IOException {
+    public String storeFromStreamingBody(StreamingResponseBody body, String originalName) throws IOException {
         String owner = resolveOwner();
         // Hold Throwable not IOException: an unchecked failure (NPE, IllegalState, OOM, etc.)
         // from the body writer would otherwise close the pipe with EOF and the consumer would
@@ -109,21 +105,19 @@ public class FileStorage {
             var executor = Executors.newSingleThreadExecutor(Thread.ofVirtual().factory());
             java.util.concurrent.Future<?> task = null;
             try {
-                task =
-                        executor.submit(
-                                () -> {
-                                    try {
-                                        body.writeTo(out);
-                                    } catch (Throwable ex) {
-                                        bodyError.set(ex);
-                                    } finally {
-                                        try {
-                                            out.close();
-                                        } catch (IOException ignored) {
-                                            // closed on the consumer side too
-                                        }
-                                    }
-                                });
+                task = executor.submit(() -> {
+                    try {
+                        body.writeTo(out);
+                    } catch (Throwable ex) {
+                        bodyError.set(ex);
+                    } finally {
+                        try {
+                            out.close();
+                        } catch (IOException ignored) {
+                            // closed on the consumer side too
+                        }
+                    }
+                });
                 FileStore.Stored stored = fileStore.store(in, originalName, owner);
                 Throwable writerErr = bodyError.get();
                 if (writerErr != null) {
@@ -141,9 +135,7 @@ public class FileStorage {
                     if (writerErr instanceof IOException ioe) {
                         throw ioe;
                     }
-                    throw new IOException(
-                            "StreamingResponseBody writer failed: " + writerErr.getMessage(),
-                            writerErr);
+                    throw new IOException("StreamingResponseBody writer failed: " + writerErr.getMessage(), writerErr);
                 }
                 log.debug("Stored StreamingResponseBody with ID: {}", stored.fileId());
                 return stored.fileId();
@@ -194,7 +186,9 @@ public class FileStorage {
         if (propagated != null) {
             return propagated;
         }
-        return jobOwnershipService.flatMap(JobOwnershipService::getCurrentUserId).orElse(null);
+        return jobOwnershipService
+                .flatMap(JobOwnershipService::getCurrentUserId)
+                .orElse(null);
     }
 
     private void enforceOwnership(String fileId) {
@@ -210,20 +204,15 @@ public class FileStorage {
             owner = fileStore.getOwner(fileId);
         } catch (IOException e) {
             log.warn("Failed to read owner for file {}: {}", fileId, e.getMessage());
-            throw new SecurityException(
-                    "Access denied: could not verify ownership of the requested file");
+            throw new SecurityException("Access denied: could not verify ownership of the requested file");
         }
         if (owner == null) {
             return;
         }
         if (!owner.equals(currentUser.get())) {
             log.warn(
-                    "Access denied: user {} attempted to access file {} owned by {}",
-                    currentUser.get(),
-                    fileId,
-                    owner);
-            throw new SecurityException(
-                    "Access denied: you do not have permission to access this file");
+                    "Access denied: user {} attempted to access file {} owned by {}", currentUser.get(), fileId, owner);
+            throw new SecurityException("Access denied: you do not have permission to access this file");
         }
     }
 }

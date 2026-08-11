@@ -34,8 +34,7 @@ class AccountLinkControllerTest {
         service = mock(AccountLinkService.class);
         syncService = mock(UsageSyncService.class);
         syncProvider = mock(ObjectProvider.class);
-        controller =
-                new AccountLinkController(service, mock(LocalUsageService.class), syncProvider);
+        controller = new AccountLinkController(service, mock(LocalUsageService.class), syncProvider);
     }
 
     @Test
@@ -46,24 +45,21 @@ class AccountLinkControllerTest {
 
     @Test
     void link_upstreamUnauthorized_maps401() throws Exception {
-        when(service.link("jwt", null))
-                .thenThrow(new AccountLinkClient.UpstreamException(401, "bad token"));
+        when(service.link("jwt", null)).thenThrow(new AccountLinkClient.UpstreamException(401, "bad token"));
         ResponseEntity<?> resp = controller.link(new LinkRequest("jwt", null));
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
     void link_upstreamForbidden_maps403() throws Exception {
-        when(service.link("jwt", null))
-                .thenThrow(new AccountLinkClient.UpstreamException(403, "forbidden"));
+        when(service.link("jwt", null)).thenThrow(new AccountLinkClient.UpstreamException(403, "forbidden"));
         ResponseEntity<?> resp = controller.link(new LinkRequest("jwt", null));
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
     void link_upstreamServerError_maps502() throws Exception {
-        when(service.link("jwt", null))
-                .thenThrow(new AccountLinkClient.UpstreamException(500, "boom"));
+        when(service.link("jwt", null)).thenThrow(new AccountLinkClient.UpstreamException(500, "boom"));
         ResponseEntity<?> resp = controller.link(new LinkRequest("jwt", null));
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
     }

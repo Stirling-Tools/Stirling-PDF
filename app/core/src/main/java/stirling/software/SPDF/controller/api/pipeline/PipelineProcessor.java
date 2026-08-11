@@ -76,8 +76,7 @@ public class PipelineProcessor {
         return name.substring(0, underscoreIndex) + extension;
     }
 
-    PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
-            throws Exception {
+    PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config) throws Exception {
         // One pipeline execution = one automation run. Scope a run id so every tool sub-step
         // dispatched via InternalApiClient groups into a single charge on the SaaS billing side
         // (see AutomationRunContext); pipeline steps run synchronously on this thread.
@@ -87,8 +86,8 @@ public class PipelineProcessor {
         }
     }
 
-    private PipelineResult runPipelineAgainstFilesInternal(
-            List<Resource> outputFiles, PipelineConfig config) throws Exception {
+    private PipelineResult runPipelineAgainstFilesInternal(List<Resource> outputFiles, PipelineConfig config)
+            throws Exception {
         PipelineResult result = new PipelineResult();
 
         ByteArrayOutputStream logStream = new ByteArrayOutputStream();
@@ -98,10 +97,7 @@ public class PipelineProcessor {
         for (PipelineOperation pipelineOperation : config.getOperations()) {
             String operation = pipelineOperation.getOperation();
             boolean isMultiInputOperation = toolMetadataService.isMultiInput(operation);
-            log.info(
-                    "Running operation: {} isMultiInputOperation {}",
-                    operation,
-                    isMultiInputOperation);
+            log.info("Running operation: {} isMultiInputOperation {}", operation, isMultiInputOperation);
             Map<String, Object> parameters = pipelineOperation.getParameters();
             List<String> inputFileTypes = toolMetadataService.getExtensionTypes(false, operation);
             if (inputFileTypes == null) {
@@ -120,9 +116,7 @@ public class PipelineProcessor {
                     boolean hasInputFileType = false;
                     for (String extension : inputFileTypes) {
                         if ("ALL".equals(extension)
-                                || file.getFilename()
-                                        .toLowerCase(Locale.ROOT)
-                                        .endsWith(extension)) {
+                                || file.getFilename().toLowerCase(Locale.ROOT).endsWith(extension)) {
                             hasInputFileType = true;
                             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
                             body.add("fileInput", file);
@@ -135,15 +129,12 @@ public class PipelineProcessor {
                                     body.add(entry.getKey(), entry.getValue());
                                 }
                             }
-                            ResponseEntity<Resource> response =
-                                    internalApiClient.post(operation, body);
+                            ResponseEntity<Resource> response = internalApiClient.post(operation, body);
                             // If the operation is filter and the response body is null or empty,
                             // skip
                             // this
                             // file
-                            if (response.getBody()
-                                    instanceof
-                                    InternalApiClient.TempFileResource tempFileResource) {
+                            if (response.getBody() instanceof InternalApiClient.TempFileResource tempFileResource) {
                                 result.addTempFile(tempFileResource.getTempFile());
                             }
 
@@ -166,20 +157,18 @@ public class PipelineProcessor {
                         String filename = file.getFilename();
                         String providedExtension = "no extension";
                         if (filename != null && filename.contains(".")) {
-                            providedExtension =
-                                    filename.substring(filename.lastIndexOf('.'))
-                                            .toLowerCase(Locale.ROOT);
+                            providedExtension = filename.substring(filename.lastIndexOf('.'))
+                                    .toLowerCase(Locale.ROOT);
                         }
 
-                        logPrintStream.println(
-                                "No files with extension "
-                                        + String.join(", ", inputFileTypes)
-                                        + " found for operation "
-                                        + operation
-                                        + ". Provided file '"
-                                        + filename
-                                        + "' has extension: "
-                                        + providedExtension);
+                        logPrintStream.println("No files with extension "
+                                + String.join(", ", inputFileTypes)
+                                + " found for operation "
+                                + operation
+                                + ". Provided file '"
+                                + filename
+                                + "' has extension: "
+                                + providedExtension);
                         hasErrors = true;
                     }
                 }
@@ -190,18 +179,10 @@ public class PipelineProcessor {
                     matchingFiles = new ArrayList<>(outputFiles);
                 } else {
                     final List<String> finalinputFileTypes = inputFileTypes;
-                    matchingFiles =
-                            outputFiles.stream()
-                                    .filter(
-                                            file ->
-                                                    finalinputFileTypes.stream()
-                                                            .anyMatch(
-                                                                    file.getFilename()
-                                                                                    .toLowerCase(
-                                                                                            Locale
-                                                                                                    .ROOT)
-                                                                            ::endsWith))
-                                    .toList();
+                    matchingFiles = outputFiles.stream()
+                            .filter(file -> finalinputFileTypes.stream()
+                                    .anyMatch(file.getFilename().toLowerCase(Locale.ROOT)::endsWith))
+                            .toList();
                 }
                 // Check if there are matching files
                 if (!matchingFiles.isEmpty()) {
@@ -221,8 +202,7 @@ public class PipelineProcessor {
                         }
                     }
                     ResponseEntity<Resource> response = internalApiClient.post(operation, body);
-                    if (response.getBody()
-                            instanceof InternalApiClient.TempFileResource tempFileResource) {
+                    if (response.getBody() instanceof InternalApiClient.TempFileResource tempFileResource) {
                         result.addTempFile(tempFileResource.getTempFile());
                     }
                     // Handle the response
@@ -230,37 +210,32 @@ public class PipelineProcessor {
                         processOutputFiles(operation, response, newOutputFiles, result);
                     } else {
                         // Log error if the response status is not OK
-                        logPrintStream.println(
-                                "Error in multi-input operation: " + response.getBody());
+                        logPrintStream.println("Error in multi-input operation: " + response.getBody());
                         hasErrors = true;
                     }
                 } else {
                     // Get details about what files were actually provided
-                    List<String> providedExtensions =
-                            outputFiles.stream()
-                                    .map(
-                                            file -> {
-                                                String filename = file.getFilename();
-                                                if (filename != null && filename.contains(".")) {
-                                                    return filename.substring(
-                                                                    filename.lastIndexOf('.'))
-                                                            .toLowerCase(Locale.ROOT);
-                                                }
-                                                return "no extension";
-                                            })
-                                    .distinct()
-                                    .toList();
+                    List<String> providedExtensions = outputFiles.stream()
+                            .map(file -> {
+                                String filename = file.getFilename();
+                                if (filename != null && filename.contains(".")) {
+                                    return filename.substring(filename.lastIndexOf('.'))
+                                            .toLowerCase(Locale.ROOT);
+                                }
+                                return "no extension";
+                            })
+                            .distinct()
+                            .toList();
 
-                    logPrintStream.println(
-                            "No files with extension "
-                                    + String.join(", ", inputFileTypes)
-                                    + " found for multi-input operation "
-                                    + operation
-                                    + ". Provided files have extensions: "
-                                    + String.join(", ", providedExtensions)
-                                    + " (total files: "
-                                    + outputFiles.size()
-                                    + ")");
+                    logPrintStream.println("No files with extension "
+                            + String.join(", ", inputFileTypes)
+                            + " found for multi-input operation "
+                            + operation
+                            + ". Provided files have extensions: "
+                            + String.join(", ", providedExtensions)
+                            + " (total files: "
+                            + outputFiles.size()
+                            + ")");
                     hasErrors = true;
                 }
             }
@@ -277,10 +252,7 @@ public class PipelineProcessor {
     }
 
     private List<Resource> processOutputFiles(
-            String operation,
-            ResponseEntity<Resource> response,
-            List<Resource> newOutputFiles,
-            PipelineResult result)
+            String operation, ResponseEntity<Resource> response, List<Resource> newOutputFiles, PipelineResult result)
             throws IOException {
         // Define filename
         String newFilename;
@@ -297,21 +269,19 @@ public class PipelineProcessor {
         if (ZipExtractionUtils.isZip(response.getBody(), newFilename)) {
             // Unzip the file and add all the files to the new output files
             newOutputFiles.addAll(
-                    ZipExtractionUtils.extractZip(
-                            response.getBody(), tempFileManager, result::addTempFile));
+                    ZipExtractionUtils.extractZip(response.getBody(), tempFileManager, result::addTempFile));
         } else {
             final Resource tempResource = response.getBody();
             if (tempResource instanceof InternalApiClient.TempFileResource tfr) {
                 result.addTempFile(tfr.getTempFile());
             }
-            Resource outputResource =
-                    new FileSystemResource(tempResource.getFile()) {
+            Resource outputResource = new FileSystemResource(tempResource.getFile()) {
 
-                        @Override
-                        public String getFilename() {
-                            return newFilename;
-                        }
-                    };
+                @Override
+                public String getFilename() {
+                    return newFilename;
+                }
+            };
             newOutputFiles.add(outputResource);
         }
         return newOutputFiles;
@@ -345,8 +315,7 @@ public class PipelineProcessor {
         for (File file : files) {
             Path normalizedPath = Path.of(file.getName()).normalize();
             if (normalizedPath.startsWith("..")) {
-                throw new SecurityException(
-                        "Potential path traversal attempt in file name: " + file.getName());
+                throw new SecurityException("Potential path traversal attempt in file name: " + file.getName());
             }
             Path path = Path.of(file.getAbsolutePath());
             // debug statement
@@ -372,14 +341,13 @@ public class PipelineProcessor {
             Path tempFile = Files.createTempFile("SPDF-upload-", ".tmp");
             file.transferTo(tempFile);
 
-            Resource fileResource =
-                    new FileSystemResource(tempFile.toFile()) {
+            Resource fileResource = new FileSystemResource(tempFile.toFile()) {
 
-                        @Override
-                        public String getFilename() {
-                            return Filenames.toSimpleFileName(file.getOriginalFilename());
-                        }
-                    };
+                @Override
+                public String getFilename() {
+                    return Filenames.toSimpleFileName(file.getOriginalFilename());
+                }
+            };
             outputFiles.add(fileResource);
         }
         log.info("Files successfully loaded. Starting processing...");

@@ -14,8 +14,7 @@ class MultiplePDFFilesTest {
     @DisplayName("fileInput array accessor round-trips")
     void roundTrip() {
         MultiplePDFFiles files = new MultiplePDFFiles();
-        MultipartFile[] input = {
-            new MockMultipartFile("a", new byte[] {1}), new MockMultipartFile("b", new byte[] {2})
+        MultipartFile[] input = {new MockMultipartFile("a", new byte[] {1}), new MockMultipartFile("b", new byte[] {2})
         };
         files.setFileInput(input);
 

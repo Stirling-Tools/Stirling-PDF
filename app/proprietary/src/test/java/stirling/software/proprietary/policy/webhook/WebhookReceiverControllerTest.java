@@ -35,7 +35,8 @@ class WebhookReceiverControllerTest {
     private static final String SECRET = "topsecret";
     private static final byte[] BODY = "a pdf".getBytes(StandardCharsets.UTF_8);
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private SourceStore sourceStore;
     private WebhookSpool spool;
@@ -65,8 +66,7 @@ class WebhookReceiverControllerTest {
     }
 
     private static MockHttpServletRequest request(byte[] body) {
-        MockHttpServletRequest req =
-                new MockHttpServletRequest("POST", "/api/v1/webhooks/" + WEBHOOK_ID);
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/webhooks/" + WEBHOOK_ID);
         req.setContent(body);
         return req;
     }
@@ -87,12 +87,9 @@ class WebhookReceiverControllerTest {
 
     @Test
     void aWrongSignatureIsRejectedAndStoresNothing() {
-        ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class,
-                        () ->
-                                controller.receive(
-                                        WEBHOOK_ID, "sha256=deadbeef", "x.pdf", request(BODY)));
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> controller.receive(WEBHOOK_ID, "sha256=deadbeef", "x.pdf", request(BODY)));
 
         assertEquals(401, ex.getStatusCode().value());
         assertTrue(spooledFiles().isEmpty());
@@ -101,15 +98,10 @@ class WebhookReceiverControllerTest {
 
     @Test
     void anUnknownWebhookIsNotFound() {
-        ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class,
-                        () ->
-                                controller.receive(
-                                        "unknownwebhookid",
-                                        WebhookSignatures.sign(SECRET, BODY),
-                                        "x.pdf",
-                                        request(BODY)));
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> controller.receive(
+                        "unknownwebhookid", WebhookSignatures.sign(SECRET, BODY), "x.pdf", request(BODY)));
 
         assertEquals(404, ex.getStatusCode().value());
     }
@@ -119,10 +111,8 @@ class WebhookReceiverControllerTest {
         sourceStore.save(webhookSource(false));
         String signature = WebhookSignatures.sign(SECRET, BODY);
 
-        ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class,
-                        () -> controller.receive(WEBHOOK_ID, signature, "x.pdf", request(BODY)));
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class, () -> controller.receive(WEBHOOK_ID, signature, "x.pdf", request(BODY)));
 
         assertEquals(403, ex.getStatusCode().value());
         assertTrue(spooledFiles().isEmpty());
@@ -133,10 +123,8 @@ class WebhookReceiverControllerTest {
         byte[] empty = new byte[0];
         String signature = WebhookSignatures.sign(SECRET, empty);
 
-        ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class,
-                        () -> controller.receive(WEBHOOK_ID, signature, null, request(empty)));
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class, () -> controller.receive(WEBHOOK_ID, signature, null, request(empty)));
 
         assertEquals(400, ex.getStatusCode().value());
     }
@@ -145,15 +133,9 @@ class WebhookReceiverControllerTest {
     void anOversizeDeliveryIsRejectedBeforeStoring() {
         properties.getPolicies().setWebhookMaxBytes(2);
 
-        ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class,
-                        () ->
-                                controller.receive(
-                                        WEBHOOK_ID,
-                                        WebhookSignatures.sign(SECRET, BODY),
-                                        "x.pdf",
-                                        request(BODY)));
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> controller.receive(WEBHOOK_ID, WebhookSignatures.sign(SECRET, BODY), "x.pdf", request(BODY)));
 
         assertEquals(413, ex.getStatusCode().value());
         assertTrue(spooledFiles().isEmpty());
@@ -161,17 +143,10 @@ class WebhookReceiverControllerTest {
 
     @Test
     void aDeliveryWithoutAContentLengthIsRejected() {
-        MockHttpServletRequest req =
-                new MockHttpServletRequest("POST", "/api/v1/webhooks/" + WEBHOOK_ID);
-        ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class,
-                        () ->
-                                controller.receive(
-                                        WEBHOOK_ID,
-                                        WebhookSignatures.sign(SECRET, BODY),
-                                        "x.pdf",
-                                        req));
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/webhooks/" + WEBHOOK_ID);
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> controller.receive(WEBHOOK_ID, WebhookSignatures.sign(SECRET, BODY), "x.pdf", req));
 
         assertEquals(411, ex.getStatusCode().value());
         assertTrue(spooledFiles().isEmpty());

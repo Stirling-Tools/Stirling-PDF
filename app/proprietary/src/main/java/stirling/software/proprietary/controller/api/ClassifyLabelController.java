@@ -101,13 +101,12 @@ public class ClassifyLabelController {
     @PostMapping(value = "/classify-and-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Classify a PDF and label its metadata",
-            description =
-                    "Reads the first two and last two pages, classifies the document via the AI"
-                            + " engine, and stores the result in the StirlingPDFClassification"
-                            + " metadata field. Dispatched by the Classification policy; not"
-                            + " intended for direct client use.")
-    public ResponseEntity<Resource> classifyAndLabel(
-            @RequestParam("fileInput") MultipartFile fileInput) throws IOException {
+            description = "Reads the first two and last two pages, classifies the document via the AI"
+                    + " engine, and stores the result in the StirlingPDFClassification"
+                    + " metadata field. Dispatched by the Classification policy; not"
+                    + " intended for direct client use.")
+    public ResponseEntity<Resource> classifyAndLabel(@RequestParam("fileInput") MultipartFile fileInput)
+            throws IOException {
         aiFeatureGate.requireClassify();
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             String fileName = safeFileName(fileInput.getOriginalFilename());
@@ -121,9 +120,7 @@ public class ClassifyLabelController {
             }
 
             List<AiPageText> pages = extractWindow(document);
-            String requestBody =
-                    objectMapper.writeValueAsString(
-                            new ClassifyEngineRequest(fileName, pages, allowed));
+            String requestBody = objectMapper.writeValueAsString(new ClassifyEngineRequest(fileName, pages, allowed));
 
             String userId = userService != null ? userService.getCurrentUsername() : null;
             String responseJson = aiEngineClient.post(CLASSIFY_ENDPOINT, requestBody, userId);
@@ -183,8 +180,7 @@ public class ClassifyLabelController {
         return List.copyOf(byId.values());
     }
 
-    private static void collectLabels(
-            List<ClassificationLabel> labels, Map<String, EngineLabel> into) {
+    private static void collectLabels(List<ClassificationLabel> labels, Map<String, EngineLabel> into) {
         for (ClassificationLabel label : labels) {
             if (label.id() == null
                     || label.id().isBlank()
@@ -200,6 +196,5 @@ public class ClassifyLabelController {
     private record EngineLabel(String id, String name) {}
 
     /** Request body for the engine's {@code /api/v1/documents/classify} endpoint. */
-    private record ClassifyEngineRequest(
-            String fileName, List<AiPageText> pages, List<EngineLabel> labels) {}
+    private record ClassifyEngineRequest(String fileName, List<AiPageText> pages, List<EngineLabel> labels) {}
 }

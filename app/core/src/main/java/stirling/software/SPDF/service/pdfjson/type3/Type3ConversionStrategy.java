@@ -16,8 +16,7 @@ public interface Type3ConversionStrategy {
     boolean isAvailable();
 
     /** Quick predicate to avoid running on unsupported Type3 shapes. */
-    default boolean supports(Type3ConversionRequest request, Type3GlyphContext context)
-            throws IOException {
+    default boolean supports(Type3ConversionRequest request, Type3GlyphContext context) throws IOException {
         return request != null && request.getFont() != null;
     }
 
@@ -27,6 +26,6 @@ public interface Type3ConversionStrategy {
      * @param request contextual information for the conversion attempt
      * @return a candidate describing the outcome, never {@code null}
      */
-    PdfJsonFontConversionCandidate convert(
-            Type3ConversionRequest request, Type3GlyphContext context) throws IOException;
+    PdfJsonFontConversionCandidate convert(Type3ConversionRequest request, Type3GlyphContext context)
+            throws IOException;
 }

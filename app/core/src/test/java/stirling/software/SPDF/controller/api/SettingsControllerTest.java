@@ -37,9 +37,14 @@ import stirling.software.common.util.GeneralUtils;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SettingsControllerTest {
 
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private ApplicationProperties.System system;
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private ApplicationProperties.System system;
 
     private SettingsController settingsController;
 
@@ -59,8 +64,7 @@ class SettingsControllerTest {
             when(system.getEnableAnalytics()).thenReturn(null);
 
             try (MockedStatic<GeneralUtils> generalUtils = mockStatic(GeneralUtils.class)) {
-                ResponseEntity<Map<String, Object>> response =
-                        settingsController.updateApiKey(Boolean.TRUE);
+                ResponseEntity<Map<String, Object>> response = settingsController.updateApiKey(Boolean.TRUE);
 
                 assertNotNull(response);
                 assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -68,10 +72,7 @@ class SettingsControllerTest {
                 assertEquals("Updated", response.getBody().get("message"));
 
                 generalUtils.verify(
-                        () ->
-                                GeneralUtils.saveKeyToSettings(
-                                        "system.enableAnalytics", Boolean.TRUE),
-                        times(1));
+                        () -> GeneralUtils.saveKeyToSettings("system.enableAnalytics", Boolean.TRUE), times(1));
             }
 
             verify(system).setEnableAnalytics(Boolean.TRUE);
@@ -84,17 +85,13 @@ class SettingsControllerTest {
             when(system.getEnableAnalytics()).thenReturn(null);
 
             try (MockedStatic<GeneralUtils> generalUtils = mockStatic(GeneralUtils.class)) {
-                ResponseEntity<Map<String, Object>> response =
-                        settingsController.updateApiKey(Boolean.FALSE);
+                ResponseEntity<Map<String, Object>> response = settingsController.updateApiKey(Boolean.FALSE);
 
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertEquals("Updated", response.getBody().get("message"));
 
                 generalUtils.verify(
-                        () ->
-                                GeneralUtils.saveKeyToSettings(
-                                        "system.enableAnalytics", Boolean.FALSE),
-                        times(1));
+                        () -> GeneralUtils.saveKeyToSettings("system.enableAnalytics", Boolean.FALSE), times(1));
             }
 
             verify(system).setEnableAnalytics(Boolean.FALSE);
@@ -107,8 +104,7 @@ class SettingsControllerTest {
             when(system.getEnableAnalytics()).thenReturn(Boolean.TRUE);
 
             try (MockedStatic<GeneralUtils> generalUtils = mockStatic(GeneralUtils.class)) {
-                ResponseEntity<Map<String, Object>> response =
-                        settingsController.updateApiKey(Boolean.TRUE);
+                ResponseEntity<Map<String, Object>> response = settingsController.updateApiKey(Boolean.TRUE);
 
                 assertNotNull(response);
                 assertEquals(HttpStatus.ALREADY_REPORTED, response.getStatusCode());
@@ -133,13 +129,10 @@ class SettingsControllerTest {
             when(system.getEnableAnalytics()).thenReturn(Boolean.FALSE);
 
             try (MockedStatic<GeneralUtils> generalUtils = mockStatic(GeneralUtils.class)) {
-                ResponseEntity<Map<String, Object>> response =
-                        settingsController.updateApiKey(Boolean.TRUE);
+                ResponseEntity<Map<String, Object>> response = settingsController.updateApiKey(Boolean.TRUE);
 
                 assertEquals(HttpStatus.ALREADY_REPORTED, response.getStatusCode());
-                generalUtils.verify(
-                        () -> GeneralUtils.saveKeyToSettings(eq("system.enableAnalytics"), any()),
-                        never());
+                generalUtils.verify(() -> GeneralUtils.saveKeyToSettings(eq("system.enableAnalytics"), any()), never());
             }
 
             verify(system, never()).setEnableAnalytics(any());
@@ -158,8 +151,7 @@ class SettingsControllerTest {
             statuses.put("remove-blanks", Boolean.FALSE);
             when(endpointConfiguration.getEndpointStatuses()).thenReturn(statuses);
 
-            ResponseEntity<Map<String, Boolean>> response =
-                    settingsController.getDisabledEndpoints();
+            ResponseEntity<Map<String, Boolean>> response = settingsController.getDisabledEndpoints();
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -175,8 +167,7 @@ class SettingsControllerTest {
             Map<String, Boolean> statuses = new HashMap<>();
             when(endpointConfiguration.getEndpointStatuses()).thenReturn(statuses);
 
-            ResponseEntity<Map<String, Boolean>> response =
-                    settingsController.getDisabledEndpoints();
+            ResponseEntity<Map<String, Boolean>> response = settingsController.getDisabledEndpoints();
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());

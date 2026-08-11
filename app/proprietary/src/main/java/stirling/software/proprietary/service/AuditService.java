@@ -88,9 +88,7 @@ public class AuditService {
      */
     public void audit(AuditEventType type, Map<String, Object> data, AuditLevel level) {
         // Skip auditing if this level is not enabled or if not Enterprise edition
-        if (!auditConfig.isEnabled()
-                || !auditConfig.getAuditLevel().includes(level)
-                || !runningEE) {
+        if (!auditConfig.isEnabled() || !auditConfig.getAuditLevel().includes(level) || !runningEE) {
             return;
         }
 
@@ -124,8 +122,7 @@ public class AuditService {
      * @param data Additional event data (will be automatically sanitized)
      * @param level The minimum audit level required for this event to be logged
      */
-    public void audit(
-            String principal, AuditEventType type, Map<String, Object> data, AuditLevel level) {
+    public void audit(String principal, AuditEventType type, Map<String, Object> data, AuditLevel level) {
         // Skip auditing if this level is not enabled or if not Enterprise edition
         if (!auditConfig.isLevelEnabled(level) || !runningEE) {
             return;
@@ -223,9 +220,7 @@ public class AuditService {
             AuditEventType type,
             Map<String, Object> data,
             AuditLevel level) {
-        if (!auditConfig.isEnabled()
-                || !auditConfig.getAuditLevel().includes(level)
-                || !runningEE) {
+        if (!auditConfig.isEnabled() || !auditConfig.getAuditLevel().includes(level) || !runningEE) {
             return;
         }
 
@@ -250,9 +245,7 @@ public class AuditService {
             String type,
             Map<String, Object> data,
             AuditLevel level) {
-        if (!auditConfig.isEnabled()
-                || !auditConfig.getAuditLevel().includes(level)
-                || !runningEE) {
+        if (!auditConfig.isEnabled() || !auditConfig.getAuditLevel().includes(level) || !runningEE) {
             return;
         }
 
@@ -275,8 +268,7 @@ public class AuditService {
      * @param auditLevel The current audit level
      * @return A map with standard audit data
      */
-    public Map<String, Object> createBaseAuditData(
-            ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
+    public Map<String, Object> createBaseAuditData(ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
         Map<String, Object> data = new HashMap<>();
 
         // Common data for all levels
@@ -311,8 +303,7 @@ public class AuditService {
      * @param path The request path
      * @param auditLevel The current audit level
      */
-    public void addHttpData(
-            Map<String, Object> data, String httpMethod, String path, AuditLevel auditLevel) {
+    public void addHttpData(Map<String, Object> data, String httpMethod, String path, AuditLevel auditLevel) {
         if (httpMethod == null || path == null) {
             return; // Skip if we don't have basic HTTP info
         }
@@ -322,8 +313,7 @@ public class AuditService {
         data.put("path", path);
 
         // Get request attributes safely
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attrs == null) {
             return; // No request context available
         }
@@ -371,8 +361,7 @@ public class AuditService {
      * @param joinPoint The AspectJ join point
      * @param auditLevel The current audit level
      */
-    public void addFileData(
-            Map<String, Object> data, ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
+    public void addFileData(Map<String, Object> data, ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
         if (auditLevel.includes(AuditLevel.STANDARD)) {
             List<MultipartFile> files = new ArrayList<>();
 
@@ -397,25 +386,22 @@ public class AuditService {
             }
 
             if (!files.isEmpty()) {
-                List<Map<String, Object>> fileInfos =
-                        files.stream()
-                                .map(
-                                        f -> {
-                                            Map<String, Object> m = new HashMap<>();
-                                            m.put("name", f.getOriginalFilename());
-                                            m.put("size", f.getSize());
-                                            m.put("type", f.getContentType());
+                List<Map<String, Object>> fileInfos = files.stream()
+                        .map(f -> {
+                            Map<String, Object> m = new HashMap<>();
+                            m.put("name", f.getOriginalFilename());
+                            m.put("size", f.getSize());
+                            m.put("type", f.getContentType());
 
-                                            // Add file metadata if enabled (independent of audit
-                                            // level)
-                                            if (auditConfig.isCaptureFileHash()
-                                                    || auditConfig.isCapturePdfAuthor()) {
-                                                addFileMetadata(m, f);
-                                            }
+                            // Add file metadata if enabled (independent of audit
+                            // level)
+                            if (auditConfig.isCaptureFileHash() || auditConfig.isCapturePdfAuthor()) {
+                                addFileMetadata(m, f);
+                            }
 
-                                            return m;
-                                        })
-                                .toList();
+                            return m;
+                        })
+                        .toList();
 
                 data.put("files", fileInfos);
             }
@@ -446,16 +432,12 @@ public class AuditService {
                 }
                 fileData.put("fileHash", hexString.toString());
             } catch (Exception e) {
-                log.debug(
-                        "Could not calculate file hash for {}: {}",
-                        file.getOriginalFilename(),
-                        e.getMessage());
+                log.debug("Could not calculate file hash for {}: {}", file.getOriginalFilename(), e.getMessage());
             }
         }
 
         // Extract PDF author if file is a PDF and enabled
-        if (auditConfig.isCapturePdfAuthor()
-                && "application/pdf".equalsIgnoreCase(file.getContentType())) {
+        if (auditConfig.isCapturePdfAuthor() && "application/pdf".equalsIgnoreCase(file.getContentType())) {
             try (InputStream is = file.getInputStream();
                     PDDocument doc = pdfDocumentFactory.load(is, true)) {
                 PDDocumentInformation info = doc.getDocumentInformation();
@@ -463,10 +445,7 @@ public class AuditService {
                     fileData.put("pdfAuthor", info.getAuthor());
                 }
             } catch (Exception e) {
-                log.debug(
-                        "Could not extract PDF author from {}: {}",
-                        file.getOriginalFilename(),
-                        e.getMessage());
+                log.debug("Could not extract PDF author from {}: {}", file.getOriginalFilename(), e.getMessage());
             }
         }
     }
@@ -508,12 +487,11 @@ public class AuditService {
         if (steps instanceof List<?> list && !list.isEmpty()) {
             // Caller-supplied and unbounded; cap count and each entry so a crafted run can't
             // bloat the audit JSON the portal cache loads and parses in bulk.
-            List<String> safeSteps =
-                    list.stream()
-                            .limit(MAX_POLICY_STEPS)
-                            .map(s -> capLabel(String.valueOf(s)))
-                            .filter(s -> !s.isEmpty())
-                            .toList();
+            List<String> safeSteps = list.stream()
+                    .limit(MAX_POLICY_STEPS)
+                    .map(s -> capLabel(String.valueOf(s)))
+                    .filter(s -> !s.isEmpty())
+                    .toList();
             if (!safeSteps.isEmpty()) {
                 data.put("policySteps", safeSteps);
             }
@@ -545,23 +523,20 @@ public class AuditService {
      * @param joinPoint The AspectJ join point
      * @param auditLevel The current audit level
      */
-    public void addMethodArguments(
-            Map<String, Object> data, ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
+    public void addMethodArguments(Map<String, Object> data, ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
         if (auditLevel.includes(AuditLevel.VERBOSE)) {
             MethodSignature sig = (MethodSignature) joinPoint.getSignature();
             String[] names = sig.getParameterNames();
             Object[] vals = joinPoint.getArgs();
             if (names != null && vals != null) {
-                IntStream.range(0, names.length)
-                        .forEach(
-                                i -> {
-                                    if (vals[i] != null) {
-                                        // Convert objects to safe string representation
-                                        data.put("arg_" + names[i], safeToString(vals[i], 500));
-                                    } else {
-                                        data.put("arg_" + names[i], null);
-                                    }
-                                });
+                IntStream.range(0, names.length).forEach(i -> {
+                    if (vals[i] != null) {
+                        // Convert objects to safe string representation
+                        data.put("arg_" + names[i], safeToString(vals[i], 500));
+                    } else {
+                        data.put("arg_" + names[i], null);
+                    }
+                });
             }
         }
     }
@@ -619,8 +594,7 @@ public class AuditService {
 
         // Check for annotation override
         Audited auditedAnnotation = method.getAnnotation(Audited.class);
-        AuditLevel requiredLevel =
-                (auditedAnnotation != null) ? auditedAnnotation.level() : AuditLevel.BASIC;
+        AuditLevel requiredLevel = (auditedAnnotation != null) ? auditedAnnotation.level() : AuditLevel.BASIC;
 
         // Check if the required level is enabled
         return auditConfig.getAuditLevel().includes(requiredLevel);
@@ -670,11 +644,7 @@ public class AuditService {
      * @return The resolved event type (never null)
      */
     public AuditEventType resolveEventType(
-            Method method,
-            Class<?> controller,
-            String path,
-            String httpMethod,
-            Audited annotation) {
+            Method method, Class<?> controller, String path, String httpMethod, Audited annotation) {
         // First check if we have an explicit annotation
         if (annotation != null && annotation.type() != AuditEventType.HTTP_REQUEST) {
             return annotation.type();
@@ -700,9 +670,7 @@ public class AuditService {
                     || path.startsWith("/user")
                     || path.startsWith("/login")) {
                 return AuditEventType.USER_PROFILE_UPDATE;
-            } else if (cls.contains("admin")
-                    || path.startsWith("/admin")
-                    || path.startsWith("/settings")) {
+            } else if (cls.contains("admin") || path.startsWith("/admin") || path.startsWith("/settings")) {
                 return AuditEventType.SETTINGS_CHANGED;
             } else if (cls.contains("file")
                     || path.startsWith("/file")
@@ -747,8 +715,7 @@ public class AuditService {
      * @param httpMethod The HTTP method
      * @return The determined audit event type
      */
-    public AuditEventType determineAuditEventType(
-            Method method, Class<?> controller, String path, String httpMethod) {
+    public AuditEventType determineAuditEventType(Method method, Class<?> controller, String path, String httpMethod) {
         // First check for explicit annotation
         Audited auditedAnnotation = method.getAnnotation(Audited.class);
         if (auditedAnnotation != null) {
@@ -767,9 +734,7 @@ public class AuditService {
                 || path.startsWith("/user")
                 || path.startsWith("/login")) {
             return AuditEventType.USER_PROFILE_UPDATE;
-        } else if (cls.contains("admin")
-                || path.startsWith("/admin")
-                || path.startsWith("/settings")) {
+        } else if (cls.contains("admin") || path.startsWith("/admin") || path.startsWith("/settings")) {
             return AuditEventType.SETTINGS_CHANGED;
         } else if (cls.contains("file")
                 || path.startsWith("/file")
@@ -789,8 +754,7 @@ public class AuditService {
      * @return The current request or null if not in a request context
      */
     public HttpServletRequest getCurrentRequest() {
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         return attrs != null ? attrs.getRequest() : null;
     }
 
@@ -802,8 +766,7 @@ public class AuditService {
      */
     public boolean isStaticResourceRequest(HttpServletRequest request) {
         return request != null
-                && !RequestUriUtils.isTrackableResource(
-                        request.getContextPath(), request.getRequestURI());
+                && !RequestUriUtils.isTrackableResource(request.getContextPath(), request.getRequestURI());
     }
 
     /**

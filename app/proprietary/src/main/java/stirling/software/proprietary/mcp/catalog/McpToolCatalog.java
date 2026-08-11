@@ -89,8 +89,9 @@ public class McpToolCatalog {
     @EventListener(ContextRefreshedEvent.class)
     public void discover() {
         pdfOps.clear();
-        for (RequestMappingHandlerMapping mapping :
-                applicationContext.getBeansOfType(RequestMappingHandlerMapping.class).values()) {
+        for (RequestMappingHandlerMapping mapping : applicationContext
+                .getBeansOfType(RequestMappingHandlerMapping.class)
+                .values()) {
             for (Map.Entry<RequestMappingInfo, HandlerMethod> e :
                     mapping.getHandlerMethods().entrySet()) {
                 indexOne(e.getKey(), e.getValue());
@@ -123,25 +124,14 @@ public class McpToolCatalog {
         }
     }
 
-    private OperationMeta buildMeta(
-            String opId, OperationCategory category, String url, HandlerMethod handler) {
+    private OperationMeta buildMeta(String opId, OperationCategory category, String url, HandlerMethod handler) {
         Method method = handler.getMethod();
         Operation opAnno = method.getAnnotation(Operation.class);
-        String summary =
-                opAnno != null && !opAnno.summary().isBlank()
-                        ? opAnno.summary()
-                        : prettifyOpId(opId);
+        String summary = opAnno != null && !opAnno.summary().isBlank() ? opAnno.summary() : prettifyOpId(opId);
         ObjectNode schema = paramSchemaFor(handler);
         // Every mutating endpoint requires the write scope.
         return new OperationMeta(
-                opId,
-                category,
-                summary,
-                schema,
-                WRITE_SCOPE,
-                OperationMeta.Target.JAVA_ENDPOINT,
-                url,
-                handler);
+                opId, category, summary, schema, WRITE_SCOPE, OperationMeta.Target.JAVA_ENDPOINT, url, handler);
     }
 
     private ObjectNode paramSchemaFor(HandlerMethod handler) {
@@ -201,9 +191,8 @@ public class McpToolCatalog {
         // A disabled PDF op returns empty rather than falling through to a same-id AI capability.
         OperationMeta meta = pdfOps.get(id);
         if (meta != null) {
-            boolean enabled =
-                    meta.target() != OperationMeta.Target.JAVA_ENDPOINT
-                            || endpointConfiguration.isEndpointEnabledForUri(meta.endpointPath());
+            boolean enabled = meta.target() != OperationMeta.Target.JAVA_ENDPOINT
+                    || endpointConfiguration.isEndpointEnabledForUri(meta.endpointPath());
             return enabled ? Optional.of(meta) : Optional.empty();
         }
         return Optional.ofNullable(aiOps.get(id));

@@ -17,7 +17,8 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 @DataJpaTest
 class JpaProcessedLedgerDbTest extends ProcessedLedgerContractTest {
 
-    @Autowired private ProcessedFileRepository repository;
+    @Autowired
+    private ProcessedFileRepository repository;
 
     @AfterEach
     void wipeLedger() {

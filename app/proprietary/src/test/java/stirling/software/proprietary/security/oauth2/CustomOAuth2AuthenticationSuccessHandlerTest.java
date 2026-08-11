@@ -32,8 +32,7 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
         JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
         UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
 
-        ApplicationProperties.Security.OAUTH2 oauth2Props =
-                new ApplicationProperties.Security.OAUTH2();
+        ApplicationProperties.Security.OAUTH2 oauth2Props = new ApplicationProperties.Security.OAUTH2();
         oauth2Props.setAutoCreateUser(true);
         oauth2Props.setBlockRegistration(false);
 
@@ -42,29 +41,26 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
         securityProperties.setOauth2(oauth2Props);
         applicationProperties.setSecurity(securityProperties);
 
-        CustomOAuth2AuthenticationSuccessHandler handler =
-                new CustomOAuth2AuthenticationSuccessHandler(
-                        loginAttemptService,
-                        oauth2Props,
-                        userService,
-                        jwtService,
-                        licenseSettingsService,
-                        applicationProperties);
+        CustomOAuth2AuthenticationSuccessHandler handler = new CustomOAuth2AuthenticationSuccessHandler(
+                loginAttemptService,
+                oauth2Props,
+                userService,
+                jwtService,
+                licenseSettingsService,
+                applicationProperties);
 
         when(userService.usernameExistsIgnoreCase("user")).thenReturn(false);
         when(licenseSettingsService.isOAuthEligible(null)).thenReturn(true);
         when(userService.isUserDisabled("user")).thenReturn(false);
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(jwtService.generateToken(
-                        org.mockito.Mockito.any(
-                                org.springframework.security.core.Authentication.class),
+                        org.mockito.Mockito.any(org.springframework.security.core.Authentication.class),
                         org.mockito.Mockito.anyMap()))
                 .thenReturn("jwt");
 
         Map<String, Object> attributes = Map.of("sub", "provider-sub", "name", "user");
         DefaultOAuth2User oauthUser =
-                new DefaultOAuth2User(
-                        List.of(new SimpleGrantedAuthority("ROLE_USER")), attributes, "name");
+                new DefaultOAuth2User(List.of(new SimpleGrantedAuthority("ROLE_USER")), attributes, "name");
         OAuth2AuthenticationToken authentication =
                 new OAuth2AuthenticationToken(oauthUser, oauthUser.getAuthorities(), "google");
 
@@ -78,8 +74,6 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        assertEquals(
-                "http://localhost:8080/auth/callback/tauri#access_token=jwt",
-                response.getRedirectedUrl());
+        assertEquals("http://localhost:8080/auth/callback/tauri#access_token=jwt", response.getRedirectedUrl());
     }
 }

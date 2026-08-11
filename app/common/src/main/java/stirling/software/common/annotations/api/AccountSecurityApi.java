@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/account")
-@Tag(
-        name = "Account Security",
-        description =
-                """
+@Tag(name = "Account Security", description = """
                 Account security and protection services for user safety and organizational compliance.
 
                 This endpoint group provides account security capabilities for organizations requiring

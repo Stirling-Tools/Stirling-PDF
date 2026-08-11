@@ -46,18 +46,14 @@ public class CustomAuditEventRepository implements AuditEventRepository {
     public void add(AuditEvent ev) {
         try {
             Map<String, Object> clean =
-                    CollectionUtils.isEmpty(ev.getData())
-                            ? Map.of()
-                            : SecretMasker.mask(ev.getData());
+                    CollectionUtils.isEmpty(ev.getData()) ? Map.of() : SecretMasker.mask(ev.getData());
 
             if (clean.isEmpty() || (clean.size() == 1 && clean.containsKey("details"))) {
                 return;
             }
             String rid = MDC.get("requestId");
-            String apiKeyLabel =
-                    MDC.get(
-                            stirling.software.proprietary.security.service
-                                    .ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY);
+            String apiKeyLabel = MDC.get(
+                    stirling.software.proprietary.security.service.ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY);
 
             if (rid != null || apiKeyLabel != null) {
                 clean = new java.util.HashMap<>(clean);
@@ -76,14 +72,13 @@ public class CustomAuditEventRepository implements AuditEventRepository {
             String auditEventData = mapper.writeValueAsString(clean);
             log.debug("AuditEvent data (JSON): {}", auditEventData);
 
-            PersistentAuditEvent ent =
-                    PersistentAuditEvent.builder()
-                            .principal(safePrincipal(ev.getPrincipal()))
-                            .type(ev.getType())
-                            .source(source)
-                            .data(auditEventData)
-                            .timestamp(ev.getTimestamp())
-                            .build();
+            PersistentAuditEvent ent = PersistentAuditEvent.builder()
+                    .principal(safePrincipal(ev.getPrincipal()))
+                    .type(ev.getType())
+                    .source(source)
+                    .data(auditEventData)
+                    .timestamp(ev.getTimestamp())
+                    .build();
             repo.save(ent);
         } catch (Exception e) {
             log.error("Failed to persist audit event (fail-open); type={}", ev.getType(), e);
@@ -110,9 +105,7 @@ public class CustomAuditEventRepository implements AuditEventRepository {
     /** First 8 bytes of SHA-256 as hex: stable, one-way, collision-safe enough. */
     private static String sha256Prefix(String value) {
         try {
-            byte[] digest =
-                    MessageDigest.getInstance("SHA-256")
-                            .digest(value.getBytes(StandardCharsets.UTF_8));
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest, 0, 8);
         } catch (NoSuchAlgorithmException e) {
             return "unhashable";

@@ -50,12 +50,17 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PosterPdfControllerTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private PosterPdfController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private PosterPdfController controller;
 
     private final AtomicInteger tempCounter = new AtomicInteger();
 
@@ -64,28 +69,21 @@ class PosterPdfControllerTest {
         // new TempFile(tempFileManager, suffix) delegates to createTempFile(suffix);
         // hand back real, writable files in the test temp dir so the controller's
         // real file/zip I/O works end to end.
-        lenient()
-                .when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            String suffix = inv.getArgument(0);
-                            File f =
-                                    tempDir.resolve(
-                                                    "poster-"
-                                                            + tempCounter.incrementAndGet()
-                                                            + suffix)
-                                            .toFile();
-                            Files.createFile(f.toPath());
-                            return f;
-                        });
+        lenient().when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> {
+            String suffix = inv.getArgument(0);
+            File f = tempDir.resolve("poster-" + tempCounter.incrementAndGet() + suffix)
+                    .toFile();
+            Files.createFile(f.toPath());
+            return f;
+        });
     }
 
     private MockMultipartFile createRealPdf(int numPages, String name) throws IOException {
         return createRealPdf(numPages, name, PDRectangle.A4, 0);
     }
 
-    private MockMultipartFile createRealPdf(
-            int numPages, String name, PDRectangle size, int rotation) throws IOException {
+    private MockMultipartFile createRealPdf(int numPages, String name, PDRectangle size, int rotation)
+            throws IOException {
         try (PDDocument doc = new PDDocument()) {
             for (int i = 0; i < numPages; i++) {
                 PDPage page = new PDPage(size);
@@ -94,8 +92,7 @@ class PosterPdfControllerTest {
             }
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             doc.save(baos);
-            return new MockMultipartFile(
-                    "fileInput", name, MediaType.APPLICATION_PDF_VALUE, baos.toByteArray());
+            return new MockMultipartFile("fileInput", name, MediaType.APPLICATION_PDF_VALUE, baos.toByteArray());
         }
     }
 
@@ -129,8 +126,7 @@ class PosterPdfControllerTest {
         PDDocument sourceDoc = Loader.loadPDF(file.getBytes());
         PDDocument outputDoc = new PDDocument();
         when(pdfDocumentFactory.load(file)).thenReturn(sourceDoc);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
-                .thenReturn(outputDoc);
+        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc)).thenReturn(outputDoc);
     }
 
     @Nested
@@ -149,8 +145,7 @@ class PosterPdfControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getHeaders().getContentDisposition().getFilename())
                     .isEqualTo("doc_poster.zip");
-            assertThat(response.getHeaders().getContentType())
-                    .isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
+            assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
 
             byte[] zipBytes = drainBody(response);
             assertThat(zipBytes).isNotEmpty();
@@ -257,8 +252,7 @@ class PosterPdfControllerTest {
 
             assertThat(response.getHeaders().getContentDisposition().getFilename())
                     .isEqualTo("noext_poster.zip");
-            try (ZipInputStream zis =
-                    new ZipInputStream(new ByteArrayInputStream(drainBody(response)))) {
+            try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(drainBody(response)))) {
                 ZipEntry entry = zis.getNextEntry();
                 assertThat(entry).isNotNull();
                 assertThat(entry.getName()).isEqualTo("noext_poster.pdf");
@@ -268,12 +262,11 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("Null original filename falls back to default base name")
         void nullOriginalFilename() throws Exception {
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput",
-                            null,
-                            MediaType.APPLICATION_PDF_VALUE,
-                            createRealPdf(1, "x.pdf").getBytes());
+            MockMultipartFile file = new MockMultipartFile(
+                    "fileInput",
+                    null,
+                    MediaType.APPLICATION_PDF_VALUE,
+                    createRealPdf(1, "x.pdf").getBytes());
             PosterPdfRequest request = createRequest(file);
             stubFactory(file);
 
@@ -301,9 +294,7 @@ class PosterPdfControllerTest {
 
                 ResponseEntity<Resource> response = controller.posterPdf(request);
 
-                assertThat(response.getStatusCode())
-                        .as("page size %s", size)
-                        .isEqualTo(HttpStatus.OK);
+                assertThat(response.getStatusCode()).as("page size %s", size).isEqualTo(HttpStatus.OK);
                 assertThat(drainBody(response)).as("body for %s", size).isNotEmpty();
             }
         }
@@ -316,8 +307,7 @@ class PosterPdfControllerTest {
             request.setPageSize("NotAPageSize");
             stubFactory(file);
 
-            assertThatThrownBy(() -> controller.posterPdf(request))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.posterPdf(request)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -326,8 +316,7 @@ class PosterPdfControllerTest {
     class TargetPageSize {
 
         private PDRectangle invoke(String size) throws Exception {
-            Method m =
-                    PosterPdfController.class.getDeclaredMethod("getTargetPageSize", String.class);
+            Method m = PosterPdfController.class.getDeclaredMethod("getTargetPageSize", String.class);
             m.setAccessible(true);
             return (PDRectangle) m.invoke(controller, size);
         }
@@ -353,8 +342,7 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("Unknown size raises IllegalArgumentException")
         void unknownSize() throws Exception {
-            Method m =
-                    PosterPdfController.class.getDeclaredMethod("getTargetPageSize", String.class);
+            Method m = PosterPdfController.class.getDeclaredMethod("getTargetPageSize", String.class);
             m.setAccessible(true);
             assertThatThrownBy(() -> m.invoke(controller, "Unknown"))
                     .isInstanceOf(InvocationTargetException.class)
@@ -364,8 +352,7 @@ class PosterPdfControllerTest {
         @Test
         @DisplayName("Null size raises IllegalArgumentException")
         void nullSize() throws Exception {
-            Method m =
-                    PosterPdfController.class.getDeclaredMethod("getTargetPageSize", String.class);
+            Method m = PosterPdfController.class.getDeclaredMethod("getTargetPageSize", String.class);
             m.setAccessible(true);
             assertThatThrownBy(() -> m.invoke(controller, new Object[] {null}))
                     .isInstanceOf(InvocationTargetException.class)
@@ -439,8 +426,7 @@ class PosterPdfControllerTest {
 
             // createNewDocumentBasedOnOldDocument is never reached after load throws.
             verify(pdfDocumentFactory, never())
-                    .createNewDocumentBasedOnOldDocument(
-                            org.mockito.ArgumentMatchers.any(PDDocument.class));
+                    .createNewDocumentBasedOnOldDocument(org.mockito.ArgumentMatchers.any(PDDocument.class));
         }
     }
 }

@@ -47,57 +47,42 @@ class PdfSigningServiceImplTest {
             byte[] pdf = "%PDF-1.4 fake".getBytes();
 
             ArgumentCaptor<MultipartFile> fileCaptor = ArgumentCaptor.forClass(MultipartFile.class);
-            ArgumentCaptor<ByteArrayOutputStream> outCaptor =
-                    ArgumentCaptor.forClass(ByteArrayOutputStream.class);
+            ArgumentCaptor<ByteArrayOutputStream> outCaptor = ArgumentCaptor.forClass(ByteArrayOutputStream.class);
 
             try (MockedStatic<CertSignController> signer = mockStatic(CertSignController.class)) {
-                signer.when(
-                                () ->
-                                        CertSignController.sign(
-                                                any(),
-                                                any(),
-                                                any(),
-                                                any(),
-                                                eq(true),
-                                                eq(2),
-                                                eq("Alice"),
-                                                eq("London"),
-                                                eq("approval"),
-                                                eq(false)))
-                        .thenAnswer(
-                                inv -> {
-                                    ByteArrayOutputStream out = inv.getArgument(2);
-                                    out.write("signed".getBytes());
-                                    return null;
-                                });
+                signer.when(() -> CertSignController.sign(
+                                any(),
+                                any(),
+                                any(),
+                                any(),
+                                eq(true),
+                                eq(2),
+                                eq("Alice"),
+                                eq("London"),
+                                eq("approval"),
+                                eq(false)))
+                        .thenAnswer(inv -> {
+                            ByteArrayOutputStream out = inv.getArgument(2);
+                            out.write("signed".getBytes());
+                            return null;
+                        });
 
-                byte[] result =
-                        service.signWithKeystore(
-                                pdf,
-                                keystore,
-                                "password".toCharArray(),
-                                true,
-                                2,
-                                "Alice",
-                                "London",
-                                "approval",
-                                false);
+                byte[] result = service.signWithKeystore(
+                        pdf, keystore, "password".toCharArray(), true, 2, "Alice", "London", "approval", false);
 
                 assertThat(new String(result)).isEqualTo("signed");
 
-                signer.verify(
-                        () ->
-                                CertSignController.sign(
-                                        any(),
-                                        fileCaptor.capture(),
-                                        outCaptor.capture(),
-                                        any(),
-                                        eq(true),
-                                        eq(2),
-                                        eq("Alice"),
-                                        eq("London"),
-                                        eq("approval"),
-                                        eq(false)));
+                signer.verify(() -> CertSignController.sign(
+                        any(),
+                        fileCaptor.capture(),
+                        outCaptor.capture(),
+                        any(),
+                        eq(true),
+                        eq(2),
+                        eq("Alice"),
+                        eq("London"),
+                        eq("approval"),
+                        eq(false)));
 
                 // Exercise the private ByteArrayMultipartFile wrapper passed to sign().
                 MultipartFile wrapper = fileCaptor.getValue();
@@ -126,45 +111,33 @@ class PdfSigningServiceImplTest {
             ArgumentCaptor<MultipartFile> fileCaptor = ArgumentCaptor.forClass(MultipartFile.class);
 
             try (MockedStatic<CertSignController> signer = mockStatic(CertSignController.class)) {
-                signer.when(
-                                () ->
-                                        CertSignController.sign(
-                                                any(),
-                                                any(),
-                                                any(),
-                                                any(),
-                                                org.mockito.ArgumentMatchers.anyBoolean(),
-                                                any(),
-                                                any(),
-                                                any(),
-                                                any(),
-                                                org.mockito.ArgumentMatchers.anyBoolean()))
+                signer.when(() -> CertSignController.sign(
+                                any(),
+                                any(),
+                                any(),
+                                any(),
+                                org.mockito.ArgumentMatchers.anyBoolean(),
+                                any(),
+                                any(),
+                                any(),
+                                any(),
+                                org.mockito.ArgumentMatchers.anyBoolean()))
                         .thenAnswer(inv -> null);
 
                 service.signWithKeystore(
-                        new byte[0],
-                        realKeystore(),
-                        "password".toCharArray(),
-                        false,
-                        null,
-                        null,
-                        null,
-                        null,
-                        false);
+                        new byte[0], realKeystore(), "password".toCharArray(), false, null, null, null, null, false);
 
-                signer.verify(
-                        () ->
-                                CertSignController.sign(
-                                        any(),
-                                        fileCaptor.capture(),
-                                        any(),
-                                        any(),
-                                        org.mockito.ArgumentMatchers.anyBoolean(),
-                                        any(),
-                                        any(),
-                                        any(),
-                                        any(),
-                                        org.mockito.ArgumentMatchers.anyBoolean()));
+                signer.verify(() -> CertSignController.sign(
+                        any(),
+                        fileCaptor.capture(),
+                        any(),
+                        any(),
+                        org.mockito.ArgumentMatchers.anyBoolean(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        org.mockito.ArgumentMatchers.anyBoolean()));
                 assertThat(fileCaptor.getValue().isEmpty()).isTrue();
                 assertThat(fileCaptor.getValue().getSize()).isZero();
             }

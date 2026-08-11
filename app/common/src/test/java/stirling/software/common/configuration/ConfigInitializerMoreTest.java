@@ -20,17 +20,15 @@ import stirling.software.common.util.YamlHelper;
 
 class ConfigInitializerMoreTest {
 
-    private static final LoadSettings LOAD_SETTINGS =
-            LoadSettings.builder()
-                    .setUseMarks(true)
-                    .setMaxAliasesForCollections(Integer.MAX_VALUE)
-                    .setAllowRecursiveKeys(true)
-                    .setParseComments(true)
-                    .build();
+    private static final LoadSettings LOAD_SETTINGS = LoadSettings.builder()
+            .setUseMarks(true)
+            .setMaxAliasesForCollections(Integer.MAX_VALUE)
+            .setAllowRecursiveKeys(true)
+            .setParseComments(true)
+            .build();
 
     // Template after the enterpriseEdition -> premium rename.
-    private static final String PREMIUM_TEMPLATE =
-            """
+    private static final String PREMIUM_TEMPLATE = """
             premium:
               enabled: false
               key: 0000
@@ -50,8 +48,7 @@ class ConfigInitializerMoreTest {
         @Test
         @DisplayName("carries legacy enterpriseEdition values forward into premium block")
         void migratesLegacyEnterpriseValues() throws Exception {
-            String legacy =
-                    """
+            String legacy = """
                     enterpriseEdition:
                       enabled: true
                       key: ABC-123
@@ -71,32 +68,21 @@ class ConfigInitializerMoreTest {
             assertThat(template.getValueByExactKeyPath("premium", "key")).isEqualTo("ABC-123");
             assertThat(template.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"))
                     .isEqualTo("true");
-            assertThat(
-                            template.getValueByExactKeyPath(
-                                    "premium",
-                                    "proFeatures",
-                                    "customMetadata",
-                                    "autoUpdateMetadata"))
+            assertThat(template.getValueByExactKeyPath(
+                            "premium", "proFeatures", "customMetadata", "autoUpdateMetadata"))
                     .isEqualTo("true");
-            assertThat(
-                            template.getValueByExactKeyPath(
-                                    "premium", "proFeatures", "customMetadata", "author"))
+            assertThat(template.getValueByExactKeyPath("premium", "proFeatures", "customMetadata", "author"))
                     .isEqualTo("alice");
-            assertThat(
-                            template.getValueByExactKeyPath(
-                                    "premium", "proFeatures", "customMetadata", "creator"))
+            assertThat(template.getValueByExactKeyPath("premium", "proFeatures", "customMetadata", "creator"))
                     .isEqualTo("bob");
-            assertThat(
-                            template.getValueByExactKeyPath(
-                                    "premium", "proFeatures", "customMetadata", "producer"))
+            assertThat(template.getValueByExactKeyPath("premium", "proFeatures", "customMetadata", "producer"))
                     .isEqualTo("carol");
         }
 
         @Test
         @DisplayName("no legacy enterpriseEdition block leaves template defaults intact")
         void noLegacyKeysIsNoOp() throws Exception {
-            String noEnterprise =
-                    """
+            String noEnterprise = """
                     security:
                       enableLogin: false
                     """;
@@ -106,18 +92,13 @@ class ConfigInitializerMoreTest {
             invokeMigrate(existing, template);
 
             assertThat(template.getValueByExactKeyPath("premium", "enabled")).isEqualTo("false");
-            assertThat(
-                            template.getValueByExactKeyPath(
-                                    "premium", "proFeatures", "customMetadata", "author"))
+            assertThat(template.getValueByExactKeyPath("premium", "proFeatures", "customMetadata", "author"))
                     .isEqualTo("username");
         }
 
         private void invokeMigrate(YamlHelper yaml, YamlHelper template) throws Exception {
-            var method =
-                    ConfigInitializer.class.getDeclaredMethod(
-                            "migrateEnterpriseEditionToPremium",
-                            YamlHelper.class,
-                            YamlHelper.class);
+            var method = ConfigInitializer.class.getDeclaredMethod(
+                    "migrateEnterpriseEditionToPremium", YamlHelper.class, YamlHelper.class);
             method.setAccessible(true);
             method.invoke(new ConfigInitializer(), yaml, template);
         }
@@ -133,12 +114,9 @@ class ConfigInitializerMoreTest {
             Path settings = tempDir.resolve("configs").resolve("settings.yml");
             Path custom = tempDir.resolve("configs").resolve("custom_settings.yml");
 
-            try (MockedStatic<InstallationPathConfig> mocked =
-                    mockStatic(InstallationPathConfig.class)) {
-                mocked.when(InstallationPathConfig::getSettingsPath)
-                        .thenReturn(settings.toString());
-                mocked.when(InstallationPathConfig::getCustomSettingsPath)
-                        .thenReturn(custom.toString());
+            try (MockedStatic<InstallationPathConfig> mocked = mockStatic(InstallationPathConfig.class)) {
+                mocked.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+                mocked.when(InstallationPathConfig::getCustomSettingsPath).thenReturn(custom.toString());
 
                 // settings.yml.template is packaged in the core module, not common, so the
                 // create branch must surface a FileNotFoundException here.
@@ -156,12 +134,9 @@ class ConfigInitializerMoreTest {
             // Fewer than MIN_SETTINGS_FILE_LINES (31) lines triggers the recreate path.
             Files.writeString(settings, "a: 1\nb: 2\n");
 
-            try (MockedStatic<InstallationPathConfig> mocked =
-                    mockStatic(InstallationPathConfig.class)) {
-                mocked.when(InstallationPathConfig::getSettingsPath)
-                        .thenReturn(settings.toString());
-                mocked.when(InstallationPathConfig::getCustomSettingsPath)
-                        .thenReturn(custom.toString());
+            try (MockedStatic<InstallationPathConfig> mocked = mockStatic(InstallationPathConfig.class)) {
+                mocked.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+                mocked.when(InstallationPathConfig::getCustomSettingsPath).thenReturn(custom.toString());
 
                 assertThatThrownBy(() -> new ConfigInitializer().ensureConfigExists())
                         .isInstanceOf(FileNotFoundException.class);

@@ -47,9 +47,7 @@ class MetricsControllerMoreTest {
         endpointInspector = mock(EndpointInspector.class);
         when(applicationProperties.getMetrics()).thenReturn(metrics);
         when(metrics.isEnabled()).thenReturn(true);
-        controller =
-                new MetricsController(
-                        applicationProperties, meterRegistry, endpointInspector, Optional.empty());
+        controller = new MetricsController(applicationProperties, meterRegistry, endpointInspector, Optional.empty());
         controller.init();
     }
 
@@ -80,10 +78,7 @@ class MetricsControllerMoreTest {
         void uniquePageLoads() {
             stubCounters(
                     "GET",
-                    List.of(
-                            mockCounter("/a", "s1", 1.0),
-                            mockCounter("/a", "s2", 1.0),
-                            mockCounter("/a", "s1", 1.0)));
+                    List.of(mockCounter("/a", "s1", 1.0), mockCounter("/a", "s2", 1.0), mockCounter("/a", "s1", 1.0)));
             when(endpointInspector.getValidGetEndpoints()).thenReturn(Collections.emptySet());
 
             ResponseEntity<?> resp = controller.getUniquePageLoads(Optional.empty());
@@ -95,11 +90,7 @@ class MetricsControllerMoreTest {
         @Test
         @DisplayName("getUniqueTotalRequests counts distinct sessions for POST")
         void uniqueTotalRequests() {
-            stubCounters(
-                    "POST",
-                    List.of(
-                            mockCounter("/api/v1/x", "s1", 1.0),
-                            mockCounter("/api/v1/x", "s1", 1.0)));
+            stubCounters("POST", List.of(mockCounter("/api/v1/x", "s1", 1.0), mockCounter("/api/v1/x", "s1", 1.0)));
 
             ResponseEntity<?> resp = controller.getUniqueTotalRequests(Optional.empty());
 
@@ -127,8 +118,7 @@ class MetricsControllerMoreTest {
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
             @SuppressWarnings("unchecked")
-            List<MetricsController.EndpointCount> body =
-                    (List<MetricsController.EndpointCount>) resp.getBody();
+            List<MetricsController.EndpointCount> body = (List<MetricsController.EndpointCount>) resp.getBody();
             assertThat(body).hasSize(2);
             assertThat(body.get(0).getEndpoint()).isEqualTo("/high");
             assertThat(body.get(0).getCount()).isEqualTo(10.0);
@@ -143,8 +133,7 @@ class MetricsControllerMoreTest {
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
             @SuppressWarnings("unchecked")
-            List<MetricsController.EndpointCount> body =
-                    (List<MetricsController.EndpointCount>) resp.getBody();
+            List<MetricsController.EndpointCount> body = (List<MetricsController.EndpointCount>) resp.getBody();
             assertThat(body).hasSize(1);
         }
 
@@ -153,17 +142,13 @@ class MetricsControllerMoreTest {
         void allUniqueEndpointLoads() {
             stubCounters(
                     "GET",
-                    List.of(
-                            mockCounter("/p", "s1", 1.0),
-                            mockCounter("/p", "s2", 1.0),
-                            mockCounter("/p", "s1", 1.0)));
+                    List.of(mockCounter("/p", "s1", 1.0), mockCounter("/p", "s2", 1.0), mockCounter("/p", "s1", 1.0)));
 
             ResponseEntity<?> resp = controller.getAllUniqueEndpointLoads();
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
             @SuppressWarnings("unchecked")
-            List<MetricsController.EndpointCount> body =
-                    (List<MetricsController.EndpointCount>) resp.getBody();
+            List<MetricsController.EndpointCount> body = (List<MetricsController.EndpointCount>) resp.getBody();
             assertThat(body).hasSize(1);
             assertThat(body.get(0).getCount()).isEqualTo(2.0);
         }
@@ -177,8 +162,7 @@ class MetricsControllerMoreTest {
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
             @SuppressWarnings("unchecked")
-            List<MetricsController.EndpointCount> body =
-                    (List<MetricsController.EndpointCount>) resp.getBody();
+            List<MetricsController.EndpointCount> body = (List<MetricsController.EndpointCount>) resp.getBody();
             assertThat(body).hasSize(1);
         }
     }
@@ -293,11 +277,7 @@ class MetricsControllerMoreTest {
             when(wau.getDaysOnline()).thenReturn(2L);
             when(wau.getStartTime()).thenReturn(java.time.Instant.parse("2025-02-02T00:00:00Z"));
             MetricsController ctrl =
-                    new MetricsController(
-                            applicationProperties,
-                            meterRegistry,
-                            endpointInspector,
-                            Optional.of(wau));
+                    new MetricsController(applicationProperties, meterRegistry, endpointInspector, Optional.of(wau));
             ctrl.init();
 
             ResponseEntity<?> resp = ctrl.getWeeklyActiveUsers();

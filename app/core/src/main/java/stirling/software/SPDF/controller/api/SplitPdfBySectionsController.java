@@ -60,22 +60,19 @@ public class SplitPdfBySectionsController {
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Split PDF pages into smaller sections",
-            description =
-                    "Split each page of a PDF into smaller sections based on the user's choice"
-                            + " which page to split, and how to split ( halves, thirds, quarters, etc.), both"
-                            + " vertically and horizontally.")
-    public ResponseEntity<Resource> splitPdf(
-            @Valid @ModelAttribute SplitPdfBySectionsRequest request) throws Exception {
+            description = "Split each page of a PDF into smaller sections based on the user's choice"
+                    + " which page to split, and how to split ( halves, thirds, quarters, etc.), both"
+                    + " vertically and horizontally.")
+    public ResponseEntity<Resource> splitPdf(@Valid @ModelAttribute SplitPdfBySectionsRequest request)
+            throws Exception {
         MultipartFile file = request.getFileInput();
         String pageNumbers = request.getPageNumbers();
-        SplitTypes splitMode =
-                Optional.ofNullable(request.getSplitMode())
-                        .map(SplitTypes::valueOf)
-                        .orElse(SplitTypes.SPLIT_ALL);
+        SplitTypes splitMode = Optional.ofNullable(request.getSplitMode())
+                .map(SplitTypes::valueOf)
+                .orElse(SplitTypes.SPLIT_ALL);
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
-            Set<Integer> pagesToSplit =
-                    getPagesToSplit(pageNumbers, splitMode, sourceDocument.getNumberOfPages());
+            Set<Integer> pagesToSplit = getPagesToSplit(pageNumbers, splitMode, sourceDocument.getNumberOfPages());
 
             // Process the PDF based on split parameters
             int horiz = request.getHorizontalDivisions() + 1;
@@ -84,41 +81,27 @@ public class SplitPdfBySectionsController {
             String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "_split");
 
             if (merge) {
-                try (PDDocument mergedDoc =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+                try (PDDocument mergedDoc = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
                     LayerUtility layerUtility = new LayerUtility(mergedDoc);
-                    for (int pageIndex = 0;
-                            pageIndex < sourceDocument.getNumberOfPages();
-                            pageIndex++) {
+                    for (int pageIndex = 0; pageIndex < sourceDocument.getNumberOfPages(); pageIndex++) {
                         if (pagesToSplit.contains(pageIndex)) {
-                            addSplitPageToTarget(
-                                    sourceDocument,
-                                    pageIndex,
-                                    mergedDoc,
-                                    layerUtility,
-                                    horiz,
-                                    verti);
+                            addSplitPageToTarget(sourceDocument, pageIndex, mergedDoc, layerUtility, horiz, verti);
                         } else {
                             addPageToTarget(sourceDocument, pageIndex, mergedDoc, layerUtility);
                         }
                     }
-                    return WebResponseUtils.pdfDocToWebResponse(
-                            mergedDoc, filename + ".pdf", tempFileManager);
+                    return WebResponseUtils.pdfDocToWebResponse(mergedDoc, filename + ".pdf", tempFileManager);
                 }
             } else {
                 TempFile zipTempFile = tempFileManager.createManagedTempFile(".zip");
                 try {
-                    try (ZipOutputStream zipOut =
-                            new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
-                        for (int pageIndex = 0;
-                                pageIndex < sourceDocument.getNumberOfPages();
-                                pageIndex++) {
+                    try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+                        for (int pageIndex = 0; pageIndex < sourceDocument.getNumberOfPages(); pageIndex++) {
                             int pageNum = pageIndex + 1;
                             if (pagesToSplit.contains(pageIndex)) {
                                 for (int i = 0; i < horiz; i++) {
                                     for (int j = 0; j < verti; j++) {
-                                        try (PDDocument subDoc =
-                                                pdfDocumentFactory.createNewDocument()) {
+                                        try (PDDocument subDoc = pdfDocumentFactory.createNewDocument()) {
                                             LayerUtility subLayerUtility = new LayerUtility(subDoc);
                                             addSingleSectionToTarget(
                                                     sourceDocument,
@@ -130,13 +113,7 @@ public class SplitPdfBySectionsController {
                                                     horiz,
                                                     verti);
                                             int sectionNum = i * verti + j + 1;
-                                            String entryName =
-                                                    filename
-                                                            + "_"
-                                                            + pageNum
-                                                            + "_"
-                                                            + sectionNum
-                                                            + ".pdf";
+                                            String entryName = filename + "_" + pageNum + "_" + sectionNum + ".pdf";
                                             saveDocToZip(subDoc, zipOut, entryName);
                                         } catch (IOException e) {
                                             log.error(
@@ -151,8 +128,7 @@ public class SplitPdfBySectionsController {
                             } else {
                                 try (PDDocument subDoc = pdfDocumentFactory.createNewDocument()) {
                                     LayerUtility subLayerUtility = new LayerUtility(subDoc);
-                                    addPageToTarget(
-                                            sourceDocument, pageIndex, subDoc, subLayerUtility);
+                                    addPageToTarget(sourceDocument, pageIndex, subDoc, subLayerUtility);
                                     String entryName = filename + "_" + pageNum + "_1.pdf";
                                     saveDocToZip(subDoc, zipOut, entryName);
                                 } catch (IOException e) {
@@ -177,8 +153,7 @@ public class SplitPdfBySectionsController {
         }
     }
 
-    private void addPageToTarget(
-            PDDocument sourceDoc, int pageIndex, PDDocument targetDoc, LayerUtility layerUtility)
+    private void addPageToTarget(PDDocument sourceDoc, int pageIndex, PDDocument targetDoc, LayerUtility layerUtility)
             throws IOException {
         PDPage sourcePage = sourceDoc.getPage(pageIndex);
         PDPage newPage = new PDPage(sourcePage.getMediaBox());
@@ -217,8 +192,7 @@ public class SplitPdfBySectionsController {
                 targetDoc.addPage(subPage);
 
                 try (PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                targetDoc, subPage, AppendMode.APPEND, true, true)) {
+                        new PDPageContentStream(targetDoc, subPage, AppendMode.APPEND, true, true)) {
                     float translateX = -subPageWidth * i;
                     float translateY = -subPageHeight * (totalVert - 1 - j);
 
@@ -229,8 +203,7 @@ public class SplitPdfBySectionsController {
                     contentStream.drawForm(form);
                     contentStream.restoreGraphicsState();
                 } catch (IOException e) {
-                    log.error(
-                            "Error adding split section ({}, {}) for page {}", i, j, pageIndex, e);
+                    log.error("Error adding split section ({}, {}) for page {}", i, j, pageIndex, e);
                     throw e;
                 }
             }
@@ -270,17 +243,12 @@ public class SplitPdfBySectionsController {
             contentStream.restoreGraphicsState();
         } catch (IOException e) {
             log.error(
-                    "Error adding single section ({}, {}) for page {} to target",
-                    horizIndex,
-                    vertIndex,
-                    pageIndex,
-                    e);
+                    "Error adding single section ({}, {}) for page {} to target", horizIndex, vertIndex, pageIndex, e);
             throw e;
         }
     }
 
-    private void saveDocToZip(PDDocument doc, ZipOutputStream zipOut, String entryName)
-            throws IOException {
+    private void saveDocToZip(PDDocument doc, ZipOutputStream zipOut, String entryName) throws IOException {
         ZipEntry entry = new ZipEntry(entryName);
         zipOut.putNextEntry(entry);
         doc.save(zipOut);
@@ -295,14 +263,10 @@ public class SplitPdfBySectionsController {
             case CUSTOM:
                 if (pageNumbers == null || pageNumbers.isBlank()) {
                     throw ExceptionUtils.createIllegalArgumentException(
-                            "error.argumentRequired",
-                            "{0} is required for {1} mode",
-                            "page numbers",
-                            "custom");
+                            "error.argumentRequired", "{0} is required for {1} mode", "page numbers", "custom");
                 }
                 String[] pageOrderArr = pageNumbers.split(",");
-                List<Integer> pageListToSplit =
-                        GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+                List<Integer> pageListToSplit = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
                 pagesToSplit.addAll(pageListToSplit);
                 break;
 

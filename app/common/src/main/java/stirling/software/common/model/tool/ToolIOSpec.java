@@ -8,8 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 /** The runtime form of a {@link ToolIO} declaration, read off a handler method once at startup. */
-public record ToolIOSpec(
-        Set<ToolFormat> accepts, ToolFormat produces, ToolArity arity, List<Case> cases) {
+public record ToolIOSpec(Set<ToolFormat> accepts, ToolFormat produces, ToolArity arity, List<Case> cases) {
 
     public record When(String param, List<String> matches) {
 
@@ -90,9 +89,7 @@ public record ToolIOSpec(
     }
 
     public boolean acceptsFormat(ToolFormat format) {
-        return format == ToolFormat.ANY
-                || accepts.contains(ToolFormat.ANY)
-                || accepts.contains(format);
+        return format == ToolFormat.ANY || accepts.contains(ToolFormat.ANY) || accepts.contains(format);
     }
 
     /** For run-time file checks. Empty means anything is accepted. */

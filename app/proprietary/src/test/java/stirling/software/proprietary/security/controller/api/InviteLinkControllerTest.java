@@ -36,11 +36,20 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 @ExtendWith(MockitoExtension.class)
 class InviteLinkControllerTest {
 
-    @Mock private InviteTokenRepository inviteTokenRepository;
-    @Mock private TeamRepository teamRepository;
-    @Mock private UserService userService;
-    @Mock private EmailService emailService;
-    @Mock private UserLicenseSettingsService userLicenseSettingsService;
+    @Mock
+    private InviteTokenRepository inviteTokenRepository;
+
+    @Mock
+    private TeamRepository teamRepository;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private UserLicenseSettingsService userLicenseSettingsService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -55,14 +64,13 @@ class InviteLinkControllerTest {
 
         adminPrincipal = () -> "admin";
 
-        InviteLinkController controller =
-                new InviteLinkController(
-                        inviteTokenRepository,
-                        teamRepository,
-                        userService,
-                        applicationProperties,
-                        Optional.of(emailService),
-                        userLicenseSettingsService);
+        InviteLinkController controller = new InviteLinkController(
+                inviteTokenRepository,
+                teamRepository,
+                userService,
+                applicationProperties,
+                Optional.of(emailService),
+                userLicenseSettingsService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -81,10 +89,9 @@ class InviteLinkControllerTest {
     void generateInviteLinkRejectsInvalidEmail() throws Exception {
         applicationProperties.getMail().setEnableInvites(true);
 
-        mockMvc.perform(
-                        post("/api/v1/invite/generate")
-                                .principal(adminPrincipal)
-                                .param("email", "not-an-email"))
+        mockMvc.perform(post("/api/v1/invite/generate")
+                        .principal(adminPrincipal)
+                        .param("email", "not-an-email"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Invalid email address"));
     }
@@ -96,10 +103,9 @@ class InviteLinkControllerTest {
         when(inviteTokenRepository.countActiveInvites(any(LocalDateTime.class))).thenReturn(0L);
         when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(1);
 
-        mockMvc.perform(
-                        post("/api/v1/invite/generate")
-                                .principal(adminPrincipal)
-                                .param("email", "new@ex.com"))
+        mockMvc.perform(post("/api/v1/invite/generate")
+                        .principal(adminPrincipal)
+                        .param("email", "new@ex.com"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value(startsWith("License limit reached")));
     }
@@ -117,13 +123,11 @@ class InviteLinkControllerTest {
         Team defaultTeam = new Team();
         defaultTeam.setId(1L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
-                .thenReturn(Optional.of(defaultTeam));
+        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME)).thenReturn(Optional.of(defaultTeam));
 
-        mockMvc.perform(
-                        post("/api/v1/invite/generate")
-                                .principal(adminPrincipal)
-                                .param("email", "new@ex.com"))
+        mockMvc.perform(post("/api/v1/invite/generate")
+                        .principal(adminPrincipal)
+                        .param("email", "new@ex.com"))
                 .andExpect(status().isOk());
     }
 
@@ -132,19 +136,15 @@ class InviteLinkControllerTest {
         Team defaultTeam = new Team();
         defaultTeam.setId(5L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
-                .thenReturn(Optional.of(defaultTeam));
+        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME)).thenReturn(Optional.of(defaultTeam));
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
         when(inviteTokenRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
 
-        mockMvc.perform(
-                        post("/api/v1/invite/generate")
-                                .principal(adminPrincipal)
-                                .param("email", "new@example.com"))
+        mockMvc.perform(post("/api/v1/invite/generate")
+                        .principal(adminPrincipal)
+                        .param("email", "new@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(
-                        jsonPath("$.inviteUrl")
-                                .value(startsWith("https://frontend.example.com/invite/")))
+                .andExpect(jsonPath("$.inviteUrl").value(startsWith("https://frontend.example.com/invite/")))
                 .andExpect(jsonPath("$.email").value("new@example.com"));
 
         verify(inviteTokenRepository).save(any());
@@ -174,10 +174,9 @@ class InviteLinkControllerTest {
         when(inviteTokenRepository.findByToken("abc")).thenReturn(Optional.of(invite));
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
 
-        mockMvc.perform(
-                        post("/api/v1/invite/accept/abc")
-                                .param("email", "new@example.com")
-                                .param("password", "password123"))
+        mockMvc.perform(post("/api/v1/invite/accept/abc")
+                        .param("email", "new@example.com")
+                        .param("password", "password123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Account created successfully"))
                 .andExpect(jsonPath("$.username").value("new@example.com"));

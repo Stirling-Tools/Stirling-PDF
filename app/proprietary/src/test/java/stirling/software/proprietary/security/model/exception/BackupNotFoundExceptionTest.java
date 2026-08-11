@@ -23,12 +23,9 @@ class BackupNotFoundExceptionTest {
 
     @Test
     void canBeThrownAndCaught() {
-        BackupNotFoundException ex =
-                assertThrows(
-                        BackupNotFoundException.class,
-                        () -> {
-                            throw new BackupNotFoundException("missing backup");
-                        });
+        BackupNotFoundException ex = assertThrows(BackupNotFoundException.class, () -> {
+            throw new BackupNotFoundException("missing backup");
+        });
         assertEquals("missing backup", ex.getMessage());
     }
 }

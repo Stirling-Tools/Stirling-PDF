@@ -28,11 +28,10 @@ class PdfJsonTextColorTest {
     @Test
     @DisplayName("builder and setters round-trip")
     void builderAndSetters() {
-        PdfJsonTextColor c =
-                PdfJsonTextColor.builder()
-                        .colorSpace("DeviceGray")
-                        .components(new float[] {0.5f})
-                        .build();
+        PdfJsonTextColor c = PdfJsonTextColor.builder()
+                .colorSpace("DeviceGray")
+                .components(new float[] {0.5f})
+                .build();
         assertThat(c.getColorSpace()).isEqualTo("DeviceGray");
         assertThat(c.getComponents()).containsExactly(0.5f);
 
@@ -44,20 +43,20 @@ class PdfJsonTextColorTest {
     @Test
     @DisplayName("equal content arrays equal; different content not")
     void arrayEquality() {
-        PdfJsonTextColor a =
-                PdfJsonTextColor.builder()
-                        .colorSpace("RGB")
-                        .components(new float[] {1f, 2f})
-                        .build();
-        PdfJsonTextColor b =
-                PdfJsonTextColor.builder()
-                        .colorSpace("RGB")
-                        .components(new float[] {1f, 2f})
-                        .build();
+        PdfJsonTextColor a = PdfJsonTextColor.builder()
+                .colorSpace("RGB")
+                .components(new float[] {1f, 2f})
+                .build();
+        PdfJsonTextColor b = PdfJsonTextColor.builder()
+                .colorSpace("RGB")
+                .components(new float[] {1f, 2f})
+                .build();
         assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
 
-        PdfJsonTextColor c =
-                PdfJsonTextColor.builder().colorSpace("RGB").components(new float[] {9f}).build();
+        PdfJsonTextColor c = PdfJsonTextColor.builder()
+                .colorSpace("RGB")
+                .components(new float[] {9f})
+                .build();
         assertThat(a).isNotEqualTo(c).isNotEqualTo(null).isNotEqualTo("string");
         assertThat(a.toString()).contains("PdfJsonTextColor");
     }

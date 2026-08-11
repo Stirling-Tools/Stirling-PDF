@@ -31,9 +31,11 @@ import stirling.software.proprietary.security.model.exception.BackupNotFoundExce
 @DisplayName("DatabaseService - additional coverage")
 class DatabaseServiceMoreTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock private DatabaseNotificationServiceInterface notificationService;
+    @Mock
+    private DatabaseNotificationServiceInterface notificationService;
 
     private DatabaseService databaseService;
 
@@ -44,8 +46,7 @@ class DatabaseServiceMoreTest {
         datasourceProps.setType(ApplicationProperties.Driver.H2.name());
 
         DataSource dataSource =
-                new DriverManagerDataSource(
-                        "jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
+                new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
 
         databaseService = new DatabaseService(datasourceProps, dataSource, notificationService);
         ReflectionTestUtils.setField(databaseService, "BACKUP_DIR", tempDir);
@@ -87,8 +88,7 @@ class DatabaseServiceMoreTest {
         @Test
         @DisplayName("importDatabase throws when no backups exist")
         void importThrowsWhenEmpty() {
-            assertThatThrownBy(() -> databaseService.importDatabase())
-                    .isInstanceOf(BackupNotFoundException.class);
+            assertThatThrownBy(() -> databaseService.importDatabase()).isInstanceOf(BackupNotFoundException.class);
         }
 
         @Test
@@ -96,21 +96,20 @@ class DatabaseServiceMoreTest {
         void importByNameSuccess() throws IOException {
             Path backup = writeBackup("backup_user_202601010101.sql");
 
-            boolean result = databaseService.importDatabaseFromUI(backup.getFileName().toString());
+            boolean result =
+                    databaseService.importDatabaseFromUI(backup.getFileName().toString());
 
             assertThat(result).isTrue();
             verify(notificationService)
                     .notifyImportsSuccess(
-                            org.mockito.ArgumentMatchers.anyString(),
-                            org.mockito.ArgumentMatchers.anyString());
+                            org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
         }
 
         @Test
         @DisplayName("importDatabaseFromUI by name fails validation for a missing file")
         void importByNameMissingFile() {
             // SQL validation reads the file first; a missing file surfaces as a validation failure.
-            assertThatThrownBy(
-                            () -> databaseService.importDatabaseFromUI("backup_does_not_exist.sql"))
+            assertThatThrownBy(() -> databaseService.importDatabaseFromUI("backup_does_not_exist.sql"))
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
@@ -199,9 +198,7 @@ class DatabaseServiceMoreTest {
         @DisplayName("rejects CREATE ALIAS")
         void rejectsCreateAlias() throws IOException {
             Path script =
-                    writeScript(
-                            "CREATE ALIAS MYALIAS AS 'String run(String c) throws Exception"
-                                    + " { return c; }';");
+                    writeScript("CREATE ALIAS MYALIAS AS 'String run(String c) throws Exception" + " { return c; }';");
             assertThatThrownBy(() -> databaseService.importDatabaseFromUI(script))
                     .isInstanceOf(IllegalArgumentException.class);
         }
@@ -217,11 +214,9 @@ class DatabaseServiceMoreTest {
         @Test
         @DisplayName("allows a backup whose data mentions a keyword")
         void allowsKeywordInsideStringData() throws IOException {
-            Path script =
-                    writeScript(
-                            "CREATE TABLE PUBLIC.NOTES(ID INT, BODY CHARACTER VARYING);"
-                                    + " INSERT INTO PUBLIC.NOTES(ID, BODY)"
-                                    + " VALUES(1, 'plain text with FILE_WRITE() inside');");
+            Path script = writeScript("CREATE TABLE PUBLIC.NOTES(ID INT, BODY CHARACTER VARYING);"
+                    + " INSERT INTO PUBLIC.NOTES(ID, BODY)"
+                    + " VALUES(1, 'plain text with FILE_WRITE() inside');");
             assertThat(databaseService.importDatabaseFromUI(script)).isTrue();
         }
     }

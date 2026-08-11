@@ -52,16 +52,15 @@ class MultiNodeClusterScenarioTest {
     @Test
     @DisplayName("async job created on node-A is readable from node-B via shared JobStore")
     void jobStatusVisibleCrossNode() {
-        JobStoreEntry entry =
-                new JobStoreEntry(
-                        "job-1",
-                        JobStoreEntry.JobState.RUNNING,
-                        "node-A",
-                        Instant.now(),
-                        null,
-                        null,
-                        List.of("file-1"),
-                        Map.of());
+        JobStoreEntry entry = new JobStoreEntry(
+                "job-1",
+                JobStoreEntry.JobState.RUNNING,
+                "node-A",
+                Instant.now(),
+                null,
+                null,
+                List.of("file-1"),
+                Map.of());
         sharedJobStore.put(entry, Duration.ofMinutes(30));
 
         Optional<JobStoreEntry> seenOnB = sharedJobStore.get("job-1");
@@ -74,16 +73,11 @@ class MultiNodeClusterScenarioTest {
     @DisplayName("global rate limit - capacity counted once across both nodes")
     void rateLimitGlobalAcrossNodes() {
         long capacity = 4L;
-        RateLimitDecision a1 =
-                sharedRateLimit.tryConsume("user:bob", capacity, Duration.ofMinutes(1));
-        RateLimitDecision b1 =
-                sharedRateLimit.tryConsume("user:bob", capacity, Duration.ofMinutes(1));
-        RateLimitDecision a2 =
-                sharedRateLimit.tryConsume("user:bob", capacity, Duration.ofMinutes(1));
-        RateLimitDecision b2 =
-                sharedRateLimit.tryConsume("user:bob", capacity, Duration.ofMinutes(1));
-        RateLimitDecision a3 =
-                sharedRateLimit.tryConsume("user:bob", capacity, Duration.ofMinutes(1));
+        RateLimitDecision a1 = sharedRateLimit.tryConsume("user:bob", capacity, Duration.ofMinutes(1));
+        RateLimitDecision b1 = sharedRateLimit.tryConsume("user:bob", capacity, Duration.ofMinutes(1));
+        RateLimitDecision a2 = sharedRateLimit.tryConsume("user:bob", capacity, Duration.ofMinutes(1));
+        RateLimitDecision b2 = sharedRateLimit.tryConsume("user:bob", capacity, Duration.ofMinutes(1));
+        RateLimitDecision a3 = sharedRateLimit.tryConsume("user:bob", capacity, Duration.ofMinutes(1));
 
         assertTrue(a1.allowed());
         assertTrue(b1.allowed());

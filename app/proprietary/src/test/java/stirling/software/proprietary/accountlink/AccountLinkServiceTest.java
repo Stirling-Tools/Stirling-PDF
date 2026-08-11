@@ -32,8 +32,7 @@ class AccountLinkServiceTest {
 
     @Test
     void link_storesCredentialAndInvalidatesCache() throws IOException {
-        when(client.register("jwt", "name"))
-                .thenReturn(new AccountLinkClient.RegisterResult("dev-1", "sec-1", 7L));
+        when(client.register("jwt", "name")).thenReturn(new AccountLinkClient.RegisterResult("dev-1", "sec-1", 7L));
         DeviceCredential stored = new DeviceCredential();
         stored.setDeviceId("dev-1");
         stored.setTeamId(7L);
@@ -52,8 +51,7 @@ class AccountLinkServiceTest {
     @Test
     void link_propagatesRegisterFailure() throws IOException {
         when(client.register(any(), any())).thenThrow(new IOException("boom"));
-        org.junit.jupiter.api.Assertions.assertThrows(
-                IOException.class, () -> service.link("jwt", null));
+        org.junit.jupiter.api.Assertions.assertThrows(IOException.class, () -> service.link("jwt", null));
         verify(cache, org.mockito.Mockito.never()).invalidate();
     }
 

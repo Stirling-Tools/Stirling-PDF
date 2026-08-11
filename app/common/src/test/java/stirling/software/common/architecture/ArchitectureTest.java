@@ -15,58 +15,52 @@ import com.tngtech.archunit.lang.ArchRule;
  */
 class ArchitectureTest {
 
-    private static final JavaClasses commonClasses =
-            new ClassFileImporter()
-                    .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_JARS)
-                    .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                    .importPackages("stirling.software.common");
+    private static final JavaClasses commonClasses = new ClassFileImporter()
+            .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_JARS)
+            .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+            .importPackages("stirling.software.common");
 
     @Test
     void commonDoesNotDependOnCore() {
-        ArchRule rule =
-                noClasses()
-                        .that()
-                        .resideInAPackage("stirling.software.common..")
-                        .should()
-                        .dependOnClassesThat()
-                        .resideInAPackage("stirling.software.SPDF..");
+        ArchRule rule = noClasses()
+                .that()
+                .resideInAPackage("stirling.software.common..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("stirling.software.SPDF..");
         rule.check(commonClasses);
     }
 
     @Test
     void commonDoesNotDependOnProprietary() {
-        ArchRule rule =
-                noClasses()
-                        .that()
-                        .resideInAPackage("stirling.software.common..")
-                        .should()
-                        .dependOnClassesThat()
-                        .resideInAPackage("stirling.software.proprietary..");
+        ArchRule rule = noClasses()
+                .that()
+                .resideInAPackage("stirling.software.common..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("stirling.software.proprietary..");
         rule.check(commonClasses);
     }
 
     @Test
     void commonDoesNotDependOnSaas() {
-        ArchRule rule =
-                noClasses()
-                        .that()
-                        .resideInAPackage("stirling.software.common..")
-                        .should()
-                        .dependOnClassesThat()
-                        .resideInAPackage("stirling.software.saas..");
+        ArchRule rule = noClasses()
+                .that()
+                .resideInAPackage("stirling.software.common..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("stirling.software.saas..");
         rule.check(commonClasses);
     }
 
     @Test
     void clusterInterfacesHaveNoImplementationDependencies() {
-        ArchRule rule =
-                noClasses()
-                        .that()
-                        .resideInAPackage("stirling.software.common.cluster..")
-                        .should()
-                        .dependOnClassesThat()
-                        .resideInAnyPackage(
-                                "stirling.software.proprietary..", "stirling.software.saas..");
+        ArchRule rule = noClasses()
+                .that()
+                .resideInAPackage("stirling.software.common.cluster..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("stirling.software.proprietary..", "stirling.software.saas..");
         rule.check(commonClasses);
     }
 }

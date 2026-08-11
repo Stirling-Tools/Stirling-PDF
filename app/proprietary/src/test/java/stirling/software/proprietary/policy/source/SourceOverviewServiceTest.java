@@ -42,9 +42,7 @@ class SourceOverviewServiceTest {
         PolicyManagementAuthority authority = mock(PolicyManagementAuthority.class);
         SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
-        service =
-                new SourceOverviewService(
-                        sourceStore, policyStore, sourceGuard, policyGuard, docCounter);
+        service = new SourceOverviewService(sourceStore, policyStore, sourceGuard, policyGuard, docCounter);
     }
 
     @Test
@@ -65,17 +63,12 @@ class SourceOverviewServiceTest {
         SourceView av = find(response, a.id());
         assertEquals(2, av.referenceCount());
         assertEquals("active", av.status());
-        assertTrue(
-                av.referencingPolicies().stream()
-                        .map(SourceView.PolicyRef::name)
-                        .toList()
-                        .containsAll(List.of("P1", "P2")));
-        assertTrue(
-                av.config().stream()
-                        .anyMatch(
-                                row ->
-                                        row.label().equals("Directory")
-                                                && row.value().equals("/a")));
+        assertTrue(av.referencingPolicies().stream()
+                .map(SourceView.PolicyRef::name)
+                .toList()
+                .containsAll(List.of("P1", "P2")));
+        assertTrue(av.config().stream()
+                .anyMatch(row -> row.label().equals("Directory") && row.value().equals("/a")));
 
         assertEquals(1, find(response, b.id()).referenceCount());
 
@@ -84,21 +77,15 @@ class SourceOverviewServiceTest {
         assertEquals("unused", cv.status());
 
         // KPI strip: total, in-use, orphaned.
-        assertEquals(List.of(3L, 2L, 1L), response.kpis().stream().map(SourceKpi::value).toList());
+        assertEquals(
+                List.of(3L, 2L, 1L),
+                response.kpis().stream().map(SourceKpi::value).toList());
     }
 
     @Test
     void aDisabledSourceReadsAsDisabled() {
         Source disabled =
-                sourceStore.save(
-                        new Source(
-                                null,
-                                "Paused",
-                                "folder",
-                                Map.of("directory", "/d"),
-                                false,
-                                "owner",
-                                null));
+                sourceStore.save(new Source(null, "Paused", "folder", Map.of("directory", "/d"), false, "owner", null));
 
         assertEquals("disabled", find(service.overview(), disabled.id()).status());
     }
@@ -115,8 +102,7 @@ class SourceOverviewServiceTest {
         SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
         SourceOverviewService scoped =
-                new SourceOverviewService(
-                        sourceStore, policyStore, sourceGuard, policyGuard, docCounter);
+                new SourceOverviewService(sourceStore, policyStore, sourceGuard, policyGuard, docCounter);
 
         Source ours = teamSource("Ours", "/ours", 1L);
         teamSource("Theirs", "/theirs", 2L);
@@ -129,7 +115,9 @@ class SourceOverviewServiceTest {
         assertEquals(EditorSource.ID, response.sources().get(0).id());
         SourceView view = find(response, ours.id());
         assertEquals(1, view.referenceCount());
-        assertEquals(List.of(1L, 1L, 0L), response.kpis().stream().map(SourceKpi::value).toList());
+        assertEquals(
+                List.of(1L, 1L, 0L),
+                response.kpis().stream().map(SourceKpi::value).toList());
     }
 
     @Test
@@ -143,7 +131,9 @@ class SourceOverviewServiceTest {
         assertEquals("active", editor.status());
         assertEquals(0, editor.referenceCount());
         // KPIs describe configured connections, so the built-in editor is left out of them.
-        assertEquals(List.of(0L, 0L, 0L), response.kpis().stream().map(SourceKpi::value).toList());
+        assertEquals(
+                List.of(0L, 0L, 0L),
+                response.kpis().stream().map(SourceKpi::value).toList());
     }
 
     @Test
@@ -156,11 +146,10 @@ class SourceOverviewServiceTest {
         SourceView editor = find(service.overview(), EditorSource.ID);
 
         assertEquals(2, editor.referenceCount());
-        assertTrue(
-                editor.referencingPolicies().stream()
-                        .map(SourceView.PolicyRef::name)
-                        .toList()
-                        .containsAll(List.of("Redact on upload", "Classify on upload")));
+        assertTrue(editor.referencingPolicies().stream()
+                .map(SourceView.PolicyRef::name)
+                .toList()
+                .containsAll(List.of("Redact on upload", "Classify on upload")));
     }
 
     @Test
@@ -193,61 +182,49 @@ class SourceOverviewServiceTest {
     }
 
     private Source source(String name, String directory) {
-        return sourceStore.save(
-                new Source(
-                        null, name, "folder", Map.of("directory", directory), true, "owner", null));
+        return sourceStore.save(new Source(null, name, "folder", Map.of("directory", directory), true, "owner", null));
     }
 
     private Source teamSource(String name, String directory, Long teamId) {
         return sourceStore.save(
-                new Source(
-                        null,
-                        name,
-                        "folder",
-                        Map.of("directory", directory),
-                        true,
-                        "owner",
-                        teamId));
+                new Source(null, name, "folder", Map.of("directory", directory), true, "owner", teamId));
     }
 
     private void policyReferencing(String name, String... sourceIds) {
-        policyStore.save(
-                new Policy(
-                        null,
-                        name,
-                        "owner",
-                        true,
-                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        OutputSpec.inline()));
+        policyStore.save(new Policy(
+                null,
+                name,
+                "owner",
+                true,
+                List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline()));
     }
 
     /**
      * A policy that targets the editor: membership rides in its output metadata, not a sourceId.
      */
     private void editorPolicy(String name) {
-        policyStore.save(
-                new Policy(
-                        null,
-                        name,
-                        "owner",
-                        true,
-                        List.of(),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        new OutputSpec("inline", Map.of("sources", List.of("editor")))));
+        policyStore.save(new Policy(
+                null,
+                name,
+                "owner",
+                true,
+                List.of(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                new OutputSpec("inline", Map.of("sources", List.of("editor")))));
     }
 
     private void teamPolicy(String name, Long teamId, String... sourceIds) {
-        policyStore.save(
-                new Policy(
-                        null,
-                        name,
-                        "owner",
-                        true,
-                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        OutputSpec.inline(),
-                        teamId));
+        policyStore.save(new Policy(
+                null,
+                name,
+                "owner",
+                true,
+                List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline(),
+                teamId));
     }
 
     private static SourceView find(SourcesResponse response, String id) {

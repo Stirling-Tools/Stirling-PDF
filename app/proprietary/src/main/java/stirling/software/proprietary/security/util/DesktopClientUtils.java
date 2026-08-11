@@ -58,12 +58,9 @@ public class DesktopClientUtils {
      * @return desktop token expiry in minutes (defaults to 30 days if not configured)
      */
     public static int getDesktopTokenExpiryMinutes(ApplicationProperties applicationProperties) {
-        int configuredMinutes =
-                applicationProperties.getSecurity().getJwt().getDesktopTokenExpiryMinutes();
+        int configuredMinutes = applicationProperties.getSecurity().getJwt().getDesktopTokenExpiryMinutes();
         // If not configured or invalid, default to 30 days (43200 minutes)
-        return configuredMinutes > 0
-                ? configuredMinutes
-                : JwtConstants.DEFAULT_DESKTOP_TOKEN_EXPIRY_MINUTES;
+        return configuredMinutes > 0 ? configuredMinutes : JwtConstants.DEFAULT_DESKTOP_TOKEN_EXPIRY_MINUTES;
     }
 
     /**
@@ -73,10 +70,7 @@ public class DesktopClientUtils {
      * @return web token expiry in minutes
      */
     public static int getWebTokenExpiryMinutes(ApplicationProperties applicationProperties) {
-        int configuredMinutes =
-                applicationProperties.getSecurity().getJwt().getTokenExpiryMinutes();
-        return configuredMinutes > 0
-                ? configuredMinutes
-                : JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
+        int configuredMinutes = applicationProperties.getSecurity().getJwt().getTokenExpiryMinutes();
+        return configuredMinutes > 0 ? configuredMinutes : JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
     }
 }

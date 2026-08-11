@@ -15,8 +15,9 @@ import tools.jackson.databind.json.JsonMapper;
 @Slf4j
 public class JsonObjectPropertyEditor<T> extends PropertyEditorSupport {
 
-    private static final ObjectMapper OBJECT_MAPPER =
-            JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
 
     private final Class<T> type;
 
@@ -34,8 +35,7 @@ public class JsonObjectPropertyEditor<T> extends PropertyEditorSupport {
             setValue(OBJECT_MAPPER.readValue(text, type));
         } catch (Exception e) {
             log.error("Failed to parse JSON object value", e);
-            throw new IllegalArgumentException(
-                    "Expected a JSON object but could not parse: " + e.getMessage());
+            throw new IllegalArgumentException("Expected a JSON object but could not parse: " + e.getMessage());
         }
     }
 }

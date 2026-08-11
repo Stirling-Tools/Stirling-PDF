@@ -29,21 +29,23 @@ import stirling.software.common.util.TempFileManager;
 class StampControllerTest {
 
     private static final Pattern UUID_HEX_PATTERN = Pattern.compile("[0-9a-f]{8}");
-    private static final Pattern DATE_LITERAL_REGEX =
-            Pattern.compile("@date is \\d{4}-\\d{2}-\\d{2}");
-    private static final Pattern DATE_TIME_MIN_PATTERN =
-            Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}");
+    private static final Pattern DATE_LITERAL_REGEX = Pattern.compile("@date is \\d{4}-\\d{2}-\\d{2}");
+    private static final Pattern DATE_TIME_MIN_PATTERN = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}");
     private static final Pattern DATE_SLASH_PATTERN = Pattern.compile("\\d{2}/\\d{2}/\\d{4}");
     private static final Pattern DAY_LABEL_PATTERN = Pattern.compile("Day: \\d{2}");
     private static final Pattern MONTH_LABEL_PATTERN = Pattern.compile("Month: \\d{2}");
-    private static final Pattern DATE_TIME_FULL_PATTERN =
-            Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}");
+    private static final Pattern DATE_TIME_FULL_PATTERN = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}");
     private static final Pattern TIME_LABEL_PATTERN = Pattern.compile("Time: \\d{2}:\\d{2}:\\d{2}");
     private static final Pattern DATE_LABEL_PATTERN = Pattern.compile("Date: \\d{4}-\\d{2}-\\d{2}");
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
 
-    @InjectMocks private StampController stampController;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private StampController stampController;
 
     private Method processStampTextMethod;
     private Method processCustomDateFormatMethod;
@@ -51,56 +53,40 @@ class StampControllerTest {
 
     @BeforeEach
     void setUp() throws NoSuchMethodException {
-        processStampTextMethod =
-                StampController.class.getDeclaredMethod(
-                        "processStampText",
-                        String.class,
-                        int.class,
-                        int.class,
-                        String.class,
-                        PDDocument.class);
+        processStampTextMethod = StampController.class.getDeclaredMethod(
+                "processStampText", String.class, int.class, int.class, String.class, PDDocument.class);
         processStampTextMethod.setAccessible(true);
 
         processCustomDateFormatMethod =
-                StampController.class.getDeclaredMethod(
-                        "processCustomDateFormat", String.class, LocalDateTime.class);
+                StampController.class.getDeclaredMethod("processCustomDateFormat", String.class, LocalDateTime.class);
         processCustomDateFormatMethod.setAccessible(true);
 
-        calculateImagePositionYMethod =
-                StampController.class.getDeclaredMethod(
-                        "calculateImagePositionY",
-                        PDRectangle.class,
-                        int.class,
-                        float.class,
-                        float.class);
+        calculateImagePositionYMethod = StampController.class.getDeclaredMethod(
+                "calculateImagePositionY", PDRectangle.class, int.class, float.class, float.class);
         calculateImagePositionYMethod.setAccessible(true);
     }
 
-    private float invokeCalculateImagePositionY(
-            PDRectangle pageSize, int position, float imageHeight, float margin) throws Exception {
+    private float invokeCalculateImagePositionY(PDRectangle pageSize, int position, float imageHeight, float margin)
+            throws Exception {
         try {
             return (float)
-                    calculateImagePositionYMethod.invoke(
-                            stampController, pageSize, position, imageHeight, margin);
+                    calculateImagePositionYMethod.invoke(stampController, pageSize, position, imageHeight, margin);
         } catch (InvocationTargetException e) {
             throw (Exception) e.getCause();
         }
     }
 
     private String invokeProcessStampText(
-            String stampText, int pageNumber, int totalPages, String filename, PDDocument document)
-            throws Exception {
+            String stampText, int pageNumber, int totalPages, String filename, PDDocument document) throws Exception {
         try {
-            return (String)
-                    processStampTextMethod.invoke(
-                            stampController, stampText, pageNumber, totalPages, filename, document);
+            return (String) processStampTextMethod.invoke(
+                    stampController, stampText, pageNumber, totalPages, filename, document);
         } catch (InvocationTargetException e) {
             throw (Exception) e.getCause();
         }
     }
 
-    private String invokeProcessCustomDateFormat(String format, LocalDateTime now)
-            throws Exception {
+    private String invokeProcessCustomDateFormat(String format, LocalDateTime now) throws Exception {
         try {
             return (String) processCustomDateFormatMethod.invoke(stampController, format, now);
         } catch (InvocationTargetException e) {
@@ -161,17 +147,14 @@ class StampControllerTest {
         @Test
         @DisplayName("Should replace @total_pages with total page count")
         void testTotalPagesReplacement() throws Exception {
-            String result =
-                    invokeProcessStampText("of @total_pages pages", 1, 100, "test.pdf", null);
+            String result = invokeProcessStampText("of @total_pages pages", 1, 100, "test.pdf", null);
             assertEquals("of 100 pages", result);
         }
 
         @Test
         @DisplayName("Should replace combined page variables")
         void testCombinedPageVariables() throws Exception {
-            String result =
-                    invokeProcessStampText(
-                            "Page @page_number of @total_pages", 5, 20, "test.pdf", null);
+            String result = invokeProcessStampText("Page @page_number of @total_pages", 5, 20, "test.pdf", null);
             assertEquals("Page 5 of 20", result);
         }
 
@@ -204,8 +187,7 @@ class StampControllerTest {
         @Test
         @DisplayName("Should replace @filename_full with full filename")
         void testFilenameWithExtension() throws Exception {
-            String result =
-                    invokeProcessStampText("File: @filename_full", 1, 1, "document.pdf", null);
+            String result = invokeProcessStampText("File: @filename_full", 1, 1, "document.pdf", null);
             assertEquals("File: document.pdf", result);
         }
 
@@ -246,18 +228,14 @@ class StampControllerTest {
         @DisplayName("Should replace @date with current date")
         void testDateReplacement() throws Exception {
             String result = invokeProcessStampText("Date: @date", 1, 1, "test.pdf", null);
-            assertTrue(
-                    DATE_LABEL_PATTERN.matcher(result).matches(),
-                    "Date should match YYYY-MM-DD format");
+            assertTrue(DATE_LABEL_PATTERN.matcher(result).matches(), "Date should match YYYY-MM-DD format");
         }
 
         @Test
         @DisplayName("Should replace @time with current time")
         void testTimeReplacement() throws Exception {
             String result = invokeProcessStampText("Time: @time", 1, 1, "test.pdf", null);
-            assertTrue(
-                    TIME_LABEL_PATTERN.matcher(result).matches(),
-                    "Time should match HH:mm:ss format");
+            assertTrue(TIME_LABEL_PATTERN.matcher(result).matches(), "Time should match HH:mm:ss format");
         }
 
         @Test
@@ -282,8 +260,7 @@ class StampControllerTest {
         @DisplayName("Should replace @month with zero-padded month")
         void testMonthReplacement() throws Exception {
             String result = invokeProcessStampText("Month: @month", 1, 1, "test.pdf", null);
-            assertTrue(
-                    MONTH_LABEL_PATTERN.matcher(result).matches(), "Month should be zero-padded");
+            assertTrue(MONTH_LABEL_PATTERN.matcher(result).matches(), "Month should be zero-padded");
         }
 
         @Test
@@ -302,27 +279,21 @@ class StampControllerTest {
         @DisplayName("Should handle custom date format dd/MM/yyyy")
         void testCustomDateFormatSlash() throws Exception {
             String result = invokeProcessStampText("@date{dd/MM/yyyy}", 1, 1, "test.pdf", null);
-            assertTrue(
-                    DATE_SLASH_PATTERN.matcher(result).matches(),
-                    "Should match dd/MM/yyyy format: " + result);
+            assertTrue(DATE_SLASH_PATTERN.matcher(result).matches(), "Should match dd/MM/yyyy format: " + result);
         }
 
         @Test
         @DisplayName("Should handle custom date format with time")
         void testCustomDateFormatWithTime() throws Exception {
-            String result =
-                    invokeProcessStampText("@date{yyyy-MM-dd HH:mm}", 1, 1, "test.pdf", null);
+            String result = invokeProcessStampText("@date{yyyy-MM-dd HH:mm}", 1, 1, "test.pdf", null);
             assertTrue(
-                    DATE_TIME_MIN_PATTERN.matcher(result).matches(),
-                    "Should match yyyy-MM-dd HH:mm format: " + result);
+                    DATE_TIME_MIN_PATTERN.matcher(result).matches(), "Should match yyyy-MM-dd HH:mm format: " + result);
         }
 
         @Test
         @DisplayName("Should handle multiple custom date formats in same text")
         void testMultipleCustomDateFormats() throws Exception {
-            String result =
-                    invokeProcessStampText(
-                            "Start: @date{dd/MM/yyyy} End: @date{yyyy}", 1, 1, "test.pdf", null);
+            String result = invokeProcessStampText("Start: @date{dd/MM/yyyy} End: @date{yyyy}", 1, 1, "test.pdf", null);
             assertTrue(result.contains("/"), "Should contain slash from first format");
             // Should have year twice (once with slashes, once alone)
         }
@@ -336,19 +307,16 @@ class StampControllerTest {
         @DisplayName("Should not match format that is too long - regex won't capture it")
         void testFormatTooLong() throws Exception {
             String longFormat = "y".repeat(51); // 51 chars, over the 50 char regex limit
-            String result =
-                    invokeProcessStampText("@date{" + longFormat + "}", 1, 1, "test.pdf", null);
+            String result = invokeProcessStampText("@date{" + longFormat + "}", 1, 1, "test.pdf", null);
             // The CUSTOM_DATE_PATTERN only captures up to 50 chars, so this won't match
             // The @date part will be replaced by simple replacement, leaving {yyy...}
-            assertTrue(
-                    result.contains("{"), "Should contain { because regex didn't match: " + result);
+            assertTrue(result.contains("{"), "Should contain { because regex didn't match: " + result);
         }
 
         @Test
         @DisplayName("Should reject format with unsafe characters - shell injection attempt")
         void testShellInjectionAttempt() throws Exception {
-            String result =
-                    invokeProcessStampText("@date{yyyy-MM-dd$(rm -rf /)}", 1, 1, "test.pdf", null);
+            String result = invokeProcessStampText("@date{yyyy-MM-dd$(rm -rf /)}", 1, 1, "test.pdf", null);
             assertEquals("[invalid format]", result);
         }
 
@@ -370,8 +338,7 @@ class StampControllerTest {
         @ValueSource(strings = {"$(cmd)", "`cmd`", ";cmd", "|cmd", "&cmd", "<cmd", ">cmd"})
         @DisplayName("Should reject various injection attempts")
         void testVariousInjectionAttempts(String injection) throws Exception {
-            String result =
-                    invokeProcessStampText("@date{yyyy" + injection + "}", 1, 1, "test.pdf", null);
+            String result = invokeProcessStampText("@date{yyyy" + injection + "}", 1, 1, "test.pdf", null);
             assertEquals("[invalid format]", result);
         }
 
@@ -380,10 +347,8 @@ class StampControllerTest {
         void testValidFormatCharacters() throws Exception {
             // All these should be valid based on SAFE_DATE_FORMAT_PATTERN: yMdHhmsS/-:.,
             // '+EGuwWDFzZXa and space
-            String result =
-                    invokeProcessStampText("@date{yyyy-MM-dd HH:mm:ss}", 1, 1, "test.pdf", null);
-            assertFalse(
-                    result.startsWith("[invalid"), "Valid format should be accepted: " + result);
+            String result = invokeProcessStampText("@date{yyyy-MM-dd HH:mm:ss}", 1, 1, "test.pdf", null);
+            assertFalse(result.startsWith("[invalid"), "Valid format should be accepted: " + result);
         }
 
         @Test
@@ -395,9 +360,7 @@ class StampControllerTest {
             // Note: The pattern 'sssss' passes the SAFE_DATE_FORMAT_PATTERN but fails
             // DateTimeFormatter.ofPattern()
             String result = invokeProcessCustomDateFormat("sssss", now);
-            assertTrue(
-                    result.startsWith("[invalid format:"),
-                    "Invalid pattern should return error message: " + result);
+            assertTrue(result.startsWith("[invalid format:"), "Invalid pattern should return error message: " + result);
         }
     }
 
@@ -408,8 +371,7 @@ class StampControllerTest {
         @Test
         @DisplayName("Should convert @@ to literal @")
         void testDoubleAtEscape() throws Exception {
-            String result =
-                    invokeProcessStampText("Email: test@@example.com", 1, 1, "test.pdf", null);
+            String result = invokeProcessStampText("Email: test@@example.com", 1, 1, "test.pdf", null);
             assertEquals("Email: test@example.com", result);
         }
 
@@ -419,9 +381,7 @@ class StampControllerTest {
             String result = invokeProcessStampText("@@date is @date", 1, 1, "test.pdf", null);
             // @@date should become @date, and @date should be replaced with actual date
             assertTrue(result.startsWith("@date is "), "Should start with literal @date");
-            assertTrue(
-                    DATE_LITERAL_REGEX.matcher(result).matches(),
-                    "Should have date after: " + result);
+            assertTrue(DATE_LITERAL_REGEX.matcher(result).matches(), "Should have date after: " + result);
         }
 
         @Test
@@ -498,8 +458,7 @@ class StampControllerTest {
             // Don't set any document information
 
             try {
-                String result =
-                        invokeProcessStampText("@author @title @subject", 1, 1, "test.pdf", doc);
+                String result = invokeProcessStampText("@author @title @subject", 1, 1, "test.pdf", doc);
                 assertEquals("  ", result); // All should be empty strings
             } finally {
                 doc.close();
@@ -538,9 +497,7 @@ class StampControllerTest {
         @DisplayName("UUID should contain only hex characters")
         void testUuidFormat() throws Exception {
             String result = invokeProcessStampText("@uuid", 1, 1, "test.pdf", null);
-            assertTrue(
-                    UUID_HEX_PATTERN.matcher(result).matches(),
-                    "UUID should be 8 hex characters: " + result);
+            assertTrue(UUID_HEX_PATTERN.matcher(result).matches(), "UUID should be 8 hex characters: " + result);
         }
     }
 
@@ -579,16 +536,14 @@ class StampControllerTest {
         @Test
         @DisplayName("Should preserve text around variables")
         void testPreservesSurroundingText() throws Exception {
-            String result =
-                    invokeProcessStampText("Before @page_number After", 5, 10, "test.pdf", null);
+            String result = invokeProcessStampText("Before @page_number After", 5, 10, "test.pdf", null);
             assertEquals("Before 5 After", result);
         }
 
         @Test
         @DisplayName("Should handle multiple same variables")
         void testMultipleSameVariables() throws Exception {
-            String result =
-                    invokeProcessStampText("@page_number / @page_number", 3, 10, "test.pdf", null);
+            String result = invokeProcessStampText("@page_number / @page_number", 3, 10, "test.pdf", null);
             assertEquals("3 / 3", result);
         }
 
@@ -635,8 +590,7 @@ class StampControllerTest {
             "'Page @page_number of @total_pages', 100, 1000, 'Page 100 of 1000'"
         })
         @DisplayName("Should handle page number template with various values")
-        void testPageNumberTemplates(String template, int page, int total, String expected)
-                throws Exception {
+        void testPageNumberTemplates(String template, int page, int total, String expected) throws Exception {
             String result = invokeProcessStampText(template, page, total, "test.pdf", null);
             assertEquals(expected, result);
         }

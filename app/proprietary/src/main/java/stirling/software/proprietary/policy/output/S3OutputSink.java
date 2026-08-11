@@ -82,8 +82,8 @@ public class S3OutputSink implements PolicyOutputSink {
     }
 
     @Override
-    public List<ResultFile> deliver(
-            OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
+    public List<ResultFile> deliver(OutputDelivery delivery, List<Resource> outputs, OutputSpec spec)
+            throws IOException {
         S3Config config = connectionResolver.resolve(spec.options());
         S3Client client = connectionPool.clientFor(config);
 
@@ -96,17 +96,15 @@ public class S3OutputSink implements PolicyOutputSink {
                 String predictedGate = stage(resource, staged, delivery.policyId() != null);
                 long size = Files.size(staged);
                 String key = upload(delivery, client, config, name, staged, predictedGate);
-                String contentType =
-                        MediaTypeFactory.getMediaType(name)
-                                .orElse(MediaType.APPLICATION_OCTET_STREAM)
-                                .toString();
-                results.add(
-                        ResultFile.builder()
-                                .fileId(UUID.randomUUID().toString())
-                                .fileName(S3Identities.identity(config.bucket(), key))
-                                .contentType(contentType)
-                                .fileSize(size)
-                                .build());
+                String contentType = MediaTypeFactory.getMediaType(name)
+                        .orElse(MediaType.APPLICATION_OCTET_STREAM)
+                        .toString();
+                results.add(ResultFile.builder()
+                        .fileId(UUID.randomUUID().toString())
+                        .fileName(S3Identities.identity(config.bucket(), key))
+                        .contentType(contentType)
+                        .fileSize(size)
+                        .build());
                 log.debug(
                         "Wrote policy run {} output to {}",
                         delivery.runId(),
@@ -127,8 +125,7 @@ public class S3OutputSink implements PolicyOutputSink {
      * be re-readable across collision retries). For a recorded delivery the MD5 - the predicted
      * single-part ETag - is digested in the same pass; ad-hoc runs record nothing and skip it.
      */
-    private static String stage(Resource resource, Path staged, boolean recorded)
-            throws IOException {
+    private static String stage(Resource resource, Path staged, boolean recorded) throws IOException {
         if (!recorded) {
             try (InputStream is = resource.getInputStream();
                     OutputStream out = Files.newOutputStream(staged)) {
@@ -138,8 +135,7 @@ public class S3OutputSink implements PolicyOutputSink {
         }
         MessageDigest digest = newMd5();
         try (InputStream is = resource.getInputStream();
-                DigestOutputStream out =
-                        new DigestOutputStream(Files.newOutputStream(staged), digest)) {
+                DigestOutputStream out = new DigestOutputStream(Files.newOutputStream(staged), digest)) {
             is.transferTo(out);
         }
         return HexFormat.of().formatHex(digest.digest());
@@ -153,12 +149,7 @@ public class S3OutputSink implements PolicyOutputSink {
      * PUT that never made the object visible also forgets its row.
      */
     private String upload(
-            OutputDelivery delivery,
-            S3Client client,
-            S3Config config,
-            String name,
-            Path staged,
-            String predictedGate)
+            OutputDelivery delivery, S3Client client, S3Config config, String name, Path staged, String predictedGate)
             throws IOException {
         String keyPrefix = keyPrefix(config);
         boolean conditionalPuts = true;
@@ -177,8 +168,7 @@ public class S3OutputSink implements PolicyOutputSink {
                 put.ifNoneMatch("*");
             }
             try {
-                PutObjectResponse response =
-                        client.putObject(put.build(), RequestBody.fromFile(staged));
+                PutObjectResponse response = client.putObject(put.build(), RequestBody.fromFile(staged));
                 reRecordIfGateDiffers(delivery, identity, predictedGate, response);
                 return key;
             } catch (S3Exception e) {
@@ -194,9 +184,7 @@ public class S3OutputSink implements PolicyOutputSink {
                 if (conditionalPuts && e.statusCode() == 501) {
                     // Store without conditional-write support: retry this candidate with a plain
                     // existence check instead.
-                    log.debug(
-                            "Conditional PUT unsupported by {}; falling back to existence checks",
-                            config.bucket());
+                    log.debug("Conditional PUT unsupported by {}; falling back to existence checks", config.bucket());
                     conditionalPuts = false;
                     attempt--;
                     continue;
@@ -215,18 +203,13 @@ public class S3OutputSink implements PolicyOutputSink {
      * already visible - the narrow race such stores trade for a working self-output skip.
      */
     private void reRecordIfGateDiffers(
-            OutputDelivery delivery,
-            String identity,
-            String predictedGate,
-            PutObjectResponse response) {
+            OutputDelivery delivery, String identity, String predictedGate, PutObjectResponse response) {
         if (delivery.policyId() == null) {
             return;
         }
         String actualGate = S3Identities.gate(response.eTag(), null, null);
         if (!actualGate.equals(predictedGate)) {
-            log.debug(
-                    "PUT ETag for {} differs from content MD5 (encrypted bucket?); re-recording",
-                    identity);
+            log.debug("PUT ETag for {} differs from content MD5 (encrypted bucket?); re-recording", identity);
             processedLedger.recordOutput(delivery.policyId(), identity, actualGate, null);
         }
     }
@@ -239,7 +222,8 @@ public class S3OutputSink implements PolicyOutputSink {
 
     private static boolean exists(S3Client client, String bucket, String key) {
         try {
-            client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
+            client.headObject(
+                    HeadObjectRequest.builder().bucket(bucket).key(key).build());
             return true;
         } catch (NoSuchKeyException e) {
             return false;

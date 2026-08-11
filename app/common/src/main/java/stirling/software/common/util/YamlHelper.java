@@ -37,22 +37,20 @@ import lombok.extern.slf4j.Slf4j;
 public class YamlHelper {
 
     // YAML dump settings with comment support and block flow style
-    private static final DumpSettings DUMP_SETTINGS =
-            DumpSettings.builder()
-                    .setDumpComments(true)
-                    .setWidth(Integer.MAX_VALUE)
-                    .setDefaultFlowStyle(FlowStyle.BLOCK)
-                    .build();
+    private static final DumpSettings DUMP_SETTINGS = DumpSettings.builder()
+            .setDumpComments(true)
+            .setWidth(Integer.MAX_VALUE)
+            .setDefaultFlowStyle(FlowStyle.BLOCK)
+            .build();
 
     private final String yamlContent; // Stores the entire YAML content as a string
 
-    private LoadSettings loadSettings =
-            LoadSettings.builder()
-                    .setUseMarks(true)
-                    .setMaxAliasesForCollections(Integer.MAX_VALUE)
-                    .setAllowRecursiveKeys(true)
-                    .setParseComments(true)
-                    .build();
+    private LoadSettings loadSettings = LoadSettings.builder()
+            .setUseMarks(true)
+            .setMaxAliasesForCollections(Integer.MAX_VALUE)
+            .setAllowRecursiveKeys(true)
+            .setParseComments(true)
+            .build();
 
     private Path originalFilePath;
     private Node updatedRootNode;
@@ -85,8 +83,7 @@ public class YamlHelper {
 
             Object newValue = sourceYaml.getValueByExactKeyPath(keyArray);
             Object currentValue = targetYaml.getValueByExactKeyPath(keyArray);
-            if (newValue != null
-                    && (!newValue.equals(currentValue) || !sourceKeys.equals(targetKeys))) {
+            if (newValue != null && (!newValue.equals(currentValue) || !sourceKeys.equals(targetKeys))) {
                 boolean updatedKey = targetYaml.updateValue(Arrays.asList(keyArray), newValue);
                 if (updatedKey) updated = true;
             }
@@ -126,23 +123,18 @@ public class YamlHelper {
                 Node newValueNode = null;
 
                 if (isAnyInteger(newValue)) {
-                    newValueNode =
-                            new ScalarNode(Tag.INT, String.valueOf(newValue), ScalarStyle.PLAIN);
+                    newValueNode = new ScalarNode(Tag.INT, String.valueOf(newValue), ScalarStyle.PLAIN);
                 } else if (isFloat(newValue)) {
                     Object floatValue = Float.valueOf(String.valueOf(newValue));
-                    newValueNode =
-                            new ScalarNode(
-                                    Tag.FLOAT, String.valueOf(floatValue), ScalarStyle.PLAIN);
+                    newValueNode = new ScalarNode(Tag.FLOAT, String.valueOf(floatValue), ScalarStyle.PLAIN);
                 } else if ("true".equals(newValue) || "false".equals(newValue)) {
-                    newValueNode =
-                            new ScalarNode(Tag.BOOL, String.valueOf(newValue), ScalarStyle.PLAIN);
+                    newValueNode = new ScalarNode(Tag.BOOL, String.valueOf(newValue), ScalarStyle.PLAIN);
                 } else if (newValue instanceof Map<?, ?> map) {
                     // Handle Map objects - convert to MappingNode
                     List<NodeTuple> mapTuples = new ArrayList<>();
                     for (Map.Entry<?, ?> entry : map.entrySet()) {
                         ScalarNode mapKeyNode =
-                                new ScalarNode(
-                                        Tag.STR, String.valueOf(entry.getKey()), ScalarStyle.PLAIN);
+                                new ScalarNode(Tag.STR, String.valueOf(entry.getKey()), ScalarStyle.PLAIN);
                         Node mapValueNode = convertValueToNode(entry.getValue());
                         mapTuples.add(new NodeTuple(mapKeyNode, mapValueNode));
                     }
@@ -163,14 +155,11 @@ public class YamlHelper {
                         } else {
                             tag = Tag.STR;
                         }
-                        sequenceNodes.add(
-                                new ScalarNode(tag, String.valueOf(obj), ScalarStyle.PLAIN));
+                        sequenceNodes.add(new ScalarNode(tag, String.valueOf(obj), ScalarStyle.PLAIN));
                     }
                     newValueNode = new SequenceNode(Tag.SEQ, sequenceNodes, FlowStyle.FLOW);
                 } else if (tag == Tag.NULL) {
-                    if ("true".equals(newValue)
-                            || "false".equals(newValue)
-                            || newValue instanceof Boolean) {
+                    if ("true".equals(newValue) || "false".equals(newValue) || newValue instanceof Boolean) {
                         tag = Tag.BOOL;
                     }
                     newValueNode = new ScalarNode(tag, String.valueOf(newValue), ScalarStyle.PLAIN);
@@ -280,9 +269,7 @@ public class YamlHelper {
             for (NodeTuple tuple : mappingNode.getValue()) {
                 if (tuple.getKeyNode() instanceof ScalarNode keyNode) {
                     String newPath =
-                            currentPath.isEmpty()
-                                    ? keyNode.getValue()
-                                    : currentPath + "." + keyNode.getValue();
+                            currentPath.isEmpty() ? keyNode.getValue() : currentPath + "." + keyNode.getValue();
                     allKeys.add(newPath);
                     collectKeys(tuple.getValueNode(), newPath, allKeys);
                 }
@@ -366,18 +353,17 @@ public class YamlHelper {
      */
     public String convertNodeToYaml(Node rootNode) {
         StringWriter writer = new StringWriter();
-        StreamDataWriter streamDataWriter =
-                new StreamDataWriter() {
-                    @Override
-                    public void write(String str) {
-                        writer.write(str);
-                    }
+        StreamDataWriter streamDataWriter = new StreamDataWriter() {
+            @Override
+            public void write(String str) {
+                writer.write(str);
+            }
 
-                    @Override
-                    public void write(String str, int off, int len) {
-                        writer.write(str, off, len);
-                    }
-                };
+            @Override
+            public void write(String str, int off, int len) {
+                writer.write(str, off, len);
+            }
+        };
 
         new Dump(DUMP_SETTINGS).dumpNode(rootNode, streamDataWriter);
         return writer.toString();
@@ -400,10 +386,7 @@ public class YamlHelper {
      */
     @SuppressWarnings("UnnecessaryTemporaryOnConversionFromString")
     public static boolean isInteger(Object object) {
-        if (object instanceof Integer
-                || object instanceof Short
-                || object instanceof Byte
-                || object instanceof Long) {
+        if (object instanceof Integer || object instanceof Short || object instanceof Byte || object instanceof Long) {
             return true;
         }
         if (object instanceof String str) {
@@ -432,8 +415,7 @@ public class YamlHelper {
      */
     @SuppressWarnings("UnnecessaryTemporaryOnConversionFromString")
     public static boolean isShort(Object object) {
-        return (object instanceof Long)
-                || (object instanceof String str && isParsable(str, Short::parseShort));
+        return (object instanceof Long) || (object instanceof String str && isParsable(str, Short::parseShort));
     }
 
     /**
@@ -444,8 +426,7 @@ public class YamlHelper {
      */
     @SuppressWarnings("UnnecessaryTemporaryOnConversionFromString")
     public static boolean isByte(Object object) {
-        return (object instanceof Long)
-                || (object instanceof String str && isParsable(str, Byte::parseByte));
+        return (object instanceof Long) || (object instanceof String str && isParsable(str, Byte::parseByte));
     }
 
     /**
@@ -456,8 +437,7 @@ public class YamlHelper {
      */
     @SuppressWarnings("UnnecessaryTemporaryOnConversionFromString")
     public static boolean isLong(Object object) {
-        return (object instanceof Long)
-                || (object instanceof String str && isParsable(str, Long::parseLong));
+        return (object instanceof Long) || (object instanceof String str && isParsable(str, Long::parseLong));
     }
 
     /**
@@ -490,8 +470,7 @@ public class YamlHelper {
             // Recursively handle nested maps
             List<NodeTuple> mapTuples = new ArrayList<>();
             for (Map.Entry<?, ?> entry : map.entrySet()) {
-                ScalarNode mapKeyNode =
-                        new ScalarNode(Tag.STR, String.valueOf(entry.getKey()), ScalarStyle.PLAIN);
+                ScalarNode mapKeyNode = new ScalarNode(Tag.STR, String.valueOf(entry.getKey()), ScalarStyle.PLAIN);
                 Node mapValueNode = convertValueToNode(entry.getValue());
                 mapTuples.add(new NodeTuple(mapKeyNode, mapValueNode));
             }

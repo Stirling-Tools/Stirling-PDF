@@ -41,9 +41,8 @@ import stirling.software.proprietary.security.service.UserService;
 @EnabledIfEnvironmentVariable(
         named = "RUN_NETWORK_INTEGRATION_TESTS",
         matches = "true",
-        disabledReason =
-                "Spins up SFTP/FTP/SMB containers; opt-in to keep several heavy containers off the"
-                        + " standard CI runner. Run with RUN_NETWORK_INTEGRATION_TESTS=true.")
+        disabledReason = "Spins up SFTP/FTP/SMB containers; opt-in to keep several heavy containers off the"
+                + " standard CI runner. Run with RUN_NETWORK_INTEGRATION_TESTS=true.")
 class SmbNetworkSourceIntegrationTest {
 
     private static final String POLICY = "p1";
@@ -53,16 +52,10 @@ class SmbNetworkSourceIntegrationTest {
     private static final int SMB_PORT = 445;
 
     @org.testcontainers.junit.jupiter.Container
-    static GenericContainer<?> samba =
-            new GenericContainer<>("dperson/samba")
-                    .withExposedPorts(SMB_PORT)
-                    .withCommand(
-                            "-p",
-                            "-u",
-                            USER + ";" + PASS,
-                            "-s",
-                            SHARE + ";/share;yes;no;no;" + USER)
-                    .waitingFor(Wait.forListeningPort());
+    static GenericContainer<?> samba = new GenericContainer<>("dperson/samba")
+            .withExposedPorts(SMB_PORT)
+            .withCommand("-p", "-u", USER + ";" + PASS, "-s", SHARE + ";/share;yes;no;no;" + USER)
+            .waitingFor(Wait.forListeningPort());
 
     private NetworkInputSource source;
     private InProcessProcessedLedger ledger;
@@ -74,13 +67,9 @@ class SmbNetworkSourceIntegrationTest {
         samba.execInContainer("sh", "-c", "mkdir -p /share && chmod -R 0777 /share");
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowPrivateNetworkSources(true);
-        RemoteFileClientFactory factory =
-                new RemoteFileClientFactory(new NetworkHostGuard(properties));
-        NetworkConnectionResolver resolver =
-                new NetworkConnectionResolver(
-                        mock(IntegrationConfigRepository.class),
-                        mock(OwnershipService.class),
-                        mock(UserService.class));
+        RemoteFileClientFactory factory = new RemoteFileClientFactory(new NetworkHostGuard(properties));
+        NetworkConnectionResolver resolver = new NetworkConnectionResolver(
+                mock(IntegrationConfigRepository.class), mock(OwnershipService.class), mock(UserService.class));
         source = new NetworkInputSource(resolver, factory);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
@@ -93,12 +82,7 @@ class SmbNetworkSourceIntegrationTest {
         List<ResolvedInput> work = source.resolve(spec(Map.of()), ctx);
 
         assertThat(work).hasSize(1);
-        String identity =
-                "smb://"
-                        + samba.getHost()
-                        + ":"
-                        + samba.getMappedPort(SMB_PORT)
-                        + "/documents/doc.pdf";
+        String identity = "smb://" + samba.getHost() + ":" + samba.getMappedPort(SMB_PORT) + "/documents/doc.pdf";
         assertThat(ctx.present).containsExactly(identity);
         assertThat(read(work.get(0))).isEqualTo("hello smb");
         assertThat(source.resolve(spec(Map.of()), ctx)).isEmpty();
@@ -176,8 +160,7 @@ class SmbNetworkSourceIntegrationTest {
         }
 
         @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
+        public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
             ledger.settle(POLICY, identity, finalGate, finalContentHash, success);
         }
 

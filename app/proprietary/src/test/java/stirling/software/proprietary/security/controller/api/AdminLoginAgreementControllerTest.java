@@ -23,9 +23,11 @@ import stirling.software.proprietary.security.controller.api.AdminLoginAgreement
 @ExtendWith(MockitoExtension.class)
 class AdminLoginAgreementControllerTest {
 
-    @Mock LoginAgreementService loginAgreementService;
+    @Mock
+    LoginAgreementService loginAgreementService;
 
-    @InjectMocks AdminLoginAgreementController controller;
+    @InjectMocks
+    AdminLoginAgreementController controller;
 
     @Test
     void listDelegatesToService() {
@@ -60,16 +62,13 @@ class AdminLoginAgreementControllerTest {
         doThrow(new IllegalArgumentException("Invalid locale"))
                 .when(loginAgreementService)
                 .writeForLocale(eq("../escape"), eq("x"));
-        ResponseEntity<Void> resp =
-                controller.write("../escape", new DisclaimerContentRequest("x"));
+        ResponseEntity<Void> resp = controller.write("../escape", new DisclaimerContentRequest("x"));
         assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
     }
 
     @Test
     void writeReturnsServerErrorOnIoException() throws IOException {
-        doThrow(new IOException("disk full"))
-                .when(loginAgreementService)
-                .writeForLocale(eq("fr-FR"), eq("x"));
+        doThrow(new IOException("disk full")).when(loginAgreementService).writeForLocale(eq("fr-FR"), eq("x"));
         ResponseEntity<Void> resp = controller.write("fr-FR", new DisclaimerContentRequest("x"));
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, resp.getStatusCode());
     }

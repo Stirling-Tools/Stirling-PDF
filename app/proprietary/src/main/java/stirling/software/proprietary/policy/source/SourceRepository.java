@@ -15,8 +15,6 @@ public interface SourceRepository extends JpaRepository<SourceEntity, String> {
      * matches the rows with no team (login-disabled / pre-team data), mirroring the in-memory team
      * filter rather than the empty result a plain {@code = null} would give.
      */
-    @Query(
-            "select s from SourceEntity s where (:teamId is null and s.teamId is null) or"
-                    + " s.teamId = :teamId")
+    @Query("select s from SourceEntity s where (:teamId is null and s.teamId is null) or" + " s.teamId = :teamId")
     List<SourceEntity> findByTeam(@Param("teamId") Long teamId);
 }

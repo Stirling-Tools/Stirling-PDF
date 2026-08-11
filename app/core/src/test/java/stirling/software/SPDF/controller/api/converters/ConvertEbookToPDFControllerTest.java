@@ -61,26 +61,27 @@ class ConvertEbookToPDFControllerTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertEbookToPDFController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @InjectMocks
+    private ConvertEbookToPDFController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     @Test
@@ -88,8 +89,7 @@ class ConvertEbookToPDFControllerTest {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
 
         MockMultipartFile ebookFile =
-                new MockMultipartFile(
-                        "fileInput", "ebook.epub", "application/epub+zip", "content".getBytes());
+                new MockMultipartFile("fileInput", "ebook.epub", "application/epub+zip", "content".getBytes());
 
         ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
         request.setFileInput(ebookFile);
@@ -101,24 +101,21 @@ class ConvertEbookToPDFControllerTest {
         when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
 
         AtomicReference<Path> deletedDir = new AtomicReference<>();
-        Mockito.doAnswer(
-                        invocation -> {
-                            Path dir = invocation.getArgument(0);
-                            deletedDir.set(dir);
-                            if (Files.exists(dir)) {
-                                try (Stream<Path> paths = Files.walk(dir)) {
-                                    paths.sorted(Comparator.reverseOrder())
-                                            .forEach(
-                                                    path -> {
-                                                        try {
-                                                            Files.deleteIfExists(path);
-                                                        } catch (IOException ignored) {
-                                                        }
-                                                    });
+        Mockito.doAnswer(invocation -> {
+                    Path dir = invocation.getArgument(0);
+                    deletedDir.set(dir);
+                    if (Files.exists(dir)) {
+                        try (Stream<Path> paths = Files.walk(dir)) {
+                            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                                try {
+                                    Files.deleteIfExists(path);
+                                } catch (IOException ignored) {
                                 }
-                            }
-                            return null;
-                        })
+                            });
+                        }
+                    }
+                    return null;
+                })
                 .when(tempFileManager)
                 .deleteTempDirectory(any(Path.class));
 
@@ -139,13 +136,11 @@ class ConvertEbookToPDFControllerTest {
             ArgumentCaptor<List<String>> commandCaptor = ArgumentCaptor.forClass(List.class);
             Path expectedInput = workingDir.resolve("ebook.epub");
             Path expectedOutput = workingDir.resolve("ebook.pdf");
-            when(executor.runCommandWithOutputHandling(
-                            commandCaptor.capture(), eq(workingDir.toFile())))
-                    .thenAnswer(
-                            invocation -> {
-                                Files.writeString(expectedOutput, "pdf");
-                                return execResult;
-                            });
+            when(executor.runCommandWithOutputHandling(commandCaptor.capture(), eq(workingDir.toFile())))
+                    .thenAnswer(invocation -> {
+                        Files.writeString(expectedOutput, "pdf");
+                        return execResult;
+                    });
 
             ResponseEntity<Resource> expectedResponse = streamingOk("result".getBytes());
             wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
@@ -174,14 +169,12 @@ class ConvertEbookToPDFControllerTest {
 
         if (Files.exists(workingDir)) {
             try (Stream<Path> paths = Files.walk(workingDir)) {
-                paths.sorted(Comparator.reverseOrder())
-                        .forEach(
-                                path -> {
-                                    try {
-                                        Files.deleteIfExists(path);
-                                    } catch (IOException ignored) {
-                                    }
-                                });
+                paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException ignored) {
+                    }
+                });
             }
         }
     }
@@ -191,8 +184,7 @@ class ConvertEbookToPDFControllerTest {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
 
         MockMultipartFile unsupported =
-                new MockMultipartFile(
-                        "fileInput", "ebook.exe", "application/octet-stream", new byte[] {1, 2, 3});
+                new MockMultipartFile("fileInput", "ebook.exe", "application/octet-stream", new byte[] {1, 2, 3});
 
         ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
         request.setFileInput(unsupported);
@@ -206,8 +198,7 @@ class ConvertEbookToPDFControllerTest {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
 
         MockMultipartFile ebookFile =
-                new MockMultipartFile(
-                        "fileInput", "ebook.epub", "application/epub+zip", "content".getBytes());
+                new MockMultipartFile("fileInput", "ebook.epub", "application/epub+zip", "content".getBytes());
 
         ConvertEbookToPdfRequest request = new ConvertEbookToPdfRequest();
         request.setFileInput(ebookFile);
@@ -217,24 +208,21 @@ class ConvertEbookToPDFControllerTest {
         when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
 
         AtomicReference<Path> deletedDir = new AtomicReference<>();
-        Mockito.doAnswer(
-                        invocation -> {
-                            Path dir = invocation.getArgument(0);
-                            deletedDir.set(dir);
-                            if (Files.exists(dir)) {
-                                try (Stream<Path> paths = Files.walk(dir)) {
-                                    paths.sorted(Comparator.reverseOrder())
-                                            .forEach(
-                                                    path -> {
-                                                        try {
-                                                            Files.deleteIfExists(path);
-                                                        } catch (IOException ignored) {
-                                                        }
-                                                    });
+        Mockito.doAnswer(invocation -> {
+                    Path dir = invocation.getArgument(0);
+                    deletedDir.set(dir);
+                    if (Files.exists(dir)) {
+                        try (Stream<Path> paths = Files.walk(dir)) {
+                            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                                try {
+                                    Files.deleteIfExists(path);
+                                } catch (IOException ignored) {
                                 }
-                            }
-                            return null;
-                        })
+                            });
+                        }
+                    }
+                    return null;
+                })
                 .when(tempFileManager)
                 .deleteTempDirectory(any(Path.class));
 
@@ -251,11 +239,10 @@ class ConvertEbookToPDFControllerTest {
             Path expectedInput = workingDir.resolve("ebook.epub");
             Path expectedOutput = workingDir.resolve("ebook.pdf");
             when(executor.runCommandWithOutputHandling(any(List.class), eq(workingDir.toFile())))
-                    .thenAnswer(
-                            invocation -> {
-                                Files.writeString(expectedOutput, "pdf");
-                                return execResult;
-                            });
+                    .thenAnswer(invocation -> {
+                        Files.writeString(expectedOutput, "pdf");
+                        return execResult;
+                    });
 
             gu.when(() -> GeneralUtils.generateFilename("ebook.epub", "_convertedToPDF.pdf"))
                     .thenReturn("ebook_convertedToPDF.pdf");
@@ -280,14 +267,12 @@ class ConvertEbookToPDFControllerTest {
 
         if (Files.exists(workingDir)) {
             try (Stream<Path> paths = Files.walk(workingDir)) {
-                paths.sorted(Comparator.reverseOrder())
-                        .forEach(
-                                path -> {
-                                    try {
-                                        Files.deleteIfExists(path);
-                                    } catch (IOException ignored) {
-                                    }
-                                });
+                paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException ignored) {
+                    }
+                });
             }
         }
     }

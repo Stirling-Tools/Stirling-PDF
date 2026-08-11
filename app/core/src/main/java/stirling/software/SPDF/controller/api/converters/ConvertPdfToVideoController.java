@@ -37,12 +37,11 @@ import stirling.software.common.util.TempFileManager;
 public class ConvertPdfToVideoController {
 
     private static final Set<String> SUPPORTED_FORMATS = Set.of("mp4", "webm");
-    private static final Map<String, String> RESOLUTION_FILTERS =
-            Map.of(
-                    "ORIGINAL", "scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1",
-                    "1080P", "scale=-2:1080,setsar=1",
-                    "720P", "scale=-2:720,setsar=1",
-                    "480P", "scale=-2:480,setsar=1");
+    private static final Map<String, String> RESOLUTION_FILTERS = Map.of(
+            "ORIGINAL", "scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1",
+            "1080P", "scale=-2:1080,setsar=1",
+            "720P", "scale=-2:720,setsar=1",
+            "480P", "scale=-2:480,setsar=1");
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -153,12 +152,7 @@ public class ConvertPdfToVideoController {
     */
 
     private void generateFrames(
-            Path inputPdf,
-            Path outputDir,
-            int dpi,
-            float opacity,
-            String watermarkText,
-            boolean isWatermarkEnabled)
+            Path inputPdf, Path outputDir, int dpi, float opacity, String watermarkText, boolean isWatermarkEnabled)
             throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(inputPdf.toFile())) {
             PDFRenderer renderer = new PDFRenderer(document);
@@ -175,19 +169,14 @@ public class ConvertPdfToVideoController {
                 ExceptionUtils.validateRenderingDimensions(
                         document.getPage(currentPageIndex), currentPageIndex + 1, dpi);
 
-                BufferedImage image =
-                        ExceptionUtils.handleOomRendering(
-                                currentPageIndex + 1,
-                                dpi,
-                                () ->
-                                        renderer.renderImageWithDPI(
-                                                currentPageIndex, dpi, ImageType.RGB));
+                BufferedImage image = ExceptionUtils.handleOomRendering(
+                        currentPageIndex + 1,
+                        dpi,
+                        () -> renderer.renderImageWithDPI(currentPageIndex, dpi, ImageType.RGB));
                 if (isWatermarkEnabled) {
                     applyWatermark(image, opacity, watermarkText);
                 }
-                Path framePath =
-                        outputDir.resolve(
-                                String.format(Locale.ROOT, "frame_%05d.png", pageIndex + 1));
+                Path framePath = outputDir.resolve(String.format(Locale.ROOT, "frame_%05d.png", pageIndex + 1));
                 ImageIO.write(image, "png", framePath.toFile());
             }
         }
@@ -197,8 +186,7 @@ public class ConvertPdfToVideoController {
         Graphics2D graphics = image.createGraphics();
         try {
             graphics.setRenderingHint(
-                    java.awt.RenderingHints.KEY_TEXT_ANTIALIASING,
-                    java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                    java.awt.RenderingHints.KEY_TEXT_ANTIALIASING, java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
             int baseDimension = Math.min(image.getWidth(), image.getHeight());
             int fontSize = Math.max(32, baseDimension / 5);
             Font font = new Font(Font.SANS_SERIF, Font.BOLD, fontSize);
@@ -229,8 +217,7 @@ public class ConvertPdfToVideoController {
         }
     }
 
-    private List<String> buildFfmpegCommand(
-            String format, String resolution, String frameRate, TempFile outputVideo) {
+    private List<String> buildFfmpegCommand(String format, String resolution, String frameRate, TempFile outputVideo) {
         List<String> command = new ArrayList<>();
         command.add("ffmpeg");
         command.add("-y");
@@ -239,11 +226,9 @@ public class ConvertPdfToVideoController {
         command.add("-i");
         command.add("frame_%05d.png");
         command.add("-vf");
-        command.add(
-                RESOLUTION_FILTERS.getOrDefault(resolution, RESOLUTION_FILTERS.get("ORIGINAL")));
+        command.add(RESOLUTION_FILTERS.getOrDefault(resolution, RESOLUTION_FILTERS.get("ORIGINAL")));
         if ("mp4".equals(format)) {
-            command.addAll(
-                    List.of("-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart"));
+            command.addAll(List.of("-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart"));
         } else if ("webm".equals(format)) {
             command.addAll(List.of("-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "30"));
         }
@@ -260,8 +245,7 @@ public class ConvertPdfToVideoController {
     }
 
     private int getMaxDpi() {
-        ApplicationProperties properties =
-                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        ApplicationProperties properties = ApplicationContextProvider.getBean(ApplicationProperties.class);
         if (properties != null && properties.getSystem() != null) {
             return properties.getSystem().getMaxDPI();
         }

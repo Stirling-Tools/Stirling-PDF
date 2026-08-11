@@ -12,8 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 class ConvertCbzToPdfRequestTest {
 
     private static MultipartFile file() {
-        return new MockMultipartFile(
-                "fileInput", "comic.cbz", "application/x-cbz", new byte[] {1, 2, 3});
+        return new MockMultipartFile("fileInput", "comic.cbz", "application/x-cbz", new byte[] {1, 2, 3});
     }
 
     @Nested

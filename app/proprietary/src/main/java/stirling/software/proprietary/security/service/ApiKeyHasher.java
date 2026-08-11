@@ -29,9 +29,7 @@ public final class ApiKeyHasher {
     /** SHA-256 hex of a raw key; the value stored and looked up, never the raw key. */
     public static String hash(String rawKey) {
         try {
-            byte[] digest =
-                    MessageDigest.getInstance("SHA-256")
-                            .digest(rawKey.getBytes(StandardCharsets.UTF_8));
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(rawKey.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 unavailable", e);
@@ -43,8 +41,6 @@ public final class ApiKeyHasher {
         if (rawKey == null) {
             return "";
         }
-        return rawKey.length() <= DISPLAY_PREFIX_LENGTH
-                ? rawKey
-                : rawKey.substring(0, DISPLAY_PREFIX_LENGTH);
+        return rawKey.length() <= DISPLAY_PREFIX_LENGTH ? rawKey : rawKey.substring(0, DISPLAY_PREFIX_LENGTH);
     }
 }

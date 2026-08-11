@@ -16,14 +16,13 @@ import lombok.Data;
         name = "sessions",
         indexes = {
             // per-principal session/activity lookups
-            @Index(
-                    name = "idx_sessions_principal_last",
-                    columnList = "principal_name, last_request"),
+            @Index(name = "idx_sessions_principal_last", columnList = "principal_name, last_request"),
             // scheduled expiry/purge scan
             @Index(name = "idx_sessions_expired", columnList = "expired")
         })
 public class SessionEntity implements Serializable {
-    @Id private String sessionId;
+    @Id
+    private String sessionId;
 
     private String principalName;
 

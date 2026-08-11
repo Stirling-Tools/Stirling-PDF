@@ -90,8 +90,9 @@ class EndpointInspectorMoreTest {
         @DisplayName("collects direct paths from a GET mapping")
         void collectsDirectPaths() throws Exception {
             Map<RequestMappingInfo, HandlerMethod> methods = new LinkedHashMap<>();
-            RequestMappingInfo getInfo =
-                    RequestMappingInfo.paths("/dashboard").methods(RequestMethod.GET).build();
+            RequestMappingInfo getInfo = RequestMappingInfo.paths("/dashboard")
+                    .methods(RequestMethod.GET)
+                    .build();
             methods.put(getInfo, handlerMethod());
             stubMapping(methods);
 
@@ -115,8 +116,9 @@ class EndpointInspectorMoreTest {
         @DisplayName("ignores non-GET only mappings")
         void ignoresPostOnly() throws Exception {
             Map<RequestMappingInfo, HandlerMethod> methods = new LinkedHashMap<>();
-            RequestMappingInfo postInfo =
-                    RequestMappingInfo.paths("/save").methods(RequestMethod.POST).build();
+            RequestMappingInfo postInfo = RequestMappingInfo.paths("/save")
+                    .methods(RequestMethod.POST)
+                    .build();
             methods.put(postInfo, handlerMethod());
             stubMapping(methods);
 
@@ -128,8 +130,9 @@ class EndpointInspectorMoreTest {
         void fallsBackToStringParsing() throws Exception {
             Map<RequestMappingInfo, HandlerMethod> methods = new LinkedHashMap<>();
             // Wildcard patterns are not direct paths, forcing the toString() fallback branch.
-            RequestMappingInfo patternInfo =
-                    RequestMappingInfo.paths("/files/**").methods(RequestMethod.GET).build();
+            RequestMappingInfo patternInfo = RequestMappingInfo.paths("/files/**")
+                    .methods(RequestMethod.GET)
+                    .build();
             methods.put(patternInfo, handlerMethod());
             stubMapping(methods);
 

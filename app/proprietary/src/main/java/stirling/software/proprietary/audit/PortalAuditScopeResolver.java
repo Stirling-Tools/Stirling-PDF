@@ -11,8 +11,6 @@ public interface PortalAuditScopeResolver {
     /** True when the current authentication carries {@code ROLE_ADMIN}. */
     static boolean hasAdminAuthority() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null
-                && auth.getAuthorities().stream()
-                        .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        return auth != null && auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 }

@@ -24,26 +24,25 @@ class PdfJsonImageElementTest {
         @Test
         @DisplayName("builder sets scalar and array fields")
         void builder() {
-            PdfJsonImageElement e =
-                    PdfJsonImageElement.builder()
-                            .id("img1")
-                            .objectName("Im0")
-                            .inlineImage(false)
-                            .nativeWidth(100)
-                            .nativeHeight(200)
-                            .x(1f)
-                            .y(2f)
-                            .width(3f)
-                            .height(4f)
-                            .left(5f)
-                            .right(6f)
-                            .top(7f)
-                            .bottom(8f)
-                            .transform(new float[] {1f, 0f, 0f, 1f, 0f, 0f})
-                            .zOrder(2)
-                            .imageData("base64")
-                            .imageFormat("png")
-                            .build();
+            PdfJsonImageElement e = PdfJsonImageElement.builder()
+                    .id("img1")
+                    .objectName("Im0")
+                    .inlineImage(false)
+                    .nativeWidth(100)
+                    .nativeHeight(200)
+                    .x(1f)
+                    .y(2f)
+                    .width(3f)
+                    .height(4f)
+                    .left(5f)
+                    .right(6f)
+                    .top(7f)
+                    .bottom(8f)
+                    .transform(new float[] {1f, 0f, 0f, 1f, 0f, 0f})
+                    .zOrder(2)
+                    .imageData("base64")
+                    .imageFormat("png")
+                    .build();
 
             assertThat(e.getId()).isEqualTo("img1");
             assertThat(e.getObjectName()).isEqualTo("Im0");
@@ -83,14 +82,20 @@ class PdfJsonImageElementTest {
         @Test
         @DisplayName("equal content arrays equal; different content not")
         void arrayEquality() {
-            PdfJsonImageElement a =
-                    PdfJsonImageElement.builder().id("i").transform(new float[] {1f, 2f}).build();
-            PdfJsonImageElement b =
-                    PdfJsonImageElement.builder().id("i").transform(new float[] {1f, 2f}).build();
+            PdfJsonImageElement a = PdfJsonImageElement.builder()
+                    .id("i")
+                    .transform(new float[] {1f, 2f})
+                    .build();
+            PdfJsonImageElement b = PdfJsonImageElement.builder()
+                    .id("i")
+                    .transform(new float[] {1f, 2f})
+                    .build();
             assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
 
-            PdfJsonImageElement c =
-                    PdfJsonImageElement.builder().id("i").transform(new float[] {9f}).build();
+            PdfJsonImageElement c = PdfJsonImageElement.builder()
+                    .id("i")
+                    .transform(new float[] {9f})
+                    .build();
             assertThat(a).isNotEqualTo(c).isNotEqualTo(null).isNotEqualTo("string");
         }
 

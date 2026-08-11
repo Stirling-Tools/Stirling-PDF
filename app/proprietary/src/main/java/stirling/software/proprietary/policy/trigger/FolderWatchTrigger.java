@@ -89,8 +89,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
     @Override
     public void validate(Policy policy, PipelineInput input) {
         if (watchDirsOf(input).isEmpty()) {
-            throw new IllegalArgumentException(
-                    "folder-watch trigger requires a watchable (folder) input source");
+            throw new IllegalArgumentException("folder-watch trigger requires a watchable (folder) input source");
         }
     }
 
@@ -108,9 +107,8 @@ public class FolderWatchTrigger implements PolicyTrigger {
         running = true;
         Thread.ofVirtual().name("policy-folder-watch").start(this::watchLoop);
         long reconcileSeconds = applicationProperties.getPolicies().getWatchReconcileSeconds();
-        reconciler =
-                Executors.newSingleThreadScheduledExecutor(
-                        Thread.ofVirtual().name("policy-folder-reconcile-", 0).factory());
+        reconciler = Executors.newSingleThreadScheduledExecutor(
+                Thread.ofVirtual().name("policy-folder-reconcile-", 0).factory());
         // First reconcile runs immediately so pre-existing files are picked up at startup.
         reconciler.scheduleAtFixedRate(this::safeReconcile, 0, reconcileSeconds, TimeUnit.SECONDS);
         log.info("Folder-watch trigger started (reconcile every {}s)", reconcileSeconds);
@@ -246,17 +244,14 @@ public class FolderWatchTrigger implements PolicyTrigger {
         }
         Set<Path> desired = desiredDirs();
 
-        keysByDir
-                .entrySet()
-                .removeIf(
-                        entry -> {
-                            if (desired.contains(entry.getKey())) {
-                                return false;
-                            }
-                            entry.getValue().cancel();
-                            dirByKey.remove(entry.getValue());
-                            return true;
-                        });
+        keysByDir.entrySet().removeIf(entry -> {
+            if (desired.contains(entry.getKey())) {
+                return false;
+            }
+            entry.getValue().cancel();
+            dirByKey.remove(entry.getValue());
+            return true;
+        });
 
         for (Path dir : desired) {
             if (keysByDir.containsKey(dir)) {

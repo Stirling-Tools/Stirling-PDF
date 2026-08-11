@@ -49,25 +49,27 @@ class DecompressPdfControllerTest {
         return baos.toByteArray();
     }
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private DecompressPdfController controller;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private DecompressPdfController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private MockMultipartFile createRealPdf(String content) throws IOException {
@@ -137,12 +139,11 @@ class DecompressPdfControllerTest {
 
     @Test
     void decompressPdf_resultFilename() throws IOException {
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "mydoc.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        createRealPdf("test").getBytes());
+        MockMultipartFile file = new MockMultipartFile(
+                "fileInput",
+                "mydoc.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                createRealPdf("test").getBytes());
         PDFFile request = new PDFFile();
         request.setFileInput(file);
 
@@ -173,12 +174,8 @@ class DecompressPdfControllerTest {
             }
             doc.save(path.toFile());
         }
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "multi.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        Files.readAllBytes(path));
+        MockMultipartFile file = new MockMultipartFile(
+                "fileInput", "multi.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
         PDFFile request = new PDFFile();
         request.setFileInput(file);
 

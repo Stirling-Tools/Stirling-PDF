@@ -17,13 +17,12 @@ import org.snakeyaml.engine.v2.api.LoadSettings;
 
 class YamlHelperMoreTest {
 
-    private static final LoadSettings LOAD_SETTINGS =
-            LoadSettings.builder()
-                    .setUseMarks(true)
-                    .setMaxAliasesForCollections(Integer.MAX_VALUE)
-                    .setAllowRecursiveKeys(true)
-                    .setParseComments(true)
-                    .build();
+    private static final LoadSettings LOAD_SETTINGS = LoadSettings.builder()
+            .setUseMarks(true)
+            .setMaxAliasesForCollections(Integer.MAX_VALUE)
+            .setAllowRecursiveKeys(true)
+            .setParseComments(true)
+            .build();
 
     private YamlHelper helper(String yaml) {
         return new YamlHelper(LOAD_SETTINGS, yaml);
@@ -74,7 +73,8 @@ class YamlHelperMoreTest {
         @DisplayName("replaces a scalar with a List value (SequenceNode)")
         void listValue() {
             YamlHelper h = helper("cfg:\n  items: x\n");
-            assertThat(h.updateValue(List.of("cfg", "items"), List.of("a", "b", "c"))).isTrue();
+            assertThat(h.updateValue(List.of("cfg", "items"), List.of("a", "b", "c")))
+                    .isTrue();
             Object value = h.getValueByExactKeyPath("cfg", "items");
             assertThat(value).isInstanceOf(List.class);
             List<?> list = (List<?>) value;

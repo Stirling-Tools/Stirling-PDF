@@ -48,8 +48,7 @@ public class PrintFileController {
     //        description =
     //                "Input of PDF or Image along with a printer name/URL/IP to match against
     // to send it to (Fire and forget)")
-    public ResponseEntity<String> printFile(@ModelAttribute PrintFileRequest request)
-            throws IOException {
+    public ResponseEntity<String> printFile(@ModelAttribute PrintFileRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         String originalFilename = file.getOriginalFilename();
         if (originalFilename != null
@@ -63,18 +62,11 @@ public class PrintFileController {
             // Find matching printer
             PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
             String normalizedPrinterName = printerName.toLowerCase(Locale.ROOT);
-            PrintService selectedService =
-                    Arrays.stream(services)
-                            .filter(
-                                    service ->
-                                            service.getName()
-                                                    .toLowerCase(Locale.ROOT)
-                                                    .contains(normalizedPrinterName))
-                            .findFirst()
-                            .orElseThrow(
-                                    () ->
-                                            new IllegalArgumentException(
-                                                    "No matching printer found"));
+            PrintService selectedService = Arrays.stream(services)
+                    .filter(service ->
+                            service.getName().toLowerCase(Locale.ROOT).contains(normalizedPrinterName))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("No matching printer found"));
 
             log.info("Selected Printer: {}", selectedService.getName());
 
@@ -82,8 +74,7 @@ public class PrintFileController {
                 // Use Stream-to-File pattern: write to temp file first, then load from file
                 Path tempFile = Files.createTempFile("print-", ".pdf");
                 try {
-                    Files.copy(
-                            file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
                     try (PDDocument document = Loader.loadPDF(tempFile.toFile())) {
                         PrinterJob job = PrinterJob.getPrinterJob();
                         job.setPrintService(selectedService);
@@ -98,32 +89,28 @@ public class PrintFileController {
                     BufferedImage image = ImageIO.read(inputStream);
                     PrinterJob job = PrinterJob.getPrinterJob();
                     job.setPrintService(selectedService);
-                    job.setPrintable(
-                            new Printable() {
-                                public int print(
-                                        Graphics graphics, PageFormat pageFormat, int pageIndex)
-                                        throws PrinterException {
-                                    if (pageIndex != 0) {
-                                        return NO_SUCH_PAGE;
-                                    }
-                                    Graphics2D g2d = (Graphics2D) graphics;
-                                    g2d.translate(
-                                            pageFormat.getImageableX(), pageFormat.getImageableY());
-                                    g2d.drawImage(
-                                            image,
-                                            0,
-                                            0,
-                                            (int) pageFormat.getImageableWidth(),
-                                            (int) pageFormat.getImageableHeight(),
-                                            null);
-                                    return PAGE_EXISTS;
-                                }
-                            });
+                    job.setPrintable(new Printable() {
+                        public int print(Graphics graphics, PageFormat pageFormat, int pageIndex)
+                                throws PrinterException {
+                            if (pageIndex != 0) {
+                                return NO_SUCH_PAGE;
+                            }
+                            Graphics2D g2d = (Graphics2D) graphics;
+                            g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+                            g2d.drawImage(
+                                    image,
+                                    0,
+                                    0,
+                                    (int) pageFormat.getImageableWidth(),
+                                    (int) pageFormat.getImageableHeight(),
+                                    null);
+                            return PAGE_EXISTS;
+                        }
+                    });
                     job.print();
                 }
             }
-            return new ResponseEntity<>(
-                    "File printed successfully to " + selectedService.getName(), HttpStatus.OK);
+            return new ResponseEntity<>("File printed successfully to " + selectedService.getName(), HttpStatus.OK);
         } catch (Exception e) {
             System.err.println("Failed to print: " + e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

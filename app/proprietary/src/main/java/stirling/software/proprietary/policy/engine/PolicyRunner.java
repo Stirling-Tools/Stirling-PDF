@@ -90,11 +90,7 @@ public class PolicyRunner {
                 continue;
             }
             if (!source.enabled()) {
-                log.debug(
-                        "Source {} ({}) is disabled; skipping for policy {}",
-                        sourceId,
-                        source.name(),
-                        policy.id());
+                log.debug("Source {} ({}) is disabled; skipping for policy {}", sourceId, source.name(), policy.id());
                 // Veto: a paused source's files cannot be stamped, so they must not be pruned.
                 context.vetoCleanup();
                 continue;
@@ -106,10 +102,7 @@ public class PolicyRunner {
             processedLedger.markSeen(policy.id(), context.presentIdentities());
             int removed = processedLedger.deleteUnseen(policy.id(), sweepStart);
             if (removed > 0) {
-                log.debug(
-                        "Pruned {} ledger row(s) for files no longer present (policy {})",
-                        removed,
-                        policy.id());
+                log.debug("Pruned {} ledger row(s) for files no longer present (policy {})", removed, policy.id());
             }
         }
         return context.outcome(runIds);
@@ -120,10 +113,10 @@ public class PolicyRunner {
      * The supplied documents are still counted against the virtual {@link EditorSource}, scoped to
      * the policy's team, so the Sources overview reports the whole team's editor throughput.
      */
-    public PolicyRunHandle runWith(
-            Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
+    public PolicyRunHandle runWith(Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
         PolicyRunHandle handle = policyEngine.runPolicy(policy, inputs, listener);
-        docCounter.record(EditorSource.counterKey(policy.teamId()), inputs.primary().size());
+        docCounter.record(
+                EditorSource.counterKey(policy.teamId()), inputs.primary().size());
         return handle;
     }
 
@@ -138,14 +131,10 @@ public class PolicyRunner {
      * returns the ids of the runs started. Any source that could not be listed completely vetoes
      * this sweep's ledger cleanup.
      */
-    private List<String> pullAndRun(
-            Policy policy, String sourceId, InputSpec spec, PolicySweep context) {
+    private List<String> pullAndRun(Policy policy, String sourceId, InputSpec spec, PolicySweep context) {
         InputSource source = sourceFor(spec);
         if (source == null) {
-            log.warn(
-                    "No input source for type '{}' (policy {}); skipping",
-                    spec.type(),
-                    policy.id());
+            log.warn("No input source for type '{}' (policy {}); skipping", spec.type(), policy.id());
             context.vetoCleanup();
             return List.of();
         }
@@ -156,11 +145,7 @@ public class PolicyRunner {
         try {
             work = source.resolve(spec, context);
         } catch (IOException | RuntimeException e) {
-            log.warn(
-                    "Failed to resolve source '{}' for policy {}: {}",
-                    spec.type(),
-                    policy.id(),
-                    e.getMessage());
+            log.warn("Failed to resolve source '{}' for policy {}: {}", spec.type(), policy.id(), e.getMessage());
             context.vetoCleanup();
             return List.of();
         }
@@ -176,10 +161,8 @@ public class PolicyRunner {
 
     private String startRun(Policy policy, PolicyInputs inputs, Consumer<Boolean> onComplete) {
         log.info("Running policy {} ({})", policy.id(), policy.name());
-        PolicyRunHandle handle =
-                policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP);
-        handle.completion()
-                .whenComplete((run, throwable) -> onComplete.accept(succeeded(run, throwable)));
+        PolicyRunHandle handle = policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP);
+        handle.completion().whenComplete((run, throwable) -> onComplete.accept(succeeded(run, throwable)));
         return handle.runId();
     }
 

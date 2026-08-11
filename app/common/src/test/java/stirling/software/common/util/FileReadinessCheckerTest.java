@@ -32,10 +32,14 @@ import stirling.software.common.model.ApplicationProperties.AutoPipeline.FileRea
 @DisplayName("FileReadinessChecker")
 class FileReadinessCheckerTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock ApplicationProperties applicationProperties;
-    @Mock ApplicationProperties.AutoPipeline autoPipeline;
+    @Mock
+    ApplicationProperties applicationProperties;
+
+    @Mock
+    ApplicationProperties.AutoPipeline autoPipeline;
 
     /** Real config object — easier to tweak per test than chaining multiple stubs. */
     FileReadiness config;
@@ -229,11 +233,9 @@ class FileReadinessCheckerTest {
             try (MockedStatic<Files> mockedFiles = mockStatic(Files.class, CALLS_REAL_METHODS)) {
                 mockedFiles
                         .when(() -> Files.size(file))
-                        .thenAnswer(
-                                inv ->
-                                        sizeCallCount.incrementAndGet() == 1
-                                                ? 100L // first read: 100 bytes
-                                                : 200L); // second read: 200 bytes — changed!
+                        .thenAnswer(inv -> sizeCallCount.incrementAndGet() == 1
+                                ? 100L // first read: 100 bytes
+                                : 200L); // second read: 200 bytes — changed!
                 assertFalse(checker.isReady(file));
             }
         }
@@ -257,20 +259,17 @@ class FileReadinessCheckerTest {
             CountDownLatch testDone = new CountDownLatch(1);
             AtomicInteger lockThreadFailed = new AtomicInteger(0);
 
-            Thread lockHolder =
-                    new Thread(
-                            () -> {
-                                try (RandomAccessFile raf =
-                                                new RandomAccessFile(file.toFile(), "rw");
-                                        FileChannel channel = raf.getChannel();
-                                        FileLock lock = channel.lock()) {
-                                    lockAcquired.countDown();
-                                    testDone.await(10, TimeUnit.SECONDS);
-                                } catch (Exception e) {
-                                    lockThreadFailed.set(1);
-                                    lockAcquired.countDown();
-                                }
-                            });
+            Thread lockHolder = new Thread(() -> {
+                try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), "rw");
+                        FileChannel channel = raf.getChannel();
+                        FileLock lock = channel.lock()) {
+                    lockAcquired.countDown();
+                    testDone.await(10, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    lockThreadFailed.set(1);
+                    lockAcquired.countDown();
+                }
+            });
             lockHolder.setDaemon(true);
             lockHolder.start();
             lockAcquired.await(5, TimeUnit.SECONDS);
@@ -351,7 +350,6 @@ class FileReadinessCheckerTest {
      * checks pass without actually waiting.
      */
     private void setLastModifiedInPast(Path path, long millisAgo) throws IOException {
-        Files.setLastModifiedTime(
-                path, FileTime.fromMillis(System.currentTimeMillis() - millisAgo));
+        Files.setLastModifiedTime(path, FileTime.fromMillis(System.currentTimeMillis() - millisAgo));
     }
 }

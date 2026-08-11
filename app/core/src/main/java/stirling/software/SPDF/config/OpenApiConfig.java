@@ -31,9 +31,8 @@ public class OpenApiConfig {
     private final ApplicationProperties applicationProperties;
 
     private static final String DEFAULT_TITLE = "Stirling PDF API";
-    private static final String DEFAULT_DESCRIPTION =
-            "API documentation for all Server-Side processing.\n"
-                    + "Please note some functionality might be UI only and missing from here.";
+    private static final String DEFAULT_DESCRIPTION = "API documentation for all Server-Side processing.\n"
+            + "Please note some functionality might be UI only and missing from here.";
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -42,22 +41,18 @@ public class OpenApiConfig {
             // default version if all else fails
             version = "1.0.0";
         }
-        Info info =
-                new Info()
-                        .title(DEFAULT_TITLE)
-                        .version(version)
-                        .license(
-                                new License()
-                                        .name("Open-Core - MIT Licensed")
-                                        .url(
-                                                "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/LICENSE"))
-                        .termsOfService("https://www.stirlingpdf.com/terms")
-                        .contact(
-                                new Contact()
-                                        .name("Stirling Software")
-                                        .url("https://www.stirlingpdf.com")
-                                        .email("contact@stirlingpdf.com"))
-                        .description(DEFAULT_DESCRIPTION);
+        Info info = new Info()
+                .title(DEFAULT_TITLE)
+                .version(version)
+                .license(new License()
+                        .name("Open-Core - MIT Licensed")
+                        .url("https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/LICENSE"))
+                .termsOfService("https://www.stirlingpdf.com/terms")
+                .contact(new Contact()
+                        .name("Stirling Software")
+                        .url("https://www.stirlingpdf.com")
+                        .email("contact@stirlingpdf.com"))
+                .description(DEFAULT_DESCRIPTION);
 
         OpenAPI openAPI = new OpenAPI().info(info).openapi("3.0.3");
 
@@ -65,10 +60,7 @@ public class OpenApiConfig {
         // The AI controllers are currently @Hidden, so they don't emit this tag themselves yet;
         // defining it here keeps the grouping ready for when those endpoints are unhidden.
         openAPI.addTagsItem(
-                new Tag()
-                        .name("AI")
-                        .description(
-                                "AI-powered document creation, editing, and assistant endpoints."));
+                new Tag().name("AI").description("AI-powered document creation, editing, and assistant endpoints."));
 
         // Add server configuration from environment variable
         String swaggerServerUrl = System.getenv("SWAGGER_SERVER_URL");
@@ -83,40 +75,28 @@ public class OpenApiConfig {
         openAPI.addServersItem(server);
 
         // Add ErrorResponse schema to components
-        Schema<?> errorResponseSchema =
-                new Schema<>()
-                        .type("object")
-                        .addProperty(
-                                "timestamp",
-                                new Schema<>()
-                                        .type("string")
-                                        .format("date-time")
-                                        .description("Error timestamp"))
-                        .addProperty(
-                                "status",
-                                new Schema<>().type("integer").description("HTTP status code"))
-                        .addProperty(
-                                "error", new Schema<>().type("string").description("Error type"))
-                        .addProperty(
-                                "message",
-                                new Schema<>().type("string").description("Error message"))
-                        .addProperty(
-                                "path", new Schema<>().type("string").description("Request path"))
-                        .description("Standard error response format");
+        Schema<?> errorResponseSchema = new Schema<>()
+                .type("object")
+                .addProperty(
+                        "timestamp",
+                        new Schema<>().type("string").format("date-time").description("Error timestamp"))
+                .addProperty("status", new Schema<>().type("integer").description("HTTP status code"))
+                .addProperty("error", new Schema<>().type("string").description("Error type"))
+                .addProperty("message", new Schema<>().type("string").description("Error message"))
+                .addProperty("path", new Schema<>().type("string").description("Request path"))
+                .description("Standard error response format");
 
         Components components = new Components().addSchemas("ErrorResponse", errorResponseSchema);
 
         if (!applicationProperties.getSecurity().isEnableLogin()) {
             return openAPI.components(components);
         } else {
-            SecurityScheme apiKeyScheme =
-                    new SecurityScheme()
-                            .type(SecurityScheme.Type.APIKEY)
-                            .in(SecurityScheme.In.HEADER)
-                            .name("X-API-KEY");
+            SecurityScheme apiKeyScheme = new SecurityScheme()
+                    .type(SecurityScheme.Type.APIKEY)
+                    .in(SecurityScheme.In.HEADER)
+                    .name("X-API-KEY");
             components.addSecuritySchemes("apiKey", apiKeyScheme);
-            return openAPI.components(components)
-                    .addSecurityItem(new SecurityRequirement().addList("apiKey"));
+            return openAPI.components(components).addSecurityItem(new SecurityRequirement().addList("apiKey"));
         }
     }
 
@@ -127,35 +107,27 @@ public class OpenApiConfig {
             var schemas = components.getSchemas();
 
             // Define the two shapes
-            var upload =
-                    new ObjectSchema()
-                            .name("PDFFileUpload")
-                            .description("Upload a PDF file")
-                            .addProperty("fileInput", new StringSchema().format("binary"))
-                            .addRequiredItem("fileInput");
+            var upload = new ObjectSchema()
+                    .name("PDFFileUpload")
+                    .description("Upload a PDF file")
+                    .addProperty("fileInput", new StringSchema().format("binary"))
+                    .addRequiredItem("fileInput");
 
-            var ref =
-                    new ObjectSchema()
-                            .name("PDFFileRef")
-                            .description("Reference a server-side file")
-                            .addProperty(
-                                    "fileId",
-                                    new StringSchema()
-                                            .example("a1b2c3d4-5678-90ab-cdef-ghijklmnopqr"))
-                            .addRequiredItem("fileId");
+            var ref = new ObjectSchema()
+                    .name("PDFFileRef")
+                    .description("Reference a server-side file")
+                    .addProperty("fileId", new StringSchema().example("a1b2c3d4-5678-90ab-cdef-ghijklmnopqr"))
+                    .addRequiredItem("fileId");
 
             schemas.put("PDFFileUpload", upload);
             schemas.put("PDFFileRef", ref);
 
             // Create the oneOf schema
-            var pdfFileOneOf =
-                    new ComposedSchema()
-                            .oneOf(
-                                    List.of(
-                                            new Schema<>()
-                                                    .$ref("#/components/schemas/PDFFileUpload"),
-                                            new Schema<>().$ref("#/components/schemas/PDFFileRef")))
-                            .description("Either upload a file or provide a server-side file ID");
+            var pdfFileOneOf = new ComposedSchema()
+                    .oneOf(List.of(
+                            new Schema<>().$ref("#/components/schemas/PDFFileUpload"),
+                            new Schema<>().$ref("#/components/schemas/PDFFileRef")))
+                    .description("Either upload a file or provide a server-side file ID");
 
             // Replace PDFFile schema
             schemas.put("PDFFile", pdfFileOneOf);

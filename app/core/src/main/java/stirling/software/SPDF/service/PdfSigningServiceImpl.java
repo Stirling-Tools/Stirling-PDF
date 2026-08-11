@@ -33,12 +33,10 @@ public class PdfSigningServiceImpl implements PdfSigningService {
             boolean showLogo)
             throws Exception {
 
-        CertSignController.CreateSignature createSignature =
-                new CertSignController.CreateSignature(keystore, password);
+        CertSignController.CreateSignature createSignature = new CertSignController.CreateSignature(keystore, password);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ByteArrayMultipartFile inputFile =
-                new ByteArrayMultipartFile(pdfBytes, "document.pdf", "application/pdf");
+        ByteArrayMultipartFile inputFile = new ByteArrayMultipartFile(pdfBytes, "document.pdf", "application/pdf");
 
         CertSignController.sign(
                 pdfDocumentFactory,
@@ -56,8 +54,7 @@ public class PdfSigningServiceImpl implements PdfSigningService {
     }
 
     /** Minimal MultipartFile wrapper for passing raw PDF bytes to CertSignController.sign(). */
-    private static class ByteArrayMultipartFile
-            implements org.springframework.web.multipart.MultipartFile {
+    private static class ByteArrayMultipartFile implements org.springframework.web.multipart.MultipartFile {
         private final byte[] content;
         private final String filename;
         private final String contentType;

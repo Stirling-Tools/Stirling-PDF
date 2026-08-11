@@ -10,8 +10,7 @@ import java.util.List;
  * earlier sweep. Counts are zero for {@link SweepKind#LIGHT} sweeps, which do not take a full
  * listing.
  */
-public record SweepOutcome(
-        List<String> runIds, int filesListed, int alreadyProcessed, int parked, int inFlight) {
+public record SweepOutcome(List<String> runIds, int filesListed, int alreadyProcessed, int parked, int inFlight) {
 
     public SweepOutcome {
         runIds = runIds == null ? List.of() : List.copyOf(runIds);

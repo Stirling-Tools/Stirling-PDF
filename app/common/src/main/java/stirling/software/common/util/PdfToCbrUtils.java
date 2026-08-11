@@ -27,8 +27,7 @@ import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 @Slf4j
 public class PdfToCbrUtils {
 
-    public static byte[] convertPdfToCbr(
-            MultipartFile pdfFile, int dpi, CustomPDFDocumentFactory pdfDocumentFactory)
+    public static byte[] convertPdfToCbr(MultipartFile pdfFile, int dpi, CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
 
         validatePdfFile(pdfFile);
@@ -70,16 +69,12 @@ public class PdfToCbrUtils {
             for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                 final int currentPage = pageIndex;
                 try {
-                    BufferedImage image =
-                            ExceptionUtils.handleOomRendering(
-                                    currentPage + 1,
-                                    dpi,
-                                    () ->
-                                            pdfRenderer.renderImageWithDPI(
-                                                    currentPage, dpi, ImageType.RGB));
+                    BufferedImage image = ExceptionUtils.handleOomRendering(
+                            currentPage + 1,
+                            dpi,
+                            () -> pdfRenderer.renderImageWithDPI(currentPage, dpi, ImageType.RGB));
 
-                    String imageFilename =
-                            String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
+                    String imageFilename = String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
                     Path imagePath = tempDir.resolve(imageFilename);
 
                     ImageIO.write(image, "PNG", imagePath.toFile());
@@ -90,8 +85,7 @@ public class PdfToCbrUtils {
                     throw e;
                 } catch (IOException e) {
                     // Wrap other IOExceptions with context
-                    throw ExceptionUtils.createFileProcessingException(
-                            "CBR creation for page " + (currentPage + 1), e);
+                    throw ExceptionUtils.createFileProcessingException("CBR creation for page " + (currentPage + 1), e);
                 }
             }
 
@@ -120,15 +114,12 @@ public class PdfToCbrUtils {
             command.add(image.getFileName().toString());
         }
 
-        ProcessExecutor executor =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.INSTALL_APP);
+        ProcessExecutor executor = ProcessExecutor.getInstance(ProcessExecutor.Processes.INSTALL_APP);
         try {
-            ProcessExecutorResult result =
-                    executor.runCommandWithOutputHandling(command, tempDir.toFile());
+            ProcessExecutorResult result = executor.runCommandWithOutputHandling(command, tempDir.toFile());
             if (result.getRc() != 0) {
                 throw ExceptionUtils.createFileProcessingException(
-                        "RAR archive creation",
-                        new IOException("RAR command failed with code " + result.getRc()));
+                        "RAR archive creation", new IOException("RAR command failed with code " + result.getRc()));
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -157,18 +148,13 @@ public class PdfToCbrUtils {
         }
         if (tempDir != null) {
             try (var paths = Files.walk(tempDir)) {
-                paths.sorted(Comparator.reverseOrder())
-                        .forEach(
-                                path -> {
-                                    try {
-                                        Files.deleteIfExists(path);
-                                    } catch (IOException e) {
-                                        log.warn(
-                                                "Failed to delete temp path {}: {}",
-                                                path,
-                                                e.getMessage());
-                                    }
-                                });
+                paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException e) {
+                        log.warn("Failed to delete temp path {}: {}", path, e.getMessage());
+                    }
+                });
             } catch (IOException e) {
                 log.warn("Failed to clean up temp directory {}: {}", tempDir, e.getMessage());
             }

@@ -44,19 +44,15 @@ public class TauriProcessMonitor {
             logger.info("Tauri mode detected. Parent process ID: {}", parentProcessId);
             startMonitoring();
         } else {
-            logger.warn(
-                    "TAURI_PARENT_PID environment variable not found. Tauri process monitoring disabled.");
+            logger.warn("TAURI_PARENT_PID environment variable not found. Tauri process monitoring disabled.");
         }
     }
 
     private void startMonitoring() {
-        scheduler =
-                Executors.newSingleThreadScheduledExecutor(
-                        r -> {
-                            Thread t =
-                                    Thread.ofVirtual().name("tauri-process-monitor").unstarted(r);
-                            return t;
-                        });
+        scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = Thread.ofVirtual().name("tauri-process-monitor").unstarted(r);
+            return t;
+        });
 
         monitoring = true;
 
@@ -105,27 +101,23 @@ public class TauriProcessMonitor {
         logger.info("Orphaned Java backend detected. Shutting down gracefully...");
 
         // Shutdown asynchronously to avoid blocking the monitor thread
-        Thread.ofVirtual()
-                .name("tauri-graceful-shutdown")
-                .start(
-                        () -> {
-                            try {
-                                // Give a small delay to ensure logging completes
-                                Thread.sleep(1000);
+        Thread.ofVirtual().name("tauri-graceful-shutdown").start(() -> {
+            try {
+                // Give a small delay to ensure logging completes
+                Thread.sleep(1000);
 
-                                if (applicationContext instanceof ConfigurableApplicationContext) {
-                                    ((ConfigurableApplicationContext) applicationContext).close();
-                                } else {
-                                    // Fallback to system exit
-                                    logger.warn(
-                                            "Unable to shutdown Spring context gracefully, using System.exit");
-                                    System.exit(0);
-                                }
-                            } catch (Exception e) {
-                                logger.error("Error during graceful shutdown", e);
-                                System.exit(1);
-                            }
-                        });
+                if (applicationContext instanceof ConfigurableApplicationContext) {
+                    ((ConfigurableApplicationContext) applicationContext).close();
+                } else {
+                    // Fallback to system exit
+                    logger.warn("Unable to shutdown Spring context gracefully, using System.exit");
+                    System.exit(0);
+                }
+            } catch (Exception e) {
+                logger.error("Error during graceful shutdown", e);
+                System.exit(1);
+            }
+        });
     }
 
     @PreDestroy

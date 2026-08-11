@@ -52,9 +52,8 @@ public class InternalApiClient {
     // dereference an admin-owned connection rather than a caller-supplied host — see
     // ApiConnectionResolver.
     private static final Pattern ALLOWED_ENDPOINT_PATH =
-            Pattern.compile(
-                    "^/api/v1/(general|misc|security|convert|filter|integration)(/[A-Za-z0-9_-]+)+$"
-                            + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
+            Pattern.compile("^/api/v1/(general|misc|security|convert|filter|integration)(/[A-Za-z0-9_-]+)+$"
+                    + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
 
     /**
      * Marker propagated on every internal sub-step dispatch so the saas PAYG interceptor classifies
@@ -155,9 +154,7 @@ public class InternalApiClient {
         // expects. File-bearing calls get the right multipart content-type from RestTemplate.
         boolean isAiTool = endpointPath.startsWith("/api/v1/ai/tools/");
         boolean hasFilePart =
-                body.values().stream()
-                        .flatMap(java.util.List::stream)
-                        .anyMatch(v -> v instanceof Resource);
+                body.values().stream().flatMap(java.util.List::stream).anyMatch(v -> v instanceof Resource);
         if (isAiTool && !hasFilePart) {
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         }
@@ -165,27 +162,20 @@ public class InternalApiClient {
         RequestCallback requestCallback = restTemplate.httpEntityCallback(entity, Resource.class);
 
         try {
-            return restTemplate.execute(
-                    url,
-                    HttpMethod.POST,
-                    requestCallback,
-                    response -> {
-                        try {
-                            TempFile tempFile =
-                                    tempFileManager.createManagedTempFile("internal-api");
-                            Files.copy(
-                                    response.getBody(),
-                                    tempFile.getPath(),
-                                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                            String filename = extractFilename(response.getHeaders());
-                            TempFileResource resource = new TempFileResource(tempFile, filename);
-                            return ResponseEntity.status(response.getStatusCode())
-                                    .headers(response.getHeaders())
-                                    .body(resource);
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
+            return restTemplate.execute(url, HttpMethod.POST, requestCallback, response -> {
+                try {
+                    TempFile tempFile = tempFileManager.createManagedTempFile("internal-api");
+                    Files.copy(
+                            response.getBody(), tempFile.getPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    String filename = extractFilename(response.getHeaders());
+                    TempFileResource resource = new TempFileResource(tempFile, filename);
+                    return ResponseEntity.status(response.getStatusCode())
+                            .headers(response.getHeaders())
+                            .body(resource);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
         } catch (ResourceAccessException e) {
             // RestTemplate wraps low-level I/O failures in ResourceAccessException. Only the
             // SocketTimeoutException-rooted case is a real timeout; other I/O failures (connection
@@ -244,8 +234,7 @@ public class InternalApiClient {
     private void validateUrl(String endpointPath) {
         if (endpointPath == null || !ALLOWED_ENDPOINT_PATH.matcher(endpointPath).matches()) {
             log.warn("Blocked internal API request to disallowed path: {}", endpointPath);
-            throw new SecurityException(
-                    "Internal API dispatch not permitted for endpoint: " + endpointPath);
+            throw new SecurityException("Internal API dispatch not permitted for endpoint: " + endpointPath);
         }
     }
 

@@ -131,9 +131,7 @@ public final class SimpleSchemaGenerator {
         if (MultipartFile.class.isAssignableFrom(c)) {
             out.put("type", "string");
             out.put("format", "file-id");
-            out.put(
-                    "description",
-                    "Reference to a previously-uploaded file in Stirling's job store.");
+            out.put("description", "Reference to a previously-uploaded file in Stirling's job store.");
             return;
         }
         if (c.isArray()) {
@@ -165,8 +163,7 @@ public final class SimpleSchemaGenerator {
         } else if (c == java.util.UUID.class) {
             out.put("type", "string");
             out.put("format", "uuid");
-        } else if (java.time.temporal.Temporal.class.isAssignableFrom(c)
-                || c == java.util.Date.class) {
+        } else if (java.time.temporal.Temporal.class.isAssignableFrom(c) || c == java.util.Date.class) {
             out.put("type", "string");
             out.put("format", "date-time");
         } else {

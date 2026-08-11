@@ -16,8 +16,7 @@ class PdfJsonFontConversionStatusTest {
     @DisplayName("contains exactly the expected constants")
     void containsExpected() {
         assertThat(Arrays.stream(PdfJsonFontConversionStatus.values()).map(Enum::name))
-                .containsExactlyInAnyOrder(
-                        "SUCCESS", "WARNING", "FAILURE", "SKIPPED", "UNSUPPORTED");
+                .containsExactlyInAnyOrder("SUCCESS", "WARNING", "FAILURE", "SKIPPED", "UNSUPPORTED");
     }
 
     @ParameterizedTest

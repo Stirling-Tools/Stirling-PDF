@@ -39,8 +39,7 @@ public class UnlockPDFFormsController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    public UnlockPDFFormsController(
-            CustomPDFDocumentFactory pdfDocumentFactory, TempFileManager tempFileManager) {
+    public UnlockPDFFormsController(CustomPDFDocumentFactory pdfDocumentFactory, TempFileManager tempFileManager) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.tempFileManager = tempFileManager;
     }
@@ -86,33 +85,23 @@ public class UnlockPDFFormsController {
 
                             xml = accessReadOnlyPattern.matcher(xml).replaceAll("access=\"open\"");
 
-                            PDStream newStream =
-                                    new PDStream(
-                                            document,
-                                            new ByteArrayInputStream(
-                                                    xml.getBytes(StandardCharsets.UTF_8)));
+                            PDStream newStream = new PDStream(
+                                    document, new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
                             acroForm.getCOSObject().setItem(COSName.XFA, newStream.getCOSObject());
                         } else if (xfaBase instanceof COSArray xfaArray) {
                             for (int i = 0; i < xfaArray.size(); i += 2) {
                                 COSBase namePart = xfaArray.getObject(i);
                                 COSBase streamPart = xfaArray.getObject(i + 1);
-                                if (namePart instanceof COSString
-                                        && streamPart instanceof COSStream stream) {
+                                if (namePart instanceof COSString && streamPart instanceof COSStream stream) {
                                     InputStream is = stream.createInputStream();
                                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                                     is.transferTo(baos);
                                     String xml = baos.toString(StandardCharsets.UTF_8);
 
-                                    xml =
-                                            accessReadOnlyPattern
-                                                    .matcher(xml)
-                                                    .replaceAll("access=\"open\"");
+                                    xml = accessReadOnlyPattern.matcher(xml).replaceAll("access=\"open\"");
 
-                                    PDStream newStream =
-                                            new PDStream(
-                                                    document,
-                                                    new ByteArrayInputStream(
-                                                            xml.getBytes(StandardCharsets.UTF_8)));
+                                    PDStream newStream = new PDStream(
+                                            document, new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
                                     xfaArray.set(i + 1, newStream.getCOSObject());
                                 }
                             }
@@ -123,8 +112,7 @@ public class UnlockPDFFormsController {
                 }
             }
             String mergedFileName =
-                    GeneralUtils.generateFilename(
-                            file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");
+                    GeneralUtils.generateFilename(file.getFileInput().getOriginalFilename(), "_unlocked_forms.pdf");
             return WebResponseUtils.pdfDocToWebResponse(
                     document, Filenames.toSimpleFileName(mergedFileName), tempFileManager);
         } catch (Exception e) {

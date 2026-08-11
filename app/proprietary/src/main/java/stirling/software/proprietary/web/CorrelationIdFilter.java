@@ -26,8 +26,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
     public static final String MDC_KEY = "requestId";
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
 
         try {

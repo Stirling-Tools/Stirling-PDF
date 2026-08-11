@@ -78,8 +78,7 @@ class OAuth2ConfigurationMoreTest {
         void noProviderThrows() {
             ApplicationProperties props = enabledProps();
             OAuth2Configuration config = newConfig(props);
-            assertThatThrownBy(config::clientRegistrationRepository)
-                    .isInstanceOf(NoProviderFoundException.class);
+            assertThatThrownBy(config::clientRegistrationRepository).isInstanceOf(NoProviderFoundException.class);
         }
 
         @Test
@@ -92,8 +91,7 @@ class OAuth2ConfigurationMoreTest {
 
             OAuth2Configuration config = newConfig(props);
             // Disabled => no registrations => NoProviderFoundException.
-            assertThatThrownBy(config::clientRegistrationRepository)
-                    .isInstanceOf(NoProviderFoundException.class);
+            assertThatThrownBy(config::clientRegistrationRepository).isInstanceOf(NoProviderFoundException.class);
         }
 
         @Test
@@ -104,8 +102,7 @@ class OAuth2ConfigurationMoreTest {
             props.getSecurity().getOauth2().getClient().getGithub().setClientSecret("");
 
             OAuth2Configuration config = newConfig(props);
-            assertThatThrownBy(config::clientRegistrationRepository)
-                    .isInstanceOf(NoProviderFoundException.class);
+            assertThatThrownBy(config::clientRegistrationRepository).isInstanceOf(NoProviderFoundException.class);
         }
     }
 
@@ -130,12 +127,10 @@ class OAuth2ConfigurationMoreTest {
             ApplicationProperties props = enabledProps();
             props.getSecurity().getOauth2().setUseAsUsername("email");
             OAuth2Configuration config = newConfig(props);
-            when(userService.findByUsernameIgnoreCase("nobody@example.com"))
-                    .thenReturn(Optional.empty());
+            when(userService.findByUsernameIgnoreCase("nobody@example.com")).thenReturn(Optional.empty());
 
             GrantedAuthoritiesMapper mapper = config.userAuthoritiesMapper();
-            OAuth2UserAuthority oauthAuthority =
-                    new OAuth2UserAuthority(Map.of("email", "nobody@example.com"));
+            OAuth2UserAuthority oauthAuthority = new OAuth2UserAuthority(Map.of("email", "nobody@example.com"));
 
             var mapped = mapper.mapAuthorities(List.of(oauthAuthority));
 
@@ -154,13 +149,11 @@ class OAuth2ConfigurationMoreTest {
             User user = new User();
             user.setUsername("known@example.com");
             Authority role = new Authority("ROLE_ADMIN", user);
-            when(userService.findByUsernameIgnoreCase("known@example.com"))
-                    .thenReturn(Optional.of(user));
+            when(userService.findByUsernameIgnoreCase("known@example.com")).thenReturn(Optional.of(user));
             when(userService.findRole(user)).thenReturn(role);
 
             GrantedAuthoritiesMapper mapper = config.userAuthoritiesMapper();
-            OAuth2UserAuthority oauthAuthority =
-                    new OAuth2UserAuthority(Map.of("email", "known@example.com"));
+            OAuth2UserAuthority oauthAuthority = new OAuth2UserAuthority(Map.of("email", "known@example.com"));
 
             var mapped = mapper.mapAuthorities(List.of(oauthAuthority));
 

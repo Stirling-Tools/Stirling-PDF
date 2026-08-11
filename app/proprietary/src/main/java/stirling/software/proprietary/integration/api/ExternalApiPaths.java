@@ -42,8 +42,7 @@ public final class ExternalApiPaths {
         try {
             resolved = new URI(base + candidate).normalize();
         } catch (URISyntaxException e) {
-            throw new IllegalArgumentException(
-                    "api step 'path' is not a valid URL path: " + path, e);
+            throw new IllegalArgumentException("api step 'path' is not a valid URL path: " + path, e);
         }
         requireSameOrigin(base, resolved, path);
         requireUnderBasePath(base, resolved, path);
@@ -53,23 +52,20 @@ public final class ExternalApiPaths {
     /** Reject the shapes that could retarget the request before it is even assembled. */
     private static void screen(String path) {
         if (path.contains("://") || path.startsWith("//")) {
-            throw new IllegalArgumentException(
-                    "api step 'path' must be relative to the connection's base URL, not an"
-                            + " absolute or protocol-relative URL: "
-                            + path);
+            throw new IllegalArgumentException("api step 'path' must be relative to the connection's base URL, not an"
+                    + " absolute or protocol-relative URL: "
+                    + path);
         }
         for (int i = 0; i < path.length(); i++) {
             char c = path.charAt(i);
             // Control characters and spaces can split the request line; a backslash is normalised
             // to '/' by some servers and would sidestep the traversal check below.
             if (c <= 0x20 || c == 0x7F || c == '\\') {
-                throw new IllegalArgumentException(
-                        "api step 'path' contains an illegal character: " + path);
+                throw new IllegalArgumentException("api step 'path' contains an illegal character: " + path);
             }
         }
         if (path.indexOf('#') >= 0) {
-            throw new IllegalArgumentException(
-                    "api step 'path' must not contain a fragment: " + path);
+            throw new IllegalArgumentException("api step 'path' must not contain a fragment: " + path);
         }
         // Percent-encoded dots would survive the normalise() below and be decoded by the target, so
         // a traversal must not be smuggled past us in encoded form.
@@ -80,22 +76,19 @@ public final class ExternalApiPaths {
         // while doing nothing for traversal, which needs the dots.
         String lower = path.toLowerCase(Locale.ROOT);
         if (lower.contains("%2e")) {
-            throw new IllegalArgumentException(
-                    "api step 'path' must not percent-encode dots: " + path);
+            throw new IllegalArgumentException("api step 'path' must not percent-encode dots: " + path);
         }
     }
 
     private static void requireSameOrigin(URI base, URI resolved, String original) {
-        boolean sameOrigin =
-                equalsIgnoreCase(base.getScheme(), resolved.getScheme())
-                        && equalsIgnoreCase(base.getHost(), resolved.getHost())
-                        && base.getPort() == resolved.getPort()
-                        && resolved.getUserInfo() == null;
+        boolean sameOrigin = equalsIgnoreCase(base.getScheme(), resolved.getScheme())
+                && equalsIgnoreCase(base.getHost(), resolved.getHost())
+                && base.getPort() == resolved.getPort()
+                && resolved.getUserInfo() == null;
         if (!sameOrigin) {
-            throw new IllegalArgumentException(
-                    "api step 'path' would change the target host; it must stay under the"
-                            + " connection's base URL: "
-                            + original);
+            throw new IllegalArgumentException("api step 'path' would change the target host; it must stay under the"
+                    + " connection's base URL: "
+                    + original);
         }
     }
 
@@ -104,13 +97,9 @@ public final class ExternalApiPaths {
         String resolvedPath = resolved.getPath() == null ? "" : resolved.getPath();
         // The base URL has its trailing slash stripped at parse time, so a base path of "/v1"
         // must match "/v1" exactly or be followed by a separator - never "/v1betray".
-        boolean under =
-                basePath.isEmpty()
-                        || resolvedPath.equals(basePath)
-                        || resolvedPath.startsWith(basePath + "/");
+        boolean under = basePath.isEmpty() || resolvedPath.equals(basePath) || resolvedPath.startsWith(basePath + "/");
         if (!under) {
-            throw new IllegalArgumentException(
-                    "api step 'path' escapes the connection's base path: " + original);
+            throw new IllegalArgumentException("api step 'path' escapes the connection's base path: " + original);
         }
     }
 

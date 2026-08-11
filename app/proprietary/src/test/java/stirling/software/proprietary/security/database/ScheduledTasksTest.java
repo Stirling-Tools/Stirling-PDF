@@ -20,7 +20,8 @@ import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 @ExtendWith(MockitoExtension.class)
 class ScheduledTasksTest {
 
-    @Mock private DatabaseServiceInterface databaseService;
+    @Mock
+    private DatabaseServiceInterface databaseService;
 
     @Test
     void performBackup_calls_exportDatabase() throws Exception {
@@ -64,8 +65,7 @@ class ScheduledTasksTest {
         Conditional conditional = ScheduledTasks.class.getAnnotation(Conditional.class);
         assertNotNull(conditional, "@Conditional missing on ScheduledTasks class");
 
-        boolean containsH2 =
-                Arrays.stream(conditional.value()).anyMatch(c -> c == H2SQLCondition.class);
+        boolean containsH2 = Arrays.stream(conditional.value()).anyMatch(c -> c == H2SQLCondition.class);
         assertTrue(containsH2, "@Conditional should include H2SQLCondition");
     }
 }

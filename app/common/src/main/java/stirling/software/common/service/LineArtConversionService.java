@@ -6,7 +6,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 public interface LineArtConversionService {
-    PDImageXObject convertImageToLineArt(
-            PDDocument doc, PDImageXObject originalImage, double threshold, int edgeLevel)
+    PDImageXObject convertImageToLineArt(PDDocument doc, PDImageXObject originalImage, double threshold, int edgeLevel)
             throws IOException;
 }

@@ -39,13 +39,10 @@ public class PolicyOverviewService {
         List<Policy> policies = policyAccessGuard.visibleFrom(policyStore);
         Map<String, String> sourceNames = sourceNames();
 
-        List<PolicyView> views =
-                policies.stream()
-                        .map(policy -> toView(policy, sourceNames))
-                        .sorted(
-                                Comparator.comparing(
-                                        PolicyView::name, String.CASE_INSENSITIVE_ORDER))
-                        .toList();
+        List<PolicyView> views = policies.stream()
+                .map(policy -> toView(policy, sourceNames))
+                .sorted(Comparator.comparing(PolicyView::name, String.CASE_INSENSITIVE_ORDER))
+                .toList();
 
         return new PoliciesOverviewResponse(buildKpis(policies), views);
     }
@@ -60,13 +57,13 @@ public class PolicyOverviewService {
     }
 
     private static PolicyView toView(Policy policy, Map<String, String> sourceNames) {
-        List<PolicyView.SourceRef> sources =
-                policy.sourceIds().stream()
-                        // An unresolved id (source deleted, or not visible) falls back to the id so
-                        // the row still renders rather than dropping the reference silently.
-                        .map(id -> new PolicyView.SourceRef(id, sourceNames.getOrDefault(id, id)))
-                        .toList();
-        List<String> steps = policy.steps().stream().map(PipelineStep::operation).toList();
+        List<PolicyView.SourceRef> sources = policy.sourceIds().stream()
+                // An unresolved id (source deleted, or not visible) falls back to the id so
+                // the row still renders rather than dropping the reference silently.
+                .map(id -> new PolicyView.SourceRef(id, sourceNames.getOrDefault(id, id)))
+                .toList();
+        List<String> steps =
+                policy.steps().stream().map(PipelineStep::operation).toList();
         return new PolicyView(
                 policy.id(),
                 policy.name(),

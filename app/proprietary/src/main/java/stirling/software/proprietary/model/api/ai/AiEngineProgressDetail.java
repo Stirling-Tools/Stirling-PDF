@@ -20,18 +20,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         property = "phase",
         visible = true)
 @JsonSubTypes({
-    @JsonSubTypes.Type(
-            value = AiEngineProgressDetail.WholeDocReadStarted.class,
-            name = "whole_doc_read_started"),
-    @JsonSubTypes.Type(
-            value = AiEngineProgressDetail.WholeDocSliceDone.class,
-            name = "whole_doc_slice_done"),
+    @JsonSubTypes.Type(value = AiEngineProgressDetail.WholeDocReadStarted.class, name = "whole_doc_read_started"),
+    @JsonSubTypes.Type(value = AiEngineProgressDetail.WholeDocSliceDone.class, name = "whole_doc_slice_done"),
     @JsonSubTypes.Type(
             value = AiEngineProgressDetail.WholeDocCompressionRound.class,
             name = "whole_doc_compression_round"),
-    @JsonSubTypes.Type(
-            value = AiEngineProgressDetail.WholeDocReadDone.class,
-            name = "whole_doc_read_done"),
+    @JsonSubTypes.Type(value = AiEngineProgressDetail.WholeDocReadDone.class, name = "whole_doc_read_done"),
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public sealed interface AiEngineProgressDetail {
@@ -42,13 +36,7 @@ public sealed interface AiEngineProgressDetail {
             implements AiEngineProgressDetail {}
 
     record WholeDocSliceDone(
-            String phase,
-            int completed,
-            int total,
-            String pages,
-            int durationMs,
-            int excerpts,
-            int facts)
+            String phase, int completed, int total, String pages, int durationMs, int excerpts, int facts)
             implements AiEngineProgressDetail {}
 
     record WholeDocCompressionRound(String phase, int roundNumber, int notesIn, int groups)

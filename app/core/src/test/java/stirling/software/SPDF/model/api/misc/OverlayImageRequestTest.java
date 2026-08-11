@@ -34,8 +34,7 @@ class OverlayImageRequestTest {
         @DisplayName("all fields round-trip")
         void allFieldsRoundTrip() {
             OverlayImageRequest req = new OverlayImageRequest();
-            MultipartFile image =
-                    new MockMultipartFile("imageFile", "o.png", "image/png", new byte[] {7});
+            MultipartFile image = new MockMultipartFile("imageFile", "o.png", "image/png", new byte[] {7});
             req.setImageFile(image);
             req.setX(12.5f);
             req.setY(34.25f);

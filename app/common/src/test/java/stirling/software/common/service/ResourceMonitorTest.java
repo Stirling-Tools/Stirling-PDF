@@ -25,19 +25,20 @@ import stirling.software.common.service.ResourceMonitor.ResourceStatus;
 @ExtendWith(MockitoExtension.class)
 class ResourceMonitorTest {
 
-    @InjectMocks private ResourceMonitor resourceMonitor;
+    @InjectMocks
+    private ResourceMonitor resourceMonitor;
 
-    @Mock private OperatingSystemMXBean osMXBean;
+    @Mock
+    private OperatingSystemMXBean osMXBean;
 
-    @Mock private MemoryMXBean memoryMXBean;
+    @Mock
+    private MemoryMXBean memoryMXBean;
 
     @Spy
-    private final AtomicReference<ResourceStatus> currentStatus =
-            new AtomicReference<>(ResourceStatus.OK);
+    private final AtomicReference<ResourceStatus> currentStatus = new AtomicReference<>(ResourceStatus.OK);
 
     @Spy
-    private final AtomicReference<ResourceMetrics> latestMetrics =
-            new AtomicReference<>(new ResourceMetrics());
+    private final AtomicReference<ResourceMetrics> latestMetrics = new AtomicReference<>(new ResourceMetrics());
 
     @BeforeEach
     void setUp() {
@@ -104,8 +105,7 @@ class ResourceMonitorTest {
         "80, WARNING, true", // Heavy job, WARNING status
         "80, CRITICAL, true" // Heavy job, CRITICAL status
     })
-    void shouldQueueJobBasedOnWeightAndStatus(
-            int weight, ResourceStatus status, boolean shouldQueue) {
+    void shouldQueueJobBasedOnWeightAndStatus(int weight, ResourceStatus status, boolean shouldQueue) {
         // Given
         currentStatus.set(status);
 
@@ -130,16 +130,13 @@ class ResourceMonitorTest {
         final Instant testTime = Instant.now();
 
         // Given
-        Instant pastInstant =
-                testTime.minusMillis(6000); // 6 seconds ago (relative to test start time)
+        Instant pastInstant = testTime.minusMillis(6000); // 6 seconds ago (relative to test start time)
 
         ResourceMetrics staleMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, pastInstant);
         ResourceMetrics freshMetrics = new ResourceMetrics(0.5, 0.5, 1024, 2048, 4096, testTime);
 
         // When/Then
-        assertTrue(
-                staleMetrics.isStale(5000),
-                "Metrics from 6 seconds ago should be stale with 5s threshold");
+        assertTrue(staleMetrics.isStale(5000), "Metrics from 6 seconds ago should be stale with 5s threshold");
         assertFalse(freshMetrics.isStale(5000), "Fresh metrics should not be stale");
     }
 }

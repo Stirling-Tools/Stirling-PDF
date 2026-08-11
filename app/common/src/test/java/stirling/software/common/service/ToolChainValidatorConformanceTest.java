@@ -37,9 +37,7 @@ class ToolChainValidatorConformanceTest {
 
         List<DynamicTest> tests = new ArrayList<>();
         for (JsonNode testCase : root.get("cases")) {
-            tests.add(
-                    DynamicTest.dynamicTest(
-                            testCase.get("name").asString(), () -> runCase(testCase, specs)));
+            tests.add(DynamicTest.dynamicTest(testCase.get("name").asString(), () -> runCase(testCase, specs)));
         }
         return tests.stream();
     }
@@ -61,12 +59,9 @@ class ToolChainValidatorConformanceTest {
 
         JsonNode sourceNode = testCase.get("sourceFormat");
         ToolFormat sourceFormat =
-                sourceNode == null || sourceNode.isNull()
-                        ? null
-                        : ToolFormat.valueOf(sourceNode.asString());
+                sourceNode == null || sourceNode.isNull() ? null : ToolFormat.valueOf(sourceNode.asString());
 
-        List<ToolDiagnostic> actual =
-                new ToolChainValidator(ToolIOSource.of(registry)).validate(steps, sourceFormat);
+        List<ToolDiagnostic> actual = new ToolChainValidator(ToolIOSource.of(registry)).validate(steps, sourceFormat);
 
         assertEquals(summarise(testCase.get("expected")), summarise(actual), describe(actual));
     }
@@ -77,14 +72,15 @@ class ToolChainValidatorConformanceTest {
             return null;
         }
         Map<String, Object> values = new HashMap<>();
-        parameters.propertyStream().forEach(e -> values.put(e.getKey(), e.getValue().asString()));
+        parameters
+                .propertyStream()
+                .forEach(e -> values.put(e.getKey(), e.getValue().asString()));
         return values;
     }
 
     private static Map<String, ToolIOSpec> readSpecs(JsonNode node) {
         Map<String, ToolIOSpec> specs = new HashMap<>();
-        node.propertyStream()
-                .forEach(entry -> specs.put(entry.getKey(), readSpec(entry.getValue())));
+        node.propertyStream().forEach(entry -> specs.put(entry.getKey(), readSpec(entry.getValue())));
         return specs;
     }
 
@@ -103,11 +99,10 @@ class ToolChainValidatorConformanceTest {
                 }
                 when.add(new ToolIOSpec.When(condition.get("param").asString(), matches));
             }
-            cases.add(
-                    new ToolIOSpec.Case(
-                            when,
-                            ToolFormat.valueOf(rule.get("produces").asString()),
-                            ToolArity.valueOf(rule.get("arity").asString())));
+            cases.add(new ToolIOSpec.Case(
+                    when,
+                    ToolFormat.valueOf(rule.get("produces").asString()),
+                    ToolArity.valueOf(rule.get("arity").asString())));
         }
         return new ToolIOSpec(
                 accepts,
@@ -126,12 +121,11 @@ class ToolChainValidatorConformanceTest {
     private static List<String> summarise(JsonNode expected) {
         List<String> summary = new ArrayList<>();
         for (JsonNode node : expected) {
-            summary.add(
-                    node.get("stepIndex").asInt()
-                            + ":"
-                            + node.get("severity").asString()
-                            + ":"
-                            + node.get("code").asString());
+            summary.add(node.get("stepIndex").asInt()
+                    + ":"
+                    + node.get("severity").asString()
+                    + ":"
+                    + node.get("code").asString());
         }
         return summary;
     }
@@ -153,7 +147,6 @@ class ToolChainValidatorConformanceTest {
             }
             current = current.getParent();
         }
-        throw new IllegalStateException(
-                "testing/tool-io-cases.json not found above the working directory");
+        throw new IllegalStateException("testing/tool-io-cases.json not found above the working directory");
     }
 }

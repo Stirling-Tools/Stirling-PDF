@@ -62,8 +62,7 @@ public class ApiKeyManagementService {
         User caller = requireCaller();
         migrateLegacyKey(caller);
 
-        List<ApiKey> visible =
-                apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(caller.getId());
+        List<ApiKey> visible = apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(caller.getId());
 
         // Batch usage for all keys into three queries rather than two-per-key (avoids N+1).
         long today = Instant.now().atZone(ZoneOffset.UTC).toLocalDate().toEpochDay();
@@ -72,9 +71,7 @@ public class ApiKeyManagementService {
         Map<Long, Long> monthById = new HashMap<>();
         Map<Long, Long> totalById = new HashMap<>();
         if (!ids.isEmpty()) {
-            usageRepository
-                    .countForDayByIds(ids, today)
-                    .forEach(r -> todayById.put(r.getApiKeyId(), r.getTotal()));
+            usageRepository.countForDayByIds(ids, today).forEach(r -> todayById.put(r.getApiKeyId(), r.getTotal()));
             usageRepository
                     .sumSinceByIds(ids, today - (MONTH_WINDOW_DAYS - 1))
                     .forEach(r -> monthById.put(r.getApiKeyId(), r.getTotal()));
@@ -83,16 +80,13 @@ public class ApiKeyManagementService {
                     .forEach(r -> totalById.put(r.getApiKeyId(), r.getTotal()));
         }
 
-        List<PortalApiKeyDto> keys =
-                visible.stream()
-                        .map(
-                                k ->
-                                        toDto(
-                                                k,
-                                                zeroIfNull(todayById.get(k.getId())),
-                                                zeroIfNull(monthById.get(k.getId())),
-                                                zeroIfNull(totalById.get(k.getId()))))
-                        .toList();
+        List<PortalApiKeyDto> keys = visible.stream()
+                .map(k -> toDto(
+                        k,
+                        zeroIfNull(todayById.get(k.getId())),
+                        zeroIfNull(monthById.get(k.getId())),
+                        zeroIfNull(totalById.get(k.getId()))))
+                .toList();
         return PortalApiKeysResponse.builder().keys(keys).build();
     }
 
@@ -110,13 +104,11 @@ public class ApiKeyManagementService {
         }
         if (name.trim().length() > MAX_NAME_LENGTH) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Key name must be " + MAX_NAME_LENGTH + " characters or fewer");
+                    HttpStatus.BAD_REQUEST, "Key name must be " + MAX_NAME_LENGTH + " characters or fewer");
         }
-        long activeOwned =
-                apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(caller.getId()).stream()
-                        .filter(ApiKey::isActive)
-                        .count();
+        long activeOwned = apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(caller.getId()).stream()
+                .filter(ApiKey::isActive)
+                .count();
         if (activeOwned >= MAX_ACTIVE_KEYS_PER_USER) {
             throw new ResponseStatusException(
                     HttpStatus.TOO_MANY_REQUESTS,
@@ -126,29 +118,28 @@ public class ApiKeyManagementService {
         }
 
         String rawKey = ApiKeyHasher.generateRawKey();
-        ApiKey saved =
-                apiKeyRepository.save(
-                        ApiKey.builder()
-                                .name(name.trim())
-                                .keyHash(ApiKeyHasher.hash(rawKey))
-                                .prefix(ApiKeyHasher.displayPrefix(rawKey))
-                                .ownerUserId(caller.getId())
-                                .enabled(true)
-                                .createdAt(Instant.now())
-                                .build());
+        ApiKey saved = apiKeyRepository.save(ApiKey.builder()
+                .name(name.trim())
+                .keyHash(ApiKeyHasher.hash(rawKey))
+                .prefix(ApiKeyHasher.displayPrefix(rawKey))
+                .ownerUserId(caller.getId())
+                .enabled(true)
+                .createdAt(Instant.now())
+                .build());
 
-        return CreatedApiKeyDto.builder().key(toDto(saved, 0L, 0L, 0L)).secret(rawKey).build();
+        return CreatedApiKeyDto.builder()
+                .key(toDto(saved, 0L, 0L, 0L))
+                .secret(rawKey)
+                .build();
     }
 
     /** Soft-revoke a key the caller owns; also clears the legacy column if it is that key. */
     @Transactional
     public void revokeKey(Long id) {
         User caller = requireCaller();
-        ApiKey key =
-                apiKeyRepository
-                        .findById(id)
-                        .orElseThrow(
-                                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No key"));
+        ApiKey key = apiKeyRepository
+                .findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No key"));
         if (!key.getOwnerUserId().equals(caller.getId())) {
             // Not-found rather than forbidden so a caller can't probe other users' key ids.
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No key");
@@ -172,15 +163,14 @@ public class ApiKeyManagementService {
         try {
             // Insert in its own transaction so a concurrent-insert clash can't poison this
             // listing transaction (see ApiKeyLegacyMigrator).
-            legacyMigrator.insertMigratedKey(
-                    ApiKey.builder()
-                            .name("Default key")
-                            .keyHash(hash)
-                            .prefix(ApiKeyHasher.displayPrefix(legacy))
-                            .ownerUserId(user.getId())
-                            .enabled(true)
-                            .createdAt(Instant.now())
-                            .build());
+            legacyMigrator.insertMigratedKey(ApiKey.builder()
+                    .name("Default key")
+                    .keyHash(hash)
+                    .prefix(ApiKeyHasher.displayPrefix(legacy))
+                    .ownerUserId(user.getId())
+                    .enabled(true)
+                    .createdAt(Instant.now())
+                    .build());
         } catch (DataIntegrityViolationException alreadyMigrated) {
             // A concurrent first-load won the race and inserted the same hash; that's fine.
             log.debug("Legacy key already migrated concurrently for user {}", user.getId());
@@ -191,17 +181,13 @@ public class ApiKeyManagementService {
      * If a revoked key is the owner's legacy {@code users.apiKey}, null it so it stops resolving.
      */
     private void clearLegacyColumnIfMatches(ApiKey key) {
-        userRepository
-                .findById(key.getOwnerUserId())
-                .ifPresent(
-                        owner -> {
-                            String legacy = owner.getApiKey();
-                            if (legacy != null
-                                    && ApiKeyHasher.hash(legacy).equals(key.getKeyHash())) {
-                                owner.setApiKey(null);
-                                userRepository.save(owner);
-                            }
-                        });
+        userRepository.findById(key.getOwnerUserId()).ifPresent(owner -> {
+            String legacy = owner.getApiKey();
+            if (legacy != null && ApiKeyHasher.hash(legacy).equals(key.getKeyHash())) {
+                owner.setApiKey(null);
+                userRepository.save(owner);
+            }
+        });
     }
 
     private PortalApiKeyDto toDto(ApiKey key, long usageToday, long usageMonth, long usageTotal) {
@@ -209,12 +195,8 @@ public class ApiKeyManagementService {
                 .id(String.valueOf(key.getId()))
                 .name(key.getName())
                 .prefix(key.getPrefix())
-                .created(
-                        key.getCreatedAt() == null ? "" : CREATED_FORMAT.format(key.getCreatedAt()))
-                .lastUsed(
-                        key.getLastUsedAt() == null
-                                ? "Never"
-                                : LAST_USED_FORMAT.format(key.getLastUsedAt()))
+                .created(key.getCreatedAt() == null ? "" : CREATED_FORMAT.format(key.getCreatedAt()))
+                .lastUsed(key.getLastUsedAt() == null ? "Never" : LAST_USED_FORMAT.format(key.getLastUsedAt()))
                 .status(key.isActive() ? "active" : "revoked")
                 .usageToday(usageToday)
                 .usageMonth(usageMonth)
@@ -229,7 +211,6 @@ public class ApiKeyManagementService {
         }
         return userService
                 .findByUsernameIgnoreCase(username)
-                .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unknown user"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unknown user"));
     }
 }

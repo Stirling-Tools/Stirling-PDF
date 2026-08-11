@@ -55,18 +55,14 @@ public class S3ConnectionResolver {
             // Legacy embedded credentials, pending migration.
             return S3Config.from(options);
         }
-        IntegrationConfig connection =
-                connections
-                        .findById(connectionId)
-                        .filter(cfg -> cfg.getIntegrationType() == IntegrationType.S3)
-                        .filter(this::usableByCurrentUser)
-                        // Existence and access collapse into one error: a caller must not be able
-                        // to tell "no such connection" from "someone else's connection" and
-                        // enumerate ids. The id/name are never echoed.
-                        .orElseThrow(
-                                () ->
-                                        new IllegalArgumentException(
-                                                "unknown or inaccessible s3 connection"));
+        IntegrationConfig connection = connections
+                .findById(connectionId)
+                .filter(cfg -> cfg.getIntegrationType() == IntegrationType.S3)
+                .filter(this::usableByCurrentUser)
+                // Existence and access collapse into one error: a caller must not be able
+                // to tell "no such connection" from "someone else's connection" and
+                // enumerate ids. The id/name are never echoed.
+                .orElseThrow(() -> new IllegalArgumentException("unknown or inaccessible s3 connection"));
         if (!connection.isEnabled()) {
             throw new IllegalArgumentException("s3 connection is disabled");
         }
@@ -88,8 +84,7 @@ public class S3ConnectionResolver {
         try {
             return Long.valueOf(reference.toString().trim());
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                    "s3 'connectionId' is not a valid connection reference: " + reference);
+            throw new IllegalArgumentException("s3 'connectionId' is not a valid connection reference: " + reference);
         }
     }
 
@@ -131,16 +126,13 @@ public class S3ConnectionResolver {
             return Map.of();
         }
         try {
-            return OBJECT_MAPPER.readValue(
-                    json, new TypeReference<LinkedHashMap<String, Object>>() {});
+            return OBJECT_MAPPER.readValue(json, new TypeReference<LinkedHashMap<String, Object>>() {});
         } catch (Exception e) {
-            throw new IllegalArgumentException(
-                    "s3 connection '" + connection.getName() + "' has unreadable config", e);
+            throw new IllegalArgumentException("s3 connection '" + connection.getName() + "' has unreadable config", e);
         }
     }
 
-    private static void copyPerUseOption(
-            Map<String, Object> options, Map<String, Object> merged, String key) {
+    private static void copyPerUseOption(Map<String, Object> options, Map<String, Object> merged, String key) {
         Object value = options.get(key);
         if (value != null && !value.toString().isBlank()) {
             merged.put(key, value);

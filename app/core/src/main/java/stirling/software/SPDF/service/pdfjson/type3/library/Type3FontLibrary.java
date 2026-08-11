@@ -48,8 +48,7 @@ public class Type3FontLibrary {
             this.indexLocation =
                     applicationProperties.getPdfEditor().getType3().getLibrary().getIndex();
         } else {
-            log.warn(
-                    "[TYPE3] PdfEditor Type3 library configuration not available; Type3 library disabled");
+            log.warn("[TYPE3] PdfEditor Type3 library configuration not available; Type3 library disabled");
             entries = List.of();
             return;
         }
@@ -60,8 +59,7 @@ public class Type3FontLibrary {
             return;
         }
         try (InputStream inputStream = resource.getInputStream()) {
-            List<RawEntry> rawEntries =
-                    objectMapper.readValue(inputStream, new TypeReference<List<RawEntry>>() {});
+            List<RawEntry> rawEntries = objectMapper.readValue(inputStream, new TypeReference<List<RawEntry>>() {});
             List<Type3FontLibraryEntry> loaded = new ArrayList<>();
             for (RawEntry rawEntry : rawEntries) {
                 Type3FontLibraryEntry entry = toEntry(rawEntry);
@@ -99,11 +97,7 @@ public class Type3FontLibrary {
                     aliasIndex.size(),
                     indexLocation);
         } catch (IOException ex) {
-            log.warn(
-                    "[TYPE3] Failed to load Type3 library index {}: {}",
-                    indexLocation,
-                    ex.getMessage(),
-                    ex);
+            log.warn("[TYPE3] Failed to load Type3 library index {}: {}", indexLocation, ex.getMessage(), ex);
             entries = List.of();
             signatureIndex.clear();
             aliasIndex.clear();
@@ -170,16 +164,15 @@ public class Type3FontLibrary {
             return null;
         }
         try {
-            Type3FontLibraryEntry.Type3FontLibraryEntryBuilder builder =
-                    Type3FontLibraryEntry.builder()
-                            .id(rawEntry.id)
-                            .label(rawEntry.label != null ? rawEntry.label : rawEntry.id)
-                            .signatures(normalizeList(rawEntry.signatures))
-                            .aliases(normalizeList(rawEntry.aliases))
-                            .program(loadPayload(rawEntry.program))
-                            .webProgram(loadPayload(rawEntry.webProgram))
-                            .pdfProgram(loadPayload(rawEntry.pdfProgram))
-                            .source(rawEntry.source);
+            Type3FontLibraryEntry.Type3FontLibraryEntryBuilder builder = Type3FontLibraryEntry.builder()
+                    .id(rawEntry.id)
+                    .label(rawEntry.label != null ? rawEntry.label : rawEntry.id)
+                    .signatures(normalizeList(rawEntry.signatures))
+                    .aliases(normalizeList(rawEntry.aliases))
+                    .program(loadPayload(rawEntry.program))
+                    .webProgram(loadPayload(rawEntry.webProgram))
+                    .pdfProgram(loadPayload(rawEntry.pdfProgram))
+                    .source(rawEntry.source);
             if (rawEntry.glyphCoverage != null && !rawEntry.glyphCoverage.isEmpty()) {
                 for (Integer codePoint : rawEntry.glyphCoverage) {
                     if (codePoint != null) {
@@ -189,10 +182,7 @@ public class Type3FontLibrary {
             }
             return builder.build();
         } catch (IOException ex) {
-            log.warn(
-                    "[TYPE3] Failed to load Type3 library entry {}: {}",
-                    rawEntry.id,
-                    ex.getMessage());
+            log.warn("[TYPE3] Failed to load Type3 library entry {}: {}", rawEntry.id, ex.getMessage());
             return null;
         }
     }
@@ -207,10 +197,7 @@ public class Type3FontLibrary {
             // Only decode a small prefix to verify encoding is valid
             try {
                 byte[] probe =
-                        Base64.getDecoder()
-                                .decode(
-                                        payload.base64.substring(
-                                                0, Math.min(4, payload.base64.length())));
+                        Base64.getDecoder().decode(payload.base64.substring(0, Math.min(4, payload.base64.length())));
                 if (probe.length == 0 && payload.base64.length() <= 4) {
                     return null;
                 }

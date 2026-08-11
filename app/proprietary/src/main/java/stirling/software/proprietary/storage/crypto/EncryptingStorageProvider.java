@@ -61,17 +61,14 @@ public class EncryptingStorageProvider implements StorageProvider {
     }
 
     public EncryptingStorageProvider(
-            StorageProvider delegate,
-            StorageEncryptionState state,
-            TempFileManager tempFileManager) {
+            StorageProvider delegate, StorageEncryptionState state, TempFileManager tempFileManager) {
         this.delegate = delegate;
         this.state = state;
         this.tempFileManager = tempFileManager;
     }
 
     /** Test convenience mirroring the pre-state constructor shape. */
-    public EncryptingStorageProvider(
-            StorageProvider delegate, FileEncryptionKeyService keys, boolean writeEnabled) {
+    public EncryptingStorageProvider(StorageProvider delegate, FileEncryptionKeyService keys, boolean writeEnabled) {
         this(delegate, StorageEncryptionState.of(writeEnabled, keys), null);
     }
 
@@ -108,10 +105,7 @@ public class EncryptingStorageProvider implements StorageProvider {
             // download instead of an error.
             if (plaintextBytes != file.getSize()) {
                 throw new StorageEncryptionException(
-                        "Upload reported "
-                                + file.getSize()
-                                + " bytes but streamed "
-                                + plaintextBytes);
+                        "Upload reported " + file.getSize() + " bytes but streamed " + plaintextBytes);
             }
             StoredObject stored = delegate.store(owner, new SpooledUpload(file, spool));
             log.debug(
@@ -168,8 +162,7 @@ public class EncryptingStorageProvider implements StorageProvider {
     }
 
     @Override
-    public Optional<URI> signedDownloadUrl(
-            String storageKey, Duration ttl, boolean inline, String originalFilename)
+    public Optional<URI> signedDownloadUrl(String storageKey, Duration ttl, boolean inline, String originalFilename)
             throws IOException {
         if (state.suppressDirectDownloads()) {
             return Optional.empty();
@@ -180,17 +173,15 @@ public class EncryptingStorageProvider implements StorageProvider {
     // ---- store helpers -------------------------------------------------------------------
 
     private EncryptedFileFormat.Header buildHeader(
-            FileEncryptionKeyService.ScopeKek kek, byte[] dek, long plaintextLength)
-            throws StorageEncryptionException {
+            FileEncryptionKeyService.ScopeKek kek, byte[] dek, long plaintextLength) throws StorageEncryptionException {
         // AAD covers the header prefix, so build a header with a placeholder wrap first to get
         // the prefix bytes, then wrap the DEK bound to that prefix.
-        EncryptedFileFormat.Header prototype =
-                new EncryptedFileFormat.Header(
-                        EncryptedFileFormat.FORMAT_VERSION,
-                        EncryptedFileFormat.SUITE_AES_GCM_HKDF_1MIB,
-                        kek.keyId(),
-                        plaintextLength,
-                        new byte[EncryptedFileFormat.WRAPPED_DEK_LENGTH]);
+        EncryptedFileFormat.Header prototype = new EncryptedFileFormat.Header(
+                EncryptedFileFormat.FORMAT_VERSION,
+                EncryptedFileFormat.SUITE_AES_GCM_HKDF_1MIB,
+                kek.keyId(),
+                plaintextLength,
+                new byte[EncryptedFileFormat.WRAPPED_DEK_LENGTH]);
         byte[] aad = prototype.associatedData();
         byte[] wrappedDek = wrapDek(dek, kek.key(), aad);
         return new EncryptedFileFormat.Header(
@@ -201,16 +192,12 @@ public class EncryptingStorageProvider implements StorageProvider {
                 wrappedDek);
     }
 
-    private static byte[] wrapDek(byte[] dek, byte[] kek, byte[] aad)
-            throws StorageEncryptionException {
+    private static byte[] wrapDek(byte[] dek, byte[] kek, byte[] aad) throws StorageEncryptionException {
         try {
             byte[] iv = new byte[12];
             RANDOM.nextBytes(iv);
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(
-                    Cipher.ENCRYPT_MODE,
-                    new SecretKeySpec(kek, "AES"),
-                    new GCMParameterSpec(128, iv));
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(kek, "AES"), new GCMParameterSpec(128, iv));
             cipher.updateAAD(aad);
             byte[] ct = cipher.doFinal(dek);
             byte[] out = new byte[iv.length + ct.length];
@@ -229,16 +216,12 @@ public class EncryptingStorageProvider implements StorageProvider {
             byte[] iv = Arrays.copyOfRange(wrapped, 0, 12);
             byte[] ct = Arrays.copyOfRange(wrapped, 12, wrapped.length);
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(
-                    Cipher.DECRYPT_MODE,
-                    new SecretKeySpec(kek, "AES"),
-                    new GCMParameterSpec(128, iv));
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(kek, "AES"), new GCMParameterSpec(128, iv));
             cipher.updateAAD(header.associatedData());
             return cipher.doFinal(ct);
         } catch (GeneralSecurityException e) {
             throw new StorageEncryptionException(
-                    "Failed to unwrap file key for key " + header.keyId() + " — tampered header?",
-                    e);
+                    "Failed to unwrap file key for key " + header.keyId() + " — tampered header?", e);
         }
     }
 
@@ -251,11 +234,7 @@ public class EncryptingStorageProvider implements StorageProvider {
      */
     private static AesGcmHkdfStreaming streamingAead(byte[] dek) throws GeneralSecurityException {
         return new AesGcmHkdfStreaming(
-                dek,
-                "HMACSHA256",
-                EncryptedFileFormat.DEK_LENGTH_BYTES,
-                EncryptedFileFormat.SEGMENT_SIZE_BYTES,
-                0);
+                dek, "HMACSHA256", EncryptedFileFormat.DEK_LENGTH_BYTES, EncryptedFileFormat.SEGMENT_SIZE_BYTES, 0);
     }
 
     // ---- load helpers --------------------------------------------------------------------
@@ -295,9 +274,7 @@ public class EncryptingStorageProvider implements StorageProvider {
                     length = -1;
                 }
                 return new OneShotResource(
-                        new SequenceInputStream(new ByteArrayInputStream(prefix), in),
-                        length,
-                        raw.getDescription());
+                        new SequenceInputStream(new ByteArrayInputStream(prefix), in), length, raw.getDescription());
             }
             byte[] dek = unwrapDek(header);
             InputStream decrypting;
@@ -327,8 +304,7 @@ public class EncryptingStorageProvider implements StorageProvider {
         private final EncryptedFileFormat.Header header;
         private final byte[] dek;
 
-        private ReopenableDecryptedResource(
-                Resource ciphertext, EncryptedFileFormat.Header header, byte[] dek) {
+        private ReopenableDecryptedResource(Resource ciphertext, EncryptedFileFormat.Header header, byte[] dek) {
             this.ciphertext = ciphertext;
             this.header = header;
             this.dek = dek;
@@ -385,8 +361,7 @@ public class EncryptingStorageProvider implements StorageProvider {
         @Override
         public synchronized InputStream getInputStream() {
             if (consumed) {
-                throw new IllegalStateException(
-                        "InputStream has already been read - do not use OneShotResource twice");
+                throw new IllegalStateException("InputStream has already been read - do not use OneShotResource twice");
             }
             consumed = true;
             return stream;

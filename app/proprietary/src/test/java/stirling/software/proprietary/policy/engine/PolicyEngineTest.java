@@ -78,15 +78,29 @@ class PolicyEngineTest {
     private static final String ROTATE = "/api/v1/general/rotate-pdf";
     private static final String COMPRESS = "/api/v1/misc/compress-pdf";
 
-    @Mock private InternalApiClient internalApiClient;
-    @Mock private ToolMetadataService toolMetadataService;
-    @Mock private TaskManager taskManager;
-    @Mock private FileStorage fileStorage;
-    @Mock private JobOwnershipService jobOwnershipService;
-    @Mock private ResourceMonitor resourceMonitor;
-    @Mock private JobQueue jobQueue;
+    @Mock
+    private InternalApiClient internalApiClient;
 
-    @TempDir Path tempDir;
+    @Mock
+    private ToolMetadataService toolMetadataService;
+
+    @Mock
+    private TaskManager taskManager;
+
+    @Mock
+    private FileStorage fileStorage;
+
+    @Mock
+    private JobOwnershipService jobOwnershipService;
+
+    @Mock
+    private ResourceMonitor resourceMonitor;
+
+    @Mock
+    private JobQueue jobQueue;
+
+    @TempDir
+    Path tempDir;
 
     private final RecordingSink recordingSink = new RecordingSink();
     private PolicyRunRegistry registry;
@@ -98,32 +112,28 @@ class PolicyEngineTest {
         props.getSystem().getTempFileManagement().setBaseTmpDir(tempDir.toString());
         props.getSystem().getTempFileManagement().setPrefix("policy-engine-test-");
         TempFileManager tempFileManager = new TempFileManager(new TempFileRegistry(), props);
-        PolicyExecutor executor =
-                new PolicyExecutor(
-                        internalApiClient,
-                        toolMetadataService,
-                        tempFileManager,
-                        JsonMapper.builder().build());
+        PolicyExecutor executor = new PolicyExecutor(
+                internalApiClient,
+                toolMetadataService,
+                tempFileManager,
+                JsonMapper.builder().build());
         registry = new PolicyRunRegistry(new ApplicationProperties());
         InlineOutputSink sink = new InlineOutputSink(fileStorage);
         PolicyOutputResolver outputResolver = new PolicyOutputResolver(new InProcessSourceStore());
-        engine =
-                new PolicyEngine(
-                        executor,
-                        taskManager,
-                        registry,
-                        fileStorage,
-                        jobOwnershipService,
-                        List.of(sink, recordingSink),
-                        outputResolver,
-                        resourceMonitor,
-                        jobQueue);
+        engine = new PolicyEngine(
+                executor,
+                taskManager,
+                registry,
+                fileStorage,
+                jobOwnershipService,
+                List.of(sink, recordingSink),
+                outputResolver,
+                resourceMonitor,
+                jobQueue);
 
         // Identity scoping: the run id is the generated UUID unchanged. Lenient because the
         // resume/cancel tests do not submit a run.
-        lenient()
-                .when(jobOwnershipService.createScopedJobKey(anyString()))
-                .thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(jobOwnershipService.createScopedJobKey(anyString())).thenAnswer(inv -> inv.getArgument(0));
         // Default to running immediately; the queueing test overrides this.
         lenient().when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(false);
     }
@@ -135,21 +145,16 @@ class PolicyEngineTest {
         stubEndpoint(ROTATE, pdf("rotated", "rotated.pdf"));
         stubEndpoint(COMPRESS, pdf("compressed", "compressed.pdf"));
         int[] counter = {0};
-        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
-                .thenAnswer(
-                        inv -> {
-                            InputStream is = inv.getArgument(0);
-                            long size = is.readAllBytes().length;
-                            return new StoredFile("file-" + ++counter[0], size);
-                        });
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString())).thenAnswer(inv -> {
+            InputStream is = inv.getArgument(0);
+            long size = is.readAllBytes().length;
+            return new StoredFile("file-" + ++counter[0], size);
+        });
 
-        PolicyRunHandle handle =
-                engine.submit(
-                        definition(
-                                new PipelineStep(ROTATE, Map.of()),
-                                new PipelineStep(COMPRESS, Map.of())),
-                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                        PolicyProgressListener.NOOP);
+        PolicyRunHandle handle = engine.submit(
+                definition(new PipelineStep(ROTATE, Map.of()), new PipelineStep(COMPRESS, Map.of())),
+                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                PolicyProgressListener.NOOP);
 
         // The completion future resolves with the final run state, no polling needed.
         String runId = handle.runId();
@@ -174,21 +179,15 @@ class PolicyEngineTest {
 
         // Two destinations of a recording sink; each fully reads the (shared) result file, so this
         // also proves the result Resources are re-readable across more than one delivery.
-        PipelineDefinition definition =
-                new PipelineDefinition(
-                        "multi",
-                        List.of(new PipelineStep(COMPRESS, Map.of())),
-                        List.of(
-                                new OutputSpec("record", Map.of("dest", "a")),
-                                new OutputSpec("record", Map.of("dest", "b"))));
+        PipelineDefinition definition = new PipelineDefinition(
+                "multi",
+                List.of(new PipelineStep(COMPRESS, Map.of())),
+                List.of(new OutputSpec("record", Map.of("dest", "a")), new OutputSpec("record", Map.of("dest", "b"))));
 
-        PolicyRun run =
-                engine.submit(
-                                definition,
-                                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                                PolicyProgressListener.NOOP)
-                        .completion()
-                        .get(10, TimeUnit.SECONDS);
+        PolicyRun run = engine.submit(
+                        definition, PolicyInputs.of(List.of(pdf("input", "input.pdf"))), PolicyProgressListener.NOOP)
+                .completion()
+                .get(10, TimeUnit.SECONDS);
 
         assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
         // One result file per destination, and each destination read the same output content.
@@ -201,11 +200,10 @@ class PolicyEngineTest {
         when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
         when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
 
-        PolicyRunHandle handle =
-                engine.submit(
-                        definition(new PipelineStep(ROTATE, Map.of())),
-                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                        PolicyProgressListener.NOOP);
+        PolicyRunHandle handle = engine.submit(
+                definition(new PipelineStep(ROTATE, Map.of())),
+                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                PolicyProgressListener.NOOP);
 
         String runId = handle.runId();
         PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
@@ -222,21 +220,19 @@ class PolicyEngineTest {
         when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
         String body = "{\"error\":\"PAYG_LIMIT_REACHED\",\"subscribed\":true}";
         when(internalApiClient.post(eq(ROTATE), any()))
-                .thenThrow(
-                        HttpClientErrorException.create(
-                                HttpStatus.PAYMENT_REQUIRED,
-                                "Payment Required",
-                                HttpHeaders.EMPTY,
-                                body.getBytes(java.nio.charset.StandardCharsets.UTF_8),
-                                java.nio.charset.StandardCharsets.UTF_8));
+                .thenThrow(HttpClientErrorException.create(
+                        HttpStatus.PAYMENT_REQUIRED,
+                        "Payment Required",
+                        HttpHeaders.EMPTY,
+                        body.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                        java.nio.charset.StandardCharsets.UTF_8));
 
-        PolicyRun run =
-                engine.submit(
-                                definition(new PipelineStep(ROTATE, Map.of())),
-                                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                                PolicyProgressListener.NOOP)
-                        .completion()
-                        .get(10, TimeUnit.SECONDS);
+        PolicyRun run = engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP)
+                .completion()
+                .get(10, TimeUnit.SECONDS);
 
         assertEquals(PolicyRunStatus.FAILED, run.getStatus());
         assertEquals("PAYG_LIMIT_REACHED", run.getErrorCode());
@@ -249,28 +245,22 @@ class PolicyEngineTest {
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
         stubEndpoint(ROTATE, pdf("rotated", "rotated.pdf"));
         int[] counter = {0};
-        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
-                .thenAnswer(
-                        inv -> {
-                            InputStream is = inv.getArgument(0);
-                            return new StoredFile("file-" + ++counter[0], is.readAllBytes().length);
-                        });
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString())).thenAnswer(inv -> {
+            InputStream is = inv.getArgument(0);
+            return new StoredFile("file-" + ++counter[0], is.readAllBytes().length);
+        });
 
-        Policy policy =
-                new Policy(
-                        "p1",
-                        "rotate",
-                        "owner",
-                        true,
-                        List.of(),
-                        List.of(new PipelineStep(ROTATE, Map.of())),
-                        OutputSpec.inline());
+        Policy policy = new Policy(
+                "p1",
+                "rotate",
+                "owner",
+                true,
+                List.of(),
+                List.of(new PipelineStep(ROTATE, Map.of())),
+                OutputSpec.inline());
 
-        PolicyRunHandle handle =
-                engine.runPolicy(
-                        policy,
-                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                        PolicyProgressListener.NOOP);
+        PolicyRunHandle handle = engine.runPolicy(
+                policy, PolicyInputs.of(List.of(pdf("input", "input.pdf"))), PolicyProgressListener.NOOP);
 
         PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
         assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
@@ -286,34 +276,25 @@ class PolicyEngineTest {
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
         int[] counter = {0};
         when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
-                .thenAnswer(
-                        inv ->
-                                new StoredFile(
-                                        "file-" + ++counter[0],
-                                        ((InputStream) inv.getArgument(0)).readAllBytes().length));
+                .thenAnswer(inv -> new StoredFile(
+                        "file-" + ++counter[0], ((InputStream) inv.getArgument(0)).readAllBytes().length));
 
         String[] principalAtDispatch = {"<none>"};
-        when(internalApiClient.post(eq(ROTATE), any()))
-                .thenAnswer(
-                        inv -> {
-                            principalAtDispatch[0] = MDC.get("auditPrincipal");
-                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
-                        });
+        when(internalApiClient.post(eq(ROTATE), any())).thenAnswer(inv -> {
+            principalAtDispatch[0] = MDC.get("auditPrincipal");
+            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+        });
 
-        Policy policy =
-                new Policy(
-                        "p1",
-                        "rotate",
-                        "alice",
-                        true,
-                        List.of(),
-                        List.of(new PipelineStep(ROTATE, Map.of())),
-                        OutputSpec.inline());
+        Policy policy = new Policy(
+                "p1",
+                "rotate",
+                "alice",
+                true,
+                List.of(),
+                List.of(new PipelineStep(ROTATE, Map.of())),
+                OutputSpec.inline());
 
-        engine.runPolicy(
-                        policy,
-                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                        PolicyProgressListener.NOOP)
+        engine.runPolicy(policy, PolicyInputs.of(List.of(pdf("input", "input.pdf"))), PolicyProgressListener.NOOP)
                 .completion()
                 .get(10, TimeUnit.SECONDS);
 
@@ -328,19 +309,14 @@ class PolicyEngineTest {
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
         int[] counter = {0};
         when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
-                .thenAnswer(
-                        inv ->
-                                new StoredFile(
-                                        "file-" + ++counter[0],
-                                        ((InputStream) inv.getArgument(0)).readAllBytes().length));
+                .thenAnswer(inv -> new StoredFile(
+                        "file-" + ++counter[0], ((InputStream) inv.getArgument(0)).readAllBytes().length));
 
         String[] principalAtDispatch = {"<none>"};
-        when(internalApiClient.post(eq(ROTATE), any()))
-                .thenAnswer(
-                        inv -> {
-                            principalAtDispatch[0] = MDC.get("auditPrincipal");
-                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
-                        });
+        when(internalApiClient.post(eq(ROTATE), any())).thenAnswer(inv -> {
+            principalAtDispatch[0] = MDC.get("auditPrincipal");
+            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+        });
 
         MDC.put("auditPrincipal", "bob"); // the request thread's audit principal
         try {
@@ -366,11 +342,10 @@ class PolicyEngineTest {
                 .when(jobQueue)
                 .queueJob(anyString(), anyInt(), any(), anyLong());
 
-        PolicyRunHandle handle =
-                engine.submit(
-                        definition(new PipelineStep(ROTATE, Map.of())),
-                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                        PolicyProgressListener.NOOP);
+        PolicyRunHandle handle = engine.submit(
+                definition(new PipelineStep(ROTATE, Map.of())),
+                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                PolicyProgressListener.NOOP);
 
         verify(jobQueue).queueJob(eq(handle.runId()), anyInt(), any(), anyLong());
         assertEquals(PolicyRunStatus.PENDING, registry.get(handle.runId()).getStatus());
@@ -381,15 +356,13 @@ class PolicyEngineTest {
         when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(true);
         // Admission rejected (queue full): the queued future completes exceptionally.
         CompletableFuture<Object> rejected = new CompletableFuture<>();
-        rejected.completeExceptionally(
-                new RuntimeException("Job queue full, please try again later"));
+        rejected.completeExceptionally(new RuntimeException("Job queue full, please try again later"));
         doReturn(rejected).when(jobQueue).queueJob(anyString(), anyInt(), any(), anyLong());
 
-        PolicyRunHandle handle =
-                engine.submit(
-                        definition(new PipelineStep(ROTATE, Map.of())),
-                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
-                        PolicyProgressListener.NOOP);
+        PolicyRunHandle handle = engine.submit(
+                definition(new PipelineStep(ROTATE, Map.of())),
+                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                PolicyProgressListener.NOOP);
 
         PolicyRun run = registry.get(handle.runId());
         assertEquals(PolicyRunStatus.FAILED, run.getStatus());
@@ -449,8 +422,7 @@ class PolicyEngineTest {
         }
 
         @Override
-        public List<ResultFile> deliver(
-                OutputDelivery delivery, List<Resource> outputs, OutputSpec spec)
+        public List<ResultFile> deliver(OutputDelivery delivery, List<Resource> outputs, OutputSpec spec)
                 throws IOException {
             String dest = String.valueOf(spec.options().get("dest"));
             List<ResultFile> results = new ArrayList<>();
@@ -460,13 +432,12 @@ class PolicyEngineTest {
                     bytes = is.readAllBytes();
                 }
                 deliveries.add(dest + ":" + new String(bytes));
-                results.add(
-                        ResultFile.builder()
-                                .fileId("rec-" + dest)
-                                .fileName(dest + "/" + file.getFilename())
-                                .contentType("application/pdf")
-                                .fileSize(bytes.length)
-                                .build());
+                results.add(ResultFile.builder()
+                        .fileId("rec-" + dest)
+                        .fileName(dest + "/" + file.getFilename())
+                        .contentType("application/pdf")
+                        .fileSize(bytes.length)
+                        .build());
             }
             return results;
         }

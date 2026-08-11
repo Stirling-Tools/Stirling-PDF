@@ -30,7 +30,8 @@ import stirling.software.jpdfium.text.TextWord;
  */
 class PdfMarkdownConverterMoreTest {
 
-    @TempDir Path tmp;
+    @TempDir
+    Path tmp;
 
     // ---- helpers ------------------------------------------------------------
 
@@ -39,15 +40,7 @@ class PdfMarkdownConverterMoreTest {
         List<TextChar> chars = new ArrayList<>();
         for (int i = 0; i < text.length(); i++) {
             chars.add(
-                    new TextChar(
-                            i,
-                            text.charAt(i),
-                            x,
-                            0f,
-                            width / Math.max(1, text.length()),
-                            10f,
-                            "Helvetica",
-                            10f));
+                    new TextChar(i, text.charAt(i), x, 0f, width / Math.max(1, text.length()), 10f, "Helvetica", 10f));
         }
         return new TextWord(chars, x, 0f, width, 10f);
     }
@@ -131,7 +124,8 @@ class PdfMarkdownConverterMoreTest {
         @Test
         @DisplayName("an empty row list produces no columns")
         void emptyInput() {
-            assertThat(PdfMarkdownConverter.findColumnRangesFromLines(List.of())).isEmpty();
+            assertThat(PdfMarkdownConverter.findColumnRangesFromLines(List.of()))
+                    .isEmpty();
         }
 
         @Test
@@ -233,12 +227,11 @@ class PdfMarkdownConverterMoreTest {
         @DisplayName("the many-tables stress fixture converts without throwing")
         void manyTablesFixture() throws IOException {
             Path pdf = fixture("many-tables-test_stress.pdf");
-            assertDoesNotThrow(
-                    () -> {
-                        try (PdfDocument doc = PdfDocument.open(pdf)) {
-                            return new PdfMarkdownConverter().convert(doc);
-                        }
-                    });
+            assertDoesNotThrow(() -> {
+                try (PdfDocument doc = PdfDocument.open(pdf)) {
+                    return new PdfMarkdownConverter().convert(doc);
+                }
+            });
         }
     }
 }

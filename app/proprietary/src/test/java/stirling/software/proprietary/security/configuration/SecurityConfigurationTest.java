@@ -130,9 +130,7 @@ class SecurityConfigurationTest {
         @Test
         @DisplayName("corsConfigurationSource uses configured origin patterns when present")
         void corsUsesConfiguredOrigins() {
-            applicationProperties
-                    .getSystem()
-                    .setCorsAllowedOrigins(List.of("https://app.example.com"));
+            applicationProperties.getSystem().setCorsAllowedOrigins(List.of("https://app.example.com"));
 
             CorsConfiguration cfg = configFor(newConfig(true).corsConfigurationSource());
             assertThat(cfg.getAllowedOriginPatterns()).containsExactly("https://app.example.com");
@@ -162,13 +160,14 @@ class SecurityConfigurationTest {
         @DisplayName("jwtAuthenticationFilter is created")
         void jwtAuthenticationFilter() {
             JwtAuthenticationFilter filter =
-                    newConfig(true)
-                            .jwtAuthenticationFilter(mock(ApiKeyAuthenticationService.class));
+                    newConfig(true).jwtAuthenticationFilter(mock(ApiKeyAuthenticationService.class));
             assertThat(filter).isNotNull();
         }
 
         private CorsConfiguration configFor(CorsConfigurationSource source) {
-            return ((UrlBasedCorsConfigurationSource) source).getCorsConfigurations().get("/**");
+            return ((UrlBasedCorsConfigurationSource) source)
+                    .getCorsConfigurations()
+                    .get("/**");
         }
     }
 
@@ -187,8 +186,7 @@ class SecurityConfigurationTest {
             IPRateLimitingFilter rateLimitingFilter = mock(IPRateLimitingFilter.class);
             JwtAuthenticationFilter jwtFilter = mock(JwtAuthenticationFilter.class);
 
-            SecurityFilterChain chain =
-                    newConfig(false).filterChain(http, rateLimitingFilter, jwtFilter);
+            SecurityFilterChain chain = newConfig(false).filterChain(http, rateLimitingFilter, jwtFilter);
 
             assertThat(chain).isSameAs(built);
         }

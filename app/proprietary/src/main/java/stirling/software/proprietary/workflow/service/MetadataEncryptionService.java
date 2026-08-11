@@ -127,9 +127,7 @@ public class MetadataEncryptionService {
                     "AutomaticallyGenerated.key is not initialised — cannot derive encryption key");
         }
         // SHA-256 of the raw key gives a stable 32-byte AES-256 key
-        byte[] hash =
-                MessageDigest.getInstance("SHA-256")
-                        .digest(rawKey.getBytes(StandardCharsets.UTF_8));
+        byte[] hash = MessageDigest.getInstance("SHA-256").digest(rawKey.getBytes(StandardCharsets.UTF_8));
         return new SecretKeySpec(hash, "AES");
     }
 

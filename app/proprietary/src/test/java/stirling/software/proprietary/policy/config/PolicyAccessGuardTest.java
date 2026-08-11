@@ -28,8 +28,11 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 @ExtendWith(MockitoExtension.class)
 class PolicyAccessGuardTest {
 
-    @Mock private UserServiceInterface userService;
-    @Mock private PolicyManagementAuthority policyManagementAuthority;
+    @Mock
+    private UserServiceInterface userService;
+
+    @Mock
+    private PolicyManagementAuthority policyManagementAuthority;
 
     private PolicyAccessGuard guard(boolean loginEnabled) {
         ApplicationProperties properties = new ApplicationProperties();
@@ -89,7 +92,6 @@ class PolicyAccessGuardTest {
     }
 
     private static Policy inTeam(Long teamId) {
-        return new Policy(
-                null, "p", "owner", true, List.of(), List.of(), OutputSpec.inline(), teamId);
+        return new Policy(null, "p", "owner", true, List.of(), List.of(), OutputSpec.inline(), teamId);
     }
 }

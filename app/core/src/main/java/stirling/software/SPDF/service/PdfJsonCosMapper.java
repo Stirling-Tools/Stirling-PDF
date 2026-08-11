@@ -64,23 +64,18 @@ public class PdfJsonCosMapper {
             return null;
         }
         return serializeStream(
-                cosStream,
-                Collections.newSetFromMap(new IdentityHashMap<>()),
-                SerializationContext.DEFAULT);
+                cosStream, Collections.newSetFromMap(new IdentityHashMap<>()), SerializationContext.DEFAULT);
     }
 
-    public PdfJsonStream serializeStream(COSStream cosStream, SerializationContext context)
-            throws IOException {
+    public PdfJsonStream serializeStream(COSStream cosStream, SerializationContext context) throws IOException {
         if (cosStream == null) {
             return null;
         }
         SerializationContext effective = context != null ? context : SerializationContext.DEFAULT;
-        return serializeStream(
-                cosStream, Collections.newSetFromMap(new IdentityHashMap<>()), effective);
+        return serializeStream(cosStream, Collections.newSetFromMap(new IdentityHashMap<>()), effective);
     }
 
-    public PdfJsonStream serializeStream(PDStream stream, SerializationContext context)
-            throws IOException {
+    public PdfJsonStream serializeStream(PDStream stream, SerializationContext context) throws IOException {
         if (stream == null) {
             return null;
         }
@@ -89,20 +84,15 @@ public class PdfJsonCosMapper {
 
     public PdfJsonCosValue serializeCosValue(COSBase base) throws IOException {
         return serializeCosValue(
-                base,
-                Collections.newSetFromMap(new IdentityHashMap<>()),
-                SerializationContext.DEFAULT);
+                base, Collections.newSetFromMap(new IdentityHashMap<>()), SerializationContext.DEFAULT);
     }
 
-    public PdfJsonCosValue serializeCosValue(COSBase base, SerializationContext context)
-            throws IOException {
+    public PdfJsonCosValue serializeCosValue(COSBase base, SerializationContext context) throws IOException {
         SerializationContext effective = context != null ? context : SerializationContext.DEFAULT;
-        return serializeCosValue(
-                base, Collections.newSetFromMap(new IdentityHashMap<>()), effective);
+        return serializeCosValue(base, Collections.newSetFromMap(new IdentityHashMap<>()), effective);
     }
 
-    public COSBase deserializeCosValue(PdfJsonCosValue value, PDDocument document)
-            throws IOException {
+    public COSBase deserializeCosValue(PdfJsonCosValue value, PDDocument document) throws IOException {
         if (value == null || value.getType() == null) {
             return null;
         }
@@ -155,7 +145,8 @@ public class PdfJsonCosMapper {
             case DICTIONARY:
                 COSDictionary dictionary = new COSDictionary();
                 if (value.getEntries() != null) {
-                    for (Map.Entry<String, PdfJsonCosValue> entry : value.getEntries().entrySet()) {
+                    for (Map.Entry<String, PdfJsonCosValue> entry :
+                            value.getEntries().entrySet()) {
                         COSName key = COSName.getPDFName(entry.getKey());
                         COSBase entryValue = deserializeCosValue(entry.getValue(), document);
                         if (entryValue != null) {
@@ -174,8 +165,7 @@ public class PdfJsonCosMapper {
         }
     }
 
-    public COSStream buildStreamFromModel(PdfJsonStream streamModel, PDDocument document)
-            throws IOException {
+    public COSStream buildStreamFromModel(PdfJsonStream streamModel, PDDocument document) throws IOException {
         if (streamModel == null) {
             return null;
         }
@@ -210,8 +200,8 @@ public class PdfJsonCosMapper {
         return cosStream;
     }
 
-    private PdfJsonCosValue serializeCosValue(
-            COSBase base, Set<COSBase> visited, SerializationContext context) throws IOException {
+    private PdfJsonCosValue serializeCosValue(COSBase base, Set<COSBase> visited, SerializationContext context)
+            throws IOException {
         if (base == null) {
             return null;
         }
@@ -222,10 +212,7 @@ public class PdfJsonCosMapper {
             }
         }
 
-        boolean complex =
-                base instanceof COSDictionary
-                        || base instanceof COSArray
-                        || base instanceof COSStream;
+        boolean complex = base instanceof COSDictionary || base instanceof COSArray || base instanceof COSStream;
         if (complex) {
             if (!visited.add(base)) {
                 return PdfJsonCosValue.builder()
@@ -272,16 +259,14 @@ public class PdfJsonCosMapper {
                 return builder.build();
             }
             if (base instanceof COSStream stream) {
-                builder.type(PdfJsonCosValue.Type.STREAM).stream(
-                        serializeStream(stream, visited, context));
+                builder.type(PdfJsonCosValue.Type.STREAM).stream(serializeStream(stream, visited, context));
                 return builder.build();
             }
             if (base instanceof COSDictionary dictionary) {
                 Map<String, PdfJsonCosValue> entries = new LinkedHashMap<>();
                 for (COSName key : dictionary.keySet()) {
                     PdfJsonCosValue serialized =
-                            serializeCosValue(
-                                    dictionary.getDictionaryObject(key), visited, context);
+                            serializeCosValue(dictionary.getDictionaryObject(key), visited, context);
                     entries.put(key.getName(), serialized);
                 }
                 builder.type(PdfJsonCosValue.Type.DICTIONARY).entries(entries);
@@ -295,8 +280,7 @@ public class PdfJsonCosMapper {
         }
     }
 
-    private PdfJsonStream serializeStream(
-            COSStream cosStream, Set<COSBase> visited, SerializationContext context)
+    private PdfJsonStream serializeStream(COSStream cosStream, Set<COSBase> visited, SerializationContext context)
             throws IOException {
         Map<String, PdfJsonCosValue> dictionary = new LinkedHashMap<>();
         for (COSName key : cosStream.keySet()) {

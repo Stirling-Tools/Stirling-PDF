@@ -48,33 +48,30 @@ class PolicyRunRoutesTest {
     @Test
     void isSegmentAnchoredAndContextPathTolerant() {
         assertThat(matchesUri("/stirling/api/v1/policies/pol-123/run")).isTrue();
-        assertThat(matchesUri("/api/v1/policies-x/pol-123/run"))
-                .isFalse(); // sibling, not the segment
+        assertThat(matchesUri("/api/v1/policies-x/pol-123/run")).isFalse(); // sibling, not the segment
         assertThat(matchesUri("/api/v1/sources/pol/run")).isFalse();
         assertThat(matchesUri("/api/v1/misc/compress-pdf")).isFalse();
     }
 
     /** Every request mapping on PolicyController, and whether it executes an automation. */
-    private static final Map<String, Boolean> EXPECTED =
-            Map.of(
-                    "/api/v1/policies", false, // base: list (GET) + create (POST)
-                    "/api/v1/policies/run", true,
-                    "/api/v1/policies/run/stream", true,
-                    "/api/v1/policies/run/{runId}", false,
-                    "/api/v1/policies/runs", false,
-                    "/api/v1/policies/order", false,
-                    "/api/v1/policies/overview", false,
-                    "/api/v1/policies/triggers", false,
-                    "/api/v1/policies/{policyId}", false, // GET + DELETE
-                    "/api/v1/policies/{policyId}/processed-history", false);
+    private static final Map<String, Boolean> EXPECTED = Map.of(
+            "/api/v1/policies", false, // base: list (GET) + create (POST)
+            "/api/v1/policies/run", true,
+            "/api/v1/policies/run/stream", true,
+            "/api/v1/policies/run/{runId}", false,
+            "/api/v1/policies/runs", false,
+            "/api/v1/policies/order", false,
+            "/api/v1/policies/overview", false,
+            "/api/v1/policies/triggers", false,
+            "/api/v1/policies/{policyId}", false, // GET + DELETE
+            "/api/v1/policies/{policyId}/processed-history", false);
 
     // Split out because Map.of caps at 10 entries; the execute {id} routes live here.
-    private static final Map<String, Boolean> EXPECTED_ID_EXECUTES =
-            Map.of(
-                    "/api/v1/policies/{policyId}/run", true,
-                    "/api/v1/policies/{policyId}/trigger", true,
-                    // Checks whether a chain could run; runs and stores nothing, so not billable.
-                    "/api/v1/policies/validate", false);
+    private static final Map<String, Boolean> EXPECTED_ID_EXECUTES = Map.of(
+            "/api/v1/policies/{policyId}/run", true,
+            "/api/v1/policies/{policyId}/trigger", true,
+            // Checks whether a chain could run; runs and stores nothing, so not billable.
+            "/api/v1/policies/validate", false);
 
     /**
      * Fail-safe: this matcher is the sole billing gate, so an unmatched execute route would run
@@ -87,20 +84,19 @@ class PolicyRunRoutesTest {
         String base = classMapping();
         Arrays.stream(PolicyController.class.getDeclaredMethods())
                 .filter(m -> AnnotatedElementUtils.hasAnnotation(m, RequestMapping.class))
-                .forEach(
-                        m -> {
-                            String pattern = base + methodMapping(m);
-                            Boolean expected = expectedFor(pattern);
-                            assertThat(expected)
-                                    .as(
-                                            "unclassified PolicyController route %s - add it to"
-                                                    + " PolicyRunRoutesTest.EXPECTED",
-                                            pattern)
-                                    .isNotNull();
-                            assertThat(matchesPattern(pattern))
-                                    .as("PolicyRunRoutes classification of %s", pattern)
-                                    .isEqualTo(expected);
-                        });
+                .forEach(m -> {
+                    String pattern = base + methodMapping(m);
+                    Boolean expected = expectedFor(pattern);
+                    assertThat(expected)
+                            .as(
+                                    "unclassified PolicyController route %s - add it to"
+                                            + " PolicyRunRoutesTest.EXPECTED",
+                                    pattern)
+                            .isNotNull();
+                    assertThat(matchesPattern(pattern))
+                            .as("PolicyRunRoutes classification of %s", pattern)
+                            .isEqualTo(expected);
+                });
     }
 
     private static Boolean expectedFor(String pattern) {
@@ -111,9 +107,7 @@ class PolicyRunRoutesTest {
     }
 
     private static String classMapping() {
-        RequestMapping rm =
-                AnnotatedElementUtils.getMergedAnnotation(
-                        PolicyController.class, RequestMapping.class);
+        RequestMapping rm = AnnotatedElementUtils.getMergedAnnotation(PolicyController.class, RequestMapping.class);
         return rm == null ? "" : firstOrEmpty(rm);
     }
 

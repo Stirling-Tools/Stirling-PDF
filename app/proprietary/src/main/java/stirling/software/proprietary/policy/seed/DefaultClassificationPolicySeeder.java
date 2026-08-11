@@ -59,8 +59,7 @@ public class DefaultClassificationPolicySeeder {
             return;
         }
         boolean alreadySeeded =
-                policyStore.findByTeam(teamId).stream()
-                        .anyMatch(DefaultClassificationPolicySeeder::isClassification);
+                policyStore.findByTeam(teamId).stream().anyMatch(DefaultClassificationPolicySeeder::isClassification);
         if (alreadySeeded) {
             return;
         }

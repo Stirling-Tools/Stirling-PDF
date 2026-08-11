@@ -10,15 +10,12 @@ import stirling.software.common.cluster.KeyValueCache;
 
 public class InProcessKeyValueCache implements KeyValueCache {
 
-    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Expiring>> namespaces =
-            new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Expiring>> namespaces = new ConcurrentHashMap<>();
 
     @Override
     public void put(String namespace, String key, String value, Duration ttl) {
         Instant expiry = ttl == null ? Instant.MAX : Instant.now().plus(ttl);
-        namespaces
-                .computeIfAbsent(namespace, n -> new ConcurrentHashMap<>())
-                .put(key, new Expiring(value, expiry));
+        namespaces.computeIfAbsent(namespace, n -> new ConcurrentHashMap<>()).put(key, new Expiring(value, expiry));
     }
 
     @Override

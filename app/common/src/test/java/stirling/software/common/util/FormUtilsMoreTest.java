@@ -59,8 +59,8 @@ class FormUtilsMoreTest {
         return new SetupDocument(page, acroForm);
     }
 
-    private static void attachWidget(
-            SetupDocument setup, PDTerminalField field, PDRectangle rectangle) throws IOException {
+    private static void attachWidget(SetupDocument setup, PDTerminalField field, PDRectangle rectangle)
+            throws IOException {
         PDAnnotationWidget widget = new PDAnnotationWidget();
         widget.setRectangle(rectangle);
         widget.setPage(setup.page());
@@ -241,8 +241,7 @@ class FormUtilsMoreTest {
                 text.setReadOnly(true);
                 attachWidget(setup, text, new PDRectangle(50, 600, 200, 80));
 
-                List<FormFieldWithCoordinates> fields =
-                        FormUtils.extractFormFieldsWithCoordinates(doc);
+                List<FormFieldWithCoordinates> fields = FormUtils.extractFormFieldsWithCoordinates(doc);
                 assertEquals(1, fields.size());
                 assertTrue(fields.get(0).isMultiline());
                 assertTrue(fields.get(0).isReadOnly());
@@ -259,8 +258,7 @@ class FormUtilsMoreTest {
                 combo.setOptions(List.of("US", "GB"), List.of("United States", "Britain"));
                 attachWidget(setup, combo, new PDRectangle(50, 700, 200, 20));
 
-                List<FormFieldWithCoordinates> fields =
-                        FormUtils.extractFormFieldsWithCoordinates(doc);
+                List<FormFieldWithCoordinates> fields = FormUtils.extractFormFieldsWithCoordinates(doc);
                 assertEquals(1, fields.size());
                 List<String> displayOptions = fields.get(0).getDisplayOptions();
                 assertNotNull(displayOptions);
@@ -277,9 +275,9 @@ class FormUtilsMoreTest {
                 text.setDefaultAppearance("/Helv 14 Tf 0 g");
                 attachWidget(setup, text, new PDRectangle(50, 700, 200, 20));
 
-                List<FormFieldWithCoordinates> fields =
-                        FormUtils.extractFormFieldsWithCoordinates(doc);
-                FormFieldWithCoordinates.WidgetCoordinates wc = fields.get(0).getWidgets().get(0);
+                List<FormFieldWithCoordinates> fields = FormUtils.extractFormFieldsWithCoordinates(doc);
+                FormFieldWithCoordinates.WidgetCoordinates wc =
+                        fields.get(0).getWidgets().get(0);
                 assertEquals(14f, wc.getFontSize(), 0.01f);
             }
         }
@@ -294,8 +292,7 @@ class FormUtilsMoreTest {
                 // returns null, which is still added to the per-field widget list.
                 attachWidget(setup, text, new PDRectangle(50, -5000, 200, 20));
 
-                List<FormFieldWithCoordinates> fields =
-                        FormUtils.extractFormFieldsWithCoordinates(doc);
+                List<FormFieldWithCoordinates> fields = FormUtils.extractFormFieldsWithCoordinates(doc);
                 assertEquals(1, fields.size());
                 List<FormFieldWithCoordinates.WidgetCoordinates> widgets =
                         fields.get(0).getWidgets();
@@ -320,8 +317,7 @@ class FormUtilsMoreTest {
                 setup.acroForm().getFields().add(text);
                 setup.page().getAnnotations().add(widget);
 
-                List<FormFieldWithCoordinates> fields =
-                        FormUtils.extractFormFieldsWithCoordinates(doc);
+                List<FormFieldWithCoordinates> fields = FormUtils.extractFormFieldsWithCoordinates(doc);
                 assertEquals(1, fields.size());
                 assertNull(fields.get(0).getWidgets());
             }
@@ -394,8 +390,7 @@ class FormUtilsMoreTest {
 
                 // Blank radio value path: no exception, value stays unset.
                 org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton radio =
-                        new org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton(
-                                setup.acroForm());
+                        new org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton(setup.acroForm());
                 radio.setPartialName("choice");
                 attachWidget(setup, radio, new PDRectangle(50, 700, 20, 20));
 
@@ -468,17 +463,8 @@ class FormUtilsMoreTest {
                 text.setPartialName("toCombo");
                 attachWidget(setup, text, new PDRectangle(50, 700, 200, 20));
 
-                FormUtils.ModifyFormFieldDefinition mod =
-                        new FormUtils.ModifyFormFieldDefinition(
-                                "toCombo",
-                                "toCombo",
-                                "Pick one",
-                                "combobox",
-                                null,
-                                null,
-                                List.of("One", "Two"),
-                                "One",
-                                null);
+                FormUtils.ModifyFormFieldDefinition mod = new FormUtils.ModifyFormFieldDefinition(
+                        "toCombo", "toCombo", "Pick one", "combobox", null, null, List.of("One", "Two"), "One", null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -498,17 +484,16 @@ class FormUtilsMoreTest {
                 listBox.setOptions(List.of("A", "B"));
                 attachWidget(setup, listBox, new PDRectangle(50, 600, 200, 60));
 
-                FormUtils.ModifyFormFieldDefinition mod =
-                        new FormUtils.ModifyFormFieldDefinition(
-                                "list",
-                                null,
-                                null,
-                                "listbox", // same type -> in-place path
-                                null,
-                                Boolean.TRUE,
-                                List.of("X", "Y", "Z"),
-                                null,
-                                "Choose items");
+                FormUtils.ModifyFormFieldDefinition mod = new FormUtils.ModifyFormFieldDefinition(
+                        "list",
+                        null,
+                        null,
+                        "listbox", // same type -> in-place path
+                        null,
+                        Boolean.TRUE,
+                        List.of("X", "Y", "Z"),
+                        null,
+                        "Choose items");
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -527,9 +512,8 @@ class FormUtilsMoreTest {
                 text.setPartialName("keep");
                 attachWidget(setup, text, new PDRectangle(50, 700, 200, 20));
 
-                FormUtils.ModifyFormFieldDefinition mod =
-                        new FormUtils.ModifyFormFieldDefinition(
-                                "keep", null, null, "bogusType", null, null, null, null, null);
+                FormUtils.ModifyFormFieldDefinition mod = new FormUtils.ModifyFormFieldDefinition(
+                        "keep", null, null, "bogusType", null, null, null, null, null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
                 // The field is preserved unchanged because the target type is unsupported.
@@ -552,9 +536,8 @@ class FormUtilsMoreTest {
                 attachWidget(setup, b, new PDRectangle(50, 660, 200, 20));
 
                 // Rename beta -> alpha; should be uniquified to avoid the collision.
-                FormUtils.ModifyFormFieldDefinition mod =
-                        new FormUtils.ModifyFormFieldDefinition(
-                                "beta", "alpha", null, null, null, null, null, null, null);
+                FormUtils.ModifyFormFieldDefinition mod = new FormUtils.ModifyFormFieldDefinition(
+                        "beta", "alpha", null, null, null, null, null, null, null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -574,8 +557,7 @@ class FormUtilsMoreTest {
             try (PDDocument doc = new PDDocument()) {
                 doc.addPage(new PDPage());
                 FormUtils.ModifyFormFieldDefinition mod =
-                        new FormUtils.ModifyFormFieldDefinition(
-                                "x", null, null, null, null, null, null, null, null);
+                        new FormUtils.ModifyFormFieldDefinition("x", null, null, null, null, null, null, null, null);
                 FormUtils.modifyFormFields(doc, List.of(mod));
             }
         }
@@ -588,8 +570,7 @@ class FormUtilsMoreTest {
     @Test
     void buildFillTemplateRadioUsesCurrentValue() {
         FormUtils.FormFieldInfo info =
-                new FormUtils.FormFieldInfo(
-                        "choice", "Choice", "radio", "Yes", null, false, 0, false, null, 0);
+                new FormUtils.FormFieldInfo("choice", "Choice", "radio", "Yes", null, false, 0, false, null, 0);
         Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(info));
         assertEquals("Yes", result.get("choice"));
     }
@@ -598,9 +579,7 @@ class FormUtilsMoreTest {
     void buildFillTemplateNullEntriesAreSkipped() {
         List<FormUtils.FormFieldInfo> list = new ArrayList<>();
         list.add(null);
-        list.add(
-                new FormUtils.FormFieldInfo(
-                        "kept", "Kept", "text", "v", null, false, 0, false, null, 0));
+        list.add(new FormUtils.FormFieldInfo("kept", "Kept", "text", "v", null, false, 0, false, null, 0));
         Map<String, Object> result = FormUtils.buildFillTemplateRecord(list);
         assertEquals(1, result.size());
         assertTrue(result.containsKey("kept"));
@@ -647,9 +626,7 @@ class FormUtilsMoreTest {
             combo.setPartialName("noOpts");
             attachWidget(setup, combo, new PDRectangle(50, 700, 200, 20));
 
-            assertThrows(
-                    IOException.class,
-                    () -> FormUtils.applyFieldValues(doc, Map.of("noOpts", "X"), false, true));
+            assertThrows(IOException.class, () -> FormUtils.applyFieldValues(doc, Map.of("noOpts", "X"), false, true));
         }
     }
 }

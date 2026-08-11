@@ -18,8 +18,7 @@ import stirling.software.common.service.UserServiceInterface;
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "security.enable-login", havingValue = "true", matchIfMissing = false)
-public class JobOwnershipServiceImpl
-        implements stirling.software.common.service.JobOwnershipService {
+public class JobOwnershipServiceImpl implements stirling.software.common.service.JobOwnershipService {
 
     @Autowired(required = false)
     private UserServiceInterface userService;
@@ -87,8 +86,7 @@ public class JobOwnershipServiceImpl
                     "Access denied: User {} attempted to access job key {} which they don't own",
                     userId.get(),
                     scopedJobKey);
-            throw new SecurityException(
-                    "Access denied: You do not have permission to access this job");
+            throw new SecurityException("Access denied: You do not have permission to access this job");
         }
 
         log.debug("Access granted: User {} owns job {}", userId.get(), scopedJobKey);

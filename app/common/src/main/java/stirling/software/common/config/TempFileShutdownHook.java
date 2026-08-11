@@ -69,9 +69,7 @@ public class TempFileShutdownHook implements DisposableBean {
                 }
             }
 
-            log.info(
-                    "Shutdown cleanup complete. Deleted {} temporary files/directories",
-                    deletedCount);
+            log.info("Shutdown cleanup complete. Deleted {} temporary files/directories", deletedCount);
 
             // Clear the registry
             registry.clear();

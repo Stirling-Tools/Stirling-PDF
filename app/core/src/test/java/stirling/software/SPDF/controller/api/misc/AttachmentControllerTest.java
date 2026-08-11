@@ -46,12 +46,17 @@ class AttachmentControllerTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @Mock private AttachmentServiceInterface pdfAttachmentService;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private AttachmentServiceInterface pdfAttachmentService;
 
-    @InjectMocks private AttachmentController attachmentController;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private AttachmentController attachmentController;
 
     private MockMultipartFile pdfFile;
     private MockMultipartFile attachment1;
@@ -62,36 +67,19 @@ class AttachmentControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
-        pdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "PDF content".getBytes());
-        attachment1 =
-                new MockMultipartFile(
-                        "attachment1",
-                        "file1.txt",
-                        MediaType.TEXT_PLAIN_VALUE,
-                        "File 1 content".getBytes());
-        attachment2 =
-                new MockMultipartFile(
-                        "attachment2",
-                        "file2.jpg",
-                        MediaType.IMAGE_JPEG_VALUE,
-                        "Image content".getBytes());
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
+        pdfFile = new MockMultipartFile(
+                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, "PDF content".getBytes());
+        attachment1 = new MockMultipartFile(
+                "attachment1", "file1.txt", MediaType.TEXT_PLAIN_VALUE, "File 1 content".getBytes());
+        attachment2 = new MockMultipartFile(
+                "attachment2", "file2.jpg", MediaType.IMAGE_JPEG_VALUE, "Image content".getBytes());
         request = new AddAttachmentRequest();
         mockDocument = mock(PDDocument.class);
         modifiedMockDocument = mock(PDDocument.class);
@@ -105,18 +93,12 @@ class AttachmentControllerTest {
         ResponseEntity<Resource> expectedResponse = streamingOk("modified PDF content".getBytes());
 
         when(pdfDocumentFactory.load(request, false)).thenReturn(mockDocument);
-        when(pdfAttachmentService.addAttachment(mockDocument, attachments))
-                .thenReturn(mockDocument);
+        when(pdfAttachmentService.addAttachment(mockDocument, attachments)).thenReturn(mockDocument);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponseUtils =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponseUtils = mockStatic(WebResponseUtils.class)) {
             mockedWebResponseUtils
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfDocToWebResponse(
-                                            any(PDDocument.class),
-                                            anyString(),
-                                            any(TempFileManager.class)))
+                    .when(() -> WebResponseUtils.pdfDocToWebResponse(
+                            any(PDDocument.class), anyString(), any(TempFileManager.class)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = attachmentController.addAttachments(request);
@@ -137,18 +119,12 @@ class AttachmentControllerTest {
         ResponseEntity<Resource> expectedResponse = streamingOk("modified PDF content".getBytes());
 
         when(pdfDocumentFactory.load(request, false)).thenReturn(mockDocument);
-        when(pdfAttachmentService.addAttachment(mockDocument, attachments))
-                .thenReturn(mockDocument);
+        when(pdfAttachmentService.addAttachment(mockDocument, attachments)).thenReturn(mockDocument);
 
-        try (MockedStatic<WebResponseUtils> mockedWebResponseUtils =
-                mockStatic(WebResponseUtils.class)) {
+        try (MockedStatic<WebResponseUtils> mockedWebResponseUtils = mockStatic(WebResponseUtils.class)) {
             mockedWebResponseUtils
-                    .when(
-                            () ->
-                                    WebResponseUtils.pdfDocToWebResponse(
-                                            any(PDDocument.class),
-                                            anyString(),
-                                            any(TempFileManager.class)))
+                    .when(() -> WebResponseUtils.pdfDocToWebResponse(
+                            any(PDDocument.class), anyString(), any(TempFileManager.class)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = attachmentController.addAttachments(request);

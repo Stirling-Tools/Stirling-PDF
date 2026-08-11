@@ -39,10 +39,17 @@ import tools.jackson.databind.ObjectMapper;
 @ExtendWith(MockitoExtension.class)
 class WorkflowParticipantControllerMoreTest {
 
-    @Mock private WorkflowSessionService workflowSessionService;
-    @Mock private WorkflowParticipantRepository participantRepository;
-    @Mock private MetadataEncryptionService metadataEncryptionService;
-    @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
+    @Mock
+    private WorkflowSessionService workflowSessionService;
+
+    @Mock
+    private WorkflowParticipantRepository participantRepository;
+
+    @Mock
+    private MetadataEncryptionService metadataEncryptionService;
+
+    @Mock
+    private CertificateSubmissionValidator certificateSubmissionValidator;
 
     private WorkflowParticipantController controller;
 
@@ -50,13 +57,12 @@ class WorkflowParticipantControllerMoreTest {
 
     @BeforeEach
     void setUp() {
-        controller =
-                new WorkflowParticipantController(
-                        workflowSessionService,
-                        participantRepository,
-                        new ObjectMapper(),
-                        metadataEncryptionService,
-                        certificateSubmissionValidator);
+        controller = new WorkflowParticipantController(
+                workflowSessionService,
+                participantRepository,
+                new ObjectMapper(),
+                metadataEncryptionService,
+                certificateSubmissionValidator);
     }
 
     private WorkflowSession activeSession() {
@@ -133,8 +139,7 @@ class WorkflowParticipantControllerMoreTest {
 
             verify(workflowSessionService, org.mockito.Mockito.never())
                     .updateParticipantStatus(
-                            org.mockito.ArgumentMatchers.anyLong(),
-                            org.mockito.ArgumentMatchers.any());
+                            org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.any());
         }
     }
 
@@ -230,11 +235,9 @@ class WorkflowParticipantControllerMoreTest {
             when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
             when(metadataEncryptionService.encrypt(org.mockito.ArgumentMatchers.any()))
                     .thenReturn("enc");
-            when(participantRepository.save(org.mockito.ArgumentMatchers.any()))
-                    .thenAnswer(i -> i.getArgument(0));
+            when(participantRepository.save(org.mockito.ArgumentMatchers.any())).thenAnswer(i -> i.getArgument(0));
 
-            ResponseEntity<ParticipantResponse> response =
-                    controller.submitSignature(request(TOKEN));
+            ResponseEntity<ParticipantResponse> response = controller.submitSignature(request(TOKEN));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(p.getStatus()).isEqualTo(ParticipantStatus.SIGNED);
@@ -274,11 +277,9 @@ class WorkflowParticipantControllerMoreTest {
         void withReason_setsDeclinedAndNotifies() {
             WorkflowParticipant p = participant(ParticipantStatus.PENDING);
             when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
-            when(participantRepository.save(org.mockito.ArgumentMatchers.any()))
-                    .thenAnswer(i -> i.getArgument(0));
+            when(participantRepository.save(org.mockito.ArgumentMatchers.any())).thenAnswer(i -> i.getArgument(0));
 
-            ResponseEntity<ParticipantResponse> response =
-                    controller.declineParticipation(TOKEN, "not me");
+            ResponseEntity<ParticipantResponse> response = controller.declineParticipation(TOKEN, "not me");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(p.getStatus()).isEqualTo(ParticipantStatus.DECLINED);
@@ -289,8 +290,7 @@ class WorkflowParticipantControllerMoreTest {
         void withoutReason_usesDefaultNotification() {
             WorkflowParticipant p = participant(ParticipantStatus.PENDING);
             when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
-            when(participantRepository.save(org.mockito.ArgumentMatchers.any()))
-                    .thenAnswer(i -> i.getArgument(0));
+            when(participantRepository.save(org.mockito.ArgumentMatchers.any())).thenAnswer(i -> i.getArgument(0));
 
             controller.declineParticipation(TOKEN, null);
 

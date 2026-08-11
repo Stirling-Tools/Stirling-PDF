@@ -89,15 +89,13 @@ public class JwtService implements JwtServiceInterface {
 
             KeyPair keyPair = keyPairOpt.get();
 
-            var builder =
-                    Jwts.builder()
-                            .claims(claims)
-                            .subject(username)
-                            .issuer(JwtConstants.ISSUER)
-                            .issuedAt(new Date())
-                            .expiration(
-                                    new Date(System.currentTimeMillis() + getExpirationMillis()))
-                            .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
+            var builder = Jwts.builder()
+                    .claims(claims)
+                    .subject(username)
+                    .issuer(JwtConstants.ISSUER)
+                    .issuedAt(new Date())
+                    .expiration(new Date(System.currentTimeMillis() + getExpirationMillis()))
+                    .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
 
             String keyId = activeKey.getKeyId();
             if (keyId != null) {
@@ -123,15 +121,13 @@ public class JwtService implements JwtServiceInterface {
             KeyPair keyPair = keyPairOpt.get();
             long customExpirationMillis = expiryMinutes * JwtConstants.MILLIS_PER_MINUTE;
 
-            var builder =
-                    Jwts.builder()
-                            .claims(claims)
-                            .subject(username)
-                            .issuer(JwtConstants.ISSUER)
-                            .issuedAt(new Date())
-                            .expiration(
-                                    new Date(System.currentTimeMillis() + customExpirationMillis))
-                            .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
+            var builder = Jwts.builder()
+                    .claims(claims)
+                    .subject(username)
+                    .issuer(JwtConstants.ISSUER)
+                    .issuedAt(new Date())
+                    .expiration(new Date(System.currentTimeMillis() + customExpirationMillis))
+                    .signWith(keyPair.getPrivate(), Jwts.SIG.RS256);
 
             String keyId = activeKey.getKeyId();
             if (keyId != null) {
@@ -189,8 +185,7 @@ public class JwtService implements JwtServiceInterface {
         return claimsResolver.apply(claims);
     }
 
-    private <T> T extractClaim(
-            String token, Function<Claims, T> claimsResolver, boolean allowExpired) {
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver, boolean allowExpired) {
         final Claims claims = extractAllClaims(token, allowExpired);
         return claimsResolver.apply(claims);
     }
@@ -210,31 +205,25 @@ public class JwtService implements JwtServiceInterface {
                 if (specificKeyPair.isPresent()) {
                     keyPair = specificKeyPair.get();
                 } else {
-                    log.warn(
-                            "Key ID {} not found in keystore, token may have been signed with an expired key",
-                            keyId);
+                    log.warn("Key ID {} not found in keystore, token may have been signed with an expired key", keyId);
 
                     if (keyId.equals(keyPersistenceService.getActiveKey().getKeyId())) {
-                        JwtVerificationKey verificationKey =
-                                keyPersistenceService.refreshActiveKeyPair();
+                        JwtVerificationKey verificationKey = keyPersistenceService.refreshActiveKeyPair();
                         Optional<KeyPair> refreshedKeyPair =
                                 keyPersistenceService.getKeyPair(verificationKey.getKeyId());
                         if (refreshedKeyPair.isPresent()) {
                             keyPair = refreshedKeyPair.get();
                         } else {
-                            throw new AuthenticationFailureException(
-                                    "Failed to retrieve refreshed key pair");
+                            throw new AuthenticationFailureException("Failed to retrieve refreshed key pair");
                         }
                     } else {
                         // Try to use active key as fallback
                         JwtVerificationKey activeKey = keyPersistenceService.getActiveKey();
-                        Optional<KeyPair> activeKeyPair =
-                                keyPersistenceService.getKeyPair(activeKey.getKeyId());
+                        Optional<KeyPair> activeKeyPair = keyPersistenceService.getKeyPair(activeKey.getKeyId());
                         if (activeKeyPair.isPresent()) {
                             keyPair = activeKeyPair.get();
                         } else {
-                            throw new AuthenticationFailureException(
-                                    "Failed to retrieve active key pair");
+                            throw new AuthenticationFailureException("Failed to retrieve active key pair");
                         }
                     }
                 }
@@ -259,8 +248,7 @@ public class JwtService implements JwtServiceInterface {
         } catch (ExpiredJwtException e) {
             if (allowExpired) {
                 log.debug(
-                        "Extracting claims from expired token (allowed for refresh grace period): {}",
-                        e.getMessage());
+                        "Extracting claims from expired token (allowed for refresh grace period): {}", e.getMessage());
                 return e.getClaims();
             }
             log.warn("Token validation failed - token has expired: {}", e.getMessage());
@@ -274,13 +262,11 @@ public class JwtService implements JwtServiceInterface {
         }
     }
 
-    private Claims tryAllKeys(String token, boolean allowExpired)
-            throws AuthenticationFailureException {
+    private Claims tryAllKeys(String token, boolean allowExpired) throws AuthenticationFailureException {
         // First try the active key
         try {
             JwtVerificationKey activeKey = keyPersistenceService.getActiveKey();
-            PublicKey publicKey =
-                    keyPersistenceService.decodePublicKey(activeKey.getVerifyingKey());
+            PublicKey publicKey = keyPersistenceService.decodePublicKey(activeKey.getVerifyingKey());
             return Jwts.parser()
                     .verifyWith(publicKey)
                     .clockSkewSeconds(getAllowedClockSkewSeconds())
@@ -289,27 +275,21 @@ public class JwtService implements JwtServiceInterface {
                     .getPayload();
         } catch (ExpiredJwtException e) {
             if (allowExpired) {
-                log.debug(
-                        "Extracting claims from expired token (allowed for refresh grace period)");
+                log.debug("Extracting claims from expired token (allowed for refresh grace period)");
                 return e.getClaims();
             }
             log.warn("Token validation failed - token has expired");
             throw new AuthenticationFailureException("The token has expired", e);
-        } catch (SignatureException
-                | NoSuchAlgorithmException
-                | InvalidKeySpecException activeKeyException) {
+        } catch (SignatureException | NoSuchAlgorithmException | InvalidKeySpecException activeKeyException) {
             log.debug("Active key failed, trying all available keys from cache");
 
             // If active key fails, try all available keys from cache
-            List<JwtVerificationKey> allKeys =
-                    keyPersistenceService.getKeysEligibleForCleanup(
-                            LocalDateTime.now().plusDays(1));
+            List<JwtVerificationKey> allKeys = keyPersistenceService.getKeysEligibleForCleanup(
+                    LocalDateTime.now().plusDays(1));
 
             for (JwtVerificationKey verificationKey : allKeys) {
                 try {
-                    PublicKey publicKey =
-                            keyPersistenceService.decodePublicKey(
-                                    verificationKey.getVerifyingKey());
+                    PublicKey publicKey = keyPersistenceService.decodePublicKey(verificationKey.getVerifyingKey());
                     return Jwts.parser()
                             .verifyWith(publicKey)
                             .clockSkewSeconds(getAllowedClockSkewSeconds())
@@ -321,19 +301,14 @@ public class JwtService implements JwtServiceInterface {
                         return e.getClaims();
                     }
                     throw new AuthenticationFailureException("The token has expired", e);
-                } catch (SignatureException
-                        | NoSuchAlgorithmException
-                        | InvalidKeySpecException e) {
-                    log.debug(
-                            "Key {} failed to verify token, trying next key",
-                            verificationKey.getKeyId());
+                } catch (SignatureException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+                    log.debug("Key {} failed to verify token, trying next key", verificationKey.getKeyId());
                     // Continue to next key
                 }
             }
 
             throw new AuthenticationFailureException(
-                    "Token signature could not be verified with any available key",
-                    activeKeyException);
+                    "Token signature could not be verified with any available key", activeKeyException);
         }
     }
 
@@ -382,16 +357,13 @@ public class JwtService implements JwtServiceInterface {
         try {
             String[] tokenParts = token.split("\\.");
             if (tokenParts.length < 2) {
-                log.debug(
-                        "Token does not have enough parts (expected at least 2, got {})",
-                        tokenParts.length);
+                log.debug("Token does not have enough parts (expected at least 2, got {})", tokenParts.length);
                 return null;
             }
 
             byte[] headerBytes = Base64.getUrlDecoder().decode(tokenParts[0]);
             Map<String, Object> header =
-                    objectMapper.readValue(
-                            headerBytes, new TypeReference<Map<String, Object>>() {});
+                    objectMapper.readValue(headerBytes, new TypeReference<Map<String, Object>>() {});
             Object keyId = header.get("kid");
             return keyId instanceof String ? (String) keyId : null;
         } catch (IllegalArgumentException e) {
@@ -405,10 +377,7 @@ public class JwtService implements JwtServiceInterface {
 
     private long getExpirationMillis() {
         int configuredMinutes = securityProperties.getJwt().getTokenExpiryMinutes();
-        int expiryMinutes =
-                configuredMinutes > 0
-                        ? configuredMinutes
-                        : JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
+        int expiryMinutes = configuredMinutes > 0 ? configuredMinutes : JwtConstants.DEFAULT_TOKEN_EXPIRY_MINUTES;
         return expiryMinutes * JwtConstants.MILLIS_PER_MINUTE;
     }
 

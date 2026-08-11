@@ -45,17 +45,22 @@ class JobExecutorServiceMoreTest {
 
     private JobExecutorService service;
 
-    @Mock private TaskManager taskManager;
-    @Mock private FileStorage fileStorage;
-    @Mock private ResourceMonitor resourceMonitor;
-    @Mock private JobQueue jobQueue;
+    @Mock
+    private TaskManager taskManager;
+
+    @Mock
+    private FileStorage fileStorage;
+
+    @Mock
+    private ResourceMonitor resourceMonitor;
+
+    @Mock
+    private JobQueue jobQueue;
 
     @BeforeEach
     void setUp() {
         // request is null on purpose to exercise the request==null guard.
-        service =
-                new JobExecutorService(
-                        taskManager, fileStorage, null, resourceMonitor, jobQueue, 30000L, "30m");
+        service = new JobExecutorService(taskManager, fileStorage, null, resourceMonitor, jobQueue, 30000L, "30m");
     }
 
     /** Concrete validation exception so we can drive the BaseValidationException rethrow branch. */
@@ -109,10 +114,9 @@ class JobExecutorServiceMoreTest {
         @Test
         @DisplayName("IllegalArgumentException is rethrown, not wrapped in a 500 body")
         void illegalArgumentRethrown() {
-            Supplier<Object> work =
-                    () -> {
-                        throw new IllegalArgumentException("bad input");
-                    };
+            Supplier<Object> work = () -> {
+                throw new IllegalArgumentException("bad input");
+            };
             assertThatThrownBy(() -> service.runJobGeneric(false, work))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("bad input");
@@ -121,10 +125,9 @@ class JobExecutorServiceMoreTest {
         @Test
         @DisplayName("a cause of BaseValidationException is rethrown")
         void validationCauseRethrown() {
-            Supplier<Object> work =
-                    () -> {
-                        throw new RuntimeException(new TestValidationException("invalid"));
-                    };
+            Supplier<Object> work = () -> {
+                throw new RuntimeException(new TestValidationException("invalid"));
+            };
             assertThatThrownBy(() -> service.runJobGeneric(false, work))
                     .isInstanceOf(RuntimeException.class)
                     .hasCauseInstanceOf(ExceptionUtils.BaseValidationException.class);
@@ -133,10 +136,9 @@ class JobExecutorServiceMoreTest {
         @Test
         @DisplayName("a cause of BaseAppException is rethrown")
         void appCauseRethrown() {
-            Supplier<Object> work =
-                    () -> {
-                        throw new RuntimeException(new TestAppException("app error"));
-                    };
+            Supplier<Object> work = () -> {
+                throw new RuntimeException(new TestAppException("app error"));
+            };
             assertThatThrownBy(() -> service.runJobGeneric(false, work))
                     .isInstanceOf(RuntimeException.class)
                     .hasCauseInstanceOf(ExceptionUtils.BaseAppException.class);
@@ -163,9 +165,7 @@ class JobExecutorServiceMoreTest {
         @Test
         @DisplayName("MultipartFile result is streamed back with its own content type")
         void multipartBecomesResponse() {
-            MultipartFile file =
-                    new MockMultipartFile(
-                            "f", "orig.txt", MediaType.TEXT_PLAIN_VALUE, "hi".getBytes());
+            MultipartFile file = new MockMultipartFile("f", "orig.txt", MediaType.TEXT_PLAIN_VALUE, "hi".getBytes());
             ResponseEntity<?> response = service.runJobGeneric(false, () -> file);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -177,7 +177,8 @@ class JobExecutorServiceMoreTest {
         @Test
         @DisplayName("a ResponseEntity result is returned verbatim")
         void responseEntityReturnedVerbatim() {
-            ResponseEntity<String> inner = ResponseEntity.status(HttpStatus.ACCEPTED).body("ok");
+            ResponseEntity<String> inner =
+                    ResponseEntity.status(HttpStatus.ACCEPTED).body("ok");
             ResponseEntity<?> response = service.runJobGeneric(false, () -> inner);
             assertThat(response).isSameAs(inner);
         }
@@ -190,10 +191,9 @@ class JobExecutorServiceMoreTest {
         @Test
         @DisplayName("a thrown exception is recorded via TaskManager.setError")
         void asyncErrorRecorded() {
-            Supplier<Object> work =
-                    () -> {
-                        throw new RuntimeException("async boom");
-                    };
+            Supplier<Object> work = () -> {
+                throw new RuntimeException("async boom");
+            };
             ResponseEntity<?> response = service.runJobGeneric(true, work);
             assertThat(response.getBody()).isInstanceOf(JobResponse.class);
             verify(taskManager, timeout(5000)).setError(anyString(), eq("async boom"));
@@ -202,14 +202,13 @@ class JobExecutorServiceMoreTest {
         @Test
         @DisplayName("a job that exceeds its timeout is recorded as timed out")
         void asyncTimeoutRecorded() {
-            Supplier<Object> work =
-                    () -> {
-                        long start = System.nanoTime();
-                        while (System.nanoTime() - start < 200_000_000L) {
-                            // busy wait beyond the 1ms timeout
-                        }
-                        return "late";
-                    };
+            Supplier<Object> work = () -> {
+                long start = System.nanoTime();
+                while (System.nanoTime() - start < 200_000_000L) {
+                    // busy wait beyond the 1ms timeout
+                }
+                return "late";
+            };
             // 1ms custom timeout, async, non-queueable.
             ResponseEntity<?> response = service.runJobGeneric(true, work, 1L, false, 10);
             assertThat(response.getBody()).isInstanceOf(JobResponse.class);
@@ -225,18 +224,13 @@ class JobExecutorServiceMoreTest {
         @DisplayName("raw byte[] result is stored and recorded as a file")
         void rawBytesStored() throws Exception {
             byte[] payload = "raw".getBytes(StandardCharsets.UTF_8);
-            when(fileStorage.storeBytes(any(byte[].class), eq("result.pdf")))
-                    .thenReturn("bytes-id");
+            when(fileStorage.storeBytes(any(byte[].class), eq("result.pdf"))).thenReturn("bytes-id");
 
             service.runJobGeneric(true, () -> payload);
 
             verify(fileStorage, timeout(5000)).storeBytes(any(byte[].class), eq("result.pdf"));
             verify(taskManager, timeout(5000))
-                    .setFileResult(
-                            anyString(),
-                            eq("bytes-id"),
-                            eq("result.pdf"),
-                            eq(MediaType.APPLICATION_PDF_VALUE));
+                    .setFileResult(anyString(), eq("bytes-id"), eq("result.pdf"), eq(MediaType.APPLICATION_PDF_VALUE));
             verify(taskManager, timeout(5000)).setComplete(anyString());
         }
 
@@ -254,11 +248,7 @@ class JobExecutorServiceMoreTest {
             service.runJobGeneric(true, work);
 
             verify(taskManager, timeout(5000))
-                    .setFileResult(
-                            anyString(),
-                            eq("re-id"),
-                            eq("out.pdf"),
-                            eq(MediaType.APPLICATION_PDF_VALUE));
+                    .setFileResult(anyString(), eq("re-id"), eq("out.pdf"), eq(MediaType.APPLICATION_PDF_VALUE));
         }
 
         @Test
@@ -306,19 +296,13 @@ class JobExecutorServiceMoreTest {
         @Test
         @DisplayName("MultipartFile result is stored via storeFile")
         void multipartStored() throws Exception {
-            MultipartFile file =
-                    new MockMultipartFile(
-                            "f", "m.pdf", MediaType.APPLICATION_PDF_VALUE, "m".getBytes());
+            MultipartFile file = new MockMultipartFile("f", "m.pdf", MediaType.APPLICATION_PDF_VALUE, "m".getBytes());
             when(fileStorage.storeFile(any(MultipartFile.class))).thenReturn("mp-id");
 
             service.runJobGeneric(true, () -> file);
 
             verify(taskManager, timeout(5000))
-                    .setFileResult(
-                            anyString(),
-                            eq("mp-id"),
-                            eq("m.pdf"),
-                            eq(MediaType.APPLICATION_PDF_VALUE));
+                    .setFileResult(anyString(), eq("mp-id"), eq("m.pdf"), eq(MediaType.APPLICATION_PDF_VALUE));
         }
 
         @Test
@@ -328,8 +312,7 @@ class JobExecutorServiceMoreTest {
 
             service.runJobGeneric(true, () -> bean);
 
-            verify(taskManager, timeout(5000))
-                    .setFileResult(anyString(), eq("plain-bean"), eq("p.pdf"), eq("app/p"));
+            verify(taskManager, timeout(5000)).setFileResult(anyString(), eq("plain-bean"), eq("p.pdf"), eq("app/p"));
         }
 
         @Test
@@ -366,8 +349,7 @@ class JobExecutorServiceMoreTest {
             when(jobQueue.queueJob(anyString(), eq(80), workCaptor.capture(), anyLong()))
                     .thenReturn(new CompletableFuture<>());
 
-            ResponseEntity<?> response =
-                    service.runJobGeneric(true, () -> "queued-ok", 5000, true, 80);
+            ResponseEntity<?> response = service.runJobGeneric(true, () -> "queued-ok", 5000, true, 80);
             assertThat(response.getBody()).isInstanceOf(JobResponse.class);
 
             // Execute the wrapped work and assert it routed the result to TaskManager.
@@ -385,10 +367,9 @@ class JobExecutorServiceMoreTest {
             when(jobQueue.queueJob(anyString(), eq(80), workCaptor.capture(), anyLong()))
                     .thenReturn(new CompletableFuture<>());
 
-            Supplier<Object> failing =
-                    () -> {
-                        throw new RuntimeException("queued-boom");
-                    };
+            Supplier<Object> failing = () -> {
+                throw new RuntimeException("queued-boom");
+            };
             service.runJobGeneric(true, failing, 5000, true, 80);
 
             assertThatThrownBy(() -> workCaptor.getValue().get())
@@ -403,8 +384,7 @@ class JobExecutorServiceMoreTest {
             // queueable=true but async=false -> shouldQueue is false, runs inline.
             ResponseEntity<?> response = service.runJobGeneric(false, () -> "inline", 0, true, 90);
             assertThat(response.getBody()).isEqualTo("inline");
-            verify(jobQueue, org.mockito.Mockito.never())
-                    .queueJob(anyString(), anyInt(), any(), anyLong());
+            verify(jobQueue, org.mockito.Mockito.never()).queueJob(anyString(), anyInt(), any(), anyLong());
         }
     }
 
@@ -432,15 +412,8 @@ class JobExecutorServiceMoreTest {
     class SessionTimeoutParsing {
 
         private long parse(String value) {
-            JobExecutorService s =
-                    new JobExecutorService(
-                            taskManager,
-                            fileStorage,
-                            null,
-                            resourceMonitor,
-                            jobQueue,
-                            999_999_999L,
-                            value);
+            JobExecutorService s = new JobExecutorService(
+                    taskManager, fileStorage, null, resourceMonitor, jobQueue, 999_999_999L, value);
             return (long) ReflectionTestUtils.getField(s, "effectiveTimeoutMs");
         }
 
@@ -474,14 +447,13 @@ class JobExecutorServiceMoreTest {
         @Test
         @DisplayName("a synchronous job that exceeds its timeout returns a 500 with a timeout body")
         void syncTimeoutReturns500() {
-            Supplier<Object> work =
-                    () -> {
-                        long start = System.nanoTime();
-                        while (System.nanoTime() - start < 200_000_000L) {
-                            // busy wait beyond 1ms timeout
-                        }
-                        return "late";
-                    };
+            Supplier<Object> work = () -> {
+                long start = System.nanoTime();
+                while (System.nanoTime() - start < 200_000_000L) {
+                    // busy wait beyond 1ms timeout
+                }
+                return "late";
+            };
             ResponseEntity<?> response = service.runJobGeneric(false, work, 1L);
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
             @SuppressWarnings("unchecked")

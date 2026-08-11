@@ -21,7 +21,8 @@ import stirling.software.proprietary.security.service.UserService;
 @ExtendWith(MockitoExtension.class)
 class AdminPolicyManagementAuthorityTest {
 
-    @Mock private UserService userService;
+    @Mock
+    private UserService userService;
 
     private AdminPolicyManagementAuthority authority() {
         return new AdminPolicyManagementAuthority(userService);

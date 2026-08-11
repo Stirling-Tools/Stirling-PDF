@@ -42,8 +42,7 @@ final class SmbFileClient implements RemoteFileClient {
     private final Session session;
     private final DiskShare share;
 
-    private SmbFileClient(
-            SMBClient smbClient, Connection connection, Session session, DiskShare share) {
+    private SmbFileClient(SMBClient smbClient, Connection connection, Session session, DiskShare share) {
         this.smbClient = smbClient;
         this.connection = connection;
         this.session = session;
@@ -53,19 +52,17 @@ final class SmbFileClient implements RemoteFileClient {
     static SmbFileClient connect(NetworkConfig config) throws IOException {
         // Bounded connect and read timeouts (both default to unlimited) so a host that accepts
         // the TCP connection then stalls cannot wedge a poller.
-        SmbConfig smbConfig =
-                SmbConfig.builder()
-                        .withSocketFactory(new ProxySocketFactory(CONNECT_TIMEOUT_MS))
-                        .withSoTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-                        .withTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-                        .build();
+        SmbConfig smbConfig = SmbConfig.builder()
+                .withSocketFactory(new ProxySocketFactory(CONNECT_TIMEOUT_MS))
+                .withSoTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .withTimeout(READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .build();
         SMBClient smbClient = new SMBClient(smbConfig);
         Connection connection = smbClient.connect(config.host(), config.port());
         try {
             char[] password =
                     config.password() == null ? new char[0] : config.password().toCharArray();
-            AuthenticationContext auth =
-                    new AuthenticationContext(config.username(), password, config.domain());
+            AuthenticationContext auth = new AuthenticationContext(config.username(), password, config.domain());
             Session session = connection.authenticate(auth);
             DiskShare share = (DiskShare) session.connectShare(config.share());
             return new SmbFileClient(smbClient, connection, session, share);
@@ -73,13 +70,7 @@ final class SmbFileClient implements RemoteFileClient {
             closeQuietly(connection);
             closeQuietly(smbClient);
             throw new IOException(
-                    "SMB connection to \\\\"
-                            + config.host()
-                            + "\\"
-                            + config.share()
-                            + " failed: "
-                            + e.getMessage(),
-                    e);
+                    "SMB connection to \\\\" + config.host() + "\\" + config.share() + " failed: " + e.getMessage(), e);
         }
     }
 
@@ -90,8 +81,7 @@ final class SmbFileClient implements RemoteFileClient {
         return files;
     }
 
-    private void collect(String directory, boolean recursive, int depth, List<RemoteFile> out)
-            throws IOException {
+    private void collect(String directory, boolean recursive, int depth, List<RemoteFile> out) throws IOException {
         List<FileIdBothDirectoryInformation> entries;
         try {
             entries = share.list(directory);
@@ -114,19 +104,16 @@ final class SmbFileClient implements RemoteFileClient {
             }
             String path = join(directory, name);
             if (isSet(attributes, FileAttributes.FILE_ATTRIBUTE_DIRECTORY)) {
-                if (recursive
-                        && !isSet(attributes, FileAttributes.FILE_ATTRIBUTE_REPARSE_POINT)
-                        && depth < MAX_DEPTH) {
+                if (recursive && !isSet(attributes, FileAttributes.FILE_ATTRIBUTE_REPARSE_POINT) && depth < MAX_DEPTH) {
                     collect(path, true, depth + 1, out);
                 }
                 continue;
             }
-            out.add(
-                    new RemoteFile(
-                            slashed(path),
-                            name,
-                            info.getEndOfFile(),
-                            info.getLastWriteTime().toEpochMillis()));
+            out.add(new RemoteFile(
+                    slashed(path),
+                    name,
+                    info.getEndOfFile(),
+                    info.getLastWriteTime().toEpochMillis()));
         }
     }
 
@@ -152,14 +139,13 @@ final class SmbFileClient implements RemoteFileClient {
     @Override
     public InputStream open(String path) throws IOException {
         try {
-            com.hierynomus.smbj.share.File file =
-                    share.openFile(
-                            smbPath(path),
-                            EnumSet.of(AccessMask.GENERIC_READ),
-                            null,
-                            SMB2ShareAccess.ALL,
-                            SMB2CreateDisposition.FILE_OPEN,
-                            null);
+            com.hierynomus.smbj.share.File file = share.openFile(
+                    smbPath(path),
+                    EnumSet.of(AccessMask.GENERIC_READ),
+                    null,
+                    SMB2ShareAccess.ALL,
+                    SMB2CreateDisposition.FILE_OPEN,
+                    null);
             // Close the SMB file handle when the stream is closed, before the session is torn down.
             return new FilterInputStream(file.getInputStream()) {
                 @Override

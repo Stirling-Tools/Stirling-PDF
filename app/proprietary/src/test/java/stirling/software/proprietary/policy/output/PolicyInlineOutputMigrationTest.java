@@ -29,8 +29,7 @@ class PolicyInlineOutputMigrationTest {
     private final PolicyStore policyStore = new InProcessPolicyStore();
     private final SourceStore sourceStore = new InProcessSourceStore();
     private final PolicyInlineOutputMigration migration =
-            new PolicyInlineOutputMigration(
-                    policyStore, sourceStore, new InProcessCompletedMigrations());
+            new PolicyInlineOutputMigration(policyStore, sourceStore, new InProcessCompletedMigrations());
 
     @Test
     void migratesAFolderPolicyToAStoredSource() {
@@ -47,16 +46,14 @@ class PolicyInlineOutputMigrationTest {
 
     @Test
     void leavesInlinePoliciesUntouched() {
-        Policy saved =
-                policyStore.save(
-                        new Policy(
-                                null,
-                                "Editor run",
-                                "owner",
-                                true,
-                                List.of(),
-                                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                                OutputSpec.inline()));
+        Policy saved = policyStore.save(new Policy(
+                null,
+                "Editor run",
+                "owner",
+                true,
+                List.of(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline()));
 
         migration.migrate();
 
@@ -103,22 +100,16 @@ class PolicyInlineOutputMigrationTest {
     void reusesAnExistingInputSourceAtTheSameLocation() {
         // An input source already reads /shared (with consume mode); a policy that outputs there
         // should link to that same source, not mint a duplicate.
-        Source existing =
-                sourceStore.save(
-                        new Source(
-                                null,
-                                "Shared",
-                                "folder",
-                                Map.of("directory", "/shared", "mode", "consume"),
-                                true,
-                                "owner",
-                                7L));
+        Source existing = sourceStore.save(new Source(
+                null, "Shared", "folder", Map.of("directory", "/shared", "mode", "consume"), true, "owner", 7L));
         Policy saved = policyStore.save(teamFolderPolicy("Writer", "/shared", 7L));
 
         migration.migrate();
 
         assertEquals(1, sourceStore.all().size());
-        assertEquals(List.of(existing.id()), policyStore.get(saved.id()).orElseThrow().outputIds());
+        assertEquals(
+                List.of(existing.id()),
+                policyStore.get(saved.id()).orElseThrow().outputIds());
     }
 
     private static Policy folderPolicy(String name, String directory) {

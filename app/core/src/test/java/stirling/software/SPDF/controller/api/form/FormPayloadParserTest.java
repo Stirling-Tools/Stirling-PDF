@@ -64,8 +64,7 @@ class FormPayloadParserTest {
         @Test
         @DisplayName("parses fields array with name/value pairs")
         void fieldsArray() {
-            String json =
-                    "{\"fields\":[{\"name\":\"f1\",\"value\":\"v1\"},{\"name\":\"f2\",\"value\":\"v2\"}]}";
+            String json = "{\"fields\":[{\"name\":\"f1\",\"value\":\"v1\"},{\"name\":\"f2\",\"value\":\"v2\"}]}";
             Map<String, Object> result = FormPayloadParser.parseValueMap(objectMapper, json);
             assertThat(result).containsEntry("f1", "v1").containsEntry("f2", "v2");
         }
@@ -158,9 +157,8 @@ class FormPayloadParserTest {
         @Test
         @DisplayName("parses valid modification list")
         void validModifications() {
-            String json =
-                    "[{\"targetName\":\"field1\",\"name\":\"newName\",\"label\":null,\"type\":null,"
-                            + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
+            String json = "[{\"targetName\":\"field1\",\"name\":\"newName\",\"label\":null,\"type\":null,"
+                    + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
             List<FormUtils.ModifyFormFieldDefinition> result =
                     FormPayloadParser.parseModificationDefinitions(objectMapper, json);
             assertThat(result).hasSize(1);
@@ -193,8 +191,7 @@ class FormPayloadParserTest {
         @Test
         @DisplayName("parses array of strings")
         void arrayOfStrings() {
-            List<String> result =
-                    FormPayloadParser.parseNameList(objectMapper, "[\"field1\",\"field2\"]");
+            List<String> result = FormPayloadParser.parseNameList(objectMapper, "[\"field1\",\"field2\"]");
             assertThat(result).containsExactly("field1", "field2");
         }
 
@@ -264,10 +261,7 @@ class FormPayloadParserTest {
         @Test
         @DisplayName("throws for invalid JSON that cannot be parsed")
         void invalidJson() {
-            assertThatThrownBy(
-                            () ->
-                                    FormPayloadParser.parseNameList(
-                                            objectMapper, "{not valid json!!!}"))
+            assertThatThrownBy(() -> FormPayloadParser.parseNameList(objectMapper, "{not valid json!!!}"))
                     .isInstanceOf(Exception.class);
         }
     }

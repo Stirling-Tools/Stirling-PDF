@@ -110,11 +110,7 @@ public class StoredFile implements Serializable {
     @Column(name = "encryption_key_id", length = 36)
     private String encryptionKeyId;
 
-    @OneToMany(
-            mappedBy = "file",
-            fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL,
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "file", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<FileShare> shares = new HashSet<>();
 
     /**

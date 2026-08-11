@@ -57,12 +57,10 @@ public class RepairController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Repair a PDF file",
-            description =
-                    "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf"
-                            + " (fallback), or PDFBox (if no external tools available). The PDF is first saved"
-                            + " to a temporary location, repaired, read back, and then returned as a response.")
-    public ResponseEntity<Resource> repairPdf(@ModelAttribute PDFFile file)
-            throws IOException, InterruptedException {
+            description = "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf"
+                    + " (fallback), or PDFBox (if no external tools available). The PDF is first saved"
+                    + " to a temporary location, repaired, read back, and then returned as a response.")
+    public ResponseEntity<Resource> repairPdf(@ModelAttribute PDFFile file) throws IOException, InterruptedException {
         MultipartFile inputFile = file.getFileInput();
 
         TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf");
@@ -83,9 +81,8 @@ public class RepairController {
                     gsCommand.add("-sDEVICE=pdfwrite");
                     gsCommand.add(tempInputFile.getPath().toString());
 
-                    ProcessExecutorResult gsResult =
-                            ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                                    .runCommandWithOutputHandling(gsCommand);
+                    ProcessExecutorResult gsResult = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                            .runCommandWithOutputHandling(gsCommand);
 
                     if (gsResult.getRc() == 0) {
                         repairSuccess = true;
@@ -106,9 +103,8 @@ public class RepairController {
                 qpdfCommand.add(tempInputFile.getPath().toString());
                 qpdfCommand.add(tempOutputFile.getPath().toString());
 
-                ProcessExecutorResult qpdfResult =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                                .runCommandWithOutputHandling(qpdfCommand);
+                ProcessExecutorResult qpdfResult = ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                        .runCommandWithOutputHandling(qpdfCommand);
 
                 repairSuccess = true;
             }
@@ -123,16 +119,13 @@ public class RepairController {
                     }
                 } else {
                     throw ExceptionUtils.createFileProcessingException(
-                            "PDF repair",
-                            new IOException("PDF repair failed with available tools"));
+                            "PDF repair", new IOException("PDF repair failed with available tools"));
                 }
             }
 
             // Return the repaired PDF as a streaming response
             return WebResponseUtils.pdfFileToWebResponse(
-                    tempOutputFile,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_repaired.pdf"));
+                    tempOutputFile, GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_repaired.pdf"));
         } catch (IOException | InterruptedException e) {
             tempOutputFile.close();
             throw e;

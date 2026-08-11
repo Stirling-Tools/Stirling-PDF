@@ -119,8 +119,7 @@ class UIScalingTest {
         double scaleFactor = UIScaling.getHeightScaleFactor();
 
         // Assert
-        assertEquals(
-                0.711, scaleFactor, 0.001, "Scale factor should be ~0.711 for 1366x768 height");
+        assertEquals(0.711, scaleFactor, 0.001, "Scale factor should be ~0.711 for 1366x768 height");
     }
 
     @Test
@@ -226,8 +225,7 @@ class UIScalingTest {
         Font scaledFont = UIScaling.scaleFont(originalFont);
 
         // Assert
-        assertEquals(
-                24.0f, scaledFont.getSize2D(), 0.001f, "Font size should be scaled by factor of 2");
+        assertEquals(24.0f, scaledFont.getSize2D(), 0.001f, "Font size should be scaled by factor of 2");
         // Font family might be substituted by the system, so we don't test it
         assertEquals(Font.PLAIN, scaledFont.getStyle(), "Font style should remain unchanged");
     }
@@ -235,8 +233,7 @@ class UIScalingTest {
     @Test
     void testScaleFont_DifferentWidthHeightScales() {
         // Arrange - Different width and height scaling factors
-        Dimension screenSize =
-                new Dimension(2560, 1440); // 1.33x width, 1.33x height of base resolution
+        Dimension screenSize = new Dimension(2560, 1440); // 1.33x width, 1.33x height of base resolution
         when(mockedDefaultToolkit.getScreenSize()).thenReturn(screenSize);
         Font originalFont = new Font("Arial", Font.PLAIN, 12);
 
@@ -245,11 +242,7 @@ class UIScalingTest {
 
         // Assert
         // Should use the smaller of the two scale factors, which is the same in this case
-        assertEquals(
-                16.0f,
-                scaledFont.getSize2D(),
-                0.001f,
-                "Font size should be scaled by factor of 1.33");
+        assertEquals(16.0f, scaledFont.getSize2D(), 0.001f, "Font size should be scaled by factor of 1.33");
     }
 
     @Test
@@ -263,11 +256,7 @@ class UIScalingTest {
         Font scaledFont = UIScaling.scaleFont(originalFont);
 
         // Assert - should use the smaller of the two scale factors (height in this case)
-        assertEquals(
-                12.0f,
-                scaledFont.getSize2D(),
-                0.001f,
-                "Font size should be scaled by the smaller factor (1.0)");
+        assertEquals(12.0f, scaledFont.getSize2D(), 0.001f, "Font size should be scaled by the smaller factor (1.0)");
     }
 
     @Test

@@ -46,8 +46,7 @@ class GeneralFormCopyUtilsMoreTest {
         return acroForm;
     }
 
-    private static void addWidget(PDTerminalField field, PDPage page, PDRectangle rect)
-            throws IOException {
+    private static void addWidget(PDTerminalField field, PDPage page, PDRectangle rect) throws IOException {
         PDAnnotationWidget widget = new PDAnnotationWidget();
         widget.setRectangle(rect);
         widget.setPage(page);
@@ -93,8 +92,7 @@ class GeneralFormCopyUtilsMoreTest {
                 sourceForm.getFields().add(combo);
                 combo.setOptions(List.of("Red", "Green"));
 
-                GeneralFormCopyUtils.copyAndTransformFormFields(
-                        source, target, 1, 1, 1, 1, 612f, 792f);
+                GeneralFormCopyUtils.copyAndTransformFormFields(source, target, 1, 1, 1, 1, 612f, 792f);
 
                 PDAcroForm targetForm = target.getDocumentCatalog().getAcroForm();
                 assertNotNull(targetForm);
@@ -123,8 +121,7 @@ class GeneralFormCopyUtilsMoreTest {
                 sourceForm.getFields().add(text);
 
                 // 2x2 layout exercises the scale/offset arithmetic for cell placement.
-                GeneralFormCopyUtils.copyAndTransformFormFields(
-                        source, target, 1, 4, 2, 2, 300f, 396f);
+                GeneralFormCopyUtils.copyAndTransformFormFields(source, target, 1, 4, 2, 2, 300f, 396f);
 
                 PDAcroForm targetForm = target.getDocumentCatalog().getAcroForm();
                 assertEquals(1, targetForm.getFields().size());
@@ -147,8 +144,7 @@ class GeneralFormCopyUtilsMoreTest {
                 text.setPartialName("ghost");
                 sourceForm.getFields().add(text);
 
-                GeneralFormCopyUtils.copyAndTransformFormFields(
-                        source, target, 1, 1, 1, 1, 612f, 792f);
+                GeneralFormCopyUtils.copyAndTransformFormFields(source, target, 1, 1, 1, 1, 612f, 792f);
 
                 PDAcroForm targetForm = target.getDocumentCatalog().getAcroForm();
                 // Form is created but no widgets were copied.
@@ -180,8 +176,7 @@ class GeneralFormCopyUtilsMoreTest {
 
                 // cols=1, rows=1, pagesPerSheet=2 -> second page maps to rowIndex 1 (>= rows) ->
                 // skipped.
-                GeneralFormCopyUtils.copyAndTransformFormFields(
-                        source, target, 2, 2, 1, 1, 612f, 792f);
+                GeneralFormCopyUtils.copyAndTransformFormFields(source, target, 2, 2, 1, 1, 612f, 792f);
 
                 PDAcroForm targetForm = target.getDocumentCatalog().getAcroForm();
                 assertEquals(1, targetForm.getFields().size());
@@ -204,9 +199,7 @@ class GeneralFormCopyUtilsMoreTest {
                 sourceForm.getFields().add(text);
 
                 assertDoesNotThrow(
-                        () ->
-                                GeneralFormCopyUtils.copyAndTransformFormFields(
-                                        source, target, 1, 1, 1, 1, 612f, 792f));
+                        () -> GeneralFormCopyUtils.copyAndTransformFormFields(source, target, 1, 1, 1, 1, 612f, 792f));
 
                 PDAcroForm targetForm = target.getDocumentCatalog().getAcroForm();
                 assertTrue(targetForm.getFields().isEmpty());
@@ -235,8 +228,7 @@ class GeneralFormCopyUtilsMoreTest {
                 addWidget(two, sourcePage, new PDRectangle(50, 660, 100, 20));
                 sourceForm.getFields().add(two);
 
-                GeneralFormCopyUtils.copyAndTransformFormFields(
-                        source, target, 1, 1, 1, 1, 612f, 792f);
+                GeneralFormCopyUtils.copyAndTransformFormFields(source, target, 1, 1, 1, 1, 612f, 792f);
 
                 PDAcroForm targetForm = target.getDocumentCatalog().getAcroForm();
                 assertEquals(2, targetForm.getFields().size());
@@ -269,8 +261,7 @@ class GeneralFormCopyUtilsMoreTest {
             try (PDDocument doc = new PDDocument()) {
                 PDAcroForm form = newAcroForm(doc);
                 assertEquals(
-                        GeneralFormFieldTypeSupport.TEXT,
-                        GeneralFormFieldTypeSupport.forField(new PDTextField(form)));
+                        GeneralFormFieldTypeSupport.TEXT, GeneralFormFieldTypeSupport.forField(new PDTextField(form)));
                 assertEquals(
                         GeneralFormFieldTypeSupport.CHECKBOX,
                         GeneralFormFieldTypeSupport.forField(new PDCheckBox(form)));

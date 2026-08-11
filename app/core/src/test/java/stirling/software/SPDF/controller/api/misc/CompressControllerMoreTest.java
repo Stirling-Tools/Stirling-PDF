@@ -63,16 +63,26 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class CompressControllerMoreTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @Mock private ProcessExecutor ghostscriptExecutor;
-    @Mock private ProcessExecutor qpdfExecutor;
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
 
-    @InjectMocks private CompressController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private ProcessExecutor ghostscriptExecutor;
+
+    @Mock
+    private ProcessExecutor qpdfExecutor;
+
+    @InjectMocks
+    private CompressController controller;
 
     /** Real temp files created during a test; cleaned up after each test. */
     private final List<File> createdFiles = new ArrayList<>();
@@ -90,18 +100,12 @@ class CompressControllerMoreTest {
         lenient().when(endpointConfiguration.isGroupEnabled(anyString())).thenReturn(true);
 
         // Every managed temp file is backed by a real on-disk file wrapped in a mock TempFile.
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile(
-                                                    "compress-more-test",
-                                                    inv.<String>getArgument(0))
-                                            .toFile();
-                            createdFiles.add(f);
-                            return newRealBackedTempFile(f);
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("compress-more-test", inv.<String>getArgument(0))
+                    .toFile();
+            createdFiles.add(f);
+            return newRealBackedTempFile(f);
+        });
 
         // The final reload and any image-compression reload return real PDFBox documents.
         lenient()
@@ -203,15 +207,14 @@ class CompressControllerMoreTest {
         ProcessExecutorResult okResult = resultWithRc(0);
         lenient()
                 .when(ghostscriptExecutor.runCommandWithOutputHandling(anyList()))
-                .thenAnswer(
-                        inv -> {
-                            List<String> command = inv.getArgument(0);
-                            Path out = ghostscriptOutputPath(command);
-                            if (out != null) {
-                                Files.write(out, pdfToWrite);
-                            }
-                            return okResult;
-                        });
+                .thenAnswer(inv -> {
+                    List<String> command = inv.getArgument(0);
+                    Path out = ghostscriptOutputPath(command);
+                    if (out != null) {
+                        Files.write(out, pdfToWrite);
+                    }
+                    return okResult;
+                });
     }
 
     /** Stub gs to report a non-zero, non-critical return code (output stays untouched). */
@@ -227,15 +230,14 @@ class CompressControllerMoreTest {
         ProcessExecutorResult okResult = resultWithRc(0);
         lenient()
                 .when(qpdfExecutor.runCommandWithOutputHandling(anyList(), any()))
-                .thenAnswer(
-                        inv -> {
-                            List<String> command = inv.getArgument(0);
-                            Path out = qpdfOutputPath(command);
-                            if (out != null) {
-                                Files.write(out, pdfToWrite);
-                            }
-                            return okResult;
-                        });
+                .thenAnswer(inv -> {
+                    List<String> command = inv.getArgument(0);
+                    Path out = qpdfOutputPath(command);
+                    if (out != null) {
+                        Files.write(out, pdfToWrite);
+                    }
+                    return okResult;
+                });
     }
 
     // ----- tiny in-memory PDF builders ---------------------------------------------------------
@@ -267,8 +269,7 @@ class CompressControllerMoreTest {
             doc.addPage(page);
             // >400px so the resize branch fires; filled via Graphics2D (instant vs per-pixel).
             java.awt.image.BufferedImage img =
-                    new java.awt.image.BufferedImage(
-                            500, 500, java.awt.image.BufferedImage.TYPE_INT_RGB);
+                    new java.awt.image.BufferedImage(500, 500, java.awt.image.BufferedImage.TYPE_INT_RGB);
             java.awt.Graphics2D g = img.createGraphics();
             g.setColor(java.awt.Color.LIGHT_GRAY);
             g.fillRect(0, 0, 500, 500);
@@ -286,8 +287,7 @@ class CompressControllerMoreTest {
     }
 
     private MockMultipartFile multipart(byte[] bytes) {
-        return new MockMultipartFile(
-                "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, bytes);
+        return new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, bytes);
     }
 
     private static byte[] drain(ResponseEntity<Resource> response) throws IOException {
@@ -398,9 +398,7 @@ class CompressControllerMoreTest {
             // detectGhostscriptCriticalError.
             ProcessExecutorResult criticalResult = mock(ProcessExecutorResult.class);
             lenient().when(criticalResult.getRc()).thenReturn(0);
-            lenient()
-                    .when(criticalResult.getMessages())
-                    .thenReturn("Page 1\nERROR: Could not draw this page");
+            lenient().when(criticalResult.getMessages()).thenReturn("Page 1\nERROR: Could not draw this page");
             lenient()
                     .when(ghostscriptExecutor.runCommandWithOutputHandling(anyList()))
                     .thenReturn(criticalResult);
@@ -468,14 +466,13 @@ class CompressControllerMoreTest {
             byte[] pdfToWrite = textOnlyPdfBytes();
             lenient()
                     .when(qpdfExecutor.runCommandWithOutputHandling(anyList(), any()))
-                    .thenAnswer(
-                            inv -> {
-                                List<String> command = inv.getArgument(0);
-                                captured.add(command);
-                                Path out = qpdfOutputPath(command);
-                                Files.write(out, pdfToWrite);
-                                return okResult;
-                            });
+                    .thenAnswer(inv -> {
+                        List<String> command = inv.getArgument(0);
+                        captured.add(command);
+                        Path out = qpdfOutputPath(command);
+                        Files.write(out, pdfToWrite);
+                        return okResult;
+                    });
 
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(multipart(largeImagePdfBytes()));
@@ -501,13 +498,12 @@ class CompressControllerMoreTest {
             byte[] pdfToWrite = textOnlyPdfBytes();
             lenient()
                     .when(qpdfExecutor.runCommandWithOutputHandling(anyList(), any()))
-                    .thenAnswer(
-                            inv -> {
-                                List<String> command = inv.getArgument(0);
-                                captured.add(command);
-                                Files.write(qpdfOutputPath(command), pdfToWrite);
-                                return okResult;
-                            });
+                    .thenAnswer(inv -> {
+                        List<String> command = inv.getArgument(0);
+                        captured.add(command);
+                        Files.write(qpdfOutputPath(command), pdfToWrite);
+                        return okResult;
+                    });
 
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(multipart(largeImagePdfBytes()));
@@ -590,16 +586,15 @@ class CompressControllerMoreTest {
             ProcessExecutorResult okResult = resultWithRc(0);
             lenient()
                     .when(ghostscriptExecutor.runCommandWithOutputHandling(anyList()))
-                    .thenAnswer(
-                            inv -> {
-                                gsCalls.incrementAndGet();
-                                List<String> command = inv.getArgument(0);
-                                Path out = ghostscriptOutputPath(command);
-                                if (out != null) {
-                                    Files.write(out, moderate);
-                                }
-                                return okResult;
-                            });
+                    .thenAnswer(inv -> {
+                        gsCalls.incrementAndGet();
+                        List<String> command = inv.getArgument(0);
+                        Path out = ghostscriptOutputPath(command);
+                        if (out != null) {
+                            Files.write(out, moderate);
+                        }
+                        return okResult;
+                    });
             stubQpdfSuccess(moderate);
 
             OptimizePdfRequest request = new OptimizePdfRequest();
@@ -739,8 +734,7 @@ class CompressControllerMoreTest {
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(null);
 
-            assertThatThrownBy(() -> controller.optimizePdf(request))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.optimizePdf(request)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -751,8 +745,7 @@ class CompressControllerMoreTest {
             request.setOptimizeLevel(null);
             request.setExpectedOutputSize(null);
 
-            assertThatThrownBy(() -> controller.optimizePdf(request))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.optimizePdf(request)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 }

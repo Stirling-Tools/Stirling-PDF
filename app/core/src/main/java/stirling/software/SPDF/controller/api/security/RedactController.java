@@ -64,19 +64,12 @@ public class RedactController {
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(
-                List.class,
-                "redactions",
-                new JsonListPropertyEditor<>(new TypeReference<List<RedactionArea>>() {}));
+                List.class, "redactions", new JsonListPropertyEditor<>(new TypeReference<List<RedactionArea>>() {}));
         binder.registerCustomEditor(
-                List.class,
-                "ranges",
-                new JsonListPropertyEditor<>(new TypeReference<List<TextRange>>() {}));
+                List.class, "ranges", new JsonListPropertyEditor<>(new TypeReference<List<TextRange>>() {}));
         binder.registerCustomEditor(
-                List.class,
-                "imageBoxes",
-                new JsonListPropertyEditor<>(new TypeReference<List<ImageBox>>() {}));
-        binder.registerCustomEditor(
-                RedactStyle.class, "style", new JsonObjectPropertyEditor<>(RedactStyle.class));
+                List.class, "imageBoxes", new JsonListPropertyEditor<>(new TypeReference<List<ImageBox>>() {}));
+        binder.registerCustomEditor(RedactStyle.class, "style", new JsonObjectPropertyEditor<>(RedactStyle.class));
     }
 
     @AutoJobPostMapping(
@@ -88,12 +81,10 @@ public class RedactController {
     @Operation(
             operationId = "redactPdfManual",
             summary = "Redacts areas and pages in a PDF document",
-            description =
-                    "This endpoint redacts content from a PDF file based on manually specified"
-                            + " areas. Users can specify areas to redact and optionally convert the PDF to an"
-                            + " image.")
-    public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
-            throws IOException {
+            description = "This endpoint redacts content from a PDF file based on manually specified"
+                    + " areas. Users can specify areas to redact and optionally convert the PDF to an"
+                    + " image.")
+    public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request) throws IOException {
 
         MultipartFile file = request.getFileInput();
 
@@ -107,10 +98,8 @@ public class RedactController {
                 try (PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document)) {
                     return WebResponseUtils.pdfDocToWebResponse(
                             convertedPdf,
-                            removeFileExtension(
-                                            Objects.requireNonNull(
-                                                    Filenames.toSimpleFileName(
-                                                            file.getOriginalFilename())))
+                            removeFileExtension(Objects.requireNonNull(
+                                            Filenames.toSimpleFileName(file.getOriginalFilename())))
                                     + "_redacted.pdf",
                             tempFileManager);
                 }
@@ -118,9 +107,7 @@ public class RedactController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    removeFileExtension(
-                                    Objects.requireNonNull(
-                                            Filenames.toSimpleFileName(file.getOriginalFilename())))
+                    removeFileExtension(Objects.requireNonNull(Filenames.toSimpleFileName(file.getOriginalFilename())))
                             + "_redacted.pdf",
                     tempFileManager);
         }
@@ -135,10 +122,9 @@ public class RedactController {
     @Operation(
             summary = "Redact PDF automatically",
             operationId = "redactPdfAuto",
-            description =
-                    "This endpoint automatically redacts text from a PDF file based on specified"
-                            + " patterns. Users can provide text patterns to redact, with options for regex"
-                            + " and whole word matching.")
+            description = "This endpoint automatically redacts text from a PDF file based on specified"
+                    + " patterns. Users can provide text patterns to redact, with options for regex"
+                    + " and whole word matching.")
     public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request) {
         String rawListOfText = request.getListOfText();
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
@@ -173,10 +159,10 @@ public class RedactController {
             }
 
             Map<Integer, List<PDFText>> allFoundTextsByPage =
-                    textRedactionService.findTextToRedact(
-                            document, listOfText, useRegex, wholeWordSearchBool);
+                    textRedactionService.findTextToRedact(document, listOfText, useRegex, wholeWordSearchBool);
 
-            int totalMatches = allFoundTextsByPage.values().stream().mapToInt(List::size).sum();
+            int totalMatches =
+                    allFoundTextsByPage.values().stream().mapToInt(List::size).sum();
             log.info(
                     "Redaction scan: {} occurrences across {} pages (patterns={}, regex={}, wholeWord={})",
                     totalMatches,
@@ -185,12 +171,9 @@ public class RedactController {
                     useRegex,
                     wholeWordSearchBool);
 
-            String filename =
-                    removeFileExtension(
-                                    Objects.requireNonNull(
-                                            Filenames.toSimpleFileName(
-                                                    request.getFileInput().getOriginalFilename())))
-                            + "_redacted.pdf";
+            String filename = removeFileExtension(Objects.requireNonNull(
+                            Filenames.toSimpleFileName(request.getFileInput().getOriginalFilename())))
+                    + "_redacted.pdf";
 
             if (allFoundTextsByPage.isEmpty()) {
                 log.info("No text found matching redaction patterns");
@@ -199,50 +182,39 @@ public class RedactController {
 
             boolean fallbackToBoxOnlyMode;
             try {
-                fallbackToBoxOnlyMode =
-                        textRedactionService.performTextReplacement(
-                                document,
-                                allFoundTextsByPage,
-                                listOfText,
-                                useRegex,
-                                wholeWordSearchBool);
+                fallbackToBoxOnlyMode = textRedactionService.performTextReplacement(
+                        document, allFoundTextsByPage, listOfText, useRegex, wholeWordSearchBool);
             } catch (Exception e) {
-                log.warn(
-                        "Text replacement redaction failed, falling back to box-only mode: {}",
-                        e.getMessage());
+                log.warn("Text replacement redaction failed, falling back to box-only mode: {}", e.getMessage());
                 fallbackToBoxOnlyMode = true;
             }
 
             if (fallbackToBoxOnlyMode) {
-                log.warn(
-                        "Font compatibility issues detected. Using box-only redaction mode for better reliability.");
+                log.warn("Font compatibility issues detected. Using box-only redaction mode for better reliability.");
 
                 fallbackDocument = pdfDocumentFactory.load(request.getFileInput());
 
-                allFoundTextsByPage =
-                        textRedactionService.findTextToRedact(
-                                fallbackDocument, listOfText, useRegex, wholeWordSearchBool);
+                allFoundTextsByPage = textRedactionService.findTextToRedact(
+                        fallbackDocument, listOfText, useRegex, wholeWordSearchBool);
 
-                TempFile finalized =
-                        manualRedactionService.finalizeRedaction(
-                                fallbackDocument,
-                                allFoundTextsByPage,
-                                request.getRedactColor(),
-                                request.getCustomPadding(),
-                                request.getConvertPDFToImage(),
-                                false);
+                TempFile finalized = manualRedactionService.finalizeRedaction(
+                        fallbackDocument,
+                        allFoundTextsByPage,
+                        request.getRedactColor(),
+                        request.getCustomPadding(),
+                        request.getConvertPDFToImage(),
+                        false);
 
                 return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
             }
 
-            TempFile finalized =
-                    manualRedactionService.finalizeRedaction(
-                            document,
-                            allFoundTextsByPage,
-                            request.getRedactColor(),
-                            request.getCustomPadding(),
-                            request.getConvertPDFToImage(),
-                            true);
+            TempFile finalized = manualRedactionService.finalizeRedaction(
+                    document,
+                    allFoundTextsByPage,
+                    request.getRedactColor(),
+                    request.getCustomPadding(),
+                    request.getConvertPDFToImage(),
+                    true);
 
             return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
 
@@ -280,22 +252,17 @@ public class RedactController {
     @Operation(
             operationId = "redactExecute",
             summary = "Execute a unified redaction plan on a PDF",
-            description =
-                    "Unified redaction endpoint that accepts exact strings, regex patterns, and"
-                            + " page numbers in a single request. Supports execution strategy hints.")
-    public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request)
-            throws IOException {
+            description = "Unified redaction endpoint that accepts exact strings, regex patterns, and"
+                    + " page numbers in a single request. Supports execution strategy hints.")
+    public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request) throws IOException {
 
         if (request.getFileInput() == null) {
             throw ExceptionUtils.createFileNullOrEmptyException();
         }
 
-        String filename =
-                removeFileExtension(
-                                Objects.requireNonNull(
-                                        Filenames.toSimpleFileName(
-                                                request.getFileInput().getOriginalFilename())))
-                        + "_redacted.pdf";
+        String filename = removeFileExtension(Objects.requireNonNull(
+                        Filenames.toSimpleFileName(request.getFileInput().getOriginalFilename())))
+                + "_redacted.pdf";
 
         TempFile out = redactExecuteService.execute(request);
         return WebResponseUtils.pdfFileToWebResponse(out, filename);

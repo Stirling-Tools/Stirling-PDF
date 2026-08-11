@@ -50,19 +50,24 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SplitPDFControllerTest {
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private SplitPDFController controller;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private SplitPDFController controller;
 
     @BeforeEach
     void setUp() throws IOException {
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        invocation -> {
-                            String suffix = invocation.getArgument(0);
-                            return Files.createTempFile(tempDir, "test", suffix).toFile();
-                        });
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(invocation -> {
+            String suffix = invocation.getArgument(0);
+            return Files.createTempFile(tempDir, "test", suffix).toFile();
+        });
         lenient()
                 .when(pdfDocumentFactory.load(any(File.class), eq(true)))
                 .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
@@ -132,8 +137,7 @@ class SplitPDFControllerTest {
 
     private List<byte[]> unzip(Resource zipResource) throws IOException {
         List<byte[]> entries = new ArrayList<>();
-        try (ZipInputStream zis =
-                new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 entries.add(zis.readAllBytes());
@@ -158,8 +162,7 @@ class SplitPDFControllerTest {
     void shouldSplitAtPage3() throws Exception {
         byte[] pdfBytes = createPdf(6);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
@@ -178,8 +181,7 @@ class SplitPDFControllerTest {
     void shouldSplitAllPages() throws Exception {
         byte[] pdfBytes = createPdf(3);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
@@ -198,8 +200,7 @@ class SplitPDFControllerTest {
     void shouldHandleSinglePage() throws Exception {
         byte[] pdfBytes = createPdf(1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
@@ -218,8 +219,7 @@ class SplitPDFControllerTest {
     void shouldSplitWithRange() throws Exception {
         byte[] pdfBytes = createPdf(10);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
@@ -238,8 +238,7 @@ class SplitPDFControllerTest {
     void shouldSplitIntoTwoDocs() throws Exception {
         byte[] pdfBytes = createPdf(4);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
@@ -248,8 +247,7 @@ class SplitPDFControllerTest {
         ResponseEntity<Resource> response = controller.splitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getHeaders().getContentType())
-                .isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
+        assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
         List<byte[]> outputs = unzip(response.getBody());
         assertThat(outputs).hasSize(2);
         assertThat(pageCountsOf(outputs)).containsExactly(2, 2);
@@ -260,8 +258,7 @@ class SplitPDFControllerTest {
     void shouldSplitAtLastPage() throws Exception {
         byte[] pdfBytes = createPdf(5);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
@@ -280,8 +277,7 @@ class SplitPDFControllerTest {
     void shouldHandleAllKeyword() throws Exception {
         byte[] pdfBytes = createPdf(3);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);
@@ -300,8 +296,7 @@ class SplitPDFControllerTest {
     void shouldSplitFormPdf() throws Exception {
         byte[] pdfBytes = createPdfWithForm(4);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPagesRequest request = new SplitPagesRequest();
         request.setFileInput(file);

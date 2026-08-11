@@ -56,31 +56,26 @@ public class PdfToCbzUtils {
         }
     }
 
-    private static TempFile createCbzFromPdf(
-            PDDocument document, int dpi, TempFileManager tempFileManager) throws IOException {
+    private static TempFile createCbzFromPdf(PDDocument document, int dpi, TempFileManager tempFileManager)
+            throws IOException {
         PDFRenderer pdfRenderer = new PDFRenderer(document);
         pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
 
         TempFile cbzTempFile = new TempFile(tempFileManager, ".cbz");
         try {
-            try (ZipOutputStream zipOut =
-                    new ZipOutputStream(Files.newOutputStream(cbzTempFile.getPath()))) {
+            try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(cbzTempFile.getPath()))) {
 
                 int totalPages = document.getNumberOfPages();
 
                 for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                     final int currentPage = pageIndex;
                     try {
-                        BufferedImage image =
-                                ExceptionUtils.handleOomRendering(
-                                        currentPage + 1,
-                                        dpi,
-                                        () ->
-                                                pdfRenderer.renderImageWithDPI(
-                                                        currentPage, dpi, ImageType.RGB));
+                        BufferedImage image = ExceptionUtils.handleOomRendering(
+                                currentPage + 1,
+                                dpi,
+                                () -> pdfRenderer.renderImageWithDPI(currentPage, dpi, ImageType.RGB));
 
-                        String imageFilename =
-                                String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
+                        String imageFilename = String.format(Locale.ROOT, "page_%03d.png", currentPage + 1);
                         zipOut.putNextEntry(new ZipEntry(imageFilename));
                         ImageIO.write(image, "PNG", zipOut);
                         zipOut.closeEntry();

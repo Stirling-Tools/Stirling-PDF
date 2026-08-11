@@ -32,16 +32,20 @@ class MetricsAggregatorServiceTest {
         endpointInspector = mock(EndpointInspector.class);
         when(endpointInspector.getValidGetEndpoints()).thenReturn(Set.of("/getEndpoint"));
         when(endpointInspector.isValidGetEndpoint("/getEndpoint")).thenReturn(true);
-        metricsAggregatorService =
-                new MetricsAggregatorService(meterRegistry, postHogService, endpointInspector);
+        metricsAggregatorService = new MetricsAggregatorService(meterRegistry, postHogService, endpointInspector);
     }
 
-    @Captor private ArgumentCaptor<Map<String, Object>> captor;
+    @Captor
+    private ArgumentCaptor<Map<String, Object>> captor;
 
     @Test
     void testAggregateAndSendMetrics() {
-        meterRegistry.counter("http.requests", "method", "GET", "uri", "/getEndpoint").increment(3);
-        meterRegistry.counter("http.requests", "method", "POST", "uri", "/api/v1/do").increment(2);
+        meterRegistry
+                .counter("http.requests", "method", "GET", "uri", "/getEndpoint")
+                .increment(3);
+        meterRegistry
+                .counter("http.requests", "method", "POST", "uri", "/api/v1/do")
+                .increment(2);
 
         metricsAggregatorService.aggregateAndSendMetrics();
 
@@ -56,8 +60,7 @@ class MetricsAggregatorServiceTest {
 
     @Test
     void testAggregateAndSendMetricsSendsOnlyDifferences() {
-        Counter counter =
-                meterRegistry.counter("http.requests", "method", "GET", "uri", "/getEndpoint");
+        Counter counter = meterRegistry.counter("http.requests", "method", "GET", "uri", "/getEndpoint");
         counter.increment(5);
         metricsAggregatorService.aggregateAndSendMetrics();
         reset(postHogService);

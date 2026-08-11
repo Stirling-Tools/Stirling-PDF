@@ -64,24 +64,18 @@ class PdfJsonConversionServiceUnicodeParsingTest {
 
     @Test
     void rejectsEmptyHex() {
-        assertThrows(
-                NumberFormatException.class,
-                () -> PdfJsonConversionService.parseToUnicodeCodepoint(""));
+        assertThrows(NumberFormatException.class, () -> PdfJsonConversionService.parseToUnicodeCodepoint(""));
     }
 
     @Test
     void rejectsNullHex() {
-        assertThrows(
-                NumberFormatException.class,
-                () -> PdfJsonConversionService.parseToUnicodeCodepoint(null));
+        assertThrows(NumberFormatException.class, () -> PdfJsonConversionService.parseToUnicodeCodepoint(null));
     }
 
     @Test
     void rejectsOddByteCountAboveBmp() {
         // 6 hex chars is 3 bytes — not a valid UTF-16BE sequence.
-        assertThrows(
-                NumberFormatException.class,
-                () -> PdfJsonConversionService.parseToUnicodeCodepoint("D83DDC"));
+        assertThrows(NumberFormatException.class, () -> PdfJsonConversionService.parseToUnicodeCodepoint("D83DDC"));
     }
 
     @Test
@@ -93,10 +87,8 @@ class PdfJsonConversionServiceUnicodeParsingTest {
         ByteArrayInputStream stream = new ByteArrayInputStream(new byte[] {1, 2, 3, 4});
         PdfJsonConversionService.CodeReader reader = in -> 0; // never reads, always "succeeds"
 
-        int count =
-                assertTimeoutPreemptively(
-                        Duration.ofSeconds(2),
-                        () -> PdfJsonConversionService.countCodesProtected(stream, reader));
+        int count = assertTimeoutPreemptively(
+                Duration.ofSeconds(2), () -> PdfJsonConversionService.countCodesProtected(stream, reader));
 
         // First iteration sees no progress and breaks immediately.
         assertEquals(0, count);
@@ -105,15 +97,12 @@ class PdfJsonConversionServiceUnicodeParsingTest {
     @Test
     void countCodesProtectedTerminatesOnEmptyStream() {
         ByteArrayInputStream stream = new ByteArrayInputStream(new byte[0]);
-        PdfJsonConversionService.CodeReader reader =
-                in -> {
-                    throw new AssertionError("reader must not be called when stream is empty");
-                };
+        PdfJsonConversionService.CodeReader reader = in -> {
+            throw new AssertionError("reader must not be called when stream is empty");
+        };
 
-        int count =
-                assertTimeoutPreemptively(
-                        Duration.ofSeconds(2),
-                        () -> PdfJsonConversionService.countCodesProtected(stream, reader));
+        int count = assertTimeoutPreemptively(
+                Duration.ofSeconds(2), () -> PdfJsonConversionService.countCodesProtected(stream, reader));
 
         assertEquals(0, count);
     }
@@ -121,11 +110,10 @@ class PdfJsonConversionServiceUnicodeParsingTest {
     @Test
     void countCodesProtectedHonorsExplicitMinusOneReturn() throws IOException {
         ByteArrayInputStream stream = new ByteArrayInputStream(new byte[] {1, 2, 3});
-        PdfJsonConversionService.CodeReader reader =
-                in -> {
-                    int b = in.read();
-                    return b == -1 ? -1 : b;
-                };
+        PdfJsonConversionService.CodeReader reader = in -> {
+            int b = in.read();
+            return b == -1 ? -1 : b;
+        };
 
         int count = PdfJsonConversionService.countCodesProtected(stream, reader);
 
@@ -137,24 +125,21 @@ class PdfJsonConversionServiceUnicodeParsingTest {
         // A reader that consumes one byte then hits a corrupt-CMap pattern returning 0 without
         // consuming further must still terminate after counting the consumed bytes.
         ByteArrayInputStream stream = new ByteArrayInputStream(new byte[] {1, 2, 3, 4});
-        PdfJsonConversionService.CodeReader reader =
-                new PdfJsonConversionService.CodeReader() {
-                    boolean firstCall = true;
+        PdfJsonConversionService.CodeReader reader = new PdfJsonConversionService.CodeReader() {
+            boolean firstCall = true;
 
-                    @Override
-                    public int readCode(InputStream in) throws IOException {
-                        if (firstCall) {
-                            firstCall = false;
-                            return in.read();
-                        }
-                        return 0; // simulates corrupt CMap thereafter
-                    }
-                };
+            @Override
+            public int readCode(InputStream in) throws IOException {
+                if (firstCall) {
+                    firstCall = false;
+                    return in.read();
+                }
+                return 0; // simulates corrupt CMap thereafter
+            }
+        };
 
-        int count =
-                assertTimeoutPreemptively(
-                        Duration.ofSeconds(2),
-                        () -> PdfJsonConversionService.countCodesProtected(stream, reader));
+        int count = assertTimeoutPreemptively(
+                Duration.ofSeconds(2), () -> PdfJsonConversionService.countCodesProtected(stream, reader));
 
         assertEquals(1, count);
     }

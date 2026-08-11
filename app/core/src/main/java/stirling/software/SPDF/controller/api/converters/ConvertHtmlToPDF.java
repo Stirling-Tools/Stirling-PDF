@@ -47,10 +47,8 @@ public class ConvertHtmlToPDF {
             produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",
-            description =
-                    "This endpoint takes an HTML or ZIP file input and converts it to a PDF format.")
-    public ResponseEntity<Resource> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request)
-            throws Exception {
+            description = "This endpoint takes an HTML or ZIP file input and converts it to a PDF format.")
+    public ResponseEntity<Resource> HtmlToPdf(@ModelAttribute HTMLToPdfRequest request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
 
         if (fileInput == null) {
@@ -58,20 +56,18 @@ public class ConvertHtmlToPDF {
         }
 
         String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
-        if (originalFilename == null
-                || (!originalFilename.endsWith(".html") && !originalFilename.endsWith(".zip"))) {
+        if (originalFilename == null || (!originalFilename.endsWith(".html") && !originalFilename.endsWith(".zip"))) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.fileFormatRequired", "File must be in {0} format", ".html or .zip");
         }
 
-        byte[] pdfBytes =
-                FileToPdf.convertHtmlToPdf(
-                        runtimePathConfig.getWeasyPrintPath(),
-                        request,
-                        fileInput.getBytes(),
-                        originalFilename,
-                        tempFileManager,
-                        customHtmlSanitizer);
+        byte[] pdfBytes = FileToPdf.convertHtmlToPdf(
+                runtimePathConfig.getWeasyPrintPath(),
+                request,
+                fileInput.getBytes(),
+                originalFilename,
+                tempFileManager,
+                customHtmlSanitizer);
 
         pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 

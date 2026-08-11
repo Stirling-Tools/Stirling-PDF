@@ -36,7 +36,8 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class JpaPolicyStoreTest {
 
-    @Mock private PolicyRepository repository;
+    @Mock
+    private PolicyRepository repository;
 
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
     private JpaPolicyStore store;
@@ -48,18 +49,14 @@ class JpaPolicyStoreTest {
 
     @Test
     void saveAssignsAnIdAndPersistsThePolicyAsJson() {
-        Policy saved =
-                store.save(
-                        new Policy(
-                                null,
-                                "compress incoming",
-                                "alice",
-                                true,
-                                List.of(
-                                        new PipelineInput(
-                                                "src-in", new TriggerConfig("schedule", Map.of()))),
-                                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                                OutputSpec.inline()));
+        Policy saved = store.save(new Policy(
+                null,
+                "compress incoming",
+                "alice",
+                true,
+                List.of(new PipelineInput("src-in", new TriggerConfig("schedule", Map.of()))),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline()));
 
         assertNotNull(saved.id());
         ArgumentCaptor<PolicyEntity> captor = ArgumentCaptor.forClass(PolicyEntity.class);
@@ -73,17 +70,14 @@ class JpaPolicyStoreTest {
 
     @Test
     void getDeserializesThePolicyFromJson() {
-        Policy policy =
-                new Policy(
-                        "p1",
-                        "rotate",
-                        "alice",
-                        true,
-                        List.of(), // no inputs: run on demand only
-                        List.of(
-                                new PipelineStep(
-                                        "/api/v1/general/rotate-pdf", Map.of("angle", 90))),
-                        OutputSpec.inline());
+        Policy policy = new Policy(
+                "p1",
+                "rotate",
+                "alice",
+                true,
+                List.of(), // no inputs: run on demand only
+                List.of(new PipelineStep("/api/v1/general/rotate-pdf", Map.of("angle", 90))),
+                OutputSpec.inline());
         when(repository.findById("p1")).thenReturn(Optional.of(entityFor(policy)));
 
         assertEquals(policy, store.get("p1").orElseThrow());
@@ -92,11 +86,10 @@ class JpaPolicyStoreTest {
     @Test
     void getUpgradesLegacyTriggerAndSourceIdsToPerInputTriggers() {
         // A blob written before triggers moved onto inputs: one policy-level trigger + sourceIds.
-        String legacyJson =
-                "{\"id\":\"p1\",\"name\":\"legacy\",\"owner\":\"alice\",\"enabled\":true,"
-                        + "\"trigger\":{\"type\":\"schedule\",\"options\":{}},"
-                        + "\"sourceIds\":[\"s1\",\"s2\"],\"steps\":[],"
-                        + "\"output\":{\"type\":\"inline\",\"options\":{}}}";
+        String legacyJson = "{\"id\":\"p1\",\"name\":\"legacy\",\"owner\":\"alice\",\"enabled\":true,"
+                + "\"trigger\":{\"type\":\"schedule\",\"options\":{}},"
+                + "\"sourceIds\":[\"s1\",\"s2\"],\"steps\":[],"
+                + "\"output\":{\"type\":\"inline\",\"options\":{}}}";
         PolicyEntity entity = new PolicyEntity();
         entity.setId("p1");
         entity.setName("legacy");
@@ -115,16 +108,15 @@ class JpaPolicyStoreTest {
 
     @Test
     void saveDenormalizesTeamIdForScopedQueries() {
-        store.save(
-                new Policy(
-                        "p1",
-                        "scoped",
-                        "alice",
-                        true,
-                        List.of(),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        OutputSpec.inline(),
-                        9L));
+        store.save(new Policy(
+                "p1",
+                "scoped",
+                "alice",
+                true,
+                List.of(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline(),
+                9L));
 
         ArgumentCaptor<PolicyEntity> captor = ArgumentCaptor.forClass(PolicyEntity.class);
         verify(repository).save(captor.capture());
@@ -133,16 +125,15 @@ class JpaPolicyStoreTest {
 
     @Test
     void findByTeamDelegatesToTheScopedQuery() {
-        Policy policy =
-                new Policy(
-                        "p1",
-                        "ours",
-                        "alice",
-                        true,
-                        List.of(),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        OutputSpec.inline(),
-                        9L);
+        Policy policy = new Policy(
+                "p1",
+                "ours",
+                "alice",
+                true,
+                List.of(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline(),
+                9L);
         when(repository.findByTeam(9L)).thenReturn(List.of(entityFor(policy)));
 
         List<Policy> mine = store.findByTeam(9L);
@@ -153,18 +144,16 @@ class JpaPolicyStoreTest {
 
     @Test
     void findBindingsByTriggerTypeScansEnabledPoliciesForMatchingInputs() {
-        Policy policy =
-                new Policy(
-                        "p1",
-                        "watch",
-                        "alice",
-                        true,
-                        List.of(
-                                new PipelineInput(
-                                        "src-in", new TriggerConfig("schedule", Map.of())),
-                                PipelineInput.manual("src-manual")),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        OutputSpec.inline());
+        Policy policy = new Policy(
+                "p1",
+                "watch",
+                "alice",
+                true,
+                List.of(
+                        new PipelineInput("src-in", new TriggerConfig("schedule", Map.of())),
+                        PipelineInput.manual("src-manual")),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline());
         when(repository.findByEnabledTrue()).thenReturn(List.of(entityFor(policy)));
 
         List<PolicyBinding> scheduled = store.findBindingsByTriggerType("schedule");

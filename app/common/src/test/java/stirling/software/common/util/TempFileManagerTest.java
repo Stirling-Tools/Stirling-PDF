@@ -20,7 +20,8 @@ class TempFileManagerTest {
     private TempFileRegistry registry;
     private ApplicationProperties applicationProperties;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {

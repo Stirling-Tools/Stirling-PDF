@@ -46,8 +46,11 @@ import stirling.software.common.configuration.RuntimePathConfig;
 @DisplayName("ExternalAppDepConfig extra coverage")
 class ExternalAppDepConfigMoreTest {
 
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
 
     private ExternalAppDepConfig config;
 
@@ -58,9 +61,7 @@ class ExternalAppDepConfigMoreTest {
         when(runtimePathConfig.getCalibrePath()).thenReturn("/custom/calibre");
         when(runtimePathConfig.getOcrMyPdfPath()).thenReturn("/custom/ocrmypdf");
         when(runtimePathConfig.getSOfficePath()).thenReturn("/custom/soffice");
-        lenient()
-                .when(endpointConfiguration.getEndpointsForGroup(anyString()))
-                .thenReturn(Set.of());
+        lenient().when(endpointConfiguration.getEndpointsForGroup(anyString())).thenReturn(Set.of());
         config = new ExternalAppDepConfig(endpointConfiguration, runtimePathConfig);
     }
 
@@ -88,14 +89,12 @@ class ExternalAppDepConfigMoreTest {
 
     /** Make every ProcessBuilder built in scope return the supplied process from start(). */
     private static MockedConstruction<ProcessBuilder> alwaysReturn(Process p) {
-        return mockConstruction(
-                ProcessBuilder.class,
-                (pbMock, ctx) -> {
-                    try {
-                        doReturn(p).when(pbMock).start();
-                    } catch (Exception ignored) {
-                    }
-                });
+        return mockConstruction(ProcessBuilder.class, (pbMock, ctx) -> {
+            try {
+                doReturn(p).when(pbMock).start();
+            } catch (Exception ignored) {
+            }
+        });
     }
 
     private Object invoke(String name, Class<?>[] sig, Object... args) throws Exception {
@@ -111,10 +110,8 @@ class ExternalAppDepConfigMoreTest {
         @Test
         @DisplayName("true when OS lookup (where/which) exits 0")
         void availableViaLookup() throws Exception {
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    alwaysReturn(processReturning(0, "/usr/bin/gs", ""))) {
-                boolean available =
-                        (boolean) invoke("isCommandAvailable", new Class<?>[] {String.class}, "gs");
+            try (MockedConstruction<ProcessBuilder> ignored = alwaysReturn(processReturning(0, "/usr/bin/gs", ""))) {
+                boolean available = (boolean) invoke("isCommandAvailable", new Class<?>[] {String.class}, "gs");
                 assertThat(available).isTrue();
             }
         }
@@ -122,22 +119,14 @@ class ExternalAppDepConfigMoreTest {
         @Test
         @DisplayName("falls back to --version when lookup fails, then true")
         void availableViaVersionFallback() throws Exception {
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    mockConstruction(
-                            ProcessBuilder.class,
-                            (pbMock, ctx) -> {
-                                List<?> cmd = (List<?>) ctx.arguments().get(0);
-                                boolean isVersion = cmd.contains("--version");
-                                doReturn(processReturning(isVersion ? 0 : 1, "1.0", ""))
-                                        .when(pbMock)
-                                        .start();
-                            })) {
-                boolean available =
-                        (boolean)
-                                invoke(
-                                        "isCommandAvailable",
-                                        new Class<?>[] {String.class},
-                                        "weirdcmd");
+            try (MockedConstruction<ProcessBuilder> ignored = mockConstruction(ProcessBuilder.class, (pbMock, ctx) -> {
+                List<?> cmd = (List<?>) ctx.arguments().get(0);
+                boolean isVersion = cmd.contains("--version");
+                doReturn(processReturning(isVersion ? 0 : 1, "1.0", ""))
+                        .when(pbMock)
+                        .start();
+            })) {
+                boolean available = (boolean) invoke("isCommandAvailable", new Class<?>[] {String.class}, "weirdcmd");
                 assertThat(available).isTrue();
             }
         }
@@ -145,11 +134,8 @@ class ExternalAppDepConfigMoreTest {
         @Test
         @DisplayName("false when both lookup and --version fail")
         void unavailable() throws Exception {
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    alwaysReturn(processReturning(1, "", ""))) {
-                boolean available =
-                        (boolean)
-                                invoke("isCommandAvailable", new Class<?>[] {String.class}, "nope");
+            try (MockedConstruction<ProcessBuilder> ignored = alwaysReturn(processReturning(1, "", ""))) {
+                boolean available = (boolean) invoke("isCommandAvailable", new Class<?>[] {String.class}, "nope");
                 assertThat(available).isFalse();
             }
         }
@@ -165,13 +151,8 @@ class ExternalAppDepConfigMoreTest {
         void extractsVersion() throws Exception {
             try (MockedConstruction<ProcessBuilder> ignored =
                     alwaysReturn(processReturning(0, "qpdf version 11.9.0", ""))) {
-                Optional<String> version =
-                        (Optional<String>)
-                                invoke(
-                                        "getVersionSafe",
-                                        new Class<?>[] {String.class, String.class},
-                                        "qpdf",
-                                        "--version");
+                Optional<String> version = (Optional<String>)
+                        invoke("getVersionSafe", new Class<?>[] {String.class, String.class}, "qpdf", "--version");
                 assertThat(version).contains("11.9.0");
             }
         }
@@ -180,15 +161,9 @@ class ExternalAppDepConfigMoreTest {
         @DisplayName("empty when command exits non-zero")
         @SuppressWarnings("unchecked")
         void emptyOnNonZero() throws Exception {
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    alwaysReturn(processReturning(2, "", ""))) {
-                Optional<String> version =
-                        (Optional<String>)
-                                invoke(
-                                        "getVersionSafe",
-                                        new Class<?>[] {String.class, String.class},
-                                        "qpdf",
-                                        "--version");
+            try (MockedConstruction<ProcessBuilder> ignored = alwaysReturn(processReturning(2, "", ""))) {
+                Optional<String> version = (Optional<String>)
+                        invoke("getVersionSafe", new Class<?>[] {String.class, String.class}, "qpdf", "--version");
                 assertThat(version).isEmpty();
             }
         }
@@ -204,12 +179,11 @@ class ExternalAppDepConfigMoreTest {
             Process p = mock(Process.class);
             doReturn(false).when(p).waitFor(anyLong(), any(TimeUnit.class));
             try (MockedConstruction<ProcessBuilder> ignored = alwaysReturn(p)) {
-                Object result =
-                        invoke(
-                                "runAndWait",
-                                new Class<?>[] {List.class, Duration.class},
-                                List.of("sleep", "100"),
-                                Duration.ofMillis(10));
+                Object result = invoke(
+                        "runAndWait",
+                        new Class<?>[] {List.class, Duration.class},
+                        List.of("sleep", "100"),
+                        Duration.ofMillis(10));
                 Method ec = result.getClass().getDeclaredMethod("exitCode");
                 ec.setAccessible(true);
                 assertThat((int) ec.invoke(result)).isEqualTo(124);
@@ -220,18 +194,14 @@ class ExternalAppDepConfigMoreTest {
         @Test
         @DisplayName("returns code 127 when ProcessBuilder.start throws IOException")
         void ioExceptionYields127() throws Exception {
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    mockConstruction(
-                            ProcessBuilder.class,
-                            (pbMock, ctx) ->
-                                    when(pbMock.start())
-                                            .thenThrow(new java.io.IOException("cannot run")))) {
-                Object result =
-                        invoke(
-                                "runAndWait",
-                                new Class<?>[] {List.class, Duration.class},
-                                List.of("bogus"),
-                                Duration.ofSeconds(1));
+            try (MockedConstruction<ProcessBuilder> ignored = mockConstruction(
+                    ProcessBuilder.class,
+                    (pbMock, ctx) -> when(pbMock.start()).thenThrow(new java.io.IOException("cannot run")))) {
+                Object result = invoke(
+                        "runAndWait",
+                        new Class<?>[] {List.class, Duration.class},
+                        List.of("bogus"),
+                        Duration.ofSeconds(1));
                 Method ec = result.getClass().getDeclaredMethod("exitCode");
                 ec.setAccessible(true);
                 assertThat((int) ec.invoke(result)).isEqualTo(127);
@@ -251,20 +221,17 @@ class ExternalAppDepConfigMoreTest {
         @Test
         @DisplayName("disables the affected group when the command is missing")
         void disablesMissingGroup() throws Exception {
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    alwaysReturn(processReturning(1, "", ""))) {
+            try (MockedConstruction<ProcessBuilder> ignored = alwaysReturn(processReturning(1, "", ""))) {
                 invoke("checkDependencyAndDisableGroup", new Class<?>[] {String.class}, "gs");
             }
 
-            verify(endpointConfiguration)
-                    .disableGroup("Ghostscript", EndpointConfiguration.DisableReason.DEPENDENCY);
+            verify(endpointConfiguration).disableGroup("Ghostscript", EndpointConfiguration.DisableReason.DEPENDENCY);
         }
 
         @Test
         @DisplayName("present command with no version gate leaves the group enabled")
         void presentCommandNotDisabled() throws Exception {
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    alwaysReturn(processReturning(0, "/usr/bin/gs", ""))) {
+            try (MockedConstruction<ProcessBuilder> ignored = alwaysReturn(processReturning(0, "/usr/bin/gs", ""))) {
                 invoke("checkDependencyAndDisableGroup", new Class<?>[] {String.class}, "gs");
             }
 
@@ -281,8 +248,7 @@ class ExternalAppDepConfigMoreTest {
                 invoke("checkDependencyAndDisableGroup", new Class<?>[] {String.class}, "qpdf");
             }
 
-            verify(endpointConfiguration)
-                    .disableGroup("qpdf", EndpointConfiguration.DisableReason.DEPENDENCY);
+            verify(endpointConfiguration).disableGroup("qpdf", EndpointConfiguration.DisableReason.DEPENDENCY);
         }
 
         @Test
@@ -302,14 +268,10 @@ class ExternalAppDepConfigMoreTest {
         void weasyprintBelowMinimumDisabled() throws Exception {
             try (MockedConstruction<ProcessBuilder> ignored =
                     alwaysReturn(processReturning(0, "WeasyPrint 50.0", ""))) {
-                invoke(
-                        "checkDependencyAndDisableGroup",
-                        new Class<?>[] {String.class},
-                        "/custom/weasyprint");
+                invoke("checkDependencyAndDisableGroup", new Class<?>[] {String.class}, "/custom/weasyprint");
             }
 
-            verify(endpointConfiguration)
-                    .disableGroup("Weasyprint", EndpointConfiguration.DisableReason.DEPENDENCY);
+            verify(endpointConfiguration).disableGroup("Weasyprint", EndpointConfiguration.DisableReason.DEPENDENCY);
         }
     }
 }

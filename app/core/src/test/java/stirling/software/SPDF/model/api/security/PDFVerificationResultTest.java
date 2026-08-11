@@ -76,19 +76,18 @@ class PDFVerificationResultTest {
         @Test
         @DisplayName("all-args constructor populates fields")
         void allArgs() {
-            PDFVerificationResult result =
-                    new PDFVerificationResult(
-                            "std",
-                            "stdName",
-                            "prof",
-                            "profName",
-                            "summary",
-                            true,
-                            false,
-                            1,
-                            2,
-                            new java.util.ArrayList<>(),
-                            new java.util.ArrayList<>());
+            PDFVerificationResult result = new PDFVerificationResult(
+                    "std",
+                    "stdName",
+                    "prof",
+                    "profName",
+                    "summary",
+                    true,
+                    false,
+                    1,
+                    2,
+                    new java.util.ArrayList<>(),
+                    new java.util.ArrayList<>());
 
             assertThat(result.getStandard()).isEqualTo("std");
             assertThat(result.getTotalFailures()).isEqualTo(1);
@@ -114,8 +113,7 @@ class PDFVerificationResultTest {
         @Test
         @DisplayName("exposes every field via accessors")
         void accessors() {
-            ValidationIssue issue =
-                    new ValidationIssue("rule", "msg", "loc", "spec", "clause", "1.2");
+            ValidationIssue issue = new ValidationIssue("rule", "msg", "loc", "spec", "clause", "1.2");
 
             assertThat(issue.getRuleId()).isEqualTo("rule");
             assertThat(issue.getMessage()).isEqualTo("msg");

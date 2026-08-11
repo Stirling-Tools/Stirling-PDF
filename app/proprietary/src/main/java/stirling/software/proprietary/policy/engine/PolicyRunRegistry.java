@@ -33,16 +33,14 @@ public class PolicyRunRegistry {
     private final Map<String, PolicyRun> runs = new ConcurrentHashMap<>();
 
     private final Duration runExpiry;
-    private final ScheduledExecutorService cleanupExecutor =
-            Executors.newSingleThreadScheduledExecutor(
-                    Thread.ofVirtual().name("policy-run-cleanup-", 0).factory());
+    private final ScheduledExecutorService cleanupExecutor = Executors.newSingleThreadScheduledExecutor(
+            Thread.ofVirtual().name("policy-run-cleanup-", 0).factory());
 
     public PolicyRunRegistry(ApplicationProperties applicationProperties) {
         int runExpiryMinutes = applicationProperties.getPolicies().getRunExpiryMinutes();
         this.runExpiry = Duration.ofMinutes(runExpiryMinutes);
         cleanupExecutor.scheduleAtFixedRate(this::evictExpiredRuns, 10, 10, TimeUnit.MINUTES);
-        log.debug(
-                "Policy run registry initialized with run expiry of {} minutes", runExpiryMinutes);
+        log.debug("Policy run registry initialized with run expiry of {} minutes", runExpiryMinutes);
     }
 
     public void register(PolicyRun run) {

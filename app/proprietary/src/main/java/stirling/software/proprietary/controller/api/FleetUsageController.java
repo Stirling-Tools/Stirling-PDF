@@ -57,16 +57,13 @@ public class FleetUsageController {
         // can't exist, so report N/A instead of a 0 that would misrepresent an empty table.
         boolean auditOn = auditConfig.isLevelEnabled(AuditLevel.STANDARD);
         Instant since = Instant.now().minus(30, ChronoUnit.DAYS);
-        Long active =
-                auditOn
-                        ? auditRepository.countDistinctPrincipalsBySourceExcludingTypeAfter(
-                                "WEB", "UI_DATA", since)
-                        : null;
-        Long pdfs =
-                auditOn
-                        ? auditRepository.countByTypeInAndSourceAndTimestampAfter(
-                                List.of("PDF_PROCESS", "FILE_OPERATION"), "WEB", Instant.EPOCH)
-                        : null;
+        Long active = auditOn
+                ? auditRepository.countDistinctPrincipalsBySourceExcludingTypeAfter("WEB", "UI_DATA", since)
+                : null;
+        Long pdfs = auditOn
+                ? auditRepository.countByTypeInAndSourceAndTimestampAfter(
+                        List.of("PDF_PROCESS", "FILE_OPERATION"), "WEB", Instant.EPOCH)
+                : null;
         if (active != null && deployed != null && active > deployed) {
             active = deployed; // active editors are a subset of those deployed
         }

@@ -38,9 +38,14 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 @DisplayName("UserAuthenticationFilter")
 class UserAuthenticationFilterTest {
 
-    @Mock private UserService userService;
-    @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
-    @Mock private SessionPersistentRegistry sessionPersistentRegistry;
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private ApiKeyAuthenticationService apiKeyAuthenticationService;
+
+    @Mock
+    private SessionPersistentRegistry sessionPersistentRegistry;
 
     private ApplicationProperties.Security securityProp;
     private MockHttpServletRequest request;
@@ -63,11 +68,7 @@ class UserAuthenticationFilterTest {
 
     private UserAuthenticationFilter filter(boolean loginEnabled) {
         return new UserAuthenticationFilter(
-                securityProp,
-                userService,
-                apiKeyAuthenticationService,
-                sessionPersistentRegistry,
-                loginEnabled);
+                securityProp, userService, apiKeyAuthenticationService, sessionPersistentRegistry, loginEnabled);
     }
 
     private static User enabledUser(String username) {
@@ -104,17 +105,13 @@ class UserAuthenticationFilterTest {
             request.setRequestURI("/api/v1/some/protected");
             request.addHeader("X-API-KEY", "good-key");
             User user = enabledUser("api-user");
-            user.addAuthority(
-                    new stirling.software.proprietary.security.model.Authority("ROLE_USER", user));
+            user.addAuthority(new stirling.software.proprietary.security.model.Authority("ROLE_USER", user));
             when(apiKeyAuthenticationService.authenticate("good-key"))
                     .thenReturn(
-                            Optional.of(
-                                    new ApiKeyAuthentication(
-                                            user, "Prod (sk_demo0000)", user.getAuthorities())));
+                            Optional.of(new ApiKeyAuthentication(user, "Prod (sk_demo0000)", user.getAuthorities())));
             when(userService.usernameExistsIgnoreCase("api-user")).thenReturn(true);
             when(userService.isUserDisabled("api-user")).thenReturn(false);
-            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
-                    .thenReturn(List.of());
+            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean())).thenReturn(List.of());
 
             filter(true).doFilter(request, response, filterChain);
 
@@ -179,8 +176,7 @@ class UserAuthenticationFilterTest {
             setAuthentication(user, "alice");
             when(userService.usernameExistsIgnoreCase("alice")).thenReturn(true);
             when(userService.isUserDisabled("alice")).thenReturn(false);
-            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
-                    .thenReturn(List.of());
+            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean())).thenReturn(List.of());
 
             filter(true).doFilter(request, response, filterChain);
 
@@ -196,10 +192,8 @@ class UserAuthenticationFilterTest {
             setAuthentication(user, "ghost");
             when(userService.usernameExistsIgnoreCase("ghost")).thenReturn(false);
             when(userService.isUserDisabled("ghost")).thenReturn(false);
-            SessionInformation sessionInfo =
-                    new SessionInformation(user, "sess-1", new java.util.Date());
-            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
-                    .thenReturn(List.of(sessionInfo));
+            SessionInformation sessionInfo = new SessionInformation(user, "sess-1", new java.util.Date());
+            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean())).thenReturn(List.of(sessionInfo));
 
             filter(true).doFilter(request, response, filterChain);
 
@@ -217,8 +211,7 @@ class UserAuthenticationFilterTest {
             setAuthentication(user, "blocked");
             when(userService.usernameExistsIgnoreCase("blocked")).thenReturn(true);
             when(userService.isUserDisabled("blocked")).thenReturn(true);
-            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
-                    .thenReturn(List.of());
+            when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean())).thenReturn(List.of());
 
             filter(true).doFilter(request, response, filterChain);
 
@@ -228,9 +221,8 @@ class UserAuthenticationFilterTest {
         }
 
         private void setAuthentication(User principal, String name) {
-            UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(
-                            principal, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                    principal, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
     }

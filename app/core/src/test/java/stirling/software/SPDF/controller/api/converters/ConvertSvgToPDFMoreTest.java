@@ -50,27 +50,28 @@ import stirling.software.common.util.WebResponseUtils;
 @DisplayName("ConvertSvgToPDF zip and failure branches")
 class ConvertSvgToPDFMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private SvgSanitizer svgSanitizer;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertSvgToPDF controller;
+    @Mock
+    private SvgSanitizer svgSanitizer;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private ConvertSvgToPDF controller;
 
     @BeforeEach
     void setUp() throws Exception {
         // Real backing files so the zip/pdf streams can actually be written.
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("svg", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("svg", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private static MockMultipartFile svg(String name, String content) {
@@ -79,8 +80,7 @@ class ConvertSvgToPDFMoreTest {
 
     private static List<String> zipNames(Resource resource) throws Exception {
         List<String> names = new ArrayList<>();
-        try (ZipInputStream zis =
-                new ZipInputStream(new ByteArrayInputStream(resource.getContentAsByteArray()))) {
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(resource.getContentAsByteArray()))) {
             ZipEntry e;
             while ((e = zis.getNextEntry()) != null) {
                 names.add(e.getName());
@@ -99,10 +99,7 @@ class ConvertSvgToPDFMoreTest {
         byte[] pdf2 = "pdf2".getBytes();
 
         SvgToPdfRequest request = new SvgToPdfRequest();
-        request.setFileInput(
-                new MockMultipartFile[] {
-                    svg("a.svg", "<svg>1</svg>"), svg("b.svg", "<svg>2</svg>")
-                });
+        request.setFileInput(new MockMultipartFile[] {svg("a.svg", "<svg>1</svg>"), svg("b.svg", "<svg>2</svg>")});
         request.setCombineIntoSinglePdf(false);
 
         when(svgSanitizer.sanitize("<svg>1</svg>".getBytes())).thenReturn(sanitized1);
@@ -176,8 +173,7 @@ class ConvertSvgToPDFMoreTest {
             when(svgSanitizer.sanitize("<svg>1</svg>".getBytes())).thenReturn(sanitized);
 
             try (MockedStatic<SvgToPdf> svg = Mockito.mockStatic(SvgToPdf.class)) {
-                svg.when(() -> SvgToPdf.combineIntoPdf(any()))
-                        .thenThrow(new IOException("convert failure"));
+                svg.when(() -> SvgToPdf.combineIntoPdf(any())).thenThrow(new IOException("convert failure"));
 
                 ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
@@ -198,8 +194,7 @@ class ConvertSvgToPDFMoreTest {
         when(svgSanitizer.sanitize("<svg>1</svg>".getBytes())).thenReturn(sanitized);
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdf)).thenReturn(pdf);
 
-        ResponseEntity<Resource> stub =
-                ResponseEntity.ok(new org.springframework.core.io.ByteArrayResource(pdf));
+        ResponseEntity<Resource> stub = ResponseEntity.ok(new org.springframework.core.io.ByteArrayResource(pdf));
         try (MockedStatic<SvgToPdf> svg = Mockito.mockStatic(SvgToPdf.class);
                 MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
             svg.when(() -> SvgToPdf.convert(sanitized)).thenReturn(pdf);

@@ -49,25 +49,27 @@ class AutoRenameControllerTest {
         return baos.toByteArray();
     }
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private AutoRenameController controller;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private AutoRenameController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private MockMultipartFile createPdfWithText(String text, float fontSize) throws IOException {
@@ -118,12 +120,8 @@ class AutoRenameControllerTest {
             doc.addPage(new PDPage());
             doc.save(path.toFile());
         }
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "empty.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        Files.readAllBytes(path));
+        MockMultipartFile file = new MockMultipartFile(
+                "fileInput", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
         ExtractHeaderRequest request = createRequest(file, false);
 
         PDDocument doc = Loader.loadPDF(file.getBytes());
@@ -179,12 +177,8 @@ class AutoRenameControllerTest {
             }
             doc.save(path.toFile());
         }
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "multi.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        Files.readAllBytes(path));
+        MockMultipartFile file = new MockMultipartFile(
+                "fileInput", "multi.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
         ExtractHeaderRequest request = createRequest(file, false);
 
         PDDocument doc = Loader.loadPDF(file.getBytes());
@@ -239,12 +233,8 @@ class AutoRenameControllerTest {
             doc.addPage(new PDPage());
             doc.save(path.toFile());
         }
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "original_name.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        Files.readAllBytes(path));
+        MockMultipartFile file = new MockMultipartFile(
+                "fileInput", "original_name.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
         ExtractHeaderRequest request = createRequest(file, false);
 
         PDDocument doc = Loader.loadPDF(file.getBytes());

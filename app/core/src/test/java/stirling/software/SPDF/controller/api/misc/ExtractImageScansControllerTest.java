@@ -65,21 +65,20 @@ import stirling.software.common.util.TempFileRegistry;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ExtractImageScansControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
     private TempFileManager tempFileManager;
     private ExtractImageScansController controller;
 
-    @TempDir Path baseTmpDir;
+    @TempDir
+    Path baseTmpDir;
 
     @BeforeEach
     void setUp() {
         stirling.software.common.model.ApplicationProperties applicationProperties =
                 new stirling.software.common.model.ApplicationProperties();
-        applicationProperties
-                .getSystem()
-                .getTempFileManagement()
-                .setBaseTmpDir(baseTmpDir.toString());
+        applicationProperties.getSystem().getTempFileManagement().setBaseTmpDir(baseTmpDir.toString());
         applicationProperties.getSystem().getTempFileManagement().setPrefix("scan-test-");
 
         tempFileManager = new TempFileManager(new TempFileRegistry(), applicationProperties);
@@ -105,15 +104,13 @@ class ExtractImageScansControllerTest {
             // Keep the page small so the 300-DPI render stays tiny and fast.
             doc.addPage(new PDPage(new PDRectangle(72f, 72f)));
             doc.save(out);
-            return new MockMultipartFile(
-                    "fileInput", name, MediaType.APPLICATION_PDF_VALUE, out.toByteArray());
+            return new MockMultipartFile("fileInput", name, MediaType.APPLICATION_PDF_VALUE, out.toByteArray());
         }
     }
 
     /** A non-PDF image input; the controller copies it straight to a temp file. */
     private MockMultipartFile imageFile(String name) {
-        return new MockMultipartFile(
-                "fileInput", name, MediaType.IMAGE_PNG_VALUE, new byte[] {1, 2, 3, 4});
+        return new MockMultipartFile("fileInput", name, MediaType.IMAGE_PNG_VALUE, new byte[] {1, 2, 3, 4});
     }
 
     /**
@@ -123,18 +120,14 @@ class ExtractImageScansControllerTest {
      */
     private ProcessExecutor execWritingOutputs(int outputCount) throws Exception {
         ProcessExecutor exec = mock(ProcessExecutor.class);
-        when(exec.runCommandWithOutputHandling(anyList()))
-                .thenAnswer(
-                        invocation -> {
-                            List<String> command = invocation.getArgument(0);
-                            Path outDir = Path.of(command.get(3));
-                            for (int i = 0; i < outputCount; i++) {
-                                Files.write(
-                                        outDir.resolve("out_" + i + ".png"),
-                                        new byte[] {9, 8, 7, (byte) i});
-                            }
-                            return mock(ProcessExecutorResult.class);
-                        });
+        when(exec.runCommandWithOutputHandling(anyList())).thenAnswer(invocation -> {
+            List<String> command = invocation.getArgument(0);
+            Path outDir = Path.of(command.get(3));
+            for (int i = 0; i < outputCount; i++) {
+                Files.write(outDir.resolve("out_" + i + ".png"), new byte[] {9, 8, 7, (byte) i});
+            }
+            return mock(ProcessExecutorResult.class);
+        });
         return exec;
     }
 
@@ -147,8 +140,7 @@ class ExtractImageScansControllerTest {
         void throwsWhenPythonUnavailable() throws Exception {
             ExtractImageScansRequest request = requestFor(pdfFile("scan.pdf"));
 
-            try (MockedStatic<CheckProgramInstall> check =
-                    Mockito.mockStatic(CheckProgramInstall.class)) {
+            try (MockedStatic<CheckProgramInstall> check = Mockito.mockStatic(CheckProgramInstall.class)) {
                 check.when(CheckProgramInstall::isPythonAvailable).thenReturn(false);
 
                 assertThrows(IOException.class, () -> controller.extractImageScans(request));
@@ -160,8 +152,7 @@ class ExtractImageScansControllerTest {
         void shortCircuitsBeforeAnyWork() throws Exception {
             ExtractImageScansRequest request = requestFor(pdfFile("scan.pdf"));
 
-            try (MockedStatic<CheckProgramInstall> check =
-                            Mockito.mockStatic(CheckProgramInstall.class);
+            try (MockedStatic<CheckProgramInstall> check = Mockito.mockStatic(CheckProgramInstall.class);
                     MockedStatic<GeneralUtils> general = Mockito.mockStatic(GeneralUtils.class)) {
                 check.when(CheckProgramInstall::isPythonAvailable).thenReturn(false);
 
@@ -183,8 +174,7 @@ class ExtractImageScansControllerTest {
         void throwsNoImagesForImageInput() throws Exception {
             ExtractImageScansRequest request = requestFor(imageFile("scan.png"));
 
-            try (MockedStatic<CheckProgramInstall> check =
-                            Mockito.mockStatic(CheckProgramInstall.class);
+            try (MockedStatic<CheckProgramInstall> check = Mockito.mockStatic(CheckProgramInstall.class);
                     MockedStatic<GeneralUtils> general = Mockito.mockStatic(GeneralUtils.class);
                     MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 check.when(CheckProgramInstall::isPythonAvailable).thenReturn(true);
@@ -200,9 +190,7 @@ class ExtractImageScansControllerTest {
                 pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV))
                         .thenReturn(exec);
 
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> controller.extractImageScans(request));
+                assertThrows(IllegalArgumentException.class, () -> controller.extractImageScans(request));
             }
         }
 
@@ -211,29 +199,24 @@ class ExtractImageScansControllerTest {
         void throwsNoImagesForPdfInput() throws Exception {
             ExtractImageScansRequest request = requestFor(pdfFile("scan.pdf"));
 
-            try (MockedStatic<CheckProgramInstall> check =
-                            Mockito.mockStatic(CheckProgramInstall.class);
+            try (MockedStatic<CheckProgramInstall> check = Mockito.mockStatic(CheckProgramInstall.class);
                     MockedStatic<GeneralUtils> general = Mockito.mockStatic(GeneralUtils.class);
                     MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 check.when(CheckProgramInstall::isPythonAvailable).thenReturn(true);
                 check.when(CheckProgramInstall::getAvailablePythonCommand).thenReturn("python3");
                 general.when(() -> GeneralUtils.extractScript("split_photos.py"))
                         .thenReturn(Path.of("split_photos.py"));
-                when(pdfDocumentFactory.load(
-                                any(org.springframework.web.multipart.MultipartFile.class)))
+                when(pdfDocumentFactory.load(any(org.springframework.web.multipart.MultipartFile.class)))
                         .thenReturn(singlePageDocument());
 
                 ProcessExecutor exec = execWritingOutputs(0);
                 pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV))
                         .thenReturn(exec);
 
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> controller.extractImageScans(request));
+                assertThrows(IllegalArgumentException.class, () -> controller.extractImageScans(request));
 
                 // The PDF path must load the document exactly once.
-                verify(pdfDocumentFactory, times(1))
-                        .load(any(org.springframework.web.multipart.MultipartFile.class));
+                verify(pdfDocumentFactory, times(1)).load(any(org.springframework.web.multipart.MultipartFile.class));
             }
         }
     }
@@ -247,8 +230,7 @@ class ExtractImageScansControllerTest {
         void returnsSinglePng() throws Exception {
             ExtractImageScansRequest request = requestFor(imageFile("scan.png"));
 
-            try (MockedStatic<CheckProgramInstall> check =
-                            Mockito.mockStatic(CheckProgramInstall.class);
+            try (MockedStatic<CheckProgramInstall> check = Mockito.mockStatic(CheckProgramInstall.class);
                     MockedStatic<GeneralUtils> general = Mockito.mockStatic(GeneralUtils.class);
                     MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 check.when(CheckProgramInstall::isPythonAvailable).thenReturn(true);
@@ -281,8 +263,7 @@ class ExtractImageScansControllerTest {
         void returnsZipForMultipleImages() throws Exception {
             ExtractImageScansRequest request = requestFor(imageFile("scan.png"));
 
-            try (MockedStatic<CheckProgramInstall> check =
-                            Mockito.mockStatic(CheckProgramInstall.class);
+            try (MockedStatic<CheckProgramInstall> check = Mockito.mockStatic(CheckProgramInstall.class);
                     MockedStatic<GeneralUtils> general = Mockito.mockStatic(GeneralUtils.class);
                     MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 check.when(CheckProgramInstall::isPythonAvailable).thenReturn(true);
@@ -303,9 +284,7 @@ class ExtractImageScansControllerTest {
                 assertEquals(HttpStatus.OK, response.getStatusCode());
                 assertNotNull(response.getBody());
                 // generateFilename is invoked for the zip name and once per zip entry.
-                general.verify(
-                        () -> GeneralUtils.generateFilename(anyString(), anyString()),
-                        atLeastOnce());
+                general.verify(() -> GeneralUtils.generateFilename(anyString(), anyString()), atLeastOnce());
             }
         }
     }
@@ -332,8 +311,7 @@ class ExtractImageScansControllerTest {
             when(exec.runCommandWithOutputHandling(cmdCaptor.capture()))
                     .thenAnswer(invocation -> mock(ProcessExecutorResult.class));
 
-            try (MockedStatic<CheckProgramInstall> check =
-                            Mockito.mockStatic(CheckProgramInstall.class);
+            try (MockedStatic<CheckProgramInstall> check = Mockito.mockStatic(CheckProgramInstall.class);
                     MockedStatic<GeneralUtils> general = Mockito.mockStatic(GeneralUtils.class);
                     MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 check.when(CheckProgramInstall::isPythonAvailable).thenReturn(true);
@@ -345,9 +323,7 @@ class ExtractImageScansControllerTest {
 
                 // No outputs are written, so the controller ultimately throws "no images";
                 // we only care that the command was built and dispatched first.
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> controller.extractImageScans(request));
+                assertThrows(IllegalArgumentException.class, () -> controller.extractImageScans(request));
 
                 List<String> command = cmdCaptor.getValue();
                 assertNotNull(command);
@@ -377,8 +353,7 @@ class ExtractImageScansControllerTest {
         void cleansUpAfterFailure() throws Exception {
             ExtractImageScansRequest request = requestFor(imageFile("scan.png"));
 
-            try (MockedStatic<CheckProgramInstall> check =
-                            Mockito.mockStatic(CheckProgramInstall.class);
+            try (MockedStatic<CheckProgramInstall> check = Mockito.mockStatic(CheckProgramInstall.class);
                     MockedStatic<GeneralUtils> general = Mockito.mockStatic(GeneralUtils.class);
                     MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 check.when(CheckProgramInstall::isPythonAvailable).thenReturn(true);
@@ -389,15 +364,12 @@ class ExtractImageScansControllerTest {
                 pe.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV))
                         .thenReturn(exec);
 
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> controller.extractImageScans(request));
+                assertThrows(IllegalArgumentException.class, () -> controller.extractImageScans(request));
 
                 try (var stream = Files.walk(baseTmpDir)) {
-                    boolean leaked =
-                            stream.filter(Files::isRegularFile)
-                                    .map(p -> p.getFileName().toString())
-                                    .anyMatch(n -> n.startsWith("scan-test-"));
+                    boolean leaked = stream.filter(Files::isRegularFile)
+                            .map(p -> p.getFileName().toString())
+                            .anyMatch(n -> n.startsWith("scan-test-"));
                     assertFalse(leaked, "controller temp files should be cleaned up");
                 }
             }

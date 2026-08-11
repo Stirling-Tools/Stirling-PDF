@@ -24,16 +24,14 @@ class WetSignatureMetadataTest {
     @Test
     void validate_image_withDataImagePrefix_passes() {
         WetSignatureMetadata sig =
-                new WetSignatureMetadata(
-                        "image", "data:image/jpeg;base64,xyz==", 0, 0.1, 0.1, 0.3, 0.3);
+                new WetSignatureMetadata("image", "data:image/jpeg;base64,xyz==", 0, 0.1, 0.1, 0.3, 0.3);
         assertThatCode(sig::validate).doesNotThrowAnyException();
     }
 
     @Test
     void validate_canvas_withoutDataImagePrefix_throws() {
         WetSignatureMetadata sig =
-                new WetSignatureMetadata(
-                        "canvas", "raw-base64-without-prefix", 0, 0.0, 0.0, 0.5, 0.5);
+                new WetSignatureMetadata("canvas", "raw-base64-without-prefix", 0, 0.0, 0.0, 0.5, 0.5);
         assertThatThrownBy(sig::validate)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("data:image/");
@@ -41,8 +39,7 @@ class WetSignatureMetadataTest {
 
     @Test
     void validate_text_doesNotRequireDataImagePrefix() {
-        WetSignatureMetadata sig =
-                new WetSignatureMetadata("text", "John Doe", 0, 0.1, 0.1, 0.3, 0.2);
+        WetSignatureMetadata sig = new WetSignatureMetadata("text", "John Doe", 0, 0.1, 0.1, 0.3, 0.2);
         assertThatCode(sig::validate).doesNotThrowAnyException();
     }
 

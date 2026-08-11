@@ -57,9 +57,7 @@ class S3OutputSinkMinioTest {
 
     @Container
     static MinIOContainer minio =
-            new MinIOContainer("minio/minio:latest")
-                    .withUserName(ACCESS_KEY)
-                    .withPassword(SECRET_KEY);
+            new MinIOContainer("minio/minio:latest").withUserName(ACCESS_KEY).withPassword(SECRET_KEY);
 
     private static S3Client adminClient;
     private static int bucketCounter;
@@ -72,17 +70,16 @@ class S3OutputSinkMinioTest {
     @BeforeEach
     void setUp() {
         if (adminClient == null) {
-            adminClient =
-                    S3Client.builder()
-                            .endpointOverride(URI.create(minio.getS3URL()))
-                            .httpClient(UrlConnectionHttpClient.create())
-                            .region(Region.US_EAST_1)
-                            .credentialsProvider(
-                                    StaticCredentialsProvider.create(
-                                            AwsBasicCredentials.create(ACCESS_KEY, SECRET_KEY)))
-                            .serviceConfiguration(
-                                    S3Configuration.builder().pathStyleAccessEnabled(true).build())
-                            .build();
+            adminClient = S3Client.builder()
+                    .endpointOverride(URI.create(minio.getS3URL()))
+                    .httpClient(UrlConnectionHttpClient.create())
+                    .region(Region.US_EAST_1)
+                    .credentialsProvider(
+                            StaticCredentialsProvider.create(AwsBasicCredentials.create(ACCESS_KEY, SECRET_KEY)))
+                    .serviceConfiguration(S3Configuration.builder()
+                            .pathStyleAccessEnabled(true)
+                            .build())
+                    .build();
         }
         bucket = "policy-outbox-" + ++bucketCounter;
         adminClient.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
@@ -97,11 +94,8 @@ class S3OutputSinkMinioTest {
 
     @Test
     void uploadsOutputsUnderThePrefix() throws IOException {
-        List<ResultFile> results =
-                sink.deliver(
-                        new OutputDelivery("run-1", POLICY),
-                        List.of(output("doc.pdf", "pdf bytes")),
-                        outputSpec("processed/"));
+        List<ResultFile> results = sink.deliver(
+                new OutputDelivery("run-1", POLICY), List.of(output("doc.pdf", "pdf bytes")), outputSpec("processed/"));
 
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getFileName()).isEqualTo("s3://" + bucket + "/processed/doc.pdf");
@@ -115,10 +109,7 @@ class S3OutputSinkMinioTest {
                 RequestBody.fromString("theirs", StandardCharsets.UTF_8));
 
         List<ResultFile> results =
-                sink.deliver(
-                        new OutputDelivery("run-1", POLICY),
-                        List.of(output("doc.pdf", "ours")),
-                        outputSpec(""));
+                sink.deliver(new OutputDelivery("run-1", POLICY), List.of(output("doc.pdf", "ours")), outputSpec(""));
 
         assertThat(results.get(0).getFileName()).isEqualTo("s3://" + bucket + "/doc (1).pdf");
         assertThat(objectContent("doc.pdf")).isEqualTo("theirs");
@@ -126,12 +117,8 @@ class S3OutputSinkMinioTest {
     }
 
     @Test
-    void aPolicyWritingIntoItsWatchedBucketSkipsItsOwnOutputsButAnotherPolicyChains()
-            throws IOException {
-        sink.deliver(
-                new OutputDelivery("run-1", POLICY),
-                List.of(output("result.pdf", "produced")),
-                outputSpec(""));
+    void aPolicyWritingIntoItsWatchedBucketSkipsItsOwnOutputsButAnotherPolicyChains() throws IOException {
+        sink.deliver(new OutputDelivery("run-1", POLICY), List.of(output("result.pdf", "produced")), outputSpec(""));
 
         // The producing policy's sweep sees its own output at the recorded gate and skips it.
         assertThat(source.resolve(inputSpec(), new RecordingContext(POLICY))).isEmpty();
@@ -167,8 +154,8 @@ class S3OutputSinkMinioTest {
     }
 
     private String objectContent(String key) throws IOException {
-        try (ResponseInputStream<GetObjectResponse> stream =
-                adminClient.getObject(GetObjectRequest.builder().bucket(bucket).key(key).build())) {
+        try (ResponseInputStream<GetObjectResponse> stream = adminClient.getObject(
+                GetObjectRequest.builder().bucket(bucket).key(key).build())) {
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
@@ -196,8 +183,7 @@ class S3OutputSinkMinioTest {
         }
 
         @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
+        public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
             ledger.settle(policyId, identity, finalGate, finalContentHash, success);
         }
 

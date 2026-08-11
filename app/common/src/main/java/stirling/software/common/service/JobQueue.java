@@ -44,19 +44,21 @@ public class JobQueue implements SmartLifecycle {
 
     private volatile BlockingQueue<QueuedJob> jobQueue;
     private final Map<String, QueuedJob> jobMap = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler =
-            Executors.newSingleThreadScheduledExecutor(
-                    Thread.ofVirtual().name("job-queue-scheduler-", 0).factory());
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
+            Thread.ofVirtual().name("job-queue-scheduler-", 0).factory());
     private final ExecutorService jobExecutor = ExecutorFactory.newVirtualThreadExecutor();
     private final Object queueLock = new Object(); // Lock for synchronizing queue operations
 
     private boolean shuttingDown = false;
 
-    @Getter private int rejectedJobs = 0;
+    @Getter
+    private int rejectedJobs = 0;
 
-    @Getter private int totalQueuedJobs = 0;
+    @Getter
+    private int totalQueuedJobs = 0;
 
-    @Getter private int currentQueueSize = 0;
+    @Getter
+    private int currentQueueSize = 0;
 
     /** Represents a job waiting in the queue. */
     @Data
@@ -75,21 +77,16 @@ public class JobQueue implements SmartLifecycle {
         this.resourceMonitor = resourceMonitor;
 
         // Initialize with dynamic capacity
-        int capacity =
-                resourceMonitor.calculateDynamicQueueCapacity(baseQueueCapacity, minQueueCapacity);
+        int capacity = resourceMonitor.calculateDynamicQueueCapacity(baseQueueCapacity, minQueueCapacity);
         this.jobQueue = new LinkedBlockingQueue<>(capacity);
     }
 
     // Remove @PostConstruct to let SmartLifecycle control startup
     private void initializeSchedulers() {
-        log.debug(
-                "Starting job queue with base capacity {}, min capacity {}",
-                baseQueueCapacity,
-                minQueueCapacity);
+        log.debug("Starting job queue with base capacity {}, min capacity {}", baseQueueCapacity, minQueueCapacity);
 
         // Periodically process the job queue
-        scheduler.scheduleWithFixedDelay(
-                this::processQueue, 0, queueCheckIntervalMs, TimeUnit.MILLISECONDS);
+        scheduler.scheduleWithFixedDelay(this::processQueue, 0, queueCheckIntervalMs, TimeUnit.MILLISECONDS);
 
         // Periodically update queue capacity based on resource usage
         scheduler.scheduleWithFixedDelay(
@@ -105,13 +102,11 @@ public class JobQueue implements SmartLifecycle {
         shuttingDown = true;
 
         // Complete any futures that are still waiting
-        jobMap.forEach(
-                (id, job) -> {
-                    if (!job.future.isDone()) {
-                        job.future.completeExceptionally(
-                                new RuntimeException("Server shutting down, job cancelled"));
-                    }
-                });
+        jobMap.forEach((id, job) -> {
+            if (!job.future.isDone()) {
+                job.future.completeExceptionally(new RuntimeException("Server shutting down, job cancelled"));
+            }
+        });
 
         // Shutdown schedulers and wait for termination
         try {
@@ -130,10 +125,7 @@ public class JobQueue implements SmartLifecycle {
             jobExecutor.shutdownNow();
         }
 
-        log.info(
-                "Job queue shutdown complete. Stats: total={}, rejected={}",
-                totalQueuedJobs,
-                rejectedJobs);
+        log.info("Job queue shutdown complete. Stats: total={}, rejected={}", totalQueuedJobs, rejectedJobs);
     }
 
     // SmartLifecycle methods
@@ -186,8 +178,7 @@ public class JobQueue implements SmartLifecycle {
         CompletableFuture<ResponseEntity<?>> future = new CompletableFuture<>();
 
         // Create the queued job
-        QueuedJob job =
-                new QueuedJob(jobId, resourceWeight, work, timeoutMs, Instant.now(), future, false);
+        QueuedJob job = new QueuedJob(jobId, resourceWeight, work, timeoutMs, Instant.now(), future, false);
 
         // Store in our map for lookup
         jobMap.put(jobId, job);
@@ -205,8 +196,7 @@ public class JobQueue implements SmartLifecycle {
                 if (!added) {
                     log.warn("Queue full, rejecting job {}", jobId);
                     rejectedJobs++;
-                    future.completeExceptionally(
-                            new RuntimeException("Job queue full, please try again later"));
+                    future.completeExceptionally(new RuntimeException("Job queue full, please try again later"));
                     jobMap.remove(jobId);
                     return future;
                 }
@@ -234,8 +224,7 @@ public class JobQueue implements SmartLifecycle {
      */
     public int getQueueCapacity() {
         synchronized (queueLock) {
-            return ((LinkedBlockingQueue<QueuedJob>) jobQueue).remainingCapacity()
-                    + jobQueue.size();
+            return ((LinkedBlockingQueue<QueuedJob>) jobQueue).remainingCapacity() + jobQueue.size();
         }
     }
 
@@ -243,14 +232,11 @@ public class JobQueue implements SmartLifecycle {
     private void updateQueueCapacity() {
         try {
             // Calculate new capacity once and cache the result
-            int newCapacity =
-                    resourceMonitor.calculateDynamicQueueCapacity(
-                            baseQueueCapacity, minQueueCapacity);
+            int newCapacity = resourceMonitor.calculateDynamicQueueCapacity(baseQueueCapacity, minQueueCapacity);
 
             int currentCapacity = getQueueCapacity();
             if (newCapacity != currentCapacity) {
-                log.debug(
-                        "Updating job queue capacity from {} to {}", currentCapacity, newCapacity);
+                log.debug("Updating job queue capacity from {} to {}", currentCapacity, newCapacity);
 
                 synchronized (queueLock) {
                     // Double-check that capacity still needs to be updated
@@ -285,7 +271,8 @@ public class JobQueue implements SmartLifecycle {
 
             try {
                 // Get current resource status
-                ResourceMonitor.ResourceStatus status = resourceMonitor.getCurrentStatus().get();
+                ResourceMonitor.ResourceStatus status =
+                        resourceMonitor.getCurrentStatus().get();
 
                 // Check if we should execute any jobs
                 boolean canExecuteJobs = (status != ResourceMonitor.ResourceStatus.CRITICAL);
@@ -297,14 +284,13 @@ public class JobQueue implements SmartLifecycle {
                 }
 
                 // Get jobs from the queue, up to a limit based on resource availability
-                int jobsToProcess =
-                        Math.max(
-                                1,
-                                switch (status) {
-                                    case OK -> 3;
-                                    case WARNING -> 1;
-                                    case CRITICAL -> 0;
-                                });
+                int jobsToProcess = Math.max(
+                        1,
+                        switch (status) {
+                            case OK -> 3;
+                            case WARNING -> 1;
+                            case CRITICAL -> 0;
+                        });
 
                 for (int i = 0; i < jobsToProcess && !jobQueue.isEmpty(); i++) {
                     QueuedJob job = jobQueue.poll();
@@ -313,16 +299,12 @@ public class JobQueue implements SmartLifecycle {
                     // Check if it's been waiting too long
                     long waitTimeMs = Instant.now().toEpochMilli() - job.queuedAt.toEpochMilli();
                     if (waitTimeMs > maxWaitTimeMs) {
-                        log.warn(
-                                "Job {} exceeded maximum wait time ({} ms), executing anyway",
-                                job.jobId,
-                                waitTimeMs);
+                        log.warn("Job {} exceeded maximum wait time ({} ms), executing anyway", job.jobId, waitTimeMs);
 
                         // Add a specific status to the job context that can be tracked
                         // This will be visible in the job status API
                         try {
-                            TaskManager taskManager =
-                                    SpringContextHolder.getBean(TaskManager.class);
+                            TaskManager taskManager = SpringContextHolder.getBean(TaskManager.class);
                             if (taskManager != null) {
                                 taskManager.addNote(
                                         job.jobId,
@@ -333,10 +315,7 @@ public class JobQueue implements SmartLifecycle {
                                                 + " seconds.");
                             }
                         } catch (Exception e) {
-                            log.error(
-                                    "Failed to add timeout note to job {}: {}",
-                                    job.jobId,
-                                    e.getMessage());
+                            log.error("Failed to add timeout note to job {}: {}", job.jobId, e.getMessage());
                         }
                     }
 
@@ -369,27 +348,25 @@ public class JobQueue implements SmartLifecycle {
             return;
         }
 
-        jobExecutor.execute(
-                () -> {
-                    log.debug("Executing queued job {} (queued at {})", job.jobId, job.queuedAt);
+        jobExecutor.execute(() -> {
+            log.debug("Executing queued job {} (queued at {})", job.jobId, job.queuedAt);
 
-                    try {
-                        // Execute with timeout
-                        Object result = executeWithTimeout(job.work, job.timeoutMs);
+            try {
+                // Execute with timeout
+                Object result = executeWithTimeout(job.work, job.timeoutMs);
 
-                        // Process the result
-                        if (result instanceof ResponseEntity) {
-                            job.future.complete((ResponseEntity<?>) result);
-                        } else {
-                            job.future.complete(ResponseEntity.ok(result));
-                        }
+                // Process the result
+                if (result instanceof ResponseEntity) {
+                    job.future.complete((ResponseEntity<?>) result);
+                } else {
+                    job.future.complete(ResponseEntity.ok(result));
+                }
 
-                    } catch (Exception e) {
-                        log.error(
-                                "Error executing queued job {}: {}", job.jobId, e.getMessage(), e);
-                        job.future.completeExceptionally(e);
-                    }
-                });
+            } catch (Exception e) {
+                log.error("Error executing queued job {}: {}", job.jobId, e.getMessage(), e);
+                job.future.completeExceptionally(e);
+            }
+        });
     }
 
     /**

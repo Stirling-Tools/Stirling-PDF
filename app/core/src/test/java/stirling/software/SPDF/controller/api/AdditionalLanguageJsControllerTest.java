@@ -22,21 +22,15 @@ class AdditionalLanguageJsControllerTest {
     void returnsJsWithSupportedLanguagesAndFunction() throws Exception {
         LanguageService lang = mock(LanguageService.class);
         // LinkedHashSet for deterministic order in the array
-        when(lang.getSupportedLanguages())
-                .thenReturn(new LinkedHashSet<>(List.of("de_DE", "en_US")));
+        when(lang.getSupportedLanguages()).thenReturn(new LinkedHashSet<>(List.of("de_DE", "en_US")));
 
-        MockMvc mvc =
-                MockMvcBuilders.standaloneSetup(new AdditionalLanguageJsController(lang)).build();
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new AdditionalLanguageJsController(lang))
+                .build();
 
         mvc.perform(get("/js/additionalLanguageCode.js"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(new MediaType("application", "javascript")))
-                .andExpect(
-                        content()
-                                .string(
-                                        containsString(
-                                                "const supportedLanguages ="
-                                                        + " [\"de_DE\",\"en_US\"];")))
+                .andExpect(content().string(containsString("const supportedLanguages =" + " [\"de_DE\",\"en_US\"];")))
                 .andExpect(content().string(containsString("function getDetailedLanguageCode()")))
                 .andExpect(content().string(containsString("return \"en_US\";")));
 
@@ -48,8 +42,8 @@ class AdditionalLanguageJsControllerTest {
         LanguageService lang = mock(LanguageService.class);
         when(lang.getSupportedLanguages()).thenReturn(Set.of());
 
-        MockMvc mvc =
-                MockMvcBuilders.standaloneSetup(new AdditionalLanguageJsController(lang)).build();
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new AdditionalLanguageJsController(lang))
+                .build();
 
         mvc.perform(get("/js/additionalLanguageCode.js"))
                 .andExpect(status().isOk())

@@ -65,8 +65,7 @@ public class FormUtils {
     public final String FIELD_TYPE_SIGNATURE = "signature";
 
     // Set of choice field types that support options
-    public final Set<String> CHOICE_FIELD_TYPES =
-            Set.of(FIELD_TYPE_COMBOBOX, FIELD_TYPE_LISTBOX, FIELD_TYPE_RADIO);
+    public final Set<String> CHOICE_FIELD_TYPES = Set.of(FIELD_TYPE_COMBOBOX, FIELD_TYPE_LISTBOX, FIELD_TYPE_RADIO);
 
     /**
      * Threshold in PDF points for considering two widgets to be on the same line. Fields whose
@@ -75,8 +74,7 @@ public class FormUtils {
      */
     private static final float SAME_LINE_THRESHOLD_PT = 10.0f;
 
-    private static final Pattern HEX_UUID_PATTERN =
-            Pattern.compile("^[0-9a-fA-F]{8}[0-9a-fA-F]{24,}$");
+    private static final Pattern HEX_UUID_PATTERN = Pattern.compile("^[0-9a-fA-F]{8}[0-9a-fA-F]{24,}$");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 
     /**
@@ -130,9 +128,7 @@ public class FormUtils {
 
             String type = detectFieldType(terminalField);
 
-            String name =
-                    Optional.ofNullable(field.getFullyQualifiedName())
-                            .orElseGet(field::getPartialName);
+            String name = Optional.ofNullable(field.getFullyQualifiedName()).orElseGet(field::getPartialName);
             if (name == null || name.isBlank()) {
                 continue;
             }
@@ -143,37 +139,34 @@ public class FormUtils {
             List<String> options = resolveOptions(terminalField);
             String tooltip = resolveTooltip(terminalField);
             int typeIndex = typeCounters.merge(type, 1, Integer::sum);
-            String displayLabel =
-                    deriveDisplayLabel(field, name, tooltip, type, typeIndex, options);
+            String displayLabel = deriveDisplayLabel(field, name, tooltip, type, typeIndex, options);
             boolean multiSelect = resolveMultiSelect(terminalField);
             int pageOrder = pageOrderCounters.merge(pageIndex, 1, Integer::sum) - 1;
 
-            fields.add(
-                    new FormFieldInfo(
-                            name,
-                            displayLabel,
-                            type,
-                            currentValue,
-                            options.isEmpty() ? null : Collections.unmodifiableList(options),
-                            required,
-                            pageIndex,
-                            multiSelect,
-                            tooltip,
-                            pageOrder));
+            fields.add(new FormFieldInfo(
+                    name,
+                    displayLabel,
+                    type,
+                    currentValue,
+                    options.isEmpty() ? null : Collections.unmodifiableList(options),
+                    required,
+                    pageIndex,
+                    multiSelect,
+                    tooltip,
+                    pageOrder));
         }
 
-        fields.sort(
-                (a, b) -> {
-                    int pageCompare = Integer.compare(a.pageIndex(), b.pageIndex());
-                    if (pageCompare != 0) {
-                        return pageCompare;
-                    }
-                    int orderCompare = Integer.compare(a.pageOrder(), b.pageOrder());
-                    if (orderCompare != 0) {
-                        return orderCompare;
-                    }
-                    return a.name().compareToIgnoreCase(b.name());
-                });
+        fields.sort((a, b) -> {
+            int pageCompare = Integer.compare(a.pageIndex(), b.pageIndex());
+            if (pageCompare != 0) {
+                return pageCompare;
+            }
+            int orderCompare = Integer.compare(a.pageOrder(), b.pageOrder());
+            if (orderCompare != 0) {
+                return orderCompare;
+            }
+            return a.name().compareToIgnoreCase(b.name());
+        });
 
         return Collections.unmodifiableList(fields);
     }
@@ -201,9 +194,7 @@ public class FormUtils {
             }
 
             String type = detectFieldType(terminalField);
-            String name =
-                    Optional.ofNullable(field.getFullyQualifiedName())
-                            .orElseGet(field::getPartialName);
+            String name = Optional.ofNullable(field.getFullyQualifiedName()).orElseGet(field::getPartialName);
             if (name == null || name.isBlank()) {
                 continue;
             }
@@ -215,12 +206,9 @@ public class FormUtils {
             List<String> displayOptions = resolveDisplayOptions(terminalField);
             String tooltip = resolveTooltip(terminalField);
             int typeIndex = typeCounters.merge(type, 1, Integer::sum);
-            String displayLabel =
-                    deriveDisplayLabel(field, name, tooltip, type, typeIndex, options);
+            String displayLabel = deriveDisplayLabel(field, name, tooltip, type, typeIndex, options);
             boolean multiSelect = resolveMultiSelect(terminalField);
-            boolean multiline =
-                    terminalField instanceof PDTextField
-                            && ((PDTextField) terminalField).isMultiline();
+            boolean multiline = terminalField instanceof PDTextField && ((PDTextField) terminalField).isMultiline();
 
             // Extract widget coordinates
             List<FormFieldWithCoordinates.WidgetCoordinates> widgets =
@@ -228,27 +216,24 @@ public class FormUtils {
 
             // Only include displayOptions when they differ from export options
             List<String> displayOptsToSend = null;
-            if (displayOptions != null
-                    && !displayOptions.isEmpty()
-                    && !displayOptions.equals(options)) {
+            if (displayOptions != null && !displayOptions.isEmpty() && !displayOptions.equals(options)) {
                 displayOptsToSend = displayOptions;
             }
 
-            fields.add(
-                    FormFieldWithCoordinates.builder()
-                            .name(name)
-                            .label(displayLabel)
-                            .type(type)
-                            .value(currentValue)
-                            .options(options.isEmpty() ? null : options)
-                            .displayOptions(displayOptsToSend)
-                            .required(required)
-                            .readOnly(readOnly)
-                            .multiSelect(multiSelect)
-                            .multiline(multiline)
-                            .tooltip(tooltip)
-                            .widgets(widgets.isEmpty() ? null : widgets)
-                            .build());
+            fields.add(FormFieldWithCoordinates.builder()
+                    .name(name)
+                    .label(displayLabel)
+                    .type(type)
+                    .value(currentValue)
+                    .options(options.isEmpty() ? null : options)
+                    .displayOptions(displayOptsToSend)
+                    .required(required)
+                    .readOnly(readOnly)
+                    .multiSelect(multiSelect)
+                    .multiline(multiline)
+                    .tooltip(tooltip)
+                    .widgets(widgets.isEmpty() ? null : widgets)
+                    .build());
         }
 
         // Sort by page and position
@@ -268,12 +253,7 @@ public class FormUtils {
 
         fields.stream()
                 .filter(f -> f.getWidgets() == null || f.getWidgets().isEmpty())
-                .forEach(
-                        f ->
-                                log.debug(
-                                        "Field '{}' type={} has NO widget coordinates",
-                                        f.getName(),
-                                        f.getType()));
+                .forEach(f -> log.debug("Field '{}' type={} has NO widget coordinates", f.getName(), f.getType()));
 
         return Collections.unmodifiableList(fields);
     }
@@ -286,9 +266,7 @@ public class FormUtils {
      * @return List of widget coordinates
      */
     private List<FormFieldWithCoordinates.WidgetCoordinates> extractWidgetCoordinates(
-            PDDocument document,
-            PDTerminalField field,
-            Map<COSDictionary, Integer> annotationPageMap) {
+            PDDocument document, PDTerminalField field, Map<COSDictionary, Integer> annotationPageMap) {
         List<FormFieldWithCoordinates.WidgetCoordinates> result = new ArrayList<>();
 
         List<PDAnnotationWidget> widgets = field.getWidgets();
@@ -308,13 +286,10 @@ public class FormUtils {
                 COSDictionary fieldDict = field.getCOSObject();
                 COSBase rectBase = fieldDict.getDictionaryObject(COSName.RECT);
                 if (rectBase instanceof COSArray rectArray) {
-                    int pageIndex =
-                            findPageIndexForAnnotation(document, fieldDict, annotationPageMap);
+                    int pageIndex = findPageIndexForAnnotation(document, fieldDict, annotationPageMap);
                     if (pageIndex >= 0) {
                         PDRectangle rectangle = new PDRectangle(rectArray);
-                        result.add(
-                                createWidgetCoordinates(
-                                        document, rectangle, pageIndex, null, field));
+                        result.add(createWidgetCoordinates(document, rectangle, pageIndex, null, field));
                     } else {
                         log.warn(
                                 "Found rectangle for field '{}' but could not resolve page index",
@@ -341,19 +316,13 @@ public class FormUtils {
             try {
                 PDRectangle rectangle = widget.getRectangle();
                 if (rectangle == null) {
-                    log.warn(
-                            "Field '{}' widget {} has NULL rectangle",
-                            field.getFullyQualifiedName(),
-                            i);
+                    log.warn("Field '{}' widget {} has NULL rectangle", field.getFullyQualifiedName(), i);
                     continue;
                 }
 
                 int pageIndex = resolveWidgetPageIndex(document, widget, annotationPageMap);
                 if (pageIndex < 0) {
-                    log.warn(
-                            "Field '{}' widget {} could not resolve page index",
-                            field.getFullyQualifiedName(),
-                            i);
+                    log.warn("Field '{}' widget {} could not resolve page index", field.getFullyQualifiedName(), i);
                     continue;
                 }
 
@@ -385,9 +354,7 @@ public class FormUtils {
                     }
                 }
 
-                result.add(
-                        createWidgetCoordinates(
-                                document, rectangle, pageIndex, exportValue, field));
+                result.add(createWidgetCoordinates(document, rectangle, pageIndex, exportValue, field));
             } catch (Exception e) {
                 log.debug(
                         "Failed to extract coordinates for widget in field '{}': {}",
@@ -400,11 +367,7 @@ public class FormUtils {
     }
 
     private FormFieldWithCoordinates.WidgetCoordinates createWidgetCoordinates(
-            PDDocument document,
-            PDRectangle rectangle,
-            int pageIndex,
-            String exportValue,
-            PDTerminalField field) {
+            PDDocument document, PDRectangle rectangle, int pageIndex, String exportValue, PDTerminalField field) {
         if (pageIndex < 0 || pageIndex >= document.getNumberOfPages()) {
             return null;
         }
@@ -505,18 +468,14 @@ public class FormUtils {
                                     "Repaired widget for field '{}' - set page reference via map",
                                     field.getFullyQualifiedName());
                         } else {
-                            log.warn(
-                                    "Could not find page for widget in field '{}'",
-                                    field.getFullyQualifiedName());
+                            log.warn("Could not find page for widget in field '{}'", field.getFullyQualifiedName());
                         }
                     }
                 }
             }
 
             if (repairedCount > 0) {
-                log.debug(
-                        "Successfully repaired {} widgets with missing page references",
-                        repairedCount);
+                log.debug("Successfully repaired {} widgets with missing page references", repairedCount);
             } else {
                 log.debug("No widgets needed repair");
             }
@@ -527,9 +486,7 @@ public class FormUtils {
     }
 
     private int findPageIndexForAnnotation(
-            PDDocument document,
-            COSDictionary annotDict,
-            Map<COSDictionary, Integer> annotationPageMap) {
+            PDDocument document, COSDictionary annotDict, Map<COSDictionary, Integer> annotationPageMap) {
         try {
             // Method 0: Check the pre-built lookup map (fastest)
             if (annotationPageMap != null) {
@@ -615,8 +572,7 @@ public class FormUtils {
         return current != null ? current : "";
     }
 
-    public void applyFieldValues(
-            PDDocument document, Map<String, ?> values, boolean flatten, boolean strict)
+    public void applyFieldValues(PDDocument document, Map<String, ?> values, boolean flatten, boolean strict)
             throws IOException {
         if (document == null) {
             return;
@@ -707,13 +663,11 @@ public class FormUtils {
 
         PDFRenderer renderer = new PDFRenderer(document);
         renderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
-        ApplicationProperties properties =
-                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        ApplicationProperties properties = ApplicationContextProvider.getBean(ApplicationProperties.class);
 
-        int requestedDpi =
-                properties != null && properties.getSystem() != null
-                        ? properties.getSystem().getMaxDPI()
-                        : 300;
+        int requestedDpi = properties != null && properties.getSystem() != null
+                ? properties.getSystem().getMaxDPI()
+                : 300;
         int effectiveDpi = Math.min(requestedDpi, FLATTEN_FALLBACK_MAX_DPI);
 
         rebuildDocumentFromImages(document, renderer, effectiveDpi);
@@ -745,10 +699,7 @@ public class FormUtils {
         try {
             acroForm.flatten();
         } catch (Exception e) {
-            log.warn(
-                    "PDFBox acroForm.flatten() failed, falling back to rendering: {}",
-                    e.getMessage(),
-                    e);
+            log.warn("PDFBox acroForm.flatten() failed, falling back to rendering: {}", e.getMessage(), e);
             flattenViaRendering(document, acroForm);
         }
     }
@@ -775,8 +726,7 @@ public class FormUtils {
         return false;
     }
 
-    private void rebuildDocumentFromImages(PDDocument document, PDFRenderer renderer, int dpi)
-            throws IOException {
+    private void rebuildDocumentFromImages(PDDocument document, PDFRenderer renderer, int dpi) throws IOException {
         int pageCount = document.getNumberOfPages();
 
         for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
@@ -804,8 +754,7 @@ public class FormUtils {
             }
 
             try (PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.OVERWRITE, true, true)) {
+                    new PDPageContentStream(document, page, PDPageContentStream.AppendMode.OVERWRITE, true, true)) {
                 PDImageXObject pdImage = JPEGFactory.createFromImage(document, rendered);
                 contentStream.drawImage(
                         pdImage,
@@ -838,10 +787,7 @@ public class FormUtils {
                 }
 
                 PDRectangle rectangle = widget.getRectangle();
-                boolean invalidRectangle =
-                        rectangle == null
-                                || rectangle.getWidth() <= 0
-                                || rectangle.getHeight() <= 0;
+                boolean invalidRectangle = rectangle == null || rectangle.getWidth() <= 0 || rectangle.getHeight() <= 0;
 
                 PDPage page = widget.getPage();
                 if (page == null) {
@@ -861,12 +807,8 @@ public class FormUtils {
                         PDRectangle mediaBox = page.getMediaBox();
                         float fallbackWidth = Math.min(200f, mediaBox.getWidth());
                         float fallbackHeight = Math.min(40f, mediaBox.getHeight());
-                        PDRectangle fallbackRectangle =
-                                new PDRectangle(
-                                        mediaBox.getLowerLeftX(),
-                                        mediaBox.getLowerLeftY(),
-                                        fallbackWidth,
-                                        fallbackHeight);
+                        PDRectangle fallbackRectangle = new PDRectangle(
+                                mediaBox.getLowerLeftX(), mediaBox.getLowerLeftY(), fallbackWidth, fallbackHeight);
                         widget.setRectangle(fallbackRectangle);
 
                         try {
@@ -886,8 +828,7 @@ public class FormUtils {
         }
     }
 
-    public void applyFieldValues(PDDocument document, Map<String, ?> values, boolean flatten)
-            throws IOException {
+    public void applyFieldValues(PDDocument document, Map<String, ?> values, boolean flatten) throws IOException {
         applyFieldValues(document, values, flatten, false);
     }
 
@@ -914,9 +855,7 @@ public class FormUtils {
                     }
                 }
             } catch (Exception fontPrep) {
-                log.debug(
-                        "Unable to ensure default font resources before refresh: {}",
-                        fontPrep.getMessage());
+                log.debug("Unable to ensure default font resources before refresh: {}", fontPrep.getMessage());
             }
             acroForm.refreshAppearances();
         } catch (IOException e) {
@@ -944,11 +883,9 @@ public class FormUtils {
         }
     }
 
-    public String filterSingleChoiceSelection(
-            String selection, List<String> allowedOptions, String fieldName) {
+    public String filterSingleChoiceSelection(String selection, List<String> allowedOptions, String fieldName) {
         if (selection == null || selection.trim().isEmpty()) return null;
-        List<String> filtered =
-                filterChoiceSelections(List.of(selection), allowedOptions, fieldName);
+        List<String> filtered = filterChoiceSelections(List.of(selection), allowedOptions, fieldName);
         return filtered.isEmpty() ? null : filtered.get(0);
     }
 
@@ -989,17 +926,12 @@ public class FormUtils {
                 field.setValue(value != null ? value : "");
             }
         } catch (Exception e) {
-            log.warn(
-                    "Failed to set value for field '{}': {}",
-                    field.getFullyQualifiedName(),
-                    e.getMessage(),
-                    e);
+            log.warn("Failed to set value for field '{}': {}", field.getFullyQualifiedName(), e.getMessage(), e);
             if (strict) {
                 if (e instanceof IOException io) {
                     throw io;
                 }
-                throw new IOException(
-                        "Failed to set value for field '" + field.getFullyQualifiedName() + "'", e);
+                throw new IOException("Failed to set value for field '" + field.getFullyQualifiedName() + "'", e);
             }
         }
     }
@@ -1073,33 +1005,28 @@ public class FormUtils {
         if (choiceField.isMultiSelect()) {
             List<String> selections = parseMultiChoiceSelections(value);
             List<String> filteredSelections =
-                    filterChoiceSelections(
-                            selections, allowedOptions, choiceField.getFullyQualifiedName());
+                    filterChoiceSelections(selections, allowedOptions, choiceField.getFullyQualifiedName());
             if (filteredSelections.isEmpty()) {
                 choiceField.setValue(Collections.emptyList());
             } else {
                 choiceField.setValue(filteredSelections);
             }
         } else {
-            String selected =
-                    filterSingleChoiceSelection(
-                            value, allowedOptions, choiceField.getFullyQualifiedName());
+            String selected = filterSingleChoiceSelection(value, allowedOptions, choiceField.getFullyQualifiedName());
             choiceField.setValue(Objects.requireNonNullElse(selected, ""));
         }
     }
 
-    List<String> filterChoiceSelections(
-            List<String> selections, List<String> allowedOptions, String fieldName) {
+    List<String> filterChoiceSelections(List<String> selections, List<String> allowedOptions, String fieldName) {
         if (selections == null || selections.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<String> sanitizedSelections =
-                selections.stream()
-                        .filter(Objects::nonNull)
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .toList();
+        List<String> sanitizedSelections = selections.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
 
         if (sanitizedSelections.isEmpty()) {
             return Collections.emptyList();
@@ -1107,9 +1034,7 @@ public class FormUtils {
 
         if (allowedOptions == null || allowedOptions.isEmpty()) {
             throw new IllegalArgumentException(
-                    "The /Opt array is missing for choice field '"
-                            + fieldName
-                            + "', cannot set values.");
+                    "The /Opt array is missing for choice field '" + fieldName + "', cannot set values.");
         }
 
         Map<String, String> allowedLookup = new LinkedHashMap<>();
@@ -1130,10 +1055,7 @@ public class FormUtils {
             if (resolved != null) {
                 validSelections.add(resolved);
             } else {
-                log.debug(
-                        "Ignoring unsupported option '{}' for choice field '{}'",
-                        selection,
-                        fieldName);
+                log.debug("Ignoring unsupported option '{}' for choice field '{}'", selection, fieldName);
             }
         }
         return validSelections;
@@ -1157,15 +1079,12 @@ public class FormUtils {
         try {
             List<String> exports = choiceField.getOptionsExportValues();
             if (exports != null) {
-                exports.stream()
-                        .filter(Objects::nonNull)
-                        .forEach(
-                                option -> {
-                                    String cleaned = option.trim();
-                                    if (!cleaned.isEmpty()) {
-                                        allowed.add(option);
-                                    }
-                                });
+                exports.stream().filter(Objects::nonNull).forEach(option -> {
+                    String cleaned = option.trim();
+                    if (!cleaned.isEmpty()) {
+                        allowed.add(option);
+                    }
+                });
             }
         } catch (Exception e) {
             log.debug(
@@ -1177,15 +1096,12 @@ public class FormUtils {
         try {
             List<String> display = choiceField.getOptionsDisplayValues();
             if (display != null) {
-                display.stream()
-                        .filter(Objects::nonNull)
-                        .forEach(
-                                option -> {
-                                    String cleaned = option.trim();
-                                    if (!cleaned.isEmpty()) {
-                                        allowed.add(option);
-                                    }
-                                });
+                display.stream().filter(Objects::nonNull).forEach(option -> {
+                    String cleaned = option.trim();
+                    if (!cleaned.isEmpty()) {
+                        allowed.add(option);
+                    }
+                });
             }
         } catch (Exception e) {
             log.debug(
@@ -1296,10 +1212,7 @@ public class FormUtils {
             }
             return field.getValueAsString();
         } catch (Exception e) {
-            log.debug(
-                    "Failed to read current value for field '{}': {}",
-                    field.getFullyQualifiedName(),
-                    e.getMessage());
+            log.debug("Failed to read current value for field '{}': {}", field.getFullyQualifiedName(), e.getMessage());
             return null;
         }
     }
@@ -1338,10 +1251,7 @@ public class FormUtils {
                 }
             }
         } catch (Exception e) {
-            log.debug(
-                    "Failed to resolve options for field '{}': {}",
-                    field.getFullyQualifiedName(),
-                    e.getMessage());
+            log.debug("Failed to resolve options for field '{}': {}", field.getFullyQualifiedName(), e.getMessage());
         }
         return Collections.emptyList();
     }
@@ -1413,10 +1323,7 @@ public class FormUtils {
                 }
             }
         } catch (Exception e) {
-            log.trace(
-                    "Could not extract font size for field '{}': {}",
-                    field.getFullyQualifiedName(),
-                    e.getMessage());
+            log.trace("Could not extract font size for field '{}': {}", field.getFullyQualifiedName(), e.getMessage());
         }
         return null;
     }
@@ -1447,12 +1354,7 @@ public class FormUtils {
     }
 
     private String deriveDisplayLabel(
-            PDField field,
-            String name,
-            String tooltip,
-            String type,
-            int typeIndex,
-            List<String> options) {
+            PDField field, String name, String tooltip, String type, int typeIndex, List<String> options) {
         String alternate = cleanLabel(field.getAlternateFieldName());
         if (alternate != null && !looksGeneric(alternate)) {
             return alternate;
@@ -1494,7 +1396,8 @@ public class FormUtils {
         if (value == null) return true;
 
         RegexPatternUtils patterns = RegexPatternUtils.getInstance();
-        String simplified = patterns.getPunctuationPattern().matcher(value).replaceAll(" ").trim();
+        String simplified =
+                patterns.getPunctuationPattern().matcher(value).replaceAll(" ").trim();
 
         if (simplified.isEmpty()) return true;
 
@@ -1518,13 +1421,13 @@ public class FormUtils {
         cleaned = cleaned.replace('.', ' ');
         cleaned = patterns.getUnderscoreHyphenPattern().matcher(cleaned).replaceAll(" ");
         cleaned = patterns.getCamelCaseBoundaryPattern().matcher(cleaned).replaceAll(" ");
-        cleaned = patterns.getWhitespacePattern().matcher(cleaned).replaceAll(" ").trim();
+        cleaned =
+                patterns.getWhitespacePattern().matcher(cleaned).replaceAll(" ").trim();
 
         return cleaned.isEmpty() ? null : cleaned;
     }
 
-    public void modifyFormFields(
-            PDDocument document, List<ModifyFormFieldDefinition> modifications) {
+    public void modifyFormFields(PDDocument document, List<ModifyFormFieldDefinition> modifications) {
         if (document == null || modifications == null || modifications.isEmpty()) return;
 
         PDAcroForm acroForm = getAcroFormSafely(document);
@@ -1561,29 +1464,23 @@ public class FormUtils {
             PDRectangle originalRectangle = cloneRectangle(widget.getRectangle());
             PDPage page = resolveWidgetPage(document, widget, null);
             if (page == null || originalRectangle == null) {
-                log.warn(
-                        "Unable to resolve widget page or rectangle for '{}'; skipping",
-                        lookupName);
+                log.warn("Unable to resolve widget page or rectangle for '{}'; skipping", lookupName);
                 continue;
             }
 
-            String resolvedType =
-                    Optional.ofNullable(modification.type())
-                            .map(FormUtils::normalizeFieldType)
-                            .orElseGet(() -> detectFieldType(originalField));
+            String resolvedType = Optional.ofNullable(modification.type())
+                    .map(FormUtils::normalizeFieldType)
+                    .orElseGet(() -> detectFieldType(originalField));
 
-            if (!RegexPatternUtils.getInstance()
-                    .getSupportedNewFieldTypes()
-                    .contains(resolvedType)) {
+            if (!RegexPatternUtils.getInstance().getSupportedNewFieldTypes().contains(resolvedType)) {
                 log.warn("Unsupported target type '{}' for field '{}'", resolvedType, lookupName);
                 continue;
             }
 
-            String desiredName =
-                    Optional.ofNullable(modification.name())
-                            .map(String::trim)
-                            .filter(s -> !s.isEmpty())
-                            .orElseGet(originalField::getPartialName);
+            String desiredName = Optional.ofNullable(modification.name())
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .orElseGet(originalField::getPartialName);
 
             if (desiredName != null) {
                 existingNames.remove(originalField.getFullyQualifiedName());
@@ -1611,21 +1508,20 @@ public class FormUtils {
 
             // For type changes or when in-place modification fails, use remove-and-recreate
             // But create the new field first to ensure success before removing the original
-            NewFormFieldDefinition replacementDefinition =
-                    new NewFormFieldDefinition(
-                            desiredName,
-                            modification.label(),
-                            resolvedType,
-                            determineWidgetPageIndex(document, widget, null),
-                            originalRectangle.getLowerLeftX(),
-                            originalRectangle.getLowerLeftY(),
-                            originalRectangle.getWidth(),
-                            originalRectangle.getHeight(),
-                            modification.required(),
-                            modification.multiSelect(),
-                            modification.options(),
-                            modification.defaultValue(),
-                            modification.tooltip());
+            NewFormFieldDefinition replacementDefinition = new NewFormFieldDefinition(
+                    desiredName,
+                    modification.label(),
+                    resolvedType,
+                    determineWidgetPageIndex(document, widget, null),
+                    originalRectangle.getLowerLeftX(),
+                    originalRectangle.getLowerLeftY(),
+                    originalRectangle.getWidth(),
+                    originalRectangle.getHeight(),
+                    modification.required(),
+                    modification.multiSelect(),
+                    modification.options(),
+                    modification.defaultValue(),
+                    modification.tooltip());
 
             List<String> sanitizedOptions = sanitizeOptions(modification.options());
 
@@ -1647,10 +1543,7 @@ public class FormUtils {
 
                 removeFieldFromDocument(document, acroForm, originalField);
 
-                log.debug(
-                        "Successfully replaced field '{}' with type '{}'",
-                        lookupName,
-                        resolvedType);
+                log.debug("Successfully replaced field '{}' with type '{}'", lookupName, resolvedType);
             } catch (Exception e) {
                 log.warn(
                         "Failed to modify form field '{}' to type '{}': {}",
@@ -1664,8 +1557,7 @@ public class FormUtils {
         ensureAppearances(acroForm);
     }
 
-    private void modifyFieldPropertiesInPlace(
-            PDField field, ModifyFormFieldDefinition modification, String newName)
+    private void modifyFieldPropertiesInPlace(PDField field, ModifyFormFieldDefinition modification, String newName)
             throws IOException {
         if (newName != null && !newName.equals(field.getPartialName())) {
             field.setPartialName(newName);
@@ -1748,19 +1640,14 @@ public class FormUtils {
                     return tooltip;
                 }
             } catch (Exception e) {
-                log.debug(
-                        "Failed to read tooltip for field '{}': {}",
-                        field.getFullyQualifiedName(),
-                        e.getMessage());
+                log.debug("Failed to read tooltip for field '{}': {}", field.getFullyQualifiedName(), e.getMessage());
             }
         }
         return null;
     }
 
     private int resolveFirstWidgetPageIndex(
-            PDDocument document,
-            PDTerminalField field,
-            Map<COSDictionary, Integer> annotationPageMap) {
+            PDDocument document, PDTerminalField field, Map<COSDictionary, Integer> annotationPageMap) {
         List<PDAnnotationWidget> widgets = field.getWidgets();
         if (widgets == null || widgets.isEmpty()) {
             return -1;
@@ -1775,9 +1662,7 @@ public class FormUtils {
     }
 
     private int resolveWidgetPageIndex(
-            PDDocument document,
-            PDAnnotationWidget widget,
-            Map<COSDictionary, Integer> annotationPageMap) {
+            PDDocument document, PDAnnotationWidget widget, Map<COSDictionary, Integer> annotationPageMap) {
         if (document == null || widget == null) {
             return -1;
         }
@@ -1928,10 +1813,7 @@ public class FormUtils {
                         e.getMessage());
             }
         } catch (Exception e) {
-            log.warn(
-                    "Failed to detach field '{}' from document: {}",
-                    field.getFullyQualifiedName(),
-                    e.getMessage());
+            log.warn("Failed to detach field '{}' from document: {}", field.getFullyQualifiedName(), e.getMessage());
         }
     }
 
@@ -1989,16 +1871,11 @@ public class FormUtils {
             return null;
         }
         return new PDRectangle(
-                rectangle.getLowerLeftX(),
-                rectangle.getLowerLeftY(),
-                rectangle.getWidth(),
-                rectangle.getHeight());
+                rectangle.getLowerLeftX(), rectangle.getLowerLeftY(), rectangle.getWidth(), rectangle.getHeight());
     }
 
     private PDPage resolveWidgetPage(
-            PDDocument document,
-            PDAnnotationWidget widget,
-            Map<COSDictionary, Integer> annotationPageMap) {
+            PDDocument document, PDAnnotationWidget widget, Map<COSDictionary, Integer> annotationPageMap) {
         if (widget == null) {
             return null;
         }
@@ -2018,9 +1895,7 @@ public class FormUtils {
     }
 
     private int determineWidgetPageIndex(
-            PDDocument document,
-            PDAnnotationWidget widget,
-            Map<COSDictionary, Integer> annotationPageMap) {
+            PDDocument document, PDAnnotationWidget widget, Map<COSDictionary, Integer> annotationPageMap) {
         if (document == null || widget == null) {
             return -1;
         }
@@ -2098,10 +1973,7 @@ public class FormUtils {
             try {
                 page = document.getPage(pageIndex);
             } catch (Exception e) {
-                log.debug(
-                        "Failed to access page {} while building widget map: {}",
-                        pageIndex,
-                        e.getMessage());
+                log.debug("Failed to access page {} while building widget map: {}", pageIndex, e.getMessage());
                 continue;
             }
 
@@ -2109,8 +1981,7 @@ public class FormUtils {
             try {
                 annotations = page.getAnnotations();
             } catch (IOException e) {
-                log.debug(
-                        "Failed to access annotations for page {}: {}", pageIndex, e.getMessage());
+                log.debug("Failed to access annotations for page {}: {}", pageIndex, e.getMessage());
                 continue;
             }
 
@@ -2127,14 +1998,11 @@ public class FormUtils {
                 try {
                     widgetDictionary = widget.getCOSObject();
                 } catch (Exception e) {
-                    log.debug(
-                            "Failed to access widget dictionary while building fallback map: {}",
-                            e.getMessage());
+                    log.debug("Failed to access widget dictionary while building fallback map: {}", e.getMessage());
                     continue;
                 }
 
-                if (widgetDictionary == null
-                        || widgetDictionary.getDictionaryObject(COSName.P) != null) {
+                if (widgetDictionary == null || widgetDictionary.getDictionaryObject(COSName.P) != null) {
                     continue;
                 }
 
@@ -2197,11 +2065,10 @@ public class FormUtils {
     }
 
     private String generateUniqueFieldName(String baseName, Set<String> existingNames) {
-        String sanitized =
-                Optional.ofNullable(baseName)
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .orElse("field");
+        String sanitized = Optional.ofNullable(baseName)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .orElse("field");
 
         StringBuilder candidateBuilder = new StringBuilder(sanitized);
         String candidate = candidateBuilder.toString();
@@ -2248,15 +2115,12 @@ public class FormUtils {
         }
         field.setRequired(Boolean.TRUE.equals(definition.required()));
 
-        PDAnnotationWidget widget =
-                existingWidget != null ? existingWidget : new PDAnnotationWidget();
+        PDAnnotationWidget widget = existingWidget != null ? existingWidget : new PDAnnotationWidget();
 
         // Ensure rectangle is valid and set before any appearance-related operations
         // please note removal of this might cause **subtle** issues
         PDRectangle validRectangle = rectangle;
-        if (validRectangle == null
-                || validRectangle.getWidth() <= 0
-                || validRectangle.getHeight() <= 0) {
+        if (validRectangle == null || validRectangle.getWidth() <= 0 || validRectangle.getHeight() <= 0) {
             log.warn("Invalid rectangle for field '{}', using default dimensions", name);
             validRectangle = new PDRectangle(100, 100, 100, 20);
         }
@@ -2384,14 +2248,7 @@ public class FormUtils {
             float cellHeight)
             throws IOException {
         stirling.software.common.util.GeneralFormCopyUtils.copyAndTransformFormFields(
-                sourceDocument,
-                newDocument,
-                totalPages,
-                pagesPerSheet,
-                cols,
-                rows,
-                cellWidth,
-                cellHeight);
+                sourceDocument, newDocument, totalPages, pagesPerSheet, cols, rows, cellWidth, cellHeight);
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

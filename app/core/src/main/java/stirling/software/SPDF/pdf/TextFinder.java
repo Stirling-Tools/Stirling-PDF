@@ -23,13 +23,14 @@ public class TextFinder extends PDFTextStripper {
     private final String searchTerm;
     private final boolean useRegex;
     private final boolean wholeWordSearch;
-    @Getter private final List<PDFText> foundTexts = new ArrayList<>();
+
+    @Getter
+    private final List<PDFText> foundTexts = new ArrayList<>();
 
     private final List<TextPosition> pageTextPositions = new ArrayList<>();
     private final StringBuilder pageTextBuilder = new StringBuilder();
 
-    public TextFinder(String searchTerm, boolean useRegex, boolean wholeWordSearch)
-            throws IOException {
+    public TextFinder(String searchTerm, boolean useRegex, boolean wholeWordSearch) throws IOException {
         this.searchTerm = searchTerm;
         this.useRegex = useRegex;
         this.wholeWordSearch = wholeWordSearch;
@@ -77,8 +78,7 @@ public class TextFinder extends PDFTextStripper {
         }
         String regex = this.useRegex ? processedSearchTerm : "\\Q" + processedSearchTerm + "\\E";
         if (this.wholeWordSearch) {
-            if (processedSearchTerm.length() == 1
-                    && Character.isDigit(processedSearchTerm.charAt(0))) {
+            if (processedSearchTerm.length() == 1 && Character.isDigit(processedSearchTerm.charAt(0))) {
                 regex = "(?<![\\w])(?<!\\d[\\.,])" + regex + "(?![\\w])(?![\\.,]\\d)";
             } else if (processedSearchTerm.length() == 1) {
                 regex = "(?<![\\w])" + regex + "(?![\\w])";
@@ -105,12 +105,7 @@ public class TextFinder extends PDFTextStripper {
             int matchStart = matcher.start();
             int matchEnd = matcher.end();
 
-            log.debug(
-                    "Found match #{} at positions {}-{}: '{}'",
-                    matchCount,
-                    matchStart,
-                    matchEnd,
-                    matcher.group());
+            log.debug("Found match #{} at positions {}-{}: '{}'", matchCount, matchStart, matchEnd, matcher.group());
 
             float minX = Float.MAX_VALUE;
             float minY = Float.MAX_VALUE;
@@ -120,10 +115,7 @@ public class TextFinder extends PDFTextStripper {
 
             for (int i = matchStart; i < matchEnd; i++) {
                 if (i >= pageTextPositions.size()) {
-                    log.debug(
-                            "Position index {} exceeds available positions ({})",
-                            i,
-                            pageTextPositions.size());
+                    log.debug("Position index {} exceeds available positions ({})", i, pageTextPositions.size());
                     continue;
                 }
                 TextPosition pos = pageTextPositions.get(i);
@@ -137,14 +129,9 @@ public class TextFinder extends PDFTextStripper {
             }
 
             if (!foundPosition && matchStart < pageTextPositions.size()) {
-                log.debug(
-                        "Attempting to find nearby positions for match at {}-{}",
-                        matchStart,
-                        matchEnd);
+                log.debug("Attempting to find nearby positions for match at {}-{}", matchStart, matchEnd);
 
-                for (int i = Math.max(0, matchStart - 5);
-                        i < Math.min(pageTextPositions.size(), matchEnd + 5);
-                        i++) {
+                for (int i = Math.max(0, matchStart - 5); i < Math.min(pageTextPositions.size(), matchEnd + 5); i++) {
                     TextPosition pos = pageTextPositions.get(i);
                     if (pos != null) {
                         foundPosition = true;
@@ -158,14 +145,7 @@ public class TextFinder extends PDFTextStripper {
             }
 
             if (foundPosition) {
-                foundTexts.add(
-                        new PDFText(
-                                this.getCurrentPageNo() - 1,
-                                minX,
-                                minY,
-                                maxX,
-                                maxY,
-                                matcher.group()));
+                foundTexts.add(new PDFText(this.getCurrentPageNo() - 1, minX, minY, maxX, maxY, matcher.group()));
                 log.debug(
                         "Added PDFText for match: page={}, bounds=({},{},{},{}), text='{}'",
                         getCurrentPageNo() - 1,
@@ -204,17 +184,13 @@ public class TextFinder extends PDFTextStripper {
         for (int i = 0; i < Math.min(text.length(), 50); i++) {
             char c = text.charAt(i);
             TextPosition pos = i < pageTextPositions.size() ? pageTextPositions.get(i) : null;
-            debug.append(
-                    String.format(
-                            Locale.ROOT,
-                            "  [%d] '%c' (0x%02X) -> %s\n",
-                            i,
-                            c,
-                            (int) c,
-                            pos != null
-                                    ? String.format(
-                                            Locale.ROOT, "(%.1f,%.1f)", pos.getX(), pos.getY())
-                                    : "null"));
+            debug.append(String.format(
+                    Locale.ROOT,
+                    "  [%d] '%c' (0x%02X) -> %s\n",
+                    i,
+                    c,
+                    (int) c,
+                    pos != null ? String.format(Locale.ROOT, "(%.1f,%.1f)", pos.getX(), pos.getY()) : "null"));
         }
 
         return debug.toString();

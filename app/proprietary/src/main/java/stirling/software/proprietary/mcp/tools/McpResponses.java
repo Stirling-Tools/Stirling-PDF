@@ -42,8 +42,7 @@ public final class McpResponses {
     }
 
     /** An embedded-resource content block carrying base64 file content. */
-    public static ObjectNode resourceBlock(
-            ObjectMapper mapper, String uri, String mimeType, String base64) {
+    public static ObjectNode resourceBlock(ObjectMapper mapper, String uri, String mimeType, String base64) {
         ObjectNode block = mapper.createObjectNode();
         block.put("type", "resource");
         ObjectNode res = block.putObject("resource");

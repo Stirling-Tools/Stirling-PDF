@@ -50,10 +50,17 @@ class PdfVectorExportControllerMoreTest {
 
     private final List<Path> tempPaths = new ArrayList<>();
 
-    @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private ProcessExecutor ghostscriptExecutor;
-    @InjectMocks private PdfVectorExportController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private ProcessExecutor ghostscriptExecutor;
+
+    @InjectMocks
+    private PdfVectorExportController controller;
 
     // Real manager used only to mint genuine TempFile instances for the mock to hand back.
     private final TempFileManager realTempFileManager =
@@ -67,16 +74,12 @@ class PdfVectorExportControllerMoreTest {
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(inv -> realTempFileManager.createManagedTempFile(inv.getArgument(0)));
-        lenient()
-                .when(tempFileManager.createTempFile(any()))
-                .thenAnswer(
-                        invocation -> {
-                            String suffix = invocation.<String>getArgument(0);
-                            Path path =
-                                    Files.createTempFile("vec_in", suffix == null ? "" : suffix);
-                            tempPaths.add(path);
-                            return path.toFile();
-                        });
+        lenient().when(tempFileManager.createTempFile(any())).thenAnswer(invocation -> {
+            String suffix = invocation.<String>getArgument(0);
+            Path path = Files.createTempFile("vec_in", suffix == null ? "" : suffix);
+            tempPaths.add(path);
+            return path.toFile();
+        });
 
         Field instancesField = ProcessExecutor.class.getDeclaredField("instances");
         instancesField.setAccessible(true);
@@ -115,8 +118,7 @@ class PdfVectorExportControllerMoreTest {
 
     private static PdfVectorExportRequest request(String outputFormat) {
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "in.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1});
+                new MockMultipartFile("fileInput", "in.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1});
         PdfVectorExportRequest request = new PdfVectorExportRequest();
         request.setFileInput(file);
         request.setOutputFormat(outputFormat);

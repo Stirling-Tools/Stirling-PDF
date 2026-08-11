@@ -38,8 +38,7 @@ class CustomAuditEventRepositoryTest {
         MDC.put("auditSource", "WEB");
         writer.add(new AuditEvent(Instant.now(), "admin", "PDF_PROCESS", Map.of("k", "v")));
 
-        ArgumentCaptor<PersistentAuditEvent> captor =
-                ArgumentCaptor.forClass(PersistentAuditEvent.class);
+        ArgumentCaptor<PersistentAuditEvent> captor = ArgumentCaptor.forClass(PersistentAuditEvent.class);
         verify(repo).save(captor.capture());
         assertEquals("WEB", captor.getValue().getSource());
     }
@@ -52,16 +51,14 @@ class CustomAuditEventRepositoryTest {
 
         writer.add(new AuditEvent(Instant.now(), "admin", "PDF_PROCESS", Map.of("k", "v")));
 
-        ArgumentCaptor<PersistentAuditEvent> captor =
-                ArgumentCaptor.forClass(PersistentAuditEvent.class);
+        ArgumentCaptor<PersistentAuditEvent> captor = ArgumentCaptor.forClass(PersistentAuditEvent.class);
         verify(repo).save(captor.capture());
         assertNull(captor.getValue().getSource());
     }
 
     @Test
     void shortPrincipalPassesThroughUnchanged() {
-        assertEquals(
-                "alice@example.com", CustomAuditEventRepository.safePrincipal("alice@example.com"));
+        assertEquals("alice@example.com", CustomAuditEventRepository.safePrincipal("alice@example.com"));
     }
 
     @Test
@@ -94,8 +91,6 @@ class CustomAuditEventRepositoryTest {
     void sameTokenHashesStably() {
         String token = "eyJ" + "c".repeat(400);
 
-        assertEquals(
-                CustomAuditEventRepository.safePrincipal(token),
-                CustomAuditEventRepository.safePrincipal(token));
+        assertEquals(CustomAuditEventRepository.safePrincipal(token), CustomAuditEventRepository.safePrincipal(token));
     }
 }

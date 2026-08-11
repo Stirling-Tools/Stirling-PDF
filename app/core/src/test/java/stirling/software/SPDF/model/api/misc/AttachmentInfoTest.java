@@ -28,8 +28,7 @@ class AttachmentInfoTest {
         @Test
         @DisplayName("all-args constructor sets every field")
         void allArgsConstructorSetsFields() {
-            AttachmentInfo info =
-                    new AttachmentInfo("file.txt", 123L, "text/plain", "desc", "2023", "2024");
+            AttachmentInfo info = new AttachmentInfo("file.txt", 123L, "text/plain", "desc", "2023", "2024");
             assertThat(info.getFilename()).isEqualTo("file.txt");
             assertThat(info.getSize()).isEqualTo(123L);
             assertThat(info.getContentType()).isEqualTo("text/plain");

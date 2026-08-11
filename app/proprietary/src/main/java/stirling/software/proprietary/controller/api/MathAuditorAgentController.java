@@ -53,10 +53,7 @@ public class MathAuditorAgentController {
     private final AiFeatureGate aiFeatureGate;
 
     @PostMapping(value = "/math-auditor-agent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(
-            summary = "Validate mathematical calculations in a PDF",
-            description =
-                    """
+    @Operation(summary = "Validate mathematical calculations in a PDF", description = """
                     Analyses a PDF document for mathematical errors using the Math Auditor Agent.
 
                     The auditor checks:
@@ -70,13 +67,11 @@ public class MathAuditorAgentController {
                     caller.
                     """)
     public ResponseEntity<Verdict> mathAuditorAgent(
-            @Parameter(description = "The PDF document to audit", required = true)
-                    @RequestParam("fileInput")
+            @Parameter(description = "The PDF document to audit", required = true) @RequestParam("fileInput")
                     MultipartFile fileInput,
             @Parameter(
-                            description =
-                                    "Arithmetic tolerance — differences smaller than this are"
-                                            + " ignored (default: 0.01)")
+                            description = "Arithmetic tolerance — differences smaller than this are"
+                                    + " ignored (default: 0.01)")
                     @RequestParam(value = "tolerance", defaultValue = "0.01")
                     BigDecimal tolerance) {
         aiFeatureGate.requireMathAuditor();
@@ -87,10 +82,9 @@ public class MathAuditorAgentController {
         }
 
         String originalFilename = fileInput.getOriginalFilename();
-        String safeName =
-                originalFilename != null
-                        ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
-                        : "<unnamed>";
+        String safeName = originalFilename != null
+                ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
+                : "<unnamed>";
         log.info("[math-auditor-agent] request file={} tolerance={}", safeName, tolerance);
 
         try {

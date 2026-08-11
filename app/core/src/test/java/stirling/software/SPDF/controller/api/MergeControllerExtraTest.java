@@ -42,8 +42,7 @@ class MergeControllerExtraTest {
     @BeforeEach
     void setUp() {
         pdfDocumentFactory = new CustomPDFDocumentFactory(mock(PdfMetadataService.class));
-        TempFileManager tempFileManager =
-                new TempFileManager(new TempFileRegistry(), new ApplicationProperties());
+        TempFileManager tempFileManager = new TempFileManager(new TempFileRegistry(), new ApplicationProperties());
         mergeController = new MergeController(pdfDocumentFactory, tempFileManager);
     }
 
@@ -59,14 +58,12 @@ class MergeControllerExtraTest {
     }
 
     private static MockMultipartFile pdf(String name, int pages) throws IOException {
-        return new MockMultipartFile(
-                "fileInput", name, MediaType.APPLICATION_PDF_VALUE, pdfBytes(pages));
+        return new MockMultipartFile("fileInput", name, MediaType.APPLICATION_PDF_VALUE, pdfBytes(pages));
     }
 
     private void addTableOfContents(PDDocument merged, MultipartFile[] files) throws Exception {
         Method m =
-                MergeController.class.getDeclaredMethod(
-                        "addTableOfContents", PDDocument.class, MultipartFile[].class);
+                MergeController.class.getDeclaredMethod("addTableOfContents", PDDocument.class, MultipartFile[].class);
         m.setAccessible(true);
         m.invoke(mergeController, merged, files);
     }

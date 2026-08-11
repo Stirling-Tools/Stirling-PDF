@@ -56,8 +56,7 @@ class Type3FontLibraryTest {
         m.invoke(library);
     }
 
-    private Object invoke(Type3FontLibrary library, String method, Class<?>[] sig, Object... args)
-            throws Exception {
+    private Object invoke(Type3FontLibrary library, String method, Class<?>[] sig, Object... args) throws Exception {
         Method m = Type3FontLibrary.class.getDeclaredMethod(method, sig);
         m.setAccessible(true);
         return m.invoke(library, args);
@@ -71,9 +70,7 @@ class Type3FontLibraryTest {
         @DisplayName("loads real classpath index.json and populates entries / indexes")
         void initialise_realIndex_loadsEntries() throws Exception {
             Type3FontLibrary library =
-                    newLibrary(
-                            new DefaultResourceLoader(),
-                            propsWithIndex("classpath:/type3/library/index.json"));
+                    newLibrary(new DefaultResourceLoader(), propsWithIndex("classpath:/type3/library/index.json"));
             invokeInitialise(library);
 
             assertTrue(library.isLoaded());
@@ -82,10 +79,8 @@ class Type3FontLibraryTest {
         @Test
         @DisplayName("missing index disables library")
         void initialise_missingIndex_disabled() throws Exception {
-            Type3FontLibrary library =
-                    newLibrary(
-                            new DefaultResourceLoader(),
-                            propsWithIndex("classpath:/type3/library/does-not-exist.json"));
+            Type3FontLibrary library = newLibrary(
+                    new DefaultResourceLoader(), propsWithIndex("classpath:/type3/library/does-not-exist.json"));
             invokeInitialise(library);
 
             assertFalse(library.isLoaded());
@@ -125,16 +120,13 @@ class Type3FontLibraryTest {
             when(loader.getResource("classpath:/bad.json")).thenReturn(resource);
             when(resource.exists()).thenReturn(true);
             when(resource.getInputStream())
-                    .thenReturn(
-                            new ByteArrayInputStream("not json".getBytes(StandardCharsets.UTF_8)));
+                    .thenReturn(new ByteArrayInputStream("not json".getBytes(StandardCharsets.UTF_8)));
 
             Type3FontLibrary library = newLibrary(loader, propsWithIndex("classpath:/bad.json"));
             // Jackson 3 throws an unchecked StreamReadException which the IOException-only
             // catch in initialise() does not handle, so it propagates.
             java.lang.reflect.InvocationTargetException ex =
-                    assertThrows(
-                            java.lang.reflect.InvocationTargetException.class,
-                            () -> invokeInitialise(library));
+                    assertThrows(java.lang.reflect.InvocationTargetException.class, () -> invokeInitialise(library));
             assertNotNull(ex.getCause());
             assertFalse(library.isLoaded());
         }
@@ -143,20 +135,18 @@ class Type3FontLibraryTest {
         @DisplayName("inline base64 program entry is loaded and indexed by signature + alias")
         void initialise_inlineBase64_loaded() throws Exception {
             String base64 = Base64.getEncoder().encodeToString(new byte[] {1, 2, 3, 4});
-            String json =
-                    "[{\"id\":\"e1\",\"label\":\"E1\","
-                            + "\"signatures\":[\"sha256:ABCDEF\"],"
-                            + "\"aliases\":[\"ABCDEF+MyFont\",\"  \",null],"
-                            + "\"program\":{\"base64\":\""
-                            + base64
-                            + "\",\"format\":\"TTF\"},"
-                            + "\"glyphCoverage\":[65,null,66]}]";
+            String json = "[{\"id\":\"e1\",\"label\":\"E1\","
+                    + "\"signatures\":[\"sha256:ABCDEF\"],"
+                    + "\"aliases\":[\"ABCDEF+MyFont\",\"  \",null],"
+                    + "\"program\":{\"base64\":\""
+                    + base64
+                    + "\",\"format\":\"TTF\"},"
+                    + "\"glyphCoverage\":[65,null,66]}]";
             ResourceLoader loader = mock(ResourceLoader.class);
             Resource resource = mock(Resource.class);
             when(loader.getResource("classpath:/inline.json")).thenReturn(resource);
             when(resource.exists()).thenReturn(true);
-            when(resource.getInputStream())
-                    .thenReturn(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+            when(resource.getInputStream()).thenReturn(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
 
             Type3FontLibrary library = newLibrary(loader, propsWithIndex("classpath:/inline.json"));
             invokeInitialise(library);
@@ -172,8 +162,7 @@ class Type3FontLibraryTest {
             Resource resource = mock(Resource.class);
             when(loader.getResource("classpath:/empty.json")).thenReturn(resource);
             when(resource.exists()).thenReturn(true);
-            when(resource.getInputStream())
-                    .thenReturn(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+            when(resource.getInputStream()).thenReturn(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
 
             Type3FontLibrary library = newLibrary(loader, propsWithIndex("classpath:/empty.json"));
             invokeInitialise(library);
@@ -190,8 +179,7 @@ class Type3FontLibraryTest {
             Resource resource = mock(Resource.class);
             when(loader.getResource("classpath:/noid.json")).thenReturn(resource);
             when(resource.exists()).thenReturn(true);
-            when(resource.getInputStream())
-                    .thenReturn(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+            when(resource.getInputStream()).thenReturn(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
 
             Type3FontLibrary library = newLibrary(loader, propsWithIndex("classpath:/noid.json"));
             invokeInitialise(library);
@@ -202,10 +190,9 @@ class Type3FontLibraryTest {
         @Test
         @DisplayName("resource-based payload is read and re-encoded to base64")
         void initialise_resourcePayload_loaded() throws Exception {
-            String json =
-                    "[{\"id\":\"res\",\"label\":\"Res\","
-                            + "\"program\":{\"resource\":\"type3/library/fonts/dejavu/DejaVuSans.ttf\","
-                            + "\"format\":\"ttf\"}}]";
+            String json = "[{\"id\":\"res\",\"label\":\"Res\","
+                    + "\"program\":{\"resource\":\"type3/library/fonts/dejavu/DejaVuSans.ttf\","
+                    + "\"format\":\"ttf\"}}]";
             ResourceLoader loader = new DefaultResourceLoader();
             Resource indexResource = mock(Resource.class);
             ResourceLoader spyLoader = spy(loader);
@@ -229,9 +216,7 @@ class Type3FontLibraryTest {
         @DisplayName("returns null when font is null")
         void match_nullFont_returnsNull() throws Exception {
             Type3FontLibrary library =
-                    newLibrary(
-                            new DefaultResourceLoader(),
-                            propsWithIndex("classpath:/type3/library/index.json"));
+                    newLibrary(new DefaultResourceLoader(), propsWithIndex("classpath:/type3/library/index.json"));
             invokeInitialise(library);
             assertNull(library.match(null, "uid"));
         }
@@ -239,10 +224,8 @@ class Type3FontLibraryTest {
         @Test
         @DisplayName("returns null when no entries loaded")
         void match_emptyLibrary_returnsNull() throws Exception {
-            Type3FontLibrary library =
-                    newLibrary(
-                            new DefaultResourceLoader(),
-                            propsWithIndex("classpath:/type3/library/does-not-exist.json"));
+            Type3FontLibrary library = newLibrary(
+                    new DefaultResourceLoader(), propsWithIndex("classpath:/type3/library/does-not-exist.json"));
             invokeInitialise(library);
             PDType3Font font = mock(PDType3Font.class);
             assertNull(library.match(font, "uid"));
@@ -252,17 +235,15 @@ class Type3FontLibraryTest {
         @DisplayName("matches by signature using mocked signature calculator")
         void match_bySignature_returnsSignatureMatch() throws Exception {
             String base64 = Base64.getEncoder().encodeToString(new byte[] {1, 2, 3, 4});
-            String json =
-                    "[{\"id\":\"sig-entry\",\"label\":\"SigEntry\","
-                            + "\"signatures\":[\"sha256:DEADBEEF\"],"
-                            + "\"program\":{\"base64\":\""
-                            + base64
-                            + "\"}}]";
+            String json = "[{\"id\":\"sig-entry\",\"label\":\"SigEntry\","
+                    + "\"signatures\":[\"sha256:DEADBEEF\"],"
+                    + "\"program\":{\"base64\":\""
+                    + base64
+                    + "\"}}]";
             Type3FontLibrary library = libraryFromJson("classpath:/sig.json", json);
 
             PDType3Font font = mock(PDType3Font.class);
-            try (MockedStatic<Type3FontSignatureCalculator> mocked =
-                    mockStatic(Type3FontSignatureCalculator.class)) {
+            try (MockedStatic<Type3FontSignatureCalculator> mocked = mockStatic(Type3FontSignatureCalculator.class)) {
                 mocked.when(() -> Type3FontSignatureCalculator.computeSignature(font))
                         .thenReturn("sha256:deadbeef");
 
@@ -278,19 +259,17 @@ class Type3FontLibraryTest {
         @DisplayName("falls back to alias match on BaseFont name")
         void match_byAlias_returnsAliasMatch() throws Exception {
             String base64 = Base64.getEncoder().encodeToString(new byte[] {1, 2, 3, 4});
-            String json =
-                    "[{\"id\":\"alias-entry\",\"label\":\"AliasEntry\","
-                            + "\"aliases\":[\"ABCDEF+CoolFont\"],"
-                            + "\"program\":{\"base64\":\""
-                            + base64
-                            + "\"}}]";
+            String json = "[{\"id\":\"alias-entry\",\"label\":\"AliasEntry\","
+                    + "\"aliases\":[\"ABCDEF+CoolFont\"],"
+                    + "\"program\":{\"base64\":\""
+                    + base64
+                    + "\"}}]";
             Type3FontLibrary library = libraryFromJson("classpath:/alias.json", json);
 
             PDType3Font font = mock(PDType3Font.class);
             when(font.getName()).thenReturn("XYZXYZ+CoolFont");
 
-            try (MockedStatic<Type3FontSignatureCalculator> mocked =
-                    mockStatic(Type3FontSignatureCalculator.class)) {
+            try (MockedStatic<Type3FontSignatureCalculator> mocked = mockStatic(Type3FontSignatureCalculator.class)) {
                 mocked.when(() -> Type3FontSignatureCalculator.computeSignature(font))
                         .thenReturn(null);
 
@@ -305,19 +284,17 @@ class Type3FontLibraryTest {
         @DisplayName("no signature and no alias match returns null")
         void match_noMatch_returnsNull() throws Exception {
             String base64 = Base64.getEncoder().encodeToString(new byte[] {1, 2, 3, 4});
-            String json =
-                    "[{\"id\":\"only\",\"label\":\"Only\","
-                            + "\"signatures\":[\"sha256:1111\"],"
-                            + "\"program\":{\"base64\":\""
-                            + base64
-                            + "\"}}]";
+            String json = "[{\"id\":\"only\",\"label\":\"Only\","
+                    + "\"signatures\":[\"sha256:1111\"],"
+                    + "\"program\":{\"base64\":\""
+                    + base64
+                    + "\"}}]";
             Type3FontLibrary library = libraryFromJson("classpath:/nomatch.json", json);
 
             PDType3Font font = mock(PDType3Font.class);
             when(font.getName()).thenReturn("Unrelated");
 
-            try (MockedStatic<Type3FontSignatureCalculator> mocked =
-                    mockStatic(Type3FontSignatureCalculator.class)) {
+            try (MockedStatic<Type3FontSignatureCalculator> mocked = mockStatic(Type3FontSignatureCalculator.class)) {
                 mocked.when(() -> Type3FontSignatureCalculator.computeSignature(font))
                         .thenReturn("sha256:9999");
 
@@ -329,12 +306,11 @@ class Type3FontLibraryTest {
         @DisplayName("alias resolution falls back to COS BASE_FONT when getName throws")
         void match_baseFontFromCos_whenGetNameThrows() throws Exception {
             String base64 = Base64.getEncoder().encodeToString(new byte[] {1, 2, 3, 4});
-            String json =
-                    "[{\"id\":\"cos-entry\",\"label\":\"CosEntry\","
-                            + "\"aliases\":[\"CosFont\"],"
-                            + "\"program\":{\"base64\":\""
-                            + base64
-                            + "\"}}]";
+            String json = "[{\"id\":\"cos-entry\",\"label\":\"CosEntry\","
+                    + "\"aliases\":[\"CosFont\"],"
+                    + "\"program\":{\"base64\":\""
+                    + base64
+                    + "\"}}]";
             Type3FontLibrary library = libraryFromJson("classpath:/cos.json", json);
 
             PDType3Font font = mock(PDType3Font.class);
@@ -343,8 +319,7 @@ class Type3FontLibraryTest {
             cos.setName(COSName.BASE_FONT, "CosFont");
             when(font.getCOSObject()).thenReturn(cos);
 
-            try (MockedStatic<Type3FontSignatureCalculator> mocked =
-                    mockStatic(Type3FontSignatureCalculator.class)) {
+            try (MockedStatic<Type3FontSignatureCalculator> mocked = mockStatic(Type3FontSignatureCalculator.class)) {
                 mocked.when(() -> Type3FontSignatureCalculator.computeSignature(font))
                         .thenReturn(null);
 
@@ -367,27 +342,20 @@ class Type3FontLibraryTest {
         @DisplayName("normalizeAlias strips subset prefix and lowercases")
         void normalizeAlias_stripsPrefix() throws Exception {
             Type3FontLibrary lib = library();
-            assertEquals(
-                    "myfont",
-                    invoke(lib, "normalizeAlias", new Class<?>[] {String.class}, "ABCDEF+MyFont"));
-            assertEquals(
-                    "plainname",
-                    invoke(lib, "normalizeAlias", new Class<?>[] {String.class}, " PlainName "));
+            assertEquals("myfont", invoke(lib, "normalizeAlias", new Class<?>[] {String.class}, "ABCDEF+MyFont"));
+            assertEquals("plainname", invoke(lib, "normalizeAlias", new Class<?>[] {String.class}, " PlainName "));
             assertNull(invoke(lib, "normalizeAlias", new Class<?>[] {String.class}, (Object) null));
             assertNull(invoke(lib, "normalizeAlias", new Class<?>[] {String.class}, "   "));
             // Trailing plus keeps original since plus is at end
-            assertEquals(
-                    "name+", invoke(lib, "normalizeAlias", new Class<?>[] {String.class}, "Name+"));
+            assertEquals("name+", invoke(lib, "normalizeAlias", new Class<?>[] {String.class}, "Name+"));
         }
 
         @Test
         @DisplayName("normalizeFormat trims and lowercases, null stays null")
         void normalizeFormat() throws Exception {
             Type3FontLibrary lib = library();
-            assertEquals(
-                    "ttf", invoke(lib, "normalizeFormat", new Class<?>[] {String.class}, "  TTF "));
-            assertNull(
-                    invoke(lib, "normalizeFormat", new Class<?>[] {String.class}, (Object) null));
+            assertEquals("ttf", invoke(lib, "normalizeFormat", new Class<?>[] {String.class}, "  TTF "));
+            assertNull(invoke(lib, "normalizeFormat", new Class<?>[] {String.class}, (Object) null));
         }
 
         @Test
@@ -395,16 +363,11 @@ class Type3FontLibraryTest {
         void resolveLocation() throws Exception {
             Type3FontLibrary lib = library();
             assertEquals(
-                    "classpath:/a/b.ttf",
-                    invoke(lib, "resolveLocation", new Class<?>[] {String.class}, "a/b.ttf"));
+                    "classpath:/a/b.ttf", invoke(lib, "resolveLocation", new Class<?>[] {String.class}, "a/b.ttf"));
             assertEquals(
-                    "classpath:/abs.ttf",
-                    invoke(lib, "resolveLocation", new Class<?>[] {String.class}, "/abs.ttf"));
-            assertEquals(
-                    "file:/x.ttf",
-                    invoke(lib, "resolveLocation", new Class<?>[] {String.class}, "file:/x.ttf"));
-            assertNull(
-                    invoke(lib, "resolveLocation", new Class<?>[] {String.class}, (Object) null));
+                    "classpath:/abs.ttf", invoke(lib, "resolveLocation", new Class<?>[] {String.class}, "/abs.ttf"));
+            assertEquals("file:/x.ttf", invoke(lib, "resolveLocation", new Class<?>[] {String.class}, "file:/x.ttf"));
+            assertNull(invoke(lib, "resolveLocation", new Class<?>[] {String.class}, (Object) null));
         }
 
         @SuppressWarnings("unchecked")
@@ -413,17 +376,11 @@ class Type3FontLibraryTest {
         void normalizeList() throws Exception {
             Type3FontLibrary lib = library();
             List<String> in = java.util.Arrays.asList(" a ", null, "", "b");
-            List<String> out =
-                    (List<String>) invoke(lib, "normalizeList", new Class<?>[] {List.class}, in);
+            List<String> out = (List<String>) invoke(lib, "normalizeList", new Class<?>[] {List.class}, in);
             assertEquals(List.of("a", "b"), out);
 
             List<String> empty =
-                    (List<String>)
-                            invoke(
-                                    lib,
-                                    "normalizeList",
-                                    new Class<?>[] {List.class},
-                                    (Object) null);
+                    (List<String>) invoke(lib, "normalizeList", new Class<?>[] {List.class}, (Object) null);
             assertTrue(empty.isEmpty());
         }
 
@@ -435,15 +392,12 @@ class Type3FontLibraryTest {
             m.setAccessible(true);
 
             java.lang.reflect.InvocationTargetException ex1 =
-                    assertThrows(
-                            java.lang.reflect.InvocationTargetException.class,
-                            () -> m.invoke(lib, (Object) null));
+                    assertThrows(java.lang.reflect.InvocationTargetException.class, () -> m.invoke(lib, (Object) null));
             assertInstanceOf(IOException.class, ex1.getCause());
 
-            java.lang.reflect.InvocationTargetException ex2 =
-                    assertThrows(
-                            java.lang.reflect.InvocationTargetException.class,
-                            () -> m.invoke(lib, "type3/library/missing-font.ttf"));
+            java.lang.reflect.InvocationTargetException ex2 = assertThrows(
+                    java.lang.reflect.InvocationTargetException.class,
+                    () -> m.invoke(lib, "type3/library/missing-font.ttf"));
             assertInstanceOf(IOException.class, ex2.getCause());
         }
     }
@@ -453,8 +407,7 @@ class Type3FontLibraryTest {
         Resource resource = mock(Resource.class);
         when(loader.getResource(location)).thenReturn(resource);
         when(resource.exists()).thenReturn(true);
-        when(resource.getInputStream())
-                .thenReturn(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+        when(resource.getInputStream()).thenReturn(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
         Type3FontLibrary library = newLibrary(loader, propsWithIndex(location));
         invokeInitialise(library);
         return library;
@@ -474,9 +427,7 @@ class Type3FontLibraryTest {
         @DisplayName("invalid base64 payload yields null payload (entry filtered)")
         void invalidBase64_filtered() throws Exception {
             // '@' is not valid base64 in the 4-char probe prefix
-            String json =
-                    "[{\"id\":\"badb64\",\"label\":\"Bad\","
-                            + "\"program\":{\"base64\":\"@@@@invalid\"}}]";
+            String json = "[{\"id\":\"badb64\",\"label\":\"Bad\"," + "\"program\":{\"base64\":\"@@@@invalid\"}}]";
             Type3FontLibrary library = libraryFromJson("classpath:/badb64.json", json);
             assertFalse(library.isLoaded());
         }
@@ -485,13 +436,12 @@ class Type3FontLibraryTest {
         @DisplayName("internal index maps are populated for loaded entry")
         void internalMaps_populated() throws Exception {
             String base64 = Base64.getEncoder().encodeToString(new byte[] {1, 2, 3, 4});
-            String json =
-                    "[{\"id\":\"mapcheck\",\"label\":\"MapCheck\","
-                            + "\"signatures\":[\"sha256:CAFE\"],"
-                            + "\"aliases\":[\"MapAlias\"],"
-                            + "\"program\":{\"base64\":\""
-                            + base64
-                            + "\"}}]";
+            String json = "[{\"id\":\"mapcheck\",\"label\":\"MapCheck\","
+                    + "\"signatures\":[\"sha256:CAFE\"],"
+                    + "\"aliases\":[\"MapAlias\"],"
+                    + "\"program\":{\"base64\":\""
+                    + base64
+                    + "\"}}]";
             Type3FontLibrary library = libraryFromJson("classpath:/mapcheck.json", json);
 
             Field sigIndex = Type3FontLibrary.class.getDeclaredField("signatureIndex");

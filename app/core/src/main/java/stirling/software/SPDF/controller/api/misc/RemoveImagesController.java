@@ -52,10 +52,8 @@ public class RemoveImagesController {
     @Operation(
             summary = "Remove images from PDF",
             description =
-                    "This endpoint removes all embedded images from a PDF file and returns the"
-                            + " modified document.")
-    public ResponseEntity<Resource> removeImages(@ModelAttribute PDFFile request)
-            throws IOException {
+                    "This endpoint removes all embedded images from a PDF file and returns the" + " modified document.")
+    public ResponseEntity<Resource> removeImages(@ModelAttribute PDFFile request) throws IOException {
 
         MultipartFile inputFile = request.getFileInput();
 
@@ -80,9 +78,7 @@ public class RemoveImagesController {
             }
 
             return WebResponseUtils.pdfFileToWebResponse(
-                    tempOut,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_images_removed.pdf"));
+                    tempOut, GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_images_removed.pdf"));
 
         } catch (IOException e) {
             throw ExceptionUtils.handlePdfException(e, "during image removal");

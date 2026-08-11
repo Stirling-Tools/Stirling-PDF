@@ -24,18 +24,8 @@ class PdfJsonMetadataTest {
         @Test
         @DisplayName("all-args constructor sets every field")
         void allArgs() {
-            PdfJsonMetadata m =
-                    new PdfJsonMetadata(
-                            "Title",
-                            "Author",
-                            "Subject",
-                            "kw",
-                            "Creator",
-                            "Producer",
-                            "2025-01-01",
-                            "2026-01-01",
-                            "False",
-                            7);
+            PdfJsonMetadata m = new PdfJsonMetadata(
+                    "Title", "Author", "Subject", "kw", "Creator", "Producer", "2025-01-01", "2026-01-01", "False", 7);
 
             assertThat(m.getTitle()).isEqualTo("Title");
             assertThat(m.getAuthor()).isEqualTo("Author");
@@ -52,12 +42,11 @@ class PdfJsonMetadataTest {
         @Test
         @DisplayName("builder sets fields")
         void builder() {
-            PdfJsonMetadata m =
-                    PdfJsonMetadata.builder()
-                            .title("BuiltTitle")
-                            .author("BuiltAuthor")
-                            .numberOfPages(3)
-                            .build();
+            PdfJsonMetadata m = PdfJsonMetadata.builder()
+                    .title("BuiltTitle")
+                    .author("BuiltAuthor")
+                    .numberOfPages(3)
+                    .build();
 
             assertThat(m.getTitle()).isEqualTo("BuiltTitle");
             assertThat(m.getAuthor()).isEqualTo("BuiltAuthor");

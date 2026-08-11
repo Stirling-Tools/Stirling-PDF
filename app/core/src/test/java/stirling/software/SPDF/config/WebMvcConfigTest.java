@@ -40,10 +40,17 @@ class WebMvcConfigTest {
 
     private static final String TAURI_PROP = "STIRLING_PDF_TAURI_MODE";
 
-    @Mock private EndpointInterceptor endpointInterceptor;
-    @Mock private PdfMetricsInterceptor pdfMetricsInterceptor;
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private ApplicationProperties.System system;
+    @Mock
+    private EndpointInterceptor endpointInterceptor;
+
+    @Mock
+    private PdfMetricsInterceptor pdfMetricsInterceptor;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private ApplicationProperties.System system;
 
     private WebMvcConfig config;
     private String originalTauriProp;
@@ -52,8 +59,7 @@ class WebMvcConfigTest {
     void setUp() {
         originalTauriProp = System.getProperty(TAURI_PROP);
         System.clearProperty(TAURI_PROP);
-        config =
-                new WebMvcConfig(endpointInterceptor, pdfMetricsInterceptor, applicationProperties);
+        config = new WebMvcConfig(endpointInterceptor, pdfMetricsInterceptor, applicationProperties);
     }
 
     @AfterEach
@@ -91,8 +97,7 @@ class WebMvcConfigTest {
         @DisplayName("registers all five resource handler groups")
         void registersFiveHandlerGroups() {
             ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
-            ResourceHandlerRegistration registration =
-                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration registration = mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
             when(registry.addResourceHandler(any(String[].class))).thenReturn(registration);
 
             config.addResourceHandlers(registry);
@@ -105,16 +110,16 @@ class WebMvcConfigTest {
         @DisplayName("includes the SPA catch-all and assets patterns")
         void includesKnownPatterns() {
             ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
-            ResourceHandlerRegistration registration =
-                    mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
+            ResourceHandlerRegistration registration = mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
             when(registry.addResourceHandler(any(String[].class))).thenReturn(registration);
 
             config.addResourceHandlers(registry);
 
             ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
             verify(registry, atLeastOnce()).addResourceHandler(captor.capture());
-            List<String> allPatterns =
-                    captor.getAllValues().stream().flatMap(java.util.Arrays::stream).toList();
+            List<String> allPatterns = captor.getAllValues().stream()
+                    .flatMap(java.util.Arrays::stream)
+                    .toList();
             assertThat(allPatterns).contains("/**", "/assets/**", "/sw.js");
         }
     }
@@ -166,12 +171,8 @@ class WebMvcConfigTest {
         void configuredOriginsAlreadyContainTauri() {
             when(applicationProperties.getSystem()).thenReturn(system);
             when(system.getCorsAllowedOrigins())
-                    .thenReturn(
-                            new java.util.ArrayList<>(
-                                    List.of(
-                                            "tauri://localhost",
-                                            "http://tauri.localhost",
-                                            "https://tauri.localhost")));
+                    .thenReturn(new java.util.ArrayList<>(
+                            List.of("tauri://localhost", "http://tauri.localhost", "https://tauri.localhost")));
 
             config.addCorsMappings(registry);
 

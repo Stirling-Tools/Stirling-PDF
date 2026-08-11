@@ -23,8 +23,7 @@ class PrintFileControllerTest {
     void printFile_pathTraversal_throwsException() {
         PrintFileRequest request = new PrintFileRequest();
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "../../../etc/passwd", "application/pdf", "data".getBytes());
+                new MockMultipartFile("fileInput", "../../../etc/passwd", "application/pdf", "data".getBytes());
         request.setFileInput(file);
         request.setPrinterName("test-printer");
 
@@ -37,9 +36,7 @@ class PrintFileControllerTest {
         String absPath = Path.of("/etc/passwd").toString();
         // Only test on systems where /etc/passwd is absolute
         if (Path.of(absPath).isAbsolute()) {
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", absPath, "application/pdf", "data".getBytes());
+            MockMultipartFile file = new MockMultipartFile("fileInput", absPath, "application/pdf", "data".getBytes());
             request.setFileInput(file);
             request.setPrinterName("test-printer");
 
@@ -51,8 +48,7 @@ class PrintFileControllerTest {
     void printFile_normalFilename_doesNotThrowPathValidation() throws IOException {
         PrintFileRequest request = new PrintFileRequest();
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "document.pdf", "application/pdf", "data".getBytes());
+                new MockMultipartFile("fileInput", "document.pdf", "application/pdf", "data".getBytes());
         request.setFileInput(file);
         request.setPrinterName("nonexistent-printer");
 
@@ -69,8 +65,7 @@ class PrintFileControllerTest {
     @Test
     void printFile_nullFilename_doesNotThrowPathValidation() throws IOException {
         PrintFileRequest request = new PrintFileRequest();
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", null, "application/pdf", "data".getBytes());
+        MockMultipartFile file = new MockMultipartFile("fileInput", null, "application/pdf", "data".getBytes());
         request.setFileInput(file);
         request.setPrinterName("nonexistent-printer");
 
@@ -87,8 +82,7 @@ class PrintFileControllerTest {
     void printFile_dotDotInFilename_throwsException() {
         PrintFileRequest request = new PrintFileRequest();
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "some..file.pdf", "application/pdf", "data".getBytes());
+                new MockMultipartFile("fileInput", "some..file.pdf", "application/pdf", "data".getBytes());
         request.setFileInput(file);
         request.setPrinterName("test-printer");
 

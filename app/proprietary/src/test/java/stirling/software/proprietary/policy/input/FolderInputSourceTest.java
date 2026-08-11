@@ -44,9 +44,11 @@ class FolderInputSourceTest {
 
     private static final String POLICY = "p1";
 
-    @Mock private FileReadinessChecker readinessChecker;
+    @Mock
+    private FileReadinessChecker readinessChecker;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private FolderInputSource source;
     private InProcessProcessedLedger ledger;
@@ -56,12 +58,8 @@ class FolderInputSourceTest {
     void setUp() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        FolderAccessGuard guard =
-                new FolderAccessGuard(
-                        properties,
-                        new RuntimePathConfig(properties),
-                        new StandardEnvironment(),
-                        new InProcessSourceStore());
+        FolderAccessGuard guard = new FolderAccessGuard(
+                properties, new RuntimePathConfig(properties), new StandardEnvironment(), new InProcessSourceStore());
         source = new FolderInputSource(readinessChecker, guard);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
@@ -103,7 +101,8 @@ class FolderInputSourceTest {
         // The delete is version-guarded: the replacement is not the file that ran, so it stays
         // and is claimed as fresh work instead of being marked processed.
         assertTrue(Files.exists(file));
-        assertEquals(1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
+        assertEquals(
+                1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
     }
 
     @Test
@@ -154,10 +153,14 @@ class FolderInputSourceTest {
         Path file = inputDir.resolve("doc.pdf");
         Files.writeString(file, "data");
 
-        source.resolve(InputSpec.folder(inputDir.toString()), ctx).get(0).onComplete().accept(true);
+        source.resolve(InputSpec.folder(inputDir.toString()), ctx)
+                .get(0)
+                .onComplete()
+                .accept(true);
         Files.writeString(file, "data again");
 
-        assertEquals(1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
+        assertEquals(
+                1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
     }
 
     @Test
@@ -175,7 +178,8 @@ class FolderInputSourceTest {
         assertTrue(source.resolve(InputSpec.folder(inputDir.toString()), ctx).isEmpty());
 
         Files.setLastModifiedTime(file, FileTime.from(Instant.now().plusSeconds(60)));
-        assertEquals(1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
+        assertEquals(
+                1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
     }
 
     @Test
@@ -187,9 +191,7 @@ class FolderInputSourceTest {
         Files.writeString(statFile, "data");
         Files.writeString(hashFile, "data");
         InputSpec statSpec = InputSpec.folder(statDir.toString());
-        InputSpec hashSpec =
-                new InputSpec(
-                        "folder", Map.of("directory", hashDir.toString(), "identity", "hash"));
+        InputSpec hashSpec = new InputSpec("folder", Map.of("directory", hashDir.toString(), "identity", "hash"));
 
         source.resolve(statSpec, ctx).get(0).onComplete().accept(false);
         source.resolve(hashSpec, ctx).get(0).onComplete().accept(false);
@@ -209,9 +211,7 @@ class FolderInputSourceTest {
         Path inputDir = Files.createDirectories(tempDir.resolve("in"));
         Path file = inputDir.resolve("doc.pdf");
         Files.writeString(file, "data");
-        InputSpec spec =
-                new InputSpec(
-                        "folder", Map.of("directory", inputDir.toString(), "identity", "hash"));
+        InputSpec spec = new InputSpec("folder", Map.of("directory", inputDir.toString(), "identity", "hash"));
 
         source.resolve(spec, ctx).get(0).onComplete().accept(false);
         Files.writeString(file, "data v2 - longer");
@@ -223,9 +223,7 @@ class FolderInputSourceTest {
     void snapshotReadsStatelesslyEverySweep() throws IOException {
         Path inputDir = Files.createDirectories(tempDir.resolve("in"));
         Files.writeString(inputDir.resolve("doc.pdf"), "data");
-        InputSpec spec =
-                new InputSpec(
-                        "folder", Map.of("directory", inputDir.toString(), "mode", "snapshot"));
+        InputSpec spec = new InputSpec("folder", Map.of("directory", inputDir.toString(), "mode", "snapshot"));
 
         List<ResolvedInput> first = source.resolve(spec, ctx);
         first.get(0).onComplete().accept(true);
@@ -265,9 +263,7 @@ class FolderInputSourceTest {
         Files.writeString(nestedStaging.resolve("half-delivered"), "d");
 
         InputSpec flat = InputSpec.folder(inputDir.toString());
-        InputSpec recursive =
-                new InputSpec(
-                        "folder", Map.of("directory", inputDir.toString(), "recursive", "true"));
+        InputSpec recursive = new InputSpec("folder", Map.of("directory", inputDir.toString(), "recursive", "true"));
 
         assertEquals(1, source.resolve(flat, ctx).size());
         assertEquals(1, source.resolve(recursive, ctx).size()); // top.pdf already claimed above
@@ -297,8 +293,7 @@ class FolderInputSourceTest {
         Path child = Files.createDirectories(parent.resolve("sub"));
         Files.writeString(child.resolve("doc.pdf"), "data");
         InputSpec parentRecursive =
-                new InputSpec(
-                        "folder", Map.of("directory", parent.toString(), "recursive", "true"));
+                new InputSpec("folder", Map.of("directory", parent.toString(), "recursive", "true"));
         InputSpec childFlat = InputSpec.folder(child.toString());
 
         // Same sweep, same policy context: whichever source resolves first wins the file.
@@ -308,24 +303,15 @@ class FolderInputSourceTest {
 
     @Test
     void missingDirectoryOptionFails() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> source.resolve(new InputSpec("folder", Map.of()), ctx));
+        assertThrows(IllegalArgumentException.class, () -> source.resolve(new InputSpec("folder", Map.of()), ctx));
     }
 
     @Test
     void anUnknownIdentityModeIsRejected() {
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        source.validate(
-                                new InputSpec(
-                                        "folder",
-                                        Map.of(
-                                                "directory",
-                                                tempDir.toString(),
-                                                "identity",
-                                                "guesswork"))));
+                () -> source.validate(
+                        new InputSpec("folder", Map.of("directory", tempDir.toString(), "identity", "guesswork"))));
     }
 
     @Test
@@ -340,20 +326,14 @@ class FolderInputSourceTest {
 
     @Test
     void validateRejectsMissingDirectory() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> source.validate(new InputSpec("folder", Map.of())));
+        assertThrows(IllegalArgumentException.class, () -> source.validate(new InputSpec("folder", Map.of())));
     }
 
     @Test
     void rejectsADirectoryOutsideTheAllowedRoots() {
         Path outside = tempDir.resolveSibling("not-allowed");
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> source.resolve(InputSpec.folder(outside.toString()), ctx));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> source.validate(InputSpec.folder(outside.toString())));
+        assertThrows(IllegalArgumentException.class, () -> source.resolve(InputSpec.folder(outside.toString()), ctx));
+        assertThrows(IllegalArgumentException.class, () -> source.validate(InputSpec.folder(outside.toString())));
     }
 
     @Test
@@ -382,8 +362,7 @@ class FolderInputSourceTest {
         }
 
         @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
+        public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
             ledger.settle(policyId, identity, finalGate, finalContentHash, success);
         }
 

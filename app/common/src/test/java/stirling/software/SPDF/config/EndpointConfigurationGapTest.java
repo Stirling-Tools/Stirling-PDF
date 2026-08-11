@@ -72,17 +72,13 @@ class EndpointConfigurationGapTest {
         @Test
         @DisplayName("extracts plain endpoint key from a standard /api/v1/<group>/<endpoint> uri")
         void plainEndpoint() {
-            assertEquals(
-                    "remove-pages",
-                    EndpointConfiguration.endpointKeyForUri("/api/v1/general/remove-pages"));
+            assertEquals("remove-pages", EndpointConfiguration.endpointKeyForUri("/api/v1/general/remove-pages"));
         }
 
         @Test
         @DisplayName("builds a <from>-to-<to> key for convert endpoints")
         void convertEndpoint() {
-            assertEquals(
-                    "pdf-to-img",
-                    EndpointConfiguration.endpointKeyForUri("/api/v1/convert/pdf/img"));
+            assertEquals("pdf-to-img", EndpointConfiguration.endpointKeyForUri("/api/v1/convert/pdf/img"));
         }
 
         @Test
@@ -354,7 +350,8 @@ class EndpointConfigurationGapTest {
             EndpointConfiguration config = buildDefault();
             config.disableEndpoint("merge-pdfs");
             assertEquals(
-                    DisableReason.CONFIG, config.getEndpointAvailability("merge-pdfs").getReason());
+                    DisableReason.CONFIG,
+                    config.getEndpointAvailability("merge-pdfs").getReason());
         }
 
         @Test
@@ -415,9 +412,7 @@ class EndpointConfigurationGapTest {
         @Test
         @DisplayName("endpoints.toRemove disables the listed endpoints at construction")
         void endpointsToRemove() {
-            applicationProperties
-                    .getEndpoints()
-                    .setToRemove(List.of(" merge-pdfs ", "split-pages"));
+            applicationProperties.getEndpoints().setToRemove(List.of(" merge-pdfs ", "split-pages"));
             EndpointConfiguration config = build(false);
             // values are trimmed before disabling
             assertFalse(config.isEndpointEnabled("merge-pdfs"));

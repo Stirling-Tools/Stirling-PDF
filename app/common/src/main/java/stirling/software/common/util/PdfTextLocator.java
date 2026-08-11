@@ -40,11 +40,7 @@ public class PdfTextLocator {
      * the needle is blank.
      */
     public Optional<MatchedBox> findOnPage(PDDocument doc, int pageIndex, String needle) {
-        if (doc == null
-                || needle == null
-                || needle.isBlank()
-                || pageIndex < 0
-                || pageIndex >= doc.getNumberOfPages()) {
+        if (doc == null || needle == null || needle.isBlank() || pageIndex < 0 || pageIndex >= doc.getNumberOfPages()) {
             return Optional.empty();
         }
         String normalizedNeedle = normalize(needle);
@@ -62,10 +58,7 @@ public class PdfTextLocator {
             // Side effect: populates `lines`. We don't need the concatenated text.
             stripper.getText(doc);
         } catch (IOException e) {
-            log.warn(
-                    "PdfTextLocator failed to extract text on page {}: {}",
-                    pageIndex,
-                    e.getMessage());
+            log.warn("PdfTextLocator failed to extract text on page {}: {}", pageIndex, e.getMessage());
             return Optional.empty();
         }
 
@@ -105,8 +98,7 @@ public class PdfTextLocator {
         }
 
         @Override
-        protected void writeString(String text, List<TextPosition> textPositions)
-                throws IOException {
+        protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
             if (textPositions != null && !textPositions.isEmpty()) {
                 CapturedLine line = new CapturedLine();
                 line.text = text;

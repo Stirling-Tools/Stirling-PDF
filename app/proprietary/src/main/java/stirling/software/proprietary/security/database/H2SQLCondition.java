@@ -18,8 +18,7 @@ public class H2SQLCondition implements Condition {
         }
 
         // Legacy custom-DB block, if explicitly enabled, is authoritative.
-        boolean enableCustomDatabase =
-                env.getProperty("system.datasource.enableCustomDatabase", Boolean.class, false);
+        boolean enableCustomDatabase = env.getProperty("system.datasource.enableCustomDatabase", Boolean.class, false);
         if (enableCustomDatabase) {
             String dataSourceType = env.getProperty("system.datasource.type", String.class, "");
             return "h2".equalsIgnoreCase(dataSourceType);

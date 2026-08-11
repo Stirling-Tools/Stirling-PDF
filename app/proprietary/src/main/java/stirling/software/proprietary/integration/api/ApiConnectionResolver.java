@@ -44,22 +44,16 @@ public class ApiConnectionResolver {
 
     /** The raw config map for a connection of the given type. */
     public Map<String, Object> resolveConfig(Long connectionId, IntegrationType type) {
-        IntegrationConfig connection =
-                connections
-                        .findById(connectionId)
-                        .filter(cfg -> cfg.getIntegrationType() == type)
-                        .filter(this::usableByCurrentUser)
-                        // Existence and access collapse into one error so a caller cannot tell
-                        // "no such connection" from "someone else's connection" and enumerate ids.
-                        .orElseThrow(
-                                () ->
-                                        new IllegalArgumentException(
-                                                "unknown or inaccessible "
-                                                        + type.name().toLowerCase()
-                                                        + " connection"));
+        IntegrationConfig connection = connections
+                .findById(connectionId)
+                .filter(cfg -> cfg.getIntegrationType() == type)
+                .filter(this::usableByCurrentUser)
+                // Existence and access collapse into one error so a caller cannot tell
+                // "no such connection" from "someone else's connection" and enumerate ids.
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "unknown or inaccessible " + type.name().toLowerCase() + " connection"));
         if (!connection.isEnabled()) {
-            throw new IllegalArgumentException(
-                    type.name().toLowerCase() + " connection is disabled");
+            throw new IllegalArgumentException(type.name().toLowerCase() + " connection is disabled");
         }
         return configOf(connection);
     }
@@ -80,8 +74,7 @@ public class ApiConnectionResolver {
         try {
             return Long.valueOf(reference.toString().trim());
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                    "'connectionId' is not a valid connection reference: " + reference);
+            throw new IllegalArgumentException("'connectionId' is not a valid connection reference: " + reference);
         }
     }
 
@@ -120,11 +113,9 @@ public class ApiConnectionResolver {
             return Map.of();
         }
         try {
-            return OBJECT_MAPPER.readValue(
-                    json, new TypeReference<LinkedHashMap<String, Object>>() {});
+            return OBJECT_MAPPER.readValue(json, new TypeReference<LinkedHashMap<String, Object>>() {});
         } catch (Exception e) {
-            throw new IllegalArgumentException(
-                    "connection '" + connection.getName() + "' has unreadable config", e);
+            throw new IllegalArgumentException("connection '" + connection.getName() + "' has unreadable config", e);
         }
     }
 }

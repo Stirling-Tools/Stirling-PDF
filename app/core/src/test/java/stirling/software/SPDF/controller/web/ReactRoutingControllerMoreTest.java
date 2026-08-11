@@ -31,8 +31,7 @@ class ReactRoutingControllerMoreTest {
         return controller;
     }
 
-    private static void setField(ReactRoutingController c, String name, Object value)
-            throws Exception {
+    private static void setField(ReactRoutingController c, String name, Object value) throws Exception {
         Field field = ReactRoutingController.class.getDeclaredField(name);
         field.setAccessible(true);
         field.set(c, value);
@@ -51,8 +50,7 @@ class ReactRoutingControllerMoreTest {
             setField(controller, "saasLandingExists", true);
             setField(controller, "cachedSaasLandingHtml", "<html>SAAS LANDING</html>");
 
-            ResponseEntity<String> response =
-                    controller.serveRootPage(mock(HttpServletRequest.class));
+            ResponseEntity<String> response = controller.serveRootPage(mock(HttpServletRequest.class));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_HTML);
@@ -65,8 +63,7 @@ class ReactRoutingControllerMoreTest {
             ReactRoutingController controller = newController("/");
             controller.init();
 
-            ResponseEntity<String> response =
-                    controller.serveRootPage(mock(HttpServletRequest.class));
+            ResponseEntity<String> response = controller.serveRootPage(mock(HttpServletRequest.class));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).contains("Stirling PDF");
@@ -83,20 +80,16 @@ class ReactRoutingControllerMoreTest {
             Path indexHtml = staticDir.resolve("index.html");
             Files.writeString(
                     indexHtml,
-                    "<html><head><base href=\"/old/\" /><title>x</title></head>"
-                            + "<body>%BASE_URL%</body></html>",
+                    "<html><head><base href=\"/old/\" /><title>x</title></head>" + "<body>%BASE_URL%</body></html>",
                     StandardCharsets.UTF_8);
 
-            try (MockedStatic<InstallationPathConfig> paths =
-                    mockStatic(InstallationPathConfig.class)) {
-                paths.when(InstallationPathConfig::getStaticPath)
-                        .thenReturn(staticDir.toString() + "/");
+            try (MockedStatic<InstallationPathConfig> paths = mockStatic(InstallationPathConfig.class)) {
+                paths.when(InstallationPathConfig::getStaticPath).thenReturn(staticDir.toString() + "/");
 
                 ReactRoutingController controller = newController("/myapp");
                 controller.init();
 
-                ResponseEntity<String> response =
-                        controller.serveIndexHtml(mock(HttpServletRequest.class));
+                ResponseEntity<String> response = controller.serveIndexHtml(mock(HttpServletRequest.class));
 
                 String body = response.getBody();
                 assertThat(body).isNotNull();
@@ -117,17 +110,14 @@ class ReactRoutingControllerMoreTest {
                     "<html><body>EXTERNAL UPLOAD PAGE</body></html>",
                     StandardCharsets.UTF_8);
 
-            try (MockedStatic<InstallationPathConfig> paths =
-                    mockStatic(InstallationPathConfig.class)) {
-                paths.when(InstallationPathConfig::getStaticPath)
-                        .thenReturn(staticDir.toString() + "/");
+            try (MockedStatic<InstallationPathConfig> paths = mockStatic(InstallationPathConfig.class)) {
+                paths.when(InstallationPathConfig::getStaticPath).thenReturn(staticDir.toString() + "/");
 
                 ReactRoutingController controller = newController("/");
                 controller.init();
                 System.setProperty("STIRLING_PDF_TAURI_MODE", "true");
                 try {
-                    ResponseEntity<String> response =
-                            controller.serveMobileScanner(mock(HttpServletRequest.class));
+                    ResponseEntity<String> response = controller.serveMobileScanner(mock(HttpServletRequest.class));
 
                     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                     assertThat(response.getBody()).contains("EXTERNAL UPLOAD PAGE");
@@ -150,8 +140,7 @@ class ReactRoutingControllerMoreTest {
             setField(controller, "indexHtmlExists", false);
             setField(controller, "cachedIndexHtml", null);
 
-            ResponseEntity<String> response =
-                    controller.serveIndexHtml(mock(HttpServletRequest.class));
+            ResponseEntity<String> response = controller.serveIndexHtml(mock(HttpServletRequest.class));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).contains("Stirling PDF");

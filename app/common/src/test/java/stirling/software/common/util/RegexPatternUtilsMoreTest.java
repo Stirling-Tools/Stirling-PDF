@@ -39,15 +39,7 @@ class RegexPatternUtilsMoreTest {
         @DisplayName("supported new field types contains the documented set")
         void supportedFieldTypes() {
             Set<String> types = utils.getSupportedNewFieldTypes();
-            assertThat(types)
-                    .contains(
-                            "text",
-                            "checkbox",
-                            "combobox",
-                            "listbox",
-                            "radio",
-                            "button",
-                            "signature");
+            assertThat(types).contains("text", "checkbox", "combobox", "listbox", "radio", "button", "signature");
         }
     }
 
@@ -131,7 +123,9 @@ class RegexPatternUtilsMoreTest {
 
         @Test
         void uploadDownloadPathPattern() {
-            assertTrue(utils.getUploadDownloadPathPattern().matcher("/api/UPLOAD/file").matches());
+            assertTrue(utils.getUploadDownloadPathPattern()
+                    .matcher("/api/UPLOAD/file")
+                    .matches());
         }
     }
 
@@ -179,7 +173,8 @@ class RegexPatternUtilsMoreTest {
         @Test
         void formFieldBracketPattern() {
             assertEquals(
-                    "field", utils.getFormFieldBracketPattern().matcher("field[0]").replaceAll(""));
+                    "field",
+                    utils.getFormFieldBracketPattern().matcher("field[0]").replaceAll(""));
         }
 
         @Test
@@ -255,21 +250,31 @@ class RegexPatternUtilsMoreTest {
 
         @Test
         void emailValidationPattern() {
-            assertTrue(utils.getEmailValidationPattern().matcher("user@example.com").matches());
-            assertFalse(utils.getEmailValidationPattern().matcher("not-an-email").matches());
+            assertTrue(utils.getEmailValidationPattern()
+                    .matcher("user@example.com")
+                    .matches());
+            assertFalse(
+                    utils.getEmailValidationPattern().matcher("not-an-email").matches());
         }
 
         @Test
         void scriptStyleAndCssPatterns() {
-            assertTrue(utils.getScriptTagPattern().matcher("<script>x()</script>").find());
+            assertTrue(
+                    utils.getScriptTagPattern().matcher("<script>x()</script>").find());
             assertTrue(utils.getStyleTagPattern().matcher("<style>a{}</style>").find());
-            assertTrue(utils.getFixedPositionCssPattern().matcher("position: fixed;").find());
-            assertTrue(utils.getAbsolutePositionCssPattern().matcher("position: absolute;").find());
+            assertTrue(utils.getFixedPositionCssPattern()
+                    .matcher("position: fixed;")
+                    .find());
+            assertTrue(utils.getAbsolutePositionCssPattern()
+                    .matcher("position: absolute;")
+                    .find());
         }
 
         @Test
         void inlineCidAndImagePatterns() {
-            assertTrue(utils.getInlineCidImagePattern().matcher("<img src=\"cid:abc\">").find());
+            assertTrue(utils.getInlineCidImagePattern()
+                    .matcher("<img src=\"cid:abc\">")
+                    .find());
             assertTrue(utils.getImageFilePattern().matcher("photo.JPG").matches());
         }
     }
@@ -286,18 +291,23 @@ class RegexPatternUtilsMoreTest {
         @Test
         void systemTempFilePatterns() {
             assertTrue(utils.getSystemTempFile1Pattern().matcher("lu123abc.tmp").find());
-            assertTrue(utils.getSystemTempFile2Pattern().matcher("ocr_process42").find());
+            assertTrue(
+                    utils.getSystemTempFile2Pattern().matcher("ocr_process42").find());
         }
 
         @Test
         void whitespaceParensSplit() {
-            assertTrue(utils.getWhitespaceParenthesesSplitPattern().matcher("a (b)").find());
+            assertTrue(utils.getWhitespaceParenthesesSplitPattern()
+                    .matcher("a (b)")
+                    .find());
         }
 
         @Test
         void mimeHeaderAndEncodedWord() {
-            assertTrue(utils.getMimeHeaderWhitespacePattern().matcher("a =?utf-8").find());
-            assertTrue(utils.getMimeEncodedWordPattern().matcher("=?utf-8?B?abc?=").find());
+            assertTrue(
+                    utils.getMimeHeaderWhitespacePattern().matcher("a =?utf-8").find());
+            assertTrue(
+                    utils.getMimeEncodedWordPattern().matcher("=?utf-8?B?abc?=").find());
         }
 
         @Test
@@ -312,16 +322,22 @@ class RegexPatternUtilsMoreTest {
 
         @Test
         void accessReadOnlyAndXmpPatterns() {
-            assertTrue(utils.getAccessReadOnlyPattern().matcher("access=\"readOnly\"").find());
+            assertTrue(utils.getAccessReadOnlyPattern()
+                    .matcher("access=\"readOnly\"")
+                    .find());
             assertTrue(utils.getPdfAidPartPattern().matcher("pdfaid:part=\"2\"").find());
-            assertTrue(
-                    utils.getPdfAidConformancePattern().matcher("pdfaid:conformance=\"B\"").find());
+            assertTrue(utils.getPdfAidConformancePattern()
+                    .matcher("pdfaid:conformance=\"B\"")
+                    .find());
         }
 
         @Test
         void attachmentPatterns() {
-            assertTrue(utils.getAttachmentSectionPattern().matcher("Attachments (3)").find());
-            assertTrue(utils.getAttachmentFilenamePattern().matcher("@ file.txt").find());
+            assertTrue(utils.getAttachmentSectionPattern()
+                    .matcher("Attachments (3)")
+                    .find());
+            assertTrue(
+                    utils.getAttachmentFilenamePattern().matcher("@ file.txt").find());
         }
 
         @Test

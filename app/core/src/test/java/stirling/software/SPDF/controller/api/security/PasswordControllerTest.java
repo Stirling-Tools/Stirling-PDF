@@ -57,27 +57,26 @@ class PasswordControllerTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private PasswordController passwordController;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private PasswordController passwordController;
 
     private byte[] simplePdfBytes;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage());
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -86,13 +85,11 @@ class PasswordControllerTest {
         }
     }
 
-    private byte[] createPasswordProtectedPdf(String ownerPassword, String userPassword)
-            throws IOException {
+    private byte[] createPasswordProtectedPdf(String ownerPassword, String userPassword) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage());
             AccessPermission ap = new AccessPermission();
-            StandardProtectionPolicy spp =
-                    new StandardProtectionPolicy(ownerPassword, userPassword, ap);
+            StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPassword, userPassword, ap);
             spp.setEncryptionKeyLength(128);
             doc.protect(spp);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -109,11 +106,7 @@ class PasswordControllerTest {
         @DisplayName("Should remove password from a protected PDF")
         void testRemovePassword_Success() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFPasswordRequest request = new PDFPasswordRequest();
             request.setFileInput(pdfFile);
@@ -133,11 +126,7 @@ class PasswordControllerTest {
         @DisplayName("Should include correct filename suffix in response")
         void testRemovePassword_FilenameSuffix() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "document.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "document.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFPasswordRequest request = new PDFPasswordRequest();
             request.setFileInput(pdfFile);
@@ -156,11 +145,7 @@ class PasswordControllerTest {
         @DisplayName("Should handle IOException that is a password error")
         void testRemovePassword_PasswordError() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFPasswordRequest request = new PDFPasswordRequest();
             request.setFileInput(pdfFile);
@@ -176,11 +161,7 @@ class PasswordControllerTest {
         @DisplayName("Should handle generic IOException")
         void testRemovePassword_GenericIOException() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFPasswordRequest request = new PDFPasswordRequest();
             request.setFileInput(pdfFile);
@@ -196,11 +177,7 @@ class PasswordControllerTest {
         @DisplayName("Should handle empty password")
         void testRemovePassword_EmptyPassword() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFPasswordRequest request = new PDFPasswordRequest();
             request.setFileInput(pdfFile);
@@ -217,8 +194,7 @@ class PasswordControllerTest {
         @DisplayName("Should handle null original filename")
         void testRemovePassword_NullFilename() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", null, MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
+                    new MockMultipartFile("fileInput", null, MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFPasswordRequest request = new PDFPasswordRequest();
             request.setFileInput(pdfFile);
@@ -240,11 +216,7 @@ class PasswordControllerTest {
         @DisplayName("Should add password with owner and user passwords")
         void testAddPassword_BothPasswords() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddPasswordRequest request = new AddPasswordRequest();
             request.setFileInput(pdfFile);
@@ -252,8 +224,7 @@ class PasswordControllerTest {
             request.setPassword("user123");
             request.setKeyLength(128);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
 
@@ -265,11 +236,7 @@ class PasswordControllerTest {
         @DisplayName("Should add password with only owner password")
         void testAddPassword_OnlyOwnerPassword() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddPasswordRequest request = new AddPasswordRequest();
             request.setFileInput(pdfFile);
@@ -277,8 +244,7 @@ class PasswordControllerTest {
             request.setPassword("");
             request.setKeyLength(256);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
 
@@ -289,11 +255,7 @@ class PasswordControllerTest {
         @DisplayName("Should add permissions only when no passwords")
         void testAddPassword_PermissionsOnly() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddPasswordRequest request = new AddPasswordRequest();
             request.setFileInput(pdfFile);
@@ -303,8 +265,7 @@ class PasswordControllerTest {
             request.setPreventPrinting(true);
             request.setPreventModify(true);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
@@ -314,11 +275,7 @@ class PasswordControllerTest {
         @DisplayName("Should add password with null passwords (permissions only)")
         void testAddPassword_NullPasswords() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddPasswordRequest request = new AddPasswordRequest();
             request.setFileInput(pdfFile);
@@ -326,8 +283,7 @@ class PasswordControllerTest {
             request.setPassword(null);
             request.setKeyLength(128);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
@@ -337,11 +293,7 @@ class PasswordControllerTest {
         @DisplayName("Should set all permission flags correctly")
         void testAddPassword_AllPermissionFlags() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddPasswordRequest request = new AddPasswordRequest();
             request.setFileInput(pdfFile);
@@ -357,8 +309,7 @@ class PasswordControllerTest {
             request.setPreventPrinting(true);
             request.setPreventPrintingFaithful(true);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
@@ -369,11 +320,7 @@ class PasswordControllerTest {
         @DisplayName("Should handle null permission boolean flags (treated as false)")
         void testAddPassword_NullPermissionFlags() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddPasswordRequest request = new AddPasswordRequest();
             request.setFileInput(pdfFile);
@@ -382,8 +329,7 @@ class PasswordControllerTest {
             request.setKeyLength(128);
             // All permission flags left null
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
@@ -393,11 +339,7 @@ class PasswordControllerTest {
         @DisplayName("Should use 40 bit key length")
         void testAddPassword_40BitKeyLength() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddPasswordRequest request = new AddPasswordRequest();
             request.setFileInput(pdfFile);
@@ -405,8 +347,7 @@ class PasswordControllerTest {
             request.setPassword("user");
             request.setKeyLength(40);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());
@@ -416,11 +357,7 @@ class PasswordControllerTest {
         @DisplayName("Should handle only user password set")
         void testAddPassword_OnlyUserPassword() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddPasswordRequest request = new AddPasswordRequest();
             request.setFileInput(pdfFile);
@@ -428,8 +365,7 @@ class PasswordControllerTest {
             request.setPassword("user123");
             request.setKeyLength(128);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = passwordController.addPassword(request);
             assertNotNull(response.getBody());

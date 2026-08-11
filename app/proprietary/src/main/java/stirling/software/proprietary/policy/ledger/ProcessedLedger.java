@@ -34,16 +34,10 @@ public interface ProcessedLedger {
      * matching hash refreshes the stored gate instead of reprocessing. Supplier exceptions
      * propagate.
      */
-    boolean claim(
-            String policyId,
-            String identity,
-            String gate,
-            Supplier<String> contentHash,
-            ClaimState observed);
+    boolean claim(String policyId, String identity, String gate, Supplier<String> contentHash, ClaimState observed);
 
     /** Snapshot-then-claim convenience for a single file; sweeps batch via {@link #statesFor}. */
-    default boolean claim(
-            String policyId, String identity, String gate, Supplier<String> contentHash) {
+    default boolean claim(String policyId, String identity, String gate, Supplier<String> contentHash) {
         return claim(
                 policyId,
                 identity,
@@ -53,12 +47,7 @@ public interface ProcessedLedger {
     }
 
     /** Record a claimed file's outcome at its final version ({@code finalContentHash} nullable). */
-    void settle(
-            String policyId,
-            String identity,
-            String finalGate,
-            String finalContentHash,
-            boolean success);
+    void settle(String policyId, String identity, String finalGate, String finalContentHash, boolean success);
 
     /**
      * Record a produced file as {@link ProcessedFileStatus#DONE} so the policy skips its own

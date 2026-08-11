@@ -30,9 +30,7 @@ public class LibreOfficeListener {
     private boolean isListenerRunning() {
         log.info("waiting for listener to start");
         try (Socket socket = new Socket()) {
-            socket.connect(
-                    new InetSocketAddress("localhost", LISTENER_PORT),
-                    1000); // Timeout after 1 second
+            socket.connect(new InetSocketAddress("localhost", LISTENER_PORT), 1000); // Timeout after 1 second
             return true;
         } catch (Exception e) {
             return false;
@@ -51,23 +49,22 @@ public class LibreOfficeListener {
 
         // Start a virtual thread to monitor the activity timeout
         executorService = Executors.newVirtualThreadPerTaskExecutor();
-        executorService.submit(
-                () -> {
-                    while (true) {
-                        long idleTime = System.currentTimeMillis() - lastActivityTime;
-                        if (idleTime >= ACTIVITY_TIMEOUT) {
-                            // If there has been no activity for too long, tear down the listener
-                            process.destroy();
-                            break;
-                        }
-                        try {
-                            Thread.sleep(5000); // Check for inactivity every 5 seconds
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            break;
-                        }
-                    }
-                });
+        executorService.submit(() -> {
+            while (true) {
+                long idleTime = System.currentTimeMillis() - lastActivityTime;
+                if (idleTime >= ACTIVITY_TIMEOUT) {
+                    // If there has been no activity for too long, tear down the listener
+                    process.destroy();
+                    break;
+                }
+                try {
+                    Thread.sleep(5000); // Check for inactivity every 5 seconds
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        });
 
         // Wait for the listener to start up
         long startTime = System.currentTimeMillis();

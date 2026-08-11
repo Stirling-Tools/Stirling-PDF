@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/security")
-@Tag(
-        name = "Security",
-        description =
-                """
+@Tag(name = "Security", description = """
                 Protect and clean PDFs: passwords, digital signatures, redaction, and sanitizing.
                 These endpoints help you control who can open a file, what they can do with it, and remove sensitive content when needed.
 

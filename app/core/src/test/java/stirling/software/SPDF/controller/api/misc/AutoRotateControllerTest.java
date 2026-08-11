@@ -48,31 +48,35 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class AutoRotateControllerTest {
 
-    private static final String SAMPLE_TEXT =
-            "The quick brown fox jumps over the lazy dog again and again";
+    private static final String SAMPLE_TEXT = "The quick brown fox jumps over the lazy dog again and again";
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private RuntimePathConfig runtimePathConfig;
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private AutoRotateController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @InjectMocks
+    private AutoRotateController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
         lenient().when(endpointConfiguration.isGroupEnabled("tesseract")).thenReturn(false);
     }
 
@@ -96,11 +100,7 @@ class AutoRotateControllerTest {
     private AutoRotatePdfRequest request(PDDocument document) throws IOException {
         AutoRotatePdfRequest request = new AutoRotatePdfRequest();
         request.setFileInput(
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        new byte[] {1, 2, 3}));
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3}));
         when(pdfDocumentFactory.load(request)).thenReturn(document);
         return request;
     }
@@ -110,16 +110,14 @@ class AutoRotateControllerTest {
         return Loader.loadPDF(resource.getContentAsByteArray());
     }
 
-    private static PDDocument docWithTextAt(int textAngleDegrees, int pageRotation)
-            throws IOException {
+    private static PDDocument docWithTextAt(int textAngleDegrees, int pageRotation) throws IOException {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage(PDRectangle.LETTER);
         document.addPage(page);
         try (PDPageContentStream content = new PDPageContentStream(document, page)) {
             content.beginText();
             content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-            content.setTextMatrix(
-                    Matrix.getRotateInstance(Math.toRadians(textAngleDegrees), 300, 400));
+            content.setTextMatrix(Matrix.getRotateInstance(Math.toRadians(textAngleDegrees), 300, 400));
             content.showText(SAMPLE_TEXT);
             content.endText();
         }
@@ -134,15 +132,14 @@ class AutoRotateControllerTest {
      */
     private static int dominantGlyphDirection(PDDocument document) throws IOException {
         int[] counts = new int[4];
-        PDFTextStripper stripper =
-                new PDFTextStripper() {
-                    @Override
-                    protected void processTextPosition(TextPosition text) {
-                        if (!text.getUnicode().isBlank()) {
-                            counts[Math.floorMod(Math.round(text.getDir()), 360) / 90]++;
-                        }
-                    }
-                };
+        PDFTextStripper stripper = new PDFTextStripper() {
+            @Override
+            protected void processTextPosition(TextPosition text) {
+                if (!text.getUnicode().isBlank()) {
+                    counts[Math.floorMod(Math.round(text.getDir()), 360) / 90]++;
+                }
+            }
+        };
         stripper.setStartPage(1);
         stripper.setEndPage(1);
         stripper.getText(document);
@@ -308,8 +305,7 @@ class AutoRotateControllerTest {
         AutoRotatePdfRequest request = new AutoRotatePdfRequest();
         request.setDetectionMode("magic");
 
-        assertThatThrownBy(() -> controller.autoRotatePdf(request))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> controller.autoRotatePdf(request)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -317,8 +313,7 @@ class AutoRotateControllerTest {
         AutoRotatePdfRequest request = request(docWithUprightText(0));
         request.setPageRotations(List.of(new PageRotation(1, 45)));
 
-        assertThatThrownBy(() -> controller.autoRotatePdf(request))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> controller.autoRotatePdf(request)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -326,8 +321,7 @@ class AutoRotateControllerTest {
         AutoRotatePdfRequest request = request(docWithUprightText(0));
         request.setPageRotations(List.of(new PageRotation(5, 90)));
 
-        assertThatThrownBy(() -> controller.autoRotatePdf(request))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> controller.autoRotatePdf(request)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -336,7 +330,6 @@ class AutoRotateControllerTest {
         AutoRotatePdfRequest request = request(docWithUprightText(0, 0));
         request.setPageRotations(List.of(new PageRotation(1, 90), new PageRotation(1, 90)));
 
-        assertThatThrownBy(() -> controller.autoRotatePdf(request))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> controller.autoRotatePdf(request)).isInstanceOf(IllegalArgumentException.class);
     }
 }

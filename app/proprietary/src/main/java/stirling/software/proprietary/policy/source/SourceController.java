@@ -70,9 +70,8 @@ public class SourceController {
     @GetMapping
     @Operation(
             summary = "Sources overview",
-            description =
-                    "Returns the KPI strip plus one row per source the caller's team owns, each with"
-                            + " how many policies reference it and which.")
+            description = "Returns the KPI strip plus one row per source the caller's team owns, each with"
+                    + " how many policies reference it and which.")
     public SourcesResponse list() {
         return overviewService.overview();
     }
@@ -80,9 +79,8 @@ public class SourceController {
     @GetMapping("/{sourceId}")
     @Operation(
             summary = "Get a source by id",
-            description =
-                    "Secret-bearing options are returned as a redaction sentinel, never their"
-                            + " stored values; an edit that sends the sentinel back keeps them.")
+            description = "Secret-bearing options are returned as a redaction sentinel, never their"
+                    + " stored values; an edit that sends the sentinel back keeps them.")
     public ResponseEntity<Source> get(@PathVariable String sourceId) {
         return sourceStore
                 .get(sourceId)
@@ -95,9 +93,7 @@ public class SourceController {
     @GetMapping("/{sourceId}/document-counts")
     @Operation(
             summary = "Daily document counts for a source",
-            description =
-                    "The trailing 30-day per-day document series (oldest first) for the source's"
-                            + " sparkline.")
+            description = "The trailing 30-day per-day document series (oldest first) for the source's" + " sparkline.")
     public ResponseEntity<List<Long>> documentCounts(@PathVariable String sourceId) {
         // The editor is virtual: its series is tracked per team, not against a persisted source.
         if (EditorSource.ID.equals(sourceId)) {
@@ -113,10 +109,9 @@ public class SourceController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create or update a source",
-            description =
-                    "Stores an input connection (type + config). A blank id is assigned; owner and"
-                            + " team are stamped server-side. The config is validated against the"
-                            + " matching source type.")
+            description = "Stores an input connection (type + config). A blank id is assigned; owner and"
+                    + " team are stamped server-side. The config is validated against the"
+                    + " matching source type.")
     public ResponseEntity<Source> save(@RequestBody Source source) {
         requireSourceEditingAllowed();
         requireNotEditor(source.id(), source.type());
@@ -141,13 +136,13 @@ public class SourceController {
     @DeleteMapping("/{sourceId}")
     @Operation(
             summary = "Delete a source",
-            description =
-                    "Removes a source that no policy references. A source still in use returns 409"
-                            + " so the connection can't be pulled out from under a live policy.")
+            description = "Removes a source that no policy references. A source still in use returns 409"
+                    + " so the connection can't be pulled out from under a live policy.")
     public ResponseEntity<Void> delete(@PathVariable String sourceId) {
         requireSourceEditingAllowed();
         requireNotEditor(sourceId, null);
-        Source source = sourceStore.get(sourceId).filter(sourceAccessGuard::canAccess).orElse(null);
+        Source source =
+                sourceStore.get(sourceId).filter(sourceAccessGuard::canAccess).orElse(null);
         if (source == null) {
             return ResponseEntity.notFound().build();
         }
@@ -172,8 +167,7 @@ public class SourceController {
      */
     @ExceptionHandler(FolderAccessDeniedException.class)
     public ResponseEntity<ProblemDetail> handleFolderAccessDenied(FolderAccessDeniedException ex) {
-        ProblemDetail problem =
-                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setProperty("code", FOLDER_ACCESS_DENIED_CODE);
         return ResponseEntity.badRequest()
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
@@ -197,32 +191,16 @@ public class SourceController {
                 return withOwnerAndTeam(incoming, existing.owner(), existing.teamId());
             }
         }
-        return withOwnerAndTeam(
-                incoming,
-                sourceAccessGuard.ownerForNewSource(),
-                sourceAccessGuard.teamForNewSource());
+        return withOwnerAndTeam(incoming, sourceAccessGuard.ownerForNewSource(), sourceAccessGuard.teamForNewSource());
     }
 
     private static Source withOwnerAndTeam(Source source, String owner, Long teamId) {
-        return new Source(
-                source.id(),
-                source.name(),
-                source.type(),
-                source.options(),
-                source.enabled(),
-                owner,
-                teamId);
+        return new Source(source.id(), source.name(), source.type(), source.options(), source.enabled(), owner, teamId);
     }
 
     private static Source withOptions(Source source, Map<String, Object> options) {
         return new Source(
-                source.id(),
-                source.name(),
-                source.type(),
-                options,
-                source.enabled(),
-                source.owner(),
-                source.teamId());
+                source.id(), source.name(), source.type(), options, source.enabled(), source.owner(), source.teamId());
     }
 
     /** Secrets never leave the server: reads return the redaction sentinel in their place. */
@@ -241,12 +219,8 @@ public class SourceController {
         }
         return sourceStore
                 .get(incoming.id())
-                .map(
-                        existing ->
-                                withOptions(
-                                        incoming,
-                                        SecretMasker.restoreRedacted(
-                                                incoming.options(), existing.options())))
+                .map(existing ->
+                        withOptions(incoming, SecretMasker.restoreRedacted(incoming.options(), existing.options())))
                 .orElse(incoming);
     }
 
@@ -254,8 +228,7 @@ public class SourceController {
     private void validateConfig(Source source) {
         InputSpec spec = source.toInputSpec();
         inputSourceFor(spec)
-                .orElseThrow(
-                        () -> new IllegalArgumentException("unknown source type: " + source.type()))
+                .orElseThrow(() -> new IllegalArgumentException("unknown source type: " + source.type()))
                 .validate(spec);
     }
 
@@ -290,8 +263,7 @@ public class SourceController {
         }
         if (!policyManagementAuthority.canEditPolicies()) {
             throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Sources may only be created or modified by a team leader");
+                    HttpStatus.FORBIDDEN, "Sources may only be created or modified by a team leader");
         }
     }
 
@@ -314,10 +286,8 @@ public class SourceController {
      */
     private List<String> referencingPolicyNames(String sourceId) {
         return policyAccessGuard.visibleFrom(policyStore).stream()
-                .filter(
-                        policy ->
-                                policy.sourceIds().contains(sourceId)
-                                        || policy.outputIds().contains(sourceId))
+                .filter(policy -> policy.sourceIds().contains(sourceId)
+                        || policy.outputIds().contains(sourceId))
                 .map(Policy::name)
                 .toList();
     }

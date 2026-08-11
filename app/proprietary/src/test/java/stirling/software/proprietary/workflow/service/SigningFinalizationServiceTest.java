@@ -30,15 +30,29 @@ import tools.jackson.databind.ObjectMapper;
 @ExtendWith(MockitoExtension.class)
 class SigningFinalizationServiceTest {
 
-    @Mock private WorkflowParticipantRepository participantRepository;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private ObjectMapper objectMapper;
-    @Mock private PdfSigningService pdfSigningService;
-    @Mock private MetadataEncryptionService metadataEncryptionService;
-    @Mock private ServerCertificateServiceInterface serverCertificateService;
-    @Mock private UserServerCertificateService userServerCertificateService;
+    @Mock
+    private WorkflowParticipantRepository participantRepository;
 
-    @InjectMocks private SigningFinalizationService service;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private PdfSigningService pdfSigningService;
+
+    @Mock
+    private MetadataEncryptionService metadataEncryptionService;
+
+    @Mock
+    private ServerCertificateServiceInterface serverCertificateService;
+
+    @Mock
+    private UserServerCertificateService userServerCertificateService;
+
+    @InjectMocks
+    private SigningFinalizationService service;
 
     // -------------------------------------------------------------------------
     // Helpers
@@ -69,8 +83,7 @@ class SigningFinalizationServiceTest {
 
     @Test
     void clearSensitiveMetadata_removesWetSignaturesKey() {
-        WorkflowParticipant p =
-                participantWithMetadata(Map.of("wetSignatures", List.of("sig1"), "other", "keep"));
+        WorkflowParticipant p = participantWithMetadata(Map.of("wetSignatures", List.of("sig1"), "other", "keep"));
         WorkflowSession session = sessionWithParticipants(p);
 
         service.clearSensitiveMetadata(session);
@@ -82,9 +95,7 @@ class SigningFinalizationServiceTest {
 
     @Test
     void clearSensitiveMetadata_removesCertificateSubmissionKey() {
-        WorkflowParticipant p =
-                participantWithMetadata(
-                        Map.of("certificateSubmission", Map.of("certType", "SERVER")));
+        WorkflowParticipant p = participantWithMetadata(Map.of("certificateSubmission", Map.of("certType", "SERVER")));
         WorkflowSession session = sessionWithParticipants(p);
 
         service.clearSensitiveMetadata(session);
@@ -153,10 +164,8 @@ class SigningFinalizationServiceTest {
     @Test
     void clearSensitiveMetadata_multipleParticipants_allWithSensitiveData_allCleared() {
         WorkflowParticipant p1 = participantWithMetadata(Map.of("wetSignatures", List.of("s1")));
-        WorkflowParticipant p2 =
-                participantWithMetadata(Map.of("certificateSubmission", Map.of("k", "v")));
-        WorkflowParticipant p3 =
-                participantWithMetadata(Map.of("wetSignatures", List.of("s3"), "extra", "keep"));
+        WorkflowParticipant p2 = participantWithMetadata(Map.of("certificateSubmission", Map.of("k", "v")));
+        WorkflowParticipant p3 = participantWithMetadata(Map.of("wetSignatures", List.of("s3"), "extra", "keep"));
         WorkflowSession session = sessionWithParticipants(p1, p2, p3);
 
         service.clearSensitiveMetadata(session);
@@ -170,8 +179,7 @@ class SigningFinalizationServiceTest {
 
     @Test
     void clearSensitiveMetadata_mixedParticipants_onlySavesModified() {
-        WorkflowParticipant withSensitive =
-                participantWithMetadata(Map.of("wetSignatures", List.of("s1")));
+        WorkflowParticipant withSensitive = participantWithMetadata(Map.of("wetSignatures", List.of("s1")));
         WorkflowParticipant withoutSensitive = participantWithMetadata(Map.of("showLogo", false));
         WorkflowSession session = sessionWithParticipants(withSensitive, withoutSensitive);
 

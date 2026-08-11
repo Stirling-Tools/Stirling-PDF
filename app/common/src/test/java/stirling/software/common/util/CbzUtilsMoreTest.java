@@ -42,7 +42,8 @@ class CbzUtilsMoreTest {
     private TempFileManager tempFileManager;
     private CustomPDFDocumentFactory factory;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -90,15 +91,11 @@ class CbzUtilsMoreTest {
         @Test
         @DisplayName("a CBZ with two images converts to a two-page PDF, sorted by natural order")
         void twoImagesToPdf() throws Exception {
-            byte[] archive =
-                    buildCbz(
-                            new String[] {"page2.png", "page10.png", "page1.png"},
-                            new byte[][] {
-                                pngBytes(Color.RED), pngBytes(Color.GREEN), pngBytes(Color.BLUE)
-                            });
+            byte[] archive = buildCbz(
+                    new String[] {"page2.png", "page10.png", "page1.png"},
+                    new byte[][] {pngBytes(Color.RED), pngBytes(Color.GREEN), pngBytes(Color.BLUE)});
 
-            try (TempFile resultPdf =
-                    CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false)) {
+            try (TempFile resultPdf = CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false)) {
                 assertThat(resultPdf.exists()).isTrue();
                 try (PDDocument doc = Loader.loadPDF(resultPdf.getFile())) {
                     assertThat(doc.getNumberOfPages()).isEqualTo(3);
@@ -109,15 +106,11 @@ class CbzUtilsMoreTest {
         @Test
         @DisplayName("non-image entries are ignored, only images become pages")
         void mixedEntries() throws Exception {
-            byte[] archive =
-                    buildCbz(
-                            new String[] {"readme.txt", "cover.png"},
-                            new byte[][] {
-                                "notes".getBytes(StandardCharsets.UTF_8), pngBytes(Color.CYAN)
-                            });
+            byte[] archive = buildCbz(
+                    new String[] {"readme.txt", "cover.png"},
+                    new byte[][] {"notes".getBytes(StandardCharsets.UTF_8), pngBytes(Color.CYAN)});
 
-            try (TempFile resultPdf =
-                    CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false)) {
+            try (TempFile resultPdf = CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false)) {
                 try (PDDocument doc = Loader.loadPDF(resultPdf.getFile())) {
                     assertThat(doc.getNumberOfPages()).isEqualTo(1);
                 }
@@ -133,27 +126,17 @@ class CbzUtilsMoreTest {
         @DisplayName("an empty ZIP (no entries) is rejected")
         void emptyArchive() throws Exception {
             byte[] archive = buildCbz(new String[] {}, new byte[][] {});
-            assertThatThrownBy(
-                            () ->
-                                    CbzUtils.convertCbzToPdf(
-                                            cbz(archive), factory, tempFileManager, false))
+            assertThatThrownBy(() -> CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false))
                     .isInstanceOf(Exception.class);
         }
 
         @Test
         @DisplayName("a ZIP with no image entries is rejected as 'no images'")
         void noImageEntries() throws Exception {
-            byte[] archive =
-                    buildCbz(
-                            new String[] {"a.txt", "b.json"},
-                            new byte[][] {
-                                "x".getBytes(StandardCharsets.UTF_8),
-                                "{}".getBytes(StandardCharsets.UTF_8)
-                            });
-            assertThatThrownBy(
-                            () ->
-                                    CbzUtils.convertCbzToPdf(
-                                            cbz(archive), factory, tempFileManager, false))
+            byte[] archive = buildCbz(
+                    new String[] {"a.txt", "b.json"},
+                    new byte[][] {"x".getBytes(StandardCharsets.UTF_8), "{}".getBytes(StandardCharsets.UTF_8)});
+            assertThatThrownBy(() -> CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false))
                     .isInstanceOf(Exception.class);
         }
 
@@ -161,24 +144,16 @@ class CbzUtilsMoreTest {
         @DisplayName("non-ZIP bytes are rejected as an invalid CBZ format")
         void corruptArchive() {
             byte[] notAZip = "this is definitely not a zip file".getBytes(StandardCharsets.UTF_8);
-            assertThatThrownBy(
-                            () ->
-                                    CbzUtils.convertCbzToPdf(
-                                            cbz(notAZip), factory, tempFileManager, false))
+            assertThatThrownBy(() -> CbzUtils.convertCbzToPdf(cbz(notAZip), factory, tempFileManager, false))
                     .isInstanceOf(Exception.class);
         }
 
         @Test
         @DisplayName("a CBZ whose only image is corrupt produces no pages and is rejected")
         void corruptImageProducesNoPages() throws Exception {
-            byte[] archive =
-                    buildCbz(
-                            new String[] {"broken.png"},
-                            new byte[][] {"not a real png".getBytes(StandardCharsets.UTF_8)});
-            assertThatThrownBy(
-                            () ->
-                                    CbzUtils.convertCbzToPdf(
-                                            cbz(archive), factory, tempFileManager, false))
+            byte[] archive = buildCbz(
+                    new String[] {"broken.png"}, new byte[][] {"not a real png".getBytes(StandardCharsets.UTF_8)});
+            assertThatThrownBy(() -> CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false))
                     .isInstanceOf(Exception.class);
         }
     }
@@ -190,11 +165,9 @@ class CbzUtilsMoreTest {
         @Test
         @DisplayName("the returned TempFile lives under the configured temp dir and closes cleanly")
         void tempFileCleanup() throws Exception {
-            byte[] archive =
-                    buildCbz(new String[] {"p.png"}, new byte[][] {pngBytes(Color.MAGENTA)});
+            byte[] archive = buildCbz(new String[] {"p.png"}, new byte[][] {pngBytes(Color.MAGENTA)});
 
-            TempFile resultPdf =
-                    CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false);
+            TempFile resultPdf = CbzUtils.convertCbzToPdf(cbz(archive), factory, tempFileManager, false);
             Path path = resultPdf.getPath();
             assertThat(Files.exists(path)).isTrue();
             resultPdf.close();

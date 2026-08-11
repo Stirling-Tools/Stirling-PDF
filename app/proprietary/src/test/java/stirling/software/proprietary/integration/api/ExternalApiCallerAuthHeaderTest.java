@@ -39,23 +39,18 @@ class ExternalApiCallerAuthHeaderTest {
     @BeforeEach
     void startServer() throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext(
-                "/ingest",
-                exchange -> {
-                    seen.clear();
-                    exchange.getRequestHeaders()
-                            .forEach(
-                                    (name, values) ->
-                                            seen.put(
-                                                    name.toLowerCase(java.util.Locale.ROOT),
-                                                    String.join(", ", values)));
-                    exchange.getRequestBody().readAllBytes();
-                    byte[] body = "{\"ok\":true}".getBytes(StandardCharsets.UTF_8);
-                    exchange.getResponseHeaders().add("Content-Type", "application/json");
-                    exchange.sendResponseHeaders(200, body.length);
-                    exchange.getResponseBody().write(body);
-                    exchange.close();
-                });
+        server.createContext("/ingest", exchange -> {
+            seen.clear();
+            exchange.getRequestHeaders()
+                    .forEach((name, values) ->
+                            seen.put(name.toLowerCase(java.util.Locale.ROOT), String.join(", ", values)));
+            exchange.getRequestBody().readAllBytes();
+            byte[] body = "{\"ok\":true}".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
         server.start();
         baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
     }
@@ -67,32 +62,15 @@ class ExternalApiCallerAuthHeaderTest {
 
     @Test
     void headerAuthWithPrefixSendsSchemeAndToken() throws IOException {
-        post(
-                connection(
-                        Map.of(
-                                "authType",
-                                "HEADER",
-                                "headerName",
-                                "Authorization",
-                                "headerPrefix",
-                                "API-Key",
-                                "token",
-                                "pd-secret")));
+        post(connection(Map.of(
+                "authType", "HEADER", "headerName", "Authorization", "headerPrefix", "API-Key", "token", "pd-secret")));
 
         assertThat(seen).containsEntry("authorization", "API-Key pd-secret");
     }
 
     @Test
     void headerAuthWithoutPrefixSendsTheBareToken() throws IOException {
-        post(
-                connection(
-                        Map.of(
-                                "authType",
-                                "HEADER",
-                                "headerName",
-                                "x-api-key",
-                                "token",
-                                "sk-ant-secret")));
+        post(connection(Map.of("authType", "HEADER", "headerName", "x-api-key", "token", "sk-ant-secret")));
 
         // No scheme invented: a vendor that wants the raw key must receive exactly that.
         assertThat(seen).containsEntry("x-api-key", "sk-ant-secret");
@@ -102,28 +80,18 @@ class ExternalApiCallerAuthHeaderTest {
     @Test
     void bearerAuthIsUnaffectedByAPrefix() throws IOException {
         // headerPrefix belongs to HEADER auth; BEARER must keep its own scheme regardless.
-        post(
-                connection(
-                        Map.of(
-                                "authType",
-                                "BEARER",
-                                "headerPrefix",
-                                "API-Key",
-                                "token",
-                                "sk-secret")));
+        post(connection(Map.of("authType", "BEARER", "headerPrefix", "API-Key", "token", "sk-secret")));
 
         assertThat(seen).containsEntry("authorization", "Bearer sk-secret");
     }
 
     private void post(ApiConnectionSettings settings) throws IOException {
-        ExternalApiCaller.Response response =
-                caller().dispatch(
-                                settings,
-                                "POST",
-                                "/ingest",
-                                ExternalApiCaller.raw(
-                                        "application/json", "{}".getBytes(StandardCharsets.UTF_8)),
-                                Map.of());
+        ExternalApiCaller.Response response = caller().dispatch(
+                        settings,
+                        "POST",
+                        "/ingest",
+                        ExternalApiCaller.raw("application/json", "{}".getBytes(StandardCharsets.UTF_8)),
+                        Map.of());
         assertThat(response.isSuccess()).isTrue();
     }
 
@@ -138,7 +106,9 @@ class ExternalApiCallerAuthHeaderTest {
         // The server is on loopback, which is exactly what the guard blocks by default.
         properties.getPolicies().setAllowPrivateApiEndpoints(true);
         return new ExternalApiCaller(
-                HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build(),
+                HttpClient.newBuilder()
+                        .followRedirects(HttpClient.Redirect.NEVER)
+                        .build(),
                 properties,
                 objectMapper);
     }

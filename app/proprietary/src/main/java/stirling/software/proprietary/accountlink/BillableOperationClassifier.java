@@ -47,10 +47,7 @@ public final class BillableOperationClassifier {
         // Prefix-match the AI surface (not a loose substring contains), stripping a deployment
         // context path so /<ctx>/api/v1/ai/** still classifies as AI.
         String ctx = request.getContextPath();
-        String path =
-                ctx != null && !ctx.isEmpty() && uri.startsWith(ctx)
-                        ? uri.substring(ctx.length())
-                        : uri;
+        String path = ctx != null && !ctx.isEmpty() && uri.startsWith(ctx) ? uri.substring(ctx.length()) : uri;
         return path.startsWith(AI_PATH_PREFIX);
     }
 }

@@ -26,9 +26,11 @@ public class PdfJsonFontService {
     private final TempFileManager tempFileManager;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
 
-    @Getter private boolean cffConversionEnabled;
+    @Getter
+    private boolean cffConversionEnabled;
 
-    @Getter private String cffConverterMethod;
+    @Getter
+    private String cffConverterMethod;
 
     private String pythonCommand;
 
@@ -52,9 +54,7 @@ public class PdfJsonFontService {
         log.info("[FONT-DEBUG] CFF conversion enabled, checking tool availability...");
         pythonCffConverterAvailable = isCommandAvailable(pythonCommand);
         if (!pythonCffConverterAvailable) {
-            log.warn(
-                    "[FONT-DEBUG] Python command '{}' not found; Python CFF conversion disabled",
-                    pythonCommand);
+            log.warn("[FONT-DEBUG] Python command '{}' not found; Python CFF conversion disabled", pythonCommand);
         } else {
             log.info("[FONT-DEBUG] Python command '{}' is available", pythonCommand);
         }
@@ -96,10 +96,7 @@ public class PdfJsonFontService {
             return null;
         }
 
-        log.info(
-                "[FONT-DEBUG] Converting CFF font: {} bytes, method: {}",
-                fontBytes.length,
-                cffConverterMethod);
+        log.info("[FONT-DEBUG] Converting CFF font: {} bytes, method: {}", fontBytes.length, cffConverterMethod);
 
         if ("python".equalsIgnoreCase(cffConverterMethod)) {
             if (!pythonCffConverterAvailable) {
@@ -107,33 +104,25 @@ public class PdfJsonFontService {
                 return null;
             }
             byte[] result = convertCffUsingPython(fontBytes, toUnicode);
-            log.debug(
-                    "[FONT-DEBUG] Python conversion result: {}",
-                    result == null ? "null" : result.length + " bytes");
+            log.debug("[FONT-DEBUG] Python conversion result: {}", result == null ? "null" : result.length + " bytes");
             return result;
         } else if ("fontforge".equalsIgnoreCase(cffConverterMethod)) {
             if (!fontForgeCffConverterAvailable) {
-                log.debug(
-                        "[FONT-DEBUG] FontForge CFF converter not available, skipping conversion");
+                log.debug("[FONT-DEBUG] FontForge CFF converter not available, skipping conversion");
                 return null;
             }
             byte[] result = convertCffUsingFontForge(fontBytes);
             log.debug(
-                    "[FONT-DEBUG] FontForge conversion result: {}",
-                    result == null ? "null" : result.length + " bytes");
+                    "[FONT-DEBUG] FontForge conversion result: {}", result == null ? "null" : result.length + " bytes");
             return result;
         } else {
-            log.debug(
-                    "[FONT-DEBUG] Unknown CFF converter method: {}, falling back to Python",
-                    cffConverterMethod);
+            log.debug("[FONT-DEBUG] Unknown CFF converter method: {}, falling back to Python", cffConverterMethod);
             if (!pythonCffConverterAvailable) {
                 log.debug("[FONT-DEBUG] Python CFF converter not available, skipping conversion");
                 return null;
             }
             byte[] result = convertCffUsingPython(fontBytes, toUnicode);
-            log.debug(
-                    "[FONT-DEBUG] Python conversion result: {}",
-                    result == null ? "null" : result.length + " bytes");
+            log.debug("[FONT-DEBUG] Python conversion result: {}", result == null ? "null" : result.length + " bytes");
             return result;
         }
     }
@@ -142,11 +131,10 @@ public class PdfJsonFontService {
         if (fontBytes == null || fontBytes.length < 4) {
             return null;
         }
-        int signature =
-                ((fontBytes[0] & 0xFF) << 24)
-                        | ((fontBytes[1] & 0xFF) << 16)
-                        | ((fontBytes[2] & 0xFF) << 8)
-                        | (fontBytes[3] & 0xFF);
+        int signature = ((fontBytes[0] & 0xFF) << 24)
+                | ((fontBytes[1] & 0xFF) << 16)
+                | ((fontBytes[2] & 0xFF) << 8)
+                | (fontBytes[3] & 0xFF);
         if (signature == 0x00010000 || signature == 0x74727565) {
             return "ttf";
         }
@@ -164,10 +152,7 @@ public class PdfJsonFontService {
             return null;
         }
         int signature =
-                ((data[0] & 0xFF) << 24)
-                        | ((data[1] & 0xFF) << 16)
-                        | ((data[2] & 0xFF) << 8)
-                        | (data[3] & 0xFF);
+                ((data[0] & 0xFF) << 24) | ((data[1] & 0xFF) << 16) | ((data[2] & 0xFF) << 8) | (data[3] & 0xFF);
         if (signature == 0x00010000) {
             return "ttf";
         }
@@ -196,51 +181,38 @@ public class PdfJsonFontService {
             log.debug("[FONT-DEBUG] Python CFF converter not available");
             return null;
         }
-        if (pythonCommand == null
-                || pythonCommand.isBlank()
-                || pythonScript == null
-                || pythonScript.isBlank()) {
+        if (pythonCommand == null || pythonCommand.isBlank() || pythonScript == null || pythonScript.isBlank()) {
             log.debug("[FONT-DEBUG] Python converter not configured");
             return null;
         }
 
-        log.debug(
-                "[FONT-DEBUG] Running Python CFF converter: command={}, script={}",
-                pythonCommand,
-                pythonScript);
+        log.debug("[FONT-DEBUG] Running Python CFF converter: command={}, script={}", pythonCommand, pythonScript);
 
         try (TempFile inputFile = new TempFile(tempFileManager, ".cff");
                 TempFile outputFile = new TempFile(tempFileManager, ".otf");
-                TempFile toUnicodeFile =
-                        toUnicode != null ? new TempFile(tempFileManager, ".tounicode") : null) {
+                TempFile toUnicodeFile = toUnicode != null ? new TempFile(tempFileManager, ".tounicode") : null) {
             Files.write(inputFile.getPath(), fontBytes);
             if (toUnicodeFile != null) {
                 try {
                     byte[] toUnicodeBytes = Base64.getDecoder().decode(toUnicode);
                     Files.write(toUnicodeFile.getPath(), toUnicodeBytes);
                 } catch (IllegalArgumentException ex) {
-                    log.debug(
-                            "[FONT-DEBUG] Failed to decode ToUnicode data for CFF conversion: {}",
-                            ex.getMessage());
+                    log.debug("[FONT-DEBUG] Failed to decode ToUnicode data for CFF conversion: {}", ex.getMessage());
                     return null;
                 }
             }
 
-            String[] command =
-                    buildPythonCommand(
-                            inputFile.getAbsolutePath(),
-                            outputFile.getAbsolutePath(),
-                            toUnicodeFile != null ? toUnicodeFile.getAbsolutePath() : null);
+            String[] command = buildPythonCommand(
+                    inputFile.getAbsolutePath(),
+                    outputFile.getAbsolutePath(),
+                    toUnicodeFile != null ? toUnicodeFile.getAbsolutePath() : null);
             log.debug("[FONT-DEBUG] Executing: {}", String.join(" ", command));
 
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER)
-                            .runCommandWithOutputHandling(java.util.Arrays.asList(command));
+            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER)
+                    .runCommandWithOutputHandling(java.util.Arrays.asList(command));
 
             if (result.getRc() != 0) {
-                log.error(
-                        "[FONT-DEBUG] Python CFF conversion failed with exit code: {}",
-                        result.getRc());
+                log.error("[FONT-DEBUG] Python CFF conversion failed with exit code: {}", result.getRc());
                 log.error("[FONT-DEBUG] Stdout: {}", result.getMessages());
                 return null;
             }
@@ -277,27 +249,25 @@ public class PdfJsonFontService {
                 TempFile outputFile = new TempFile(tempFileManager, ".ttf")) {
             Files.write(inputFile.getPath(), fontBytes);
 
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER)
-                            .runCommandWithOutputHandling(
-                                    java.util.Arrays.asList(
-                                            fontforgeCommand,
-                                            "-lang=ff",
-                                            "-c",
-                                            "Open($1); "
-                                                    + "ScaleToEm(1000); "
-                                                    + "SelectWorthOutputting(); "
-                                                    + "SetFontOrder(2); "
-                                                    + "Reencode(\"unicode\"); "
-                                                    + "RoundToInt(); "
-                                                    + "RemoveOverlap(); "
-                                                    + "Simplify(); "
-                                                    + "CorrectDirection(); "
-                                                    + "Generate($2, \"\", 4+16+32); "
-                                                    + "Close(); "
-                                                    + "Quit()",
-                                            inputFile.getAbsolutePath(),
-                                            outputFile.getAbsolutePath()));
+            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.CFF_CONVERTER)
+                    .runCommandWithOutputHandling(java.util.Arrays.asList(
+                            fontforgeCommand,
+                            "-lang=ff",
+                            "-c",
+                            "Open($1); "
+                                    + "ScaleToEm(1000); "
+                                    + "SelectWorthOutputting(); "
+                                    + "SetFontOrder(2); "
+                                    + "Reencode(\"unicode\"); "
+                                    + "RoundToInt(); "
+                                    + "RemoveOverlap(); "
+                                    + "Simplify(); "
+                                    + "CorrectDirection(); "
+                                    + "Generate($2, \"\", 4+16+32); "
+                                    + "Close(); "
+                                    + "Quit()",
+                            inputFile.getAbsolutePath(),
+                            outputFile.getAbsolutePath()));
 
             if (result.getRc() != 0) {
                 log.warn("FontForge CFF conversion failed: {}", result.getRc());
@@ -345,14 +315,7 @@ public class PdfJsonFontService {
     private String[] buildPythonCommand(String input, String output, String toUnicode) {
         if (toUnicode != null) {
             return new String[] {
-                pythonCommand,
-                pythonScript,
-                "--input",
-                input,
-                "--output",
-                output,
-                "--to-unicode",
-                toUnicode
+                pythonCommand, pythonScript, "--input", input, "--output", output, "--to-unicode", toUnicode
             };
         }
         return new String[] {pythonCommand, pythonScript, "--input", input, "--output", output};

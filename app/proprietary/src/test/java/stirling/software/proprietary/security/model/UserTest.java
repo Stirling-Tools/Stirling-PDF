@@ -36,8 +36,7 @@ class UserTest {
 
         assertTrue(u.getAuthorities().contains(a));
         // current behavior: addAuthority() does NOT call a.setUser(u)
-        assertNull(
-                a.getUser(), "Current behavior: Authority.user is NOT set by User.addAuthority()");
+        assertNull(a.getUser(), "Current behavior: Authority.user is NOT set by User.addAuthority()");
     }
 
     @Test
@@ -70,11 +69,10 @@ class UserTest {
 
         String roles = u.getRolesAsString();
         // Order is not guaranteed due to HashSet -> split/trim and compare as a Set
-        Set<String> parts =
-                java.util.Arrays.stream(roles.split(","))
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .collect(java.util.stream.Collectors.toSet());
+        Set<String> parts = java.util.Arrays.stream(roles.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.toSet());
 
         assertEquals(Set.of("ROLE_USER", "ROLE_ADMIN"), parts);
     }

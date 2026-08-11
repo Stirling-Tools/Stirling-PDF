@@ -18,8 +18,6 @@ public class EditTableOfContentsRequest extends PDFFile {
                     "[{\\\"title\\\":\\\"Chapter 1\\\",\\\"pageNumber\\\":1,\\\"children\\\":[{\\\"title\\\":\\\"Section 1.1\\\",\\\"pageNumber\\\":2}]}]")
     private String bookmarkData;
 
-    @Schema(
-            description = "Whether to replace existing bookmarks or append to them",
-            example = "true")
+    @Schema(description = "Whether to replace existing bookmarks or append to them", example = "true")
     private Boolean replaceExisting;
 }

@@ -38,19 +38,16 @@ public class ValkeyConnectionConfiguration {
     public LettuceConnectionFactory valkeyConnectionFactory() {
         Cluster cluster = applicationProperties.getCluster();
         Endpoint endpoint = parseUrl(cluster.getValkey().getUrl());
-        RedisStandaloneConfiguration cfg =
-                new RedisStandaloneConfiguration(endpoint.host(), endpoint.port());
+        RedisStandaloneConfiguration cfg = new RedisStandaloneConfiguration(endpoint.host(), endpoint.port());
         if (endpoint.username() != null) {
             cfg.setUsername(endpoint.username());
         }
         if (endpoint.password() != null) {
             cfg.setPassword(RedisPassword.of(endpoint.password()));
         }
-        boolean skipCertVerification =
-                cluster.getValkey().getTls() != null
-                        && cluster.getValkey().getTls().isSkipCertVerification();
-        LettuceClientConfiguration clientConfig =
-                buildClientConfiguration(endpoint.tls(), skipCertVerification);
+        boolean skipCertVerification = cluster.getValkey().getTls() != null
+                && cluster.getValkey().getTls().isSkipCertVerification();
+        LettuceClientConfiguration clientConfig = buildClientConfiguration(endpoint.tls(), skipCertVerification);
         LettuceConnectionFactory factory = new LettuceConnectionFactory(cfg, clientConfig);
         factory.afterPropertiesSet();
         // Eager handshake with retry tolerates docker-compose DNS races; fails boot loudly
@@ -92,15 +89,12 @@ public class ValkeyConnectionConfiguration {
             uri = new URI(url);
         } catch (URISyntaxException ex) {
             throw new IllegalStateException(
-                    "cluster.valkey.url is not a valid URI: " + url + " (" + ex.getMessage() + ")",
-                    ex);
+                    "cluster.valkey.url is not a valid URI: " + url + " (" + ex.getMessage() + ")", ex);
         }
         String host = uri.getHost();
         if (host == null || host.isBlank()) {
             throw new IllegalStateException(
-                    "cluster.valkey.url has no host: "
-                            + url
-                            + " (expected redis://[user:password@]host[:port])");
+                    "cluster.valkey.url has no host: " + url + " (expected redis://[user:password@]host[:port])");
         }
         boolean tls = "rediss".equalsIgnoreCase(uri.getScheme());
         int port = uri.getPort() <= 0 ? 6379 : uri.getPort();
@@ -123,8 +117,7 @@ public class ValkeyConnectionConfiguration {
      * Package-private for testing. verifyPeer(FULL) is pinned explicitly so a Spring Data Redis
      * default change cannot silently weaken our TLS handshake. skipCertVerification is dev-only.
      */
-    static LettuceClientConfiguration buildClientConfiguration(
-            boolean tls, boolean skipCertVerification) {
+    static LettuceClientConfiguration buildClientConfiguration(boolean tls, boolean skipCertVerification) {
         LettuceClientConfiguration.LettuceClientConfigurationBuilder clientBuilder =
                 LettuceClientConfiguration.builder();
         // Bound every backplane command. Lettuce defaults to 60s; without this a partitioned or
@@ -133,14 +126,11 @@ public class ValkeyConnectionConfiguration {
         // non-blocking single commands, so a short timeout is safe.
         clientBuilder.commandTimeout(Duration.ofSeconds(2));
         if (tls) {
-            clientBuilder
-                    .useSsl()
-                    .verifyPeer(skipCertVerification ? SslVerifyMode.NONE : SslVerifyMode.FULL);
+            clientBuilder.useSsl().verifyPeer(skipCertVerification ? SslVerifyMode.NONE : SslVerifyMode.FULL);
             if (skipCertVerification) {
-                log.warn(
-                        "Valkey TLS hostname/chain verification DISABLED via"
-                                + " cluster.valkey.tls.skip-cert-verification=true"
-                                + " - insecure, dev-only");
+                log.warn("Valkey TLS hostname/chain verification DISABLED via"
+                        + " cluster.valkey.tls.skip-cert-verification=true"
+                        + " - insecure, dev-only");
             }
         }
         return clientBuilder.build();
@@ -150,8 +140,7 @@ public class ValkeyConnectionConfiguration {
      * 10 x 3s = 30s boot-time retry. Auth failures (WRONGPASS/NOAUTH/NOPERM) short-circuit
      * immediately; only transport errors get the loop. Package-private for testing.
      */
-    static void eagerHandshake(
-            LettuceConnectionFactory factory, String host, int port, boolean tls) {
+    static void eagerHandshake(LettuceConnectionFactory factory, String host, int port, boolean tls) {
         RuntimeException last = null;
         for (int attempt = 1; attempt <= 10; attempt++) {
             try {
@@ -163,8 +152,7 @@ public class ValkeyConnectionConfiguration {
                     conn.close();
                 }
                 if (!"PONG".equalsIgnoreCase(pong)) {
-                    throw new IllegalStateException(
-                            "Valkey PING returned '" + pong + "' (expected PONG)");
+                    throw new IllegalStateException("Valkey PING returned '" + pong + "' (expected PONG)");
                 }
                 if (attempt > 1) {
                     log.info("Valkey reachable after {} attempts", attempt);
@@ -240,9 +228,7 @@ public class ValkeyConnectionConfiguration {
             return false;
         }
         String upper = message.toUpperCase(java.util.Locale.ROOT).stripLeading();
-        return upper.startsWith("WRONGPASS")
-                || upper.startsWith("NOAUTH")
-                || upper.startsWith("NOPERM");
+        return upper.startsWith("WRONGPASS") || upper.startsWith("NOAUTH") || upper.startsWith("NOPERM");
     }
 
     private static String rootAuthMessage(Throwable t) {

@@ -19,9 +19,7 @@ import stirling.software.common.service.ServerCertificateServiceInterface;
 @RestController
 @RequestMapping("/api/v1/admin/server-certificate")
 @Slf4j
-@Tag(
-        name = "Admin - Server Certificate",
-        description = "Admin APIs for server certificate management")
+@Tag(name = "Admin - Server Certificate", description = "Admin APIs for server certificate management")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class ServerCertificateController {
@@ -32,8 +30,7 @@ public class ServerCertificateController {
     @Operation(
             summary = "Get server certificate information",
             description = "Returns information about the current server certificate")
-    public ResponseEntity<ServerCertificateServiceInterface.ServerCertificateInfo>
-            getServerCertificateInfo() {
+    public ResponseEntity<ServerCertificateServiceInterface.ServerCertificateInfo> getServerCertificateInfo() {
         try {
             ServerCertificateServiceInterface.ServerCertificateInfo info =
                     serverCertificateService.getServerCertificateInfo();
@@ -47,14 +44,11 @@ public class ServerCertificateController {
     @PostMapping("/upload")
     @Operation(
             summary = "Upload server certificate",
-            description =
-                    "Upload a new PKCS12 certificate file to be used as the server certificate")
+            description = "Upload a new PKCS12 certificate file to be used as the server certificate")
     public ResponseEntity<String> uploadServerCertificate(
-            @Parameter(description = "PKCS12 certificate file", required = true)
-                    @RequestParam("file")
+            @Parameter(description = "PKCS12 certificate file", required = true) @RequestParam("file")
                     MultipartFile file,
-            @Parameter(description = "Certificate password", required = true)
-                    @RequestParam("password")
+            @Parameter(description = "Certificate password", required = true) @RequestParam("password")
                     String password) {
 
         if (file.isEmpty()) {
@@ -63,8 +57,7 @@ public class ServerCertificateController {
 
         if (!file.getOriginalFilename().toLowerCase().endsWith(".p12")
                 && !file.getOriginalFilename().toLowerCase().endsWith(".pfx")) {
-            return ResponseEntity.badRequest()
-                    .body("Only PKCS12 (.p12 or .pfx) files are supported");
+            return ResponseEntity.badRequest().body("Only PKCS12 (.p12 or .pfx) files are supported");
         }
 
         try {
@@ -80,9 +73,7 @@ public class ServerCertificateController {
     }
 
     @DeleteMapping
-    @Operation(
-            summary = "Delete server certificate",
-            description = "Delete the current server certificate")
+    @Operation(summary = "Delete server certificate", description = "Delete the current server certificate")
     public ResponseEntity<String> deleteServerCertificate() {
         try {
             serverCertificateService.deleteServerCertificate();
@@ -104,8 +95,7 @@ public class ServerCertificateController {
             return ResponseEntity.ok("New server certificate generated successfully");
         } catch (Exception e) {
             log.error("Failed to generate server certificate", e);
-            return ResponseEntity.internalServerError()
-                    .body("Failed to generate server certificate");
+            return ResponseEntity.internalServerError().body("Failed to generate server certificate");
         }
     }
 
@@ -122,9 +112,7 @@ public class ServerCertificateController {
             byte[] certificate = serverCertificateService.getServerCertificatePublicKey();
 
             return ResponseEntity.ok()
-                    .header(
-                            HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"server-cert.cer\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"server-cert.cer\"")
                     .contentType(MediaType.valueOf("application/pkix-cert"))
                     .body(certificate);
         } catch (Exception e) {
@@ -136,8 +124,7 @@ public class ServerCertificateController {
     @GetMapping("/enabled")
     @Operation(
             summary = "Check if server certificate feature is enabled",
-            description =
-                    "Returns whether the server certificate feature is enabled in configuration")
+            description = "Returns whether the server certificate feature is enabled in configuration")
     public ResponseEntity<Boolean> isServerCertificateEnabled() {
         return ResponseEntity.ok(serverCertificateService.isEnabled());
     }

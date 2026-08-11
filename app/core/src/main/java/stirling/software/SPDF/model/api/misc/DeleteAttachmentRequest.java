@@ -11,8 +11,6 @@ import stirling.software.common.model.api.PDFFile;
 @EqualsAndHashCode(callSuper = true)
 public class DeleteAttachmentRequest extends PDFFile {
 
-    @Schema(
-            description = "The name of the attachment to delete",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "The name of the attachment to delete", requiredMode = Schema.RequiredMode.REQUIRED)
     private String attachmentName;
 }

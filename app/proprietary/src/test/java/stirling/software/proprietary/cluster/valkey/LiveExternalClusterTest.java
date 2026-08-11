@@ -56,8 +56,7 @@ class LiveExternalClusterTest {
             p.getCluster().getValkey().setUrl(url);
             p.getCluster().getNode().setId(nodeId(i));
             // Production bean: parse + credentials + TLS + eager PING handshake (proves reachable).
-            LettuceConnectionFactory f =
-                    new ValkeyConnectionConfiguration(p).valkeyConnectionFactory();
+            LettuceConnectionFactory f = new ValkeyConnectionConfiguration(p).valkeyConnectionFactory();
             factories.add(f);
             templates.add(new StringRedisTemplate(f));
         }
@@ -90,8 +89,7 @@ class LiveExternalClusterTest {
     @DisplayName("TLS reachability: every node's backplane reports healthy over the external URL")
     void allNodesHealthyOverTls() {
         for (int i = 0; i < NODES; i++) {
-            ValkeyClusterBackplane bp =
-                    new ValkeyClusterBackplane(propsForNode(i), templates.get(i));
+            ValkeyClusterBackplane bp = new ValkeyClusterBackplane(propsForNode(i), templates.get(i));
             assertTrue(bp.isHealthy(), nodeId(i) + " must reach the external Valkey (PING)");
             assertEquals(nodeId(i), bp.localNodeId());
         }
@@ -107,22 +105,18 @@ class LiveExternalClusterTest {
         for (int i = 0; i < NODES; i++) {
             regs.get(i)
                     .register(
-                            new ClusterNode(
-                                    nodeId(i), "10.0.0." + i + ":8080", Instant.now(), "BOTH"),
+                            new ClusterNode(nodeId(i), "10.0.0." + i + ":8080", Instant.now(), "BOTH"),
                             Duration.ofSeconds(30));
         }
         try {
             // Node 0's view must include all three registrations made on three connections.
             for (int i = 0; i < NODES; i++) {
                 final String id = nodeId(i);
-                boolean seenByNode0 =
-                        regs.get(0).activeNodes().stream().anyMatch(n -> id.equals(n.nodeId()));
+                boolean seenByNode0 = regs.get(0).activeNodes().stream().anyMatch(n -> id.equals(n.nodeId()));
                 assertTrue(seenByNode0, "node-0 must see " + id + " registered by another node");
             }
             regs.get(1).deregister(nodeId(2));
-            assertFalse(
-                    regs.get(0).lookup(nodeId(2)).isPresent(),
-                    "deregister on node-1 must be visible from node-0");
+            assertFalse(regs.get(0).lookup(nodeId(2)).isPresent(), "deregister on node-1 must be visible from node-0");
         } finally {
             regs.get(0).deregister(nodeId(0));
             regs.get(1).deregister(nodeId(1));
@@ -130,8 +124,7 @@ class LiveExternalClusterTest {
     }
 
     @Test
-    @DisplayName(
-            "Cross-node JobStore: put on node-0 visible on node-1/2; delete on node-2 clears it")
+    @DisplayName("Cross-node JobStore: put on node-0 visible on node-1/2; delete on node-2 clears it")
     void jobStoreVisibleAcrossNodes() {
         ValkeyJobStore s0 = new ValkeyJobStore(templates.get(0));
         ValkeyJobStore s1 = new ValkeyJobStore(templates.get(1));
@@ -159,8 +152,7 @@ class LiveExternalClusterTest {
         s2.delete(jobId);
         assertFalse(s0.exists(jobId), "delete on node-2 must clear the hash for node-0");
         assertFalse(
-                s1.findJobIdByFileId(fileId).isPresent(),
-                "delete on node-2 must clear the reverse index for node-1");
+                s1.findJobIdByFileId(fileId).isPresent(), "delete on node-2 must clear the reverse index for node-1");
     }
 
     @Test
@@ -176,16 +168,12 @@ class LiveExternalClusterTest {
         long capacity = 6;
         AtomicInteger allowed = new AtomicInteger();
         for (int i = 0; i < 12; i++) {
-            RateLimitDecision d =
-                    stores.get(i % NODES).tryConsume(key, capacity, Duration.ofSeconds(60));
+            RateLimitDecision d = stores.get(i % NODES).tryConsume(key, capacity, Duration.ofSeconds(60));
             if (d.allowed()) {
                 allowed.incrementAndGet();
             }
         }
-        assertEquals(
-                capacity,
-                allowed.get(),
-                "exactly the global capacity must be allowed across all three nodes");
+        assertEquals(capacity, allowed.get(), "exactly the global capacity must be allowed across all three nodes");
     }
 
     @Test
@@ -206,8 +194,7 @@ class LiveExternalClusterTest {
 
         // Short lease that expires, then node-2 takes it; node-1's stale release must not steal.
         String key2 = "ext-lock2-" + RUN;
-        Optional<DistributedLock.LockHandle> shortHeld =
-                l1.tryAcquire(key2, Duration.ofMillis(500));
+        Optional<DistributedLock.LockHandle> shortHeld = l1.tryAcquire(key2, Duration.ofMillis(500));
         assertTrue(shortHeld.isPresent());
         Thread.sleep(900);
         Optional<DistributedLock.LockHandle> stolen = l2.tryAcquire(key2, Duration.ofSeconds(30));

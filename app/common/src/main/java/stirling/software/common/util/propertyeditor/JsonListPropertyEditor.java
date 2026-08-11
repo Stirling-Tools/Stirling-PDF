@@ -19,11 +19,10 @@ import tools.jackson.databind.json.JsonMapper;
 @Slf4j
 public class JsonListPropertyEditor<T> extends PropertyEditorSupport {
 
-    private static final ObjectMapper OBJECT_MAPPER =
-            JsonMapper.builder()
-                    .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-                    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                    .build();
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
+            .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
 
     private final TypeReference<? extends List<T>> typeRef;
 
@@ -41,8 +40,7 @@ public class JsonListPropertyEditor<T> extends PropertyEditorSupport {
             setValue(OBJECT_MAPPER.readValue(text, typeRef));
         } catch (Exception e) {
             log.error("Failed to parse JSON list value", e);
-            throw new IllegalArgumentException(
-                    "Expected a JSON array but could not parse: " + e.getMessage());
+            throw new IllegalArgumentException("Expected a JSON array but could not parse: " + e.getMessage());
         }
     }
 }

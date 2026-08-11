@@ -89,8 +89,7 @@ public class TotpService {
         for (int offset = -1; offset <= 1; offset++) {
             long candidate = timeStep + offset;
             String generatedCode = generateCode(secretKey, candidate);
-            if (MessageDigest.isEqual(
-                    generatedCode.getBytes(StandardCharsets.UTF_8), normalizedCodeBytes)) {
+            if (MessageDigest.isEqual(generatedCode.getBytes(StandardCharsets.UTF_8), normalizedCodeBytes)) {
                 return candidate;
             }
         }
@@ -146,11 +145,10 @@ public class TotpService {
             byte[] hash = mac.doFinal(buffer.array());
 
             int offset = hash[hash.length - 1] & 0x0F;
-            int binary =
-                    ((hash[offset] & 0x7F) << 24)
-                            | ((hash[offset + 1] & 0xFF) << 16)
-                            | ((hash[offset + 2] & 0xFF) << 8)
-                            | (hash[offset + 3] & 0xFF);
+            int binary = ((hash[offset] & 0x7F) << 24)
+                    | ((hash[offset + 1] & 0xFF) << 16)
+                    | ((hash[offset + 2] & 0xFF) << 8)
+                    | (hash[offset + 3] & 0xFF);
 
             int otp = binary % (int) Math.pow(10, CODE_DIGITS);
             return String.format("%0" + CODE_DIGITS + "d", otp);

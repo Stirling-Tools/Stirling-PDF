@@ -57,11 +57,8 @@ public class AttachmentController {
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
-    @Operation(
-            summary = "Add attachments to PDF",
-            description = "This endpoint adds attachments to a PDF.")
-    public ResponseEntity<Resource> addAttachments(@ModelAttribute AddAttachmentRequest request)
-            throws Exception {
+    @Operation(summary = "Add attachments to PDF", description = "This endpoint adds attachments to a PDF.")
+    public ResponseEntity<Resource> addAttachments(@ModelAttribute AddAttachmentRequest request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
         List<MultipartFile> attachments = request.getAttachments();
         boolean convertToPdfA3b = request.isConvertToPdfA3b();
@@ -72,10 +69,9 @@ public class AttachmentController {
         if (originalFileName == null || originalFileName.isEmpty()) {
             originalFileName = "document";
         }
-        String baseFileName =
-                originalFileName.contains(".")
-                        ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
-                        : originalFileName;
+        String baseFileName = originalFileName.contains(".")
+                ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
+                : originalFileName;
 
         if (convertToPdfA3b) {
             byte[] pdfaBytes;
@@ -91,8 +87,7 @@ public class AttachmentController {
                 ConvertPDFToPDFA.fixType1FontCharSet(pdfaDocument);
 
                 String outputFilename = baseFileName + "_with_attachments_PDFA-3b.pdf";
-                return WebResponseUtils.pdfDocToWebResponse(
-                        pdfaDocument, outputFilename, tempFileManager);
+                return WebResponseUtils.pdfDocToWebResponse(pdfaDocument, outputFilename, tempFileManager);
             }
         } else {
             try (PDDocument document = pdfDocumentFactory.load(request, false)) {
@@ -100,8 +95,7 @@ public class AttachmentController {
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
                         GeneralUtils.generateFilename(
-                                Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
-                                "_with_attachments.pdf"),
+                                Filenames.toSimpleFileName(fileInput.getOriginalFilename()), "_with_attachments.pdf"),
                         tempFileManager);
             }
         }
@@ -148,25 +142,21 @@ public class AttachmentController {
     @ToolIO(produces = ToolFormat.ZIP)
     @Operation(
             summary = "Extract attachments from PDF",
-            description =
-                    "This endpoint extracts all embedded attachments from a PDF into a ZIP archive.")
-    public ResponseEntity<Resource> extractAttachments(
-            @ModelAttribute ExtractAttachmentsRequest request) throws IOException {
+            description = "This endpoint extracts all embedded attachments from a PDF into a ZIP archive.")
+    public ResponseEntity<Resource> extractAttachments(@ModelAttribute ExtractAttachmentsRequest request)
+            throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(request, true)) {
             Optional<byte[]> extracted = pdfAttachmentService.extractAttachments(document);
 
             if (extracted.isEmpty()) {
                 throw ExceptionUtils.createIllegalArgumentException(
-                        "error.noAttachmentsFound",
-                        "No embedded attachments found in the provided PDF");
+                        "error.noAttachmentsFound", "No embedded attachments found in the provided PDF");
             }
 
             MultipartFile fileInput = request.getFileInput();
-            String sourceName =
-                    fileInput != null ? fileInput.getOriginalFilename() : request.getFileId();
+            String sourceName = fileInput != null ? fileInput.getOriginalFilename() : request.getFileId();
             String outputName =
-                    Filenames.toSimpleFileName(
-                            GeneralUtils.generateFilename(sourceName, "_attachments.zip"));
+                    Filenames.toSimpleFileName(GeneralUtils.generateFilename(sourceName, "_attachments.zip"));
 
             TempFile tempOut = tempFileManager.createManagedTempFile(".zip");
             try {
@@ -187,8 +177,8 @@ public class AttachmentController {
     @Operation(
             summary = "List attachments in PDF",
             description = "This endpoint lists all embedded attachments in a PDF.")
-    public ResponseEntity<List<stirling.software.SPDF.model.api.misc.AttachmentInfo>>
-            listAttachments(@ModelAttribute ListAttachmentsRequest request) throws IOException {
+    public ResponseEntity<List<stirling.software.SPDF.model.api.misc.AttachmentInfo>> listAttachments(
+            @ModelAttribute ListAttachmentsRequest request) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(request, true)) {
             List<stirling.software.SPDF.model.api.misc.AttachmentInfo> attachments =
                     pdfAttachmentService.listAttachments(document);
@@ -206,8 +196,7 @@ public class AttachmentController {
     @Operation(
             summary = "Rename attachment in PDF",
             description = "This endpoint renames an embedded attachment in a PDF.")
-    public ResponseEntity<Resource> renameAttachment(
-            @ModelAttribute RenameAttachmentRequest request) throws Exception {
+    public ResponseEntity<Resource> renameAttachment(@ModelAttribute RenameAttachmentRequest request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
         String attachmentName = request.getAttachmentName();
         String newName = request.getNewName();
@@ -227,8 +216,7 @@ public class AttachmentController {
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
-                            Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
-                            "_attachment_renamed.pdf"),
+                            Filenames.toSimpleFileName(fileInput.getOriginalFilename()), "_attachment_renamed.pdf"),
                     tempFileManager);
         }
     }
@@ -242,8 +230,7 @@ public class AttachmentController {
     @Operation(
             summary = "Delete attachment from PDF",
             description = "This endpoint deletes an embedded attachment from a PDF.")
-    public ResponseEntity<Resource> deleteAttachment(
-            @ModelAttribute DeleteAttachmentRequest request) throws Exception {
+    public ResponseEntity<Resource> deleteAttachment(@ModelAttribute DeleteAttachmentRequest request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
         String attachmentName = request.getAttachmentName();
 
@@ -258,8 +245,7 @@ public class AttachmentController {
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
-                            Filenames.toSimpleFileName(fileInput.getOriginalFilename()),
-                            "_attachment_deleted.pdf"),
+                            Filenames.toSimpleFileName(fileInput.getOriginalFilename()), "_attachment_deleted.pdf"),
                     tempFileManager);
         }
     }

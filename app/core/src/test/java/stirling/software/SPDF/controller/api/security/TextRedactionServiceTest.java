@@ -123,8 +123,7 @@ class TextRedactionServiceTest {
         @DisplayName("returns empty map for an empty term array")
         void emptyArrayReturnsEmptyMap() throws IOException {
             try (PDDocument doc = buildDoc("Some text")) {
-                Map<Integer, List<PDFText>> result =
-                        service.findTextToRedact(doc, new String[] {}, false, false);
+                Map<Integer, List<PDFText>> result = service.findTextToRedact(doc, new String[] {}, false, false);
                 assertTrue(result.isEmpty());
             }
         }
@@ -158,8 +157,7 @@ class TextRedactionServiceTest {
         @DisplayName("regex term matches digit runs")
         void regexTermMatchesDigits() throws IOException {
             try (PDDocument doc = buildDoc("Order 12345 shipped")) {
-                Map<Integer, List<PDFText>> result =
-                        service.findTextToRedact(doc, new String[] {"\\d+"}, true, false);
+                Map<Integer, List<PDFText>> result = service.findTextToRedact(doc, new String[] {"\\d+"}, true, false);
 
                 assertFalse(result.isEmpty());
                 assertEquals("12345", result.get(0).get(0).getText());
@@ -170,8 +168,7 @@ class TextRedactionServiceTest {
         @DisplayName("whole-word search does not match a substring inside a larger word")
         void wholeWordDoesNotMatchSubstring() throws IOException {
             try (PDDocument doc = buildDoc("classification of cats")) {
-                Map<Integer, List<PDFText>> result =
-                        service.findTextToRedact(doc, new String[] {"cat"}, false, true);
+                Map<Integer, List<PDFText>> result = service.findTextToRedact(doc, new String[] {"cat"}, false, true);
                 // "cat" appears only inside "classification"; whole-word must not match it.
                 assertTrue(result.isEmpty());
             }
@@ -181,8 +178,7 @@ class TextRedactionServiceTest {
         @DisplayName("whole-word search matches a standalone word")
         void wholeWordMatchesStandalone() throws IOException {
             try (PDDocument doc = buildDoc("the cat sat")) {
-                Map<Integer, List<PDFText>> result =
-                        service.findTextToRedact(doc, new String[] {"cat"}, false, true);
+                Map<Integer, List<PDFText>> result = service.findTextToRedact(doc, new String[] {"cat"}, false, true);
                 assertFalse(result.isEmpty());
                 assertEquals("cat", result.get(0).get(0).getText());
             }
@@ -211,8 +207,7 @@ class TextRedactionServiceTest {
         void noFoundTextReturnsFalse() throws IOException {
             try (PDDocument doc = buildDoc("anything")) {
                 boolean fallback =
-                        service.performTextReplacement(
-                                doc, new HashMap<>(), new String[] {"x"}, false, false);
+                        service.performTextReplacement(doc, new HashMap<>(), new String[] {"x"}, false, false);
                 assertFalse(fallback, "empty found-text map must short-circuit to no fallback");
             }
         }
@@ -225,9 +220,7 @@ class TextRedactionServiceTest {
                         service.findTextToRedact(doc, new String[] {"SECRET"}, false, false);
                 assertFalse(found.isEmpty());
 
-                boolean fallback =
-                        service.performTextReplacement(
-                                doc, found, new String[] {"SECRET"}, false, false);
+                boolean fallback = service.performTextReplacement(doc, found, new String[] {"SECRET"}, false, false);
 
                 assertFalse(fallback, "standard Helvetica should not trigger box-only fallback");
                 // After replacement the literal term should no longer be extractable.
@@ -355,14 +348,11 @@ class TextRedactionServiceTest {
                 targetWidth = 30f;
             }
 
-            String placeholder =
-                    service.createPlaceholderWithWidth(original, targetWidth, font, fontSize);
+            String placeholder = service.createPlaceholderWithWidth(original, targetWidth, font, fontSize);
 
             assertNotNull(placeholder);
             assertFalse(placeholder.isEmpty(), "Helvetica supports spaces, so non-empty expected");
-            assertTrue(
-                    placeholder.chars().allMatch(c -> c == ' '),
-                    "placeholder should be composed only of spaces");
+            assertTrue(placeholder.chars().allMatch(c -> c == ' '), "placeholder should be composed only of spaces");
         }
     }
 
@@ -374,22 +364,17 @@ class TextRedactionServiceTest {
     class CreateTokensWithoutTargetText {
 
         @Test
-        @DisplayName(
-                "returns a non-empty token list and preserves token count when nothing matches")
+        @DisplayName("returns a non-empty token list and preserves token count when nothing matches")
         void noMatchPreservesTokens() throws IOException {
             try (PDDocument doc = buildDoc("nothing to hide")) {
                 PDPage page = doc.getPage(0);
                 List<Object> originalTokens = parseTokens(page);
 
-                List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Set.of("ABSENT"), false, false);
+                List<Object> tokens = service.createTokensWithoutTargetText(doc, page, Set.of("ABSENT"), false, false);
 
                 assertNotNull(tokens);
                 assertEquals(
-                        originalTokens.size(),
-                        tokens.size(),
-                        "token count should be unchanged when nothing matched");
+                        originalTokens.size(), tokens.size(), "token count should be unchanged when nothing matched");
             }
         }
 
@@ -399,9 +384,7 @@ class TextRedactionServiceTest {
             try (PDDocument doc = buildDoc("redact SECRET token roundtrip")) {
                 PDPage page = doc.getPage(0);
 
-                List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Set.of("SECRET"), false, false);
+                List<Object> tokens = service.createTokensWithoutTargetText(doc, page, Set.of("SECRET"), false, false);
                 assertNotNull(tokens);
 
                 service.writeFilteredContentStream(doc, page, tokens);
@@ -421,8 +404,7 @@ class TextRedactionServiceTest {
                 List<Object> originalTokens = parseTokens(page);
 
                 List<Object> tokens =
-                        service.createTokensWithoutTargetText(
-                                doc, page, Collections.emptySet(), false, false);
+                        service.createTokensWithoutTargetText(doc, page, Collections.emptySet(), false, false);
 
                 assertEquals(originalTokens.size(), tokens.size());
             }
@@ -472,12 +454,8 @@ class TextRedactionServiceTest {
         @Test
         @DisplayName("MatchRange equality follows its data fields")
         void matchRangeEquality() {
-            assertEquals(
-                    new TextRedactionService.MatchRange(1, 5),
-                    new TextRedactionService.MatchRange(1, 5));
-            assertNotEquals(
-                    new TextRedactionService.MatchRange(1, 5),
-                    new TextRedactionService.MatchRange(1, 6));
+            assertEquals(new TextRedactionService.MatchRange(1, 5), new TextRedactionService.MatchRange(1, 5));
+            assertNotEquals(new TextRedactionService.MatchRange(1, 5), new TextRedactionService.MatchRange(1, 6));
         }
 
         private void assertNotEquals(Object a, Object b) {
@@ -498,17 +476,11 @@ class TextRedactionServiceTest {
             String complete = "alpha beta gamma beta";
             Set<String> terms = new LinkedHashSet<>(List.of("beta", "alpha"));
 
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "findAllMatches",
-                            String.class,
-                            Set.class,
-                            boolean.class,
-                            boolean.class);
+            Method m = TextRedactionService.class.getDeclaredMethod(
+                    "findAllMatches", String.class, Set.class, boolean.class, boolean.class);
             m.setAccessible(true);
             List<TextRedactionService.MatchRange> matches =
-                    (List<TextRedactionService.MatchRange>)
-                            m.invoke(service, complete, terms, false, false);
+                    (List<TextRedactionService.MatchRange>) m.invoke(service, complete, terms, false, false);
 
             assertNotNull(matches);
             assertFalse(matches.isEmpty());
@@ -527,26 +499,18 @@ class TextRedactionServiceTest {
         @DisplayName("findAllMatches returns nothing when no term occurs")
         @SuppressWarnings("unchecked")
         void findAllMatchesEmptyWhenAbsent() throws Exception {
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "findAllMatches",
-                            String.class,
-                            Set.class,
-                            boolean.class,
-                            boolean.class);
+            Method m = TextRedactionService.class.getDeclaredMethod(
+                    "findAllMatches", String.class, Set.class, boolean.class, boolean.class);
             m.setAccessible(true);
-            List<TextRedactionService.MatchRange> matches =
-                    (List<TextRedactionService.MatchRange>)
-                            m.invoke(service, "no terms here", Set.of("XYZ"), false, false);
+            List<TextRedactionService.MatchRange> matches = (List<TextRedactionService.MatchRange>)
+                    m.invoke(service, "no terms here", Set.of("XYZ"), false, false);
             assertTrue(matches.isEmpty());
         }
 
         @Test
         @DisplayName("extractTextFromToken pulls text from Tj COSString and TJ COSArray")
         void extractTextFromToken() throws Exception {
-            Method m =
-                    TextRedactionService.class.getDeclaredMethod(
-                            "extractTextFromToken", Object.class, String.class);
+            Method m = TextRedactionService.class.getDeclaredMethod("extractTextFromToken", Object.class, String.class);
             m.setAccessible(true);
 
             assertEquals("hi", m.invoke(service, new COSString("hi"), "Tj"));

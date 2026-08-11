@@ -154,8 +154,7 @@ public class AiWorkflowService {
         return orchestrate(request, NOOP_LISTENER);
     }
 
-    public AiWorkflowResponse orchestrate(AiWorkflowRequest request, ProgressListener listener)
-            throws IOException {
+    public AiWorkflowResponse orchestrate(AiWorkflowRequest request, ProgressListener listener) throws IOException {
         validateRequest(request);
 
         // One AI orchestration = one automation run. Scope a run id (on whichever thread runs
@@ -171,10 +170,7 @@ public class AiWorkflowService {
             List<AiFile> files = new ArrayList<>();
             for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
                 MultipartFile multipartFile = fileInput.getFileInput();
-                AiFile aiFile =
-                        new AiFile(
-                                fileIdStrategy.idFor(multipartFile),
-                                multipartFile.getOriginalFilename());
+                AiFile aiFile = new AiFile(fileIdStrategy.idFor(multipartFile), multipartFile.getOriginalFilename());
                 filesById.put(aiFile.getId(), multipartFile);
                 files.add(aiFile);
             }
@@ -182,8 +178,7 @@ public class AiWorkflowService {
             WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
             initialRequest.setUserMessage(request.getUserMessage().trim());
             initialRequest.setFiles(files);
-            initialRequest.setConversationHistory(
-                    new ArrayList<>(request.getConversationHistory()));
+            initialRequest.setConversationHistory(new ArrayList<>(request.getConversationHistory()));
             initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
             listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
@@ -196,9 +191,7 @@ public class AiWorkflowService {
     }
 
     private WorkflowState advance(
-            WorkflowTurnRequest request,
-            Map<String, MultipartFile> filesById,
-            ProgressListener listener)
+            WorkflowTurnRequest request, Map<String, MultipartFile> filesById, ProgressListener listener)
             throws IOException {
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.CALLING_ENGINE));
         AiWorkflowResponse response = invokeOrchestrator(request, listener);
@@ -209,14 +202,8 @@ public class AiWorkflowService {
             case PLAN -> onPlan(response, filesById, request, listener);
             case ANSWER -> onAnswer(response, filesById, request, listener);
             case GENERATE_FILE -> onGenerateFile(response, listener);
-            case NOT_FOUND,
-                    NEED_CLARIFICATION,
-                    CANNOT_DO,
-                    DRAFT,
-                    COMPLETED,
-                    UNSUPPORTED_CAPABILITY,
-                    CANNOT_CONTINUE ->
-                    new WorkflowState.Terminal(response);
+            case NOT_FOUND, NEED_CLARIFICATION, CANNOT_DO, DRAFT, COMPLETED, UNSUPPORTED_CAPABILITY, CANNOT_CONTINUE ->
+                new WorkflowState.Terminal(response);
         };
     }
 
@@ -228,13 +215,11 @@ public class AiWorkflowService {
             throws IOException {
         if (filesById.isEmpty()) {
             return new WorkflowState.Terminal(
-                    cannotContinue(
-                            "No files were uploaded. Please add a PDF to the workbench first."));
+                    cannotContinue("No files were uploaded. Please add a PDF to the workbench first."));
         }
 
         if (!request.getArtifacts().isEmpty()) {
-            return new WorkflowState.Terminal(
-                    cannotContinue("AI engine requested content extraction more than once."));
+            return new WorkflowState.Terminal(cannotContinue("AI engine requested content extraction more than once."));
         }
 
         List<AiWorkflowFileRequest> requestedFiles = response.getFiles();
@@ -245,22 +230,19 @@ public class AiWorkflowService {
                 AiFile file = fileReq.getFile();
                 if (file == null || !filesById.containsKey(file.getId())) {
                     String display = file == null ? "<missing file>" : file.getName();
-                    return new WorkflowState.Terminal(
-                            cannotContinue("AI engine requested unknown file: " + display));
+                    return new WorkflowState.Terminal(cannotContinue("AI engine requested unknown file: " + display));
                 }
             }
         }
 
-        List<AiFile> filesToLoad =
-                (requestedFiles == null || requestedFiles.isEmpty())
-                        ? new ArrayList<>(request.getFiles())
-                        : requestedFiles.stream().map(AiWorkflowFileRequest::getFile).toList();
+        List<AiFile> filesToLoad = (requestedFiles == null || requestedFiles.isEmpty())
+                ? new ArrayList<>(request.getFiles())
+                : requestedFiles.stream().map(AiWorkflowFileRequest::getFile).toList();
 
-        Map<String, AiWorkflowFileRequest> requestedById =
-                requestedFiles == null || requestedFiles.isEmpty()
-                        ? Map.of()
-                        : requestedFiles.stream()
-                                .collect(Collectors.toMap(r -> r.getFile().getId(), r -> r));
+        Map<String, AiWorkflowFileRequest> requestedById = requestedFiles == null || requestedFiles.isEmpty()
+                ? Map.of()
+                : requestedFiles.stream()
+                        .collect(Collectors.toMap(r -> r.getFile().getId(), r -> r));
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.EXTRACTING_CONTENT));
 
@@ -271,12 +253,8 @@ public class AiWorkflowService {
                 loadedFiles.add(new LoadedFile(file.getId(), file.getName(), doc));
             }
 
-            List<PdfContentResult> contentResults =
-                    pdfContentExtractor.extractContent(
-                            loadedFiles,
-                            requestedById,
-                            response.getMaxPages(),
-                            response.getMaxCharacters());
+            List<PdfContentResult> contentResults = pdfContentExtractor.extractContent(
+                    loadedFiles, requestedById, response.getMaxPages(), response.getMaxCharacters());
 
             listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.PROCESSING));
 
@@ -308,15 +286,13 @@ public class AiWorkflowService {
         List<AiFile> filesToIngest = response.getFilesToIngest();
         if (filesToIngest == null || filesToIngest.isEmpty()) {
             return new WorkflowState.Terminal(
-                    cannotContinue(
-                            "AI engine returned need_ingest without listing any files to ingest."));
+                    cannotContinue("AI engine returned need_ingest without listing any files to ingest."));
         }
         // Guard against a retry loop: if we've already ingested this turn and the engine still
         // asks for more, something is wrong on its side.
         if (!request.getArtifacts().isEmpty() || request.getResumeWith() != null) {
             return new WorkflowState.Terminal(
-                    cannotContinue(
-                            "AI engine requested ingest after the workflow had already been resumed."));
+                    cannotContinue("AI engine requested ingest after the workflow had already been resumed."));
         }
 
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.EXTRACTING_CONTENT));
@@ -325,8 +301,7 @@ public class AiWorkflowService {
             MultipartFile multipartFile = filesById.get(file.getId());
             if (multipartFile == null) {
                 return new WorkflowState.Terminal(
-                        cannotContinue(
-                                "AI engine requested ingest for unknown file: " + file.getName()));
+                        cannotContinue("AI engine requested ingest for unknown file: " + file.getName()));
             }
             ingestFile(file, multipartFile);
         }
@@ -369,32 +344,24 @@ public class AiWorkflowService {
         // When org / shared-doc ingestion lands, the caller chooses owner, grantees, and
         // expiry (null = persistent) explicitly.
         String callerId = currentUserId();
-        AiDocumentIngestRequest ingestRequest =
-                new AiDocumentIngestRequest(
-                        file.getId(),
-                        file.getName(),
-                        pages,
-                        callerId,
-                        callerId == null ? List.of() : List.of(callerId),
-                        Instant.now().plus(personalDocTtl()));
-        String body = objectMapper.writeValueAsString(ingestRequest);
-        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body, callerId);
-        log.debug(
-                "Ingested document: id={}, name={}, pages={}",
+        AiDocumentIngestRequest ingestRequest = new AiDocumentIngestRequest(
                 file.getId(),
                 file.getName(),
-                pages.size());
+                pages,
+                callerId,
+                callerId == null ? List.of() : List.of(callerId),
+                Instant.now().plus(personalDocTtl()));
+        String body = objectMapper.writeValueAsString(ingestRequest);
+        aiEngineClient.postLongRunning(DOCUMENTS_ENDPOINT, body, callerId);
+        log.debug("Ingested document: id={}, name={}, pages={}", file.getId(), file.getName(), pages.size());
     }
 
     private WorkflowState onToolCall(
-            AiWorkflowResponse response,
-            Map<String, MultipartFile> filesById,
-            ProgressListener listener) {
+            AiWorkflowResponse response, Map<String, MultipartFile> filesById, ProgressListener listener) {
         String endpointPath = response.getTool();
         Map<String, Object> parameters = response.getParameters();
         if (endpointPath == null || endpointPath.isBlank()) {
-            return new WorkflowState.Terminal(
-                    cannotContinue("AI engine returned tool_call without a tool endpoint."));
+            return new WorkflowState.Terminal(cannotContinue("AI engine returned tool_call without a tool endpoint."));
         }
         if (parameters == null) {
             parameters = Map.of();
@@ -402,21 +369,16 @@ public class AiWorkflowService {
 
         try {
             List<Resource> inputFiles = toResources(filesById);
-            PipelineDefinition definition =
-                    new PipelineDefinition(
-                            null,
-                            List.of(new PipelineStep(endpointPath, parameters)),
-                            OutputSpec.inline());
+            PipelineDefinition definition = new PipelineDefinition(
+                    null, List.of(new PipelineStep(endpointPath, parameters)), OutputSpec.inline());
             PolicyExecutionResult result =
-                    policyExecutor.execute(
-                            definition, PolicyInputs.of(inputFiles), stepProgress(listener));
-            return new WorkflowState.Terminal(
-                    buildCompletedResponse(
-                            response.getRationale(),
-                            result.files(),
-                            result.origins(),
-                            inputFileNames(filesById),
-                            result.report()));
+                    policyExecutor.execute(definition, PolicyInputs.of(inputFiles), stepProgress(listener));
+            return new WorkflowState.Terminal(buildCompletedResponse(
+                    response.getRationale(),
+                    result.files(),
+                    result.origins(),
+                    inputFileNames(filesById),
+                    result.report()));
         } catch (InternalApiTimeoutException e) {
             log.error("Tool {} timed out: {}", endpointPath, e.getMessage());
             return new WorkflowState.Terminal(cannotContinue(toolTimeoutMessage(endpointPath, e)));
@@ -456,28 +418,24 @@ public class AiWorkflowService {
         return new WorkflowState.Terminal(response);
     }
 
-    private WorkflowState onGenerateFile(AiWorkflowResponse response, ProgressListener listener)
-            throws IOException {
+    private WorkflowState onGenerateFile(AiWorkflowResponse response, ProgressListener listener) throws IOException {
         String content = response.getGeneratedContent();
         String filename = response.getGeneratedFilename();
         if (content == null || filename == null || filename.isBlank()) {
             return new WorkflowState.Terminal(
-                    cannotContinue(
-                            "AI engine returned generate_file without content or filename."));
+                    cannotContinue("AI engine returned generate_file without content or filename."));
         }
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.PROCESSING));
         String safeFilename = Filenames.toSimpleFileName(filename);
         byte[] bytes = content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        org.springframework.core.io.Resource resource =
-                new org.springframework.core.io.ByteArrayResource(bytes) {
-                    @Override
-                    public String getFilename() {
-                        return safeFilename;
-                    }
-                };
+        org.springframework.core.io.Resource resource = new org.springframework.core.io.ByteArrayResource(bytes) {
+            @Override
+            public String getFilename() {
+                return safeFilename;
+            }
+        };
         return new WorkflowState.Terminal(
-                buildCompletedResponse(
-                        response.getSummary(), List.of(resource), null, List.of(), null));
+                buildCompletedResponse(response.getSummary(), List.of(resource), null, List.of(), null));
     }
 
     @SuppressWarnings("unchecked")
@@ -489,8 +447,7 @@ public class AiWorkflowService {
             WorkflowTurnRequest previousRequest,
             ProgressListener listener) {
         if (steps == null || steps.isEmpty()) {
-            return new WorkflowState.Terminal(
-                    cannotContinue("AI engine returned a plan with no steps."));
+            return new WorkflowState.Terminal(cannotContinue("AI engine returned a plan with no steps."));
         }
 
         List<PipelineStep> pipelineSteps = new ArrayList<>();
@@ -498,23 +455,18 @@ public class AiWorkflowService {
             Map<String, Object> step = steps.get(i);
             String endpointPath = (String) step.get("tool");
             if (endpointPath == null || endpointPath.isBlank()) {
-                return new WorkflowState.Terminal(
-                        cannotContinue("Plan step " + (i + 1) + " has no tool endpoint."));
+                return new WorkflowState.Terminal(cannotContinue("Plan step " + (i + 1) + " has no tool endpoint."));
             }
             Map<String, Object> parameters =
-                    step.containsKey("parameters")
-                            ? (Map<String, Object>) step.get("parameters")
-                            : Map.of();
+                    step.containsKey("parameters") ? (Map<String, Object>) step.get("parameters") : Map.of();
             pipelineSteps.add(new PipelineStep(endpointPath, parameters));
         }
 
         try {
             List<Resource> inputFiles = toResources(filesById);
-            PipelineDefinition definition =
-                    new PipelineDefinition(summary, pipelineSteps, OutputSpec.inline());
+            PipelineDefinition definition = new PipelineDefinition(summary, pipelineSteps, OutputSpec.inline());
             PolicyExecutionResult result =
-                    policyExecutor.execute(
-                            definition, PolicyInputs.of(inputFiles), stepProgress(listener));
+                    policyExecutor.execute(definition, PolicyInputs.of(inputFiles), stepProgress(listener));
 
             // Multi-turn: if the plan was emitted with resume_with set, the delegate wants
             // Java to re-invoke the orchestrator with any captured report as an artifact.
@@ -526,24 +478,16 @@ public class AiWorkflowService {
                 resumeRequest.setArtifacts(new ArrayList<>(previousRequest.getArtifacts()));
                 resumeRequest
                         .getArtifacts()
-                        .add(
-                                new PdfContentExtractor.ToolReportArtifact(
-                                        result.reportTool(), result.report()));
+                        .add(new PdfContentExtractor.ToolReportArtifact(result.reportTool(), result.report()));
                 resumeRequest.setResumeWith(resumeWith);
                 return new WorkflowState.Pending(resumeRequest);
             }
 
-            return new WorkflowState.Terminal(
-                    buildCompletedResponse(
-                            summary,
-                            result.files(),
-                            result.origins(),
-                            inputFileNames(filesById),
-                            result.report()));
+            return new WorkflowState.Terminal(buildCompletedResponse(
+                    summary, result.files(), result.origins(), inputFileNames(filesById), result.report()));
         } catch (InternalApiTimeoutException e) {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
-            return new WorkflowState.Terminal(
-                    cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
+            return new WorkflowState.Terminal(cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
         } catch (HttpServerErrorException e) {
             String reason = extractDetailFromHttpError(e);
             log.error("Plan step failed (HTTP {}): {}", e.getStatusCode(), reason);
@@ -551,19 +495,18 @@ public class AiWorkflowService {
         } catch (Exception e) {
             AiWorkflowResponse limit = paygLimitResponseOrNull(e);
             if (limit != null) {
-                log.info(
-                        "AI workflow plan blocked by downstream entitlement gate ({})",
-                        limit.getErrorCode());
+                log.info("AI workflow plan blocked by downstream entitlement gate ({})", limit.getErrorCode());
                 return new WorkflowState.Terminal(limit);
             }
             log.error("Failed to execute plan: {}", e.getMessage(), e);
-            return new WorkflowState.Terminal(
-                    cannotContinue("Plan execution failed: " + e.getMessage()));
+            return new WorkflowState.Terminal(cannotContinue("Plan execution failed: " + e.getMessage()));
         }
     }
 
     private static List<String> inputFileNames(Map<String, MultipartFile> filesById) {
-        return filesById.values().stream().map(MultipartFile::getOriginalFilename).toList();
+        return filesById.values().stream()
+                .map(MultipartFile::getOriginalFilename)
+                .toList();
     }
 
     private static String toolTimeoutMessage(String endpointPath, InternalApiTimeoutException e) {
@@ -575,8 +518,9 @@ public class AiWorkflowService {
     }
 
     private static String toolFailureMessage(String endpointPath, Throwable cause) {
-        String reason =
-                cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
+        String reason = cause.getMessage() != null
+                ? cause.getMessage()
+                : cause.getClass().getSimpleName();
         return String.format("The %s tool failed: %s", endpointPath, reason);
     }
 
@@ -611,8 +555,7 @@ public class AiWorkflowService {
         return new PolicyProgressListener() {
             @Override
             public void onStepStart(int stepIndex, int stepCount, String operation) {
-                listener.onProgress(
-                        AiWorkflowProgressEvent.executingTool(operation, stepIndex, stepCount));
+                listener.onProgress(AiWorkflowProgressEvent.executingTool(operation, stepIndex, stepCount));
             }
         };
     }
@@ -636,12 +579,9 @@ public class AiWorkflowService {
         // frontend can add them as independent variants without going through a zip.
         // Count outputs per source so only a clean 1:1 transform (one output for a source) reuses
         // the input's name; a split (one input → many outputs) keeps each entry's own name.
-        Map<Integer, Long> outputsPerOrigin =
-                origins == null
-                        ? Map.of()
-                        : origins.stream()
-                                .filter(o -> o != null)
-                                .collect(Collectors.groupingBy(o -> o, Collectors.counting()));
+        Map<Integer, Long> outputsPerOrigin = origins == null
+                ? Map.of()
+                : origins.stream().filter(o -> o != null).collect(Collectors.groupingBy(o -> o, Collectors.counting()));
         List<AiWorkflowResultFile> descriptors = new ArrayList<>();
         for (int i = 0; i < resultFiles.size(); i++) {
             Resource resource = resultFiles.get(i);
@@ -649,12 +589,9 @@ public class AiWorkflowService {
             // The output's source input (from the executor), used both to name it and to tell the
             // client which file to version in place.
             Integer origin = origins != null && i < origins.size() ? origins.get(i) : null;
-            boolean uniqueOrigin =
-                    origin != null && outputsPerOrigin.getOrDefault(origin, 0L) == 1L;
+            boolean uniqueOrigin = origin != null && outputsPerOrigin.getOrDefault(origin, 0L) == 1L;
             String inputName =
-                    uniqueOrigin && origin >= 0 && origin < inputFileNames.size()
-                            ? inputFileNames.get(origin)
-                            : null;
+                    uniqueOrigin && origin >= 0 && origin < inputFileNames.size() ? inputFileNames.get(origin) : null;
             // Prefer the source input's name only for 1:1 operations where the output keeps the
             // same extension (rotate, compress, etc.). For converters and other extension-changing
             // tools, the response filename from Content-Disposition is authoritative.
@@ -668,19 +605,16 @@ public class AiWorkflowService {
             } else {
                 name = "result-" + (i + 1);
             }
-            String contentType =
-                    MediaTypeFactory.getMediaType(name)
-                            .orElse(MediaType.APPLICATION_OCTET_STREAM)
-                            .toString();
+            String contentType = MediaTypeFactory.getMediaType(name)
+                    .orElse(MediaType.APPLICATION_OCTET_STREAM)
+                    .toString();
             String fileId;
             try (java.io.InputStream is = resource.getInputStream()) {
                 fileId = fileStorage.storeInputStream(is, name).fileId();
             }
             // Only expose the source when this is a clean 1:1 transform, so the client can treat a
             // present sourceIndex as "replace that input in place" without further disambiguation.
-            descriptors.add(
-                    new AiWorkflowResultFile(
-                            fileId, name, contentType, uniqueOrigin ? origin : null));
+            descriptors.add(new AiWorkflowResultFile(fileId, name, contentType, uniqueOrigin ? origin : null));
         }
 
         AiWorkflowResponse completed = new AiWorkflowResponse();
@@ -746,8 +680,8 @@ public class AiWorkflowService {
      * final {@code result} event carries the full {@link AiWorkflowResponse}; an {@code error}
      * event surfaces engine-side failures.
      */
-    private AiWorkflowResponse invokeOrchestrator(
-            WorkflowTurnRequest request, ProgressListener listener) throws IOException {
+    private AiWorkflowResponse invokeOrchestrator(WorkflowTurnRequest request, ProgressListener listener)
+            throws IOException {
         String requestBody = objectMapper.writeValueAsString(request);
         AiWorkflowResponse[] resultHolder = new AiWorkflowResponse[1];
         String[] errorHolder = new String[1];
@@ -768,17 +702,13 @@ public class AiWorkflowService {
     }
 
     private void handleStreamLine(
-            String line,
-            ProgressListener listener,
-            AiWorkflowResponse[] resultHolder,
-            String[] errorHolder) {
+            String line, ProgressListener listener, AiWorkflowResponse[] resultHolder, String[] errorHolder) {
         try {
             JsonNode node = objectMapper.readTree(line);
             String event = node.path("event").asString();
             switch (event) {
                 case "progress" -> {
-                    AiEngineProgressDetail detail =
-                            objectMapper.treeToValue(node, AiEngineProgressDetail.class);
+                    AiEngineProgressDetail detail = objectMapper.treeToValue(node, AiEngineProgressDetail.class);
                     listener.onProgress(AiWorkflowProgressEvent.engineProgress(detail));
                 }
                 case "result" -> {

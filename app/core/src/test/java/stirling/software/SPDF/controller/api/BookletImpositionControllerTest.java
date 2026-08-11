@@ -46,25 +46,27 @@ class BookletImpositionControllerTest {
         return baos.toByteArray();
     }
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private BookletImpositionController controller;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private BookletImpositionController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private MockMultipartFile createRealPdf(int numPages) throws IOException {
@@ -239,8 +241,7 @@ class BookletImpositionControllerTest {
 
         when(pdfDocumentFactory.load(file)).thenThrow(new IOException("load error"));
 
-        assertThatThrownBy(() -> controller.createBookletImposition(request))
-                .isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> controller.createBookletImposition(request)).isInstanceOf(IOException.class);
     }
 
     @Test

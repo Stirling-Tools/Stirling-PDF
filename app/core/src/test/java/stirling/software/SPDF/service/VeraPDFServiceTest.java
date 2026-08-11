@@ -36,8 +36,7 @@ class VeraPDFServiceTest {
     @Test
     void validatePDF_withSimplePdf_returnsResults() throws Exception {
         byte[] pdfBytes = createSimplePdf();
-        List<PDFVerificationResult> results =
-                service.validatePDF(new ByteArrayInputStream(pdfBytes));
+        List<PDFVerificationResult> results = service.validatePDF(new ByteArrayInputStream(pdfBytes));
 
         assertNotNull(results);
         assertFalse(results.isEmpty());
@@ -48,32 +47,24 @@ class VeraPDFServiceTest {
     @Test
     void validatePDF_notPdfaResult_hasCorrectFields() throws Exception {
         byte[] pdfBytes = createSimplePdf();
-        List<PDFVerificationResult> results =
-                service.validatePDF(new ByteArrayInputStream(pdfBytes));
+        List<PDFVerificationResult> results = service.validatePDF(new ByteArrayInputStream(pdfBytes));
 
-        PDFVerificationResult notPdfaResult =
-                results.stream()
-                        .filter(r -> "not-pdfa".equals(r.getStandard()))
-                        .findFirst()
-                        .orElse(null);
+        PDFVerificationResult notPdfaResult = results.stream()
+                .filter(r -> "not-pdfa".equals(r.getStandard()))
+                .findFirst()
+                .orElse(null);
 
         assertNotNull(notPdfaResult);
         assertFalse(notPdfaResult.isDeclaredPdfa());
         assertFalse(notPdfaResult.isCompliant());
-        assertEquals(
-                "Not PDF/A (no PDF/A identification metadata)", notPdfaResult.getStandardName());
+        assertEquals("Not PDF/A (no PDF/A identification metadata)", notPdfaResult.getStandardName());
         assertTrue(notPdfaResult.getTotalFailures() > 0);
     }
 
     @Test
     void formatStandardDisplay_inferredPdfaWithoutDeclaration_returnsNotPdfa() throws Exception {
-        Method method =
-                VeraPDFService.class.getDeclaredMethod(
-                        "formatStandardDisplay",
-                        String.class,
-                        int.class,
-                        boolean.class,
-                        boolean.class);
+        Method method = VeraPDFService.class.getDeclaredMethod(
+                "formatStandardDisplay", String.class, int.class, boolean.class, boolean.class);
         method.setAccessible(true);
 
         String result = (String) method.invoke(null, "PDF/A-1b", 0, false, true);
@@ -82,35 +73,18 @@ class VeraPDFServiceTest {
 
     @Test
     void formatStandardDisplay_notPdfaBaseName_returnsNotPdfa() throws Exception {
-        Method method =
-                VeraPDFService.class.getDeclaredMethod(
-                        "formatStandardDisplay",
-                        String.class,
-                        int.class,
-                        boolean.class,
-                        boolean.class);
+        Method method = VeraPDFService.class.getDeclaredMethod(
+                "formatStandardDisplay", String.class, int.class, boolean.class, boolean.class);
         method.setAccessible(true);
 
-        String result =
-                (String)
-                        method.invoke(
-                                null,
-                                "Not PDF/A (no PDF/A identification metadata)",
-                                0,
-                                false,
-                                false);
+        String result = (String) method.invoke(null, "Not PDF/A (no PDF/A identification metadata)", 0, false, false);
         assertEquals("Not PDF/A (no PDF/A identification metadata)", result);
     }
 
     @Test
     void formatStandardDisplay_withErrors_appendsWithErrors() throws Exception {
-        Method method =
-                VeraPDFService.class.getDeclaredMethod(
-                        "formatStandardDisplay",
-                        String.class,
-                        int.class,
-                        boolean.class,
-                        boolean.class);
+        Method method = VeraPDFService.class.getDeclaredMethod(
+                "formatStandardDisplay", String.class, int.class, boolean.class, boolean.class);
         method.setAccessible(true);
 
         String result = (String) method.invoke(null, "PDF/A-1b", 5, true, false);
@@ -119,13 +93,8 @@ class VeraPDFServiceTest {
 
     @Test
     void formatStandardDisplay_compliant_appendsCompliant() throws Exception {
-        Method method =
-                VeraPDFService.class.getDeclaredMethod(
-                        "formatStandardDisplay",
-                        String.class,
-                        int.class,
-                        boolean.class,
-                        boolean.class);
+        Method method = VeraPDFService.class.getDeclaredMethod(
+                "formatStandardDisplay", String.class, int.class, boolean.class, boolean.class);
         method.setAccessible(true);
 
         String result = (String) method.invoke(null, "PDF/A-1b", 0, true, false);
@@ -134,14 +103,11 @@ class VeraPDFServiceTest {
 
     @Test
     void getStandardName_pdfaFlavour() throws Exception {
-        Method method =
-                VeraPDFService.class.getDeclaredMethod("getStandardName", PDFAFlavour.class);
+        Method method = VeraPDFService.class.getDeclaredMethod("getStandardName", PDFAFlavour.class);
         method.setAccessible(true);
 
         String result = (String) method.invoke(null, PDFAFlavour.PDFA_1_B);
-        assertTrue(
-                result.startsWith("PDF/A-"),
-                "Should start with PDF/A- for PDFA flavours, got: " + result);
+        assertTrue(result.startsWith("PDF/A-"), "Should start with PDF/A- for PDFA flavours, got: " + result);
     }
 
     @Test
@@ -162,14 +128,12 @@ class VeraPDFServiceTest {
 
     @Test
     void buildErrorResult_withPdfaFlavour_setsFields() throws Exception {
-        Method method =
-                VeraPDFService.class.getDeclaredMethod(
-                        "buildErrorResult", PDFAFlavour.class, PDFAFlavour.class, String.class);
+        Method method = VeraPDFService.class.getDeclaredMethod(
+                "buildErrorResult", PDFAFlavour.class, PDFAFlavour.class, String.class);
         method.setAccessible(true);
 
         PDFVerificationResult result =
-                (PDFVerificationResult)
-                        method.invoke(null, null, PDFAFlavour.PDFA_1_B, "Test error");
+                (PDFVerificationResult) method.invoke(null, null, PDFAFlavour.PDFA_1_B, "Test error");
 
         assertNotNull(result);
         assertFalse(result.isCompliant());
@@ -179,13 +143,11 @@ class VeraPDFServiceTest {
 
     @Test
     void buildErrorResult_withNullFlavours_handlesGracefully() throws Exception {
-        Method method =
-                VeraPDFService.class.getDeclaredMethod(
-                        "buildErrorResult", PDFAFlavour.class, PDFAFlavour.class, String.class);
+        Method method = VeraPDFService.class.getDeclaredMethod(
+                "buildErrorResult", PDFAFlavour.class, PDFAFlavour.class, String.class);
         method.setAccessible(true);
 
-        PDFVerificationResult result =
-                (PDFVerificationResult) method.invoke(null, null, null, "Error message");
+        PDFVerificationResult result = (PDFVerificationResult) method.invoke(null, null, null, "Error message");
 
         assertNotNull(result);
         assertFalse(result.isCompliant());
@@ -194,9 +156,7 @@ class VeraPDFServiceTest {
 
     @Test
     void createValidationIssue_withNullRuleId() throws Exception {
-        Method method =
-                VeraPDFService.class.getDeclaredMethod(
-                        "createValidationIssue", TestAssertion.class);
+        Method method = VeraPDFService.class.getDeclaredMethod("createValidationIssue", TestAssertion.class);
         method.setAccessible(true);
 
         TestAssertion assertion = mock(TestAssertion.class);
@@ -214,21 +174,18 @@ class VeraPDFServiceTest {
 
     @Test
     void createValidationIssue_withLocation() throws Exception {
-        Method method =
-                VeraPDFService.class.getDeclaredMethod(
-                        "createValidationIssue", TestAssertion.class);
+        Method method = VeraPDFService.class.getDeclaredMethod("createValidationIssue", TestAssertion.class);
         method.setAccessible(true);
 
         TestAssertion assertion = mock(TestAssertion.class);
         when(assertion.getRuleId()).thenReturn(null);
         when(assertion.getMessage()).thenReturn("Another message");
-        Object locationObj =
-                new Object() {
-                    @Override
-                    public String toString() {
-                        return "page 1, line 5";
-                    }
-                };
+        Object locationObj = new Object() {
+            @Override
+            public String toString() {
+                return "page 1, line 5";
+            }
+        };
         // TestAssertion.getLocation() returns ObjectLocator; we mock it
         when(assertion.getLocation()).thenReturn(null);
 
@@ -240,8 +197,7 @@ class VeraPDFServiceTest {
     @Test
     void validatePDF_multiPagePdf_returnsResults() throws Exception {
         byte[] pdfBytes = createMultiPagePdf(3);
-        List<PDFVerificationResult> results =
-                service.validatePDF(new ByteArrayInputStream(pdfBytes));
+        List<PDFVerificationResult> results = service.validatePDF(new ByteArrayInputStream(pdfBytes));
         assertNotNull(results);
         assertFalse(results.isEmpty());
     }

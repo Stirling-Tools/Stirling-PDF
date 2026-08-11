@@ -42,8 +42,7 @@ public record NetworkConfig(
                     return security;
                 }
             }
-            throw new IllegalArgumentException(
-                    "network config 'security' must be NONE, EXPLICIT or IMPLICIT");
+            throw new IllegalArgumentException("network config 'security' must be NONE, EXPLICIT or IMPLICIT");
         }
     }
 
@@ -68,8 +67,7 @@ public record NetworkConfig(
     public static NetworkConfig from(Map<String, Object> options) {
         NetworkProtocol protocol = NetworkProtocol.fromOption(str(options.get(PROTOCOL_OPTION)));
         if (protocol == null) {
-            throw new IllegalArgumentException(
-                    "network config requires a 'protocol' of sftp, ftp or smb");
+            throw new IllegalArgumentException("network config requires a 'protocol' of sftp, ftp or smb");
         }
         String host = trimmed(options.get(HOST_OPTION));
         if (host == null) {
@@ -93,17 +91,13 @@ public record NetworkConfig(
         boolean snapshot = snapshot(str(options.get(MODE_OPTION)));
 
         if (protocol == NetworkProtocol.SFTP && password == null && privateKey == null) {
-            throw new IllegalArgumentException(
-                    "sftp connection requires a 'password' or a 'privateKey'");
+            throw new IllegalArgumentException("sftp connection requires a 'password' or a 'privateKey'");
         }
-        if ((protocol == NetworkProtocol.FTP || protocol == NetworkProtocol.SMB)
-                && password == null) {
-            throw new IllegalArgumentException(
-                    protocol.name() + " connection requires a 'password'");
+        if ((protocol == NetworkProtocol.FTP || protocol == NetworkProtocol.SMB) && password == null) {
+            throw new IllegalArgumentException(protocol.name() + " connection requires a 'password'");
         }
         if (protocol == NetworkProtocol.SMB && share == null) {
-            throw new IllegalArgumentException(
-                    "smb connection requires a 'share' (e.g. documents)");
+            throw new IllegalArgumentException("smb connection requires a 'share' (e.g. documents)");
         }
         return new NetworkConfig(
                 protocol,
@@ -163,8 +157,7 @@ public record NetworkConfig(
         }
         for (String segment : normalized.split("/")) {
             if (segment.equals("..")) {
-                throw new IllegalArgumentException(
-                        "network config 'directory' must not contain '..'");
+                throw new IllegalArgumentException("network config 'directory' must not contain '..'");
             }
         }
         return normalized;
@@ -175,8 +168,7 @@ public record NetworkConfig(
             return false;
         }
         if (!MODE_CONSUME.equals(mode) && !MODE_SNAPSHOT.equals(mode)) {
-            throw new IllegalArgumentException(
-                    "network config 'mode' must be 'consume' or 'snapshot'");
+            throw new IllegalArgumentException("network config 'mode' must be 'consume' or 'snapshot'");
         }
         return MODE_SNAPSHOT.equals(mode);
     }

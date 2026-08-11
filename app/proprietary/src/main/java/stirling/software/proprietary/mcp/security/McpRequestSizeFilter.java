@@ -32,8 +32,7 @@ public class McpRequestSizeFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         long declared = request.getContentLengthLong();
         if (declared > maxBodyBytes) {
@@ -69,11 +68,10 @@ public class McpRequestSizeFilter extends OncePerRequestFilter {
         response.setStatus(HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE);
         response.setContentType("application/json");
         response.getWriter()
-                .write(
-                        "{\"error\":\"payload_too_large\",\"message\":\"MCP request body exceeds the"
-                                + " configured limit of "
-                                + maxBodyBytes
-                                + " bytes.\"}");
+                .write("{\"error\":\"payload_too_large\",\"message\":\"MCP request body exceeds the"
+                        + " configured limit of "
+                        + maxBodyBytes
+                        + " bytes.\"}");
     }
 
     private static final class BodyTooLargeException extends IOException {}

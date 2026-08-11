@@ -19,7 +19,8 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
 @ExtendWith(MockitoExtension.class)
 class DatabaseConfigTest {
 
-    @Mock private ApplicationProperties.Datasource datasource;
+    @Mock
+    private ApplicationProperties.Datasource datasource;
 
     private DatabaseConfig databaseConfig;
 

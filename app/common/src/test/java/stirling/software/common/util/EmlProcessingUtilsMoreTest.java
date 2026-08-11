@@ -111,10 +111,7 @@ class EmlProcessingUtilsMoreTest {
 
             String html = EmlProcessingUtils.generateEnhancedEmailHtml(content, request, null);
 
-            assertThat(html)
-                    .contains("Attachments (1)")
-                    .contains("file.pdf")
-                    .contains("embedded in the file");
+            assertThat(html).contains("Attachments (1)").contains("file.pdf").contains("embedded in the file");
         }
 
         @Test
@@ -163,11 +160,13 @@ class EmlProcessingUtilsMoreTest {
         @Test
         @DisplayName("strips script and style tags")
         void stripsScriptAndStyle() {
-            String html =
-                    "<html><head><style>.a{}</style></head>"
-                            + "<body><script>alert(1)</script><p>keep</p></body></html>";
+            String html = "<html><head><style>.a{}</style></head>"
+                    + "<body><script>alert(1)</script><p>keep</p></body></html>";
             String result = EmlProcessingUtils.simplifyHtmlContent(html);
-            assertThat(result).doesNotContain("<script").doesNotContain("<style").contains("keep");
+            assertThat(result)
+                    .doesNotContain("<script")
+                    .doesNotContain("<style")
+                    .contains("keep");
         }
     }
 

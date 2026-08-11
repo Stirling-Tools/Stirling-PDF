@@ -48,10 +48,8 @@ public class ConfigController {
             EndpointConfiguration endpointConfiguration,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     ServerCertificateServiceInterface serverCertificateService,
-            @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    UserServiceInterface userService,
-            @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    ShowAdminInterface showAdmin,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) UserServiceInterface userService,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) ShowAdminInterface showAdmin,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     stirling.software.common.service.LicenseServiceInterface licenseService,
             stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
@@ -115,9 +113,7 @@ public class ConfigController {
             if (host != null && !host.isBlank() && !isLoopbackHost(host)) {
                 String scheme = request.getScheme();
                 int port = request.getServerPort();
-                boolean defaultPort =
-                        ("http".equals(scheme) && port == 80)
-                                || ("https".equals(scheme) && port == 443);
+                boolean defaultPort = ("http".equals(scheme) && port == 80) || ("https".equals(scheme) && port == 443);
                 return defaultPort ? scheme + "://" + host : scheme + "://" + host + ":" + port;
             }
         }
@@ -192,17 +188,13 @@ public class ConfigController {
 
             // Add mobile scanner settings
             configData.put(
-                    "enableMobileScanner",
-                    applicationProperties.getSystem().isEnableMobileScanner());
+                    "enableMobileScanner", applicationProperties.getSystem().isEnableMobileScanner());
             configData.put(
                     "mobileScannerConvertToPdf",
                     applicationProperties.getSystem().getMobileScannerSettings().isConvertToPdf());
             configData.put(
                     "mobileScannerImageResolution",
-                    applicationProperties
-                            .getSystem()
-                            .getMobileScannerSettings()
-                            .getImageResolution());
+                    applicationProperties.getSystem().getMobileScannerSettings().getImageResolution());
             configData.put(
                     "mobileScannerPageFormat",
                     applicationProperties.getSystem().getMobileScannerSettings().getPageFormat());
@@ -218,8 +210,7 @@ public class ConfigController {
 
             // User preference defaults
             configData.put(
-                    "defaultHideUnavailableTools",
-                    applicationProperties.getUi().isDefaultHideUnavailableTools());
+                    "defaultHideUnavailableTools", applicationProperties.getUi().isDefaultHideUnavailableTools());
             configData.put(
                     "defaultHideUnavailableConversions",
                     applicationProperties.getUi().isDefaultHideUnavailableConversions());
@@ -246,20 +237,16 @@ public class ConfigController {
             // enableLogin requires both the config flag AND proprietary features to be loaded
             // If userService is null, proprietary module isn't loaded
             // (DISABLE_ADDITIONAL_FEATURES=true or DOCKER_ENABLE_SECURITY=false)
-            boolean enableLogin =
-                    applicationProperties.getSecurity().isEnableLogin() && userService != null;
+            boolean enableLogin = applicationProperties.getSecurity().isEnableLogin() && userService != null;
             configData.put("enableLogin", enableLogin);
             configData.put(
-                    "showSettingsWhenNoLogin",
-                    applicationProperties.getSystem().isShowSettingsWhenNoLogin());
+                    "showSettingsWhenNoLogin", applicationProperties.getSystem().isShowSettingsWhenNoLogin());
 
             // SSO Provider settings
-            boolean enableOAuth =
-                    applicationProperties.getSecurity().getOauth2() != null
-                            && applicationProperties.getSecurity().getOauth2().getEnabled();
-            boolean enableSaml =
-                    applicationProperties.getSecurity().getSaml2() != null
-                            && applicationProperties.getSecurity().getSaml2().getEnabled();
+            boolean enableOAuth = applicationProperties.getSecurity().getOauth2() != null
+                    && applicationProperties.getSecurity().getOauth2().getEnabled();
+            boolean enableSaml = applicationProperties.getSecurity().getSaml2() != null
+                    && applicationProperties.getSecurity().getSaml2().getEnabled();
             configData.put("enableOAuth", enableOAuth);
             configData.put("enableSaml", enableSaml);
 
@@ -269,20 +256,20 @@ public class ConfigController {
             configData.put("enableEmailInvites", smtpEnabled && invitesEnabled);
 
             // Storage settings
-            boolean storageEnabled = enableLogin && applicationProperties.getStorage().isEnabled();
-            boolean sharingEnabled =
-                    storageEnabled && applicationProperties.getStorage().getSharing().isEnabled();
-            boolean frontendUrlConfigured = frontendUrl != null && !frontendUrl.trim().isEmpty();
-            boolean shareLinksEnabled =
-                    sharingEnabled
-                            && applicationProperties.getStorage().getSharing().isLinkEnabled()
-                            && frontendUrlConfigured;
-            boolean shareEmailEnabled =
-                    sharingEnabled
-                            && applicationProperties.getStorage().getSharing().isEmailEnabled()
-                            && applicationProperties.getMail().isEnabled();
-            boolean groupSigningEnabled =
-                    storageEnabled && applicationProperties.getStorage().getSigning().isEnabled();
+            boolean storageEnabled =
+                    enableLogin && applicationProperties.getStorage().isEnabled();
+            boolean sharingEnabled = storageEnabled
+                    && applicationProperties.getStorage().getSharing().isEnabled();
+            boolean frontendUrlConfigured =
+                    frontendUrl != null && !frontendUrl.trim().isEmpty();
+            boolean shareLinksEnabled = sharingEnabled
+                    && applicationProperties.getStorage().getSharing().isLinkEnabled()
+                    && frontendUrlConfigured;
+            boolean shareEmailEnabled = sharingEnabled
+                    && applicationProperties.getStorage().getSharing().isEmailEnabled()
+                    && applicationProperties.getMail().isEnabled();
+            boolean groupSigningEnabled = storageEnabled
+                    && applicationProperties.getStorage().getSigning().isEnabled();
             configData.put("storageEnabled", storageEnabled);
             configData.put("storageSharingEnabled", sharingEnabled);
             configData.put("storageShareLinksEnabled", shareLinksEnabled);
@@ -304,8 +291,7 @@ public class ConfigController {
             configData.put("isNewServer", InitialSetup.isNewServer());
 
             // Check if the current user is a first-time user
-            boolean isNewUser =
-                    false; // Default to false when security is disabled or user not found
+            boolean isNewUser = false; // Default to false when security is disabled or user not found
             if (userService != null) {
                 try {
                     isNewUser = userService.isCurrentUserFirstLogin();
@@ -320,12 +306,10 @@ public class ConfigController {
             configData.put(
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
-            boolean shouldShowUpdate =
-                    applicationProperties.getSystem().isShowUpdate()
-                            && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());
+            boolean shouldShowUpdate = applicationProperties.getSystem().isShowUpdate()
+                    && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());
             configData.put("shouldShowUpdate", shouldShowUpdate);
-            configData.put(
-                    "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
+            configData.put("enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
             configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
             configData.put("enableScarf", applicationProperties.getSystem().getEnableScarf());
             configData.put(
@@ -381,8 +365,7 @@ public class ConfigController {
             configData.put("cookiePolicy", applicationProperties.getLegal().getCookiePolicy());
             configData.put("impressum", applicationProperties.getLegal().getImpressum());
             configData.put(
-                    "accessibilityStatement",
-                    applicationProperties.getLegal().getAccessibilityStatement());
+                    "accessibilityStatement", applicationProperties.getLegal().getAccessibilityStatement());
 
             // Try to get EEAppConfig values if available
             // Get these dynamically to reflect current license status (not cached at startup)
@@ -403,9 +386,7 @@ public class ConfigController {
                 }
 
                 if (applicationContext.containsBean("SSOAutoLogin")) {
-                    configData.put(
-                            "SSOAutoLogin",
-                            applicationContext.getBean("SSOAutoLogin", Boolean.class));
+                    configData.put("SSOAutoLogin", applicationContext.getBean("SSOAutoLogin", Boolean.class));
                 }
             } catch (Exception e) {
                 // EE features not available, continue without them
@@ -414,17 +395,13 @@ public class ConfigController {
             // Add version and machine info for update checking
             try {
                 if (applicationContext.containsBean("appVersion")) {
-                    configData.put(
-                            "appVersion", applicationContext.getBean("appVersion", String.class));
+                    configData.put("appVersion", applicationContext.getBean("appVersion", String.class));
                 }
                 if (applicationContext.containsBean("machineType")) {
-                    configData.put(
-                            "machineType", applicationContext.getBean("machineType", String.class));
+                    configData.put("machineType", applicationContext.getBean("machineType", String.class));
                 }
                 if (applicationContext.containsBean("activeSecurity")) {
-                    configData.put(
-                            "activeSecurity",
-                            applicationContext.getBean("activeSecurity", Boolean.class));
+                    configData.put("activeSecurity", applicationContext.getBean("activeSecurity", Boolean.class));
                 }
             } catch (Exception e) {
                 // Version/machine info not available
@@ -440,8 +417,7 @@ public class ConfigController {
     }
 
     @GetMapping("/endpoint-enabled")
-    public ResponseEntity<Boolean> isEndpointEnabled(
-            @RequestParam(name = "endpoint") String endpoint) {
+    public ResponseEntity<Boolean> isEndpointEnabled(@RequestParam(name = "endpoint") String endpoint) {
         boolean enabled = endpointConfiguration.isEndpointEnabled(endpoint);
         return ResponseEntity.ok(enabled);
     }
@@ -462,15 +438,11 @@ public class ConfigController {
     public ResponseEntity<Map<String, EndpointAvailability>> getEndpointAvailability(
             @RequestParam(name = "endpoints", required = false) List<String> endpoints) {
         Collection<String> toCheck =
-                (endpoints == null || endpoints.isEmpty())
-                        ? endpointConfiguration.getAllEndpoints()
-                        : endpoints;
+                (endpoints == null || endpoints.isEmpty()) ? endpointConfiguration.getAllEndpoints() : endpoints;
         Map<String, EndpointAvailability> result = new HashMap<>();
         for (String endpoint : toCheck) {
             String trimmedEndpoint = endpoint.trim();
-            result.put(
-                    trimmedEndpoint,
-                    endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
+            result.put(trimmedEndpoint, endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
         }
         return ResponseEntity.ok(result);
     }

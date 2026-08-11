@@ -25,10 +25,7 @@ class TempDirectoryTest {
         when(manager.createTempDirectory()).thenReturn(tempPath);
 
         try (TempDirectory tempDir = new TempDirectory(manager)) {
-            assertEquals(
-                    tempPath,
-                    tempDir.getPath(),
-                    "getPath should return the created directory path");
+            assertEquals(tempPath, tempDir.getPath(), "getPath should return the created directory path");
             assertEquals(
                     tempPath.toAbsolutePath().toString(),
                     tempDir.getAbsolutePath(),
@@ -53,10 +50,7 @@ class TempDirectoryTest {
 
         ArgumentCaptor<Path> captor = ArgumentCaptor.forClass(Path.class);
         verify(manager, times(1)).deleteTempDirectory(captor.capture());
-        assertEquals(
-                tempPath,
-                captor.getValue(),
-                "deleteTempDirectory should be called with the created path");
+        assertEquals(tempPath, captor.getValue(), "deleteTempDirectory should be called with the created path");
     }
 
     @Test

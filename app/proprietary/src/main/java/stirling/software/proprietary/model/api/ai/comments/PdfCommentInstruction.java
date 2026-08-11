@@ -8,5 +8,4 @@ package stirling.software.proprietary.model.api.ai.comments;
  * @param author Optional author/title for the popup. May be {@code null}.
  * @param subject Optional subject line for the popup. May be {@code null}.
  */
-public record PdfCommentInstruction(
-        String chunkId, String commentText, String author, String subject) {}
+public record PdfCommentInstruction(String chunkId, String commentText, String author, String subject) {}

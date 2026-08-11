@@ -101,8 +101,7 @@ public class PolicyEngine {
      * (status/notes/results observable via the job endpoints); its future resolves when the run
      * reaches a terminal or paused state.
      */
-    public PolicyRunHandle submit(
-            PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener) {
+    public PolicyRunHandle submit(PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener) {
         return submit(definition, inputs, listener, null);
     }
 
@@ -113,10 +112,7 @@ public class PolicyEngine {
      * (e.g. a refresh before it recorded the run), so a finished run is never orphaned server-side.
      */
     public PolicyRunHandle submit(
-            PipelineDefinition definition,
-            PolicyInputs inputs,
-            PolicyProgressListener listener,
-            String policyId) {
+            PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener, String policyId) {
         // Ad-hoc run (no stored policy): bill whoever kicked it off and own the outputs as them
         // too.
         // Capture the principal on this (request) thread — it does not survive the hop onto the
@@ -127,8 +123,7 @@ public class PolicyEngine {
     }
 
     /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
-    public PolicyRunHandle runPolicy(
-            Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
+    public PolicyRunHandle runPolicy(Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
         // Bill the policy owner: trigger-fired runs have no security context, and the async worker
         // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
         // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
@@ -142,10 +137,8 @@ public class PolicyEngine {
         // delivers to each of its saved Source destinations. Unreferenced policies fall back to
         // their inline output.
         PipelineDefinition definition =
-                new PipelineDefinition(
-                        policy.name(), policy.steps(), outputResolver.resolve(policy));
-        return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), definition, inputs, listener);
+                new PipelineDefinition(policy.name(), policy.steps(), outputResolver.resolve(policy));
+        return submitForPrincipal(policy.owner(), fileOwner, policy.id(), definition, inputs, listener);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -172,13 +165,11 @@ public class PolicyEngine {
         // UserService.getCurrentUsername() — that has an MDC `auditPrincipal` fallback for async
         // threads. Without this the worker has no identity, tool calls fall back to the
         // INTERNAL_API_USER, and PAYG charges that system account instead of the owner's team.
-        Runnable task =
-                () ->
-                        runAsPrincipal(
-                                billingPrincipal,
-                                fileOwner,
-                                definition.name(),
-                                () -> runToCompletion(run, inputs, tracking, completion));
+        Runnable task = () -> runAsPrincipal(
+                billingPrincipal,
+                fileOwner,
+                definition.name(),
+                () -> runToCompletion(run, inputs, tracking, completion));
 
         // One admission unit per run; steps run synchronously within it, so this gates heavy work
         // without the pool-within-pool risk of queueing each tool call.
@@ -235,8 +226,7 @@ public class PolicyEngine {
         try (AutomationRunContext.Scope runScope = AutomationRunContext.open(runId)) {
             try {
                 run.markRunning();
-                PolicyExecutionResult result =
-                        stepExecutor.execute(run.getDefinition(), inputs, listener);
+                PolicyExecutionResult result = stepExecutor.execute(run.getDefinition(), inputs, listener);
                 // Deliver the run's files to every destination; no destinations means inline
                 // delivery (results stored/returned to the caller), preserving ad-hoc/AI behaviour.
                 List<OutputSpec> destinations = run.getDefinition().outputs();
@@ -245,12 +235,8 @@ public class PolicyEngine {
                 }
                 List<ResultFile> outputs = new ArrayList<>();
                 for (OutputSpec destination : destinations) {
-                    outputs.addAll(
-                            sinkFor(destination)
-                                    .deliver(
-                                            new OutputDelivery(runId, run.getPolicyId()),
-                                            result.files(),
-                                            destination));
+                    outputs.addAll(sinkFor(destination)
+                            .deliver(new OutputDelivery(runId, run.getPolicyId()), result.files(), destination));
                 }
                 taskManager.setMultipleFileResults(runId, outputs);
                 taskManager.setComplete(runId);
@@ -264,11 +250,7 @@ public class PolicyEngine {
                 taskManager.addNote(runId, "Waiting for input: " + e.getMessage());
             } catch (InternalApiTimeoutException e) {
                 String message = toolTimeoutMessage(e);
-                log.error(
-                        "Policy run {} timed out on {}: {}",
-                        runId,
-                        e.getEndpointPath(),
-                        e.getMessage());
+                log.error("Policy run {} timed out on {}: {}", runId, e.getEndpointPath(), e.getMessage());
                 run.fail(message);
                 taskManager.setError(runId, message);
             } catch (RestClientResponseException e) {
@@ -286,13 +268,9 @@ public class PolicyEngine {
                 // through to the generic failure below.
                 String code = DownstreamEntitlementError.extractCode(e);
                 if (code != null) {
-                    log.info(
-                            "Policy run {} blocked by downstream entitlement gate ({})",
-                            runId,
-                            code);
+                    log.info("Policy run {} blocked by downstream entitlement gate ({})", runId, code);
                     String message = "Usage limit reached";
-                    run.failWithCode(
-                            message, code, DownstreamEntitlementError.extractSubscribed(e));
+                    run.failWithCode(message, code, DownstreamEntitlementError.extractSubscribed(e));
                     taskManager.setError(runId, message);
                 } else {
                     String message = "Policy run failed: " + e.getMessage();
@@ -312,8 +290,7 @@ public class PolicyEngine {
         }
     }
 
-    private ResponseEntity<?> failRejectedRun(
-            PolicyRun run, CompletableFuture<PolicyRun> completion, Throwable ex) {
+    private ResponseEntity<?> failRejectedRun(PolicyRun run, CompletableFuture<PolicyRun> completion, Throwable ex) {
         // Only reached if the run never started (e.g. queue full); a started run resolves its own
         // completion in runToCompletion.
         if (!completion.isDone()) {
@@ -340,23 +317,18 @@ public class PolicyEngine {
         return new WaitState(e.getMessage(), e.getResumeStepIndex(), fileIds);
     }
 
-    private PolicyProgressListener trackingListener(
-            String runId, PolicyRun run, PolicyProgressListener delegate) {
+    private PolicyProgressListener trackingListener(String runId, PolicyRun run, PolicyProgressListener delegate) {
         return new PolicyProgressListener() {
             @Override
             public void onStepStart(int stepIndex, int stepCount, String operation) {
                 run.enterStep(stepIndex);
-                taskManager.addNote(
-                        runId,
-                        "Step " + stepIndex + "/" + stepCount + ": " + operation + " started");
+                taskManager.addNote(runId, "Step " + stepIndex + "/" + stepCount + ": " + operation + " started");
                 delegate.onStepStart(stepIndex, stepCount, operation);
             }
 
             @Override
             public void onStepComplete(int stepIndex, int stepCount, String operation) {
-                taskManager.addNote(
-                        runId,
-                        "Step " + stepIndex + "/" + stepCount + ": " + operation + " completed");
+                taskManager.addNote(runId, "Step " + stepIndex + "/" + stepCount + ": " + operation + " completed");
                 delegate.onStepComplete(stepIndex, stepCount, operation);
             }
 
@@ -371,11 +343,8 @@ public class PolicyEngine {
         return outputSinks.stream()
                 .filter(sink -> sink.supports(spec))
                 .findFirst()
-                .orElseThrow(
-                        () ->
-                                new IllegalStateException(
-                                        "No output sink supports spec: "
-                                                + (spec == null ? "<null>" : spec.type())));
+                .orElseThrow(() -> new IllegalStateException(
+                        "No output sink supports spec: " + (spec == null ? "<null>" : spec.type())));
     }
 
     private static String toolTimeoutMessage(InternalApiTimeoutException e) {
@@ -414,8 +383,7 @@ public class PolicyEngine {
      * dispatch attributes (and charges) usage to that user. A null/blank principal runs as-is.
      * Restores the previous MDC value afterward (defensive — worker threads aren't pooled).
      */
-    private static void runAsPrincipal(
-            String billingPrincipal, String fileOwner, String policyName, Runnable body) {
+    private static void runAsPrincipal(String billingPrincipal, String fileOwner, String policyName, Runnable body) {
         // Billing identity (MDC auditPrincipal) and output-file ownership (JobContext owner) are
         // set
         // independently: usage is charged to billingPrincipal, but stored output files are owned by

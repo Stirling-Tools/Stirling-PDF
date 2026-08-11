@@ -30,9 +30,7 @@ import stirling.software.proprietary.security.model.User;
         indexes = {
             @Index(name = "idx_share_access_file_share", columnList = "file_share_id"),
             @Index(name = "idx_share_access_user", columnList = "user_id"),
-            @Index(
-                    name = "idx_share_access_file_share_accessed",
-                    columnList = "file_share_id, accessed_at")
+            @Index(name = "idx_share_access_file_share_accessed", columnList = "file_share_id, accessed_at")
         })
 @NoArgsConstructor
 @Getter

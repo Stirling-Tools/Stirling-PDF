@@ -102,8 +102,7 @@ class StringToMapPropertyEditorTest {
         String json = "{invalid json}";
 
         // Act & Assert
-        IllegalArgumentException exception =
-                assertThrows(IllegalArgumentException.class, () -> editor.setAsText(json));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> editor.setAsText(json));
 
         assertEquals(
                 "Failed to convert java.lang.String to java.util.Map",

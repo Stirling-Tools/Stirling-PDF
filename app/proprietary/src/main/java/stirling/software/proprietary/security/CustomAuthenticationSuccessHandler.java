@@ -24,17 +24,14 @@ import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 
 @Slf4j
-public class CustomAuthenticationSuccessHandler
-        extends SavedRequestAwareAuthenticationSuccessHandler {
+public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final LoginAttemptService loginAttemptService;
     private final UserService userService;
     private final JwtServiceInterface jwtService;
 
     public CustomAuthenticationSuccessHandler(
-            LoginAttemptService loginAttemptService,
-            UserService userService,
-            JwtServiceInterface jwtService) {
+            LoginAttemptService loginAttemptService, UserService userService, JwtServiceInterface jwtService) {
         this.loginAttemptService = loginAttemptService;
         this.userService = userService;
         this.jwtService = jwtService;
@@ -54,9 +51,7 @@ public class CustomAuthenticationSuccessHandler
         loginAttemptService.loginSucceeded(userName);
 
         if (jwtService.isJwtEnabled()) {
-            String jwt =
-                    jwtService.generateToken(
-                            authentication, Map.of("authType", AuthenticationType.WEB));
+            String jwt = jwtService.generateToken(authentication, Map.of("authType", AuthenticationType.WEB));
             log.debug("JWT generated for user: {}", userName);
 
             getRedirectStrategy().sendRedirect(request, response, "/");
@@ -64,13 +59,10 @@ public class CustomAuthenticationSuccessHandler
             // Get the saved request
             HttpSession session = request.getSession(false);
             SavedRequest savedRequest =
-                    (session != null)
-                            ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
-                            : null;
+                    (session != null) ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST") : null;
 
             if (savedRequest != null
-                    && !RequestUriUtils.isStaticResource(
-                            request.getContextPath(), savedRequest.getRedirectUrl())) {
+                    && !RequestUriUtils.isStaticResource(request.getContextPath(), savedRequest.getRedirectUrl())) {
                 // Redirect to the original destination
                 super.onAuthenticationSuccess(request, response, authentication);
             } else {

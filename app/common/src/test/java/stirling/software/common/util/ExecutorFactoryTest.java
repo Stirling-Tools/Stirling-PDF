@@ -29,11 +29,10 @@ class ExecutorFactoryTest {
         AtomicBoolean ran = new AtomicBoolean(false);
         CountDownLatch latch = new CountDownLatch(1);
 
-        executor.submit(
-                () -> {
-                    ran.set(true);
-                    latch.countDown();
-                });
+        executor.submit(() -> {
+            ran.set(true);
+            latch.countDown();
+        });
 
         assertTrue(latch.await(5, TimeUnit.SECONDS));
         assertTrue(ran.get());
@@ -47,11 +46,10 @@ class ExecutorFactoryTest {
         AtomicReference<Boolean> isVirtual = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
 
-        executor.submit(
-                () -> {
-                    isVirtual.set(Thread.currentThread().isVirtual());
-                    latch.countDown();
-                });
+        executor.submit(() -> {
+            isVirtual.set(Thread.currentThread().isVirtual());
+            latch.countDown();
+        });
 
         assertTrue(latch.await(5, TimeUnit.SECONDS));
         assertTrue(isVirtual.get());
@@ -61,8 +59,7 @@ class ExecutorFactoryTest {
     @Test
     @DisplayName("newSingleVirtualThreadScheduledExecutor should return non-null")
     void scheduledExecutorNotNull() {
-        ScheduledExecutorService executor =
-                ExecutorFactory.newSingleVirtualThreadScheduledExecutor();
+        ScheduledExecutorService executor = ExecutorFactory.newSingleVirtualThreadScheduledExecutor();
         assertNotNull(executor);
         executor.shutdown();
     }
@@ -70,8 +67,7 @@ class ExecutorFactoryTest {
     @Test
     @DisplayName("newSingleVirtualThreadScheduledExecutor should execute scheduled tasks")
     void scheduledExecutorExecutesTasks() throws Exception {
-        ScheduledExecutorService executor =
-                ExecutorFactory.newSingleVirtualThreadScheduledExecutor();
+        ScheduledExecutorService executor = ExecutorFactory.newSingleVirtualThreadScheduledExecutor();
         AtomicBoolean ran = new AtomicBoolean(false);
         CountDownLatch latch = new CountDownLatch(1);
 

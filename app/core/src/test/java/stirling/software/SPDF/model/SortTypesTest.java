@@ -12,28 +12,23 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 class SortTypesTest {
 
-    private static final Set<String> EXPECTED =
-            Set.of(
-                    "CUSTOM",
-                    "REVERSE_ORDER",
-                    "DUPLEX_SORT",
-                    "BOOKLET_SORT",
-                    "SIDE_STITCH_BOOKLET_SORT",
-                    "ODD_EVEN_SPLIT",
-                    "REMOVE_FIRST",
-                    "REMOVE_LAST",
-                    "REMOVE_FIRST_AND_LAST",
-                    "DUPLICATE");
+    private static final Set<String> EXPECTED = Set.of(
+            "CUSTOM",
+            "REVERSE_ORDER",
+            "DUPLEX_SORT",
+            "BOOKLET_SORT",
+            "SIDE_STITCH_BOOKLET_SORT",
+            "ODD_EVEN_SPLIT",
+            "REMOVE_FIRST",
+            "REMOVE_LAST",
+            "REMOVE_FIRST_AND_LAST",
+            "DUPLICATE");
 
     @Test
     void contains_exactly_expected_constants() {
-        Set<String> actual =
-                Arrays.stream(SortTypes.values()).map(Enum::name).collect(Collectors.toSet());
+        Set<String> actual = Arrays.stream(SortTypes.values()).map(Enum::name).collect(Collectors.toSet());
 
-        assertEquals(
-                EXPECTED,
-                actual,
-                () -> "Enum constants mismatch.\nExpected: " + EXPECTED + "\nActual: " + actual);
+        assertEquals(EXPECTED, actual, () -> "Enum constants mismatch.\nExpected: " + EXPECTED + "\nActual: " + actual);
     }
 
     @ParameterizedTest

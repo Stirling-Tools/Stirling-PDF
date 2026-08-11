@@ -56,9 +56,8 @@ abstract class AbstractCategoryTool implements McpTool {
         op.put("type", "string");
         List<OperationMeta> enabled = enabledOperations();
         StringBuilder opDesc = new StringBuilder();
-        opDesc.append(
-                "Operation id from this category. Call stirling_describe_operation first to learn"
-                        + " the exact parameters schema. Available operations:\n");
+        opDesc.append("Operation id from this category. Call stirling_describe_operation first to learn"
+                + " the exact parameters schema. Available operations:\n");
         ArrayNode opEnum = op.putArray("enum");
         for (OperationMeta m : enabled) {
             opEnum.add(m.id());
@@ -68,9 +67,7 @@ abstract class AbstractCategoryTool implements McpTool {
 
         ObjectNode params = props.putObject("parameters");
         params.put("type", "object");
-        params.put(
-                "description",
-                "Per-operation parameters. Schema available via stirling_describe_operation.");
+        params.put("description", "Per-operation parameters. Schema available via stirling_describe_operation.");
         params.put("additionalProperties", true);
 
         McpToolSupport.stringProperty(
@@ -115,8 +112,7 @@ abstract class AbstractCategoryTool implements McpTool {
         }
         if (!context.hasScope(meta.requiredScope())) {
             return McpResponses.error(
-                    mapper,
-                    "Insufficient scope: this operation requires '" + meta.requiredScope() + "'.");
+                    mapper, "Insufficient scope: this operation requires '" + meta.requiredScope() + "'.");
         }
         McpOperationExecutor executor = executorProvider.getIfAvailable();
         if (executor == null) {
@@ -132,7 +128,8 @@ abstract class AbstractCategoryTool implements McpTool {
     private ObjectNode operationListError(String badOpId) {
         StringBuilder sb = new StringBuilder();
         if (badOpId == null) {
-            sb.append("Missing required argument 'operation' for ").append(category().toolName());
+            sb.append("Missing required argument 'operation' for ")
+                    .append(category().toolName());
         } else {
             sb.append("Unknown or disabled operation '")
                     .append(badOpId)

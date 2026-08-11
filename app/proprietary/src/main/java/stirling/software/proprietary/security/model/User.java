@@ -165,9 +165,7 @@ public class User implements UserDetails, Serializable {
     }
 
     public String getRolesAsString() {
-        return this.authorities.stream()
-                .map(Authority::getAuthority)
-                .collect(Collectors.joining(", "));
+        return this.authorities.stream().map(Authority::getAuthority).collect(Collectors.joining(", "));
     }
 
     public boolean hasPassword() {

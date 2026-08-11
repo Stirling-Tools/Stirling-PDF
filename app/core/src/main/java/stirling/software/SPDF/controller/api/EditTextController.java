@@ -75,9 +75,7 @@ public class EditTextController {
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         binder.registerCustomEditor(
-                List.class,
-                "edits",
-                new JsonListPropertyEditor<>(new TypeReference<List<EditTextOperation>>() {}));
+                List.class, "edits", new JsonListPropertyEditor<>(new TypeReference<List<EditTextOperation>>() {}));
     }
 
     @AutoJobPostMapping(
@@ -88,17 +86,15 @@ public class EditTextController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Edit text in a PDF via find and replace",
-            description =
-                    "Applies an ordered list of find/replace operations to the text in a PDF and"
-                            + " returns the edited PDF. Useful for find-and-replace, bulk renames (e.g."
-                            + " updating a company name throughout a document), and copy editing where the AI"
-                            + " agent has identified specific replacements. Matching is performed against the"
-                            + " joined text of each page, so find strings can span multiple visual runs"
-                            + " (titles split per word, kerning-broken phrases). Cross-element matches are"
-                            + " written as a single replacement run anchored at the leftmost matched position;"
-                            + " centered or tracked text may shift left when its content changes.")
-    public ResponseEntity<Resource> editText(@ModelAttribute EditTextRequest request)
-            throws Exception {
+            description = "Applies an ordered list of find/replace operations to the text in a PDF and"
+                    + " returns the edited PDF. Useful for find-and-replace, bulk renames (e.g."
+                    + " updating a company name throughout a document), and copy editing where the AI"
+                    + " agent has identified specific replacements. Matching is performed against the"
+                    + " joined text of each page, so find strings can span multiple visual runs"
+                    + " (titles split per word, kerning-broken phrases). Cross-element matches are"
+                    + " written as a single replacement run anchored at the leftmost matched position;"
+                    + " centered or tracked text may shift left when its content changes.")
+    public ResponseEntity<Resource> editText(@ModelAttribute EditTextRequest request) throws Exception {
         MultipartFile inputFile = request.getFileInput();
         if (inputFile == null) {
             throw ExceptionUtils.createFileNullOrEmptyException();
@@ -106,8 +102,7 @@ public class EditTextController {
         List<EditTextOperation> edits = request.getEdits();
         if (edits == null || edits.isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.editText.no.edits",
-                    "No find/replace operations provided for text editing");
+                    "error.editText.no.edits", "No find/replace operations provided for text editing");
         }
         for (EditTextOperation edit : edits) {
             if (edit == null || edit.getFind() == null || edit.getFind().isEmpty()) {
@@ -141,8 +136,7 @@ public class EditTextController {
         return WebResponseUtils.pdfFileToWebResponse(tempOut, docName);
     }
 
-    private List<CompiledEdit> compileEdits(
-            List<EditTextOperation> edits, boolean wholeWordSearch) {
+    private List<CompiledEdit> compileEdits(List<EditTextOperation> edits, boolean wholeWordSearch) {
         return edits.stream().map(edit -> compileEdit(edit, wholeWordSearch)).toList();
     }
 
@@ -179,8 +173,7 @@ public class EditTextController {
         return new HashSet<>(pages);
     }
 
-    private int applyEdits(
-            PdfJsonDocument document, List<CompiledEdit> edits, Set<Integer> pageFilter) {
+    private int applyEdits(PdfJsonDocument document, List<CompiledEdit> edits, Set<Integer> pageFilter) {
         List<PdfJsonPage> pages = document.getPages();
         if (pages == null) {
             return 0;
@@ -221,8 +214,7 @@ public class EditTextController {
      * Apply a single edit across the page by matching against the concatenation of all element
      * texts, then writing the replacement back into the originating element(s).
      */
-    private void applyEditToPage(
-            List<PdfJsonTextElement> elements, CompiledEdit edit, Set<Integer> modifiedIndices) {
+    private void applyEditToPage(List<PdfJsonTextElement> elements, CompiledEdit edit, Set<Integer> modifiedIndices) {
         StringBuilder joined = new StringBuilder();
         int[] starts = new int[elements.size()];
         int[] ends = new int[elements.size()];
@@ -247,8 +239,7 @@ public class EditTextController {
             int sizeBefore = interpolation.length();
             matcher.appendReplacement(interpolation, edit.replacement());
             int prefixLength = matcher.start() - previousAppendPosition;
-            String actualReplacement =
-                    interpolation.substring(sizeBefore + prefixLength, interpolation.length());
+            String actualReplacement = interpolation.substring(sizeBefore + prefixLength, interpolation.length());
             spans.add(new MatchSpan(matcher.start(), matcher.end(), actualReplacement));
             previousAppendPosition = matcher.end();
         }
@@ -261,8 +252,7 @@ public class EditTextController {
             if (firstElement < 0 || lastElement < 0) {
                 continue;
             }
-            applyMatchToElements(
-                    elements, starts, span, firstElement, lastElement, modifiedIndices);
+            applyMatchToElements(elements, starts, span, firstElement, lastElement, modifiedIndices);
         }
     }
 
@@ -292,9 +282,7 @@ public class EditTextController {
             int matchStartInElement = span.start() - starts[firstElement];
             int matchEndInElement = span.end() - starts[firstElement];
             element.setText(
-                    text.substring(0, matchStartInElement)
-                            + span.replacement()
-                            + text.substring(matchEndInElement));
+                    text.substring(0, matchStartInElement) + span.replacement() + text.substring(matchEndInElement));
             modifiedIndices.add(firstElement);
             return;
         }
@@ -325,12 +313,11 @@ public class EditTextController {
 
     private String buildOutputFilename(MultipartFile inputFile) {
         String originalName = inputFile.getOriginalFilename();
-        String baseName =
-                (originalName != null && !originalName.isBlank())
-                        ? FILE_EXTENSION_PATTERN
-                                .matcher(Filenames.toSimpleFileName(originalName))
-                                .replaceFirst("")
-                        : "document";
+        String baseName = (originalName != null && !originalName.isBlank())
+                ? FILE_EXTENSION_PATTERN
+                        .matcher(Filenames.toSimpleFileName(originalName))
+                        .replaceFirst("")
+                : "document";
         return baseName + "_edited.pdf";
     }
 

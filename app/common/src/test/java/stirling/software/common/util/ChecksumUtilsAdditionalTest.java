@@ -17,7 +17,8 @@ class ChecksumUtilsAdditionalTest {
 
     private static final byte[] HELLO = "hello".getBytes(StandardCharsets.UTF_8);
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private Path writeFile(byte[] data) throws IOException {
         Path file = tempDir.resolve("testfile.bin");
@@ -69,13 +70,11 @@ class ChecksumUtilsAdditionalTest {
 
     @Test
     void testChecksumStream_unsupportedAlgorithm() {
-        assertThrows(
-                IllegalStateException.class,
-                () -> {
-                    try (InputStream is = new ByteArrayInputStream(HELLO)) {
-                        ChecksumUtils.checksum(is, "FAKE-ALGO");
-                    }
-                });
+        assertThrows(IllegalStateException.class, () -> {
+            try (InputStream is = new ByteArrayInputStream(HELLO)) {
+                ChecksumUtils.checksum(is, "FAKE-ALGO");
+            }
+        });
     }
 
     // --- checksumBase64(Path, String) ---
@@ -122,9 +121,7 @@ class ChecksumUtilsAdditionalTest {
         Map<String, String> results = ChecksumUtils.checksums(file, "MD5", "SHA-256", "CRC32");
         assertEquals(3, results.size());
         assertEquals("5d41402abc4b2a76b9719d911017c592", results.get("MD5"));
-        assertEquals(
-                "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
-                results.get("SHA-256"));
+        assertEquals("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", results.get("SHA-256"));
         assertEquals("3610a686", results.get("CRC32"));
     }
 
@@ -140,13 +137,11 @@ class ChecksumUtilsAdditionalTest {
 
     @Test
     void testChecksumsStream_unsupportedAlgorithm() {
-        assertThrows(
-                IllegalStateException.class,
-                () -> {
-                    try (InputStream is = new ByteArrayInputStream(HELLO)) {
-                        ChecksumUtils.checksums(is, "BOGUS");
-                    }
-                });
+        assertThrows(IllegalStateException.class, () -> {
+            try (InputStream is = new ByteArrayInputStream(HELLO)) {
+                ChecksumUtils.checksums(is, "BOGUS");
+            }
+        });
     }
 
     // --- matches(Path, String, String) ---
@@ -174,16 +169,14 @@ class ChecksumUtilsAdditionalTest {
     @Test
     void testMatchesStream_correct() throws IOException {
         try (InputStream is = new ByteArrayInputStream(HELLO)) {
-            assertTrue(
-                    ChecksumUtils.matches(is, "SHA-1", "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d"));
+            assertTrue(ChecksumUtils.matches(is, "SHA-1", "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d"));
         }
     }
 
     @Test
     void testMatchesStream_wrong() throws IOException {
         try (InputStream is = new ByteArrayInputStream(HELLO)) {
-            assertFalse(
-                    ChecksumUtils.matches(is, "SHA-1", "0000000000000000000000000000000000000000"));
+            assertFalse(ChecksumUtils.matches(is, "SHA-1", "0000000000000000000000000000000000000000"));
         }
     }
 

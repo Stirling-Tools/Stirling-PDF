@@ -37,12 +37,10 @@ class PlaceholdersTest {
 
     @Test
     void substitutesSeveralWithSurroundingText() {
-        assertThat(
-                        Placeholders.resolve(
-                                "{{document.filename}} ({{document.pageCount}}p) is"
-                                        + " {{sensitivityLabel.name}}",
-                                context(),
-                                Escaping.NONE))
+        assertThat(Placeholders.resolve(
+                        "{{document.filename}} ({{document.pageCount}}p) is" + " {{sensitivityLabel.name}}",
+                        context(),
+                        Escaping.NONE))
                 .isEqualTo("invoice.pdf (3p) is Confidential");
     }
 
@@ -68,8 +66,7 @@ class PlaceholdersTest {
     @Test
     void anUnknownPathIsAnErrorRatherThanAnEmptyValue() {
         // A typo that silently sent "" could mean an external system files a document wrongly.
-        assertThatThrownBy(
-                        () -> Placeholders.resolve("{{document.nope}}", context(), Escaping.NONE))
+        assertThatThrownBy(() -> Placeholders.resolve("{{document.nope}}", context(), Escaping.NONE))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("unknown placeholder");
         assertThatThrownBy(() -> Placeholders.resolve("{{nope.at.all}}", context(), Escaping.NONE))
@@ -110,10 +107,7 @@ class PlaceholdersTest {
     void aTraversalWrittenIntoTheTemplateItselfIsStillRejected() {
         // The operator's own text is not encoded, so a literal ".." normalises and the base check
         // sees it. This is why dots are deliberately left unencoded above.
-        assertThatThrownBy(
-                        () ->
-                                ExternalApiPaths.resolve(
-                                        URI.create("https://api.example.com/v1"), "/docs/../../x"))
+        assertThatThrownBy(() -> ExternalApiPaths.resolve(URI.create("https://api.example.com/v1"), "/docs/../../x"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("escapes");
     }

@@ -16,7 +16,6 @@ public class ProprietaryWebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(participantRateLimitInterceptor)
-                .addPathPatterns("/api/v1/workflow/participant/**");
+        registry.addInterceptor(participantRateLimitInterceptor).addPathPatterns("/api/v1/workflow/participant/**");
     }
 }

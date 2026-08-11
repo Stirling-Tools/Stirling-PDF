@@ -42,39 +42,28 @@ public class ApiTokenCache {
     ApiTokenCache(HttpClient httpClient, ObjectMapper objectMapper) {
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
-        this.tokens =
-                Caffeine.newBuilder()
-                        .maximumSize(MAX_ENTRIES)
-                        // Per-entry, because each connection states its own lifetime.
-                        .expireAfter(
-                                new com.github.benmanes.caffeine.cache.Expiry<String, String>() {
-                                    @Override
-                                    public long expireAfterCreate(
-                                            String key, String value, long currentTime) {
-                                        return ttlNanos(key);
-                                    }
+        this.tokens = Caffeine.newBuilder()
+                .maximumSize(MAX_ENTRIES)
+                // Per-entry, because each connection states its own lifetime.
+                .expireAfter(new com.github.benmanes.caffeine.cache.Expiry<String, String>() {
+                    @Override
+                    public long expireAfterCreate(String key, String value, long currentTime) {
+                        return ttlNanos(key);
+                    }
 
-                                    @Override
-                                    public long expireAfterUpdate(
-                                            String key,
-                                            String value,
-                                            long currentTime,
-                                            long currentDuration) {
-                                        return ttlNanos(key);
-                                    }
+                    @Override
+                    public long expireAfterUpdate(String key, String value, long currentTime, long currentDuration) {
+                        return ttlNanos(key);
+                    }
 
-                                    @Override
-                                    public long expireAfterRead(
-                                            String key,
-                                            String value,
-                                            long currentTime,
-                                            long currentDuration) {
-                                        // Reading must not extend a token's life: the vendor's
-                                        // clock is running regardless of how often we use it.
-                                        return currentDuration;
-                                    }
-                                })
-                        .build();
+                    @Override
+                    public long expireAfterRead(String key, String value, long currentTime, long currentDuration) {
+                        // Reading must not extend a token's life: the vendor's
+                        // clock is running regardless of how often we use it.
+                        return currentDuration;
+                    }
+                })
+                .build();
     }
 
     // The TTL travels in the key so the Expiry callbacks can see it without a second lookup.
@@ -112,26 +101,18 @@ public class ApiTokenCache {
         ApiTokenLogin login = settings.tokenLogin();
         URI target = ExternalApiPaths.resolve(settings.baseUri(), login.loginPath());
 
-        HttpRequest.Builder request =
-                HttpRequest.newBuilder(target)
-                        .timeout(Duration.ofSeconds(settings.timeoutSeconds()))
-                        .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                        .POST(
-                                HttpRequest.BodyPublishers.ofByteArray(
-                                        objectMapper.writeValueAsBytes(login.loginBody())));
+        HttpRequest.Builder request = HttpRequest.newBuilder(target)
+                .timeout(Duration.ofSeconds(settings.timeoutSeconds()))
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(login.loginBody())));
         login.loginHeaders().forEach(request::header);
 
-        ExternalApiCaller.Response response =
-                ExternalApiCaller.send(httpClient, request.build(), target);
+        ExternalApiCaller.Response response = ExternalApiCaller.send(httpClient, request.build(), target);
         if (!response.isSuccess()) {
             // Deliberately does not echo the body: a login failure response can repeat the
             // credentials back, and this message reaches the run log.
             throw new IOException(
-                    "Login to "
-                            + target.getHost()
-                            + login.loginPath()
-                            + " returned HTTP "
-                            + response.status());
+                    "Login to " + target.getHost() + login.loginPath() + " returned HTTP " + response.status());
         }
         try {
             String token = login.extractToken(response, objectMapper);

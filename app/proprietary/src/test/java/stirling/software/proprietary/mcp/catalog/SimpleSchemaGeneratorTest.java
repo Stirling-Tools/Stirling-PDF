@@ -29,11 +29,13 @@ class SimpleSchemaGeneratorTest {
         @JsonProperty(required = true)
         String mode;
 
-        @JsonIgnore String internalSecret;
+        @JsonIgnore
+        String internalSecret;
 
         boolean flag;
 
-        @jakarta.validation.constraints.NotBlank String title;
+        @jakarta.validation.constraints.NotBlank
+        String title;
     }
 
     @Test

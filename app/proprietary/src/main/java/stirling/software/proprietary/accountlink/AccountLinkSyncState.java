@@ -31,13 +31,11 @@ public class AccountLinkSyncState {
     /** One instance links to one team → one bookkeeping row. */
     public static final long SINGLETON_ID = 1L;
 
-    @Id private Long id;
+    @Id
+    private Long id;
 
     // columnDefinition default keeps the ddl-auto ADD COLUMN safe on a populated external Postgres.
-    @Column(
-            name = "last_sync_seq",
-            nullable = false,
-            columnDefinition = "bigint not null default 0")
+    @Column(name = "last_sync_seq", nullable = false, columnDefinition = "bigint not null default 0")
     private long lastSyncSeq;
 
     /** Null until the first sync SaaS accepts. */

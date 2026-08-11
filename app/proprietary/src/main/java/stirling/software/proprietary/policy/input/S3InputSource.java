@@ -73,16 +73,12 @@ public class S3InputSource implements InputSource {
     public void validate(InputSpec spec) {
         S3Config config = connectionResolver.resolve(spec.options());
         try {
-            connectionPool.clientFor(config).listObjectsV2(listRequest(config).maxKeys(1).build());
+            connectionPool
+                    .clientFor(config)
+                    .listObjectsV2(listRequest(config).maxKeys(1).build());
         } catch (SdkException e) {
             throw new IllegalArgumentException(
-                    "cannot access s3://"
-                            + config.bucket()
-                            + "/"
-                            + config.prefix()
-                            + ": "
-                            + e.getMessage(),
-                    e);
+                    "cannot access s3://" + config.bucket() + "/" + config.prefix() + ": " + e.getMessage(), e);
         }
     }
 
@@ -96,20 +92,13 @@ public class S3InputSource implements InputSource {
 
         if (config.snapshot()) {
             return objects.stream()
-                    .map(
-                            object ->
-                                    ResolvedInput.of(
-                                            PolicyInputs.of(
-                                                    List.of(
-                                                            objectResource(
-                                                                    client, config, object)))))
+                    .map(object -> ResolvedInput.of(PolicyInputs.of(List.of(objectResource(client, config, object)))))
                     .toList();
         }
 
-        ctx.reportPresent(
-                objects.stream()
-                        .map(object -> S3Identities.identity(config.bucket(), object.key()))
-                        .toList());
+        ctx.reportPresent(objects.stream()
+                .map(object -> S3Identities.identity(config.bucket(), object.key()))
+                .toList());
 
         List<ResolvedInput> work = new ArrayList<>();
         for (S3Object object : objects) {
@@ -118,18 +107,9 @@ public class S3InputSource implements InputSource {
             if (!ctx.claim(identity, gate, null)) {
                 continue;
             }
-            work.add(
-                    new ResolvedInput(
-                            PolicyInputs.of(List.of(objectResource(client, config, object))),
-                            success ->
-                                    completeConsumed(
-                                            ctx,
-                                            client,
-                                            config,
-                                            object.key(),
-                                            identity,
-                                            gate,
-                                            success)));
+            work.add(new ResolvedInput(
+                    PolicyInputs.of(List.of(objectResource(client, config, object))),
+                    success -> completeConsumed(ctx, client, config, object.key(), identity, gate, success)));
         }
         return work;
     }
@@ -153,14 +133,14 @@ public class S3InputSource implements InputSource {
             return;
         }
         try {
-            HeadObjectResponse head =
-                    client.headObject(
-                            HeadObjectRequest.builder().bucket(config.bucket()).key(key).build());
-            String currentGate =
-                    S3Identities.gate(head.eTag(), head.contentLength(), head.lastModified());
+            HeadObjectResponse head = client.headObject(
+                    HeadObjectRequest.builder().bucket(config.bucket()).key(key).build());
+            String currentGate = S3Identities.gate(head.eTag(), head.contentLength(), head.lastModified());
             if (currentGate.equals(claimGate) && ctx.allSettledDone(identity)) {
-                client.deleteObject(
-                        DeleteObjectRequest.builder().bucket(config.bucket()).key(key).build());
+                client.deleteObject(DeleteObjectRequest.builder()
+                        .bucket(config.bucket())
+                        .key(key)
+                        .build());
             }
         } catch (NoSuchKeyException alreadyGone) {
             // Removed by the user or a co-watching policy's own consensus delete: nothing to do.
@@ -195,8 +175,7 @@ public class S3InputSource implements InputSource {
     }
 
     private static ListObjectsV2Request.Builder listRequest(S3Config config) {
-        ListObjectsV2Request.Builder request =
-                ListObjectsV2Request.builder().bucket(config.bucket());
+        ListObjectsV2Request.Builder request = ListObjectsV2Request.builder().bucket(config.bucket());
         if (!config.prefix().isEmpty()) {
             request.prefix(config.prefix());
         }
@@ -247,7 +226,8 @@ public class S3InputSource implements InputSource {
 
         @Override
         public InputStream getInputStream() throws IOException {
-            GetObjectRequest.Builder request = GetObjectRequest.builder().bucket(bucket).key(key);
+            GetObjectRequest.Builder request =
+                    GetObjectRequest.builder().bucket(bucket).key(key);
             if (eTag != null && !eTag.isBlank()) {
                 request.ifMatch(eTag);
             }
@@ -256,8 +236,7 @@ public class S3InputSource implements InputSource {
             } catch (NoSuchKeyException e) {
                 throw new FileNotFoundException(getDescription() + " no longer exists");
             } catch (SdkException e) {
-                throw new IOException(
-                        "Could not read " + getDescription() + ": " + e.getMessage(), e);
+                throw new IOException("Could not read " + getDescription() + ": " + e.getMessage(), e);
             }
         }
 

@@ -51,11 +51,9 @@ class OpenApiConfigTest {
 
             assertThat(openAPI.getInfo().getLicense()).isNotNull();
             assertThat(openAPI.getInfo().getLicense().getName()).contains("MIT");
-            assertThat(openAPI.getInfo().getTermsOfService())
-                    .isEqualTo("https://www.stirlingpdf.com/terms");
+            assertThat(openAPI.getInfo().getTermsOfService()).isEqualTo("https://www.stirlingpdf.com/terms");
             assertThat(openAPI.getInfo().getContact()).isNotNull();
-            assertThat(openAPI.getInfo().getContact().getEmail())
-                    .isEqualTo("contact@stirlingpdf.com");
+            assertThat(openAPI.getInfo().getContact().getEmail()).isEqualTo("contact@stirlingpdf.com");
         }
 
         @Test
@@ -80,8 +78,7 @@ class OpenApiConfigTest {
             assertThat(components).isNotNull();
             assertThat(components.getSchemas()).containsKey("ErrorResponse");
             Schema<?> errorSchema = components.getSchemas().get("ErrorResponse");
-            assertThat(errorSchema.getProperties())
-                    .containsKeys("timestamp", "status", "error", "message", "path");
+            assertThat(errorSchema.getProperties()).containsKeys("timestamp", "status", "error", "message", "path");
         }
 
         @Test
@@ -91,8 +88,7 @@ class OpenApiConfigTest {
             if (System.getenv("SWAGGER_SERVER_URL") == null) {
                 OpenAPI openAPI = config.customOpenAPI();
                 assertThat(openAPI.getServers().get(0).getUrl()).isEqualTo("/");
-                assertThat(openAPI.getServers().get(0).getDescription())
-                        .isEqualTo("Current Server");
+                assertThat(openAPI.getServers().get(0).getDescription()).isEqualTo("Current Server");
             }
         }
 

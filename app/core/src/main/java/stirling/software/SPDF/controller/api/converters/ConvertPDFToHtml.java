@@ -32,11 +32,8 @@ public class ConvertPDFToHtml {
             value = "/pdf/html",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @ToolIO(produces = ToolFormat.ZIP)
-    @Operation(
-            summary = "Convert PDF to HTML",
-            description = "This endpoint converts a PDF file to HTML format.")
-    public ResponseEntity<Resource> processPdfToHTML(@ModelAttribute PDFFile file)
-            throws Exception {
+    @Operation(summary = "Convert PDF to HTML", description = "This endpoint converts a PDF file to HTML format.")
+    public ResponseEntity<Resource> processPdfToHTML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
         return pdfToFile.processPdfToHtml(inputFile);

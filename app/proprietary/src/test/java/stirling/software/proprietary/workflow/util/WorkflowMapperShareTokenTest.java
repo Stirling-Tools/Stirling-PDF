@@ -86,8 +86,7 @@ class WorkflowMapperShareTokenTest {
         assertEquals(2, response.getParticipants().size());
         for (ParticipantResponse p : response.getParticipants()) {
             assertNull(
-                    p.getShareToken(),
-                    "Participant share token must not be exposed in participant-facing responses");
+                    p.getShareToken(), "Participant share token must not be exposed in participant-facing responses");
         }
     }
 

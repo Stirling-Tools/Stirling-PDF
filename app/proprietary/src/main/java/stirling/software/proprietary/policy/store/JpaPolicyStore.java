@@ -35,20 +35,17 @@ public class JpaPolicyStore implements PolicyStore {
     @Transactional
     public Policy save(Policy policy) {
         String id =
-                policy.id() == null || policy.id().isBlank()
-                        ? UUID.randomUUID().toString()
-                        : policy.id();
-        Policy stored =
-                new Policy(
-                        id,
-                        policy.name(),
-                        policy.owner(),
-                        policy.enabled(),
-                        policy.inputs(),
-                        policy.steps(),
-                        policy.output(),
-                        policy.outputIds(),
-                        policy.teamId());
+                policy.id() == null || policy.id().isBlank() ? UUID.randomUUID().toString() : policy.id();
+        Policy stored = new Policy(
+                id,
+                policy.name(),
+                policy.owner(),
+                policy.enabled(),
+                policy.inputs(),
+                policy.steps(),
+                policy.output(),
+                policy.outputIds(),
+                policy.teamId());
 
         PolicyEntity entity = new PolicyEntity();
         entity.setId(id);
@@ -58,11 +55,10 @@ public class JpaPolicyStore implements PolicyStore {
         entity.setTeamId(stored.teamId());
         // Preserve an existing policy's run-order position; append a new one to the end of its
         // team's queue (max + 1), so setting up a policy adds it last by default.
-        entity.setSortOrder(
-                repository
-                        .findById(id)
-                        .map(PolicyEntity::getSortOrder)
-                        .orElseGet(() -> nextSortOrder(stored.teamId())));
+        entity.setSortOrder(repository
+                .findById(id)
+                .map(PolicyEntity::getSortOrder)
+                .orElseGet(() -> nextSortOrder(stored.teamId())));
         entity.setPolicyJson(objectMapper.writeValueAsString(stored));
         repository.save(entity);
         return stored;
@@ -122,11 +118,10 @@ public class JpaPolicyStore implements PolicyStore {
 
     @Override
     public List<PolicyBinding> findBindingsByTriggerType(String triggerType) {
-        List<Policy> enabled =
-                repository.findByEnabledTrue().stream()
-                        .map(this::toPolicy)
-                        .flatMap(Optional::stream)
-                        .toList();
+        List<Policy> enabled = repository.findByEnabledTrue().stream()
+                .map(this::toPolicy)
+                .flatMap(Optional::stream)
+                .toList();
         return PolicyBinding.matching(enabled, triggerType);
     }
 

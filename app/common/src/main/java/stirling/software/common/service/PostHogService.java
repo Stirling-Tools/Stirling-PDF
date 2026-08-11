@@ -123,7 +123,9 @@ public class PostHogService {
             // Memory metrics
             MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
             metrics.put("heap_memory_usage", memoryMXBean.getHeapMemoryUsage().getUsed());
-            metrics.put("non_heap_memory_usage", memoryMXBean.getNonHeapMemoryUsage().getUsed());
+            metrics.put(
+                    "non_heap_memory_usage",
+                    memoryMXBean.getNonHeapMemoryUsage().getUsed());
 
             // CPU metrics
             OperatingSystemMXBean osMXBean = ManagementFactory.getOperatingSystemMXBean();
@@ -286,7 +288,9 @@ public class PostHogService {
                 "system_googlevisibility",
                 applicationProperties.getSystem().isGooglevisibility());
         addIfNotEmpty(
-                properties, "system_showUpdate", applicationProperties.getSystem().isShowUpdate());
+                properties,
+                "system_showUpdate",
+                applicationProperties.getSystem().isShowUpdate());
         addIfNotEmpty(
                 properties,
                 "system_showUpdateOnlyAdmin",
@@ -322,7 +326,9 @@ public class PostHogService {
 
         // Capture Metrics properties
         addIfNotEmpty(
-                properties, "metrics_enabled", applicationProperties.getMetrics().isEnabled());
+                properties,
+                "metrics_enabled",
+                applicationProperties.getMetrics().isEnabled());
 
         // Capture EnterpriseEdition properties
         addIfNotEmpty(

@@ -45,9 +45,8 @@ import stirling.software.proprietary.security.service.UserService;
 @EnabledIfEnvironmentVariable(
         named = "RUN_NETWORK_INTEGRATION_TESTS",
         matches = "true",
-        disabledReason =
-                "Spins up SFTP/FTP/SMB containers; opt-in to keep several heavy containers off the"
-                        + " standard CI runner. Run with RUN_NETWORK_INTEGRATION_TESTS=true.")
+        disabledReason = "Spins up SFTP/FTP/SMB containers; opt-in to keep several heavy containers off the"
+                + " standard CI runner. Run with RUN_NETWORK_INTEGRATION_TESTS=true.")
 class SftpNetworkSourceIntegrationTest {
 
     private static final String POLICY = "p1";
@@ -57,11 +56,10 @@ class SftpNetworkSourceIntegrationTest {
     private static final int SFTP_PORT = 22;
 
     @org.testcontainers.junit.jupiter.Container
-    static GenericContainer<?> sftp =
-            new GenericContainer<>("atmoz/sftp:alpine")
-                    .withExposedPorts(SFTP_PORT)
-                    .withCommand(USER + ":" + PASS + ":::" + DIR)
-                    .waitingFor(Wait.forListeningPort());
+    static GenericContainer<?> sftp = new GenericContainer<>("atmoz/sftp:alpine")
+            .withExposedPorts(SFTP_PORT)
+            .withCommand(USER + ":" + PASS + ":::" + DIR)
+            .waitingFor(Wait.forListeningPort());
 
     private NetworkInputSource source;
     private InProcessProcessedLedger ledger;
@@ -71,18 +69,13 @@ class SftpNetworkSourceIntegrationTest {
     void setUp() throws IOException {
         // Each run's container has a fresh host key, so drop pins from earlier runs: a reused
         // mapped port would otherwise trip the trust-on-first-use "key changed" refusal.
-        Files.deleteIfExists(
-                Path.of(InstallationPathConfig.getConfigPath(), SftpFileClient.KNOWN_HOSTS_FILE));
+        Files.deleteIfExists(Path.of(InstallationPathConfig.getConfigPath(), SftpFileClient.KNOWN_HOSTS_FILE));
         // The container resolves to loopback, so the private-host opt-in must be on.
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowPrivateNetworkSources(true);
-        RemoteFileClientFactory factory =
-                new RemoteFileClientFactory(new NetworkHostGuard(properties));
-        NetworkConnectionResolver resolver =
-                new NetworkConnectionResolver(
-                        mock(IntegrationConfigRepository.class),
-                        mock(OwnershipService.class),
-                        mock(UserService.class));
+        RemoteFileClientFactory factory = new RemoteFileClientFactory(new NetworkHostGuard(properties));
+        NetworkConnectionResolver resolver = new NetworkConnectionResolver(
+                mock(IntegrationConfigRepository.class), mock(OwnershipService.class), mock(UserService.class));
         source = new NetworkInputSource(resolver, factory);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
@@ -95,12 +88,7 @@ class SftpNetworkSourceIntegrationTest {
         List<ResolvedInput> work = source.resolve(spec(Map.of()), ctx);
 
         assertThat(work).hasSize(1);
-        String identity =
-                "sftp://"
-                        + sftp.getHost()
-                        + ":"
-                        + sftp.getMappedPort(SFTP_PORT)
-                        + "/upload/doc.pdf";
+        String identity = "sftp://" + sftp.getHost() + ":" + sftp.getMappedPort(SFTP_PORT) + "/upload/doc.pdf";
         assertThat(ctx.present).containsExactly(identity);
         assertThat(read(work.get(0))).isEqualTo("hello sftp");
         // In flight: a second sweep does not re-claim it.
@@ -134,8 +122,8 @@ class SftpNetworkSourceIntegrationTest {
 
     @Test
     void acceptsTheServersRealHostKeyFingerprint() throws Exception {
-        String fingerprint =
-                exec("ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub | awk '{print $2}'").trim();
+        String fingerprint = exec("ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub | awk '{print $2}'")
+                .trim();
         Map<String, Object> pinned = new HashMap<>(baseOptions());
         pinned.put("hostKeyFingerprint", fingerprint);
         source.validate(new InputSpec("sftp", pinned));
@@ -155,8 +143,7 @@ class SftpNetworkSourceIntegrationTest {
     void refusesAChangedHostKey() throws Exception {
         source.validate(spec(Map.of())); // pins the current key (trust-on-first-use)
 
-        Path knownHosts =
-                Path.of(InstallationPathConfig.getConfigPath(), SftpFileClient.KNOWN_HOSTS_FILE);
+        Path knownHosts = Path.of(InstallationPathConfig.getConfigPath(), SftpFileClient.KNOWN_HOSTS_FILE);
         String pinned = Files.readString(knownHosts);
         // Swap the pinned key for a valid-but-different one so the server's real key reads as
         // changed rather than unparseable.
@@ -223,8 +210,7 @@ class SftpNetworkSourceIntegrationTest {
         }
 
         @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
+        public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
             ledger.settle(POLICY, identity, finalGate, finalContentHash, success);
         }
 

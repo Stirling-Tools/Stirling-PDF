@@ -37,11 +37,9 @@ class ErrorUtilsTest {
             verify(model)
                     .addAttribute(
                             eq("stackTrace"),
-                            argThat(
-                                    arg ->
-                                            arg instanceof String s
-                                                    && s.contains("RuntimeException")
-                                                    && s.contains("test error")));
+                            argThat(arg -> arg instanceof String s
+                                    && s.contains("RuntimeException")
+                                    && s.contains("test error")));
         }
 
         @Test

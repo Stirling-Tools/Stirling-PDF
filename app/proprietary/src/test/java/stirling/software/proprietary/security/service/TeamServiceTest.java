@@ -18,17 +18,18 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 @ExtendWith(MockitoExtension.class)
 class TeamServiceTest {
 
-    @Mock private TeamRepository teamRepository;
+    @Mock
+    private TeamRepository teamRepository;
 
-    @InjectMocks private TeamService teamService;
+    @InjectMocks
+    private TeamService teamService;
 
     @Test
     void getDefaultTeam() {
         var team = new Team();
         team.setName("Marleyans");
 
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
-                .thenReturn(Optional.of(team));
+        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME)).thenReturn(Optional.of(team));
 
         Team result = teamService.getOrCreateDefaultTeam();
 
@@ -55,8 +56,7 @@ class TeamServiceTest {
         var team = new Team();
         team.setName("Eldians");
 
-        when(teamRepository.findByName(TeamService.INTERNAL_TEAM_NAME))
-                .thenReturn(Optional.of(team));
+        when(teamRepository.findByName(TeamService.INTERNAL_TEAM_NAME)).thenReturn(Optional.of(team));
 
         Team result = teamService.getOrCreateInternalTeam();
 
@@ -72,8 +72,7 @@ class TeamServiceTest {
 
         when(teamRepository.findByName(teamName)).thenReturn(Optional.empty());
         when(teamRepository.save(any(Team.class))).thenReturn(internalTeam);
-        when(teamRepository.findByName(TeamService.INTERNAL_TEAM_NAME))
-                .thenReturn(Optional.empty());
+        when(teamRepository.findByName(TeamService.INTERNAL_TEAM_NAME)).thenReturn(Optional.empty());
 
         Team result = teamService.getOrCreateInternalTeam();
 

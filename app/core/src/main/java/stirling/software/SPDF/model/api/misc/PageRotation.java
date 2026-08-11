@@ -12,16 +12,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PageRotation {
 
-    @Schema(
-            description = "1-based page number to rotate",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            example = "1")
+    @Schema(description = "1-based page number to rotate", requiredMode = Schema.RequiredMode.REQUIRED, example = "1")
     private Integer pageNumber;
 
     @Schema(
-            description =
-                    "Additional clockwise rotation to add to the page's current rotation, in"
-                            + " degrees. Must be a multiple of 90",
+            description = "Additional clockwise rotation to add to the page's current rotation, in"
+                    + " degrees. Must be a multiple of 90",
             requiredMode = Schema.RequiredMode.REQUIRED,
             example = "90")
     private Integer rotation;

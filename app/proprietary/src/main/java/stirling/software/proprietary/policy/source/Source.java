@@ -19,13 +19,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
  * stirling.software.proprietary.policy.model.Policy}.
  */
 public record Source(
-        String id,
-        String name,
-        String type,
-        Map<String, Object> options,
-        boolean enabled,
-        String owner,
-        Long teamId) {
+        String id, String name, String type, Map<String, Object> options, boolean enabled, String owner, Long teamId) {
 
     public Source {
         options = options == null ? Map.of() : options;

@@ -45,8 +45,7 @@ class AiEngineClientTest {
         ConnectException cause = new ConnectException("Connection refused");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(cause);
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
         assertSame(cause, ex.getCause(), "Original cause should be preserved for diagnostics");
@@ -57,8 +56,7 @@ class AiEngineClientTest {
         HttpTimeoutException cause = new HttpTimeoutException("request timed out");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(cause);
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
 
         assertEquals(HttpStatus.GATEWAY_TIMEOUT, ex.getStatusCode());
         assertSame(cause, ex.getCause());
@@ -69,8 +67,7 @@ class AiEngineClientTest {
         IOException cause = new IOException("socket reset");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(cause);
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.get("/x", null));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> client.get("/x", null));
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
     }
@@ -79,8 +76,7 @@ class AiEngineClientTest {
     void postShortCircuitsWhenEngineDisabled() {
         applicationProperties.getAiEngine().setEnabled(false);
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> client.post("/x", "{}", null));
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
     }
@@ -91,14 +87,14 @@ class AiEngineClientTest {
         // Regression for the engine shared-secret hardening: every verb that hits a non-public
         // engine route (post/delete/get) must present X-Engine-Auth, or the route 401s once the
         // secret is set. delete() backs the logout-time RAG purge, so a miss silently leaks data.
-        AiEngineClient secured =
-                new AiEngineClient(applicationProperties, httpClient, "top-secret");
+        AiEngineClient secured = new AiEngineClient(applicationProperties, httpClient, "top-secret");
         HttpResponse<String> ok = mock(HttpResponse.class);
         when(ok.statusCode()).thenReturn(200);
         when(ok.body()).thenReturn("{}");
         org.mockito.ArgumentCaptor<java.net.http.HttpRequest> captor =
                 org.mockito.ArgumentCaptor.forClass(java.net.http.HttpRequest.class);
-        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class))).thenReturn(ok);
+        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(ok);
 
         secured.post("/api/v1/pdf-question", "{}", "alice");
         secured.delete("/api/v1/documents/by-owner", "alice");
@@ -121,10 +117,12 @@ class AiEngineClientTest {
         when(ok.body()).thenReturn("{}");
         org.mockito.ArgumentCaptor<java.net.http.HttpRequest> captor =
                 org.mockito.ArgumentCaptor.forClass(java.net.http.HttpRequest.class);
-        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class))).thenReturn(ok);
+        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(ok);
 
         noSecret.delete("/api/v1/documents/by-owner", "alice");
 
-        assertEquals(null, captor.getValue().headers().firstValue("X-Engine-Auth").orElse(null));
+        assertEquals(
+                null, captor.getValue().headers().firstValue("X-Engine-Auth").orElse(null));
     }
 }

@@ -43,11 +43,9 @@ public class RotationController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Rotate a PDF file",
-            description =
-                    "This endpoint rotates a given PDF file by a specified angle. The angle must be"
-                            + " a multiple of 90.")
-    public ResponseEntity<Resource> rotatePDF(@ModelAttribute RotatePDFRequest request)
-            throws IOException {
+            description = "This endpoint rotates a given PDF file by a specified angle. The angle must be"
+                    + " a multiple of 90.")
+    public ResponseEntity<Resource> rotatePDF(@ModelAttribute RotatePDFRequest request) throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         Integer angle = request.getAngle();
 

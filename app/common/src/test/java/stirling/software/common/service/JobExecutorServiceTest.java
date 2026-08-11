@@ -43,31 +43,36 @@ class JobExecutorServiceTest {
 
     private JobExecutorService jobExecutorService;
 
-    @Mock private TaskManager taskManager;
+    @Mock
+    private TaskManager taskManager;
 
-    @Mock private FileStorage fileStorage;
+    @Mock
+    private FileStorage fileStorage;
 
-    @Mock private HttpServletRequest request;
+    @Mock
+    private HttpServletRequest request;
 
-    @Mock private ResourceMonitor resourceMonitor;
+    @Mock
+    private ResourceMonitor resourceMonitor;
 
-    @Mock private JobQueue jobQueue;
+    @Mock
+    private JobQueue jobQueue;
 
-    @Captor private ArgumentCaptor<String> jobIdCaptor;
+    @Captor
+    private ArgumentCaptor<String> jobIdCaptor;
 
     @BeforeEach
     void setUp() {
         // Initialize the service manually with all its dependencies
-        jobExecutorService =
-                new JobExecutorService(
-                        taskManager,
-                        fileStorage,
-                        request,
-                        resourceMonitor,
-                        jobQueue,
-                        30000L, // asyncRequestTimeoutMs
-                        "30m" // sessionTimeout
-                        );
+        jobExecutorService = new JobExecutorService(
+                taskManager,
+                fileStorage,
+                request,
+                resourceMonitor,
+                jobQueue,
+                30000L, // asyncRequestTimeoutMs
+                "30m" // sessionTimeout
+                );
     }
 
     @Test
@@ -125,10 +130,9 @@ class JobExecutorServiceTest {
     @Test
     void shouldHandleSyncJobError() {
         // Given
-        Supplier<Object> work =
-                () -> {
-                    throw new RuntimeException("Test error");
-                };
+        Supplier<Object> work = () -> {
+            throw new RuntimeException("Test error");
+        };
 
         // When
         ResponseEntity<?> response = jobExecutorService.runJobGeneric(false, work);
@@ -173,8 +177,7 @@ class JobExecutorServiceTest {
 
         // Use reflection to access the private executeWithTimeout method
         java.lang.reflect.Method executeMethod =
-                JobExecutorService.class.getDeclaredMethod(
-                        "executeWithTimeout", Supplier.class, long.class);
+                JobExecutorService.class.getDeclaredMethod("executeWithTimeout", Supplier.class, long.class);
         executeMethod.setAccessible(true);
 
         // Create a spy on the JobExecutorService to verify method calls
@@ -199,13 +202,14 @@ class JobExecutorServiceTest {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(
-                ContentDisposition.formData().name("attachment").filename("result.pdf").build());
+        headers.setContentDisposition(ContentDisposition.formData()
+                .name("attachment")
+                .filename("result.pdf")
+                .build());
 
         Supplier<Object> work = () -> new ResponseEntity<>(resource, headers, HttpStatus.OK);
 
-        when(fileStorage.storeFromResource(any(Resource.class), anyString()))
-                .thenReturn("stored-file-id");
+        when(fileStorage.storeFromResource(any(Resource.class), anyString())).thenReturn("stored-file-id");
 
         // When: run the job asynchronously — processJobResult runs on the executor.
         ResponseEntity<?> response = jobExecutorService.runJobGeneric(true, work);
@@ -220,31 +224,26 @@ class JobExecutorServiceTest {
         verify(fileStorage, timeout(5000)).storeFromResource(eq(resource), eq("result.pdf"));
         verify(taskManager, timeout(5000))
                 .setFileResult(
-                        anyString(),
-                        eq("stored-file-id"),
-                        eq("result.pdf"),
-                        eq(MediaType.APPLICATION_PDF_VALUE));
+                        anyString(), eq("stored-file-id"), eq("result.pdf"), eq(MediaType.APPLICATION_PDF_VALUE));
         verify(taskManager, timeout(5000)).setComplete(anyString());
     }
 
     @Test
     void shouldHandleTimeout() throws Exception {
         // Given
-        Supplier<Object> work =
-                () -> {
-                    // Simulate long-running job without actual sleep
-                    // Use a loop to consume time instead of Thread.sleep
-                    long startTime = System.nanoTime();
-                    while (System.nanoTime() - startTime < 100_000_000) { // 100ms in nanoseconds
-                        // Busy wait to simulate work without Thread.sleep
-                    }
-                    return "test-result";
-                };
+        Supplier<Object> work = () -> {
+            // Simulate long-running job without actual sleep
+            // Use a loop to consume time instead of Thread.sleep
+            long startTime = System.nanoTime();
+            while (System.nanoTime() - startTime < 100_000_000) { // 100ms in nanoseconds
+                // Busy wait to simulate work without Thread.sleep
+            }
+            return "test-result";
+        };
 
         // Use reflection to access the private executeWithTimeout method
         java.lang.reflect.Method executeMethod =
-                JobExecutorService.class.getDeclaredMethod(
-                        "executeWithTimeout", Supplier.class, long.class);
+                JobExecutorService.class.getDeclaredMethod("executeWithTimeout", Supplier.class, long.class);
         executeMethod.setAccessible(true);
 
         // When/Then

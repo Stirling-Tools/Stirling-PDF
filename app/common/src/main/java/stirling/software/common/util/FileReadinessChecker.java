@@ -107,12 +107,10 @@ public class FileReadinessChecker {
             return true;
         }
         String filename = path.getFileName().toString();
-        String extension =
-                filename.contains(".")
-                        ? filename.substring(filename.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT)
-                        : "";
-        boolean allowed =
-                allowedExtensions.stream().anyMatch(ext -> ext.equalsIgnoreCase(extension));
+        String extension = filename.contains(".")
+                ? filename.substring(filename.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT)
+                : "";
+        boolean allowed = allowedExtensions.stream().anyMatch(ext -> ext.equalsIgnoreCase(extension));
         if (!allowed) {
             log.debug(
                     "File '{}' has extension '{}' which is not in the allowed list {}, skipping",
@@ -142,10 +140,7 @@ public class FileReadinessChecker {
             }
             return settled;
         } catch (IOException e) {
-            log.warn(
-                    "Could not read last-modified time for '{}', treating as not settled: {}",
-                    path,
-                    e.getMessage());
+            log.warn("Could not read last-modified time for '{}', treating as not settled: {}", path, e.getMessage());
             return false;
         }
     }
@@ -164,24 +159,18 @@ public class FileReadinessChecker {
             boolean stable = sizeBefore == sizeAfter;
             if (!stable) {
                 log.debug(
-                        "File '{}' size changed from {} to {} bytes during stability check,"
-                                + " not yet ready",
+                        "File '{}' size changed from {} to {} bytes during stability check," + " not yet ready",
                         path.getFileName(),
                         sizeBefore,
                         sizeAfter);
             }
             return stable;
         } catch (IOException e) {
-            log.warn(
-                    "Could not read file size for '{}', treating as unstable: {}",
-                    path,
-                    e.getMessage());
+            log.warn("Could not read file size for '{}', treating as unstable: {}", path, e.getMessage());
             return false;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn(
-                    "Size stability check interrupted for '{}', treating as unstable",
-                    path.getFileName());
+            log.warn("Size stability check interrupted for '{}', treating as unstable", path.getFileName());
             return false;
         }
     }
@@ -207,10 +196,7 @@ public class FileReadinessChecker {
             log.debug("File '{}' is already locked by this JVM", path.getFileName());
             return true;
         } catch (IOException e) {
-            log.debug(
-                    "Could not acquire lock on '{}', treating as locked: {}",
-                    path.getFileName(),
-                    e.getMessage());
+            log.debug("Could not acquire lock on '{}', treating as locked: {}", path.getFileName(), e.getMessage());
             return true;
         }
     }

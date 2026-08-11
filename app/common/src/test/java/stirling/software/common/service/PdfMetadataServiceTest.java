@@ -90,11 +90,10 @@ class PdfMetadataServiceTest {
 
             // Build the expected instant the same way the implementation does so the
             // assertion is independent of the JVM's default time zone.
-            long expectedMillis =
-                    LocalDateTime.of(2021, 6, 15, 10, 30, 45)
-                            .atZone(ZoneId.systemDefault())
-                            .toInstant()
-                            .toEpochMilli();
+            long expectedMillis = LocalDateTime.of(2021, 6, 15, 10, 30, 45)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
             assertEquals(expectedMillis, cal.getTimeInMillis());
         }
     }
@@ -153,7 +152,8 @@ class PdfMetadataServiceTest {
 
                 assertNotNull(md.getCreationDate());
                 assertNotNull(md.getModificationDate());
-                assertEquals(1_600_000_000_000L, md.getCreationDate().toInstant().toEpochMilli());
+                assertEquals(
+                        1_600_000_000_000L, md.getCreationDate().toInstant().toEpochMilli());
                 assertEquals(
                         1_700_000_000_000L, md.getModificationDate().toInstant().toEpochMilli());
             }
@@ -168,17 +168,14 @@ class PdfMetadataServiceTest {
         @DisplayName("writes producer label, title, subject, keywords and author from metadata")
         void writesCommonMetadata() throws Exception {
             PdfMetadataService service = nonProService(null);
-            PdfMetadata md =
-                    PdfMetadata.builder()
-                            .author("Bob")
-                            .title("Doc Title")
-                            .subject("Doc Subject")
-                            .keywords("a, b, c")
-                            .creationDate(
-                                    ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")))
-                            .modificationDate(
-                                    ZonedDateTime.of(2021, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")))
-                            .build();
+            PdfMetadata md = PdfMetadata.builder()
+                    .author("Bob")
+                    .title("Doc Title")
+                    .subject("Doc Subject")
+                    .keywords("a, b, c")
+                    .creationDate(ZonedDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")))
+                    .modificationDate(ZonedDateTime.of(2021, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC")))
+                    .build();
 
             try (PDDocument doc = new PDDocument()) {
                 doc.addPage(new PDPage());
@@ -200,7 +197,8 @@ class PdfMetadataServiceTest {
         void keepsExistingCreationDate() throws Exception {
             PdfMetadataService service = nonProService(null);
             ZonedDateTime creation = ZonedDateTime.of(2019, 5, 20, 8, 15, 0, 0, ZoneId.of("UTC"));
-            PdfMetadata md = PdfMetadata.builder().title("T").creationDate(creation).build();
+            PdfMetadata md =
+                    PdfMetadata.builder().title("T").creationDate(creation).build();
 
             try (PDDocument doc = new PDDocument()) {
                 service.setMetadataToPdf(doc, md);
@@ -233,7 +231,8 @@ class PdfMetadataServiceTest {
         void newlyCreatedForcesCreationDate() throws Exception {
             PdfMetadataService service = nonProService(null);
             ZonedDateTime creation = ZonedDateTime.of(2018, 3, 3, 3, 3, 3, 0, ZoneId.of("UTC"));
-            PdfMetadata md = PdfMetadata.builder().title("T").creationDate(creation).build();
+            PdfMetadata md =
+                    PdfMetadata.builder().title("T").creationDate(creation).build();
 
             try (PDDocument doc = new PDDocument()) {
                 service.setMetadataToPdf(doc, md, true);
@@ -247,8 +246,7 @@ class PdfMetadataServiceTest {
         }
 
         @Test
-        @DisplayName(
-                "setDefaultMetadata round-trips existing document info through the producer label")
+        @DisplayName("setDefaultMetadata round-trips existing document info through the producer label")
         void setDefaultMetadataRewritesProducer() throws Exception {
             PdfMetadataService service = nonProService(null);
             try (PDDocument doc = new PDDocument()) {
@@ -292,8 +290,7 @@ class PdfMetadataServiceTest {
     @DisplayName("setMetadataToPdf (pro path with custom metadata)")
     class SetMetadataProTests {
 
-        private ApplicationProperties propsWithCustomMetadata(
-                boolean autoUpdate, String author, String creator) {
+        private ApplicationProperties propsWithCustomMetadata(boolean autoUpdate, String author, String creator) {
             ApplicationProperties props = mock(ApplicationProperties.class);
             Premium premium = mock(Premium.class);
             ProFeatures proFeatures = mock(ProFeatures.class);
@@ -311,8 +308,7 @@ class PdfMetadataServiceTest {
         @Test
         @DisplayName("uses custom author and creator when pro and auto-update enabled")
         void appliesCustomAuthorAndCreator() throws Exception {
-            ApplicationProperties props =
-                    propsWithCustomMetadata(true, "Custom Author", "Custom Creator");
+            ApplicationProperties props = propsWithCustomMetadata(true, "Custom Author", "Custom Creator");
             PdfMetadataService service = new PdfMetadataService(props, LABEL, true, null);
 
             PdfMetadata md = PdfMetadata.builder().author("Ignored").title("T").build();
@@ -332,8 +328,7 @@ class PdfMetadataServiceTest {
         @Test
         @DisplayName("replaces 'username' token with the current user when userService present")
         void replacesUsernameToken() throws Exception {
-            ApplicationProperties props =
-                    propsWithCustomMetadata(true, "Report by username", "Creator");
+            ApplicationProperties props = propsWithCustomMetadata(true, "Report by username", "Creator");
             UserServiceInterface userService = mock(UserServiceInterface.class);
             when(userService.getCurrentUsername()).thenReturn("alice");
 
@@ -350,8 +345,7 @@ class PdfMetadataServiceTest {
         @Test
         @DisplayName("leaves 'username' token intact when current user is null")
         void keepsTokenWhenUsernameNull() throws Exception {
-            ApplicationProperties props =
-                    propsWithCustomMetadata(true, "Report by username", "Creator");
+            ApplicationProperties props = propsWithCustomMetadata(true, "Report by username", "Creator");
             UserServiceInterface userService = mock(UserServiceInterface.class);
             when(userService.getCurrentUsername()).thenReturn(null);
 
@@ -382,10 +376,10 @@ class PdfMetadataServiceTest {
         @Test
         @DisplayName("pro flag without auto-update keeps metadata author and label creator")
         void proButAutoUpdateDisabledUsesMetadata() throws Exception {
-            ApplicationProperties props =
-                    propsWithCustomMetadata(false, "Custom Author", "Custom Creator");
+            ApplicationProperties props = propsWithCustomMetadata(false, "Custom Author", "Custom Creator");
             PdfMetadataService service = new PdfMetadataService(props, LABEL, true, null);
-            PdfMetadata md = PdfMetadata.builder().author("Metadata Author").title("T").build();
+            PdfMetadata md =
+                    PdfMetadata.builder().author("Metadata Author").title("T").build();
 
             try (PDDocument doc = new PDDocument()) {
                 service.setMetadataToPdf(doc, md, true);
@@ -399,10 +393,10 @@ class PdfMetadataServiceTest {
         @Test
         @DisplayName("auto-update enabled but not pro keeps metadata author and label creator")
         void autoUpdateButNotProUsesMetadata() throws Exception {
-            ApplicationProperties props =
-                    propsWithCustomMetadata(true, "Custom Author", "Custom Creator");
+            ApplicationProperties props = propsWithCustomMetadata(true, "Custom Author", "Custom Creator");
             PdfMetadataService service = new PdfMetadataService(props, LABEL, false, null);
-            PdfMetadata md = PdfMetadata.builder().author("Metadata Author").title("T").build();
+            PdfMetadata md =
+                    PdfMetadata.builder().author("Metadata Author").title("T").build();
 
             try (PDDocument doc = new PDDocument()) {
                 service.setMetadataToPdf(doc, md, true);

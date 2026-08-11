@@ -60,13 +60,20 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class CompressControllerTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private CompressController controller;
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private CompressController controller;
 
     /** Real temp files created during a test; cleaned up after each test. */
     private final List<File> createdFiles = new ArrayList<>();
@@ -77,17 +84,12 @@ class CompressControllerTest {
         lenient().when(endpointConfiguration.isGroupEnabled(anyString())).thenReturn(false);
 
         // Every managed temp file is backed by a real on-disk file wrapped in a mock TempFile.
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile(
-                                                    "compress-test", inv.<String>getArgument(0))
-                                            .toFile();
-                            createdFiles.add(f);
-                            return newRealBackedTempFile(f);
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("compress-test", inv.<String>getArgument(0))
+                    .toFile();
+            createdFiles.add(f);
+            return newRealBackedTempFile(f);
+        });
     }
 
     private TempFile newRealBackedTempFile(File f) {
@@ -127,8 +129,7 @@ class CompressControllerTest {
             PDPage page = new PDPage(PDRectangle.LETTER);
             doc.addPage(page);
             java.awt.image.BufferedImage img =
-                    new java.awt.image.BufferedImage(
-                            50, 50, java.awt.image.BufferedImage.TYPE_INT_RGB);
+                    new java.awt.image.BufferedImage(50, 50, java.awt.image.BufferedImage.TYPE_INT_RGB);
             for (int x = 0; x < 50; x++) {
                 for (int y = 0; y < 50; y++) {
                     img.setRGB(x, y, (x * 5 + y) & 0xFFFFFF);
@@ -145,8 +146,7 @@ class CompressControllerTest {
     }
 
     private MockMultipartFile multipart(byte[] bytes) {
-        return new MockMultipartFile(
-                "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, bytes);
+        return new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, bytes);
     }
 
     private static byte[] drain(ResponseEntity<Resource> response) throws IOException {
@@ -169,8 +169,7 @@ class CompressControllerTest {
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(null);
 
-            assertThatThrownBy(() -> controller.optimizePdf(request))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.optimizePdf(request)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -178,27 +177,20 @@ class CompressControllerTest {
         void emptyFile_throws() {
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(
-                    new MockMultipartFile(
-                            "fileInput",
-                            "input.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            new byte[0]));
+                    new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0]));
 
-            assertThatThrownBy(() -> controller.optimizePdf(request))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.optimizePdf(request)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
-        @DisplayName(
-                "both optimizeLevel and expectedOutputSize null throws IllegalArgumentException")
+        @DisplayName("both optimizeLevel and expectedOutputSize null throws IllegalArgumentException")
         void noOptionsProvided_throws() throws Exception {
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(multipart(textOnlyPdfBytes()));
             request.setOptimizeLevel(null);
             request.setExpectedOutputSize(null);
 
-            assertThatThrownBy(() -> controller.optimizePdf(request))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.optimizePdf(request)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -217,8 +209,7 @@ class CompressControllerTest {
         }
 
         @Test
-        @DisplayName(
-                "line art requested with service present but ImageMagick disabled throws IOException")
+        @DisplayName("line art requested with service present but ImageMagick disabled throws IOException")
         void lineArt_imageMagickDisabled_throwsIOException() throws Exception {
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(multipart(textOnlyPdfBytes()));
@@ -229,8 +220,7 @@ class CompressControllerTest {
             setLineArtService(mock(LineArtConversionService.class));
             when(endpointConfiguration.isGroupEnabled("ImageMagick")).thenReturn(false);
 
-            assertThatThrownBy(() -> controller.optimizePdf(request))
-                    .isInstanceOf(IOException.class);
+            assertThatThrownBy(() -> controller.optimizePdf(request)).isInstanceOf(IOException.class);
         }
     }
 
@@ -249,8 +239,7 @@ class CompressControllerTest {
             request.setOptimizeLevel(1); // < 4 => no image compression, < 6 => no ghostscript
 
             // Final stage reloads currentFile from disk; return a fresh real document.
-            when(pdfDocumentFactory.load(any(File.class)))
-                    .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
+            when(pdfDocumentFactory.load(any(File.class))).thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
 
             ResponseEntity<Resource> response = controller.optimizePdf(request);
 
@@ -266,8 +255,7 @@ class CompressControllerTest {
             request.setFileInput(multipart(pdf));
             request.setOptimizeLevel(4); // triggers Java image compression path
 
-            when(pdfDocumentFactory.load(any(File.class)))
-                    .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
+            when(pdfDocumentFactory.load(any(File.class))).thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
             // compressImagesInPDF reloads currentFile via load(Path).
             when(pdfDocumentFactory.load(any(Path.class)))
                     .thenAnswer(inv -> Loader.loadPDF(((Path) inv.getArgument(0)).toFile()));
@@ -287,8 +275,7 @@ class CompressControllerTest {
             request.setOptimizeLevel(1);
             request.setGrayscale(true);
 
-            when(pdfDocumentFactory.load(any(File.class)))
-                    .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
+            when(pdfDocumentFactory.load(any(File.class))).thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
             when(pdfDocumentFactory.load(any(Path.class)))
                     .thenAnswer(inv -> Loader.loadPDF(((Path) inv.getArgument(0)).toFile()));
 
@@ -307,8 +294,7 @@ class CompressControllerTest {
             request.setOptimizeLevel(null);
             request.setExpectedOutputSize("1KB"); // length > 1 => auto mode
 
-            when(pdfDocumentFactory.load(any(File.class)))
-                    .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
+            when(pdfDocumentFactory.load(any(File.class))).thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
             when(pdfDocumentFactory.load(any(Path.class)))
                     .thenAnswer(inv -> Loader.loadPDF(((Path) inv.getArgument(0)).toFile()));
 
@@ -438,8 +424,7 @@ class CompressControllerTest {
             // A PNG-style lossless image yields FlateDecode -> "PNG".
             try (PDDocument doc = new PDDocument()) {
                 java.awt.image.BufferedImage bi =
-                        new java.awt.image.BufferedImage(
-                                10, 10, java.awt.image.BufferedImage.TYPE_INT_RGB);
+                        new java.awt.image.BufferedImage(10, 10, java.awt.image.BufferedImage.TYPE_INT_RGB);
                 PDImageXObject image = LosslessFactory.createFromImage(doc, bi);
 
                 Method typeMethod = privateStatic("getImageType", PDImageXObject.class);

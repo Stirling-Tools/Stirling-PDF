@@ -93,23 +93,39 @@ import tools.jackson.databind.json.JsonMapper;
 @org.mockito.junit.jupiter.MockitoSettings(strictness = Strictness.LENIENT)
 class PdfJsonConversionServiceMore2Test {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private TaskManager taskManager;
-    @Mock private PdfJsonFallbackFontService fallbackFontService;
-    @Mock private PdfJsonFontService fontService;
-    @Mock private Type3FontConversionService type3FontConversionService;
-    @Mock private Type3GlyphExtractor type3GlyphExtractor;
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private TaskManager taskManager;
+
+    @Mock
+    private PdfJsonFallbackFontService fallbackFontService;
+
+    @Mock
+    private PdfJsonFontService fontService;
+
+    @Mock
+    private Type3FontConversionService type3FontConversionService;
+
+    @Mock
+    private Type3GlyphExtractor type3GlyphExtractor;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
 
     // Real COS mapper so the serialize/deserialize machinery runs for real.
     private final PdfJsonCosMapper cosMapper = new PdfJsonCosMapper();
 
-    private final ObjectMapper objectMapper =
-            JsonMapper.builder()
-                    .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-                    .build();
+    private final ObjectMapper objectMapper = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+            .build();
 
     private PdfJsonConversionService service;
 
@@ -117,34 +133,29 @@ class PdfJsonConversionServiceMore2Test {
 
     @BeforeEach
     void setUp() throws IOException {
-        service =
-                new PdfJsonConversionService(
-                        pdfDocumentFactory,
-                        objectMapper,
-                        endpointConfiguration,
-                        tempFileManager,
-                        taskManager,
-                        cosMapper,
-                        fallbackFontService,
-                        fontService,
-                        type3FontConversionService,
-                        type3GlyphExtractor,
-                        applicationProperties);
+        service = new PdfJsonConversionService(
+                pdfDocumentFactory,
+                objectMapper,
+                endpointConfiguration,
+                tempFileManager,
+                taskManager,
+                cosMapper,
+                fallbackFontService,
+                fontService,
+                type3FontConversionService,
+                type3GlyphExtractor,
+                applicationProperties);
 
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        invocation -> {
-                            String suffix = invocation.getArgument(0);
-                            Path path = Files.createTempFile("pdfjson-more2-test", suffix);
-                            createdTempFiles.add(path);
-                            return path.toFile();
-                        });
-        when(tempFileManager.deleteTempFile(any(File.class)))
-                .thenAnswer(
-                        invocation -> {
-                            File file = invocation.getArgument(0);
-                            return file != null && file.delete();
-                        });
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(invocation -> {
+            String suffix = invocation.getArgument(0);
+            Path path = Files.createTempFile("pdfjson-more2-test", suffix);
+            createdTempFiles.add(path);
+            return path.toFile();
+        });
+        when(tempFileManager.deleteTempFile(any(File.class))).thenAnswer(invocation -> {
+            File file = invocation.getArgument(0);
+            return file != null && file.delete();
+        });
         when(taskManager.addNote(anyString(), anyString())).thenReturn(true);
     }
 
@@ -163,14 +174,12 @@ class PdfJsonConversionServiceMore2Test {
 
     private void stubFallbackFont() throws IOException {
         when(fallbackFontService.buildFallbackFontModel())
-                .thenAnswer(
-                        invocation ->
-                                PdfJsonFont.builder()
-                                        .id(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
-                                        .uid(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
-                                        .baseName("Fallback")
-                                        .subtype("TrueType")
-                                        .build());
+                .thenAnswer(invocation -> PdfJsonFont.builder()
+                        .id(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
+                        .uid(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
+                        .baseName("Fallback")
+                        .subtype("TrueType")
+                        .build());
         when(fallbackFontService.loadFallbackPdfFont(any(PDDocument.class)))
                 .thenAnswer(invocation -> new PDType1Font(Standard14Fonts.FontName.HELVETICA));
     }
@@ -333,13 +342,9 @@ class PdfJsonConversionServiceMore2Test {
             byte[] rebuilt = runJsonToPdf(doc);
             try (PDDocument loaded = Loader.loadPDF(rebuilt)) {
                 assertThat(loaded.getPage(0).getAnnotations()).hasSizeGreaterThanOrEqualTo(3);
-                boolean hasUri =
-                        loaded.getPage(0).getAnnotations().stream()
-                                .anyMatch(
-                                        a ->
-                                                a instanceof PDAnnotationLink
-                                                        && ((PDAnnotationLink) a).getAction()
-                                                                instanceof PDActionURI);
+                boolean hasUri = loaded.getPage(0).getAnnotations().stream()
+                        .anyMatch(a -> a instanceof PDAnnotationLink
+                                && ((PDAnnotationLink) a).getAction() instanceof PDActionURI);
                 assertThat(hasUri).isTrue();
             }
         }
@@ -350,34 +355,31 @@ class PdfJsonConversionServiceMore2Test {
             stubFallbackFont();
             // No rawData supplied so restoreAnnotations takes the basic-reconstruction warning
             // path.
-            PdfJsonAnnotation noRaw =
-                    PdfJsonAnnotation.builder()
-                            .subtype("Text")
-                            .contents("structured only")
-                            .rect(new float[] {40f, 700f, 60f, 720f})
-                            .color(new float[] {1f, 0f, 0f})
-                            .author("Author X")
-                            .subject("Subject Y")
-                            .destination("page-1")
-                            .iconName("Comment")
-                            .build();
+            PdfJsonAnnotation noRaw = PdfJsonAnnotation.builder()
+                    .subtype("Text")
+                    .contents("structured only")
+                    .rect(new float[] {40f, 700f, 60f, 720f})
+                    .color(new float[] {1f, 0f, 0f})
+                    .author("Author X")
+                    .subject("Subject Y")
+                    .destination("page-1")
+                    .iconName("Comment")
+                    .build();
             PdfJsonFont font = std14Font("F1", "Helvetica");
-            PdfJsonTextElement element =
-                    PdfJsonTextElement.builder()
-                            .text("Body line")
-                            .fontId("F1")
-                            .fontSize(12f)
-                            .x(72f)
-                            .y(640f)
-                            .build();
-            PdfJsonPage page =
-                    PdfJsonPage.builder()
-                            .pageNumber(1)
-                            .width(612f)
-                            .height(792f)
-                            .textElements(new ArrayList<>(List.of(element)))
-                            .annotations(new ArrayList<>(List.of(noRaw)))
-                            .build();
+            PdfJsonTextElement element = PdfJsonTextElement.builder()
+                    .text("Body line")
+                    .fontId("F1")
+                    .fontSize(12f)
+                    .x(72f)
+                    .y(640f)
+                    .build();
+            PdfJsonPage page = PdfJsonPage.builder()
+                    .pageNumber(1)
+                    .width(612f)
+                    .height(792f)
+                    .textElements(new ArrayList<>(List.of(element)))
+                    .annotations(new ArrayList<>(List.of(noRaw)))
+                    .build();
             PdfJsonDocument doc = docWith(page);
             doc.setFonts(new ArrayList<>(List.of(font)));
             // The annotation has no rawData; rebuild must not abort and the body still renders.
@@ -473,8 +475,7 @@ class PdfJsonConversionServiceMore2Test {
                     .thenAnswer(inv -> Loader.loadPDF(inv.getArgument(0, byte[].class)));
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             service.extractDocumentMetadata(pdfMultipart(rotatedCroppedPdf(90)), "job-rot", out);
-            PdfJsonDocumentMetadata md =
-                    objectMapper.readValue(out.toByteArray(), PdfJsonDocumentMetadata.class);
+            PdfJsonDocumentMetadata md = objectMapper.readValue(out.toByteArray(), PdfJsonDocumentMetadata.class);
             assertThat(md.getPageDimensions()).hasSize(1);
             assertEquals(90, md.getPageDimensions().get(0).getRotation());
         }
@@ -529,10 +530,12 @@ class PdfJsonConversionServiceMore2Test {
 
             byte[] rebuilt = runJsonToPdf(doc);
             try (PDDocument loaded = Loader.loadPDF(rebuilt)) {
-                assertEquals("alpha, beta, gamma", loaded.getDocumentInformation().getKeywords());
+                assertEquals(
+                        "alpha, beta, gamma", loaded.getDocumentInformation().getKeywords());
                 assertEquals("Creator Tool", loaded.getDocumentInformation().getCreator());
                 assertEquals("Producer Lib", loaded.getDocumentInformation().getProducer());
-                assertEquals("Round trip subject", loaded.getDocumentInformation().getSubject());
+                assertEquals(
+                        "Round trip subject", loaded.getDocumentInformation().getSubject());
             }
         }
 
@@ -575,9 +578,8 @@ class PdfJsonConversionServiceMore2Test {
         private byte[] pdfWithXmp(String title) throws IOException {
             PDDocument document = new PDDocument();
             document.addPage(new PDPage(PDRectangle.LETTER));
-            org.apache.pdfbox.pdmodel.common.PDMetadata metadata =
-                    new org.apache.pdfbox.pdmodel.common.PDMetadata(
-                            document, new java.io.ByteArrayInputStream(xmpPacket(title)));
+            org.apache.pdfbox.pdmodel.common.PDMetadata metadata = new org.apache.pdfbox.pdmodel.common.PDMetadata(
+                    document, new java.io.ByteArrayInputStream(xmpPacket(title)));
             document.getDocumentCatalog().setMetadata(metadata);
             return toBytes(document);
         }
@@ -603,8 +605,7 @@ class PdfJsonConversionServiceMore2Test {
                         loaded.getDocumentCatalog().getMetadata();
                 assertNotNull(restored);
                 try (java.io.InputStream in = restored.createInputStream()) {
-                    String xml =
-                            new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                    String xml = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
                     assertThat(xml).contains("XMP Title Two");
                 }
             }
@@ -617,8 +618,7 @@ class PdfJsonConversionServiceMore2Test {
                     .thenAnswer(inv -> Loader.loadPDF(inv.getArgument(0, byte[].class)));
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             service.extractDocumentMetadata(pdfMultipart(pdfWithXmp("XMP Meta")), null, out);
-            PdfJsonDocumentMetadata md =
-                    objectMapper.readValue(out.toByteArray(), PdfJsonDocumentMetadata.class);
+            PdfJsonDocumentMetadata md = objectMapper.readValue(out.toByteArray(), PdfJsonDocumentMetadata.class);
             assertThat(md.getXmpMetadata()).isNotBlank();
         }
     }
@@ -638,11 +638,9 @@ class PdfJsonConversionServiceMore2Test {
             PDPage page = new PDPage(PDRectangle.LETTER);
             document.addPage(page);
             PDImageXObject jpeg =
-                    JPEGFactory.createFromImage(
-                            document, solidImage(40, 30, Color.RED, BufferedImage.TYPE_INT_RGB));
-            PDImageXObject png =
-                    LosslessFactory.createFromImage(
-                            document, solidImage(30, 30, Color.BLUE, BufferedImage.TYPE_INT_RGB));
+                    JPEGFactory.createFromImage(document, solidImage(40, 30, Color.RED, BufferedImage.TYPE_INT_RGB));
+            PDImageXObject png = LosslessFactory.createFromImage(
+                    document, solidImage(30, 30, Color.BLUE, BufferedImage.TYPE_INT_RGB));
             try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
                 cs.drawImage(jpeg, 60, 600, 100, 75);
                 cs.drawImage(png, 220, 600, 75, 75);
@@ -651,10 +649,8 @@ class PdfJsonConversionServiceMore2Test {
             List<PdfJsonImageElement> images = doc.getPages().get(0).getImageElements();
             assertThat(images).hasSizeGreaterThanOrEqualTo(2);
             assertThat(images)
-                    .anySatisfy(
-                            img ->
-                                    assertThat(img.getImageFormat().toLowerCase())
-                                            .containsAnyOf("jpg", "jpeg"));
+                    .anySatisfy(img ->
+                            assertThat(img.getImageFormat().toLowerCase()).containsAnyOf("jpg", "jpeg"));
             assertThat(images).allSatisfy(img -> assertThat(img.getImageData()).isNotBlank());
         }
 
@@ -662,39 +658,27 @@ class PdfJsonConversionServiceMore2Test {
         @DisplayName("explicit-transform JPEG and default-placement PNG render on one page")
         void transformVsDefaultPlacement() throws IOException {
             stubFallbackFont();
-            PdfJsonImageElement transformed =
-                    PdfJsonImageElement.builder()
-                            .id("JpgT")
-                            .imageData(
-                                    jpgBase64(
-                                            solidImage(
-                                                    16, 16, Color.RED, BufferedImage.TYPE_INT_RGB)))
-                            .imageFormat("jpg")
-                            .transform(new float[] {72f, 0f, 0f, 54f, 90f, 560f})
-                            .build();
-            PdfJsonImageElement edgePlaced =
-                    PdfJsonImageElement.builder()
-                            .id("PngE")
-                            .imageData(
-                                    pngBase64(
-                                            solidImage(
-                                                    16,
-                                                    16,
-                                                    Color.BLUE,
-                                                    BufferedImage.TYPE_INT_RGB)))
-                            .imageFormat("png")
-                            .x(260f)
-                            .y(560f)
-                            .width(64f)
-                            .height(48f)
-                            .build();
-            PdfJsonPage page =
-                    PdfJsonPage.builder()
-                            .pageNumber(1)
-                            .width(612f)
-                            .height(792f)
-                            .imageElements(new ArrayList<>(List.of(transformed, edgePlaced)))
-                            .build();
+            PdfJsonImageElement transformed = PdfJsonImageElement.builder()
+                    .id("JpgT")
+                    .imageData(jpgBase64(solidImage(16, 16, Color.RED, BufferedImage.TYPE_INT_RGB)))
+                    .imageFormat("jpg")
+                    .transform(new float[] {72f, 0f, 0f, 54f, 90f, 560f})
+                    .build();
+            PdfJsonImageElement edgePlaced = PdfJsonImageElement.builder()
+                    .id("PngE")
+                    .imageData(pngBase64(solidImage(16, 16, Color.BLUE, BufferedImage.TYPE_INT_RGB)))
+                    .imageFormat("png")
+                    .x(260f)
+                    .y(560f)
+                    .width(64f)
+                    .height(48f)
+                    .build();
+            PdfJsonPage page = PdfJsonPage.builder()
+                    .pageNumber(1)
+                    .width(612f)
+                    .height(792f)
+                    .imageElements(new ArrayList<>(List.of(transformed, edgePlaced)))
+                    .build();
             try (PDDocument loaded = Loader.loadPDF(runJsonToPdf(docWith(page)))) {
                 assertEquals(1, loaded.getNumberOfPages());
                 assertNotNull(loaded.getPage(0).getResources());
@@ -709,8 +693,7 @@ class PdfJsonConversionServiceMore2Test {
             PDPage page = new PDPage(PDRectangle.LETTER);
             document.addPage(page);
             PDImageXObject jpeg =
-                    JPEGFactory.createFromImage(
-                            document, solidImage(48, 36, Color.ORANGE, BufferedImage.TYPE_INT_RGB));
+                    JPEGFactory.createFromImage(document, solidImage(48, 36, Color.ORANGE, BufferedImage.TYPE_INT_RGB));
             try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
                 cs.drawImage(jpeg, 80, 500, 120, 90);
             }
@@ -760,11 +743,10 @@ class PdfJsonConversionServiceMore2Test {
             page.setPageNumber(1);
             for (PdfJsonTextElement element : page.getTextElements()) {
                 element.setFontSize(26f);
-                element.setFillColor(
-                        PdfJsonTextColor.builder()
-                                .colorSpace("DeviceRGB")
-                                .components(new float[] {0.2f, 0.6f, 0.9f})
-                                .build());
+                element.setFillColor(PdfJsonTextColor.builder()
+                        .colorSpace("DeviceRGB")
+                        .components(new float[] {0.2f, 0.6f, 0.9f})
+                        .build());
             }
             PdfJsonDocument updates = new PdfJsonDocument();
             updates.setPages(new ArrayList<>(List.of(page)));
@@ -788,17 +770,14 @@ class PdfJsonConversionServiceMore2Test {
             PdfJsonPage page = objectMapper.readValue(pageOut.toByteArray(), PdfJsonPage.class);
             page.setPageNumber(1);
             List<PdfJsonTextElement> elements =
-                    page.getTextElements() != null
-                            ? new ArrayList<>(page.getTextElements())
-                            : new ArrayList<>();
-            elements.add(
-                    PdfJsonTextElement.builder()
-                            .text("Newly added line")
-                            .fontId(elements.isEmpty() ? null : elements.get(0).getFontId())
-                            .fontSize(12f)
-                            .x(72f)
-                            .y(640f)
-                            .build());
+                    page.getTextElements() != null ? new ArrayList<>(page.getTextElements()) : new ArrayList<>();
+            elements.add(PdfJsonTextElement.builder()
+                    .text("Newly added line")
+                    .fontId(elements.isEmpty() ? null : elements.get(0).getFontId())
+                    .fontSize(12f)
+                    .x(72f)
+                    .y(640f)
+                    .build());
             page.setTextElements(elements);
 
             PdfJsonDocument updates = new PdfJsonDocument();
@@ -845,9 +824,7 @@ class PdfJsonConversionServiceMore2Test {
             cacheLazyDocument("job-clear-page", simpleTextPdf("Clear single page"));
             service.clearCachedDocument("job-clear-page");
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThrows(
-                    CacheUnavailableException.class,
-                    () -> service.extractSinglePage("job-clear-page", 1, out));
+            assertThrows(CacheUnavailableException.class, () -> service.extractSinglePage("job-clear-page", 1, out));
         }
 
         @Test
@@ -873,23 +850,19 @@ class PdfJsonConversionServiceMore2Test {
             when(pdfDocumentFactory.load(any(byte[].class), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(inv.getArgument(0, byte[].class)));
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            service.extractDocumentMetadata(
-                    pdfMultipart(simpleTextPdf("No job id meta")), null, out);
-            PdfJsonDocumentMetadata md =
-                    objectMapper.readValue(out.toByteArray(), PdfJsonDocumentMetadata.class);
+            service.extractDocumentMetadata(pdfMultipart(simpleTextPdf("No job id meta")), null, out);
+            PdfJsonDocumentMetadata md = objectMapper.readValue(out.toByteArray(), PdfJsonDocumentMetadata.class);
             assertThat(md.getPageDimensions()).hasSize(1);
             assertEquals(Boolean.TRUE, md.getLazyImages());
         }
 
         @Test
-        @DisplayName(
-                "metadata extraction with a jobId caches a page retrievable by extractSinglePage")
+        @DisplayName("metadata extraction with a jobId caches a page retrievable by extractSinglePage")
         void metadataWithJobIdCachesPage() throws IOException {
             when(pdfDocumentFactory.load(any(byte[].class), eq(true)))
                     .thenAnswer(inv -> Loader.loadPDF(inv.getArgument(0, byte[].class)));
             ByteArrayOutputStream metaOut = new ByteArrayOutputStream();
-            service.extractDocumentMetadata(
-                    pdfMultipart(simpleTextPdf("Job id meta")), "job-meta-cache", metaOut);
+            service.extractDocumentMetadata(pdfMultipart(simpleTextPdf("Job id meta")), "job-meta-cache", metaOut);
 
             ByteArrayOutputStream pageOut = new ByteArrayOutputStream();
             service.extractSinglePage("job-meta-cache", 1, pageOut);

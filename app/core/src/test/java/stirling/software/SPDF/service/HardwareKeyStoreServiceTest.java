@@ -73,9 +73,7 @@ class HardwareKeyStoreServiceTest {
     void assertLocalDesktop_rejectsNonDesktop() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> service("Server-jar").assertLocalDesktop(request));
+        assertThrows(IllegalArgumentException.class, () -> service("Server-jar").assertLocalDesktop(request));
     }
 
     @Test
@@ -84,8 +82,7 @@ class HardwareKeyStoreServiceTest {
         // 203.0.113.0/24 is TEST-NET-3 (RFC 5737) - never a real local interface address.
         when(request.getRemoteAddr()).thenReturn("203.0.113.5");
         assertThrows(
-                IllegalArgumentException.class,
-                () -> service("Client-windows").assertLocalDesktop(request));
+                IllegalArgumentException.class, () -> service("Client-windows").assertLocalDesktop(request));
     }
 
     @Test
@@ -111,17 +108,14 @@ class HardwareKeyStoreServiceTest {
     @Test
     void validateLibraryAllowed_blankPath_throws() {
         assertThrows(
-                IllegalArgumentException.class,
-                () -> service("Client-windows").validateLibraryAllowed("   "));
+                IllegalArgumentException.class, () -> service("Client-windows").validateLibraryAllowed("   "));
     }
 
     @Test
     void validateLibraryAllowed_unknownPath_throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        service("Client-windows")
-                                .validateLibraryAllowed("/definitely/not/a/real/driver.so"));
+                () -> service("Client-windows").validateLibraryAllowed("/definitely/not/a/real/driver.so"));
     }
 
     @Test
@@ -132,9 +126,8 @@ class HardwareKeyStoreServiceTest {
             System.setProperty(PKCS11_PROP, fakeDriver.toString());
             HardwareKeyStoreService service = service("Client-windows");
             assertDoesNotThrow(() -> service.validateLibraryAllowed(fakeDriver.toString()));
-            assertTrue(
-                    service.detectPkcs11Libraries().stream()
-                            .anyMatch(l -> l.path().equals(fakeDriver.toString())));
+            assertTrue(service.detectPkcs11Libraries().stream()
+                    .anyMatch(l -> l.path().equals(fakeDriver.toString())));
         } finally {
             if (previous == null) {
                 System.clearProperty(PKCS11_PROP);

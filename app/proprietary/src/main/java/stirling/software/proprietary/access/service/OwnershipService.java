@@ -34,11 +34,7 @@ public class OwnershipService {
             return isAdmin(user) || isOwner(resource, user);
         }
         return accessService.canUseResource(
-                type,
-                String.valueOf(resource.getId()),
-                resource.getOwnerRef(),
-                resource.getDefaultAccess(),
-                user);
+                type, String.valueOf(resource.getId()), resource.getOwnerRef(), resource.getDefaultAccess(), user);
     }
 
     /** Whether the user may manage the resource. */
@@ -47,25 +43,19 @@ public class OwnershipService {
         if (!resource.isEnabled()) {
             return isAdmin(user) || isOwner(resource, user);
         }
-        return accessService.canManageResource(
-                type, String.valueOf(resource.getId()), resource.getOwnerRef(), user);
+        return accessService.canManageResource(type, String.valueOf(resource.getId()), resource.getOwnerRef(), user);
     }
 
     /**
      * Authorizes the scope and assigns ownership; {@code lockedOverrideBlocks} guards USER scope.
      */
     public void assignOwnership(
-            OwnedResource resource,
-            OwnerScope scope,
-            Long teamId,
-            User user,
-            BooleanSupplier lockedOverrideBlocks) {
+            OwnedResource resource, OwnerScope scope, Long teamId, User user, BooleanSupplier lockedOverrideBlocks) {
         resource.setScope(scope);
         switch (scope) {
             case USER -> {
                 if (lockedOverrideBlocks.getAsBoolean() && !isAdmin(user)) {
-                    throw forbidden(
-                            "This is locked to the server configuration by an administrator");
+                    throw forbidden("This is locked to the server configuration by an administrator");
                 }
                 resource.setOwnerUser(user);
             }
@@ -76,13 +66,9 @@ public class OwnershipService {
             }
             case TEAM -> {
                 if (teamId == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "ownerTeamId is required");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ownerTeamId is required");
                 }
-                Team team =
-                        teamRepository
-                                .findById(teamId)
-                                .orElseThrow(() -> notFound("Team not found"));
+                Team team = teamRepository.findById(teamId).orElseThrow(() -> notFound("Team not found"));
                 if (!isAdmin(user) && !teamLeadLookup.isLeaderOfTeam(user, team.getId())) {
                     throw forbidden("Only admins or team leaders can create team-owned resources");
                 }
@@ -106,8 +92,7 @@ public class OwnershipService {
             return true;
         }
         // Team-owned: the lead of the owning team owns it.
-        return resource.getOwnerTeamId() != null
-                && teamLeadLookup.isLeaderOfTeam(user, resource.getOwnerTeamId());
+        return resource.getOwnerTeamId() != null && teamLeadLookup.isLeaderOfTeam(user, resource.getOwnerTeamId());
     }
 
     private ResponseStatusException forbidden(String message) {

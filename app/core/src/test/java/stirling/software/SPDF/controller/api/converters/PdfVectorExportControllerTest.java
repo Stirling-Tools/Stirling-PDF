@@ -40,36 +40,36 @@ import stirling.software.common.util.TempFileManager;
 class PdfVectorExportControllerTest {
 
     private final List<Path> tempPaths = new ArrayList<>();
-    @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private ProcessExecutor ghostscriptExecutor;
-    @InjectMocks private PdfVectorExportController controller;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private ProcessExecutor ghostscriptExecutor;
+
+    @InjectMocks
+    private PdfVectorExportController controller;
+
     private Map<ProcessExecutor.Processes, ProcessExecutor> originalExecutors;
 
     @BeforeEach
     void setup() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
-        when(tempFileManager.createTempFile(any()))
-                .thenAnswer(
-                        invocation -> {
-                            String suffix = invocation.<String>getArgument(0);
-                            Path path =
-                                    Files.createTempFile(
-                                            "vector_test", suffix == null ? "" : suffix);
-                            tempPaths.add(path);
-                            return path.toFile();
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
+        when(tempFileManager.createTempFile(any())).thenAnswer(invocation -> {
+            String suffix = invocation.<String>getArgument(0);
+            Path path = Files.createTempFile("vector_test", suffix == null ? "" : suffix);
+            tempPaths.add(path);
+            return path.toFile();
+        });
 
         Field instancesField = ProcessExecutor.class.getDeclaredField("instances");
         instancesField.setAccessible(true);
@@ -113,12 +113,8 @@ class PdfVectorExportControllerTest {
         ProcessExecutorResult result = mockResult(0);
         when(ghostscriptExecutor.runCommandWithOutputHandling(any())).thenReturn(result);
 
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "sample.ps",
-                        MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                        new byte[] {1});
+        MockMultipartFile file = new MockMultipartFile(
+                "fileInput", "sample.ps", MediaType.APPLICATION_OCTET_STREAM_VALUE, new byte[] {1});
         PdfVectorExportRequest request = new PdfVectorExportRequest();
         request.setFileInput(file);
 
@@ -134,8 +130,7 @@ class PdfVectorExportControllerTest {
 
         byte[] content = {1};
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, content);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, content);
         PdfVectorExportRequest request = new PdfVectorExportRequest();
         request.setFileInput(file);
 
@@ -154,13 +149,10 @@ class PdfVectorExportControllerTest {
     void convertGhostscript_unsupportedFormatThrows() {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "vector.svg", MediaType.APPLICATION_XML_VALUE, new byte[] {1});
+                new MockMultipartFile("fileInput", "vector.svg", MediaType.APPLICATION_XML_VALUE, new byte[] {1});
         PdfVectorExportRequest request = new PdfVectorExportRequest();
         request.setFileInput(file);
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> controller.convertGhostscriptInputsToPdf(request));
+        assertThrows(IllegalArgumentException.class, () -> controller.convertGhostscriptInputsToPdf(request));
     }
 }

@@ -25,8 +25,7 @@ import stirling.software.SPDF.utils.AutoRotateDetection.TextDirection;
 
 class AutoRotateDetectionTest {
 
-    private static final String SAMPLE_TEXT =
-            "The quick brown fox jumps over the lazy dog again and again";
+    private static final String SAMPLE_TEXT = "The quick brown fox jumps over the lazy dog again and again";
 
     private PDDocument docWithText(int textAngleDegrees, int pageRotation) throws IOException {
         PDDocument document = new PDDocument();
@@ -35,8 +34,7 @@ class AutoRotateDetectionTest {
         try (PDPageContentStream content = new PDPageContentStream(document, page)) {
             content.beginText();
             content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-            content.setTextMatrix(
-                    Matrix.getRotateInstance(Math.toRadians(textAngleDegrees), 300, 400));
+            content.setTextMatrix(Matrix.getRotateInstance(Math.toRadians(textAngleDegrees), 300, 400));
             content.showText(SAMPLE_TEXT);
             content.endText();
         }
@@ -63,20 +61,19 @@ class AutoRotateDetectionTest {
         "90,  90,  0",
         "180, 90,  90",
     })
-    void detectsCorrectionForRotatedTextAndPages(
-            int textAngle, int pageRotation, int expectedCorrection) throws IOException {
+    void detectsCorrectionForRotatedTextAndPages(int textAngle, int pageRotation, int expectedCorrection)
+            throws IOException {
         try (PDDocument document = docWithText(textAngle, pageRotation)) {
-            TextDirection direction = AutoRotateDetection.detectTextDirections(document).get(0);
+            TextDirection direction =
+                    AutoRotateDetection.detectTextDirections(document).get(0);
 
             assertThat(direction.isConclusive())
                     .as(
                             "direction should be conclusive, glyphs=%d dominance=%s",
                             direction.glyphCount(), direction.dominance())
                     .isTrue();
-            assertThat(
-                            AutoRotateDetection.correctionFromTextDirection(
-                                    direction.dominantDirection(),
-                                    Math.floorMod(pageRotation, 360)))
+            assertThat(AutoRotateDetection.correctionFromTextDirection(
+                            direction.dominantDirection(), Math.floorMod(pageRotation, 360)))
                     .isEqualTo(expectedCorrection);
         }
     }
@@ -96,7 +93,8 @@ class AutoRotateDetectionTest {
             content.endText();
         }
         try (document) {
-            TextDirection direction = AutoRotateDetection.detectTextDirections(document).get(0);
+            TextDirection direction =
+                    AutoRotateDetection.detectTextDirections(document).get(0);
             assertThat(direction.isConclusive()).isFalse();
         }
     }
@@ -105,7 +103,8 @@ class AutoRotateDetectionTest {
     void emptyPageIsNotConclusive() throws IOException {
         try (PDDocument document = new PDDocument()) {
             document.addPage(new PDPage(PDRectangle.LETTER));
-            TextDirection direction = AutoRotateDetection.detectTextDirections(document).get(0);
+            TextDirection direction =
+                    AutoRotateDetection.detectTextDirections(document).get(0);
             assertThat(direction.glyphCount()).isZero();
             assertThat(direction.isConclusive()).isFalse();
         }
@@ -124,7 +123,8 @@ class AutoRotateDetectionTest {
             content.endText();
         }
         try (document) {
-            TextDirection direction = AutoRotateDetection.detectTextDirections(document).get(0);
+            TextDirection direction =
+                    AutoRotateDetection.detectTextDirections(document).get(0);
             assertThat(direction.isConclusive()).isFalse();
         }
     }
@@ -144,11 +144,10 @@ class AutoRotateDetectionTest {
             content.endText();
         }
         try (document) {
-            TextDirection direction = AutoRotateDetection.detectTextDirections(document).get(0);
+            TextDirection direction =
+                    AutoRotateDetection.detectTextDirections(document).get(0);
             assertThat(direction.glyphCount())
-                    .isBetween(
-                            AutoRotateDetection.MIN_GLYPHS_UNANIMOUS,
-                            AutoRotateDetection.MIN_GLYPHS - 1);
+                    .isBetween(AutoRotateDetection.MIN_GLYPHS_UNANIMOUS, AutoRotateDetection.MIN_GLYPHS - 1);
             assertThat(direction.dominance()).isEqualTo(1.0);
             assertThat(direction.isConclusive()).isTrue();
             assertThat(direction.dominantDirection()).isEqualTo(90);
@@ -167,8 +166,7 @@ class AutoRotateDetectionTest {
                 try (PDPageContentStream content = new PDPageContentStream(document, page)) {
                     content.beginText();
                     content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-                    content.setTextMatrix(
-                            Matrix.getRotateInstance(Math.toRadians(angle), 300, 400));
+                    content.setTextMatrix(Matrix.getRotateInstance(Math.toRadians(angle), 300, 400));
                     content.showText(SAMPLE_TEXT);
                     content.endText();
                 }
@@ -178,7 +176,9 @@ class AutoRotateDetectionTest {
 
             assertThat(directions).hasSize(angles.length);
             for (int i = 0; i < angles.length; i++) {
-                assertThat(directions.get(i).isConclusive()).as("page %d", i + 1).isTrue();
+                assertThat(directions.get(i).isConclusive())
+                        .as("page %d", i + 1)
+                        .isTrue();
                 assertThat(directions.get(i).dominantDirection())
                         .as("page %d direction", i + 1)
                         .isEqualTo(angles[i]);
@@ -211,8 +211,7 @@ class AutoRotateDetectionTest {
     }
 
     private static BufferedImage copyOf(BufferedImage source) {
-        BufferedImage copy =
-                new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
+        BufferedImage copy = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
         Graphics2D g = copy.createGraphics();
         g.drawImage(source, 0, 0, null);
         g.dispose();
@@ -221,8 +220,7 @@ class AutoRotateDetectionTest {
 
     @Test
     void parsesTypicalOsdOutput() {
-        String output =
-                """
+        String output = """
                 Estimating resolution as 336
                 Page number: 0
                 Orientation in degrees: 180

@@ -8,8 +8,6 @@ public class DefaultPortalAuditScopeResolver implements PortalAuditScopeResolver
 
     @Override
     public PortalAuditScope resolve() {
-        return PortalAuditScopeResolver.hasAdminAuthority()
-                ? PortalAuditScope.server()
-                : PortalAuditScope.denied();
+        return PortalAuditScopeResolver.hasAdminAuthority() ? PortalAuditScope.server() : PortalAuditScope.denied();
     }
 }

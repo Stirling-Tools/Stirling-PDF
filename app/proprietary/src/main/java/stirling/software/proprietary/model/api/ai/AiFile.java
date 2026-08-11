@@ -17,9 +17,7 @@ import lombok.NoArgsConstructor;
 @Schema(description = "File reference sent to the AI engine")
 public class AiFile {
 
-    @Schema(
-            description =
-                    "Opaque, stable identifier. Owned by Java; used as the RAG collection key.")
+    @Schema(description = "Opaque, stable identifier. Owned by Java; used as the RAG collection key.")
     private String id;
 
     @Schema(description = "Original filename, used by agents in user-facing prompts and responses.")

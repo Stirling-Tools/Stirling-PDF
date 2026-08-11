@@ -49,12 +49,18 @@ import tools.jackson.databind.ObjectMapper;
 class CertificateValidationIntegrationTest {
 
     // Infrastructure mocks — not under test
-    @Mock private WorkflowSessionService workflowSessionService;
-    @Mock private WorkflowParticipantRepository participantRepository;
-    @Mock private MetadataEncryptionService metadataEncryptionService;
+    @Mock
+    private WorkflowSessionService workflowSessionService;
+
+    @Mock
+    private WorkflowParticipantRepository participantRepository;
+
+    @Mock
+    private MetadataEncryptionService metadataEncryptionService;
 
     // Mock PdfSigningService so the test-sign step succeeds without a real PDF engine
-    @Mock private PdfSigningService pdfSigningService;
+    @Mock
+    private PdfSigningService pdfSigningService;
 
     private MockMvc mockMvc;
 
@@ -63,16 +69,14 @@ class CertificateValidationIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         // Use the REAL validator wired with the mock signing service
-        CertificateSubmissionValidator realValidator =
-                new CertificateSubmissionValidator(pdfSigningService);
+        CertificateSubmissionValidator realValidator = new CertificateSubmissionValidator(pdfSigningService);
 
-        WorkflowParticipantController controller =
-                new WorkflowParticipantController(
-                        workflowSessionService,
-                        participantRepository,
-                        new ObjectMapper(),
-                        metadataEncryptionService,
-                        realValidator);
+        WorkflowParticipantController controller = new WorkflowParticipantController(
+                workflowSessionService,
+                participantRepository,
+                new ObjectMapper(),
+                metadataEncryptionService,
+                realValidator);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
@@ -83,17 +87,8 @@ class CertificateValidationIntegrationTest {
         // test-sign succeeds — only reached by valid-cert tests, lenient to avoid
         // UnnecessaryStubbingException on error-path tests (wrong password, expired, etc.)
         org.mockito.Mockito.lenient()
-                .when(
-                        pdfSigningService.signWithKeystore(
-                                any(),
-                                any(),
-                                any(),
-                                anyBoolean(),
-                                isNull(),
-                                anyString(),
-                                isNull(),
-                                isNull(),
-                                anyBoolean()))
+                .when(pdfSigningService.signWithKeystore(
+                        any(), any(), any(), anyBoolean(), isNull(), anyString(), isNull(), isNull(), anyBoolean()))
                 .thenReturn(new byte[0]);
     }
 
@@ -101,33 +96,29 @@ class CertificateValidationIntegrationTest {
 
     private static byte[] loadCert(String filename) throws Exception {
         try (InputStream in =
-                CertificateValidationIntegrationTest.class.getResourceAsStream(
-                        "/test-certs/" + filename)) {
+                CertificateValidationIntegrationTest.class.getResourceAsStream("/test-certs/" + filename)) {
             if (in == null) throw new IllegalStateException("cert not found: " + filename);
             return in.readAllBytes();
         }
     }
 
     private static MockMultipartFile p12Part(String filename) throws Exception {
-        return new MockMultipartFile(
-                "p12File", filename, "application/octet-stream", loadCert(filename));
+        return new MockMultipartFile("p12File", filename, "application/octet-stream", loadCert(filename));
     }
 
     private static MockMultipartFile jksPart(String filename) throws Exception {
-        return new MockMultipartFile(
-                "jksFile", filename, "application/octet-stream", loadCert(filename));
+        return new MockMultipartFile("jksFile", filename, "application/octet-stream", loadCert(filename));
     }
 
     // ---- tests ----
 
     @Test
     void validP12_returnsValidTrueWithSubjectName() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(p12Part("valid-test.p12"))
-                                .param("participantToken", TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "testpass"))
+        mockMvc.perform(multipart("/api/v1/workflow/participant/validate-certificate")
+                        .file(p12Part("valid-test.p12"))
+                        .param("participantToken", TOKEN)
+                        .param("certType", "P12")
+                        .param("password", "testpass"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true))
                 .andExpect(jsonPath("$.subjectName").isNotEmpty())
@@ -136,56 +127,47 @@ class CertificateValidationIntegrationTest {
 
     @Test
     void wrongPassword_returnsValidFalseWithErrorMessage() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(p12Part("valid-test.p12"))
-                                .param("participantToken", TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "wrongpassword"))
+        mockMvc.perform(multipart("/api/v1/workflow/participant/validate-certificate")
+                        .file(p12Part("valid-test.p12"))
+                        .param("participantToken", TOKEN)
+                        .param("certType", "P12")
+                        .param("password", "wrongpassword"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(false))
-                .andExpect(
-                        jsonPath("$.error")
-                                .value("Invalid certificate password or corrupt keystore file"));
+                .andExpect(jsonPath("$.error").value("Invalid certificate password or corrupt keystore file"));
     }
 
     @Test
     void expiredP12_returnsValidFalseWithExpiryMessage() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(p12Part("expired-test.p12"))
-                                .param("participantToken", TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "testpass"))
+        mockMvc.perform(multipart("/api/v1/workflow/participant/validate-certificate")
+                        .file(p12Part("expired-test.p12"))
+                        .param("participantToken", TOKEN)
+                        .param("certType", "P12")
+                        .param("password", "testpass"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(false))
-                .andExpect(
-                        jsonPath("$.error").value(org.hamcrest.Matchers.containsString("expired")));
+                .andExpect(jsonPath("$.error").value(org.hamcrest.Matchers.containsString("expired")));
     }
 
     @Test
     void notYetValidP12_returnsValidFalseWithNotYetValidMessage() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(p12Part("not-yet-valid-test.p12"))
-                                .param("participantToken", TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "testpass"))
+        mockMvc.perform(multipart("/api/v1/workflow/participant/validate-certificate")
+                        .file(p12Part("not-yet-valid-test.p12"))
+                        .param("participantToken", TOKEN)
+                        .param("certType", "P12")
+                        .param("password", "testpass"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(false))
-                .andExpect(
-                        jsonPath("$.error")
-                                .value(org.hamcrest.Matchers.containsString("not yet valid")));
+                .andExpect(jsonPath("$.error").value(org.hamcrest.Matchers.containsString("not yet valid")));
     }
 
     @Test
     void validJks_returnsValidTrueWithSubjectName() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(jksPart("valid-test.jks"))
-                                .param("participantToken", TOKEN)
-                                .param("certType", "JKS")
-                                .param("password", "jkspass"))
+        mockMvc.perform(multipart("/api/v1/workflow/participant/validate-certificate")
+                        .file(jksPart("valid-test.jks"))
+                        .param("participantToken", TOKEN)
+                        .param("certType", "JKS")
+                        .param("password", "jkspass"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true))
                 .andExpect(jsonPath("$.subjectName").isNotEmpty());
@@ -193,10 +175,9 @@ class CertificateValidationIntegrationTest {
 
     @Test
     void serverCertType_returnsValidTrueWithoutFileUpload() throws Exception {
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .param("participantToken", TOKEN)
-                                .param("certType", "SERVER"))
+        mockMvc.perform(multipart("/api/v1/workflow/participant/validate-certificate")
+                        .param("participantToken", TOKEN)
+                        .param("certType", "SERVER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true));
     }

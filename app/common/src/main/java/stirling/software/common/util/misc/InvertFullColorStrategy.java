@@ -37,9 +37,8 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
     @Override
     public InputStreamResource replace() throws IOException {
         try (TempFile tempFile =
-                new TempFile(
-                        Files.createTempFile("temp", getFileInput().getOriginalFilename())
-                                .toFile())) {
+                new TempFile(Files.createTempFile("temp", getFileInput().getOriginalFilename())
+                        .toFile())) {
             // Transfer the content of the multipart file to the file
             getFileInput().transferTo(tempFile.getFile());
 
@@ -47,26 +46,21 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
             try (PDDocument document = Loader.loadPDF(tempFile.getFile())) {
                 // Render each page and invert colors
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
-                pdfRenderer.setSubsamplingAllowed(
-                        true); // Enable subsampling to reduce memory usage
+                pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
                 for (int page = 0; page < document.getNumberOfPages(); page++) {
                     BufferedImage image;
 
                     // Use global maximum DPI setting, fallback to 300 if not set
                     int renderDpi = 300; // Default fallback
-                    ApplicationProperties properties =
-                            ApplicationContextProvider.getBean(ApplicationProperties.class);
+                    ApplicationProperties properties = ApplicationContextProvider.getBean(ApplicationProperties.class);
                     if (properties != null && properties.getSystem() != null) {
                         renderDpi = properties.getSystem().getMaxDPI();
                     }
                     final int dpi = renderDpi;
                     final int pageNum = page;
 
-                    image =
-                            ExceptionUtils.handleOomRendering(
-                                    pageNum + 1,
-                                    dpi,
-                                    () -> pdfRenderer.renderImageWithDPI(pageNum, dpi));
+                    image = ExceptionUtils.handleOomRendering(
+                            pageNum + 1, dpi, () -> pdfRenderer.renderImageWithDPI(pageNum, dpi));
 
                     // Invert the colors
                     invertImageColors(image);
@@ -76,8 +70,7 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                     File tempImageFile = null;
                     try {
                         tempImageFile = convertToBufferedImageTpFile(image);
-                        PDImageXObject pdImage =
-                                PDImageXObject.createFromFileByContent(tempImageFile, document);
+                        PDImageXObject pdImage = PDImageXObject.createFromFileByContent(tempImageFile, document);
 
                         // Delete temp file immediately after loading into memory to prevent disk
                         // exhaustion
@@ -87,19 +80,15 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                             Files.deleteIfExists(tempImageFile.toPath());
                             tempImageFile = null; // Mark as deleted to avoid double deletion
                         } catch (IOException e) {
-                            log.warn(
-                                    "Failed to delete temporary image file: {}",
-                                    tempImageFile.getAbsolutePath(),
-                                    e);
+                            log.warn("Failed to delete temporary image file: {}", tempImageFile.getAbsolutePath(), e);
                         }
 
-                        try (PDPageContentStream contentStream =
-                                new PDPageContentStream(
-                                        document,
-                                        pdPage,
-                                        PDPageContentStream.AppendMode.OVERWRITE,
-                                        true,
-                                        true)) { // resetContext=true ensures clean graphics state
+                        try (PDPageContentStream contentStream = new PDPageContentStream(
+                                document,
+                                pdPage,
+                                PDPageContentStream.AppendMode.OVERWRITE,
+                                true,
+                                true)) { // resetContext=true ensures clean graphics state
                             contentStream.drawImage(
                                     pdImage,
                                     0,
@@ -127,8 +116,7 @@ public class InvertFullColorStrategy extends ReplaceAndInvertColorStrategy {
                 document.save(byteArrayOutputStream);
 
                 // Prepare the modified PDF for download
-                ByteArrayInputStream inputStream =
-                        new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+                ByteArrayInputStream inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
                 InputStreamResource resource = new InputStreamResource(inputStream);
                 return resource;
             }

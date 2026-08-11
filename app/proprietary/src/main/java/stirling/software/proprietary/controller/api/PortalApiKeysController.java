@@ -32,15 +32,12 @@ public class PortalApiKeysController {
     // tier accepted for endpoint symmetry with the other infra tabs; ignored here.
     @GetMapping("/infrastructure/api-keys")
     @Operation(summary = "List API keys", description = "The caller's personal API keys.")
-    public ResponseEntity<PortalApiKeysResponse> list(
-            @RequestParam(value = "tier", required = false) String tier) {
+    public ResponseEntity<PortalApiKeysResponse> list(@RequestParam(value = "tier", required = false) String tier) {
         return ResponseEntity.ok(apiKeyManagementService.listVisibleKeys());
     }
 
     @PostMapping("/infrastructure/api-keys")
-    @Operation(
-            summary = "Create an API key",
-            description = "Mints a personal key and returns its one-time secret.")
+    @Operation(summary = "Create an API key", description = "Mints a personal key and returns its one-time secret.")
     public ResponseEntity<CreatedApiKeyDto> create(@RequestBody CreateApiKeyRequest request) {
         return ResponseEntity.ok(apiKeyManagementService.createKey(request));
     }

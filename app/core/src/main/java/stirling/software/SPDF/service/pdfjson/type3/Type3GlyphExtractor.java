@@ -25,21 +25,17 @@ import stirling.software.SPDF.service.pdfjson.type3.model.Type3GlyphOutline;
 @Component
 public class Type3GlyphExtractor {
 
-    public List<Type3GlyphOutline> extractGlyphs(
-            PDDocument document, PDType3Font font, String fontId, int pageNumber)
+    public List<Type3GlyphOutline> extractGlyphs(PDDocument document, PDType3Font font, String fontId, int pageNumber)
             throws IOException {
         Objects.requireNonNull(font, "font");
-        COSDictionary charProcs =
-                (COSDictionary) font.getCOSObject().getDictionaryObject(COSName.CHAR_PROCS);
+        COSDictionary charProcs = (COSDictionary) font.getCOSObject().getDictionaryObject(COSName.CHAR_PROCS);
         if (charProcs == null || charProcs.size() == 0) {
             return List.of();
         }
         List<Type3GlyphOutline> outlines = new ArrayList<>();
         for (COSName glyphName : charProcs.keySet()) {
             COSStream stream =
-                    charProcs.getDictionaryObject(glyphName) instanceof COSStream cosStream
-                            ? cosStream
-                            : null;
+                    charProcs.getDictionaryObject(glyphName) instanceof COSStream cosStream ? cosStream : null;
             if (stream == null) {
                 continue;
             }

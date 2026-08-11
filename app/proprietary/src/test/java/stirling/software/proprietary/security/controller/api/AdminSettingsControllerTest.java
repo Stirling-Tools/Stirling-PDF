@@ -51,12 +51,8 @@ class AdminSettingsControllerTest {
         objectMapper = JsonMapper.builder().build();
         applicationContext = org.mockito.Mockito.mock(ApplicationContext.class);
         aiEngineConfigSync = org.mockito.Mockito.mock(AiEngineConfigSync.class);
-        controller =
-                new AdminSettingsController(
-                        applicationProperties,
-                        objectMapper,
-                        applicationContext,
-                        aiEngineConfigSync);
+        controller = new AdminSettingsController(
+                applicationProperties, objectMapper, applicationContext, aiEngineConfigSync);
         clearPendingChanges();
     }
 
@@ -240,10 +236,7 @@ class AdminSettingsControllerTest {
         @DisplayName("rejects duplicate watched-folder paths with 400")
         void rejectsDuplicatePaths() {
             UpdateSettingsRequest request = new UpdateSettingsRequest();
-            request.setSettings(
-                    Map.of(
-                            "system.customPaths.pipeline.watchedFoldersDirs",
-                            List.of("/tmp/a", "/tmp/a")));
+            request.setSettings(Map.of("system.customPaths.pipeline.watchedFoldersDirs", List.of("/tmp/a", "/tmp/a")));
 
             ResponseEntity<Map<String, Object>> response = controller.updateSettings(request);
 
@@ -255,10 +248,8 @@ class AdminSettingsControllerTest {
         @DisplayName("rejects overlapping watched-folder paths with 400")
         void rejectsOverlappingPaths() {
             UpdateSettingsRequest request = new UpdateSettingsRequest();
-            request.setSettings(
-                    Map.of(
-                            "system.customPaths.pipeline.watchedFoldersDirs",
-                            List.of("/tmp/parent", "/tmp/parent/child")));
+            request.setSettings(Map.of(
+                    "system.customPaths.pipeline.watchedFoldersDirs", List.of("/tmp/parent", "/tmp/parent/child")));
 
             ResponseEntity<Map<String, Object>> response = controller.updateSettings(request);
 
@@ -277,8 +268,7 @@ class AdminSettingsControllerTest {
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 assertThat(response.getBody().get("message").toString()).contains("Successfully");
-                mocked.verify(
-                        () -> GeneralUtils.updateSettingsTransactional(request.getSettings()));
+                mocked.verify(() -> GeneralUtils.updateSettingsTransactional(request.getSettings()));
             }
         }
 
@@ -328,13 +318,8 @@ class AdminSettingsControllerTest {
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 // The masked secret is stripped; only the real change is persisted.
-                mocked.verify(
-                        () ->
-                                GeneralUtils.updateSettingsTransactional(
-                                        argThat(
-                                                (Map<String, Object> m) ->
-                                                        !m.containsKey("aiEngine.models.apiKey")
-                                                                && m.containsKey("ui.appName"))));
+                mocked.verify(() -> GeneralUtils.updateSettingsTransactional(argThat((Map<String, Object> m) ->
+                        !m.containsKey("aiEngine.models.apiKey") && m.containsKey("ui.appName"))));
             }
         }
 
@@ -351,11 +336,8 @@ class AdminSettingsControllerTest {
                 controller.updateSettings(request);
 
                 verify(aiEngineConfigSync)
-                        .pushLiveAfterSave(
-                                argThat(
-                                        (Map<String, Object> m) ->
-                                                m.containsKey("aiEngine.models.provider")
-                                                        && !m.containsKey("ui.appName")));
+                        .pushLiveAfterSave(argThat((Map<String, Object> m) ->
+                                m.containsKey("aiEngine.models.provider") && !m.containsKey("ui.appName")));
             }
         }
     }
@@ -403,8 +385,7 @@ class AdminSettingsControllerTest {
         @Test
         @DisplayName("rejects null section data with 400")
         void rejectsNull() {
-            ResponseEntity<Map<String, Object>> response =
-                    controller.updateSettingsSection("security", null);
+            ResponseEntity<Map<String, Object>> response = controller.updateSettingsSection("security", null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
@@ -424,8 +405,7 @@ class AdminSettingsControllerTest {
         void updatesValidSection() {
             try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
                 ResponseEntity<Map<String, Object>> response =
-                        controller.updateSettingsSection(
-                                "ui", new java.util.HashMap<>(Map.of("appName", "New")));
+                        controller.updateSettingsSection("ui", new java.util.HashMap<>(Map.of("appName", "New")));
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 assertThat(response.getBody().get("message").toString()).contains("Successfully");
@@ -440,8 +420,7 @@ class AdminSettingsControllerTest {
             section.put("key", "license-123");
 
             try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
-                ResponseEntity<Map<String, Object>> response =
-                        controller.updateSettingsSection("premium", section);
+                ResponseEntity<Map<String, Object>> response = controller.updateSettingsSection("premium", section);
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 // enabled flag auto-added and persisted
@@ -457,8 +436,7 @@ class AdminSettingsControllerTest {
                         .thenThrow(new IOException("io"));
 
                 ResponseEntity<Map<String, Object>> response =
-                        controller.updateSettingsSection(
-                                "ui", new java.util.HashMap<>(Map.of("appName", "New")));
+                        controller.updateSettingsSection("ui", new java.util.HashMap<>(Map.of("appName", "New")));
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -520,8 +498,7 @@ class AdminSettingsControllerTest {
 
             // "token" as a substring of maxTokens must not trigger masking (would break the UI
             // and flip the integer to a "********" string).
-            ResponseEntity<?> tokensResp =
-                    controller.getSettingValue("aiEngine.models.smartMaxTokens");
+            ResponseEntity<?> tokensResp = controller.getSettingValue("aiEngine.models.smartMaxTokens");
             SettingValueResponse tokens = (SettingValueResponse) tokensResp.getBody();
             assertThat(tokens.getValue()).isEqualTo(8192);
 
@@ -553,8 +530,7 @@ class AdminSettingsControllerTest {
             UpdateSettingValueRequest request = new UpdateSettingValueRequest();
             request.setValue("********");
 
-            ResponseEntity<String> response =
-                    controller.updateSettingValue("mail.password", request);
+            ResponseEntity<String> response = controller.updateSettingValue("mail.password", request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(response.getBody()).contains("Cannot save masked");
@@ -567,8 +543,7 @@ class AdminSettingsControllerTest {
             request.setValue("Renamed");
 
             try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
-                ResponseEntity<String> response =
-                        controller.updateSettingValue("ui.appName", request);
+                ResponseEntity<String> response = controller.updateSettingValue("ui.appName", request);
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 assertThat(response.getBody()).contains("Successfully updated");
@@ -586,8 +561,7 @@ class AdminSettingsControllerTest {
                 mocked.when(() -> GeneralUtils.saveKeyToSettings("ui.appName", "Renamed"))
                         .thenThrow(new IOException("io"));
 
-                ResponseEntity<String> response =
-                        controller.updateSettingValue("ui.appName", request);
+                ResponseEntity<String> response = controller.updateSettingValue("ui.appName", request);
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -625,8 +599,7 @@ class AdminSettingsControllerTest {
                 ResponseEntity<Map<String, Object>> response = controller.restartApplication();
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-                assertThat(response.getBody().get("error").toString())
-                        .contains("Restart helper not found");
+                assertThat(response.getBody().get("error").toString()).contains("Restart helper not found");
             }
         }
     }

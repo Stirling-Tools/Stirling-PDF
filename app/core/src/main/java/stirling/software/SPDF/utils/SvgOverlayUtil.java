@@ -28,8 +28,7 @@ import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 @Slf4j
 public class SvgOverlayUtil {
 
-    public void overlaySvgOnPage(
-            PDDocument document, PDPage page, byte[] svgBytes, float x, float y)
+    public void overlaySvgOnPage(PDDocument document, PDPage page, byte[] svgBytes, float x, float y)
             throws IOException {
         try {
             String parser = XMLResourceDescriptor.getXMLParserClassName();
@@ -40,20 +39,17 @@ public class SvgOverlayUtil {
                 svgDoc = factory.createSVGDocument("file:///overlay.svg", inputStream);
             }
 
-            UserAgent userAgent =
-                    new UserAgentAdapter() {
-                        @Override
-                        public void checkLoadExternalResource(
-                                ParsedURL resourceURL, ParsedURL docURL) {
-                            // Inline data: URIs are self-contained (no network/file fetch).
-                            if (resourceURL != null && "data".equals(resourceURL.getProtocol())) {
-                                return;
-                            }
-                            throw new SecurityException(
-                                    "External resource loading is disabled for SVG overlays: "
-                                            + resourceURL);
-                        }
-                    };
+            UserAgent userAgent = new UserAgentAdapter() {
+                @Override
+                public void checkLoadExternalResource(ParsedURL resourceURL, ParsedURL docURL) {
+                    // Inline data: URIs are self-contained (no network/file fetch).
+                    if (resourceURL != null && "data".equals(resourceURL.getProtocol())) {
+                        return;
+                    }
+                    throw new SecurityException(
+                            "External resource loading is disabled for SVG overlays: " + resourceURL);
+                }
+            };
             DocumentLoader loader = new DocumentLoader(userAgent);
             BridgeContext ctx = new BridgeContext(userAgent, loader);
             ctx.setDynamicState(BridgeContext.DYNAMIC);
@@ -75,8 +71,7 @@ public class SvgOverlayUtil {
             PDFormXObject xform = pdfGraphics.getXFormObject();
 
             try (PDPageContentStream newContentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                    new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 newContentStream.saveGraphicsState();
 
                 newContentStream.transform(new Matrix(1, 0, 0, 1, x, y));
@@ -99,13 +94,8 @@ public class SvgOverlayUtil {
             return false;
         }
         // Check for SVG markers: <?xml or <svg
-        String start =
-                new String(
-                                bytes,
-                                0,
-                                Math.min(200, bytes.length),
-                                java.nio.charset.StandardCharsets.UTF_8)
-                        .toLowerCase();
+        String start = new String(bytes, 0, Math.min(200, bytes.length), java.nio.charset.StandardCharsets.UTF_8)
+                .toLowerCase();
         return start.contains("<svg") || (start.contains("<?xml") && start.contains("svg"));
     }
 }

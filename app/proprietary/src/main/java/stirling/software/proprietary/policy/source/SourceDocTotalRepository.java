@@ -20,15 +20,12 @@ public interface SourceDocTotalRepository extends JpaRepository<SourceDocTotalEn
      */
     @Modifying
     @Transactional
-    @Query(
-            "update SourceDocTotalEntity e set e.docTotal = e.docTotal + :docs"
-                    + " where e.sourceId = :sourceId")
+    @Query("update SourceDocTotalEntity e set e.docTotal = e.docTotal + :docs" + " where e.sourceId = :sourceId")
     int increment(@Param("sourceId") String sourceId, @Param("docs") long docs);
 
     /** Lifetime totals for the given sources, as {@code (sourceId, total)} rows. */
-    @Query(
-            "select new stirling.software.proprietary.policy.source.SourceDocSum("
-                    + "e.sourceId, e.docTotal)"
-                    + " from SourceDocTotalEntity e where e.sourceId in :ids")
+    @Query("select new stirling.software.proprietary.policy.source.SourceDocSum("
+            + "e.sourceId, e.docTotal)"
+            + " from SourceDocTotalEntity e where e.sourceId in :ids")
     List<SourceDocSum> totalsFor(@Param("ids") Collection<String> ids);
 }

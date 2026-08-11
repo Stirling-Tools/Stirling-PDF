@@ -34,13 +34,12 @@ class EmlProcessingUtilsTest {
         @Test
         @DisplayName("should accept valid EML with multiple headers")
         void validEml() {
-            String emlContent =
-                    "From: sender@example.com\r\n"
-                            + "To: recipient@example.com\r\n"
-                            + "Subject: Test\r\n"
-                            + "Date: Mon, 1 Jan 2024 00:00:00 +0000\r\n"
-                            + "\r\n"
-                            + "Body text";
+            String emlContent = "From: sender@example.com\r\n"
+                    + "To: recipient@example.com\r\n"
+                    + "Subject: Test\r\n"
+                    + "Date: Mon, 1 Jan 2024 00:00:00 +0000\r\n"
+                    + "\r\n"
+                    + "Body text";
             assertDoesNotThrow(() -> EmlProcessingUtils.validateEmlInput(emlContent.getBytes()));
         }
     }
@@ -139,8 +138,7 @@ class EmlProcessingUtilsTest {
         @Test
         @DisplayName("should linkify URLs")
         void linkifyUrls() {
-            String result =
-                    EmlProcessingUtils.convertTextToHtml("Visit https://example.com today", null);
+            String result = EmlProcessingUtils.convertTextToHtml("Visit https://example.com today", null);
             assertTrue(result.contains("<a href=\"https://example.com\""));
         }
 
@@ -213,8 +211,7 @@ class EmlProcessingUtilsTest {
         @Test
         @DisplayName("should return existing MIME type if provided")
         void existingMimeType() {
-            assertEquals(
-                    "image/jpeg", EmlProcessingUtils.detectMimeType("photo.png", "image/jpeg"));
+            assertEquals("image/jpeg", EmlProcessingUtils.detectMimeType("photo.png", "image/jpeg"));
         }
 
         @Test

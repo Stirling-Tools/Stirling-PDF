@@ -58,11 +58,17 @@ import stirling.software.common.util.WebResponseUtils;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ConvertImgPDFControllerGapTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertImgPDFController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @InjectMocks
+    private ConvertImgPDFController controller;
 
     /** Builds a tiny, valid single-page A4 PDF as bytes. */
     private static byte[] tinyPdfBytes(int pages) throws IOException {
@@ -96,9 +102,7 @@ class ConvertImgPDFControllerGapTest {
         @Test
         @DisplayName("disables ebook optimization when Ghostscript is not enabled")
         void disablesOptimizationWhenGhostscriptMissing() throws Exception {
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "book.cbz", "application/zip", new byte[] {1});
+            MockMultipartFile file = new MockMultipartFile("fileInput", "book.cbz", "application/zip", new byte[] {1});
             ConvertCbzToPdfRequest request = new ConvertCbzToPdfRequest();
             request.setFileInput(file);
             request.setOptimizeForEbook(true);
@@ -111,16 +115,10 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<CbzUtils> cbz = Mockito.mockStatic(CbzUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                cbz.when(
-                                () ->
-                                        CbzUtils.convertCbzToPdf(
-                                                eq(file),
-                                                eq(pdfDocumentFactory),
-                                                eq(tempFileManager),
-                                                eq(false)))
+                cbz.when(() -> CbzUtils.convertCbzToPdf(
+                                eq(file), eq(pdfDocumentFactory), eq(tempFileManager), eq(false)))
                         .thenReturn(tempFile);
                 gu.when(() -> GeneralUtils.generateFilename("book", "_converted.pdf"))
                         .thenReturn("book_converted.pdf");
@@ -130,22 +128,15 @@ class ConvertImgPDFControllerGapTest {
                 ResponseEntity<Resource> response = controller.convertCbzToPdf(request);
 
                 assertSame(expected, response);
-                cbz.verify(
-                        () ->
-                                CbzUtils.convertCbzToPdf(
-                                        eq(file),
-                                        eq(pdfDocumentFactory),
-                                        eq(tempFileManager),
-                                        eq(false)));
+                cbz.verify(() ->
+                        CbzUtils.convertCbzToPdf(eq(file), eq(pdfDocumentFactory), eq(tempFileManager), eq(false)));
             }
         }
 
         @Test
         @DisplayName("keeps ebook optimization when Ghostscript is enabled")
         void keepsOptimizationWhenGhostscriptEnabled() throws Exception {
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "book.cbz", "application/zip", new byte[] {1});
+            MockMultipartFile file = new MockMultipartFile("fileInput", "book.cbz", "application/zip", new byte[] {1});
             ConvertCbzToPdfRequest request = new ConvertCbzToPdfRequest();
             request.setFileInput(file);
             request.setOptimizeForEbook(true);
@@ -158,16 +149,10 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<CbzUtils> cbz = Mockito.mockStatic(CbzUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                cbz.when(
-                                () ->
-                                        CbzUtils.convertCbzToPdf(
-                                                eq(file),
-                                                eq(pdfDocumentFactory),
-                                                eq(tempFileManager),
-                                                eq(true)))
+                cbz.when(() -> CbzUtils.convertCbzToPdf(
+                                eq(file), eq(pdfDocumentFactory), eq(tempFileManager), eq(true)))
                         .thenReturn(tempFile);
                 gu.when(() -> GeneralUtils.generateFilename("book", "_converted.pdf"))
                         .thenReturn("book_converted.pdf");
@@ -177,21 +162,15 @@ class ConvertImgPDFControllerGapTest {
                 ResponseEntity<Resource> response = controller.convertCbzToPdf(request);
 
                 assertSame(expected, response);
-                cbz.verify(
-                        () ->
-                                CbzUtils.convertCbzToPdf(
-                                        eq(file),
-                                        eq(pdfDocumentFactory),
-                                        eq(tempFileManager),
-                                        eq(true)));
+                cbz.verify(() ->
+                        CbzUtils.convertCbzToPdf(eq(file), eq(pdfDocumentFactory), eq(tempFileManager), eq(true)));
             }
         }
 
         @Test
         @DisplayName("falls back to the default comic name when the original filename is null")
         void usesDefaultNameWhenFilenameNull() throws Exception {
-            MockMultipartFile file =
-                    new MockMultipartFile("fileInput", null, "application/zip", new byte[] {1});
+            MockMultipartFile file = new MockMultipartFile("fileInput", null, "application/zip", new byte[] {1});
             ConvertCbzToPdfRequest request = new ConvertCbzToPdfRequest();
             request.setFileInput(file);
             request.setOptimizeForEbook(false);
@@ -202,17 +181,13 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<CbzUtils> cbz = Mockito.mockStatic(CbzUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
                 cbz.when(() -> CbzUtils.convertCbzToPdf(any(), any(), any(), anyBoolean()))
                         .thenReturn(tempFile);
                 gu.when(() -> GeneralUtils.generateFilename("comic", "_converted.pdf"))
                         .thenReturn("comic_converted.pdf");
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                tempFile, "comic_converted.pdf"))
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(tempFile, "comic_converted.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.convertCbzToPdf(request);
@@ -232,8 +207,7 @@ class ConvertImgPDFControllerGapTest {
         @DisplayName("disables ebook optimization when Ghostscript is not enabled")
         void disablesOptimizationWhenGhostscriptMissing() throws Exception {
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "book.cbr", "application/x-rar", new byte[] {1});
+                    new MockMultipartFile("fileInput", "book.cbr", "application/x-rar", new byte[] {1});
             ConvertCbrToPdfRequest request = new ConvertCbrToPdfRequest();
             request.setFileInput(file);
             request.setOptimizeForEbook(true);
@@ -245,16 +219,10 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<CbrUtils> cbr = Mockito.mockStatic(CbrUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                cbr.when(
-                                () ->
-                                        CbrUtils.convertCbrToPdf(
-                                                eq(file),
-                                                eq(pdfDocumentFactory),
-                                                eq(tempFileManager),
-                                                eq(false)))
+                cbr.when(() -> CbrUtils.convertCbrToPdf(
+                                eq(file), eq(pdfDocumentFactory), eq(tempFileManager), eq(false)))
                         .thenReturn(pdfBytes);
                 gu.when(() -> GeneralUtils.generateFilename("book", "_converted.pdf"))
                         .thenReturn("book_converted.pdf");
@@ -264,13 +232,8 @@ class ConvertImgPDFControllerGapTest {
                 ResponseEntity<?> response = controller.convertCbrToPdf(request);
 
                 assertSame(expected, response);
-                cbr.verify(
-                        () ->
-                                CbrUtils.convertCbrToPdf(
-                                        eq(file),
-                                        eq(pdfDocumentFactory),
-                                        eq(tempFileManager),
-                                        eq(false)));
+                cbr.verify(() ->
+                        CbrUtils.convertCbrToPdf(eq(file), eq(pdfDocumentFactory), eq(tempFileManager), eq(false)));
             }
         }
 
@@ -278,8 +241,7 @@ class ConvertImgPDFControllerGapTest {
         @DisplayName("keeps ebook optimization when Ghostscript is enabled")
         void keepsOptimizationWhenGhostscriptEnabled() throws Exception {
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "story.cbr", "application/x-rar", new byte[] {1});
+                    new MockMultipartFile("fileInput", "story.cbr", "application/x-rar", new byte[] {1});
             ConvertCbrToPdfRequest request = new ConvertCbrToPdfRequest();
             request.setFileInput(file);
             request.setOptimizeForEbook(true);
@@ -291,16 +253,10 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<CbrUtils> cbr = Mockito.mockStatic(CbrUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                cbr.when(
-                                () ->
-                                        CbrUtils.convertCbrToPdf(
-                                                eq(file),
-                                                eq(pdfDocumentFactory),
-                                                eq(tempFileManager),
-                                                eq(true)))
+                cbr.when(() -> CbrUtils.convertCbrToPdf(
+                                eq(file), eq(pdfDocumentFactory), eq(tempFileManager), eq(true)))
                         .thenReturn(pdfBytes);
                 gu.when(() -> GeneralUtils.generateFilename("story", "_converted.pdf"))
                         .thenReturn("story_converted.pdf");
@@ -332,16 +288,10 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<PdfToCbzUtils> p2c = Mockito.mockStatic(PdfToCbzUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                p2c.when(
-                                () ->
-                                        PdfToCbzUtils.convertPdfToCbz(
-                                                eq(file),
-                                                eq(200),
-                                                eq(pdfDocumentFactory),
-                                                eq(tempFileManager)))
+                p2c.when(() -> PdfToCbzUtils.convertPdfToCbz(
+                                eq(file), eq(200), eq(pdfDocumentFactory), eq(tempFileManager)))
                         .thenReturn(cbzFile);
                 gu.when(() -> GeneralUtils.generateFilename("doc", "_converted.cbz"))
                         .thenReturn("doc_converted.cbz");
@@ -368,16 +318,10 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<PdfToCbzUtils> p2c = Mockito.mockStatic(PdfToCbzUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                p2c.when(
-                                () ->
-                                        PdfToCbzUtils.convertPdfToCbz(
-                                                eq(file),
-                                                eq(300),
-                                                eq(pdfDocumentFactory),
-                                                eq(tempFileManager)))
+                p2c.when(() -> PdfToCbzUtils.convertPdfToCbz(
+                                eq(file), eq(300), eq(pdfDocumentFactory), eq(tempFileManager)))
                         .thenReturn(cbzFile);
                 gu.when(() -> GeneralUtils.generateFilename("doc", "_converted.cbz"))
                         .thenReturn("doc_converted.cbz");
@@ -388,13 +332,8 @@ class ConvertImgPDFControllerGapTest {
 
                 assertSame(expected, response);
                 // Negative/zero DPI is replaced by the 300 default before delegating.
-                p2c.verify(
-                        () ->
-                                PdfToCbzUtils.convertPdfToCbz(
-                                        eq(file),
-                                        eq(300),
-                                        eq(pdfDocumentFactory),
-                                        eq(tempFileManager)));
+                p2c.verify(() ->
+                        PdfToCbzUtils.convertPdfToCbz(eq(file), eq(300), eq(pdfDocumentFactory), eq(tempFileManager)));
             }
         }
     }
@@ -416,22 +355,14 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<PdfToCbrUtils> p2c = Mockito.mockStatic(PdfToCbrUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                p2c.when(
-                                () ->
-                                        PdfToCbrUtils.convertPdfToCbr(
-                                                eq(file), eq(150), eq(pdfDocumentFactory)))
+                p2c.when(() -> PdfToCbrUtils.convertPdfToCbr(eq(file), eq(150), eq(pdfDocumentFactory)))
                         .thenReturn(cbrBytes);
                 gu.when(() -> GeneralUtils.generateFilename("doc", "_converted.cbr"))
                         .thenReturn("doc_converted.cbr");
-                wr.when(
-                                () ->
-                                        WebResponseUtils.bytesToWebResponse(
-                                                eq(cbrBytes),
-                                                eq("doc_converted.cbr"),
-                                                eq(MediaType.APPLICATION_OCTET_STREAM)))
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(
+                                eq(cbrBytes), eq("doc_converted.cbr"), eq(MediaType.APPLICATION_OCTET_STREAM)))
                         .thenReturn(expected);
 
                 ResponseEntity<?> response = controller.convertPdfToCbr(request);
@@ -453,31 +384,20 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<PdfToCbrUtils> p2c = Mockito.mockStatic(PdfToCbrUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                p2c.when(
-                                () ->
-                                        PdfToCbrUtils.convertPdfToCbr(
-                                                eq(file), eq(300), eq(pdfDocumentFactory)))
+                p2c.when(() -> PdfToCbrUtils.convertPdfToCbr(eq(file), eq(300), eq(pdfDocumentFactory)))
                         .thenReturn(cbrBytes);
                 gu.when(() -> GeneralUtils.generateFilename("doc", "_converted.cbr"))
                         .thenReturn("doc_converted.cbr");
-                wr.when(
-                                () ->
-                                        WebResponseUtils.bytesToWebResponse(
-                                                eq(cbrBytes),
-                                                eq("doc_converted.cbr"),
-                                                eq(MediaType.APPLICATION_OCTET_STREAM)))
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(
+                                eq(cbrBytes), eq("doc_converted.cbr"), eq(MediaType.APPLICATION_OCTET_STREAM)))
                         .thenReturn(expected);
 
                 ResponseEntity<?> response = controller.convertPdfToCbr(request);
 
                 assertSame(expected, response);
-                p2c.verify(
-                        () ->
-                                PdfToCbrUtils.convertPdfToCbr(
-                                        eq(file), eq(300), eq(pdfDocumentFactory)));
+                p2c.verify(() -> PdfToCbrUtils.convertPdfToCbr(eq(file), eq(300), eq(pdfDocumentFactory)));
             }
         }
     }
@@ -506,34 +426,26 @@ class ConvertImgPDFControllerGapTest {
             request.setIncludeAnnotations(false);
 
             // rearrangePdfPages loads a real document; convertFromPdf is the boundary we stub.
-            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
-                    .thenReturn(tinyDocument(1));
+            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(tinyDocument(1));
 
             byte[] imageBytes = "png-image".getBytes();
             ResponseEntity<byte[]> expected = ResponseEntity.ok(imageBytes);
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                pu.when(
-                                () ->
-                                        PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("PNG"),
-                                                eq(ImageType.RGB),
-                                                eq(true),
-                                                eq(72),
-                                                any(String.class),
-                                                eq(false)))
+                pu.when(() -> PdfUtils.convertFromPdf(
+                                eq(pdfDocumentFactory),
+                                any(byte[].class),
+                                eq("PNG"),
+                                eq(ImageType.RGB),
+                                eq(true),
+                                eq(72),
+                                any(String.class),
+                                eq(false)))
                         .thenReturn(imageBytes);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.bytesToWebResponse(
-                                                eq(imageBytes),
-                                                any(String.class),
-                                                any(MediaType.class)))
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(
+                                eq(imageBytes), any(String.class), any(MediaType.class)))
                         .thenReturn(expected);
 
                 ResponseEntity<?> response = controller.convertToImage(request);
@@ -557,35 +469,27 @@ class ConvertImgPDFControllerGapTest {
             request.setPageNumbers("all");
             request.setIncludeAnnotations(true);
 
-            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
-                    .thenReturn(tinyDocument(2));
+            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(tinyDocument(2));
 
             byte[] zipBytes = "zip-bytes".getBytes();
             ResponseEntity<byte[]> expected = ResponseEntity.ok(zipBytes);
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
                 // greyscale -> ImageType.GRAY, multiple -> singleImage=false
-                pu.when(
-                                () ->
-                                        PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("JPG"),
-                                                eq(ImageType.GRAY),
-                                                eq(false),
-                                                eq(72),
-                                                any(String.class),
-                                                eq(true)))
+                pu.when(() -> PdfUtils.convertFromPdf(
+                                eq(pdfDocumentFactory),
+                                any(byte[].class),
+                                eq("JPG"),
+                                eq(ImageType.GRAY),
+                                eq(false),
+                                eq(72),
+                                any(String.class),
+                                eq(true)))
                         .thenReturn(zipBytes);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.bytesToWebResponse(
-                                                eq(zipBytes),
-                                                any(String.class),
-                                                eq(MediaType.APPLICATION_OCTET_STREAM)))
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(
+                                eq(zipBytes), any(String.class), eq(MediaType.APPLICATION_OCTET_STREAM)))
                         .thenReturn(expected);
 
                 ResponseEntity<?> response = controller.convertToImage(request);
@@ -609,34 +513,26 @@ class ConvertImgPDFControllerGapTest {
             request.setPageNumbers("all");
             request.setIncludeAnnotations(false);
 
-            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
-                    .thenReturn(tinyDocument(1));
+            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(tinyDocument(1));
 
             byte[] imageBytes = "bw-image".getBytes();
             ResponseEntity<byte[]> expected = ResponseEntity.ok(imageBytes);
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
-                pu.when(
-                                () ->
-                                        PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("PNG"),
-                                                eq(ImageType.BINARY),
-                                                eq(true),
-                                                eq(72),
-                                                any(String.class),
-                                                eq(false)))
+                pu.when(() -> PdfUtils.convertFromPdf(
+                                eq(pdfDocumentFactory),
+                                any(byte[].class),
+                                eq("PNG"),
+                                eq(ImageType.BINARY),
+                                eq(true),
+                                eq(72),
+                                any(String.class),
+                                eq(false)))
                         .thenReturn(imageBytes);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.bytesToWebResponse(
-                                                eq(imageBytes),
-                                                any(String.class),
-                                                any(MediaType.class)))
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(
+                                eq(imageBytes), any(String.class), any(MediaType.class)))
                         .thenReturn(expected);
 
                 ResponseEntity<?> response = controller.convertToImage(request);
@@ -660,35 +556,27 @@ class ConvertImgPDFControllerGapTest {
             request.setPageNumbers(null);
             request.setIncludeAnnotations(null);
 
-            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
-                    .thenReturn(tinyDocument(1));
+            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(tinyDocument(1));
 
             byte[] imageBytes = "png-image".getBytes();
             ResponseEntity<byte[]> expected = ResponseEntity.ok(imageBytes);
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
                 // includeAnnotations null -> false
-                pu.when(
-                                () ->
-                                        PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("PNG"),
-                                                eq(ImageType.RGB),
-                                                eq(true),
-                                                eq(72),
-                                                any(String.class),
-                                                eq(false)))
+                pu.when(() -> PdfUtils.convertFromPdf(
+                                eq(pdfDocumentFactory),
+                                any(byte[].class),
+                                eq("PNG"),
+                                eq(ImageType.RGB),
+                                eq(true),
+                                eq(72),
+                                any(String.class),
+                                eq(false)))
                         .thenReturn(imageBytes);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.bytesToWebResponse(
-                                                eq(imageBytes),
-                                                any(String.class),
-                                                any(MediaType.class)))
+                wr.when(() -> WebResponseUtils.bytesToWebResponse(
+                                eq(imageBytes), any(String.class), any(MediaType.class)))
                         .thenReturn(expected);
 
                 ResponseEntity<?> response = controller.convertToImage(request);
@@ -712,25 +600,21 @@ class ConvertImgPDFControllerGapTest {
             request.setPageNumbers("all");
             request.setIncludeAnnotations(false);
 
-            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
-                    .thenReturn(tinyDocument(1));
+            Mockito.when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(tinyDocument(1));
 
             try (MockedStatic<PdfUtils> pu = Mockito.mockStatic(PdfUtils.class);
-                    MockedStatic<CheckProgramInstall> cpi =
-                            Mockito.mockStatic(CheckProgramInstall.class)) {
+                    MockedStatic<CheckProgramInstall> cpi = Mockito.mockStatic(CheckProgramInstall.class)) {
 
                 // webp renders to PNG first, then requires Python for the final conversion.
-                pu.when(
-                                () ->
-                                        PdfUtils.convertFromPdf(
-                                                eq(pdfDocumentFactory),
-                                                any(byte[].class),
-                                                eq("png"),
-                                                any(ImageType.class),
-                                                anyBoolean(),
-                                                anyInt(),
-                                                any(String.class),
-                                                anyBoolean()))
+                pu.when(() -> PdfUtils.convertFromPdf(
+                                eq(pdfDocumentFactory),
+                                any(byte[].class),
+                                eq("png"),
+                                any(ImageType.class),
+                                anyBoolean(),
+                                anyInt(),
+                                any(String.class),
+                                anyBoolean()))
                         .thenReturn("png-image".getBytes());
                 cpi.when(CheckProgramInstall::isPythonAvailable).thenReturn(false);
 
@@ -747,8 +631,7 @@ class ConvertImgPDFControllerGapTest {
         @DisplayName("strips only the trailing extension from a multi-dot filename")
         void stripsTrailingExtensionOnly() throws Exception {
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "my.archive.cbz", "application/zip", new byte[] {1});
+                    new MockMultipartFile("fileInput", "my.archive.cbz", "application/zip", new byte[] {1});
             ConvertCbzToPdfRequest request = new ConvertCbzToPdfRequest();
             request.setFileInput(file);
             request.setOptimizeForEbook(false);
@@ -759,17 +642,13 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<CbzUtils> cbz = Mockito.mockStatic(CbzUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
                 cbz.when(() -> CbzUtils.convertCbzToPdf(any(), any(), any(), anyBoolean()))
                         .thenReturn(tempFile);
                 gu.when(() -> GeneralUtils.generateFilename("my.archive", "_converted.pdf"))
                         .thenReturn("my.archive_converted.pdf");
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                tempFile, "my.archive_converted.pdf"))
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(tempFile, "my.archive_converted.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.convertCbzToPdf(request);
@@ -784,8 +663,7 @@ class ConvertImgPDFControllerGapTest {
         @DisplayName("uses the default comic name when stripping leaves a blank base name")
         void fallsBackToComicWhenBaseNameBlank() throws Exception {
             // ".cbz" strips to an empty base, which the controller replaces with "comic".
-            MockMultipartFile file =
-                    new MockMultipartFile("fileInput", ".cbz", "application/zip", new byte[] {1});
+            MockMultipartFile file = new MockMultipartFile("fileInput", ".cbz", "application/zip", new byte[] {1});
             ConvertCbzToPdfRequest request = new ConvertCbzToPdfRequest();
             request.setFileInput(file);
             request.setOptimizeForEbook(false);
@@ -796,17 +674,13 @@ class ConvertImgPDFControllerGapTest {
 
             try (MockedStatic<CbzUtils> cbz = Mockito.mockStatic(CbzUtils.class);
                     MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
 
                 cbz.when(() -> CbzUtils.convertCbzToPdf(any(), any(), any(), anyBoolean()))
                         .thenReturn(tempFile);
                 gu.when(() -> GeneralUtils.generateFilename("comic", "_converted.pdf"))
                         .thenReturn("comic_converted.pdf");
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                tempFile, "comic_converted.pdf"))
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(tempFile, "comic_converted.pdf"))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.convertCbzToPdf(request);

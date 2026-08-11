@@ -142,21 +142,16 @@ class OAuth2ConfigurationTest {
         assertEquals("/oauth2/authorization/authentik", authorizationPath);
 
         // Step 5: Frontend extracts provider ID
-        String frontendProviderId =
-                authorizationPath.substring(authorizationPath.lastIndexOf('/') + 1);
+        String frontendProviderId = authorizationPath.substring(authorizationPath.lastIndexOf('/') + 1);
         assertEquals("authentik", frontendProviderId);
 
         // Step 6-8: OAuth flow (external)
 
         // Step 9: Callback URL from provider
-        String callbackUrl =
-                "http://localhost:8080/login/oauth2/code/" + providerName + "?code=abc123";
+        String callbackUrl = "http://localhost:8080/login/oauth2/code/" + providerName + "?code=abc123";
         String extractedId = extractRegistrationIdFromCallback(callbackUrl);
 
         // Step 10: Registration lookup
-        assertEquals(
-                registrationId,
-                extractedId,
-                "Registration ID from callback MUST match original registration ID");
+        assertEquals(registrationId, extractedId, "Registration ID from callback MUST match original registration ID");
     }
 }

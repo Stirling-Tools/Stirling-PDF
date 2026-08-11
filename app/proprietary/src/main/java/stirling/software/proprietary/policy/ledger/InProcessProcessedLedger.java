@@ -24,8 +24,7 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     }
 
     @Override
-    public synchronized Map<String, ClaimState> statesFor(
-            String policyId, Collection<String> identities) {
+    public synchronized Map<String, ClaimState> statesFor(String policyId, Collection<String> identities) {
         Map<String, Row> rows = rowsByPolicy.getOrDefault(policyId, Map.of());
         Map<String, ClaimState> states = new HashMap<>();
         for (String identity : identities) {
@@ -41,11 +40,7 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     // against it directly; the conditional updates of the JPA ledger yield the same outcomes.
     @Override
     public synchronized boolean claim(
-            String policyId,
-            String identity,
-            String gate,
-            Supplier<String> contentHash,
-            ClaimState observed) {
+            String policyId, String identity, String gate, Supplier<String> contentHash, ClaimState observed) {
         Map<String, Row> rows = rowsByPolicy.computeIfAbsent(policyId, key -> new HashMap<>());
         long now = nowMillis.get();
         Row row = rows.get(identity);
@@ -99,11 +94,7 @@ public class InProcessProcessedLedger implements ProcessedLedger {
 
     @Override
     public synchronized void settle(
-            String policyId,
-            String identity,
-            String finalGate,
-            String finalContentHash,
-            boolean success) {
+            String policyId, String identity, String finalGate, String finalContentHash, boolean success) {
         upsertSettled(
                 policyId,
                 identity,
@@ -113,8 +104,7 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     }
 
     @Override
-    public synchronized void recordOutput(
-            String policyId, String identity, String gate, String contentHash) {
+    public synchronized void recordOutput(String policyId, String identity, String gate, String contentHash) {
         upsertSettled(policyId, identity, gate, contentHash, ProcessedFileStatus.DONE);
     }
 
@@ -131,11 +121,7 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     }
 
     private void upsertSettled(
-            String policyId,
-            String identity,
-            String gate,
-            String contentHash,
-            ProcessedFileStatus status) {
+            String policyId, String identity, String gate, String contentHash, ProcessedFileStatus status) {
         Map<String, Row> rows = rowsByPolicy.computeIfAbsent(policyId, key -> new HashMap<>());
         long now = nowMillis.get();
         Row row = rows.get(identity);
@@ -182,11 +168,7 @@ public class InProcessProcessedLedger implements ProcessedLedger {
             return 0;
         }
         int before = rows.size();
-        rows.values()
-                .removeIf(
-                        row ->
-                                row.lastSeen < seenSinceMillis
-                                        && row.status != ProcessedFileStatus.PROCESSING);
+        rows.values().removeIf(row -> row.lastSeen < seenSinceMillis && row.status != ProcessedFileStatus.PROCESSING);
         return before - rows.size();
     }
 
@@ -213,12 +195,7 @@ public class InProcessProcessedLedger implements ProcessedLedger {
         private int attempts;
         private long lastSeen;
 
-        private Row(
-                String gate,
-                String contentHash,
-                ProcessedFileStatus status,
-                int attempts,
-                long lastSeen) {
+        private Row(String gate, String contentHash, ProcessedFileStatus status, int attempts, long lastSeen) {
             this.gate = gate;
             this.contentHash = contentHash;
             this.status = status;

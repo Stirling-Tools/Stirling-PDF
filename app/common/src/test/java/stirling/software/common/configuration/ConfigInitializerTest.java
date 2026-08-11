@@ -9,17 +9,15 @@ import stirling.software.common.util.YamlHelper;
 
 class ConfigInitializerTest {
 
-    private static final LoadSettings LOAD_SETTINGS =
-            LoadSettings.builder()
-                    .setUseMarks(true)
-                    .setMaxAliasesForCollections(Integer.MAX_VALUE)
-                    .setAllowRecursiveKeys(true)
-                    .setParseComments(true)
-                    .build();
+    private static final LoadSettings LOAD_SETTINGS = LoadSettings.builder()
+            .setUseMarks(true)
+            .setMaxAliasesForCollections(Integer.MAX_VALUE)
+            .setAllowRecursiveKeys(true)
+            .setParseComments(true)
+            .build();
 
     // Mirrors the proFeatures block of settings.yml.template after the camelCase rename.
-    private static final String CAMEL_CASE_TEMPLATE =
-            """
+    private static final String CAMEL_CASE_TEMPLATE = """
             premium:
               proFeatures:
                 ssoAutoLogin: false
@@ -33,8 +31,7 @@ class ConfigInitializerTest {
     @Test
     void migrateProFeaturesKeyCasing_carriesForwardLegacyPascalCaseValues() {
         // An existing install whose settings.yml still uses the old PascalCase keys.
-        String legacy =
-                """
+        String legacy = """
                 premium:
                   proFeatures:
                     SSOAutoLogin: true
@@ -49,31 +46,19 @@ class ConfigInitializerTest {
 
         new ConfigInitializer().migrateProFeaturesKeyCasing(existing, template);
 
-        assertEquals(
-                "true", template.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"));
+        assertEquals("true", template.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"));
         assertEquals(
                 "true",
-                template.getValueByExactKeyPath(
-                        "premium", "proFeatures", "customMetadata", "autoUpdateMetadata"));
-        assertEquals(
-                "alice",
-                template.getValueByExactKeyPath(
-                        "premium", "proFeatures", "customMetadata", "author"));
-        assertEquals(
-                "bob",
-                template.getValueByExactKeyPath(
-                        "premium", "proFeatures", "customMetadata", "creator"));
-        assertEquals(
-                "carol",
-                template.getValueByExactKeyPath(
-                        "premium", "proFeatures", "customMetadata", "producer"));
+                template.getValueByExactKeyPath("premium", "proFeatures", "customMetadata", "autoUpdateMetadata"));
+        assertEquals("alice", template.getValueByExactKeyPath("premium", "proFeatures", "customMetadata", "author"));
+        assertEquals("bob", template.getValueByExactKeyPath("premium", "proFeatures", "customMetadata", "creator"));
+        assertEquals("carol", template.getValueByExactKeyPath("premium", "proFeatures", "customMetadata", "producer"));
     }
 
     @Test
     void migrateProFeaturesKeyCasing_withoutLegacyKeys_keepsTemplateDefaults() {
         // No PascalCase keys present -> this migration step must be a no-op.
-        String alreadyCamel =
-                """
+        String alreadyCamel = """
                 premium:
                   proFeatures:
                     ssoAutoLogin: true
@@ -85,11 +70,7 @@ class ConfigInitializerTest {
 
         new ConfigInitializer().migrateProFeaturesKeyCasing(existing, template);
 
-        assertEquals(
-                "false", template.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"));
-        assertEquals(
-                "username",
-                template.getValueByExactKeyPath(
-                        "premium", "proFeatures", "customMetadata", "author"));
+        assertEquals("false", template.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"));
+        assertEquals("username", template.getValueByExactKeyPath("premium", "proFeatures", "customMetadata", "author"));
     }
 }

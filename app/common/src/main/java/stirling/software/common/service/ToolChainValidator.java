@@ -45,14 +45,13 @@ public class ToolChainValidator {
             Step step = steps.get(i);
             Optional<ToolIOSpec> found = toolIO.find(step.operation());
             if (found.isEmpty()) {
-                diagnostics.add(
-                        ToolDiagnostic.warn(
-                                i,
-                                ToolDiagnostic.UNDECLARED,
-                                "Step "
-                                        + step.operation()
-                                        + " does not declare what it accepts or produces, so the"
-                                        + " rest of the chain cannot be checked."));
+                diagnostics.add(ToolDiagnostic.warn(
+                        i,
+                        ToolDiagnostic.UNDECLARED,
+                        "Step "
+                                + step.operation()
+                                + " does not declare what it accepts or produces, so the"
+                                + " rest of the chain cannot be checked."));
                 // Nothing is known past an undeclared step.
                 carried = null;
                 continue;
@@ -77,54 +76,43 @@ public class ToolChainValidator {
     }
 
     private static void checkSource(
-            List<ToolDiagnostic> diagnostics,
-            int index,
-            Step step,
-            ToolIOSpec spec,
-            ToolFormat sourceFormat) {
+            List<ToolDiagnostic> diagnostics, int index, Step step, ToolIOSpec spec, ToolFormat sourceFormat) {
         if (sourceFormat == null || spec.acceptsFormat(sourceFormat)) {
             return;
         }
-        diagnostics.add(
-                ToolDiagnostic.error(
-                        index,
-                        ToolDiagnostic.SOURCE_MISMATCH,
-                        "Step "
-                                + step.operation()
-                                + " accepts "
-                                + describe(spec)
-                                + " but the pipeline's input is "
-                                + sourceFormat
-                                + "."));
+        diagnostics.add(ToolDiagnostic.error(
+                index,
+                ToolDiagnostic.SOURCE_MISMATCH,
+                "Step "
+                        + step.operation()
+                        + " accepts "
+                        + describe(spec)
+                        + " but the pipeline's input is "
+                        + sourceFormat
+                        + "."));
     }
 
     private static void checkTransition(
-            List<ToolDiagnostic> diagnostics,
-            int index,
-            Step step,
-            ToolIOSpec spec,
-            ToolIOSpec.Output previous) {
+            List<ToolDiagnostic> diagnostics, int index, Step step, ToolIOSpec spec, ToolIOSpec.Output previous) {
 
         if (previous.format() == ToolFormat.NONE) {
-            diagnostics.add(
-                    ToolDiagnostic.error(
-                            index,
-                            ToolDiagnostic.FORMAT_MISMATCH,
-                            "The previous step returns a report rather than a file, so "
-                                    + step.operation()
-                                    + " has nothing to run on."));
+            diagnostics.add(ToolDiagnostic.error(
+                    index,
+                    ToolDiagnostic.FORMAT_MISMATCH,
+                    "The previous step returns a report rather than a file, so "
+                            + step.operation()
+                            + " has nothing to run on."));
             return;
         }
 
         if (!spec.acceptsFormat(previous.format())) {
-            String message =
-                    "Step "
-                            + step.operation()
-                            + " accepts "
-                            + describe(spec)
-                            + " but the previous step produces "
-                            + previous.format()
-                            + ".";
+            String message = "Step "
+                    + step.operation()
+                    + " accepts "
+                    + describe(spec)
+                    + " but the previous step produces "
+                    + previous.format()
+                    + ".";
             diagnostics.add(
                     previous.certain()
                             ? ToolDiagnostic.error(index, ToolDiagnostic.FORMAT_MISMATCH, message)
@@ -134,12 +122,11 @@ public class ToolChainValidator {
         }
 
         if (!previous.certain()) {
-            diagnostics.add(
-                    ToolDiagnostic.warn(
-                            index,
-                            ToolDiagnostic.OUTPUT_UNCERTAIN,
-                            "The previous step's output depends on how it is configured, so this"
-                                    + " step may not be able to run."));
+            diagnostics.add(ToolDiagnostic.warn(
+                    index,
+                    ToolDiagnostic.OUTPUT_UNCERTAIN,
+                    "The previous step's output depends on how it is configured, so this"
+                            + " step may not be able to run."));
             return;
         }
 
@@ -153,8 +140,7 @@ public class ToolChainValidator {
                             : ToolDiagnostic.info(
                                     index,
                                     ToolDiagnostic.FAN_OUT,
-                                    "This step runs once for each file the previous step"
-                                            + " produced."));
+                                    "This step runs once for each file the previous step" + " produced."));
         }
     }
 

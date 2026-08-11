@@ -18,61 +18,49 @@ import stirling.software.common.model.ApplicationProperties;
  */
 class InProcessConfigurationConditionalTest {
 
-    private final ApplicationContextRunner runner =
-            new ApplicationContextRunner()
-                    .withConfiguration(
-                            org.springframework.boot.autoconfigure.AutoConfigurations.of(
-                                    PropertyPlaceholderAutoConfiguration.class))
-                    .withUserConfiguration(
-                            TestAppPropertiesConfig.class,
-                            ClusterConfig.class,
-                            InProcessClusterConfiguration.class);
+    private final ApplicationContextRunner runner = new ApplicationContextRunner()
+            .withConfiguration(org.springframework.boot.autoconfigure.AutoConfigurations.of(
+                    PropertyPlaceholderAutoConfiguration.class))
+            .withUserConfiguration(
+                    TestAppPropertiesConfig.class, ClusterConfig.class, InProcessClusterConfiguration.class);
 
     @Test
     void inProcessBeansWireWhenClusterDisabled() {
-        runner.run(
-                context ->
-                        assertThat(context)
-                                .hasNotFailed()
-                                .hasSingleBean(ClusterBackplane.class)
-                                .hasSingleBean(JobStore.class)
-                                .hasSingleBean(RateLimitStore.class)
-                                .hasSingleBean(DistributedLock.class)
-                                .hasSingleBean(KeyValueCache.class)
-                                .hasSingleBean(InstanceRegistry.class));
+        runner.run(context -> assertThat(context)
+                .hasNotFailed()
+                .hasSingleBean(ClusterBackplane.class)
+                .hasSingleBean(JobStore.class)
+                .hasSingleBean(RateLimitStore.class)
+                .hasSingleBean(DistributedLock.class)
+                .hasSingleBean(KeyValueCache.class)
+                .hasSingleBean(InstanceRegistry.class));
     }
 
     @Test
     void inProcessBeansWireWhenEnabledWithInProcessBackplane() {
         runner.withPropertyValues("cluster.enabled=true", "cluster.backplane=inprocess")
-                .run(
-                        context ->
-                                assertThat(context)
-                                        .hasNotFailed()
-                                        .hasSingleBean(ClusterBackplane.class)
-                                        .hasSingleBean(JobStore.class)
-                                        .hasSingleBean(RateLimitStore.class)
-                                        .hasSingleBean(DistributedLock.class)
-                                        .hasSingleBean(KeyValueCache.class)
-                                        .hasSingleBean(InstanceRegistry.class));
+                .run(context -> assertThat(context)
+                        .hasNotFailed()
+                        .hasSingleBean(ClusterBackplane.class)
+                        .hasSingleBean(JobStore.class)
+                        .hasSingleBean(RateLimitStore.class)
+                        .hasSingleBean(DistributedLock.class)
+                        .hasSingleBean(KeyValueCache.class)
+                        .hasSingleBean(InstanceRegistry.class));
     }
 
     @Test
     void inProcessBeansSkippedWhenEnabledWithDistributedBackplane() {
         runner.withPropertyValues(
-                        "cluster.enabled=true",
-                        "cluster.backplane=valkey",
-                        "cluster.valkey.url=redis://localhost:6379")
-                .run(
-                        context ->
-                                assertThat(context)
-                                        .hasNotFailed()
-                                        .doesNotHaveBean(ClusterBackplane.class)
-                                        .doesNotHaveBean(JobStore.class)
-                                        .doesNotHaveBean(RateLimitStore.class)
-                                        .doesNotHaveBean(DistributedLock.class)
-                                        .doesNotHaveBean(KeyValueCache.class)
-                                        .doesNotHaveBean(InstanceRegistry.class));
+                        "cluster.enabled=true", "cluster.backplane=valkey", "cluster.valkey.url=redis://localhost:6379")
+                .run(context -> assertThat(context)
+                        .hasNotFailed()
+                        .doesNotHaveBean(ClusterBackplane.class)
+                        .doesNotHaveBean(JobStore.class)
+                        .doesNotHaveBean(RateLimitStore.class)
+                        .doesNotHaveBean(DistributedLock.class)
+                        .doesNotHaveBean(KeyValueCache.class)
+                        .doesNotHaveBean(InstanceRegistry.class));
     }
 
     /**

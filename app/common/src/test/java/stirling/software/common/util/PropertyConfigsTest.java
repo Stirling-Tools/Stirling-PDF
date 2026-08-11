@@ -62,15 +62,12 @@ class PropertyConfigsTest {
     void testGetStringValue_listKeys_firstMatch() {
         System.setProperty(TEST_KEY, "first");
         System.setProperty(TEST_KEY_2, "second");
-        assertEquals(
-                "first", PropertyConfigs.getStringValue(List.of(TEST_KEY, TEST_KEY_2), "default"));
+        assertEquals("first", PropertyConfigs.getStringValue(List.of(TEST_KEY, TEST_KEY_2), "default"));
     }
 
     @Test
     void testGetStringValue_listKeys_defaultWhenNoneMatch() {
-        assertEquals(
-                "default",
-                PropertyConfigs.getStringValue(List.of(TEST_KEY, TEST_KEY_2), "default"));
+        assertEquals("default", PropertyConfigs.getStringValue(List.of(TEST_KEY, TEST_KEY_2), "default"));
     }
 
     @Test

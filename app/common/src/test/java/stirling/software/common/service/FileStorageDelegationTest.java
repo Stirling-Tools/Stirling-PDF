@@ -15,13 +15,9 @@ import stirling.software.common.cluster.inprocess.LocalDiskFileStore;
 class FileStorageDelegationTest {
 
     @Test
-    void storeBytesThenRetrieveBytesRoundTripsThroughFileStore(@TempDir Path tempDir)
-            throws IOException {
-        FileStorage fs =
-                new FileStorage(
-                        mock(FileOrUploadService.class),
-                        new LocalDiskFileStore(tempDir.toString()),
-                        Optional.empty());
+    void storeBytesThenRetrieveBytesRoundTripsThroughFileStore(@TempDir Path tempDir) throws IOException {
+        FileStorage fs = new FileStorage(
+                mock(FileOrUploadService.class), new LocalDiskFileStore(tempDir.toString()), Optional.empty());
         byte[] payload = "round-trip".getBytes();
         String id = fs.storeBytes(payload, "x.bin");
         assertArrayEquals(payload, fs.retrieveBytes(id));

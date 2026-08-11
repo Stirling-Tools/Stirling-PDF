@@ -55,12 +55,10 @@ public class PosterPdfController {
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Split large PDF pages into smaller printable chunks",
-            description =
-                    "This endpoint splits large or oddly-sized PDF pages into smaller chunks"
-                            + " suitable for printing on standard paper sizes (e.g., A4, Letter). Divides each"
-                            + " page into a grid of smaller pages using Apache PDFBox.")
-    public ResponseEntity<Resource> posterPdf(@ModelAttribute PosterPdfRequest request)
-            throws Exception {
+            description = "This endpoint splits large or oddly-sized PDF pages into smaller chunks"
+                    + " suitable for printing on standard paper sizes (e.g., A4, Letter). Divides each"
+                    + " page into a grid of smaller pages using Apache PDFBox.")
+    public ResponseEntity<Resource> posterPdf(@ModelAttribute PosterPdfRequest request) throws Exception {
 
         log.debug("Starting PDF poster split process with request: {}", request);
         MultipartFile file = request.getFileInput();
@@ -71,8 +69,7 @@ public class PosterPdfController {
         TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
         try {
             try (PDDocument sourceDocument = pdfDocumentFactory.load(file);
-                    PDDocument outputDocument =
-                            pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
+                    PDDocument outputDocument = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
                     TempFile pdfTempFile = new TempFile(tempFileManager, ".pdf")) {
 
                 // Get target page size
@@ -91,12 +88,7 @@ public class PosterPdfController {
                 int yFactor = request.getYFactor();
                 boolean rightToLeft = request.isRightToLeft();
 
-                log.debug(
-                        "Processing {} pages with grid {}x{}, RTL={}",
-                        totalPages,
-                        xFactor,
-                        yFactor,
-                        rightToLeft);
+                log.debug("Processing {} pages with grid {}x{}, RTL={}", totalPages, xFactor, yFactor, rightToLeft);
 
                 // Process each page
                 for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
@@ -169,13 +161,8 @@ public class PosterPdfController {
                             PDPage outputPage = new PDPage(targetPageSize);
                             outputDocument.addPage(outputPage);
 
-                            try (PDPageContentStream contentStream =
-                                    new PDPageContentStream(
-                                            outputDocument,
-                                            outputPage,
-                                            PDPageContentStream.AppendMode.APPEND,
-                                            true,
-                                            true)) {
+                            try (PDPageContentStream contentStream = new PDPageContentStream(
+                                    outputDocument, outputPage, PDPageContentStream.AppendMode.APPEND, true, true)) {
 
                                 // Calculate uniform scale to fit cell into target page
                                 // Scale UP if cell is smaller than target, scale DOWN if larger
@@ -193,8 +180,7 @@ public class PosterPdfController {
                                 contentStream.saveGraphicsState();
 
                                 // Translate to center position
-                                contentStream.transform(
-                                        Matrix.getTranslateInstance(offsetX, offsetY));
+                                contentStream.transform(Matrix.getTranslateInstance(offsetX, offsetY));
 
                                 // Scale uniformly
                                 contentStream.transform(Matrix.getScaleInstance(scale, scale));
@@ -204,8 +190,7 @@ public class PosterPdfController {
                                 // (including its offset), so we only need to translate by
                                 // cropX/cropY
                                 // relative to the CropBox origin, NOT the MediaBox origin
-                                contentStream.transform(
-                                        Matrix.getTranslateInstance(-cropX, -cropY));
+                                contentStream.transform(Matrix.getTranslateInstance(-cropX, -cropY));
 
                                 // Draw the form
                                 contentStream.drawForm(form);
@@ -231,8 +216,7 @@ public class PosterPdfController {
                 log.debug("Generated output PDF with {} pages", outputDocument.getNumberOfPages());
 
                 // Create ZIP from the PDF TempFile, streaming directly to zip TempFile
-                try (ZipOutputStream zipOut =
-                        new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+                try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
                     zipOut.putNextEntry(new ZipEntry(filename + "_poster.pdf"));
                     Files.copy(pdfTempFile.getPath(), zipOut);
                     zipOut.closeEntry();
@@ -272,10 +256,7 @@ public class PosterPdfController {
         PDRectangle size = sizeMap.get(pageSize);
         if (size == null) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidPageSize",
-                    "Invalid page size: {0}",
-                    pageSize,
-                    String.join(", ", sizeMap.keySet()));
+                    "error.invalidPageSize", "Invalid page size: {0}", pageSize, String.join(", ", sizeMap.keySet()));
         }
         return size;
     }

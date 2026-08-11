@@ -37,10 +37,14 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ValidateSignatureControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private CertificateValidationService certValidationService;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ValidateSignatureController validateSignatureController;
+    @Mock
+    private CertificateValidationService certValidationService;
+
+    @InjectMocks
+    private ValidateSignatureController validateSignatureController;
 
     private byte[] simplePdfBytes;
 
@@ -62,17 +66,12 @@ class ValidateSignatureControllerTest {
         @DisplayName("Should return empty results for unsigned PDF")
         void testValidateSignature_UnsignedPdf() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(pdfFile);
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<List<SignatureValidationResult>> response =
                     validateSignatureController.validateSignature(request);
@@ -86,18 +85,13 @@ class ValidateSignatureControllerTest {
         @DisplayName("Should handle request without cert file")
         void testValidateSignature_NoCertFile() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(pdfFile);
             request.setCertFile(null);
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<List<SignatureValidationResult>> response =
                     validateSignatureController.validateSignature(request);
@@ -110,22 +104,16 @@ class ValidateSignatureControllerTest {
         @DisplayName("Should handle request with empty cert file")
         void testValidateSignature_EmptyCertFile() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             MockMultipartFile emptyCert =
-                    new MockMultipartFile(
-                            "certFile", "cert.pem", "application/x-pem-file", new byte[0]);
+                    new MockMultipartFile("certFile", "cert.pem", "application/x-pem-file", new byte[0]);
 
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(pdfFile);
             request.setCertFile(emptyCert);
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<List<SignatureValidationResult>> response =
                     validateSignatureController.validateSignature(request);
@@ -137,47 +125,30 @@ class ValidateSignatureControllerTest {
         @DisplayName("Should throw on invalid cert file content")
         void testValidateSignature_InvalidCertFile() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
-            MockMultipartFile invalidCert =
-                    new MockMultipartFile(
-                            "certFile",
-                            "cert.pem",
-                            "application/x-pem-file",
-                            "not a certificate".getBytes());
+            MockMultipartFile invalidCert = new MockMultipartFile(
+                    "certFile", "cert.pem", "application/x-pem-file", "not a certificate".getBytes());
 
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(pdfFile);
             request.setCertFile(invalidCert);
 
-            assertThrows(
-                    RuntimeException.class,
-                    () -> validateSignatureController.validateSignature(request));
+            assertThrows(RuntimeException.class, () -> validateSignatureController.validateSignature(request));
         }
 
         @Test
         @DisplayName("Should handle IOException from PDF loading")
         void testValidateSignature_IOException() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(pdfFile);
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenThrow(new IOException("Cannot load PDF"));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenThrow(new IOException("Cannot load PDF"));
 
-            assertThrows(
-                    IOException.class,
-                    () -> validateSignatureController.validateSignature(request));
+            assertThrows(IOException.class, () -> validateSignatureController.validateSignature(request));
         }
 
         @Test
@@ -193,17 +164,12 @@ class ValidateSignatureControllerTest {
             }
 
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "multi.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            multiPagePdf);
+                    new MockMultipartFile("fileInput", "multi.pdf", MediaType.APPLICATION_PDF_VALUE, multiPagePdf);
 
             SignatureValidationRequest request = new SignatureValidationRequest();
             request.setFileInput(pdfFile);
 
-            when(pdfDocumentFactory.load(any(InputStream.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(multiPagePdf));
+            when(pdfDocumentFactory.load(any(InputStream.class))).thenAnswer(inv -> Loader.loadPDF(multiPagePdf));
 
             ResponseEntity<List<SignatureValidationResult>> response =
                     validateSignatureController.validateSignature(request);
@@ -220,8 +186,7 @@ class ValidateSignatureControllerTest {
         @Test
         @DisplayName("Should not throw when initBinder is called")
         void testInitBinder() {
-            org.springframework.web.bind.WebDataBinder binder =
-                    new org.springframework.web.bind.WebDataBinder(null);
+            org.springframework.web.bind.WebDataBinder binder = new org.springframework.web.bind.WebDataBinder(null);
             assertDoesNotThrow(() -> validateSignatureController.initBinder(binder));
         }
     }

@@ -62,23 +62,26 @@ import stirling.software.common.util.WebResponseUtils;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class OCRControllerMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
 
     private TempFileManager tempFileManager;
     private ApplicationProperties applicationProperties;
     private OCRController ocrController;
 
-    @TempDir Path baseTmpDir;
+    @TempDir
+    Path baseTmpDir;
 
     @BeforeEach
     void setUp() throws IOException {
         applicationProperties = new ApplicationProperties();
-        applicationProperties
-                .getSystem()
-                .getTempFileManagement()
-                .setBaseTmpDir(baseTmpDir.toString());
+        applicationProperties.getSystem().getTempFileManagement().setBaseTmpDir(baseTmpDir.toString());
         applicationProperties.getSystem().getTempFileManagement().setPrefix("ocr-more-");
         applicationProperties.getSystem().setMaxDPI(72);
 
@@ -88,13 +91,8 @@ class OCRControllerMoreTest {
         Path fakeBinary = Files.createTempFile(baseTmpDir, "ocrmypdf", ".bin");
         lenient().when(runtimePathConfig.getOcrMyPdfPath()).thenReturn(fakeBinary.toString());
 
-        ocrController =
-                new OCRController(
-                        applicationProperties,
-                        pdfDocumentFactory,
-                        tempFileManager,
-                        endpointConfiguration,
-                        runtimePathConfig);
+        ocrController = new OCRController(
+                applicationProperties, pdfDocumentFactory, tempFileManager, endpointConfiguration, runtimePathConfig);
     }
 
     /** Build a tiny single-page in-memory PDF as a MockMultipartFile. */
@@ -103,8 +101,7 @@ class OCRControllerMoreTest {
                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             doc.addPage(new PDPage());
             doc.save(out);
-            return new MockMultipartFile(
-                    "fileInput", name, MediaType.APPLICATION_PDF_VALUE, out.toByteArray());
+            return new MockMultipartFile("fileInput", name, MediaType.APPLICATION_PDF_VALUE, out.toByteArray());
         }
     }
 
@@ -158,11 +155,9 @@ class OCRControllerMoreTest {
             ProcessPdfWithOcrRequest request = baseRequest("in.pdf");
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 ProcessExecutor executor = executorReturning(0, "done");
-                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
-                        .thenReturn(executor);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF)).thenReturn(executor);
                 wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(), anyString()))
                         .thenReturn(cannedResponse());
 
@@ -189,8 +184,7 @@ class OCRControllerMoreTest {
             request.setSidecar(true);
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 ProcessExecutor executor = mock(ProcessExecutor.class);
                 ProcessExecutorResult result = mock(ProcessExecutorResult.class);
                 when(result.getRc()).thenReturn(0);
@@ -198,12 +192,8 @@ class OCRControllerMoreTest {
                 @SuppressWarnings("unchecked")
                 ArgumentCaptor<List<String>> cmd = ArgumentCaptor.forClass(List.class);
                 when(executor.runCommandWithOutputHandling(cmd.capture())).thenReturn(result);
-                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
-                        .thenReturn(executor);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.fileToWebResponse(
-                                                any(), anyString(), any(MediaType.class)))
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF)).thenReturn(executor);
+                wr.when(() -> WebResponseUtils.fileToWebResponse(any(), anyString(), any(MediaType.class)))
                         .thenReturn(cannedResponse());
 
                 ocrController.processPdfWithOCR(request);
@@ -227,8 +217,7 @@ class OCRControllerMoreTest {
             request.setOcrType("Normal");
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 ProcessExecutor executor = mock(ProcessExecutor.class);
                 ProcessExecutorResult result = mock(ProcessExecutorResult.class);
                 when(result.getRc()).thenReturn(0);
@@ -236,8 +225,7 @@ class OCRControllerMoreTest {
                 @SuppressWarnings("unchecked")
                 ArgumentCaptor<List<String>> cmd = ArgumentCaptor.forClass(List.class);
                 when(executor.runCommandWithOutputHandling(cmd.capture())).thenReturn(result);
-                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
-                        .thenReturn(executor);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF)).thenReturn(executor);
                 wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(), anyString()))
                         .thenReturn(cannedResponse());
 
@@ -259,8 +247,7 @@ class OCRControllerMoreTest {
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 ProcessExecutor executor = executorReturning(0, "ok");
-                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
-                        .thenReturn(executor);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF)).thenReturn(executor);
 
                 // No WebResponseUtils stub: the real zip-building path runs against real temp
                 // files and streams the resulting zip.
@@ -280,24 +267,20 @@ class OCRControllerMoreTest {
             ProcessPdfWithOcrRequest request = baseRequest("in.pdf");
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 ProcessExecutor executor = mock(ProcessExecutor.class);
 
                 ProcessExecutorResult failure = mock(ProcessExecutorResult.class);
                 when(failure.getRc()).thenReturn(1);
                 when(failure.getMessages())
-                        .thenReturn(
-                                "multiprocessing/synchronize.py OSError: [Errno 38] Function not"
-                                        + " implemented");
+                        .thenReturn("multiprocessing/synchronize.py OSError: [Errno 38] Function not" + " implemented");
                 ProcessExecutorResult success = mock(ProcessExecutorResult.class);
                 when(success.getRc()).thenReturn(0);
 
                 when(executor.runCommandWithOutputHandling(anyList()))
                         .thenReturn(failure)
                         .thenReturn(success);
-                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
-                        .thenReturn(executor);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF)).thenReturn(executor);
                 wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(), anyString()))
                         .thenReturn(cannedResponse());
 
@@ -317,8 +300,7 @@ class OCRControllerMoreTest {
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 ProcessExecutor executor = executorReturning(5, "boom");
-                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
-                        .thenReturn(executor);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF)).thenReturn(executor);
 
                 assertThatThrownBy(() -> ocrController.processPdfWithOCR(request))
                         .isInstanceOf(IOException.class);
@@ -337,8 +319,7 @@ class OCRControllerMoreTest {
                 ProcessExecutor executor = mock(ProcessExecutor.class);
                 when(executor.runCommandWithOutputHandling(anyList()))
                         .thenThrow(new IOException("Process timeout exceeded."));
-                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
-                        .thenReturn(executor);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF)).thenReturn(executor);
 
                 assertThatThrownBy(() -> ocrController.processPdfWithOCR(request))
                         .isInstanceOf(IOException.class)
@@ -356,25 +337,21 @@ class OCRControllerMoreTest {
             request.setRemoveImagesAfter(true);
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 ProcessExecutor ocrExecutor = executorReturning(0, "ok");
                 ProcessExecutor gsExecutor = mock(ProcessExecutor.class);
                 ProcessExecutorResult gsResult = mock(ProcessExecutorResult.class);
                 when(gsResult.getRc()).thenReturn(0);
                 // Ghostscript writes the no-images output the controller copies back.
-                when(gsExecutor.runCommandWithOutputHandling(anyList()))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> cmd = inv.getArgument(0);
-                                    // gs command form: gs -sDEVICE=pdfwrite -dFILTERIMAGE -o out in
-                                    Path out = Path.of(cmd.get(4));
-                                    Files.writeString(out, "no-images-pdf");
-                                    return gsResult;
-                                });
+                when(gsExecutor.runCommandWithOutputHandling(anyList())).thenAnswer(inv -> {
+                    List<String> cmd = inv.getArgument(0);
+                    // gs command form: gs -sDEVICE=pdfwrite -dFILTERIMAGE -o out in
+                    Path out = Path.of(cmd.get(4));
+                    Files.writeString(out, "no-images-pdf");
+                    return gsResult;
+                });
 
-                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF))
-                        .thenReturn(ocrExecutor);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.OCR_MY_PDF)).thenReturn(ocrExecutor);
                 pe.when(() -> ProcessExecutor.getInstance(Processes.GHOSTSCRIPT))
                         .thenReturn(gsExecutor);
                 wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(), anyString()))
@@ -402,17 +379,14 @@ class OCRControllerMoreTest {
             ProcessPdfWithOcrRequest request = baseRequest("in.pdf");
             request.setOcrType("force-ocr");
             // Controller loads via the factory; return a freshly built single-page document.
-            when(pdfDocumentFactory.load(any(java.io.File.class)))
-                    .thenAnswer(inv -> singlePageDoc());
+            when(pdfDocumentFactory.load(any(java.io.File.class))).thenAnswer(inv -> singlePageDoc());
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 // Tesseract is mocked and writes no output file, so the controller takes its
                 // blank-page fallback and saves the original page; rc=0 keeps it on the happy path.
                 ProcessExecutor executor = executorReturning(0, "ok");
-                pe.when(() -> ProcessExecutor.getInstance(Processes.TESSERACT))
-                        .thenReturn(executor);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.TESSERACT)).thenReturn(executor);
                 wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(), anyString()))
                         .thenReturn(cannedResponse());
 
@@ -432,15 +406,12 @@ class OCRControllerMoreTest {
 
             ProcessPdfWithOcrRequest request = baseRequest("in.pdf");
             request.setOcrType("skip-text");
-            when(pdfDocumentFactory.load(any(java.io.File.class)))
-                    .thenAnswer(inv -> singlePageDoc());
+            when(pdfDocumentFactory.load(any(java.io.File.class))).thenAnswer(inv -> singlePageDoc());
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 ProcessExecutor executor = executorReturning(0, "ok");
-                pe.when(() -> ProcessExecutor.getInstance(Processes.TESSERACT))
-                        .thenReturn(executor);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.TESSERACT)).thenReturn(executor);
                 wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(), anyString()))
                         .thenReturn(cannedResponse());
 
@@ -460,13 +431,11 @@ class OCRControllerMoreTest {
 
             ProcessPdfWithOcrRequest request = baseRequest("in.pdf");
             request.setOcrType("force-ocr");
-            when(pdfDocumentFactory.load(any(java.io.File.class)))
-                    .thenAnswer(inv -> singlePageDoc());
+            when(pdfDocumentFactory.load(any(java.io.File.class))).thenAnswer(inv -> singlePageDoc());
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 ProcessExecutor executor = executorReturning(2, "tess-error");
-                pe.when(() -> ProcessExecutor.getInstance(Processes.TESSERACT))
-                        .thenReturn(executor);
+                pe.when(() -> ProcessExecutor.getInstance(Processes.TESSERACT)).thenReturn(executor);
 
                 assertThatThrownBy(() -> ocrController.processPdfWithOCR(request))
                         .isInstanceOf(RuntimeException.class);
@@ -490,8 +459,7 @@ class OCRControllerMoreTest {
             ProcessPdfWithOcrRequest request = baseRequest("in.pdf");
             request.setOcrRenderType("bogus");
 
-            assertThatThrownBy(() -> ocrController.processPdfWithOCR(request))
-                    .isInstanceOf(IOException.class);
+            assertThatThrownBy(() -> ocrController.processPdfWithOCR(request)).isInstanceOf(IOException.class);
             verify(runtimePathConfig, never()).getTessDataPath();
         }
 
@@ -503,8 +471,7 @@ class OCRControllerMoreTest {
             when(endpointConfiguration.isGroupEnabled("tesseract")).thenReturn(false);
             ProcessPdfWithOcrRequest request = baseRequest("in.pdf");
 
-            assertThatThrownBy(() -> ocrController.processPdfWithOCR(request))
-                    .isInstanceOf(IOException.class);
+            assertThatThrownBy(() -> ocrController.processPdfWithOCR(request)).isInstanceOf(IOException.class);
             verify(endpointConfiguration).isGroupEnabled("OCRmyPDF");
             verify(endpointConfiguration).isGroupEnabled("tesseract");
         }

@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/invite")
-@Tag(
-        name = "Invite",
-        description =
-                """
+@Tag(name = "Invite", description = """
                 Invite-link generation and acceptance endpoints for onboarding new users.
 
                 Provides the ability to issue invitation tokens, send optional email invites,

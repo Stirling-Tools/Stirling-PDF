@@ -49,14 +49,26 @@ class AuthControllerMfaTest {
     private Authentication authentication;
     private User user;
 
-    @Mock private UserService userService;
-    @Mock private JwtServiceInterface jwtService;
-    @Mock private CustomUserDetailsService userDetailsService;
-    @Mock private LoginAttemptService loginAttemptService;
-    @Mock private MfaService mfaService;
-    @Mock private TotpService totpService;
+    @Mock
+    private UserService userService;
 
-    @InjectMocks private AuthController authController;
+    @Mock
+    private JwtServiceInterface jwtService;
+
+    @Mock
+    private CustomUserDetailsService userDetailsService;
+
+    @Mock
+    private LoginAttemptService loginAttemptService;
+
+    @Mock
+    private MfaService mfaService;
+
+    @Mock
+    private TotpService totpService;
+
+    @InjectMocks
+    private AuthController authController;
 
     @BeforeEach
     void setUp() {
@@ -76,8 +88,7 @@ class AuthControllerMfaTest {
 
     @Test
     void setupMfaReturnsSecretAndUri() throws Exception {
-        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
-                .thenReturn(Optional.of(user));
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME)).thenReturn(Optional.of(user));
         when(mfaService.isMfaEnabled(user)).thenReturn(false);
         when(totpService.generateSecret()).thenReturn("SECRET");
         when(totpService.buildOtpAuthUri(USERNAME, "SECRET")).thenReturn("otpauth://test");
@@ -92,8 +103,7 @@ class AuthControllerMfaTest {
 
     @Test
     void setupMfaReturnsConflictWhenAlreadyEnabled() throws Exception {
-        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
-                .thenReturn(Optional.of(user));
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME)).thenReturn(Optional.of(user));
         when(mfaService.isMfaEnabled(user)).thenReturn(true);
 
         mockMvc.perform(get("/api/v1/auth/mfa/setup").principal(authentication))
@@ -106,45 +116,37 @@ class AuthControllerMfaTest {
     @Test
     void setupMfaRejectsNonWebAuthenticationType() throws Exception {
         user.setAuthenticationType(AuthenticationType.OAUTH2);
-        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
-                .thenReturn(Optional.of(user));
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME)).thenReturn(Optional.of(user));
 
         mockMvc.perform(get("/api/v1/auth/mfa/setup").principal(authentication))
                 .andExpect(status().isForbidden())
-                .andExpect(
-                        content()
-                                .json(
-                                        "{\"error\":\"MFA settings are only available for web accounts\"}"));
+                .andExpect(content().json("{\"error\":\"MFA settings are only available for web accounts\"}"));
     }
 
     @Test
     void enableMfaRejectsMissingCode() throws Exception {
-        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
-                .thenReturn(Optional.of(user));
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME)).thenReturn(Optional.of(user));
         when(mfaService.getSecret(user)).thenReturn("SECRET");
 
-        mockMvc.perform(
-                        post("/api/v1/auth/mfa/enable")
-                                .principal(authentication)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{}"))
+        mockMvc.perform(post("/api/v1/auth/mfa/enable")
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().json("{\"error\":\"MFA code is required\"}"));
     }
 
     @Test
     void enableMfaCompletesWorkflow() throws Exception {
-        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
-                .thenReturn(Optional.of(user));
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME)).thenReturn(Optional.of(user));
         when(mfaService.getSecret(user)).thenReturn("SECRET");
         when(totpService.getValidTimeStep("SECRET", "123456")).thenReturn(42L);
         when(mfaService.isTotpStepUsable(user, 42L)).thenReturn(true);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/mfa/enable")
-                                .principal(authentication)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(Map.of("code", "123456"))))
+        mockMvc.perform(post("/api/v1/auth/mfa/enable")
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("code", "123456"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(true));
 
@@ -155,18 +157,16 @@ class AuthControllerMfaTest {
 
     @Test
     void disableMfaCompletesWorkflow() throws Exception {
-        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
-                .thenReturn(Optional.of(user));
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME)).thenReturn(Optional.of(user));
         when(mfaService.isMfaEnabled(user)).thenReturn(true);
         when(mfaService.getSecret(user)).thenReturn("SECRET");
         when(totpService.getValidTimeStep("SECRET", "654321")).thenReturn(7L);
         when(mfaService.isTotpStepUsable(user, 7L)).thenReturn(true);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/mfa/disable")
-                                .principal(authentication)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(Map.of("code", "654321"))))
+        mockMvc.perform(post("/api/v1/auth/mfa/disable")
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("code", "654321"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(false));
 
@@ -176,15 +176,13 @@ class AuthControllerMfaTest {
 
     @Test
     void disableMfaReturnsDisabledWhenNotEnabled() throws Exception {
-        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
-                .thenReturn(Optional.of(user));
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME)).thenReturn(Optional.of(user));
         when(mfaService.isMfaEnabled(user)).thenReturn(false);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/mfa/disable")
-                                .principal(authentication)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(Map.of("code", "654321"))))
+        mockMvc.perform(post("/api/v1/auth/mfa/disable")
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("code", "654321"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(false));
 
@@ -194,8 +192,7 @@ class AuthControllerMfaTest {
 
     @Test
     void cancelMfaSetupClearsPendingSecret() throws Exception {
-        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
-                .thenReturn(Optional.of(user));
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME)).thenReturn(Optional.of(user));
 
         mockMvc.perform(post("/api/v1/auth/mfa/setup/cancel").principal(authentication))
                 .andExpect(status().isOk())
@@ -206,8 +203,7 @@ class AuthControllerMfaTest {
 
     @Test
     void cancelMfaSetupReturnsConflictWhenEnabled() throws Exception {
-        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
-                .thenReturn(Optional.of(user));
+        when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME)).thenReturn(Optional.of(user));
         when(mfaService.isMfaEnabled(user)).thenReturn(true);
 
         mockMvc.perform(post("/api/v1/auth/mfa/setup/cancel").principal(authentication))

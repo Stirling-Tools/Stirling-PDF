@@ -39,14 +39,26 @@ import stirling.software.proprietary.security.service.TeamService;
 @DataJpaTest
 class AdminSettingsQueryPerfTest {
 
-    @Autowired private UserRepository userRepository;
-    @Autowired private SessionRepository sessionRepository;
-    @Autowired private TeamRepository teamRepository;
-    @Autowired private TeamMembershipRepository teamMembershipRepository;
-    @Autowired private ResourceGrantRepository resourceGrantRepository;
-    @Autowired private EntityManagerFactory emf;
+    @Autowired
+    private UserRepository userRepository;
 
-    @PersistenceContext private EntityManager em;
+    @Autowired
+    private SessionRepository sessionRepository;
+
+    @Autowired
+    private TeamRepository teamRepository;
+
+    @Autowired
+    private TeamMembershipRepository teamMembershipRepository;
+
+    @Autowired
+    private ResourceGrantRepository resourceGrantRepository;
+
+    @Autowired
+    private EntityManagerFactory emf;
+
+    @PersistenceContext
+    private EntityManager em;
 
     private AdminSettingsPerfHarness harness() {
         return new AdminSettingsPerfHarness(
@@ -76,8 +88,7 @@ class AdminSettingsQueryPerfTest {
                 large.users(), large.statements(), large.updates(), large.millis());
         long delta = large.statements() - small.statements();
         System.out.printf(
-                "[admin-settings scaling] +%d users cost +%d statements%n",
-                large.users() - small.users(), delta);
+                "[admin-settings scaling] +%d users cost +%d statements%n", large.users() - small.users(), delta);
 
         assertTrue(
                 delta <= 40,
@@ -87,9 +98,7 @@ class AdminSettingsQueryPerfTest {
                         + delta
                         + " SQL statements (expected <= 40). The roster endpoint still scales O(N).");
         assertEquals(
-                0,
-                large.updates(),
-                "admin-settings performed " + large.updates() + " row UPDATEs during a read (GET)");
+                0, large.updates(), "admin-settings performed " + large.updates() + " row UPDATEs during a read (GET)");
     }
 
     @Test
@@ -107,12 +116,7 @@ class AdminSettingsQueryPerfTest {
                         + "  wall-clock     : %d ms%n"
                         + "  statements/user: %.2f%n"
                         + "==============================================%n",
-                m.users(),
-                m.statements(),
-                m.updates(),
-                m.inserts(),
-                m.millis(),
-                (double) m.statements() / n);
+                m.users(), m.statements(), m.updates(), m.inserts(), m.millis(), (double) m.statements() / n);
 
         assertEquals(n, m.users(), "roster should return every seeded (non-internal) user");
     }
@@ -130,22 +134,14 @@ class AdminSettingsQueryPerfTest {
         List<Team> savedTeams = harness.teams().saveAll(List.of(acme, internal));
         harness.em().flush();
 
-        User adminUser =
-                harness.mkUser("admin", savedTeams.get(0), Role.ADMIN.getRoleId(), Map.of());
-        User mfaUser =
-                harness.mkUser(
-                        "mfa-user",
-                        savedTeams.get(0),
-                        Role.USER.getRoleId(),
-                        Map.of("mfaSecret", "TOPSECRET", "language", "fr"));
-        User apiUser =
-                harness.mkUser(
-                        "internal-api",
-                        savedTeams.get(0),
-                        Role.INTERNAL_API_USER.getRoleId(),
-                        Map.of());
-        User internalTeamUser =
-                harness.mkUser("internal-team", savedTeams.get(1), Role.USER.getRoleId(), Map.of());
+        User adminUser = harness.mkUser("admin", savedTeams.get(0), Role.ADMIN.getRoleId(), Map.of());
+        User mfaUser = harness.mkUser(
+                "mfa-user",
+                savedTeams.get(0),
+                Role.USER.getRoleId(),
+                Map.of("mfaSecret", "TOPSECRET", "language", "fr"));
+        User apiUser = harness.mkUser("internal-api", savedTeams.get(0), Role.INTERNAL_API_USER.getRoleId(), Map.of());
+        User internalTeamUser = harness.mkUser("internal-team", savedTeams.get(1), Role.USER.getRoleId(), Map.of());
         harness.users().saveAll(List.of(adminUser, mfaUser, apiUser, internalTeamUser));
         harness.em().flush();
         harness.em().clear();
@@ -156,9 +152,7 @@ class AdminSettingsQueryPerfTest {
                 controller.getAdminSettingsData(auth).getBody();
 
         Set<String> usernames =
-                data.getUsers().stream()
-                        .map(AdminUserSummary::getUsername)
-                        .collect(Collectors.toSet());
+                data.getUsers().stream().map(AdminUserSummary::getUsername).collect(Collectors.toSet());
         assertTrue(usernames.contains("admin"));
         assertTrue(usernames.contains("mfa-user"));
         assertFalse(usernames.contains("internal-api"), "internal-api user must be excluded");
@@ -169,11 +163,10 @@ class AdminSettingsQueryPerfTest {
         assertEquals("********", mfaSettings.get("mfaSecret"), "mfaSecret must be masked");
         assertEquals("fr", mfaSettings.get("language"), "non-secret settings preserved");
 
-        AdminUserSummary adminSummary =
-                data.getUsers().stream()
-                        .filter(u -> "admin".equals(u.getUsername()))
-                        .findFirst()
-                        .orElseThrow();
+        AdminUserSummary adminSummary = data.getUsers().stream()
+                .filter(u -> "admin".equals(u.getUsername()))
+                .findFirst()
+                .orElseThrow();
         assertTrue(adminSummary.isPortalAccess(), "admin should have portal access");
     }
 

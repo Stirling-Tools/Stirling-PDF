@@ -30,10 +30,7 @@ public class UIScaling {
 
     public static Insets scale(Insets insets) {
         return new Insets(
-                scaleHeight(insets.top),
-                scaleWidth(insets.left),
-                scaleHeight(insets.bottom),
-                scaleWidth(insets.right));
+                scaleHeight(insets.top), scaleWidth(insets.left), scaleHeight(insets.bottom), scaleWidth(insets.right));
     }
 
     public static Font scaleFont(Font font) {

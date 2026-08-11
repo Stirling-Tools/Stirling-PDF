@@ -18,13 +18,17 @@ import stirling.software.proprietary.security.model.exception.AuthenticationFail
 @ExtendWith(MockitoExtension.class)
 class JwtAuthenticationEntryPointTest {
 
-    @Mock private HttpServletRequest request;
+    @Mock
+    private HttpServletRequest request;
 
-    @Mock private HttpServletResponse response;
+    @Mock
+    private HttpServletResponse response;
 
-    @Mock private AuthenticationFailureException authException;
+    @Mock
+    private AuthenticationFailureException authException;
 
-    @InjectMocks private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @InjectMocks
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Test
     void testCommence() throws IOException {

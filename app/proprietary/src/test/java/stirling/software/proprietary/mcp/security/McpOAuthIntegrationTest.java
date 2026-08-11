@@ -66,7 +66,8 @@ class McpOAuthIntegrationTest {
     private static RSAPrivateKey privateKey;
     private static final String KEY_ID = "mcp-test-key";
 
-    @LocalServerPort private int port;
+    @LocalServerPort
+    private int port;
 
     private final HttpClient http = HttpClient.newHttpClient();
 
@@ -82,15 +83,14 @@ class McpOAuthIntegrationTest {
         String jwksJson = new JWKSet(jwk).toString();
 
         jwksServer = new MockWebServer();
-        jwksServer.setDispatcher(
-                new Dispatcher() {
-                    @Override
-                    public MockResponse dispatch(RecordedRequest request) {
-                        return new MockResponse()
-                                .setHeader("Content-Type", "application/json")
-                                .setBody(jwksJson);
-                    }
-                });
+        jwksServer.setDispatcher(new Dispatcher() {
+            @Override
+            public MockResponse dispatch(RecordedRequest request) {
+                return new MockResponse()
+                        .setHeader("Content-Type", "application/json")
+                        .setBody(jwksJson);
+            }
+        });
         jwksServer.start();
     }
 
@@ -111,8 +111,7 @@ class McpOAuthIntegrationTest {
 
     @Test
     void noToken_returns401WithResourceMetadataHeader() throws Exception {
-        HttpResponse<String> response =
-                postMcp(null, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}");
+        HttpResponse<String> response = postMcp(null, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}");
         assertThat(response.statusCode()).isEqualTo(401);
         String wwwAuth = response.headers().firstValue("WWW-Authenticate").orElse("");
         assertThat(wwwAuth).contains("resource_metadata=");
@@ -122,69 +121,56 @@ class McpOAuthIntegrationTest {
 
     @Test
     void validToken_callsToolsListSuccessfully() throws Exception {
-        String token =
-                mintToken(
-                        ISSUER,
-                        List.of(RESOURCE_ID),
-                        "mcp.tools.read mcp.tools.write",
-                        Instant.now().plusSeconds(300));
-        HttpResponse<String> response =
-                postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
+        String token = mintToken(
+                ISSUER,
+                List.of(RESOURCE_ID),
+                "mcp.tools.read mcp.tools.write",
+                Instant.now().plusSeconds(300));
+        HttpResponse<String> response = postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body()).contains("stirling_describe_operation");
     }
 
     @Test
     void wrongAudience_isRejected() throws Exception {
-        String token =
-                mintToken(
-                        ISSUER,
-                        List.of("https://some-other-resource.example.com"),
-                        "mcp.tools.read",
-                        Instant.now().plusSeconds(300));
-        HttpResponse<String> response =
-                postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}");
+        String token = mintToken(
+                ISSUER,
+                List.of("https://some-other-resource.example.com"),
+                "mcp.tools.read",
+                Instant.now().plusSeconds(300));
+        HttpResponse<String> response = postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}");
         assertThat(response.statusCode()).isEqualTo(401);
     }
 
     @Test
     void expiredToken_isRejected() throws Exception {
-        String token =
-                mintToken(
-                        ISSUER,
-                        List.of(RESOURCE_ID),
-                        "mcp.tools.read",
-                        Instant.now().minusSeconds(60));
-        HttpResponse<String> response =
-                postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}");
+        String token = mintToken(
+                ISSUER, List.of(RESOURCE_ID), "mcp.tools.read", Instant.now().minusSeconds(60));
+        HttpResponse<String> response = postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}");
         assertThat(response.statusCode()).isEqualTo(401);
     }
 
     @Test
     void validTokenButNoStirlingAccount_isRejectedWith403() throws Exception {
         // 'ghost-user' is not provisioned, so account-binding rejects an otherwise-valid token.
-        String token =
-                mintToken(
-                        "ghost-user",
-                        ISSUER,
-                        List.of(RESOURCE_ID),
-                        "mcp.tools.read mcp.tools.write",
-                        Instant.now().plusSeconds(300));
-        HttpResponse<String> response =
-                postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
+        String token = mintToken(
+                "ghost-user",
+                ISSUER,
+                List.of(RESOURCE_ID),
+                "mcp.tools.read mcp.tools.write",
+                Instant.now().plusSeconds(300));
+        HttpResponse<String> response = postMcp(token, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
         assertThat(response.statusCode()).isEqualTo(403);
     }
 
     @Test
     void oversizedBody_isRejectedWith413() throws Exception {
-        String token =
-                mintToken(
-                        ISSUER,
-                        List.of(RESOURCE_ID),
-                        "mcp.tools.read mcp.tools.write",
-                        Instant.now().plusSeconds(300));
-        StringBuilder big =
-                new StringBuilder("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"x\",\"params\":\"");
+        String token = mintToken(
+                ISSUER,
+                List.of(RESOURCE_ID),
+                "mcp.tools.read mcp.tools.write",
+                Instant.now().plusSeconds(300));
+        StringBuilder big = new StringBuilder("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"x\",\"params\":\"");
         big.append("A".repeat(300 * 1024));
         big.append("\"}");
         HttpResponse<String> response = postMcp(token, big.toString());
@@ -195,26 +181,19 @@ class McpOAuthIntegrationTest {
     void oversizedChunkedBody_isRejectedWith413() throws Exception {
         // No Content-Length (chunked transfer) exercises the streaming cap rather than the fast
         // check.
-        String token =
-                mintToken(
-                        ISSUER,
-                        List.of(RESOURCE_ID),
-                        "mcp.tools.read mcp.tools.write",
-                        Instant.now().plusSeconds(300));
-        byte[] big =
-                ("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"x\",\"params\":\""
-                                + "A".repeat(300 * 1024)
-                                + "\"}")
-                        .getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(base() + "/mcp"))
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", "Bearer " + token)
-                        .POST(
-                                HttpRequest.BodyPublishers.ofInputStream(
-                                        () -> new java.io.ByteArrayInputStream(big)))
-                        .build();
+        String token = mintToken(
+                ISSUER,
+                List.of(RESOURCE_ID),
+                "mcp.tools.read mcp.tools.write",
+                Instant.now().plusSeconds(300));
+        byte[] big = ("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"x\",\"params\":\"" + "A".repeat(300 * 1024) + "\"}")
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(base() + "/mcp"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + token)
+                .POST(HttpRequest.BodyPublishers.ofInputStream(() -> new java.io.ByteArrayInputStream(big)))
+                .build();
         HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
         assertThat(response.statusCode()).isEqualTo(413);
     }
@@ -223,12 +202,11 @@ class McpOAuthIntegrationTest {
     void malformedJson_returnsJsonRpcParseErrorEnvelope() throws Exception {
         // Unparseable JSON must be wrapped as a JSON-RPC Parse error (-32700), not Spring's HTML
         // 400.
-        String token =
-                mintToken(
-                        ISSUER,
-                        List.of(RESOURCE_ID),
-                        "mcp.tools.read mcp.tools.write",
-                        Instant.now().plusSeconds(300));
+        String token = mintToken(
+                ISSUER,
+                List.of(RESOURCE_ID),
+                "mcp.tools.read mcp.tools.write",
+                Instant.now().plusSeconds(300));
         HttpResponse<String> response = postMcp(token, "{ this is not valid json ");
         assertThat(response.statusCode()).isEqualTo(400);
         assertThat(response.body()).contains("-32700");
@@ -236,11 +214,10 @@ class McpOAuthIntegrationTest {
 
     @Test
     void metadataEndpoint_isReachableWithoutToken() throws Exception {
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(base() + "/.well-known/oauth-protected-resource"))
-                        .GET()
-                        .build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(base() + "/.well-known/oauth-protected-resource"))
+                .GET()
+                .build();
         HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body()).contains(RESOURCE_ID);
@@ -253,11 +230,10 @@ class McpOAuthIntegrationTest {
         // RFC 9728 path-inserted form for the /mcp resource. Must be served by the MCP chain
         // with authorization_servers populated; a default/uncustomized document here makes MCP
         // clients fall back to treating this server as its own authorization server.
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(base() + "/.well-known/oauth-protected-resource/mcp"))
-                        .GET()
-                        .build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(base() + "/.well-known/oauth-protected-resource/mcp"))
+                .GET()
+                .build();
         HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body()).contains(RESOURCE_ID);
@@ -267,11 +243,10 @@ class McpOAuthIntegrationTest {
     }
 
     private HttpResponse<String> postMcp(String token, String body) throws Exception {
-        HttpRequest.Builder builder =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(base() + "/mcp"))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(body));
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(base() + "/mcp"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body));
         if (token != null) {
             builder.header("Authorization", "Bearer " + token);
         }
@@ -282,27 +257,23 @@ class McpOAuthIntegrationTest {
         return "http://localhost:" + port;
     }
 
-    private static String mintToken(
-            String issuer, List<String> audience, String scope, Instant expiry) {
+    private static String mintToken(String issuer, List<String> audience, String scope, Instant expiry) {
         return mintToken("test-user", issuer, audience, scope, expiry);
     }
 
     private static String mintToken(
             String subject, String issuer, List<String> audience, String scope, Instant expiry) {
         try {
-            JWTClaimsSet claims =
-                    new JWTClaimsSet.Builder()
-                            .issuer(issuer)
-                            .subject(subject)
-                            .audience(audience)
-                            .claim("scope", scope)
-                            .issueTime(Date.from(Instant.now().minusSeconds(5)))
-                            .expirationTime(Date.from(expiry))
-                            .build();
-            SignedJWT jwt =
-                    new SignedJWT(
-                            new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(KEY_ID).build(),
-                            claims);
+            JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                    .issuer(issuer)
+                    .subject(subject)
+                    .audience(audience)
+                    .claim("scope", scope)
+                    .issueTime(Date.from(Instant.now().minusSeconds(5)))
+                    .expirationTime(Date.from(expiry))
+                    .build();
+            SignedJWT jwt = new SignedJWT(
+                    new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(KEY_ID).build(), claims);
             jwt.sign(new RSASSASigner(privateKey));
             return jwt.serialize();
         } catch (Exception e) {
@@ -341,12 +312,10 @@ class McpOAuthIntegrationTest {
         UserService userService() {
             UserService mock = org.mockito.Mockito.mock(UserService.class);
             stirling.software.proprietary.security.model.User account =
-                    org.mockito.Mockito.mock(
-                            stirling.software.proprietary.security.model.User.class);
+                    org.mockito.Mockito.mock(stirling.software.proprietary.security.model.User.class);
             org.mockito.Mockito.when(account.isEnabled()).thenReturn(true);
             org.mockito.Mockito.when(account.getUsername()).thenReturn("test-user");
-            org.mockito.Mockito.when(
-                            mock.findByUsernameIgnoreCase(org.mockito.ArgumentMatchers.anyString()))
+            org.mockito.Mockito.when(mock.findByUsernameIgnoreCase(org.mockito.ArgumentMatchers.anyString()))
                     .thenReturn(java.util.Optional.empty());
             org.mockito.Mockito.when(mock.findByUsernameIgnoreCase("test-user"))
                     .thenReturn(java.util.Optional.of(account));

@@ -38,7 +38,8 @@ class SsrfProtectionServiceTest {
         @DisplayName("returns true for any URL when protection disabled")
         void disabledAllowsEverything() {
             config.setEnabled(false);
-            assertThat(service.isUrlAllowed("http://169.254.169.254/latest/meta-data")).isTrue();
+            assertThat(service.isUrlAllowed("http://169.254.169.254/latest/meta-data"))
+                    .isTrue();
             assertThat(service.isUrlAllowed("http://127.0.0.1")).isTrue();
             assertThat(service.isUrlAllowed("not a url")).isTrue();
         }
@@ -53,13 +54,7 @@ class SsrfProtectionServiceTest {
         }
 
         @ParameterizedTest
-        @ValueSource(
-                strings = {
-                    "data:text/plain;base64,SGVsbG8=",
-                    "DATA:image/png;base64,iVBOR",
-                    "#section",
-                    "#"
-                })
+        @ValueSource(strings = {"data:text/plain;base64,SGVsbG8=", "DATA:image/png;base64,iVBOR", "#section", "#"})
         @DisplayName("data: URLs and fragments are always allowed")
         void dataAndFragmentAllowed(String url) {
             config.setEnabled(true);
@@ -253,7 +248,8 @@ class SsrfProtectionServiceTest {
         @Test
         @DisplayName("blocks AWS cloud-metadata IP 169.254.169.254")
         void blocksCloudMetadata() {
-            assertThat(service.isUrlAllowed("http://169.254.169.254/latest/meta-data/")).isFalse();
+            assertThat(service.isUrlAllowed("http://169.254.169.254/latest/meta-data/"))
+                    .isFalse();
         }
 
         @Test

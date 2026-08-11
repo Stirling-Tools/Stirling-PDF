@@ -31,8 +31,7 @@ class ExternalApiPathsTest {
 
         @Test
         void addsTheLeadingSlashWhenOmitted() {
-            assertThat(ExternalApiPaths.resolve(BASE, "scan"))
-                    .isEqualTo(URI.create("https://api.example.com/v1/scan"));
+            assertThat(ExternalApiPaths.resolve(BASE, "scan")).isEqualTo(URI.create("https://api.example.com/v1/scan"));
         }
 
         @Test
@@ -50,8 +49,7 @@ class ExternalApiPathsTest {
         @Test
         void allowsATraversalThatStaysUnderTheBase() {
             // "/v1/a/../b" normalises to "/v1/b", which is still under the base.
-            assertThat(ExternalApiPaths.resolve(BASE, "/a/../b"))
-                    .isEqualTo(URI.create("https://api.example.com/v1/b"));
+            assertThat(ExternalApiPaths.resolve(BASE, "/a/../b")).isEqualTo(URI.create("https://api.example.com/v1/b"));
         }
 
         @Test
@@ -90,8 +88,7 @@ class ExternalApiPathsTest {
                     "file:///etc/passwd"
                 })
         void absoluteUrlIsRejected(String path) {
-            assertThatThrownBy(() -> ExternalApiPaths.resolve(BASE, path))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> ExternalApiPaths.resolve(BASE, path)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test

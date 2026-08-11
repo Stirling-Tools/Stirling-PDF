@@ -47,10 +47,11 @@ public class OAuth2Configuration {
     public static final String REDIRECT_URI_PATH = "{baseUrl}/login/oauth2/code/";
 
     private final ApplicationProperties applicationProperties;
-    @Lazy private final UserService userService;
 
-    public OAuth2Configuration(
-            ApplicationProperties applicationProperties, @Lazy UserService userService) {
+    @Lazy
+    private final UserService userService;
+
+    public OAuth2Configuration(ApplicationProperties applicationProperties, @Lazy UserService userService) {
         this.userService = userService;
         this.applicationProperties = applicationProperties;
         log.info(
@@ -59,8 +60,7 @@ public class OAuth2Configuration {
     }
 
     @Bean
-    public ClientRegistrationRepository clientRegistrationRepository()
-            throws NoProviderFoundException {
+    public ClientRegistrationRepository clientRegistrationRepository() throws NoProviderFoundException {
         List<ClientRegistration> registrations = new ArrayList<>();
         githubClientRegistration().ifPresent(registrations::add);
         oidcClientRegistration().ifPresent(registrations::add);
@@ -75,7 +75,9 @@ public class OAuth2Configuration {
         log.info(
                 "OAuth2 ClientRegistrationRepository created with {} provider(s): {}",
                 registrations.size(),
-                registrations.stream().map(ClientRegistration::getRegistrationId).toList());
+                registrations.stream()
+                        .map(ClientRegistration::getRegistrationId)
+                        .toList());
 
         return new InMemoryClientRegistrationRepository(registrations);
     }
@@ -89,24 +91,22 @@ public class OAuth2Configuration {
 
         Client client = oauth2.getClient();
         KeycloakProvider keycloakClient = client.getKeycloak();
-        Provider keycloak =
-                new KeycloakProvider(
-                        keycloakClient.getIssuer(),
-                        keycloakClient.getClientId(),
-                        keycloakClient.getClientSecret(),
-                        keycloakClient.getScopes(),
-                        keycloakClient.getUseAsUsername());
+        Provider keycloak = new KeycloakProvider(
+                keycloakClient.getIssuer(),
+                keycloakClient.getClientId(),
+                keycloakClient.getClientSecret(),
+                keycloakClient.getScopes(),
+                keycloakClient.getUseAsUsername());
 
         return validateProvider(keycloak)
-                ? Optional.of(
-                        ClientRegistrations.fromIssuerLocation(keycloak.getIssuer())
-                                .registrationId(keycloak.getName())
-                                .clientId(keycloak.getClientId())
-                                .clientSecret(keycloak.getClientSecret())
-                                .scope(keycloak.getScopes())
-                                .userNameAttributeName(keycloak.getUseAsUsername().getName())
-                                .clientName(keycloak.getClientName())
-                                .build())
+                ? Optional.of(ClientRegistrations.fromIssuerLocation(keycloak.getIssuer())
+                        .registrationId(keycloak.getName())
+                        .clientId(keycloak.getClientId())
+                        .clientSecret(keycloak.getClientSecret())
+                        .scope(keycloak.getScopes())
+                        .userNameAttributeName(keycloak.getUseAsUsername().getName())
+                        .clientName(keycloak.getClientName())
+                        .build())
                 : Optional.empty();
     }
 
@@ -119,27 +119,25 @@ public class OAuth2Configuration {
 
         Client client = oAuth2.getClient();
         GoogleProvider googleClient = client.getGoogle();
-        Provider google =
-                new GoogleProvider(
-                        googleClient.getClientId(),
-                        googleClient.getClientSecret(),
-                        googleClient.getScopes(),
-                        googleClient.getUseAsUsername());
+        Provider google = new GoogleProvider(
+                googleClient.getClientId(),
+                googleClient.getClientSecret(),
+                googleClient.getScopes(),
+                googleClient.getUseAsUsername());
 
         return validateProvider(google)
-                ? Optional.of(
-                        ClientRegistration.withRegistrationId(google.getName())
-                                .clientId(google.getClientId())
-                                .clientSecret(google.getClientSecret())
-                                .scope(google.getScopes())
-                                .authorizationUri(google.getAuthorizationUri())
-                                .tokenUri(google.getTokenUri())
-                                .userInfoUri(google.getUserInfoUri())
-                                .userNameAttributeName(google.getUseAsUsername().getName())
-                                .clientName(google.getClientName())
-                                .redirectUri(REDIRECT_URI_PATH + google.getName())
-                                .authorizationGrantType(AUTHORIZATION_CODE)
-                                .build())
+                ? Optional.of(ClientRegistration.withRegistrationId(google.getName())
+                        .clientId(google.getClientId())
+                        .clientSecret(google.getClientSecret())
+                        .scope(google.getScopes())
+                        .authorizationUri(google.getAuthorizationUri())
+                        .tokenUri(google.getTokenUri())
+                        .userInfoUri(google.getUserInfoUri())
+                        .userNameAttributeName(google.getUseAsUsername().getName())
+                        .clientName(google.getClientName())
+                        .redirectUri(REDIRECT_URI_PATH + google.getName())
+                        .authorizationGrantType(AUTHORIZATION_CODE)
+                        .build())
                 : Optional.empty();
     }
 
@@ -163,29 +161,27 @@ public class OAuth2Configuration {
             return Optional.empty();
         }
 
-        Provider github =
-                new GitHubProvider(
-                        githubClient.getClientId(),
-                        githubClient.getClientSecret(),
-                        githubClient.getScopes(),
-                        githubClient.getUseAsUsername());
+        Provider github = new GitHubProvider(
+                githubClient.getClientId(),
+                githubClient.getClientSecret(),
+                githubClient.getScopes(),
+                githubClient.getUseAsUsername());
 
         boolean isValid = validateProvider(github);
 
         return isValid
-                ? Optional.of(
-                        ClientRegistration.withRegistrationId(github.getName())
-                                .clientId(github.getClientId())
-                                .clientSecret(github.getClientSecret())
-                                .scope(github.getScopes())
-                                .authorizationUri(github.getAuthorizationUri())
-                                .tokenUri(github.getTokenUri())
-                                .userInfoUri(github.getUserInfoUri())
-                                .userNameAttributeName(github.getUseAsUsername().getName())
-                                .clientName(github.getClientName())
-                                .redirectUri(REDIRECT_URI_PATH + github.getName())
-                                .authorizationGrantType(AUTHORIZATION_CODE)
-                                .build())
+                ? Optional.of(ClientRegistration.withRegistrationId(github.getName())
+                        .clientId(github.getClientId())
+                        .clientSecret(github.getClientSecret())
+                        .scope(github.getScopes())
+                        .authorizationUri(github.getAuthorizationUri())
+                        .tokenUri(github.getTokenUri())
+                        .userInfoUri(github.getUserInfoUri())
+                        .userNameAttributeName(github.getUseAsUsername().getName())
+                        .clientName(github.getClientName())
+                        .redirectUri(REDIRECT_URI_PATH + github.getName())
+                        .authorizationGrantType(AUTHORIZATION_CODE)
+                        .build())
                 : Optional.empty();
     }
 
@@ -200,22 +196,19 @@ public class OAuth2Configuration {
         String firstChar = String.valueOf(name.charAt(0));
         String clientName = name.replaceFirst(firstChar, firstChar.toUpperCase(Locale.ROOT));
 
-        Provider oidcProvider =
-                new Provider(
-                        oauth.getIssuer(),
-                        name,
-                        clientName,
-                        oauth.getClientId(),
-                        oauth.getClientSecret(),
-                        oauth.getScopes(),
-                        UsernameAttribute.valueOf(
-                                oauth.getUseAsUsername().toUpperCase(Locale.ROOT)),
-                        null,
-                        null,
-                        null);
+        Provider oidcProvider = new Provider(
+                oauth.getIssuer(),
+                name,
+                clientName,
+                oauth.getClientId(),
+                oauth.getClientSecret(),
+                oauth.getScopes(),
+                UsernameAttribute.valueOf(oauth.getUseAsUsername().toUpperCase(Locale.ROOT)),
+                null,
+                null,
+                null);
 
-        boolean isValid =
-                !isStringEmpty(oidcProvider.getIssuer()) || validateProvider(oidcProvider);
+        boolean isValid = !isStringEmpty(oidcProvider.getIssuer()) || validateProvider(oidcProvider);
         if (isValid) {
             log.info(
                     "Initialised OIDC OAuth2 provider: registrationId='{}', issuer='{}', redirectUri='{}'",
@@ -227,17 +220,16 @@ public class OAuth2Configuration {
         }
 
         return isValid
-                ? Optional.of(
-                        ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
-                                .registrationId(name)
-                                .clientId(oidcProvider.getClientId())
-                                .clientSecret(oidcProvider.getClientSecret())
-                                .scope(oidcProvider.getScopes())
-                                .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
-                                .clientName(clientName)
-                                .redirectUri(REDIRECT_URI_PATH + name)
-                                .authorizationGrantType(AUTHORIZATION_CODE)
-                                .build())
+                ? Optional.of(ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
+                        .registrationId(name)
+                        .clientId(oidcProvider.getClientId())
+                        .clientSecret(oidcProvider.getClientSecret())
+                        .scope(oidcProvider.getScopes())
+                        .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
+                        .clientName(clientName)
+                        .redirectUri(REDIRECT_URI_PATH + name)
+                        .authorizationGrantType(AUTHORIZATION_CODE)
+                        .build())
                 : Optional.empty();
     }
 
@@ -260,30 +252,19 @@ public class OAuth2Configuration {
     GrantedAuthoritiesMapper userAuthoritiesMapper() {
         return (authorities) -> {
             Set<GrantedAuthority> mappedAuthorities = new HashSet<>();
-            authorities.forEach(
-                    authority -> {
-                        // Add existing OAUTH2 Authorities
-                        mappedAuthorities.add(new SimpleGrantedAuthority(authority.getAuthority()));
-                        // Add Authorities from database for existing user, if user is present.
-                        if (authority instanceof OAuth2UserAuthority oAuth2Auth) {
-                            String useAsUsername =
-                                    applicationProperties
-                                            .getSecurity()
-                                            .getOauth2()
-                                            .getUseAsUsername();
-                            Optional<User> userOpt =
-                                    userService.findByUsernameIgnoreCase(
-                                            (String) oAuth2Auth.getAttributes().get(useAsUsername));
-                            userOpt.ifPresent(
-                                    user ->
-                                            mappedAuthorities.add(
-                                                    new Authority(
-                                                            userService
-                                                                    .findRole(user)
-                                                                    .getAuthority(),
-                                                            user)));
-                        }
-                    });
+            authorities.forEach(authority -> {
+                // Add existing OAUTH2 Authorities
+                mappedAuthorities.add(new SimpleGrantedAuthority(authority.getAuthority()));
+                // Add Authorities from database for existing user, if user is present.
+                if (authority instanceof OAuth2UserAuthority oAuth2Auth) {
+                    String useAsUsername =
+                            applicationProperties.getSecurity().getOauth2().getUseAsUsername();
+                    Optional<User> userOpt = userService.findByUsernameIgnoreCase(
+                            (String) oAuth2Auth.getAttributes().get(useAsUsername));
+                    userOpt.ifPresent(user -> mappedAuthorities.add(
+                            new Authority(userService.findRole(user).getAuthority(), user)));
+                }
+            });
             return mappedAuthorities;
         };
     }

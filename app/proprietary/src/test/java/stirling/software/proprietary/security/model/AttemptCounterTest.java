@@ -58,20 +58,14 @@ class AttemptCounterTest {
         long after = System.currentTimeMillis();
 
         // Purpose: Ensure that count is 0 and the timestamp lies in the [before, after] window
-        assertAll(
-                () -> assertEquals(0, counter.getAttemptCount(), "attemptCount should be 0"),
-                () -> {
-                    long ts = counter.getLastAttemptTime();
-                    assertTrue(
-                            ts >= before && ts <= after,
-                            "lastAttemptTime should be between constructor start and end");
-                });
+        assertAll(() -> assertEquals(0, counter.getAttemptCount(), "attemptCount should be 0"), () -> {
+            long ts = counter.getLastAttemptTime();
+            assertTrue(ts >= before && ts <= after, "lastAttemptTime should be between constructor start and end");
+        });
     }
 
     @Test
-    @DisplayName(
-            "increment(): increases attemptCount and updates lastAttemptTime (not less than"
-                    + " before)")
+    @DisplayName("increment(): increases attemptCount and updates lastAttemptTime (not less than" + " before)")
     void increment_shouldIncreaseCountAndUpdateTime() {
         AttemptCounter counter = new AttemptCounter();
         long prevTime = counter.getLastAttemptTime();
@@ -81,10 +75,9 @@ class AttemptCounterTest {
         // Purpose: After increment, count is +1 and timestamp is not older than before
         assertAll(
                 () -> assertEquals(1, counter.getAttemptCount(), "attemptCount should be 1"),
-                () ->
-                        assertTrue(
-                                counter.getLastAttemptTime() >= prevTime,
-                                "lastAttemptTime should not be less after increment"));
+                () -> assertTrue(
+                        counter.getLastAttemptTime() >= prevTime,
+                        "lastAttemptTime should not be less after increment"));
     }
 
     @Test
@@ -99,15 +92,10 @@ class AttemptCounterTest {
 
         // Purpose: Ensure the counter is reset and time is updated
         assertAll(
-                () ->
-                        assertEquals(
-                                0,
-                                counter.getAttemptCount(),
-                                "attemptCount should be 0 after reset"),
-                () ->
-                        assertTrue(
-                                counter.getLastAttemptTime() >= beforeReset,
-                                "lastAttemptTime should be updated after reset (>= previous)"));
+                () -> assertEquals(0, counter.getAttemptCount(), "attemptCount should be 0 after reset"),
+                () -> assertTrue(
+                        counter.getLastAttemptTime() >= beforeReset,
+                        "lastAttemptTime should be updated after reset (>= previous)"));
     }
 
     @Nested
@@ -142,9 +130,7 @@ class AttemptCounterTest {
             setPrivateLong(counter, "lastAttemptTime", now - window);
 
             // Purpose: Equality -> reset should occur because the window has fully elapsed
-            assertTrue(
-                    counter.shouldReset(window),
-                    "With exactly equal difference, the reset window has elapsed");
+            assertTrue(counter.shouldReset(window), "With exactly equal difference, the reset window has elapsed");
         }
 
         @Test
@@ -190,8 +176,7 @@ class AttemptCounterTest {
             // Assumption/Documentation: Negative window is treated as already elapsed.
             assertTrue(
                     counter.shouldReset(-1L),
-                    "Negative window is nonsensical and should result in reset=true (elapsed >="
-                            + " negative)");
+                    "Negative window is nonsensical and should result in reset=true (elapsed >=" + " negative)");
         }
     }
 
@@ -201,13 +186,10 @@ class AttemptCounterTest {
         AttemptCounter counter = new AttemptCounter();
         assertAll(
                 // Purpose: Basic getter functionality
-                () ->
-                        assertEquals(
-                                0, counter.getAttemptCount(), "Initial attemptCount should be 0"),
-                () ->
-                        assertTrue(
-                                counter.getLastAttemptTime() <= System.currentTimeMillis(),
-                                "lastAttemptTime should not be in the future"));
+                () -> assertEquals(0, counter.getAttemptCount(), "Initial attemptCount should be 0"),
+                () -> assertTrue(
+                        counter.getLastAttemptTime() <= System.currentTimeMillis(),
+                        "lastAttemptTime should not be in the future"));
 
         counter.increment();
         int afterInc = counter.getAttemptCount();
@@ -216,17 +198,12 @@ class AttemptCounterTest {
         assertAll(
                 // Purpose: After increment, getters reflect the new state
                 () -> assertEquals(1, afterInc, "attemptCount should be 1 after increment"),
-                () ->
-                        assertEquals(
-                                last,
-                                counter.getLastAttemptTime(),
-                                "lastAttemptTime should be consistent"));
+                () -> assertEquals(last, counter.getLastAttemptTime(), "lastAttemptTime should be consistent"));
     }
 
     @Test
-    @DisplayName(
-            "Multiple increments(): Count increases monotonically and timestamp remains"
-                    + " monotonically non-decreasing")
+    @DisplayName("Multiple increments(): Count increases monotonically and timestamp remains"
+            + " monotonically non-decreasing")
     void multipleIncrements_shouldIncreaseMonotonically() {
         AttemptCounter counter = new AttemptCounter();
         long t1 = counter.getLastAttemptTime();
@@ -239,15 +216,8 @@ class AttemptCounterTest {
 
         // Purpose: Document monotonic behavior
         assertAll(
-                () ->
-                        assertEquals(
-                                2,
-                                counter.getAttemptCount(),
-                                "After two increments, count should be 2"),
-                () ->
-                        assertTrue(
-                                t2 >= t1 && t3 >= t2,
-                                "Timestamps should be monotonically non-decreasing"));
+                () -> assertEquals(2, counter.getAttemptCount(), "After two increments, count should be 2"),
+                () -> assertTrue(t2 >= t1 && t3 >= t2, "Timestamps should be monotonically non-decreasing"));
     }
 
     @Test
@@ -260,17 +230,13 @@ class AttemptCounterTest {
         // Set counter close to Integer.MAX_VALUE and increment()
         setPrivateInt(counter, "attemptCount", Integer.MAX_VALUE - 1);
         counter.increment(); // -> MAX_VALUE
-        assertEquals(
-                Integer.MAX_VALUE,
-                counter.getAttemptCount(),
-                "Count should reach Integer.MAX_VALUE");
+        assertEquals(Integer.MAX_VALUE, counter.getAttemptCount(), "Count should reach Integer.MAX_VALUE");
 
         counter.increment(); // -> overflow to Integer.MIN_VALUE
         assertEquals(
                 Integer.MIN_VALUE,
                 counter.getAttemptCount(),
-                "After increment past MAX_VALUE, int overflows to MIN_VALUE (Java standard"
-                        + " behavior)");
+                "After increment past MAX_VALUE, int overflows to MIN_VALUE (Java standard" + " behavior)");
     }
 
     @Test

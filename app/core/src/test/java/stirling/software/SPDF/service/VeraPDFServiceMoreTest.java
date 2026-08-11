@@ -28,8 +28,7 @@ import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 class VeraPDFServiceMoreTest {
 
     @SuppressWarnings("unchecked")
-    private static <T> T invokeStatic(String name, Class<?>[] types, Object... args)
-            throws Exception {
+    private static <T> T invokeStatic(String name, Class<?>[] types, Object... args) throws Exception {
         Method m = VeraPDFService.class.getDeclaredMethod(name, types);
         m.setAccessible(true);
         try {
@@ -67,8 +66,7 @@ class VeraPDFServiceMoreTest {
         @DisplayName("WTPDF flavour falls through to the raw flavour id")
         void wtpdf() throws Exception {
             // WTPDF ids ("wt1r") do not contain the "wtpdf" token, so the method returns toString()
-            assertThat(name(PDFAFlavour.WTPDF_1_0_REUSE))
-                    .isEqualTo(PDFAFlavour.WTPDF_1_0_REUSE.toString());
+            assertThat(name(PDFAFlavour.WTPDF_1_0_REUSE)).isEqualTo(PDFAFlavour.WTPDF_1_0_REUSE.toString());
         }
     }
 
@@ -92,8 +90,8 @@ class VeraPDFServiceMoreTest {
     @DisplayName("buildErrorResult flavour branches")
     class ErrorResult {
 
-        private PDFVerificationResult build(
-                PDFAFlavour declared, PDFAFlavour validation, String message) throws Exception {
+        private PDFVerificationResult build(PDFAFlavour declared, PDFAFlavour validation, String message)
+                throws Exception {
             return invokeStatic(
                     "buildErrorResult",
                     new Class<?>[] {PDFAFlavour.class, PDFAFlavour.class, String.class},
@@ -127,8 +125,7 @@ class VeraPDFServiceMoreTest {
     @DisplayName("convertToVerificationResult")
     class ConvertResult {
 
-        private PDFVerificationResult convert(
-                ValidationResult result, PDFAFlavour declared, PDFAFlavour validation)
+        private PDFVerificationResult convert(ValidationResult result, PDFAFlavour declared, PDFAFlavour validation)
                 throws Exception {
             return invokeStatic(
                     "convertToVerificationResult",
@@ -211,10 +208,7 @@ class VeraPDFServiceMoreTest {
             lenient().when(assertion.getLocation()).thenReturn(null);
 
             PDFVerificationResult.ValidationIssue issue =
-                    invokeStatic(
-                            "createValidationIssue",
-                            new Class<?>[] {TestAssertion.class},
-                            assertion);
+                    invokeStatic("createValidationIssue", new Class<?>[] {TestAssertion.class}, assertion);
 
             assertThat(issue.getClause()).isEqualTo("6.1.2");
             assertThat(issue.getTestNumber()).isEqualTo("7");

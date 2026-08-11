@@ -45,30 +45,30 @@ public class PortalInfraAuditService {
         return buildFromEvents(auditReadService.scopedEvents(cacheKey, principals), false);
     }
 
-    private InfraAuditLogResponse buildFromEvents(
-            List<PortalAuditEventRow> recent, boolean fullServer) {
-        List<InfraAuditEventDto> events =
-                recent.stream()
-                        .filter(e -> isInfraRelevant(e.type()))
-                        .map(this::toDto)
-                        .limit(RETURN_LIMIT)
-                        .toList();
+    private InfraAuditLogResponse buildFromEvents(List<PortalAuditEventRow> recent, boolean fullServer) {
+        List<InfraAuditEventDto> events = recent.stream()
+                .filter(e -> isInfraRelevant(e.type()))
+                .map(this::toDto)
+                .limit(RETURN_LIMIT)
+                .toList();
 
-        int policy = (int) events.stream().filter(e -> "policy".equals(e.getCategory())).count();
-        int processing =
-                (int) events.stream().filter(e -> "processing".equals(e.getCategory())).count();
-        int elevation =
-                (int) events.stream().filter(e -> "elevation".equals(e.getCategory())).count();
-        int config = (int) events.stream().filter(e -> "config".equals(e.getCategory())).count();
+        int policy = (int)
+                events.stream().filter(e -> "policy".equals(e.getCategory())).count();
+        int processing = (int) events.stream()
+                .filter(e -> "processing".equals(e.getCategory()))
+                .count();
+        int elevation = (int)
+                events.stream().filter(e -> "elevation".equals(e.getCategory())).count();
+        int config = (int)
+                events.stream().filter(e -> "config".equals(e.getCategory())).count();
 
-        InfraAuditSummary summary =
-                InfraAuditSummary.builder()
-                        .totalEvents(events.size())
-                        .policy(policy)
-                        .processing(processing)
-                        .elevation(elevation)
-                        .config(config)
-                        .build();
+        InfraAuditSummary summary = InfraAuditSummary.builder()
+                .totalEvents(events.size())
+                .policy(policy)
+                .processing(processing)
+                .elevation(elevation)
+                .config(config)
+                .build();
 
         return InfraAuditLogResponse.builder()
                 .summary(summary)
@@ -160,17 +160,14 @@ public class PortalInfraAuditService {
      * direct action. The name is only shown as the action on a real run URI, so a spoofed
      * X-Stirling-Policy-Name header on a direct tool call can't overwrite its true action.
      */
-    private static String actionFor(
-            String type, String path, String policyName, boolean automation) {
+    private static String actionFor(String type, String path, String policyName, boolean automation) {
         if (!automation && isPolicyRunPath(path)) {
             // A run with no name (ad-hoc pipeline) still reads better than the "run" endpoint.
             return policyName != null ? policyName : "Policy run";
         }
         String base = baseActionFor(type, path);
         if (automation) {
-            return policyName != null
-                    ? base + " (policy: " + policyName + ")"
-                    : base + " (automation)";
+            return policyName != null ? base + " (policy: " + policyName + ")" : base + " (automation)";
         }
         return base;
     }
@@ -179,9 +176,7 @@ public class PortalInfraAuditService {
      * The pipeline-run endpoints: {@code /policies/run}, {@code /run/stream}, {@code /{id}/run}.
      */
     private static boolean isPolicyRunPath(String path) {
-        return path != null
-                && path.contains("/policies/")
-                && (path.endsWith("/run") || path.endsWith("/run/stream"));
+        return path != null && path.contains("/policies/") && (path.endsWith("/run") || path.endsWith("/run/stream"));
     }
 
     private static String baseActionFor(String type, String path) {
@@ -201,16 +196,15 @@ public class PortalInfraAuditService {
     }
 
     /** Acronyms/tokens that get special casing when title-casing a tool path. */
-    private static final Map<String, String> WORD_FIXUPS =
-            Map.of(
-                    "pdf", "PDF",
-                    "pdfs", "PDFs",
-                    "ocr", "OCR",
-                    "img", "Image",
-                    "csv", "CSV",
-                    "html", "HTML",
-                    "url", "URL",
-                    "xml", "XML");
+    private static final Map<String, String> WORD_FIXUPS = Map.of(
+            "pdf", "PDF",
+            "pdfs", "PDFs",
+            "ocr", "OCR",
+            "img", "Image",
+            "csv", "CSV",
+            "html", "HTML",
+            "url", "URL",
+            "xml", "XML");
 
     /** "/api/v1/misc/compress-pdf" → "Compress PDF"; "merge-pdfs" → "Merge PDFs". */
     private static String prettyTool(String path) {
@@ -228,9 +222,7 @@ public class PortalInfraAuditService {
                 sb.append(' ');
             }
             String lower = word.toLowerCase(Locale.ROOT);
-            sb.append(
-                    WORD_FIXUPS.getOrDefault(
-                            lower, Character.toUpperCase(word.charAt(0)) + word.substring(1)));
+            sb.append(WORD_FIXUPS.getOrDefault(lower, Character.toUpperCase(word.charAt(0)) + word.substring(1)));
         }
         return sb.isEmpty() ? "PDF operation" : sb.toString();
     }
@@ -254,8 +246,7 @@ public class PortalInfraAuditService {
         return sb.toString();
     }
 
-    private static String targetFor(
-            String category, String path, Map<String, Object> data, boolean policyDispatch) {
+    private static String targetFor(String category, String path, Map<String, Object> data, boolean policyDispatch) {
         if (policyDispatch) {
             // The run touches no single file at this level; show the tools the policy runs instead.
             String steps = prettyStepList(data.get("policySteps"));
@@ -297,9 +288,7 @@ public class PortalInfraAuditService {
     @SuppressWarnings("unchecked")
     private static String firstFileName(Map<String, Object> data) {
         Object files = data.get("files");
-        if (files instanceof List<?> list
-                && !list.isEmpty()
-                && list.get(0) instanceof Map<?, ?> f) {
+        if (files instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof Map<?, ?> f) {
             Object name = ((Map<String, Object>) f).get("name");
             return name != null ? String.valueOf(name) : null;
         }

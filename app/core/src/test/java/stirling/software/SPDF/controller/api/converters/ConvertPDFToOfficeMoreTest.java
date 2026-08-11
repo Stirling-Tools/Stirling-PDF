@@ -58,45 +58,40 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ConvertPDFToOfficeMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertPDFToOffice controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @InjectMocks
+    private ConvertPDFToOffice controller;
 
     @BeforeEach
     void setUp() throws Exception {
         // Real temp files backing TempFileManager so the file-backed response can be read back.
-        lenient()
-                .when(tempFileManager.createManagedTempFile(any()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("conv-out", inv.<String>getArgument(0))
-                                            .toFile();
-                            f.deleteOnExit();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(any())).thenAnswer(inv -> {
+            File f =
+                    Files.createTempFile("conv-out", inv.<String>getArgument(0)).toFile();
+            f.deleteOnExit();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
 
         // PDFToFile creates its own TempFile(manager, suffix) which calls manager.createTempFile.
-        lenient()
-                .when(tempFileManager.createTempFile(any()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("conv-in", inv.<String>getArgument(0))
-                                            .toFile();
-                            f.deleteOnExit();
-                            return f;
-                        });
+        lenient().when(tempFileManager.createTempFile(any())).thenAnswer(inv -> {
+            File f = Files.createTempFile("conv-in", inv.<String>getArgument(0)).toFile();
+            f.deleteOnExit();
+            return f;
+        });
 
         // PDFToFile also creates a TempDirectory for LibreOffice output.
-        lenient()
-                .when(tempFileManager.createTempDirectory())
-                .thenAnswer(inv -> Files.createTempDirectory("conv-dir"));
+        lenient().when(tempFileManager.createTempDirectory()).thenAnswer(inv -> Files.createTempDirectory("conv-dir"));
 
         // Force the soffice fallback path (uno disabled) and a deterministic soffice binary name.
         lenient().when(runtimePathConfig.getUnoConvertPath()).thenReturn("");
@@ -105,15 +100,11 @@ class ConvertPDFToOfficeMoreTest {
 
     private MockMultipartFile pdfFile() {
         return new MockMultipartFile(
-                "fileInput",
-                "document.pdf",
-                MediaType.APPLICATION_PDF_VALUE,
-                "%PDF-1.4".getBytes());
+                "fileInput", "document.pdf", MediaType.APPLICATION_PDF_VALUE, "%PDF-1.4".getBytes());
     }
 
     private MockMultipartFile nonPdfFile() {
-        return new MockMultipartFile(
-                "fileInput", "document.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+        return new MockMultipartFile("fileInput", "document.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
     }
 
     private static byte[] readResource(Resource resource) throws IOException {
@@ -128,23 +119,20 @@ class ConvertPDFToOfficeMoreTest {
      * Stubs the LibreOffice executor so that running the soffice command writes a fake output file
      * (named {@code document.<ext>}) into the directory that follows {@code --outdir}.
      */
-    private void stubLibreOfficeWritesOutput(
-            MockedStatic<ProcessExecutor> mockedFactory, String primaryExt) throws Exception {
+    private void stubLibreOfficeWritesOutput(MockedStatic<ProcessExecutor> mockedFactory, String primaryExt)
+            throws Exception {
         ProcessExecutor executor = mock(ProcessExecutor.class);
         ProcessExecutorResult okResult = mock(ProcessExecutorResult.class);
         lenient().when(okResult.getRc()).thenReturn(0);
 
-        when(executor.runCommandWithOutputHandling(any()))
-                .thenAnswer(
-                        inv -> {
-                            List<String> cmd = inv.getArgument(0);
-                            int outDirIdx = cmd.indexOf("--outdir");
-                            Path outDir = Path.of(cmd.get(outDirIdx + 1));
-                            Path outFile = outDir.resolve("document." + primaryExt);
-                            Files.write(
-                                    outFile, "converted-bytes".getBytes(StandardCharsets.UTF_8));
-                            return okResult;
-                        });
+        when(executor.runCommandWithOutputHandling(any())).thenAnswer(inv -> {
+            List<String> cmd = inv.getArgument(0);
+            int outDirIdx = cmd.indexOf("--outdir");
+            Path outDir = Path.of(cmd.get(outDirIdx + 1));
+            Path outFile = outDir.resolve("document." + primaryExt);
+            Files.write(outFile, "converted-bytes".getBytes(StandardCharsets.UTF_8));
+            return okResult;
+        });
 
         mockedFactory
                 .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
@@ -193,13 +181,9 @@ class ConvertPDFToOfficeMoreTest {
 
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
                 ProcessExecutor executor = mock(ProcessExecutor.class);
-                when(executor.runCommandWithOutputHandling(any()))
-                        .thenThrow(new IOException("soffice crashed"));
+                when(executor.runCommandWithOutputHandling(any())).thenThrow(new IOException("soffice crashed"));
                 mockedFactory
-                        .when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.LIBRE_OFFICE))
+                        .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
                         .thenReturn(executor);
 
                 assertThrows(IOException.class, () -> controller.processPdfToPresentation(request));
@@ -286,11 +270,9 @@ class ConvertPDFToOfficeMoreTest {
             request.setFileInput(pdfFile());
             request.setOutputFormat("txt");
 
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class)))
-                    .thenThrow(new IOException("cannot parse pdf"));
+            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenThrow(new IOException("cannot parse pdf"));
 
-            IOException thrown =
-                    assertThrows(IOException.class, () -> controller.processPdfToRTForTXT(request));
+            IOException thrown = assertThrows(IOException.class, () -> controller.processPdfToRTForTXT(request));
             assertEquals("cannot parse pdf", thrown.getMessage());
         }
     }

@@ -16,9 +16,7 @@ public class WidthCalculator {
         }
 
         if (!TextEncodingHelper.canEncodeCharacters(font, text)) {
-            log.debug(
-                    "Text cannot be encoded by font {}, using fallback width calculation",
-                    font.getName());
+            log.debug("Text cannot be encoded by font {}, using fallback width calculation", font.getName());
             return calculateFallbackWidth(font, text, fontSize);
         }
 
@@ -27,23 +25,16 @@ public class WidthCalculator {
             float scaledWidth = (rawWidth / FONT_SCALE_FACTOR) * fontSize;
 
             log.debug(
-                    "Direct width calculation successful for font {}: {} -> {}",
-                    font.getName(),
-                    rawWidth,
-                    scaledWidth);
+                    "Direct width calculation successful for font {}: {} -> {}", font.getName(), rawWidth, scaledWidth);
             return scaledWidth;
 
         } catch (Exception e) {
-            log.debug(
-                    "Direct width calculation failed for font {}: {}",
-                    font.getName(),
-                    e.getMessage());
+            log.debug("Direct width calculation failed for font {}: {}", font.getName(), e.getMessage());
             return calculateWidthWithCharacterIteration(font, text, fontSize);
         }
     }
 
-    private static float calculateWidthWithCharacterIteration(
-            PDFont font, String text, float fontSize) {
+    private static float calculateWidthWithCharacterIteration(PDFont font, String text, float fontSize) {
         try {
             float totalWidth = 0;
 
@@ -83,12 +74,10 @@ public class WidthCalculator {
 
     private static float calculateFallbackWidth(PDFont font, String text, float fontSize) {
         try {
-            if (font.getFontDescriptor() != null
-                    && font.getFontDescriptor().getFontBoundingBox() != null) {
+            if (font.getFontDescriptor() != null && font.getFontDescriptor().getFontBoundingBox() != null) {
 
                 PDRectangle bbox = font.getFontDescriptor().getFontBoundingBox();
-                float avgCharWidth =
-                        bbox.getWidth() / FONT_SCALE_FACTOR * 0.6f; // Conservative estimate
+                float avgCharWidth = bbox.getWidth() / FONT_SCALE_FACTOR * 0.6f; // Conservative estimate
                 float fallbackWidth = text.length() * avgCharWidth * fontSize;
 
                 log.debug("Bounding box fallback width: {}", fallbackWidth);
@@ -103,10 +92,7 @@ public class WidthCalculator {
 
         } catch (Exception e) {
             float conservativeWidth = text.length() * 0.5f * fontSize;
-            log.debug(
-                    "Conservative fallback width for font {}: {}",
-                    font.getName(),
-                    conservativeWidth);
+            log.debug("Conservative fallback width for font {}: {}", font.getName(), conservativeWidth);
             return conservativeWidth;
         }
     }

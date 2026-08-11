@@ -48,11 +48,10 @@ public class OverlayImageController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Overlay image onto a PDF file",
-            description =
-                    "This endpoint overlays an image onto a PDF file at the specified coordinates."
-                            + " Supports both raster formats (PNG, JPEG, etc.) and vector format (SVG). SVG"
-                            + " files are rendered as vector graphics for crisp output at any resolution. The"
-                            + " image can be overlaid on every page of the PDF if specified.")
+            description = "This endpoint overlays an image onto a PDF file at the specified coordinates."
+                    + " Supports both raster formats (PNG, JPEG, etc.) and vector format (SVG). SVG"
+                    + " files are rendered as vector graphics for crisp output at any resolution. The"
+                    + " image can be overlaid on every page of the PDF if specified.")
     public ResponseEntity<Resource> overlayImage(@ModelAttribute OverlayImageRequest request) {
         MultipartFile pdfFile = request.getFileInput();
         MultipartFile imageFile = request.getImageFile();
@@ -77,15 +76,9 @@ public class OverlayImageController {
                     if (isSvg) {
                         SvgOverlayUtil.overlaySvgOnPage(document, page, imageBytes, x, y);
                     } else {
-                        try (PDPageContentStream contentStream =
-                                new PDPageContentStream(
-                                        document,
-                                        page,
-                                        PDPageContentStream.AppendMode.APPEND,
-                                        true,
-                                        true)) {
-                            PDImageXObject image =
-                                    PDImageXObject.createFromByteArray(document, imageBytes, "");
+                        try (PDPageContentStream contentStream = new PDPageContentStream(
+                                document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                            PDImageXObject image = PDImageXObject.createFromByteArray(document, imageBytes, "");
                             contentStream.drawImage(image, x, y);
                             log.info("Image successfully overlaid onto PDF page {}", i);
                         }
@@ -106,9 +99,7 @@ public class OverlayImageController {
                 log.info("PDF with overlaid image successfully created");
 
                 return WebResponseUtils.pdfFileToWebResponse(
-                        tempOut,
-                        GeneralUtils.generateFilename(
-                                pdfFile.getOriginalFilename(), "_overlayed.pdf"));
+                        tempOut, GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_overlayed.pdf"));
             }
 
         } catch (IOException e) {

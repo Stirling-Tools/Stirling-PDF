@@ -49,8 +49,7 @@ public class DecompressPdfController {
     @Operation(
             summary = "Decompress PDF streams",
             description = "Fully decompresses all PDF streams including text content")
-    public ResponseEntity<Resource> decompressPdf(@ModelAttribute PDFFile request)
-            throws IOException {
+    public ResponseEntity<Resource> decompressPdf(@ModelAttribute PDFFile request) throws IOException {
 
         MultipartFile file = request.getFileInput();
 
@@ -69,8 +68,7 @@ public class DecompressPdfController {
 
             // Return the PDF as a streaming response
             return WebResponseUtils.pdfFileToWebResponse(
-                    tempOut,
-                    GeneralUtils.generateFilename(file.getOriginalFilename(), "_decompressed.pdf"));
+                    tempOut, GeneralUtils.generateFilename(file.getOriginalFilename(), "_decompressed.pdf"));
         }
     }
 

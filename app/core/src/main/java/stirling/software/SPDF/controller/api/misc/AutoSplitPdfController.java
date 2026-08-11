@@ -56,11 +56,10 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class AutoSplitPdfController {
 
-    private static final Set<String> VALID_QR_CONTENTS =
-            Set.of(
-                    "https://github.com/Stirling-Tools/Stirling-PDF",
-                    "https://github.com/Frooodle/Stirling-PDF",
-                    "https://stirlingpdf.com");
+    private static final Set<String> VALID_QR_CONTENTS = Set.of(
+            "https://github.com/Stirling-Tools/Stirling-PDF",
+            "https://github.com/Frooodle/Stirling-PDF",
+            "https://stirlingpdf.com");
 
     private static final int MAX_IMAGES_FOR_DIRECT_EXTRACTION = 3;
 
@@ -239,26 +238,17 @@ public class AutoSplitPdfController {
     private String checkPageByRendering(PDFRenderer pdfRenderer, int pageNum) throws IOException {
         log.debug("Rendering page {} at {} DPI for QR detection", pageNum + 1, QR_DETECTION_DPI);
 
-        BufferedImage bim =
-                ExceptionUtils.handleOomRendering(
-                        pageNum + 1,
-                        QR_DETECTION_DPI,
-                        () -> pdfRenderer.renderImageWithDPI(pageNum, QR_DETECTION_DPI));
+        BufferedImage bim = ExceptionUtils.handleOomRendering(
+                pageNum + 1, QR_DETECTION_DPI, () -> pdfRenderer.renderImageWithDPI(pageNum, QR_DETECTION_DPI));
         String result = decodeQRCode(bim);
         bim = null; // allow GC before potential high-DPI retry
 
         if (result == null) {
             int maxDpi = getSystemMaxDpi();
             if (maxDpi > QR_DETECTION_DPI) {
-                log.debug(
-                        "Retrying page {} at {} DPI (low-DPI detection failed)",
-                        pageNum + 1,
-                        maxDpi);
-                BufferedImage highRes =
-                        ExceptionUtils.handleOomRendering(
-                                pageNum + 1,
-                                maxDpi,
-                                () -> pdfRenderer.renderImageWithDPI(pageNum, maxDpi));
+                log.debug("Retrying page {} at {} DPI (low-DPI detection failed)", pageNum + 1, maxDpi);
+                BufferedImage highRes = ExceptionUtils.handleOomRendering(
+                        pageNum + 1, maxDpi, () -> pdfRenderer.renderImageWithDPI(pageNum, maxDpi));
                 result = decodeQRCode(highRes);
             }
         }
@@ -280,12 +270,10 @@ public class AutoSplitPdfController {
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Auto split PDF pages into separate documents",
-            description =
-                    "This endpoint accepts a PDF file, scans each page for a specific QR code, and"
-                            + " splits the document at the QR code boundaries. The output is a zip file"
-                            + " containing each separate PDF document.")
-    public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
-            throws IOException {
+            description = "This endpoint accepts a PDF file, scans each page for a specific QR code, and"
+                    + " splits the document at the QR code boundaries. The output is a zip file"
+                    + " containing each separate PDF document.")
+    public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         boolean duplexMode = Boolean.TRUE.equals(request.getDuplexMode());
 
@@ -324,11 +312,7 @@ public class AutoSplitPdfController {
 
                 boolean isValidQrCode = qrResult != null && VALID_QR_CONTENTS.contains(qrResult);
                 if (isValidQrCode) {
-                    log.info(
-                            "Page {}/{} contains QR divider ('{}')",
-                            page + 1,
-                            totalPages,
-                            qrResult);
+                    log.info("Page {}/{} contains QR divider ('{}')", page + 1, totalPages, qrResult);
                 }
 
                 if (isValidQrCode && page != 0) {
@@ -351,9 +335,7 @@ public class AutoSplitPdfController {
             splitDocuments.removeIf(pdDocument -> pdDocument.getNumberOfPages() == 0);
             log.info("Split complete, {} output documents", splitDocuments.size());
 
-            String filename =
-                    GeneralUtils.removeExtension(
-                            Filenames.toSimpleFileName(file.getOriginalFilename()));
+            String filename = GeneralUtils.removeExtension(Filenames.toSimpleFileName(file.getOriginalFilename()));
 
             // Stream split documents directly into zip — avoids holding all PDFs in memory
             try (OutputStream fileOut = Files.newOutputStream(outputTempFile.getPath());

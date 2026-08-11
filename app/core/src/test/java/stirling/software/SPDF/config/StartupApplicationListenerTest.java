@@ -23,6 +23,5 @@ class StartupApplicationListenerTest {
     }
 
     // Minimal ApplicationContext to satisfy ContextRefreshedEvent construction.
-    private static class EmptyContext
-            extends org.springframework.context.support.StaticApplicationContext {}
+    private static class EmptyContext extends org.springframework.context.support.StaticApplicationContext {}
 }

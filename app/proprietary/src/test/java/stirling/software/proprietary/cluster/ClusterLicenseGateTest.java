@@ -39,8 +39,7 @@ class ClusterLicenseGateTest {
     void normalLicense_refusesClusterMode_withActionableMessage() throws Exception {
         ClusterLicenseGate gate = new ClusterLicenseGate();
         injectRunningProOrHigher(gate, Boolean.FALSE);
-        IllegalStateException ex =
-                assertThrows(IllegalStateException.class, () -> invokeVerify(gate));
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> invokeVerify(gate));
         String msg = ex.getMessage();
         // The error message must tell the operator exactly what to do.
         assertTrue(msg.contains("SERVER"), "message must mention SERVER license tier: " + msg);
@@ -48,9 +47,7 @@ class ClusterLicenseGateTest {
         assertTrue(
                 msg.contains("stirling.premium.key") || msg.contains("license key"),
                 "message must explain how to set the license: " + msg);
-        assertTrue(
-                msg.contains("cluster.enabled=false"),
-                "message must offer the opt-out (disable cluster): " + msg);
+        assertTrue(msg.contains("cluster.enabled=false"), "message must offer the opt-out (disable cluster): " + msg);
     }
 
     @Test

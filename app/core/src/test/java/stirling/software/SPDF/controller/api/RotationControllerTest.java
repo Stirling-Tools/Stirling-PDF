@@ -33,33 +33,31 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 public class RotationControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private RotationController rotationController;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private RotationController rotationController;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     @Test
     public void testRotatePDF() throws IOException {
         // Create a mock file
         MockMultipartFile mockFile =
-                new MockMultipartFile(
-                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
+                new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
         RotatePDFRequest request = new RotatePDFRequest();
         request.setFileInput(mockFile);
         request.setAngle(90);
@@ -87,17 +85,14 @@ public class RotationControllerTest {
     public void testRotatePDFInvalidAngle() {
         // Create a mock file
         MockMultipartFile mockFile =
-                new MockMultipartFile(
-                        "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
+                new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
         RotatePDFRequest request = new RotatePDFRequest();
         request.setFileInput(mockFile);
         request.setAngle(45); // Invalid angle
 
         // Act & Assert: Controller direkt aufrufen und Exception erwarten
         IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> rotationController.rotatePDF(request));
+                assertThrows(IllegalArgumentException.class, () -> rotationController.rotatePDF(request));
         assertEquals("Angle must be a multiple of 90", exception.getMessage());
     }
 }

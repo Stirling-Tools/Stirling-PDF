@@ -53,8 +53,7 @@ public class BlankPageController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    public static boolean isBlankImage(
-            BufferedImage image, int threshold, double whitePercent, int blurSize) {
+    public static boolean isBlankImage(BufferedImage image, int threshold, double whitePercent, int blurSize) {
         if (image == null) {
             log.info("Error: Image is null");
             return false;
@@ -76,11 +75,7 @@ public class BlankPageController {
         }
 
         double whitePixelPercentage = (whitePixels / (double) (width * height)) * 100;
-        log.info(
-                String.format(
-                        Locale.ROOT,
-                        "Page has white pixel percent of %.2f%%",
-                        whitePixelPercentage));
+        log.info(String.format(Locale.ROOT, "Page has white pixel percent of %.2f%%", whitePixelPercentage));
 
         return whitePixelPercentage >= whitePercent;
     }
@@ -92,11 +87,9 @@ public class BlankPageController {
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Remove blank pages from a PDF file",
-            description =
-                    "This endpoint removes blank pages from a given PDF file. Users can specify the"
-                            + " threshold and white percentage to tune the detection of blank pages.")
-    public ResponseEntity<Resource> removeBlankPages(
-            @ModelAttribute RemoveBlankPagesRequest request)
+            description = "This endpoint removes blank pages from a given PDF file. Users can specify the"
+                    + " threshold and white percentage to tune the detection of blank pages.")
+    public ResponseEntity<Resource> removeBlankPages(@ModelAttribute RemoveBlankPagesRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         int threshold = request.getThreshold();
@@ -140,13 +133,8 @@ public class BlankPageController {
                         final int dpi = renderDpi;
                         final int currentPageIndex = pageIndex;
 
-                        image =
-                                ExceptionUtils.handleOomRendering(
-                                        currentPageIndex + 1,
-                                        dpi,
-                                        () ->
-                                                pdfRenderer.renderImageWithDPI(
-                                                        currentPageIndex, dpi));
+                        image = ExceptionUtils.handleOomRendering(
+                                currentPageIndex + 1, dpi, () -> pdfRenderer.renderImageWithDPI(currentPageIndex, dpi));
                         blank = isBlankImage(image, threshold, whitePercent, threshold);
                     }
                 }
@@ -162,9 +150,7 @@ public class BlankPageController {
                 pageIndex++;
             }
 
-            String filename =
-                    GeneralUtils.removeExtension(
-                            Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
+            String filename = GeneralUtils.removeExtension(Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
 
             TempFile tempOut = tempFileManager.createManagedTempFile(".zip");
             try (OutputStream fos = Files.newOutputStream(tempOut.getFile().toPath());
@@ -194,8 +180,7 @@ public class BlankPageController {
         }
     }
 
-    public void createZipEntry(ZipOutputStream zos, List<PDPage> pages, String entryName)
-            throws IOException {
+    public void createZipEntry(ZipOutputStream zos, List<PDPage> pages, String entryName) throws IOException {
         try (PDDocument document = pdfDocumentFactory.createNewDocument()) {
 
             for (PDPage page : pages) {

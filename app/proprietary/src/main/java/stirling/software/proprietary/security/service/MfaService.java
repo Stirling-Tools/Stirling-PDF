@@ -64,8 +64,7 @@ public class MfaService {
      * @throws UnsupportedProviderException when the database provider is unsupported
      */
     @Transactional
-    public void setSecret(User user, String secret)
-            throws SQLException, UnsupportedProviderException {
+    public void setSecret(User user, String secret) throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_ENABLED_KEY, "false");
@@ -163,8 +162,7 @@ public class MfaService {
      * @throws SQLException when database persistence fails
      * @throws UnsupportedProviderException when the database provider is unsupported
      */
-    public boolean markTotpStepUsed(User user, long timeStep)
-            throws SQLException, UnsupportedProviderException {
+    public boolean markTotpStepUsed(User user, long timeStep) throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
         String lastUsed = settings.get(MFA_LAST_USED_STEP_KEY);
@@ -206,8 +204,7 @@ public class MfaService {
      * @throws SQLException when database persistence fails
      * @throws UnsupportedProviderException when the database provider is unsupported
      */
-    public void setMfaRequired(User user, boolean required)
-            throws SQLException, UnsupportedProviderException {
+    public void setMfaRequired(User user, boolean required) throws SQLException, UnsupportedProviderException {
         User managedUser = getUserWithSettings(user);
         Map<String, String> settings = ensureSettings(managedUser);
         settings.put(MFA_REQUIRED_KEY, Boolean.toString(required));

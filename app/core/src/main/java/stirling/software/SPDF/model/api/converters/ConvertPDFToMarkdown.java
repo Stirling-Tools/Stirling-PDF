@@ -40,15 +40,12 @@ public class ConvertPDFToMarkdown {
     @Operation(
             summary = "Convert PDF to Markdown",
             description = "This endpoint converts a PDF file to Markdown format.")
-    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file)
-            throws Exception {
+    public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
 
         String originalName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         String baseName =
-                originalName.contains(".")
-                        ? originalName.substring(0, originalName.lastIndexOf('.'))
-                        : originalName;
+                originalName.contains(".") ? originalName.substring(0, originalName.lastIndexOf('.')) : originalName;
 
         String markdown;
         try (TempFile tempInput = new TempFile(tempFileManager, ".pdf")) {
@@ -59,8 +56,6 @@ public class ConvertPDFToMarkdown {
         }
 
         return WebResponseUtils.bytesToWebResponse(
-                markdown.getBytes(StandardCharsets.UTF_8),
-                baseName + ".md",
-                MediaType.valueOf("text/markdown"));
+                markdown.getBytes(StandardCharsets.UTF_8), baseName + ".md", MediaType.valueOf("text/markdown"));
     }
 }

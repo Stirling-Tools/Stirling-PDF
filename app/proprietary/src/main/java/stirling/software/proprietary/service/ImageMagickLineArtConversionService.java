@@ -25,8 +25,7 @@ public class ImageMagickLineArtConversionService implements LineArtConversionSer
 
     @Override
     public PDImageXObject convertImageToLineArt(
-            PDDocument doc, PDImageXObject originalImage, double threshold, int edgeLevel)
-            throws IOException {
+            PDDocument doc, PDImageXObject originalImage, double threshold, int edgeLevel) throws IOException {
 
         Path inputImage = Files.createTempFile("lineart_image_input_", ".png");
         Path outputImage = Files.createTempFile("lineart_image_output_", ".tiff");
@@ -56,14 +55,11 @@ public class ImageMagickLineArtConversionService implements LineArtConversionSer
             command.add("Group4");
             command.add(outputImage.toString());
 
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.IMAGEMAGICK)
-                            .runCommandWithOutputHandling(command);
+            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.IMAGEMAGICK)
+                    .runCommandWithOutputHandling(command);
 
             if (result.getRc() != 0) {
-                log.warn(
-                        "ImageMagick line art conversion failed with return code: {}",
-                        result.getRc());
+                log.warn("ImageMagick line art conversion failed with return code: {}", result.getRc());
                 throw new IOException("ImageMagick line art conversion failed");
             }
 

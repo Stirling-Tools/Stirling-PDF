@@ -36,26 +36,21 @@ import tools.jackson.databind.node.ObjectNode;
 public class McpServerController {
 
     private static final String PREFERRED_PROTOCOL_VERSION = "2025-06-18";
-    private static final Set<String> SUPPORTED_PROTOCOL_VERSIONS =
-            Set.of("2025-06-18", "2025-03-26", "2024-11-05");
+    private static final Set<String> SUPPORTED_PROTOCOL_VERSIONS = Set.of("2025-06-18", "2025-03-26", "2024-11-05");
     private static final String SERVER_NAME = "stirling-pdf-mcp";
 
     private final ObjectMapper mapper;
     private final ApplicationProperties applicationProperties;
     private final Map<String, McpTool> toolsByName;
 
-    public McpServerController(
-            ObjectMapper mapper, ApplicationProperties applicationProperties, List<McpTool> tools) {
+    public McpServerController(ObjectMapper mapper, ApplicationProperties applicationProperties, List<McpTool> tools) {
         this.mapper = mapper;
         this.applicationProperties = applicationProperties;
         this.toolsByName = new HashMap<>();
         for (McpTool tool : tools) {
             this.toolsByName.put(tool.name(), tool);
         }
-        log.info(
-                "MCP server controller wired with {} tool(s): {}",
-                toolsByName.size(),
-                toolsByName.keySet());
+        log.info("MCP server controller wired with {} tool(s): {}", toolsByName.size(), toolsByName.keySet());
     }
 
     @PostMapping(
@@ -67,11 +62,8 @@ public class McpServerController {
         if (request == null) {
             // Valid JSON but not a JSON-RPC request -> Invalid Request, not Parse error.
             return ResponseEntity.badRequest()
-                    .body(
-                            JsonRpcResponse.failure(
-                                    null,
-                                    JsonRpcError.invalidRequest(
-                                            "Body is not a valid JSON-RPC 2.0 request")));
+                    .body(JsonRpcResponse.failure(
+                            null, JsonRpcError.invalidRequest("Body is not a valid JSON-RPC 2.0 request")));
         }
         if (request.isNotification()) {
             log.debug("Notification received: {}", sanitizeForLog(request.method()));
@@ -81,16 +73,9 @@ public class McpServerController {
         try {
             response = dispatch(request);
         } catch (RuntimeException e) {
-            log.warn(
-                    "MCP dispatch failed for method {}: {}",
-                    sanitizeForLog(request.method()),
-                    e.getMessage(),
-                    e);
-            response =
-                    JsonRpcResponse.failure(
-                            request.id(),
-                            JsonRpcError.internalError(
-                                    "Internal error handling " + request.method()));
+            log.warn("MCP dispatch failed for method {}: {}", sanitizeForLog(request.method()), e.getMessage(), e);
+            response = JsonRpcResponse.failure(
+                    request.id(), JsonRpcError.internalError("Internal error handling " + request.method()));
         }
         return ResponseEntity.ok(response);
     }
@@ -100,9 +85,7 @@ public class McpServerController {
     public ResponseEntity<JsonRpcResponse> handleUnreadable(HttpMessageNotReadableException ex) {
         return ResponseEntity.badRequest()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(
-                        JsonRpcResponse.failure(
-                                null, JsonRpcError.parseError("Request body is not valid JSON")));
+                .body(JsonRpcResponse.failure(null, JsonRpcError.parseError("Request body is not valid JSON")));
     }
 
     private static String sanitizeForLog(String value) {
@@ -121,36 +104,29 @@ public class McpServerController {
         if (method == null || !method.isTextual()) {
             return null;
         }
-        return new JsonRpcRequest(
-                jsonrpc.asText(), body.get("id"), method.asText(), body.get("params"));
+        return new JsonRpcRequest(jsonrpc.asText(), body.get("id"), method.asText(), body.get("params"));
     }
 
     private JsonRpcResponse dispatch(JsonRpcRequest request) {
         return switch (request.method()) {
-            case "initialize" ->
-                    JsonRpcResponse.success(request.id(), initializeResult(request.params()));
+            case "initialize" -> JsonRpcResponse.success(request.id(), initializeResult(request.params()));
             case "tools/list" -> JsonRpcResponse.success(request.id(), toolsListResult());
             case "tools/call" -> handleToolsCall(request);
             case "ping" -> JsonRpcResponse.success(request.id(), mapper.createObjectNode());
-            case "notifications/initialized" ->
-                    JsonRpcResponse.success(request.id(), mapper.createObjectNode());
-            default ->
-                    JsonRpcResponse.failure(
-                            request.id(), JsonRpcError.methodNotFound(request.method()));
+            case "notifications/initialized" -> JsonRpcResponse.success(request.id(), mapper.createObjectNode());
+            default -> JsonRpcResponse.failure(request.id(), JsonRpcError.methodNotFound(request.method()));
         };
     }
 
     private ObjectNode initializeResult(JsonNode params) {
         ObjectNode result = mapper.createObjectNode();
         // Echo the client's requested protocolVersion when supported, else advertise our preferred.
-        String requested =
-                params != null && params.hasNonNull("protocolVersion")
-                        ? params.get("protocolVersion").asText()
-                        : null;
-        String negotiated =
-                requested != null && SUPPORTED_PROTOCOL_VERSIONS.contains(requested)
-                        ? requested
-                        : PREFERRED_PROTOCOL_VERSION;
+        String requested = params != null && params.hasNonNull("protocolVersion")
+                ? params.get("protocolVersion").asText()
+                : null;
+        String negotiated = requested != null && SUPPORTED_PROTOCOL_VERSIONS.contains(requested)
+                ? requested
+                : PREFERRED_PROTOCOL_VERSION;
         result.put("protocolVersion", negotiated);
         ObjectNode caps = result.putObject("capabilities");
         caps.putObject("tools");
@@ -176,13 +152,11 @@ public class McpServerController {
     private JsonRpcResponse handleToolsCall(JsonRpcRequest request) {
         JsonNode params = request.params();
         if (params == null || !params.isObject()) {
-            return JsonRpcResponse.failure(
-                    request.id(), JsonRpcError.invalidParams("Missing params for tools/call"));
+            return JsonRpcResponse.failure(request.id(), JsonRpcError.invalidParams("Missing params for tools/call"));
         }
         JsonNode nameNode = params.get("name");
         if (nameNode == null || !nameNode.isTextual()) {
-            return JsonRpcResponse.failure(
-                    request.id(), JsonRpcError.invalidParams("Missing tool name"));
+            return JsonRpcResponse.failure(request.id(), JsonRpcError.invalidParams("Missing tool name"));
         }
         McpTool tool = toolsByName.get(nameNode.asText());
         if (tool == null) {

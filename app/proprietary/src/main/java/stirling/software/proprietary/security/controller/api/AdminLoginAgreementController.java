@@ -56,11 +56,9 @@ public class AdminLoginAgreementController {
 
     @PutMapping("/{locale}")
     @Operation(summary = "Write the login agreement markdown for a locale (blank clears it)")
-    public ResponseEntity<Void> write(
-            @PathVariable String locale, @RequestBody DisclaimerContentRequest request) {
+    public ResponseEntity<Void> write(@PathVariable String locale, @RequestBody DisclaimerContentRequest request) {
         try {
-            loginAgreementService.writeForLocale(
-                    locale, request == null ? null : request.content());
+            loginAgreementService.writeForLocale(locale, request == null ? null : request.content());
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();

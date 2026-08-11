@@ -38,8 +38,7 @@ public class PdfToVideoRequest extends PDFFile {
     private Integer dpi = 150;
 
     @Schema(
-            description =
-                    "Opacity of the watermark (only applied if a watermark text is specified)",
+            description = "Opacity of the watermark (only applied if a watermark text is specified)",
             minimum = "0.0",
             maximum = "1.0",
             defaultValue = "0.1")

@@ -11,9 +11,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class GeneralFile {
 
-    @Schema(
-            description = "The input file",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            format = "binary")
+    @Schema(description = "The input file", requiredMode = Schema.RequiredMode.REQUIRED, format = "binary")
     private MultipartFile fileInput;
 }

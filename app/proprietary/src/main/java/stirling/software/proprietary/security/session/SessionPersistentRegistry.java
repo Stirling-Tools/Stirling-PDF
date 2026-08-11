@@ -42,8 +42,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
     }
 
     @Override
-    public List<SessionInformation> getAllSessions(
-            Object principal, boolean includeExpiredSessions) {
+    public List<SessionInformation> getAllSessions(Object principal, boolean includeExpiredSessions) {
         List<SessionInformation> sessionInformations = new ArrayList<>();
         String principalName = null;
 
@@ -58,15 +57,13 @@ public class SessionPersistentRegistry implements SessionRegistry {
         }
 
         if (principalName != null) {
-            List<SessionEntity> sessionEntities =
-                    sessionRepository.findByPrincipalName(principalName);
+            List<SessionEntity> sessionEntities = sessionRepository.findByPrincipalName(principalName);
             for (SessionEntity sessionEntity : sessionEntities) {
                 if (includeExpiredSessions || !sessionEntity.isExpired()) {
-                    sessionInformations.add(
-                            new SessionInformation(
-                                    sessionEntity.getPrincipalName(),
-                                    sessionEntity.getSessionId(),
-                                    Date.from(sessionEntity.getLastRequest())));
+                    sessionInformations.add(new SessionInformation(
+                            sessionEntity.getPrincipalName(),
+                            sessionEntity.getSessionId(),
+                            Date.from(sessionEntity.getLastRequest())));
                 }
             }
         }
@@ -177,8 +174,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
     }
 
     // Update session details by principal name
-    public void updateSessionByPrincipalName(
-            String principalName, boolean expired, Date lastRequest) {
+    public void updateSessionByPrincipalName(String principalName, boolean expired, Date lastRequest) {
         sessionRepository.saveByPrincipalName(expired, lastRequest.toInstant(), principalName);
     }
 

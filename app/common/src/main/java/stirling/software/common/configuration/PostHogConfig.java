@@ -24,11 +24,10 @@ public class PostHogConfig {
 
     @Bean
     public PostHog postHogClient() {
-        postHogClient =
-                new PostHog.Builder(posthogApiKey)
-                        .host(posthogHost)
-                        .logger(new PostHogLoggerImpl())
-                        .build();
+        postHogClient = new PostHog.Builder(posthogApiKey)
+                .host(posthogHost)
+                .logger(new PostHogLoggerImpl())
+                .build();
         return postHogClient;
     }
 

@@ -81,10 +81,8 @@ final class AllTextLineExtractor extends PDFTextStripper {
             }
             float screenY = tp.getY();
             float screenX = tp.getX();
-            boolean yJump =
-                    !Float.isNaN(lastScreenY) && Math.abs(screenY - lastScreenY) > LINE_Y_TOLERANCE;
-            boolean xJump =
-                    !Float.isNaN(lastGlyphRight) && (screenX - lastGlyphRight) > COLUMN_GAP_X;
+            boolean yJump = !Float.isNaN(lastScreenY) && Math.abs(screenY - lastScreenY) > LINE_Y_TOLERANCE;
+            boolean xJump = !Float.isNaN(lastGlyphRight) && (screenX - lastGlyphRight) > COLUMN_GAP_X;
             if (yJump || xJump) {
                 flushLine();
             }

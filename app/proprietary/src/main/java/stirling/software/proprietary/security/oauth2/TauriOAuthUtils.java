@@ -66,10 +66,7 @@ public final class TauriOAuthUtils {
      * @return The full callback path
      */
     public static String defaultCallbackPath(String contextPath) {
-        if (contextPath == null
-                || contextPath.isBlank()
-                || "/".equals(contextPath)
-                || "\\".equals(contextPath)) {
+        if (contextPath == null || contextPath.isBlank() || "/".equals(contextPath) || "\\".equals(contextPath)) {
             return DEFAULT_CALLBACK_PATH;
         }
         return contextPath + DEFAULT_CALLBACK_PATH;
@@ -111,9 +108,7 @@ public final class TauriOAuthUtils {
         }
         for (Cookie cookie : cookies) {
             if (SPA_REDIRECT_COOKIE.equals(cookie.getName())) {
-                String value =
-                        java.net.URLDecoder.decode(
-                                cookie.getValue(), java.nio.charset.StandardCharsets.UTF_8);
+                String value = java.net.URLDecoder.decode(cookie.getValue(), java.nio.charset.StandardCharsets.UTF_8);
                 return value.trim().isEmpty() ? null : value.trim();
             }
         }

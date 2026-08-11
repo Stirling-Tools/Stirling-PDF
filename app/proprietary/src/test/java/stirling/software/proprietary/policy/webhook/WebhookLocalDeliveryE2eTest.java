@@ -39,7 +39,8 @@ class WebhookLocalDeliveryE2eTest {
     private static final String WEBHOOK_ID = "localwebhookid12";
     private static final String SECRET = "topsecret";
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private WebhookReceiverController receiver;
     private WebhookInputSource inputSource;
@@ -51,21 +52,18 @@ class WebhookLocalDeliveryE2eTest {
     void setUp() {
         WebhookSpool spool = new WebhookSpool(tempDir.resolve("spool"));
         SourceStore sourceStore = new InProcessSourceStore();
-        sourceStore.save(
-                new Source(
-                        "s1",
-                        "Partner uploads",
-                        "webhook",
-                        Map.of("webhookId", WEBHOOK_ID, "signingSecret", SECRET, "mode", "consume"),
-                        true,
-                        "owner",
-                        null));
+        sourceStore.save(new Source(
+                "s1",
+                "Partner uploads",
+                "webhook",
+                Map.of("webhookId", WEBHOOK_ID, "signingSecret", SECRET, "mode", "consume"),
+                true,
+                "owner",
+                null));
         trigger = mock(WebhookTrigger.class);
         FileReadinessChecker readiness = mock(FileReadinessChecker.class);
         when(readiness.isReady(any())).thenReturn(true);
-        receiver =
-                new WebhookReceiverController(
-                        sourceStore, spool, trigger, new ApplicationProperties());
+        receiver = new WebhookReceiverController(sourceStore, spool, trigger, new ApplicationProperties());
         inputSource = new WebhookInputSource(spool, readiness);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
@@ -91,14 +89,11 @@ class WebhookLocalDeliveryE2eTest {
     }
 
     private static InputSpec spec() {
-        return new InputSpec(
-                "webhook",
-                Map.of("webhookId", WEBHOOK_ID, "signingSecret", SECRET, "mode", "consume"));
+        return new InputSpec("webhook", Map.of("webhookId", WEBHOOK_ID, "signingSecret", SECRET, "mode", "consume"));
     }
 
     private static MockHttpServletRequest request(byte[] body) {
-        MockHttpServletRequest req =
-                new MockHttpServletRequest("POST", "/api/v1/webhooks/" + WEBHOOK_ID);
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/webhooks/" + WEBHOOK_ID);
         req.setContent(body);
         return req;
     }
@@ -119,8 +114,7 @@ class WebhookLocalDeliveryE2eTest {
         }
 
         @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
+        public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
             ledger.settle(POLICY, identity, finalGate, finalContentHash, success);
         }
 

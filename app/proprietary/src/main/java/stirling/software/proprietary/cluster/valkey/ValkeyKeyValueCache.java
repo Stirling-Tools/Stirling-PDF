@@ -26,8 +26,7 @@ public class ValkeyKeyValueCache implements KeyValueCache {
 
     @Override
     public void put(String namespace, String key, String value, Duration ttl) {
-        template.opsForValue()
-                .set(buildKey(namespace, key), value, ttl.toMillis(), TimeUnit.MILLISECONDS);
+        template.opsForValue().set(buildKey(namespace, key), value, ttl.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -42,8 +41,10 @@ public class ValkeyKeyValueCache implements KeyValueCache {
 
     @Override
     public void evictNamespace(String namespace) {
-        ScanOptions options =
-                ScanOptions.scanOptions().match(PREFIX + namespace + ":*").count(256).build();
+        ScanOptions options = ScanOptions.scanOptions()
+                .match(PREFIX + namespace + ":*")
+                .count(256)
+                .build();
         List<String> keys = new ArrayList<>();
         try (Cursor<String> cursor = template.scan(options)) {
             while (cursor.hasNext()) {

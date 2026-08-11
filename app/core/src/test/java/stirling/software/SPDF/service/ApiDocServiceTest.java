@@ -28,8 +28,11 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class ApiDocServiceTest {
 
-    @Mock ServletContext servletContext;
-    @Mock UserServiceInterface userService;
+    @Mock
+    ServletContext servletContext;
+
+    @Mock
+    UserServiceInterface userService;
 
     ApiDocService apiDocService;
     ObjectMapper mapper = JsonMapper.builder().build();
@@ -105,9 +108,7 @@ class ApiDocServiceTest {
         ApiEndpoint endpoint = new ApiEndpoint("/mixed", postNode);
         setApiDocumentation(Map.of("/mixed", endpoint));
         setApiDocsJsonRootNode();
-        assertTrue(
-                apiDocService.isValidOperation(
-                        "/mixed", Map.of("required1", "a", "optional1", "b")));
+        assertTrue(apiDocService.isValidOperation("/mixed", Map.of("required1", "a", "optional1", "b")));
         assertTrue(apiDocService.isValidOperation("/mixed", Map.of("required1", "a")));
         assertFalse(apiDocService.isValidOperation("/mixed", Map.of("optional1", "b")));
         assertFalse(apiDocService.isValidOperation("/mixed", Map.of()));

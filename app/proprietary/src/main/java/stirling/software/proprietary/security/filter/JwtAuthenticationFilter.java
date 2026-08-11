@@ -53,8 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         // Start clean so a pooled thread can't inherit a prior request's key label. This filter
         // runs before UserAuthenticationFilter, so in JWT mode it owns the API-key label lifecycle.
@@ -119,8 +118,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 handleAuthenticationFailure(
                         request,
                         response,
-                        new AuthenticationFailureException(
-                                "Error processing user authentication", e));
+                        new AuthenticationFailureException("Error processing user authentication", e));
                 return;
             }
         }
@@ -141,20 +139,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // per-user key) is consulted and per-key usage is recorded; the key runs as its
                     // owner. It also yields a per-key label for the processor's document
                     // attribution.
-                    Optional<ApiKeyAuthentication> resolved =
-                            apiKeyAuthenticationService.authenticate(apiKey);
+                    Optional<ApiKeyAuthentication> resolved = apiKeyAuthenticationService.authenticate(apiKey);
 
                     if (resolved.isEmpty()) {
                         handleAuthenticationFailure(
-                                request,
-                                response,
-                                new AuthenticationFailureException("Invalid API Key"));
+                                request, response, new AuthenticationFailureException("Invalid API Key"));
                         return false;
                     }
 
-                    authentication =
-                            new ApiKeyAuthenticationToken(
-                                    resolved.get().user(), apiKey, resolved.get().authorities());
+                    authentication = new ApiKeyAuthenticationToken(
+                            resolved.get().user(), apiKey, resolved.get().authorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     if (resolved.get().auditLabel() != null) {
                         MDC.put(
@@ -164,9 +158,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return true;
                 } catch (AuthenticationException e) {
                     handleAuthenticationFailure(
-                            request,
-                            response,
-                            new AuthenticationFailureException("Invalid API Key", e));
+                            request, response, new AuthenticationFailureException("Invalid API Key", e));
                     return false;
                 }
             }
@@ -187,8 +179,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (userDetails != null) {
                 UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
@@ -200,35 +191,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void processUserAuthenticationType(Map<String, Object> claims, String username)
             throws SQLException, UnsupportedProviderException {
-        AuthenticationType authenticationType =
-                AuthenticationType.valueOf(
-                        claims.getOrDefault("authType", WEB).toString().toUpperCase());
+        AuthenticationType authenticationType = AuthenticationType.valueOf(
+                claims.getOrDefault("authType", WEB).toString().toUpperCase());
         log.debug("Processing {} login for {} user", authenticationType, username);
 
         switch (authenticationType) {
             case OAUTH2 -> {
-                ApplicationProperties.Security.OAUTH2 oauth2Properties =
-                        securityProperties.getOauth2();
+                ApplicationProperties.Security.OAUTH2 oauth2Properties = securityProperties.getOauth2();
                 // Provider IDs should already be set during initial authentication
                 // Pass null here since this is validating an existing JWT token
-                userService.processSSOPostLogin(
-                        username, null, null, oauth2Properties.getAutoCreateUser(), OAUTH2);
+                userService.processSSOPostLogin(username, null, null, oauth2Properties.getAutoCreateUser(), OAUTH2);
             }
             case SAML2 -> {
-                ApplicationProperties.Security.SAML2 saml2Properties =
-                        securityProperties.getSaml2();
+                ApplicationProperties.Security.SAML2 saml2Properties = securityProperties.getSaml2();
                 // Provider IDs should already be set during initial authentication
                 // Pass null here since this is validating an existing JWT token
-                userService.processSSOPostLogin(
-                        username, null, null, saml2Properties.getAutoCreateUser(), SAML2);
+                userService.processSSOPostLogin(username, null, null, saml2Properties.getAutoCreateUser(), SAML2);
             }
         }
     }
 
     private void handleAuthenticationFailure(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException)
+            HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException, ServletException {
         authenticationEntryPoint.commence(request, response, authException);
     }

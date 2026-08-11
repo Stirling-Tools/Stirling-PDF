@@ -14,11 +14,7 @@ import stirling.software.common.cluster.FileStore;
  * supplies its own bean when {@code cluster.artifactStore=s3}.
  */
 @Configuration
-@ConditionalOnProperty(
-        prefix = "cluster",
-        name = "artifactStore",
-        havingValue = "local",
-        matchIfMissing = true)
+@ConditionalOnProperty(prefix = "cluster", name = "artifactStore", havingValue = "local", matchIfMissing = true)
 public class LocalDiskFileStoreConfiguration {
 
     @Bean

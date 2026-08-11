@@ -23,9 +23,7 @@ public class SignDocumentRequest {
 
     // Certificate-related fields
     @NotNull(message = "Certificate type is required")
-    @Pattern(
-            regexp = "SERVER|USER_CERT|UPLOAD|PEM|PKCS12|PFX|JKS",
-            message = "Invalid certificate type")
+    @Pattern(regexp = "SERVER|USER_CERT|UPLOAD|PEM|PKCS12|PFX|JKS", message = "Invalid certificate type")
     private String certType;
 
     private MultipartFile p12File;

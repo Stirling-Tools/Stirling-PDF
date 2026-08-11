@@ -34,15 +34,12 @@ public final class AiToolInputValidator {
         }
         String contentType = file.getContentType();
         if (contentType == null || !contentType.equals(MediaType.APPLICATION_PDF_VALUE)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Only application/pdf uploads are supported");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only application/pdf uploads are supported");
         }
         if (file.getSize() > MAX_INPUT_FILE_BYTES) {
             throw new ResponseStatusException(
                     HttpStatus.CONTENT_TOO_LARGE,
-                    "PDF exceeds maximum size of "
-                            + (MAX_INPUT_FILE_BYTES / (1024 * 1024))
-                            + " MB for AI tools");
+                    "PDF exceeds maximum size of " + (MAX_INPUT_FILE_BYTES / (1024 * 1024)) + " MB for AI tools");
         }
     }
 }

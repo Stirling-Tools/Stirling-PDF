@@ -29,8 +29,7 @@ class EEAppConfigTest {
         ApplicationProperties props = new ApplicationProperties();
         props.getPremium().getProFeatures().setSsoAutoLogin(true);
         LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
-        when(checker.getPremiumLicenseEnabledResult())
-                .thenReturn(KeygenLicenseVerifier.License.SERVER);
+        when(checker.getPremiumLicenseEnabledResult()).thenReturn(KeygenLicenseVerifier.License.SERVER);
 
         EEAppConfig cfg = new EEAppConfig(props, checker);
 
@@ -43,9 +42,8 @@ class EEAppConfigTest {
         props.getPremium().getProFeatures().setSsoAutoLogin(true);
         LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
         // Real LicenseKeyChecker.requireProOrEnterprise throws on NORMAL; mock that behavior here.
-        org.mockito.Mockito.doThrow(
-                        new IllegalStateException(
-                                "premium.proFeatures.ssoAutoLogin=true requires a Pro or Enterprise license"))
+        org.mockito.Mockito.doThrow(new IllegalStateException(
+                        "premium.proFeatures.ssoAutoLogin=true requires a Pro or Enterprise license"))
                 .when(checker)
                 .requireProOrEnterprise("premium.proFeatures.ssoAutoLogin=true");
 
@@ -53,7 +51,6 @@ class EEAppConfigTest {
 
         assertThatThrownBy(cfg::ssoAutoLogin)
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining(
-                        "premium.proFeatures.ssoAutoLogin=true requires a Pro or Enterprise license");
+                .hasMessageContaining("premium.proFeatures.ssoAutoLogin=true requires a Pro or Enterprise license");
     }
 }

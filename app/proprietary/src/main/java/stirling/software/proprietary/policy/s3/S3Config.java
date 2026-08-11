@@ -45,8 +45,7 @@ public record S3Config(
         String accessKeyId = trimmed(options.get(ACCESS_KEY_ID_OPTION));
         String secretAccessKey = trimmed(options.get(SECRET_ACCESS_KEY_OPTION));
         if (accessKeyId == null || secretAccessKey == null) {
-            throw new IllegalArgumentException(
-                    "s3 config requires an 'accessKeyId' and 'secretAccessKey'");
+            throw new IllegalArgumentException("s3 config requires an 'accessKeyId' and 'secretAccessKey'");
         }
         String mode = trimmed(options.get(MODE_OPTION));
         if (mode != null && !MODE_CONSUME.equals(mode) && !MODE_SNAPSHOT.equals(mode)) {

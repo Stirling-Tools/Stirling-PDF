@@ -36,17 +36,18 @@ class WebhookTriggerTest {
 
     private static final String TYPE = "webhook";
 
-    @Mock private PolicyStore policyStore;
-    @Mock private PolicyRunner policyRunner;
+    @Mock
+    private PolicyStore policyStore;
+
+    @Mock
+    private PolicyRunner policyRunner;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
     private WebhookTrigger trigger;
 
     @BeforeEach
     void setUp() {
-        trigger =
-                new WebhookTrigger(
-                        policyStore, policyRunner, sourceStore, new ApplicationProperties());
+        trigger = new WebhookTrigger(policyStore, policyRunner, sourceStore, new ApplicationProperties());
     }
 
     @Test
@@ -86,30 +87,21 @@ class WebhookTriggerTest {
     /** Every (policy, input) binding across the given policies, as the store would return them. */
     private static List<PolicyBinding> bindings(Policy... policies) {
         return Arrays.stream(policies)
-                .flatMap(
-                        policy -> policy.inputs().stream().map(in -> new PolicyBinding(policy, in)))
+                .flatMap(policy -> policy.inputs().stream().map(in -> new PolicyBinding(policy, in)))
                 .toList();
     }
 
     private Policy webhookPolicy(String id, String webhookId) {
-        String sourceId =
-                sourceStore
-                        .save(
-                                new Source(
-                                        null,
-                                        "hook",
-                                        "webhook",
-                                        Map.of(
-                                                "webhookId",
-                                                webhookId,
-                                                "signingSecret",
-                                                "s",
-                                                "mode",
-                                                "consume"),
-                                        true,
-                                        "owner",
-                                        null))
-                        .id();
+        String sourceId = sourceStore
+                .save(new Source(
+                        null,
+                        "hook",
+                        "webhook",
+                        Map.of("webhookId", webhookId, "signingSecret", "s", "mode", "consume"),
+                        true,
+                        "owner",
+                        null))
+                .id();
         return policy(id, new PipelineInput(sourceId, new TriggerConfig(TYPE, Map.of())));
     }
 

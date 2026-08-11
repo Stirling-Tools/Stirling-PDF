@@ -38,14 +38,11 @@ class ProcessExecutorMoreTest {
     }
 
     /** Configure a mocked Process with given streams, completion flag and exit code. */
-    private static Process mockedProcess(
-            String stdout, String stderr, boolean finished, int exitCode)
+    private static Process mockedProcess(String stdout, String stderr, boolean finished, int exitCode)
             throws InterruptedException {
         Process process = mock(Process.class);
-        when(process.getInputStream())
-                .thenReturn(new ByteArrayInputStream(stdout.getBytes(StandardCharsets.UTF_8)));
-        when(process.getErrorStream())
-                .thenReturn(new ByteArrayInputStream(stderr.getBytes(StandardCharsets.UTF_8)));
+        when(process.getInputStream()).thenReturn(new ByteArrayInputStream(stdout.getBytes(StandardCharsets.UTF_8)));
+        when(process.getErrorStream()).thenReturn(new ByteArrayInputStream(stderr.getBytes(StandardCharsets.UTF_8)));
         when(process.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(finished);
         when(process.exitValue()).thenReturn(exitCode);
         when(process.descendants()).thenReturn(Stream.empty());
@@ -54,12 +51,10 @@ class ProcessExecutorMoreTest {
 
     /** Stub every constructed ProcessBuilder so start() returns the supplied process. */
     private MockedConstruction<ProcessBuilder> stubProcessBuilder(Process process) {
-        return Mockito.mockConstruction(
-                ProcessBuilder.class,
-                (mockBuilder, context) -> {
-                    when(mockBuilder.start()).thenReturn(process);
-                    when(mockBuilder.directory(any())).thenReturn(mockBuilder);
-                });
+        return Mockito.mockConstruction(ProcessBuilder.class, (mockBuilder, context) -> {
+            when(mockBuilder.start()).thenReturn(process);
+            when(mockBuilder.directory(any())).thenReturn(mockBuilder);
+        });
     }
 
     @Nested
@@ -83,11 +78,7 @@ class ProcessExecutorMoreTest {
         void nonZeroExitThrows() throws Exception {
             Process process = mockedProcess("", "fatal: boom", true, 2);
             try (MockedConstruction<ProcessBuilder> ignored = stubProcessBuilder(process)) {
-                assertThatThrownBy(
-                                () ->
-                                        ghostscriptExecutor()
-                                                .runCommandWithOutputHandling(
-                                                        List.of("gs", "-bad")))
+                assertThatThrownBy(() -> ghostscriptExecutor().runCommandWithOutputHandling(List.of("gs", "-bad")))
                         .isInstanceOf(IOException.class)
                         .hasMessageContaining("exit code 2");
             }
@@ -98,10 +89,7 @@ class ProcessExecutorMoreTest {
         void nonZeroExitNoStderrThrows() throws Exception {
             Process process = mockedProcess("some stdout only", "", true, 5);
             try (MockedConstruction<ProcessBuilder> ignored = stubProcessBuilder(process)) {
-                assertThatThrownBy(
-                                () ->
-                                        ghostscriptExecutor()
-                                                .runCommandWithOutputHandling(List.of("gs", "x")))
+                assertThatThrownBy(() -> ghostscriptExecutor().runCommandWithOutputHandling(List.of("gs", "x")))
                         .isInstanceOf(IOException.class)
                         .hasMessageContaining("exit code 5");
             }
@@ -118,8 +106,7 @@ class ProcessExecutorMoreTest {
             Process process = mockedProcess("", "WARNING: minor issue", true, 3);
             try (MockedConstruction<ProcessBuilder> ignored = stubProcessBuilder(process)) {
                 ProcessExecutorResult result =
-                        qpdfExecutor()
-                                .runCommandWithOutputHandling(List.of("qpdf", "--check", "in.pdf"));
+                        qpdfExecutor().runCommandWithOutputHandling(List.of("qpdf", "--check", "in.pdf"));
                 assertThat(result.getRc()).isEqualTo(3);
             }
         }
@@ -129,11 +116,7 @@ class ProcessExecutorMoreTest {
         void qpdfExitTwoFails() throws Exception {
             Process process = mockedProcess("", "ERROR: broken", true, 2);
             try (MockedConstruction<ProcessBuilder> ignored = stubProcessBuilder(process)) {
-                assertThatThrownBy(
-                                () ->
-                                        qpdfExecutor()
-                                                .runCommandWithOutputHandling(
-                                                        List.of("qpdf", "in.pdf")))
+                assertThatThrownBy(() -> qpdfExecutor().runCommandWithOutputHandling(List.of("qpdf", "in.pdf")))
                         .isInstanceOf(IOException.class);
             }
         }
@@ -148,11 +131,7 @@ class ProcessExecutorMoreTest {
         void timeoutThrows() throws Exception {
             Process process = mockedProcess("", "", false, 0);
             try (MockedConstruction<ProcessBuilder> ignored = stubProcessBuilder(process)) {
-                assertThatThrownBy(
-                                () ->
-                                        qpdfExecutor()
-                                                .runCommandWithOutputHandling(
-                                                        List.of("qpdf", "slow")))
+                assertThatThrownBy(() -> qpdfExecutor().runCommandWithOutputHandling(List.of("qpdf", "slow")))
                         .isInstanceOf(IOException.class)
                         .hasMessageContaining("timeout");
                 Mockito.verify(process).destroyForcibly();
@@ -169,11 +148,9 @@ class ProcessExecutorMoreTest {
         void withWorkingDirectory() throws Exception {
             Process process = mockedProcess("ok", "", true, 0);
             try (MockedConstruction<ProcessBuilder> construction = stubProcessBuilder(process)) {
-                ProcessExecutorResult result =
-                        qpdfExecutor()
-                                .runCommandWithOutputHandling(
-                                        List.of("qpdf", "--version"),
-                                        new java.io.File(System.getProperty("java.io.tmpdir")));
+                ProcessExecutorResult result = qpdfExecutor()
+                        .runCommandWithOutputHandling(
+                                List.of("qpdf", "--version"), new java.io.File(System.getProperty("java.io.tmpdir")));
                 assertThat(result.getRc()).isEqualTo(0);
                 // directory(...) must have been applied to the single constructed builder.
                 ProcessBuilder built = construction.constructed().get(0);

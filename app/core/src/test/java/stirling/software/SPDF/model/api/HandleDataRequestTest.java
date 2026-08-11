@@ -14,8 +14,7 @@ class HandleDataRequestTest {
     @DisplayName("accessors round-trip")
     void roundTrip() {
         HandleDataRequest req = new HandleDataRequest();
-        MultipartFile[] files = {
-            new MockMultipartFile("a", new byte[] {1}), new MockMultipartFile("b", new byte[] {2})
+        MultipartFile[] files = {new MockMultipartFile("a", new byte[] {1}), new MockMultipartFile("b", new byte[] {2})
         };
         req.setFileInput(files);
         req.setJson("{\"name\":\"pipeline\"}");

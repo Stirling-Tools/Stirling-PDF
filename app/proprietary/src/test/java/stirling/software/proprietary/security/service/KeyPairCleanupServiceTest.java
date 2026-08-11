@@ -24,12 +24,23 @@ import stirling.software.proprietary.security.model.JwtVerificationKey;
 @ExtendWith(MockitoExtension.class)
 class KeyPairCleanupServiceTest {
 
-    @Mock private KeyPersistenceService keyPersistenceService;
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private ApplicationProperties.Security security;
-    @Mock private ApplicationProperties.Security.Jwt jwtProperties;
-    @Mock private DistributedLock distributedLock;
-    @Mock private LockHandle lockHandle;
+    @Mock
+    private KeyPersistenceService keyPersistenceService;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private ApplicationProperties.Security security;
+
+    @Mock
+    private ApplicationProperties.Security.Jwt jwtProperties;
+
+    @Mock
+    private DistributedLock distributedLock;
+
+    @Mock
+    private LockHandle lockHandle;
 
     private KeyPairCleanupService cleanupService;
 
@@ -39,9 +50,7 @@ class KeyPairCleanupServiceTest {
         lenient().when(security.getJwt()).thenReturn(jwtProperties);
         lenient().when(jwtProperties.isEnableKeyCleanup()).thenReturn(true);
         lenient().when(keyPersistenceService.isKeystoreEnabled()).thenReturn(true);
-        cleanupService =
-                new KeyPairCleanupService(
-                        keyPersistenceService, applicationProperties, distributedLock);
+        cleanupService = new KeyPairCleanupService(keyPersistenceService, applicationProperties, distributedLock);
     }
 
     @Test
@@ -82,8 +91,7 @@ class KeyPairCleanupServiceTest {
     @Test
     void skipsPruningWhenTheLockBackendErrors() {
         // A Valkey blip at boot must not fail startup: tryAcquire throwing degrades to skip.
-        when(distributedLock.tryAcquire(any(), any()))
-                .thenThrow(new RuntimeException("valkey unreachable"));
+        when(distributedLock.tryAcquire(any(), any())).thenThrow(new RuntimeException("valkey unreachable"));
 
         cleanupService.cleanup();
 

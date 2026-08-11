@@ -41,12 +41,10 @@ public class PolicyOutputResolver {
                     .map(Source::toOutputSpec)
                     .ifPresentOrElse(
                             resolved::add,
-                            () ->
-                                    log.warn(
-                                            "Policy {} references missing output source {}; skipping"
-                                                    + " that destination",
-                                            policy.id(),
-                                            outputId));
+                            () -> log.warn(
+                                    "Policy {} references missing output source {}; skipping" + " that destination",
+                                    policy.id(),
+                                    outputId));
         }
         return resolved.isEmpty() ? List.of(policy.output()) : resolved;
     }

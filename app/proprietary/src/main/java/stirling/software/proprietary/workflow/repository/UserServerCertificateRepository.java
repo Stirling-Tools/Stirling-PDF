@@ -10,8 +10,7 @@ import org.springframework.stereotype.Repository;
 import stirling.software.proprietary.workflow.model.UserServerCertificateEntity;
 
 @Repository
-public interface UserServerCertificateRepository
-        extends JpaRepository<UserServerCertificateEntity, Long> {
+public interface UserServerCertificateRepository extends JpaRepository<UserServerCertificateEntity, Long> {
 
     @Query("SELECT c FROM UserServerCertificateEntity c WHERE c.user.id = :userId")
     Optional<UserServerCertificateEntity> findByUserId(@Param("userId") Long userId);

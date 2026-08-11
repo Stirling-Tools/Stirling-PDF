@@ -37,9 +37,7 @@ class ExceptionUtilsTest {
             Exception cause = new Exception("root");
             IOException ex = ExceptionUtils.createPdfCorruptedException("during merge", cause);
 
-            assertTrue(
-                    ex.getMessage()
-                            .startsWith("Error during merge: PDF file appears to be corrupted"));
+            assertTrue(ex.getMessage().startsWith("Error during merge: PDF file appears to be corrupted"));
             assertSame(cause, ex.getCause());
         }
 
@@ -95,23 +93,20 @@ class ExceptionUtilsTest {
         @Test
         void testCreateIOException() {
             IOException ex =
-                    ExceptionUtils.createIOException(
-                            "key", "Default message: {0}", new Exception("cause"), "X");
+                    ExceptionUtils.createIOException("key", "Default message: {0}", new Exception("cause"), "X");
             assertEquals("Default message: X", ex.getMessage());
         }
 
         @Test
         void testCreateRuntimeException() {
             RuntimeException ex =
-                    ExceptionUtils.createRuntimeException(
-                            "key", "Default message: {0}", new Exception("cause"), "Y");
+                    ExceptionUtils.createRuntimeException("key", "Default message: {0}", new Exception("cause"), "Y");
             assertEquals("Default message: Y", ex.getMessage());
         }
 
         @Test
         void testCreateIllegalArgumentException() {
-            IllegalArgumentException ex =
-                    ExceptionUtils.createIllegalArgumentException("key", "Format {0}", "Z");
+            IllegalArgumentException ex = ExceptionUtils.createIllegalArgumentException("key", "Format {0}", "Z");
             assertEquals("Format Z", ex.getMessage());
         }
     }
@@ -193,8 +188,7 @@ class ExceptionUtilsTest {
 
         @Test
         void testCreateGhostscriptCompressionExceptionWithCause() {
-            IOException ex =
-                    ExceptionUtils.createGhostscriptCompressionException(new Exception("cause"));
+            IOException ex = ExceptionUtils.createGhostscriptCompressionException(new Exception("cause"));
             assertTrue(ex.getMessage().contains("Ghostscript"));
         }
     }
@@ -252,12 +246,8 @@ class ExceptionUtilsTest {
         @Test
         void testIsEncryptionErrorTrue() {
             assertTrue(ExceptionUtils.isEncryptionError(new IOException("BadPaddingException")));
-            assertTrue(
-                    ExceptionUtils.isEncryptionError(
-                            new IOException("Given final block not properly padded")));
-            assertTrue(
-                    ExceptionUtils.isEncryptionError(
-                            new IOException("AES initialization vector not fully read")));
+            assertTrue(ExceptionUtils.isEncryptionError(new IOException("Given final block not properly padded")));
+            assertTrue(ExceptionUtils.isEncryptionError(new IOException("AES initialization vector not fully read")));
             assertTrue(ExceptionUtils.isEncryptionError(new IOException("Failed to decrypt")));
         }
 
@@ -271,9 +261,7 @@ class ExceptionUtilsTest {
         void testIsPasswordErrorTrue() {
             assertTrue(ExceptionUtils.isPasswordError(new IOException("password is incorrect")));
             assertTrue(ExceptionUtils.isPasswordError(new IOException("Password is not provided")));
-            assertTrue(
-                    ExceptionUtils.isPasswordError(
-                            new IOException("PDF contains an encryption dictionary")));
+            assertTrue(ExceptionUtils.isPasswordError(new IOException("PDF contains an encryption dictionary")));
         }
 
         @Test
@@ -332,16 +320,14 @@ class ExceptionUtilsTest {
 
         @Test
         void testCreateInvalidArgumentExceptionSingle() {
-            IllegalArgumentException ex =
-                    ExceptionUtils.createInvalidArgumentException("arg", "invalidValue");
+            IllegalArgumentException ex = ExceptionUtils.createInvalidArgumentException("arg", "invalidValue");
             assertTrue(ex.getMessage().contains("arg"));
             assertTrue(ex.getMessage().contains("invalidValue"));
         }
 
         @Test
         void testCreateInvalidArgumentExceptionWithValue() {
-            IllegalArgumentException ex =
-                    ExceptionUtils.createInvalidArgumentException("arg", "val");
+            IllegalArgumentException ex = ExceptionUtils.createInvalidArgumentException("arg", "val");
             assertTrue(ex.getMessage().contains("val"));
         }
 

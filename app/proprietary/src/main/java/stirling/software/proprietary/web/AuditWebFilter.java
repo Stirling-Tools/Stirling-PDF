@@ -32,8 +32,7 @@ public class AuditWebFilter extends OncePerRequestFilter {
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         // Store key request info in MDC for logging and later audit use
@@ -62,11 +61,10 @@ public class AuditWebFilter extends OncePerRequestFilter {
             // Store authenticated user roles if available
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.getAuthorities() != null) {
-                String roles =
-                        auth.getAuthorities().stream()
-                                .map(a -> a.getAuthority())
-                                .reduce((a, b) -> a + "," + b)
-                                .orElse("");
+                String roles = auth.getAuthorities().stream()
+                        .map(a -> a.getAuthority())
+                        .reduce((a, b) -> a + "," + b)
+                        .orElse("");
                 MDC.put("userRoles", roles);
             }
 

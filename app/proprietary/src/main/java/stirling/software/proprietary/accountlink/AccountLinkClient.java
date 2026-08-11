@@ -65,8 +65,7 @@ public class AccountLinkClient {
     }
 
     /** Package-private: lets tests inject a stub {@link HttpClient}. */
-    AccountLinkClient(
-            AccountLinkProperties properties, ObjectMapper mapper, HttpClient httpClient) {
+    AccountLinkClient(AccountLinkProperties properties, ObjectMapper mapper, HttpClient httpClient) {
         this.properties = properties;
         this.mapper = mapper;
         this.httpClient = httpClient;
@@ -118,19 +117,17 @@ public class AccountLinkClient {
      *     admin).
      */
     public RegisterResult register(String supabaseJwt, String instanceName) throws IOException {
-        String body =
-                instanceName == null || instanceName.isBlank()
-                        ? "{}"
-                        : "{\"name\":" + mapper.writeValueAsString(instanceName) + "}";
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(uri("/api/v1/account-link/register"))
-                        .header("Authorization", "Bearer " + supabaseJwt)
-                        .header("Content-Type", "application/json")
-                        .header("Accept", "application/json")
-                        .timeout(timeout())
-                        .POST(HttpRequest.BodyPublishers.ofString(body))
-                        .build();
+        String body = instanceName == null || instanceName.isBlank()
+                ? "{}"
+                : "{\"name\":" + mapper.writeValueAsString(instanceName) + "}";
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(uri("/api/v1/account-link/register"))
+                .header("Authorization", "Bearer " + supabaseJwt)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .timeout(timeout())
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
 
         HttpResponse<String> response = send(request);
         if (response.statusCode() / 100 != 2) {
@@ -153,15 +150,14 @@ public class AccountLinkClient {
      */
     public boolean revokeSelf(String deviceId, String deviceSecret) {
         try {
-            HttpRequest request =
-                    HttpRequest.newBuilder()
-                            .uri(uri("/api/v1/instance/revoke-self"))
-                            .header(HEADER_DEVICE_ID, deviceId)
-                            .header(HEADER_DEVICE_SECRET, deviceSecret)
-                            .header("Accept", "application/json")
-                            .timeout(timeout())
-                            .POST(HttpRequest.BodyPublishers.noBody())
-                            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(uri("/api/v1/instance/revoke-self"))
+                    .header(HEADER_DEVICE_ID, deviceId)
+                    .header(HEADER_DEVICE_SECRET, deviceSecret)
+                    .header("Accept", "application/json")
+                    .timeout(timeout())
+                    .POST(HttpRequest.BodyPublishers.noBody())
+                    .build();
             HttpResponse<String> response = send(request);
             if (response.statusCode() / 100 != 2) {
                 log.debug("Self-revoke returned HTTP {}", response.statusCode());
@@ -188,15 +184,14 @@ public class AccountLinkClient {
     public InstanceEntitlement fetchEntitlement(String deviceId, String deviceSecret) {
         HttpResponse<String> response;
         try {
-            HttpRequest request =
-                    HttpRequest.newBuilder()
-                            .uri(uri("/api/v1/instance/entitlement"))
-                            .header(HEADER_DEVICE_ID, deviceId)
-                            .header(HEADER_DEVICE_SECRET, deviceSecret)
-                            .header("Accept", "application/json")
-                            .timeout(timeout())
-                            .GET()
-                            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(uri("/api/v1/instance/entitlement"))
+                    .header(HEADER_DEVICE_ID, deviceId)
+                    .header(HEADER_DEVICE_SECRET, deviceSecret)
+                    .header("Accept", "application/json")
+                    .timeout(timeout())
+                    .GET()
+                    .build();
             response = send(request);
         } catch (Exception e) {
             // Transport failure (timeout / connection refused / interrupted) → unknown, fail open.
@@ -247,16 +242,15 @@ public class AccountLinkClient {
             units.put("ai", aiUnits);
             units.put("automation", automationUnits);
             String body = mapper.writeValueAsString(root);
-            HttpRequest request =
-                    HttpRequest.newBuilder()
-                            .uri(uri("/api/v1/instance/sync"))
-                            .header(HEADER_DEVICE_ID, deviceId)
-                            .header(HEADER_DEVICE_SECRET, deviceSecret)
-                            .header("Content-Type", "application/json")
-                            .header("Accept", "application/json")
-                            .timeout(timeout())
-                            .POST(HttpRequest.BodyPublishers.ofString(body))
-                            .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(uri("/api/v1/instance/sync"))
+                    .header(HEADER_DEVICE_ID, deviceId)
+                    .header(HEADER_DEVICE_SECRET, deviceSecret)
+                    .header("Content-Type", "application/json")
+                    .header("Accept", "application/json")
+                    .timeout(timeout())
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
             response = send(request);
         } catch (Exception e) {
             log.debug("Usage sync failed: {}", e.getMessage());

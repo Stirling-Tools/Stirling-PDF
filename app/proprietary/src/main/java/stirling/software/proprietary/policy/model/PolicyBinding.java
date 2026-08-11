@@ -17,15 +17,10 @@ public record PolicyBinding(Policy policy, PipelineInput input) {
      */
     public static List<PolicyBinding> matching(List<Policy> policies, String triggerType) {
         return policies.stream()
-                .flatMap(
-                        policy ->
-                                policy.inputs().stream()
-                                        .filter(
-                                                input ->
-                                                        input.trigger() != null
-                                                                && triggerType.equals(
-                                                                        input.trigger().type()))
-                                        .map(input -> new PolicyBinding(policy, input)))
+                .flatMap(policy -> policy.inputs().stream()
+                        .filter(input -> input.trigger() != null
+                                && triggerType.equals(input.trigger().type()))
+                        .map(input -> new PolicyBinding(policy, input)))
                 .toList();
     }
 }

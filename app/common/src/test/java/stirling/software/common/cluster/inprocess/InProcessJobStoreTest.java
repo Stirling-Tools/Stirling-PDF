@@ -79,13 +79,6 @@ class InProcessJobStoreTest {
 
     private JobStoreEntry entry(String id) {
         return new JobStoreEntry(
-                id,
-                JobStoreEntry.JobState.PENDING,
-                "node-1",
-                Instant.now(),
-                null,
-                null,
-                List.of(),
-                Map.of());
+                id, JobStoreEntry.JobState.PENDING, "node-1", Instant.now(), null, null, List.of(), Map.of());
     }
 }

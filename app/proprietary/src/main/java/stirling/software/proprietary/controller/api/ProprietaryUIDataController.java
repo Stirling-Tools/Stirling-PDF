@@ -145,8 +145,7 @@ public class ProprietaryUIDataController {
         data.setCapturePdfAuthor(auditConfig.isCapturePdfAuthor());
         data.setCaptureOperationResults(auditConfig.isCaptureOperationResults());
         // pdfMetadataEnabled: true if any metadata flag is enabled (file hash or PDF author)
-        data.setPdfMetadataEnabled(
-                auditConfig.isCaptureFileHash() || auditConfig.isCapturePdfAuthor());
+        data.setPdfMetadataEnabled(auditConfig.isCaptureFileHash() || auditConfig.isCapturePdfAuthor());
 
         return ResponseEntity.ok(data);
     }
@@ -188,13 +187,10 @@ public class ProprietaryUIDataController {
         OAUTH2 oauth = securityProps.getOauth2();
 
         // Only add OAuth2 providers if loginMethod allows it
-        if (oauth != null
-                && oauth.getEnabled()
-                && securityProps.isOauth2Active()) { // This checks loginMethod
+        if (oauth != null && oauth.getEnabled() && securityProps.isOauth2Active()) { // This checks loginMethod
             if (oauth.isSettingsValid()) {
                 String firstChar = String.valueOf(oauth.getProvider().charAt(0));
-                String clientName =
-                        oauth.getProvider().replaceFirst(firstChar, firstChar.toUpperCase());
+                String clientName = oauth.getProvider().replaceFirst(firstChar, firstChar.toUpperCase());
                 providerList.put("/oauth2/authorization/" + oauth.getProvider(), clientName);
             }
 
@@ -202,21 +198,17 @@ public class ProprietaryUIDataController {
             if (client != null) {
                 GoogleProvider google = client.getGoogle();
                 if (validateProvider(google)) {
-                    providerList.put(
-                            "/oauth2/authorization/" + google.getName(), google.getClientName());
+                    providerList.put("/oauth2/authorization/" + google.getName(), google.getClientName());
                 }
 
                 GitHubProvider github = client.getGithub();
                 if (validateProvider(github)) {
-                    providerList.put(
-                            "/oauth2/authorization/" + github.getName(), github.getClientName());
+                    providerList.put("/oauth2/authorization/" + github.getName(), github.getClientName());
                 }
 
                 KeycloakProvider keycloak = client.getKeycloak();
                 if (validateProvider(keycloak)) {
-                    providerList.put(
-                            "/oauth2/authorization/" + keycloak.getName(),
-                            keycloak.getClientName());
+                    providerList.put("/oauth2/authorization/" + keycloak.getName(), keycloak.getClientName());
                 }
             }
         }
@@ -236,9 +228,7 @@ public class ProprietaryUIDataController {
         }
 
         // Remove null entries
-        providerList
-                .entrySet()
-                .removeIf(entry -> entry.getKey() == null || entry.getValue() == null);
+        providerList.entrySet().removeIf(entry -> entry.getKey() == null || entry.getValue() == null);
 
         data.setProviderList(providerList);
         data.setLoginMethod(securityProps.getLoginMethod());
@@ -293,8 +283,7 @@ public class ProprietaryUIDataController {
                 lastRequestByPrincipal.put((String) row[0], (Instant) row[1]);
             }
         }
-        Set<String> activePrincipals =
-                new HashSet<>(sessionRepository.findActivePrincipalsSince(activeCutoff));
+        Set<String> activePrincipals = new HashSet<>(sessionRepository.findActivePrincipalsSince(activeCutoff));
 
         Map<String, Boolean> userSessions = new HashMap<>();
         Map<String, Date> userLastRequest = new HashMap<>();
@@ -306,37 +295,29 @@ public class ProprietaryUIDataController {
             boolean hasActiveSession = activePrincipals.contains(username);
             Instant lastRequest = lastRequestByPrincipal.get(username);
             userSessions.put(username, hasActiveSession);
-            userLastRequest.put(
-                    username, lastRequest != null ? Date.from(lastRequest) : new Date(0));
+            userLastRequest.put(username, lastRequest != null ? Date.from(lastRequest) : new Date(0));
             userSettings.put(username, maskSecrets(settingsByUserId.get(user.getId())));
             if (hasActiveSession) activeUsers++;
             if (!user.isEnabled()) disabledUsers++;
         }
 
         // Sort users by active status and last request date
-        List<User> sortedUsers =
-                visibleUsers.stream()
-                        .sorted(
-                                (u1, u2) -> {
-                                    boolean u1Active = userSessions.get(u1.getUsername());
-                                    boolean u2Active = userSessions.get(u2.getUsername());
-                                    if (u1Active && !u2Active) return -1;
-                                    if (!u1Active && u2Active) return 1;
+        List<User> sortedUsers = visibleUsers.stream()
+                .sorted((u1, u2) -> {
+                    boolean u1Active = userSessions.get(u1.getUsername());
+                    boolean u2Active = userSessions.get(u2.getUsername());
+                    if (u1Active && !u2Active) return -1;
+                    if (!u1Active && u2Active) return 1;
 
-                                    Date u1LastRequest =
-                                            userLastRequest.getOrDefault(
-                                                    u1.getUsername(), new Date(0));
-                                    Date u2LastRequest =
-                                            userLastRequest.getOrDefault(
-                                                    u2.getUsername(), new Date(0));
-                                    return u2LastRequest.compareTo(u1LastRequest);
-                                })
-                        .toList();
+                    Date u1LastRequest = userLastRequest.getOrDefault(u1.getUsername(), new Date(0));
+                    Date u2LastRequest = userLastRequest.getOrDefault(u2.getUsername(), new Date(0));
+                    return u2LastRequest.compareTo(u1LastRequest);
+                })
+                .toList();
 
-        List<Team> allTeams =
-                teamRepository.findAll().stream()
-                        .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
-                        .toList();
+        List<Team> allTeams = teamRepository.findAll().stream()
+                .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
+                .toList();
 
         // Calculate license limits
         int maxAllowedUsers = licenseSettingsService.calculateMaxAllowedUsers();
@@ -351,25 +332,17 @@ public class ProprietaryUIDataController {
         List<TeamMembership> leaderMemberships =
                 teamMembershipRepository.findByRoleFetchingUserAndTeam(TeamRole.LEADER);
         Set<Long> leaderUserIds =
-                leaderMemberships.stream()
-                        .map(row -> row.getUser().getId())
-                        .collect(Collectors.toSet());
-        Set<Long> activeTeamLeaderUserIds =
-                leaderMemberships.stream()
-                        .filter(
-                                row ->
-                                        row.getUser().getTeam() != null
-                                                && row.getTeam()
-                                                        .getId()
-                                                        .equals(row.getUser().getTeam().getId()))
-                        .map(row -> row.getUser().getId())
-                        .collect(Collectors.toSet());
+                leaderMemberships.stream().map(row -> row.getUser().getId()).collect(Collectors.toSet());
+        Set<Long> activeTeamLeaderUserIds = leaderMemberships.stream()
+                .filter(row -> row.getUser().getTeam() != null
+                        && row.getTeam().getId().equals(row.getUser().getTeam().getId()))
+                .map(row -> row.getUser().getId())
+                .collect(Collectors.toSet());
         Set<Long> portalAccessUserIds =
                 resourceAccessService.usersWithPortalAccess(sortedUsers, activeTeamLeaderUserIds);
-        List<AdminUserSummary> userSummaries =
-                sortedUsers.stream()
-                        .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
-                        .toList();
+        List<AdminUserSummary> userSummaries = sortedUsers.stream()
+                .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
+                .toList();
 
         AdminSettingsData data = new AdminSettingsData();
         data.setUsers(userSummaries);
@@ -389,9 +362,8 @@ public class ProprietaryUIDataController {
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());
         // Email invites need the invites toggle AND SMTP on; matches the inviteUsers precondition.
-        data.setEmailInvitesEnabled(
-                applicationProperties.getMail().isEnableInvites()
-                        && applicationProperties.getMail().isEnabled());
+        data.setEmailInvitesEnabled(applicationProperties.getMail().isEnableInvites()
+                && applicationProperties.getMail().isEnabled());
         data.setUserSettings(userSettings);
         data.setLockedUsers(loginAttemptService.getAllBlockedUsers());
 
@@ -456,10 +428,9 @@ public class ProprietaryUIDataController {
     @Operation(summary = "Get teams list data")
     public ResponseEntity<TeamsData> getTeamsData() {
         List<TeamWithUserCountDTO> allTeamsWithCounts = teamRepository.findAllTeamsWithUserCount();
-        List<TeamWithUserCountDTO> teamsWithCounts =
-                allTeamsWithCounts.stream()
-                        .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
-                        .toList();
+        List<TeamWithUserCountDTO> teamsWithCounts = allTeamsWithCounts.stream()
+                .filter(team -> !TeamService.INTERNAL_TEAM_NAME.equals(team.getName()))
+                .toList();
 
         List<Object[]> teamActivities = sessionRepository.findLatestActivityByTeam();
         Map<Long, Date> teamLastRequest = new HashMap<>();
@@ -471,8 +442,7 @@ public class ProprietaryUIDataController {
         }
 
         Map<Long, List<String>> teamOwners = new HashMap<>();
-        for (TeamMembership row :
-                teamMembershipRepository.findByRoleFetchingUserAndTeam(TeamRole.LEADER)) {
+        for (TeamMembership row : teamMembershipRepository.findByRoleFetchingUserAndTeam(TeamRole.LEADER)) {
             teamOwners
                     .computeIfAbsent(row.getTeam().getId(), id -> new ArrayList<>())
                     .add(row.getUser().getUsername());
@@ -490,10 +460,7 @@ public class ProprietaryUIDataController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get team details data")
     public ResponseEntity<TeamDetailsData> getTeamDetailsData(@PathVariable("id") Long id) {
-        Team team =
-                teamRepository
-                        .findById(id)
-                        .orElseThrow(() -> new RuntimeException("Team not found"));
+        Team team = teamRepository.findById(id).orElseThrow(() -> new RuntimeException("Team not found"));
 
         if (TeamService.INTERNAL_TEAM_NAME.equals(team.getName())) {
             return ResponseEntity.status(403).build();
@@ -502,16 +469,13 @@ public class ProprietaryUIDataController {
         List<User> teamUsers = userRepository.findAllByTeamId(id);
         // Fetch authorities + team for the available-users list.
         List<User> allUsers = userRepository.findAllWithTeamAndAuthorities();
-        List<User> availableUsers =
-                allUsers.stream()
-                        .filter(
-                                user ->
-                                        (user.getTeam() == null
-                                                        || !user.getTeam().getId().equals(id))
-                                                && (user.getTeam() == null
-                                                        || !TeamService.INTERNAL_TEAM_NAME.equals(
-                                                                user.getTeam().getName())))
-                        .toList();
+        List<User> availableUsers = allUsers.stream()
+                .filter(user ->
+                        (user.getTeam() == null || !user.getTeam().getId().equals(id))
+                                && (user.getTeam() == null
+                                        || !TeamService.INTERNAL_TEAM_NAME.equals(
+                                                user.getTeam().getName())))
+                .toList();
 
         List<Object[]> userSessions = sessionRepository.findLatestSessionByTeamId(id);
         Map<String, Date> userLastRequest = new HashMap<>();
@@ -522,10 +486,9 @@ public class ProprietaryUIDataController {
             userLastRequest.put(username, lastRequest);
         }
 
-        Set<Long> ownerUserIds =
-                teamMembershipRepository.findByTeamIdAndRole(id, TeamRole.LEADER).stream()
-                        .map(row -> row.getUser().getId())
-                        .collect(Collectors.toSet());
+        Set<Long> ownerUserIds = teamMembershipRepository.findByTeamIdAndRole(id, TeamRole.LEADER).stream()
+                .map(row -> row.getUser().getId())
+                .collect(Collectors.toSet());
 
         TeamDetailsData data = new TeamDetailsData();
         data.setTeam(team);
@@ -570,8 +533,7 @@ public class ProprietaryUIDataController {
             return byUser;
         }
         for (Object[] row : userRepository.findSettingsByUserIds(userIds)) {
-            byUser.computeIfAbsent((Long) row[0], id -> new HashMap<>())
-                    .put((String) row[1], (String) row[2]);
+            byUser.computeIfAbsent((Long) row[0], id -> new HashMap<>()).put((String) row[1], (String) row[2]);
         }
         return byUser;
     }
@@ -588,8 +550,7 @@ public class ProprietaryUIDataController {
     /**
      * Convert a User to AdminUserSummary (excludes sensitive fields); portal access is passed in.
      */
-    private AdminUserSummary convertUserToSummary(
-            User user, Set<Long> leaderUserIds, Set<Long> portalAccessUserIds) {
+    private AdminUserSummary convertUserToSummary(User user, Set<Long> leaderUserIds, Set<Long> portalAccessUserIds) {
         AdminUserSummary summary = new AdminUserSummary();
         summary.setId(user.getId());
         summary.setTeamLead(leaderUserIds.contains(user.getId()));

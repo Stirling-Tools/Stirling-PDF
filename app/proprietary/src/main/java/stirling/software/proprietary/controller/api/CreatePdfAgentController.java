@@ -83,18 +83,14 @@ public class CreatePdfAgentController {
         return false;
     }
 
-    @PostMapping(
-            value = "/create-pdf-from-html-agent",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/create-pdf-from-html-agent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Convert an AI-generated document to a PDF",
-            description =
-                    "Accepts a structured document as a JSON parameter and returns a PDF. This"
-                            + " endpoint is dispatched by the AI workflow orchestrator as a plan"
-                            + " step; it is not intended for direct client use.")
+            description = "Accepts a structured document as a JSON parameter and returns a PDF. This"
+                    + " endpoint is dispatched by the AI workflow orchestrator as a plan"
+                    + " step; it is not intended for direct client use.")
     public ResponseEntity<Resource> createPdf(
-            @RequestParam("document") String document, @RequestParam("filename") String filename)
-            throws Exception {
+            @RequestParam("document") String document, @RequestParam("filename") String filename) throws Exception {
         if (!applicationProperties.getAiEngine().isEnabled()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
@@ -109,9 +105,7 @@ public class CreatePdfAgentController {
 
         String html = htmlRenderer.render(model);
 
-        log.info(
-                "[create-pdf-agent] converting document to PDF via WeasyPrint — html_bytes={}",
-                html.length());
+        log.info("[create-pdf-agent] converting document to PDF via WeasyPrint — html_bytes={}", html.length());
 
         try (TempFile htmlFile = tempFileManager.createManagedTempFile(".html");
                 TempFile pdfFile = tempFileManager.createManagedTempFile(".pdf")) {
@@ -131,10 +125,9 @@ public class CreatePdfAgentController {
                         .runCommandWithOutputHandling(command);
             } catch (IOException e) {
                 if (isMissingDependencyError(e)) {
-                    throw new IOException(
-                            "AI document creation is not available on this server because a required"
-                                    + " system dependency is not installed. Please contact your"
-                                    + " system administrator.");
+                    throw new IOException("AI document creation is not available on this server because a required"
+                            + " system dependency is not installed. Please contact your"
+                            + " system administrator.");
                 }
                 throw e;
             }
@@ -157,9 +150,7 @@ public class CreatePdfAgentController {
             }
 
             log.info(
-                    "[create-pdf-agent] PDF ready — filename={} bytes={}",
-                    safeFilename,
-                    Files.size(tempOut.getPath()));
+                    "[create-pdf-agent] PDF ready — filename={} bytes={}", safeFilename, Files.size(tempOut.getPath()));
 
             return WebResponseUtils.pdfFileToWebResponse(tempOut, safeFilename);
         }

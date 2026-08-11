@@ -17,8 +17,6 @@ public final class S3TestConnections {
      */
     public static S3ConnectionResolver legacyResolver() {
         return new S3ConnectionResolver(
-                mock(IntegrationConfigRepository.class),
-                mock(OwnershipService.class),
-                mock(UserService.class));
+                mock(IntegrationConfigRepository.class), mock(OwnershipService.class), mock(UserService.class));
     }
 }

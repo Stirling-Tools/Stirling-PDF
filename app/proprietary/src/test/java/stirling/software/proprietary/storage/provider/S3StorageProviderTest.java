@@ -41,9 +41,7 @@ class S3StorageProviderTest {
 
     @Container
     static MinIOContainer minio =
-            new MinIOContainer("minio/minio:latest")
-                    .withUserName(ACCESS_KEY)
-                    .withPassword(SECRET_KEY);
+            new MinIOContainer("minio/minio:latest").withUserName(ACCESS_KEY).withPassword(SECRET_KEY);
 
     private static S3Client s3Client;
     private static S3Presigner s3Presigner;
@@ -53,24 +51,23 @@ class S3StorageProviderTest {
     static void setUp() {
         URI endpoint = URI.create(minio.getS3URL());
         AwsBasicCredentials creds = AwsBasicCredentials.create(ACCESS_KEY, SECRET_KEY);
-        S3Configuration s3Config = S3Configuration.builder().pathStyleAccessEnabled(true).build();
+        S3Configuration s3Config =
+                S3Configuration.builder().pathStyleAccessEnabled(true).build();
 
-        s3Client =
-                S3Client.builder()
-                        .endpointOverride(endpoint)
-                        .httpClient(UrlConnectionHttpClient.create())
-                        .region(Region.US_EAST_1)
-                        .credentialsProvider(StaticCredentialsProvider.create(creds))
-                        .serviceConfiguration(s3Config)
-                        .build();
+        s3Client = S3Client.builder()
+                .endpointOverride(endpoint)
+                .httpClient(UrlConnectionHttpClient.create())
+                .region(Region.US_EAST_1)
+                .credentialsProvider(StaticCredentialsProvider.create(creds))
+                .serviceConfiguration(s3Config)
+                .build();
 
-        s3Presigner =
-                S3Presigner.builder()
-                        .endpointOverride(endpoint)
-                        .region(Region.US_EAST_1)
-                        .credentialsProvider(StaticCredentialsProvider.create(creds))
-                        .serviceConfiguration(s3Config)
-                        .build();
+        s3Presigner = S3Presigner.builder()
+                .endpointOverride(endpoint)
+                .region(Region.US_EAST_1)
+                .credentialsProvider(StaticCredentialsProvider.create(creds))
+                .serviceConfiguration(s3Config)
+                .build();
 
         s3Client.createBucket(CreateBucketRequest.builder().bucket(BUCKET).build());
         provider = new S3StorageProvider(s3Client, s3Presigner, BUCKET);
@@ -96,8 +93,7 @@ class S3StorageProviderTest {
         User owner = new User();
         owner.setId(42L);
         byte[] content = "hello s3 round trip".getBytes(StandardCharsets.UTF_8);
-        MockMultipartFile file =
-                new MockMultipartFile("file", "sample.pdf", "application/pdf", content);
+        MockMultipartFile file = new MockMultipartFile("file", "sample.pdf", "application/pdf", content);
 
         StoredObject stored = provider.store(owner, file);
 
@@ -105,8 +101,7 @@ class S3StorageProviderTest {
         // StoredObject.originalFilename for display, never in the S3 key, so vendors that
         // restrict key charset (e.g. Supabase: ASCII only) accept any filename.
         assertThat(stored.getStorageKey())
-                .matches(
-                        "42/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+                .matches("42/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
         assertThat(stored.getStorageKey()).doesNotContain("sample.pdf");
         assertThat(stored.getOriginalFilename()).isEqualTo("sample.pdf");
         assertThat(stored.getContentType()).isEqualTo("application/pdf");
@@ -120,8 +115,7 @@ class S3StorageProviderTest {
 
     @Test
     void load_unknownKey_throwsIOException() {
-        assertThatThrownBy(() -> provider.load("does/not/exist.txt"))
-                .isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> provider.load("does/not/exist.txt")).isInstanceOf(IOException.class);
     }
 
     @Test
@@ -133,14 +127,12 @@ class S3StorageProviderTest {
         owner.setId(99L);
         String unicodeName = "résumé-日本語-é.pdf";
         byte[] payload = "u".getBytes(StandardCharsets.UTF_8);
-        MockMultipartFile file =
-                new MockMultipartFile("file", unicodeName, "application/pdf", payload);
+        MockMultipartFile file = new MockMultipartFile("file", unicodeName, "application/pdf", payload);
 
         StoredObject stored = provider.store(owner, file);
 
         assertThat(stored.getStorageKey())
-                .matches(
-                        "99/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+                .matches("99/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
         assertThat(stored.getOriginalFilename()).isEqualTo(unicodeName);
         try (InputStream in = provider.load(stored.getStorageKey()).getInputStream()) {
             assertThat(in.readAllBytes()).isEqualTo(payload);
@@ -152,14 +144,12 @@ class S3StorageProviderTest {
         User owner = new User();
         owner.setId(7L);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "file", "todelete.bin", "application/octet-stream", new byte[] {1, 2, 3});
+                new MockMultipartFile("file", "todelete.bin", "application/octet-stream", new byte[] {1, 2, 3});
 
         StoredObject stored = provider.store(owner, file);
         provider.delete(stored.getStorageKey());
 
-        assertThatThrownBy(() -> provider.load(stored.getStorageKey()))
-                .isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> provider.load(stored.getStorageKey())).isInstanceOf(IOException.class);
     }
 
     @Test
@@ -173,11 +163,9 @@ class S3StorageProviderTest {
         owner.setId(99L);
         byte[] content = "presigned payload".getBytes(StandardCharsets.UTF_8);
         StoredObject stored =
-                provider.store(
-                        owner, new MockMultipartFile("file", "presign.txt", "text/plain", content));
+                provider.store(owner, new MockMultipartFile("file", "presign.txt", "text/plain", content));
 
-        Optional<URI> signed =
-                provider.signedDownloadUrl(stored.getStorageKey(), Duration.ofMinutes(2));
+        Optional<URI> signed = provider.signedDownloadUrl(stored.getStorageKey(), Duration.ofMinutes(2));
 
         assertThat(signed).isPresent();
         URI uri = signed.get();
@@ -205,17 +193,12 @@ class S3StorageProviderTest {
     void signedDownloadUrl_nullOrZeroTtl_appliesDefault() throws Exception {
         User owner = new User();
         owner.setId(3L);
-        StoredObject stored =
-                provider.store(
-                        owner,
-                        new MockMultipartFile(
-                                "file",
-                                "ttl.txt",
-                                "text/plain",
-                                "x".getBytes(StandardCharsets.UTF_8)));
+        StoredObject stored = provider.store(
+                owner, new MockMultipartFile("file", "ttl.txt", "text/plain", "x".getBytes(StandardCharsets.UTF_8)));
 
         assertThat(provider.signedDownloadUrl(stored.getStorageKey(), null)).isPresent();
-        assertThat(provider.signedDownloadUrl(stored.getStorageKey(), Duration.ZERO)).isPresent();
+        assertThat(provider.signedDownloadUrl(stored.getStorageKey(), Duration.ZERO))
+                .isPresent();
         assertThat(provider.signedDownloadUrl(stored.getStorageKey(), Duration.ofSeconds(-5)))
                 .isPresent();
     }
@@ -224,37 +207,23 @@ class S3StorageProviderTest {
     void signedDownloadUrl_inlineFlagEncodesResponseContentDispositionInQuery() throws Exception {
         User owner = new User();
         owner.setId(55L);
-        StoredObject stored =
-                provider.store(
-                        owner,
-                        new MockMultipartFile(
-                                "file",
-                                "stored-name.pdf",
-                                "application/pdf",
-                                "payload".getBytes(StandardCharsets.UTF_8)));
+        StoredObject stored = provider.store(
+                owner,
+                new MockMultipartFile(
+                        "file", "stored-name.pdf", "application/pdf", "payload".getBytes(StandardCharsets.UTF_8)));
 
-        URI attached =
-                provider.signedDownloadUrl(
-                                stored.getStorageKey(), Duration.ofMinutes(2), false, "report.pdf")
-                        .orElseThrow();
-        String attachedQuery =
-                java.net.URLDecoder.decode(attached.getRawQuery(), StandardCharsets.UTF_8);
-        assertThat(attachedQuery)
-                .contains("response-content-disposition=attachment; filename=\"report.pdf\"");
+        URI attached = provider.signedDownloadUrl(stored.getStorageKey(), Duration.ofMinutes(2), false, "report.pdf")
+                .orElseThrow();
+        String attachedQuery = java.net.URLDecoder.decode(attached.getRawQuery(), StandardCharsets.UTF_8);
+        assertThat(attachedQuery).contains("response-content-disposition=attachment; filename=\"report.pdf\"");
 
-        URI inline =
-                provider.signedDownloadUrl(
-                                stored.getStorageKey(), Duration.ofMinutes(2), true, "report.pdf")
-                        .orElseThrow();
-        String inlineQuery =
-                java.net.URLDecoder.decode(inline.getRawQuery(), StandardCharsets.UTF_8);
-        assertThat(inlineQuery)
-                .contains("response-content-disposition=inline; filename=\"report.pdf\"");
+        URI inline = provider.signedDownloadUrl(stored.getStorageKey(), Duration.ofMinutes(2), true, "report.pdf")
+                .orElseThrow();
+        String inlineQuery = java.net.URLDecoder.decode(inline.getRawQuery(), StandardCharsets.UTF_8);
+        assertThat(inlineQuery).contains("response-content-disposition=inline; filename=\"report.pdf\"");
 
-        URI bare =
-                provider.signedDownloadUrl(
-                                stored.getStorageKey(), Duration.ofMinutes(2), false, null)
-                        .orElseThrow();
+        URI bare = provider.signedDownloadUrl(stored.getStorageKey(), Duration.ofMinutes(2), false, null)
+                .orElseThrow();
         assertThat(bare.getRawQuery()).doesNotContain("response-content-disposition");
     }
 

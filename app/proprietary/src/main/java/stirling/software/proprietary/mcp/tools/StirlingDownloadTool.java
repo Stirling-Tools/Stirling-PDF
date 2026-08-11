@@ -29,9 +29,7 @@ public class StirlingDownloadTool implements McpTool {
     private final ApplicationProperties applicationProperties;
 
     public StirlingDownloadTool(
-            ObjectMapper mapper,
-            FileStorage fileStorage,
-            ApplicationProperties applicationProperties) {
+            ObjectMapper mapper, FileStorage fileStorage, ApplicationProperties applicationProperties) {
         this.mapper = mapper;
         this.fileStorage = fileStorage;
         this.applicationProperties = applicationProperties;
@@ -55,8 +53,7 @@ public class StirlingDownloadTool implements McpTool {
         schema.put("type", "object");
         schema.put("additionalProperties", false);
         ObjectNode props = schema.putObject("properties");
-        McpToolSupport.stringProperty(
-                props, "fileId", "Id of a stored file (e.g. an operation result's fileId).");
+        McpToolSupport.stringProperty(props, "fileId", "Id of a stored file (e.g. an operation result's fileId).");
         schema.putArray("required").add("fileId");
         return schema;
     }
@@ -64,8 +61,7 @@ public class StirlingDownloadTool implements McpTool {
     @Override
     public ObjectNode call(JsonNode arguments, McpCallContext context) {
         if (!context.hasScope("mcp.tools.read")) {
-            return McpResponses.error(
-                    mapper, "Insufficient scope: stirling_download requires 'mcp.tools.read'.");
+            return McpResponses.error(mapper, "Insufficient scope: stirling_download requires 'mcp.tools.read'.");
         }
         String fileId = McpToolSupport.textArg(arguments, "fileId");
         if (fileId == null) {
@@ -74,8 +70,7 @@ public class StirlingDownloadTool implements McpTool {
         long maxInline = applicationProperties.getMcp().getMaxInlineResponseBytes();
         try {
             if (!fileStorage.fileExists(fileId)) {
-                return McpResponses.error(
-                        mapper, "Unknown or inaccessible fileId '" + fileId + "'.");
+                return McpResponses.error(mapper, "Unknown or inaccessible fileId '" + fileId + "'.");
             }
             long size = fileStorage.getFileSize(fileId);
             if (size > maxInline) {
@@ -93,12 +88,7 @@ public class StirlingDownloadTool implements McpTool {
                     mapper,
                     false,
                     McpResponses.textBlock(
-                            mapper,
-                            "File "
-                                    + fileId
-                                    + " ("
-                                    + bytes.length
-                                    + " bytes) included inline below."),
+                            mapper, "File " + fileId + " (" + bytes.length + " bytes) included inline below."),
                     McpResponses.resourceBlock(
                             mapper,
                             "stirling://file/" + fileId,

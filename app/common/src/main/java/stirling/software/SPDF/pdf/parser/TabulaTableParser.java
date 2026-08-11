@@ -54,8 +54,7 @@ public class TabulaTableParser implements TableParser {
     /** Lattice mode — reliable for tables with visible ruled borders. */
     @Override
     public List<TableFragment> parse(PDDocument document, RawPage rawPage) throws IOException {
-        return parseWithAlgorithm(
-                document, rawPage, new SpreadsheetExtractionAlgorithm(), "lattice");
+        return parseWithAlgorithm(document, rawPage, new SpreadsheetExtractionAlgorithm(), "lattice");
     }
 
     /**
@@ -66,14 +65,12 @@ public class TabulaTableParser implements TableParser {
     }
 
     /** Stream mode — whitespace-based column detection for borderless tables. */
-    public List<TableFragment> parseStream(PDDocument document, RawPage rawPage)
-            throws IOException {
+    public List<TableFragment> parseStream(PDDocument document, RawPage rawPage) throws IOException {
         return parseWithAlgorithm(document, rawPage, new BasicExtractionAlgorithm(), "stream");
     }
 
     private List<TableFragment> parseWithAlgorithm(
-            PDDocument document, RawPage rawPage, ExtractionAlgorithm algorithm, String modeName)
-            throws IOException {
+            PDDocument document, RawPage rawPage, ExtractionAlgorithm algorithm, String modeName) throws IOException {
         int pageNumber = rawPage.pageNumber();
 
         List<Table> tabulaTables;
@@ -84,11 +81,7 @@ public class TabulaTableParser implements TableParser {
             Page page = extractor.extract(pageNumber);
             tabulaTables = new ArrayList<>(algorithm.extract(page));
         } catch (Exception e) {
-            log.warn(
-                    "Tabula {} extraction failed on page {}: {}",
-                    modeName,
-                    pageNumber,
-                    e.getMessage());
+            log.warn("Tabula {} extraction failed on page {}: {}", modeName, pageNumber, e.getMessage());
             return List.of();
         }
 
@@ -97,11 +90,7 @@ public class TabulaTableParser implements TableParser {
             return List.of();
         }
 
-        log.debug(
-                "Page {}: Tabula ({}) detected {} table(s)",
-                pageNumber,
-                modeName,
-                tabulaTables.size());
+        log.debug("Page {}: Tabula ({}) detected {} table(s)", pageNumber, modeName, tabulaTables.size());
 
         List<TableFragment> fragments = new ArrayList<>(tabulaTables.size());
         for (int i = 0; i < tabulaTables.size(); i++) {
@@ -163,22 +152,12 @@ public class TabulaTableParser implements TableParser {
             for (int colIdx = 0; colIdx < tabulaRow.size(); colIdx++) {
                 RectangularTextContainer c = tabulaRow.get(colIdx);
                 Bounds cellBounds =
-                        new Bounds(
-                                (float) c.getX(),
-                                (float) c.getY(),
-                                (float) c.getWidth(),
-                                (float) c.getHeight());
+                        new Bounds((float) c.getX(), (float) c.getY(), (float) c.getWidth(), (float) c.getHeight());
                 cells.add(TableCell.of(colIdx, normaliseText(c.getText()), cellBounds));
             }
 
             if (tabulaRow.size() != colCount) {
-                warnings.add(
-                        "Row "
-                                + rowIdx
-                                + " has "
-                                + tabulaRow.size()
-                                + " cells; expected "
-                                + colCount);
+                warnings.add("Row " + rowIdx + " has " + tabulaRow.size() + " cells; expected " + colCount);
             }
 
             rows.add(new TableRow(rowIdx, Collections.unmodifiableList(cells)));
@@ -193,16 +172,13 @@ public class TabulaTableParser implements TableParser {
     private int inferColumnCount(List<List<String>> rawRows, List<String> warnings) {
         if (rawRows.isEmpty()) return 0;
         int max = rawRows.stream().mapToInt(List::size).max().orElse(0);
-        int mode =
-                rawRows.stream()
-                        .collect(
-                                java.util.stream.Collectors.groupingBy(
-                                        List::size, java.util.stream.Collectors.counting()))
-                        .entrySet()
-                        .stream()
-                        .max(java.util.Map.Entry.comparingByValue())
-                        .map(java.util.Map.Entry::getKey)
-                        .orElse(0);
+        int mode = rawRows.stream()
+                .collect(java.util.stream.Collectors.groupingBy(List::size, java.util.stream.Collectors.counting()))
+                .entrySet()
+                .stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .map(java.util.Map.Entry::getKey)
+                .orElse(0);
         if (max != mode) {
             warnings.add("Inconsistent column count: modal=" + mode + " max=" + max);
         }
@@ -219,20 +195,22 @@ public class TabulaTableParser implements TableParser {
      *   <li>-0.3 if the empty-cell ratio across all cells exceeds 80%.
      * </ul>
      */
-    private float computeConfidence(
-            List<List<String>> rawRows, int colCount, List<String> warnings) {
+    private float computeConfidence(List<List<String>> rawRows, int colCount, List<String> warnings) {
         if (rawRows.isEmpty() || colCount == 0) return 0f;
 
         float score = 1.0f;
 
         if (colCount == 1) score -= 0.3f;
 
-        long inconsistentRows = rawRows.stream().filter(r -> r.size() != colCount).count();
+        long inconsistentRows =
+                rawRows.stream().filter(r -> r.size() != colCount).count();
         score -= Math.min(inconsistentRows * 0.1f, 0.4f);
 
         long totalCells = rawRows.stream().mapToLong(List::size).sum();
-        long emptyCells =
-                rawRows.stream().flatMap(Collection::stream).filter(String::isBlank).count();
+        long emptyCells = rawRows.stream()
+                .flatMap(Collection::stream)
+                .filter(String::isBlank)
+                .count();
         if (totalCells > 0 && (float) emptyCells / totalCells > 0.8f) {
             score -= 0.3f;
         }
@@ -242,10 +220,7 @@ public class TabulaTableParser implements TableParser {
 
     private Bounds tableBounds(Table table) {
         return new Bounds(
-                (float) table.getX(),
-                (float) table.getY(),
-                (float) table.getWidth(),
-                (float) table.getHeight());
+                (float) table.getX(), (float) table.getY(), (float) table.getWidth(), (float) table.getHeight());
     }
 
     private String normaliseText(String raw) {

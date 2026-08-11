@@ -96,10 +96,8 @@ public class ChecksumUtils {
      */
     public static String checksumBase64(InputStream is, String algorithm) throws IOException {
         return switch (algorithm.toUpperCase(Locale.ROOT)) {
-            case "CRC32" ->
-                    Base64.getEncoder().encodeToString(checksumChecksumBytes(is, new CRC32()));
-            case "ADLER32" ->
-                    Base64.getEncoder().encodeToString(checksumChecksumBytes(is, new Adler32()));
+            case "CRC32" -> Base64.getEncoder().encodeToString(checksumChecksumBytes(is, new CRC32()));
+            case "ADLER32" -> Base64.getEncoder().encodeToString(checksumChecksumBytes(is, new Adler32()));
             default -> Base64.getEncoder().encodeToString(checksumBytes(is, algorithm));
         };
     }
@@ -115,8 +113,7 @@ public class ChecksumUtils {
      * @return map of algorithm → hex string
      * @throws IOException if the file cannot be read
      */
-    public static Map<String, String> checksums(Path path, String... algorithms)
-            throws IOException {
+    public static Map<String, String> checksums(Path path, String... algorithms) throws IOException {
         try (InputStream is = Files.newInputStream(path)) {
             return checksums(is, algorithms);
         }
@@ -132,8 +129,7 @@ public class ChecksumUtils {
      * @return map of algorithm → hex string
      * @throws IOException if reading from the stream fails
      */
-    public static Map<String, String> checksums(InputStream is, String... algorithms)
-            throws IOException {
+    public static Map<String, String> checksums(InputStream is, String... algorithms) throws IOException {
         // Use LinkedHashMap to preserve the order of requested algorithms in the result.
         Map<String, MessageDigest> digests = new LinkedHashMap<>();
         Map<String, Checksum> checksums = new LinkedHashMap<>();
@@ -206,8 +202,7 @@ public class ChecksumUtils {
      * @return {@code true} if they match, otherwise {@code false}
      * @throws IOException if reading from the stream fails
      */
-    public static boolean matches(InputStream is, String algorithm, String expected)
-            throws IOException {
+    public static boolean matches(InputStream is, String algorithm, String expected) throws IOException {
         return checksum(is, algorithm).equalsIgnoreCase(expected);
     }
 
@@ -269,8 +264,7 @@ public class ChecksumUtils {
      * @return 4 bytes (big-endian)
      * @throws IOException if reading fails
      */
-    private static byte[] checksumChecksumBytes(InputStream is, Checksum checksum)
-            throws IOException {
+    private static byte[] checksumChecksumBytes(InputStream is, Checksum checksum) throws IOException {
         byte[] buffer = new byte[BUFFER_SIZE];
         int read;
         while ((read = is.read(buffer)) != -1) {

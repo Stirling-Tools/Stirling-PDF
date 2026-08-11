@@ -71,8 +71,7 @@ public class JobController {
 
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to access job status: {}", jobId);
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "You are not authorized to access this job"));
+            return ResponseEntity.status(403).body(Map.of("message", "You are not authorized to access this job"));
         }
 
         JobResult result = taskManager.getJobResult(jobId);
@@ -83,11 +82,7 @@ public class JobController {
         if (!result.isComplete() && jobQueue.isJobQueued(jobId)) {
             int position = jobQueue.getJobPosition(jobId);
             Map<String, Object> resultWithQueueInfo =
-                    Map.of(
-                            "jobResult",
-                            result,
-                            "queueInfo",
-                            Map.of("inQueue", true, "position", position));
+                    Map.of("jobResult", result, "queueInfo", Map.of("inQueue", true, "position", position));
             return ResponseEntity.ok(resultWithQueueInfo);
         }
 
@@ -104,8 +99,7 @@ public class JobController {
 
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to access job result: {}", jobId);
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "You are not authorized to access this job"));
+            return ResponseEntity.status(403).body(Map.of("message", "You are not authorized to access this job"));
         }
 
         JobResult result = taskManager.getJobResult(jobId);
@@ -124,14 +118,7 @@ public class JobController {
         if (result.hasMultipleFiles()) {
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(
-                            Map.of(
-                                    "jobId",
-                                    jobId,
-                                    "hasMultipleFiles",
-                                    true,
-                                    "files",
-                                    result.getAllResultFiles()));
+                    .body(Map.of("jobId", jobId, "hasMultipleFiles", true, "files", result.getAllResultFiles()));
         }
 
         if (result.hasFiles() && !result.hasMultipleFiles()) {
@@ -142,14 +129,11 @@ public class JobController {
                 byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
                 return ResponseEntity.ok()
                         .header("Content-Type", singleFile.getContentType())
-                        .header(
-                                "Content-Disposition",
-                                createContentDispositionHeader(singleFile.getFileName()))
+                        .header("Content-Disposition", createContentDispositionHeader(singleFile.getFileName()))
                         .body(fileContent);
             } catch (Exception e) {
                 log.error("Error retrieving file for job {}: {}", jobId, e.getMessage(), e);
-                return ResponseEntity.internalServerError()
-                        .body("Error retrieving file: " + e.getMessage());
+                return ResponseEntity.internalServerError().body("Error retrieving file: " + e.getMessage());
             }
         }
 
@@ -168,8 +152,7 @@ public class JobController {
 
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to cancel job: {}", jobId);
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "You are not authorized to cancel this job"));
+            return ResponseEntity.status(403).body(Map.of("message", "You are not authorized to cancel this job"));
         }
 
         boolean cancelled = false;
@@ -191,14 +174,13 @@ public class JobController {
         }
 
         if (cancelled) {
-            return ResponseEntity.ok(
-                    Map.of(
-                            "message",
-                            "Job cancelled successfully",
-                            "wasQueued",
-                            queuePosition >= 0,
-                            "queuePosition",
-                            queuePosition >= 0 ? queuePosition : "n/a"));
+            return ResponseEntity.ok(Map.of(
+                    "message",
+                    "Job cancelled successfully",
+                    "wasQueued",
+                    queuePosition >= 0,
+                    "queuePosition",
+                    queuePosition >= 0 ? queuePosition : "n/a"));
         } else {
             JobResult result = taskManager.getJobResult(jobId);
             if (result == null) {
@@ -223,8 +205,7 @@ public class JobController {
 
         if (!validateJobAccess(jobId)) {
             log.warn("Unauthorized attempt to access job files: {}", jobId);
-            return ResponseEntity.status(403)
-                    .body(Map.of("message", "You are not authorized to access this job"));
+            return ResponseEntity.status(403).body(Map.of("message", "You are not authorized to access this job"));
         }
 
         JobResult result = taskManager.getJobResult(jobId);
@@ -241,11 +222,10 @@ public class JobController {
         }
 
         List<ResultFile> files = result.getAllResultFiles();
-        return ResponseEntity.ok(
-                Map.of(
-                        "jobId", jobId,
-                        "fileCount", files.size(),
-                        "files", files));
+        return ResponseEntity.ok(Map.of(
+                "jobId", jobId,
+                "fileCount", files.size(),
+                "files", files));
     }
 
     @GetMapping("/files/{fileId}/metadata")
@@ -269,8 +249,7 @@ public class JobController {
 
             if (!validateJobAccess(jobKey)) {
                 log.warn("Unauthorized attempt to access file metadata: {}", fileId);
-                return ResponseEntity.status(403)
-                        .body(Map.of("message", "You are not authorized to access this file"));
+                return ResponseEntity.status(403).body(Map.of("message", "You are not authorized to access this file"));
             }
 
             ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
@@ -285,23 +264,21 @@ public class JobController {
                 }
 
                 long fileSize = fileStorage.getFileSize(fileId);
-                return ResponseEntity.ok(
-                        Map.of(
-                                "fileId",
-                                fileId,
-                                "fileName",
-                                "unknown",
-                                "contentType",
-                                MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                                "fileSize",
-                                fileSize));
+                return ResponseEntity.ok(Map.of(
+                        "fileId",
+                        fileId,
+                        "fileName",
+                        "unknown",
+                        "contentType",
+                        MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                        "fileSize",
+                        fileSize));
             }
 
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             log.error("Error retrieving file metadata {}: {}", fileId, e.getMessage(), e);
-            return ResponseEntity.internalServerError()
-                    .body("Error retrieving file metadata: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Error retrieving file metadata: " + e.getMessage());
         }
     }
 
@@ -326,17 +303,14 @@ public class JobController {
 
             if (!validateJobAccess(jobKey)) {
                 log.warn("Unauthorized attempt to download file: {}", fileId);
-                return ResponseEntity.status(403)
-                        .body(Map.of("message", "You are not authorized to access this file"));
+                return ResponseEntity.status(403).body(Map.of("message", "You are not authorized to access this file"));
             }
 
             ResultFile resultFile = taskManager.findResultFileByFileId(fileId);
 
             String fileName = resultFile != null ? resultFile.getFileName() : "download";
             String contentType =
-                    resultFile != null
-                            ? resultFile.getContentType()
-                            : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+                    resultFile != null ? resultFile.getContentType() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
             byte[] fileContent = fileStorage.retrieveBytes(fileId);
 
@@ -376,10 +350,7 @@ public class JobController {
                 if (taskManager.getJobResult(jobId) == null) {
                     return Optional.of(backplaneUnavailable(jobId, ex));
                 }
-                log.warn(
-                        "JobStore lookup failed for jobId={}; serving locally-held job: {}",
-                        jobId,
-                        ex.getMessage());
+                log.warn("JobStore lookup failed for jobId={}; serving locally-held job: {}", jobId, ex.getMessage());
                 return Optional.empty();
             }
             ownershipCache.put(jobId, entry);
@@ -404,19 +375,17 @@ public class JobController {
         if (stickyMissRecorder != null) {
             stickyMissRecorder.recordStickyMiss();
         }
-        return Optional.of(
-                ResponseEntity.status(410)
-                        .header("Retry-After", "0")
-                        .body(
-                                Map.of(
-                                        "message",
-                                        "Result lives on another node. Retry to be routed there"
-                                                + " by the load balancer's sticky-session"
-                                                + " affinity, or re-run the job.",
-                                        "ownedBy",
-                                        owner,
-                                        "currentNode",
-                                        localId == null ? "" : localId)));
+        return Optional.of(ResponseEntity.status(410)
+                .header("Retry-After", "0")
+                .body(Map.of(
+                        "message",
+                        "Result lives on another node. Retry to be routed there"
+                                + " by the load balancer's sticky-session"
+                                + " affinity, or re-run the job.",
+                        "ownedBy",
+                        owner,
+                        "currentNode",
+                        localId == null ? "" : localId)));
     }
 
     /**
@@ -425,25 +394,18 @@ public class JobController {
      * sticky-410 retry model) rather than a misleading 404 or a generic 500.
      */
     private ResponseEntity<?> backplaneUnavailable(String id, RuntimeException ex) {
-        log.warn(
-                "Backplane lookup failed for {}; returning 503 (retryable): {}",
-                id,
-                ex.getMessage());
+        log.warn("Backplane lookup failed for {}; returning 503 (retryable): {}", id, ex.getMessage());
         return ResponseEntity.status(503)
                 .header("Retry-After", "1")
-                .body(
-                        Map.of(
-                                "message",
-                                "Cluster backplane temporarily unavailable; retry shortly."));
+                .body(Map.of("message", "Cluster backplane temporarily unavailable; retry shortly."));
     }
 
     private String createContentDispositionHeader(String fileName) {
         try {
-            String encodedFileName =
-                    RegexPatternUtils.getInstance()
-                            .getPlusSignPattern()
-                            .matcher(URLEncoder.encode(fileName, StandardCharsets.UTF_8))
-                            .replaceAll("%20"); // URLEncoder uses + for spaces, but we want %20
+            String encodedFileName = RegexPatternUtils.getInstance()
+                    .getPlusSignPattern()
+                    .matcher(URLEncoder.encode(fileName, StandardCharsets.UTF_8))
+                    .replaceAll("%20"); // URLEncoder uses + for spaces, but we want %20
             return "attachment; filename=\"" + fileName + "\"; filename*=UTF-8''" + encodedFileName;
         } catch (Exception e) {
             return "attachment; filename=\"" + fileName + "\"";

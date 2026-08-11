@@ -67,11 +67,9 @@ public class MetadataController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Update metadata of a PDF file",
-            description =
-                    "This endpoint allows you to update the metadata of a given PDF file. You can"
-                            + " add, modify, or delete standard and custom metadata fields.")
-    public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request)
-            throws IOException {
+            description = "This endpoint allows you to update the metadata of a given PDF file. You can"
+                    + " add, modify, or delete standard and custom metadata fields.")
+    public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request) throws IOException {
 
         // Extract PDF file from the request object
         MultipartFile pdfFile = request.getFileInput();
@@ -117,12 +115,8 @@ public class MetadataController {
                     info.setCustomMetadataValue(key, null);
                 }
                 // Remove metadata from the PDF history
-                document.getDocumentCatalog()
-                        .getCOSObject()
-                        .removeItem(COSName.getPDFName("Metadata"));
-                document.getDocumentCatalog()
-                        .getCOSObject()
-                        .removeItem(COSName.getPDFName("PieceInfo"));
+                document.getDocumentCatalog().getCOSObject().removeItem(COSName.getPDFName("Metadata"));
+                document.getDocumentCatalog().getCOSObject().removeItem(COSName.getPDFName("PieceInfo"));
                 author = null;
                 creationDate = null;
                 creator = null;
@@ -151,12 +145,10 @@ public class MetadataController {
                         info.setCustomMetadataValue(key, entry.getValue());
                     } else if (key.contains("customKey")) {
                         try {
-                            int number =
-                                    Integer.parseInt(
-                                            RegexPatternUtils.getInstance()
-                                                    .getNumericExtractionPattern()
-                                                    .matcher(key)
-                                                    .replaceAll(""));
+                            int number = Integer.parseInt(RegexPatternUtils.getInstance()
+                                    .getNumericExtractionPattern()
+                                    .matcher(key)
+                                    .replaceAll(""));
                             String customKey = entry.getValue();
                             String customValue = allRequestParams.get("customValue" + number);
                             info.setCustomMetadataValue(customKey, customValue);
@@ -186,8 +178,7 @@ public class MetadataController {
             document.setDocumentInformation(info);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.removeExtension(
-                                    Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
+                    GeneralUtils.removeExtension(Filenames.toSimpleFileName(pdfFile.getOriginalFilename()))
                             + "_metadata.pdf",
                     tempFileManager);
         }

@@ -37,9 +37,7 @@ public class FileMonitor {
      * @param pathFilter the filter to apply to the paths, return true if the path should be
      *     monitored, false otherwise
      */
-    public FileMonitor(
-            @Qualifier("directoryFilter") Predicate<Path> pathFilter,
-            RuntimePathConfig runtimePathConfig)
+    public FileMonitor(@Qualifier("directoryFilter") Predicate<Path> pathFilter, RuntimePathConfig runtimePathConfig)
             throws IOException {
         this.newlyDiscoveredFiles = new HashSet<>();
         this.path2KeyMapping = new HashMap<>();
@@ -57,10 +55,7 @@ public class FileMonitor {
                 validRootDirs.add(path);
                 log.info("Monitoring directory: {}", path);
             } catch (Exception e) {
-                log.error(
-                        "Failed to initialize monitoring for path '{}': {}",
-                        pathStr,
-                        e.getMessage());
+                log.error("Failed to initialize monitoring for path '{}': {}", pathStr, e.getMessage());
             }
         }
 
@@ -116,8 +111,7 @@ public class FileMonitor {
         if (path2KeyMapping.isEmpty()) {
             log.warn("Not monitoring any directories; attempting to re-register root paths.");
             for (Path rootDir : rootDirs) {
-                if (Files.exists(
-                        rootDir)) { // if the root directory exists, re-register the root directory
+                if (Files.exists(rootDir)) { // if the root directory exists, re-register the root directory
                     try {
                         recursivelyRegisterEntry(rootDir);
                     } catch (IOException e) {
@@ -129,9 +123,7 @@ public class FileMonitor {
 
         // Skip expensive collection work when there is nothing to track
         WatchKey firstKey = watchService.poll();
-        if (firstKey == null
-                && newlyDiscoveredFiles.isEmpty()
-                && readyForProcessingFiles.isEmpty()) {
+        if (firstKey == null && newlyDiscoveredFiles.isEmpty() && readyForProcessingFiles.isEmpty()) {
             return;
         }
 
@@ -141,36 +133,34 @@ public class FileMonitor {
         WatchKey key = firstKey;
         while (key != null) {
             final Path watchingDir = (Path) key.watchable();
-            key.pollEvents()
-                    .forEach(
-                            (evt) -> {
-                                final Path path = (Path) evt.context();
-                                final WatchEvent.Kind<?> kind = evt.kind();
-                                if (shouldNotProcess(path)) return;
+            key.pollEvents().forEach((evt) -> {
+                final Path path = (Path) evt.context();
+                final WatchEvent.Kind<?> kind = evt.kind();
+                if (shouldNotProcess(path)) return;
 
-                                try {
-                                    if (Files.isDirectory(path)) {
-                                        if (kind == ENTRY_CREATE) {
-                                            handleDirectoryCreation(path);
-                                        }
-                                        /*
-                                         we don't need to handle directory deletion or modification
-                                         - directory deletion will be handled by key.reset()
-                                         - directory modification indicates a new file creation or deletion, which is handled by below
-                                        */
-                                    }
-                                    Path relativePathFromRoot = watchingDir.resolve(path);
-                                    if (kind == ENTRY_CREATE) {
-                                        handleFileCreation(relativePathFromRoot);
-                                    } else if (kind == ENTRY_DELETE) {
-                                        handleFileRemoval(relativePathFromRoot);
-                                    } else if (kind == ENTRY_MODIFY) {
-                                        handleFileModification(relativePathFromRoot);
-                                    }
-                                } catch (Exception e) {
-                                    log.error("Error while processing file: {}", path, e);
-                                }
-                            });
+                try {
+                    if (Files.isDirectory(path)) {
+                        if (kind == ENTRY_CREATE) {
+                            handleDirectoryCreation(path);
+                        }
+                        /*
+                         we don't need to handle directory deletion or modification
+                         - directory deletion will be handled by key.reset()
+                         - directory modification indicates a new file creation or deletion, which is handled by below
+                        */
+                    }
+                    Path relativePathFromRoot = watchingDir.resolve(path);
+                    if (kind == ENTRY_CREATE) {
+                        handleFileCreation(relativePathFromRoot);
+                    } else if (kind == ENTRY_DELETE) {
+                        handleFileRemoval(relativePathFromRoot);
+                    } else if (kind == ENTRY_MODIFY) {
+                        handleFileModification(relativePathFromRoot);
+                    }
+                } catch (Exception e) {
+                    log.error("Error while processing file: {}", path, e);
+                }
+            });
 
             boolean isKeyValid = key.reset();
             if (!isKeyValid) { // key is invalid when the directory itself is no longer exists

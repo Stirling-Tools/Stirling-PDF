@@ -48,12 +48,9 @@ class ApiKeyUsageWriter {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void stampLastUsed(Long apiKeyId) {
-        apiKeyRepository
-                .findById(apiKeyId)
-                .ifPresent(
-                        key -> {
-                            key.setLastUsedAt(Instant.now());
-                            apiKeyRepository.save(key);
-                        });
+        apiKeyRepository.findById(apiKeyId).ifPresent(key -> {
+            key.setLastUsedAt(Instant.now());
+            apiKeyRepository.save(key);
+        });
     }
 }

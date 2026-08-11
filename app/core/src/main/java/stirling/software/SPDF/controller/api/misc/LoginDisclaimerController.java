@@ -27,11 +27,9 @@ public class LoginDisclaimerController {
     @GetMapping("/login-disclaimer")
     @Operation(
             summary = "Get the login agreement/disclaimer",
-            description =
-                    "Returns whether the login agreement is enabled and, if so, the markdown to"
-                            + " display for the requested language.")
-    public LoginDisclaimerResponse getLoginDisclaimer(
-            @RequestParam(name = "lang", required = false) String lang) {
+            description = "Returns whether the login agreement is enabled and, if so, the markdown to"
+                    + " display for the requested language.")
+    public LoginDisclaimerResponse getLoginDisclaimer(@RequestParam(name = "lang", required = false) String lang) {
         boolean showInAnonymousMode = loginAgreementService.isShowInAnonymousMode();
         if (!loginAgreementService.isEnabled()) {
             return new LoginDisclaimerResponse(false, showInAnonymousMode, "", "markdown");
@@ -40,8 +38,7 @@ public class LoginDisclaimerController {
         // Enabled but no resolvable text (no file for any candidate locale and no fallbackText):
         // report disabled so clients don't try to render an empty agreement.
         boolean hasContent = content != null && !content.isBlank();
-        return new LoginDisclaimerResponse(
-                hasContent, showInAnonymousMode, hasContent ? content : "", "markdown");
+        return new LoginDisclaimerResponse(hasContent, showInAnonymousMode, hasContent ? content : "", "markdown");
     }
 
     public record LoginDisclaimerResponse(

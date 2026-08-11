@@ -16,31 +16,25 @@ class BillableOperationClassifierTest {
 
     @Test
     void aiPathIsAi() {
-        assertEquals(
-                BillingCategory.AI,
-                BillableOperationClassifier.categorize(req("/api/v1/ai/tools/foo"), false));
+        assertEquals(BillingCategory.AI, BillableOperationClassifier.categorize(req("/api/v1/ai/tools/foo"), false));
     }
 
     @Test
     void automationHeaderIsAutomation() {
         MockHttpServletRequest req = req("/api/v1/general/merge");
         req.addHeader(InternalApiClient.AUTOMATION_HEADER, "1");
-        assertEquals(
-                BillingCategory.AUTOMATION, BillableOperationClassifier.categorize(req, false));
+        assertEquals(BillingCategory.AUTOMATION, BillableOperationClassifier.categorize(req, false));
     }
 
     @Test
     void apiKeyToolCallIsApi() {
-        assertEquals(
-                BillingCategory.API,
-                BillableOperationClassifier.categorize(req("/api/v1/general/merge"), true));
+        assertEquals(BillingCategory.API, BillableOperationClassifier.categorize(req("/api/v1/general/merge"), true));
     }
 
     @Test
     void plainManualToolIsBypassed() {
         assertEquals(
-                BillingCategory.BYPASSED,
-                BillableOperationClassifier.categorize(req("/api/v1/general/merge"), false));
+                BillingCategory.BYPASSED, BillableOperationClassifier.categorize(req("/api/v1/general/merge"), false));
     }
 
     @Test
@@ -54,9 +48,7 @@ class BillableOperationClassifierTest {
     @Test
     void aiDominatesApiKey() {
         // A direct API-key call to an AI tool bills as AI, not API.
-        assertEquals(
-                BillingCategory.AI,
-                BillableOperationClassifier.categorize(req("/api/v1/ai/tools/foo"), true));
+        assertEquals(BillingCategory.AI, BillableOperationClassifier.categorize(req("/api/v1/ai/tools/foo"), true));
     }
 
     @Test

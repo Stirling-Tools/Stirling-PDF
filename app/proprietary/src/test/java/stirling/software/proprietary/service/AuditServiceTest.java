@@ -46,9 +46,14 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 @ExtendWith(MockitoExtension.class)
 class AuditServiceTest {
 
-    @Mock private AuditEventRepository repository;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private JwtServiceInterface jwtService;
+    @Mock
+    private AuditEventRepository repository;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private JwtServiceInterface jwtService;
 
     private AuditConfigurationProperties auditConfig;
     private AuditService service;
@@ -76,8 +81,7 @@ class AuditServiceTest {
 
     private void authenticateAs(String username) {
         // 3-arg ctor marks the token authenticated (2-arg leaves it unauthenticated)
-        Authentication auth =
-                new UsernamePasswordAuthenticationToken(username, null, java.util.List.of());
+        Authentication auth = new UsernamePasswordAuthenticationToken(username, null, java.util.List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
@@ -102,8 +106,7 @@ class AuditServiceTest {
         @DisplayName("the automation marker header demotes WEB to AUTOMATION")
         void automationHeaderIsAutomation() {
             authenticateAs("alice");
-            MockHttpServletRequest req =
-                    new MockHttpServletRequest("POST", "/api/v1/general/merge");
+            MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/general/merge");
             req.addHeader(InternalApiClient.AUTOMATION_HEADER, "true");
             bindRequest(req);
 
@@ -157,9 +160,7 @@ class AuditServiceTest {
         @Test
         @DisplayName("skips when not running EE")
         void skipsWhenNotEE() {
-            AuditService nonEe =
-                    new AuditService(
-                            repository, auditConfig, false, pdfDocumentFactory, jwtService);
+            AuditService nonEe = new AuditService(repository, auditConfig, false, pdfDocumentFactory, jwtService);
 
             nonEe.audit(AuditEventType.USER_LOGIN, new HashMap<>(), AuditLevel.BASIC);
 
@@ -170,8 +171,7 @@ class AuditServiceTest {
         @DisplayName("skips when audit disabled")
         void skipsWhenDisabled() {
             AuditService disabled =
-                    new AuditService(
-                            repository, config(false, 2), true, pdfDocumentFactory, jwtService);
+                    new AuditService(repository, config(false, 2), true, pdfDocumentFactory, jwtService);
 
             disabled.audit(AuditEventType.USER_LOGIN, new HashMap<>(), AuditLevel.BASIC);
 
@@ -194,8 +194,7 @@ class AuditServiceTest {
 
             service.audit(AuditEventType.USER_LOGIN, new HashMap<>());
 
-            org.mockito.ArgumentCaptor<AuditEvent> captor =
-                    org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
+            org.mockito.ArgumentCaptor<AuditEvent> captor = org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
             verify(repository).add(captor.capture());
             assertThat(captor.getValue().getData()).containsKey("__origin");
             assertThat(captor.getValue().getPrincipal()).isEqualTo("alice");
@@ -208,8 +207,7 @@ class AuditServiceTest {
 
             service.audit("CUSTOM_EVENT", new HashMap<>());
 
-            org.mockito.ArgumentCaptor<AuditEvent> captor =
-                    org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
+            org.mockito.ArgumentCaptor<AuditEvent> captor = org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
             verify(repository).add(captor.capture());
             assertThat(captor.getValue().getType()).isEqualTo("CUSTOM_EVENT");
         }
@@ -219,8 +217,7 @@ class AuditServiceTest {
         void explicitPrincipalOverload() {
             service.audit("bob", AuditEventType.USER_LOGIN, new HashMap<>());
 
-            org.mockito.ArgumentCaptor<AuditEvent> captor =
-                    org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
+            org.mockito.ArgumentCaptor<AuditEvent> captor = org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
             verify(repository).add(captor.capture());
             assertThat(captor.getValue().getPrincipal()).isEqualTo("bob");
         }
@@ -228,16 +225,9 @@ class AuditServiceTest {
         @Test
         @DisplayName("pre-captured principal/origin/ip overload adds ip to data")
         void preCapturedOverloadAddsIp() {
-            service.audit(
-                    "carol",
-                    "WEB",
-                    "10.0.0.1",
-                    AuditEventType.PDF_PROCESS,
-                    new HashMap<>(),
-                    AuditLevel.BASIC);
+            service.audit("carol", "WEB", "10.0.0.1", AuditEventType.PDF_PROCESS, new HashMap<>(), AuditLevel.BASIC);
 
-            org.mockito.ArgumentCaptor<AuditEvent> captor =
-                    org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
+            org.mockito.ArgumentCaptor<AuditEvent> captor = org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
             verify(repository).add(captor.capture());
             assertThat(captor.getValue().getData()).containsEntry("__ipAddress", "10.0.0.1");
             assertThat(captor.getValue().getData()).containsEntry("__origin", "WEB");
@@ -248,8 +238,7 @@ class AuditServiceTest {
         void preCapturedStringOverloadNullIp() {
             service.audit("carol", "API", null, "CUSTOM", new HashMap<>(), AuditLevel.BASIC);
 
-            org.mockito.ArgumentCaptor<AuditEvent> captor =
-                    org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
+            org.mockito.ArgumentCaptor<AuditEvent> captor = org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
             verify(repository).add(captor.capture());
             assertThat(captor.getValue().getData()).doesNotContainKey("__ipAddress");
             assertThat(captor.getValue().getType()).isEqualTo("CUSTOM");
@@ -366,8 +355,7 @@ class AuditServiceTest {
         @Test
         @DisplayName("byte arrays render as binary length marker")
         void byteArray() {
-            assertThat(service.safeToString(new byte[] {1, 2, 3}, 100))
-                    .isEqualTo("[binary data length=3]");
+            assertThat(service.safeToString(new byte[] {1, 2, 3}, 100)).isEqualTo("[binary data length=3]");
         }
 
         @Test
@@ -380,13 +368,12 @@ class AuditServiceTest {
         @Test
         @DisplayName("toString failure returns class marker")
         void toStringFailure() {
-            Object boom =
-                    new Object() {
-                        @Override
-                        public String toString() {
-                            throw new IllegalStateException("nope");
-                        }
-                    };
+            Object boom = new Object() {
+                @Override
+                public String toString() {
+                    throw new IllegalStateException("nope");
+                }
+            };
 
             assertThat(service.safeToString(boom, 100)).contains("toString() failed");
         }
@@ -399,9 +386,7 @@ class AuditServiceTest {
         @Test
         @DisplayName("false when not running EE")
         void notEe() throws Exception {
-            AuditService nonEe =
-                    new AuditService(
-                            repository, auditConfig, false, pdfDocumentFactory, jwtService);
+            AuditService nonEe = new AuditService(repository, auditConfig, false, pdfDocumentFactory, jwtService);
 
             assertThat(nonEe.shouldAudit(sampleMethod(), auditConfig)).isFalse();
         }
@@ -421,8 +406,7 @@ class AuditServiceTest {
         @Test
         @DisplayName("effective level defaults to provided when unannotated")
         void effectiveLevelDefault() throws Exception {
-            AuditLevel level =
-                    service.getEffectiveAuditLevel(sampleMethod(), AuditLevel.BASIC, auditConfig);
+            AuditLevel level = service.getEffectiveAuditLevel(sampleMethod(), AuditLevel.BASIC, auditConfig);
 
             assertThat(level).isEqualTo(AuditLevel.BASIC);
         }
@@ -435,13 +419,11 @@ class AuditServiceTest {
         @Test
         @DisplayName("non-http call adds latency and status code")
         void nonHttpAddsLatency() {
-            HttpServletResponse response =
-                    new org.springframework.mock.web.MockHttpServletResponse();
+            HttpServletResponse response = new org.springframework.mock.web.MockHttpServletResponse();
             ((org.springframework.mock.web.MockHttpServletResponse) response).setStatus(200);
             Map<String, Object> data = new HashMap<>();
 
-            service.addTimingData(
-                    data, System.currentTimeMillis() - 5, response, AuditLevel.STANDARD, false);
+            service.addTimingData(data, System.currentTimeMillis() - 5, response, AuditLevel.STANDARD, false);
 
             assertThat(data).containsKey("latencyMs");
             assertThat(data).containsEntry("statusCode", 200);
@@ -452,8 +434,7 @@ class AuditServiceTest {
         void httpSkipsLatency() {
             Map<String, Object> data = new HashMap<>();
 
-            service.addTimingData(
-                    data, System.currentTimeMillis(), null, AuditLevel.STANDARD, true);
+            service.addTimingData(data, System.currentTimeMillis(), null, AuditLevel.STANDARD, true);
 
             assertThat(data).doesNotContainKey("latencyMs");
         }
@@ -479,8 +460,7 @@ class AuditServiceTest {
             Audited annotation = annotationWith(AuditEventType.USER_LOGIN);
 
             AuditEventType type =
-                    service.resolveEventType(
-                            sampleMethod(), SampleController.class, "/x", "POST", annotation);
+                    service.resolveEventType(sampleMethod(), SampleController.class, "/x", "POST", annotation);
 
             assertThat(type).isEqualTo(AuditEventType.USER_LOGIN);
         }
@@ -488,13 +468,8 @@ class AuditServiceTest {
         @Test
         @DisplayName("GET ui-data endpoint resolves to UI_DATA")
         void getUiData() throws Exception {
-            AuditEventType type =
-                    service.resolveEventType(
-                            sampleMethod(),
-                            SampleController.class,
-                            "/api/v1/ui-data/foo",
-                            "GET",
-                            null);
+            AuditEventType type = service.resolveEventType(
+                    sampleMethod(), SampleController.class, "/api/v1/ui-data/foo", "GET", null);
 
             assertThat(type).isEqualTo(AuditEventType.UI_DATA);
         }
@@ -503,8 +478,7 @@ class AuditServiceTest {
         @DisplayName("GET non-ui endpoint resolves to HTTP_REQUEST")
         void getHttpRequest() throws Exception {
             AuditEventType type =
-                    service.resolveEventType(
-                            sampleMethod(), SampleController.class, "/api/v1/merge", "GET", null);
+                    service.resolveEventType(sampleMethod(), SampleController.class, "/api/v1/merge", "GET", null);
 
             assertThat(type).isEqualTo(AuditEventType.HTTP_REQUEST);
         }
@@ -513,8 +487,7 @@ class AuditServiceTest {
         @DisplayName("settings path resolves to SETTINGS_CHANGED")
         void settingsPath() throws Exception {
             AuditEventType type =
-                    service.resolveEventType(
-                            sampleMethod(), SampleController.class, "/settings/x", "POST", null);
+                    service.resolveEventType(sampleMethod(), SampleController.class, "/settings/x", "POST", null);
 
             assertThat(type).isEqualTo(AuditEventType.SETTINGS_CHANGED);
         }
@@ -522,9 +495,7 @@ class AuditServiceTest {
         @Test
         @DisplayName("non-http defaults to PDF_PROCESS")
         void defaultPdfProcess() throws Exception {
-            AuditEventType type =
-                    service.resolveEventType(
-                            sampleMethod(), SampleController.class, null, null, null);
+            AuditEventType type = service.resolveEventType(sampleMethod(), SampleController.class, null, null, null);
 
             assertThat(type).isEqualTo(AuditEventType.PDF_PROCESS);
         }
@@ -538,8 +509,7 @@ class AuditServiceTest {
         @DisplayName("GET resolves to HTTP_REQUEST")
         void getRequest() throws Exception {
             AuditEventType type =
-                    service.determineAuditEventType(
-                            sampleMethod(), SampleController.class, "/anything", "GET");
+                    service.determineAuditEventType(sampleMethod(), SampleController.class, "/anything", "GET");
 
             assertThat(type).isEqualTo(AuditEventType.HTTP_REQUEST);
         }
@@ -548,8 +518,7 @@ class AuditServiceTest {
         @DisplayName("user path resolves to USER_PROFILE_UPDATE")
         void userPath() throws Exception {
             AuditEventType type =
-                    service.determineAuditEventType(
-                            sampleMethod(), SampleController.class, "/user/edit", "POST");
+                    service.determineAuditEventType(sampleMethod(), SampleController.class, "/user/edit", "POST");
 
             assertThat(type).isEqualTo(AuditEventType.USER_PROFILE_UPDATE);
         }
@@ -558,8 +527,7 @@ class AuditServiceTest {
         @DisplayName("upload path matches file-operation pattern")
         void uploadPath() throws Exception {
             AuditEventType type =
-                    service.determineAuditEventType(
-                            sampleMethod(), SampleController.class, "/api/upload/file", "POST");
+                    service.determineAuditEventType(sampleMethod(), SampleController.class, "/api/upload/file", "POST");
 
             assertThat(type).isEqualTo(AuditEventType.FILE_OPERATION);
         }
@@ -568,8 +536,7 @@ class AuditServiceTest {
         @DisplayName("plain POST defaults to PDF_PROCESS")
         void defaultProcess() throws Exception {
             AuditEventType type =
-                    service.determineAuditEventType(
-                            sampleMethod(), SampleController.class, "/api/v1/merge", "POST");
+                    service.determineAuditEventType(sampleMethod(), SampleController.class, "/api/v1/merge", "POST");
 
             assertThat(type).isEqualTo(AuditEventType.PDF_PROCESS);
         }
@@ -726,8 +693,7 @@ class AuditServiceTest {
         @Test
         @DisplayName("caps and strips newlines from a spoofable policy-name header")
         void capsPolicyNameHeader() {
-            MockHttpServletRequest req =
-                    new MockHttpServletRequest("POST", "/api/v1/misc/compress-pdf");
+            MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/misc/compress-pdf");
             req.addHeader(InternalApiClient.POLICY_NAME_HEADER, "evil\r\nname" + "x".repeat(500));
             Map<String, Object> data = new HashMap<>();
 
@@ -759,8 +725,7 @@ class AuditServiceTest {
         @Test
         @DisplayName("marks automation from the header")
         void marksAutomationHeader() {
-            MockHttpServletRequest req =
-                    new MockHttpServletRequest("POST", "/api/v1/misc/compress-pdf");
+            MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/misc/compress-pdf");
             req.addHeader(InternalApiClient.AUTOMATION_HEADER, "true");
             Map<String, Object> data = new HashMap<>();
 

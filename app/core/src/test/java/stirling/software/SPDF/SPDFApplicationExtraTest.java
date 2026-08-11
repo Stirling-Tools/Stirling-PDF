@@ -29,12 +29,16 @@ import stirling.software.common.model.ApplicationProperties;
 @DisplayName("SPDFApplication remaining coverage")
 class SPDFApplicationExtraTest {
 
-    @Mock private AppConfig appConfig;
-    @Mock private Environment env;
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock
+    private AppConfig appConfig;
 
-    private static Object invokeStatic(String name, Class<?>[] sig, Object... args)
-            throws Exception {
+    @Mock
+    private Environment env;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    private static Object invokeStatic(String name, Class<?>[] sig, Object... args) throws Exception {
         Method m = SPDFApplication.class.getDeclaredMethod(name, sig);
         m.setAccessible(true);
         return m.invoke(null, args);
@@ -45,9 +49,7 @@ class SPDFApplicationExtraTest {
     class GetActiveProfile {
 
         private String[] activeProfile(String[] args) throws Exception {
-            return (String[])
-                    invokeStatic(
-                            "getActiveProfile", new Class<?>[] {String[].class}, (Object) args);
+            return (String[]) invokeStatic("getActiveProfile", new Class<?>[] {String[].class}, (Object) args);
         }
 
         @Test
@@ -85,8 +87,7 @@ class SPDFApplicationExtraTest {
     class IsClassPresent {
 
         private boolean present(String className) throws Exception {
-            return (boolean)
-                    invokeStatic("isClassPresent", new Class<?>[] {String.class}, className);
+            return (boolean) invokeStatic("isClassPresent", new Class<?>[] {String.class}, className);
         }
 
         @Test

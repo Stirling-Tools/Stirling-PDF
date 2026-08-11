@@ -18,13 +18,12 @@ class YamlHelperTest {
     private static final String SIMPLE_YAML =
             "server:\n  port: 8080\n  host: localhost\napp:\n  name: test\n  debug: true\n";
 
-    private static final LoadSettings LOAD_SETTINGS =
-            LoadSettings.builder()
-                    .setUseMarks(true)
-                    .setMaxAliasesForCollections(Integer.MAX_VALUE)
-                    .setAllowRecursiveKeys(true)
-                    .setParseComments(true)
-                    .build();
+    private static final LoadSettings LOAD_SETTINGS = LoadSettings.builder()
+            .setUseMarks(true)
+            .setMaxAliasesForCollections(Integer.MAX_VALUE)
+            .setAllowRecursiveKeys(true)
+            .setParseComments(true)
+            .build();
 
     private YamlHelper createHelper(String yaml) {
         return new YamlHelper(LOAD_SETTINGS, yaml);

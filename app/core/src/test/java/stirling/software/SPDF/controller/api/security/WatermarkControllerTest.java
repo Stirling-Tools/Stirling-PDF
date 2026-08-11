@@ -57,27 +57,26 @@ class WatermarkControllerTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private WatermarkController watermarkController;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private WatermarkController watermarkController;
 
     private byte[] simplePdfBytes;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             doc.addPage(page);
@@ -102,11 +101,7 @@ class WatermarkControllerTest {
         @DisplayName("Should add text watermark with default alphabet")
         void testAddTextWatermark_DefaultAlphabet() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -121,8 +116,7 @@ class WatermarkControllerTest {
             request.setCustomColor("#d3d3d3");
             request.setConvertPDFToImage(false);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = watermarkController.addWatermark(request);
 
@@ -135,11 +129,7 @@ class WatermarkControllerTest {
         @DisplayName("Should handle color without hash prefix")
         void testAddTextWatermark_ColorWithoutHash() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -154,8 +144,7 @@ class WatermarkControllerTest {
             request.setCustomColor("ff0000");
             request.setConvertPDFToImage(false);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = watermarkController.addWatermark(request);
             assertNotNull(response.getBody());
@@ -165,11 +154,7 @@ class WatermarkControllerTest {
         @DisplayName("Should handle invalid color string gracefully")
         void testAddTextWatermark_InvalidColor() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -184,8 +169,7 @@ class WatermarkControllerTest {
             request.setCustomColor("not-a-color");
             request.setConvertPDFToImage(false);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = watermarkController.addWatermark(request);
             assertNotNull(response.getBody());
@@ -195,11 +179,7 @@ class WatermarkControllerTest {
         @DisplayName("Should handle multi-line watermark text")
         void testAddTextWatermark_MultiLine() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -214,8 +194,7 @@ class WatermarkControllerTest {
             request.setCustomColor("#000000");
             request.setConvertPDFToImage(false);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = watermarkController.addWatermark(request);
             assertNotNull(response.getBody());
@@ -225,11 +204,7 @@ class WatermarkControllerTest {
         @DisplayName("Should handle zero rotation")
         void testAddTextWatermark_ZeroRotation() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -244,8 +219,7 @@ class WatermarkControllerTest {
             request.setCustomColor("#d3d3d3");
             request.setConvertPDFToImage(false);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = watermarkController.addWatermark(request);
             assertNotNull(response.getBody());
@@ -259,12 +233,8 @@ class WatermarkControllerTest {
         @Test
         @DisplayName("Should reject PDF filename with path traversal")
         void testWatermark_PathTraversalInPdfFilename() throws Exception {
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "../etc/passwd.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+            MockMultipartFile pdfFile = new MockMultipartFile(
+                    "fileInput", "../etc/passwd.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -286,11 +256,7 @@ class WatermarkControllerTest {
         @DisplayName("Should reject PDF filename starting with /")
         void testWatermark_AbsolutePathInPdfFilename() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "/etc/passwd",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "/etc/passwd", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -312,18 +278,10 @@ class WatermarkControllerTest {
         @DisplayName("Should reject watermark image with path traversal")
         void testWatermark_PathTraversalInWatermarkImage() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             MockMultipartFile watermarkImage =
-                    new MockMultipartFile(
-                            "watermarkImage",
-                            "../malicious.png",
-                            "image/png",
-                            new byte[] {1, 2, 3});
+                    new MockMultipartFile("watermarkImage", "../malicious.png", "image/png", new byte[] {1, 2, 3});
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -361,11 +319,7 @@ class WatermarkControllerTest {
             }
 
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "multi.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            multiPagePdf);
+                    new MockMultipartFile("fileInput", "multi.pdf", MediaType.APPLICATION_PDF_VALUE, multiPagePdf);
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -380,8 +334,7 @@ class WatermarkControllerTest {
             request.setCustomColor("#d3d3d3");
             request.setConvertPDFToImage(false);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(multiPagePdf));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(multiPagePdf));
 
             ResponseEntity<Resource> response = watermarkController.addWatermark(request);
             assertNotNull(response.getBody());
@@ -397,15 +350,10 @@ class WatermarkControllerTest {
         @DisplayName("Should handle null watermark image filename")
         void testWatermark_NullImageFilename() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             MockMultipartFile watermarkImage =
-                    new MockMultipartFile(
-                            "watermarkImage", null, "image/png", new byte[] {1, 2, 3});
+                    new MockMultipartFile("watermarkImage", null, "image/png", new byte[] {1, 2, 3});
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -421,8 +369,7 @@ class WatermarkControllerTest {
             request.setCustomColor("#d3d3d3");
             request.setConvertPDFToImage(false);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = watermarkController.addWatermark(request);
             assertNotNull(response.getBody());
@@ -432,8 +379,7 @@ class WatermarkControllerTest {
         @DisplayName("Should handle null PDF filename")
         void testWatermark_NullPdfFilename() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", null, MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
+                    new MockMultipartFile("fileInput", null, MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -448,8 +394,7 @@ class WatermarkControllerTest {
             request.setCustomColor("#d3d3d3");
             request.setConvertPDFToImage(false);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = watermarkController.addWatermark(request);
             assertNotNull(response.getBody());
@@ -459,11 +404,7 @@ class WatermarkControllerTest {
         @DisplayName("Should handle max opacity")
         void testAddTextWatermark_MaxOpacity() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             AddWatermarkRequest request = new AddWatermarkRequest();
             request.setFileInput(pdfFile);
@@ -478,8 +419,7 @@ class WatermarkControllerTest {
             request.setCustomColor("#d3d3d3");
             request.setConvertPDFToImage(false);
 
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
             ResponseEntity<Resource> response = watermarkController.addWatermark(request);
             assertNotNull(response.getBody());

@@ -65,77 +65,92 @@ import stirling.software.proprietary.util.SecretMasker;
 @DisplayName("PolicyController")
 class PolicyControllerTest {
 
-    @Mock private PolicyRunner policyRunner;
-    @Mock private PolicyRunRegistry runRegistry;
-    @Mock private stirling.software.proprietary.policy.store.PolicyStore policyStore;
-    @Mock private SourceStore sourceStore;
-    @Mock private SourceAccessGuard sourceAccessGuard;
-    @Mock private SourceDocCounter docCounter;
-    @Mock private PolicyValidator policyValidator;
-    @Mock private PolicyAccessGuard policyAccessGuard;
-    @Mock private PolicyManagementAuthority policyManagementAuthority;
-    @Mock private PolicyTriggerManager policyTriggerManager;
+    @Mock
+    private PolicyRunner policyRunner;
 
     @Mock
-    private stirling.software.proprietary.policy.overview.PolicyOverviewService
-            policyOverviewService;
+    private PolicyRunRegistry runRegistry;
 
-    @Mock private ProcessedLedger processedLedger;
+    @Mock
+    private stirling.software.proprietary.policy.store.PolicyStore policyStore;
 
-    @Mock private TempFileManager tempFileManager;
-    @Mock private JobOwnershipService jobOwnershipService;
+    @Mock
+    private SourceStore sourceStore;
+
+    @Mock
+    private SourceAccessGuard sourceAccessGuard;
+
+    @Mock
+    private SourceDocCounter docCounter;
+
+    @Mock
+    private PolicyValidator policyValidator;
+
+    @Mock
+    private PolicyAccessGuard policyAccessGuard;
+
+    @Mock
+    private PolicyManagementAuthority policyManagementAuthority;
+
+    @Mock
+    private PolicyTriggerManager policyTriggerManager;
+
+    @Mock
+    private stirling.software.proprietary.policy.overview.PolicyOverviewService policyOverviewService;
+
+    @Mock
+    private ProcessedLedger processedLedger;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private JobOwnershipService jobOwnershipService;
 
     private ApplicationProperties applicationProperties;
     private final JobStore jobStore = new InProcessJobStore();
     private PolicyController controller;
 
-    private final java.util.List<stirling.software.proprietary.policy.trigger.PolicyTrigger>
-            policyTriggers =
-                    java.util.List.of(
-                            trigger("schedule", false, java.util.Set.of()),
-                            trigger("folder-watch", true, java.util.Set.of("folder")));
+    private final java.util.List<stirling.software.proprietary.policy.trigger.PolicyTrigger> policyTriggers =
+            java.util.List.of(
+                    trigger("schedule", false, java.util.Set.of()),
+                    trigger("folder-watch", true, java.util.Set.of("folder")));
 
     @BeforeEach
     void setUp() {
         applicationProperties = new ApplicationProperties();
-        controller =
-                new PolicyController(
-                        policyRunner,
-                        runRegistry,
-                        policyStore,
-                        sourceStore,
-                        sourceAccessGuard,
-                        docCounter,
-                        policyValidator,
-                        policyAccessGuard,
-                        policyManagementAuthority,
-                        policyTriggerManager,
-                        policyOverviewService,
-                        processedLedger,
-                        policyTriggers,
-                        applicationProperties,
-                        tempFileManager,
-                        jobOwnershipService,
-                        jobStore);
+        controller = new PolicyController(
+                policyRunner,
+                runRegistry,
+                policyStore,
+                sourceStore,
+                sourceAccessGuard,
+                docCounter,
+                policyValidator,
+                policyAccessGuard,
+                policyManagementAuthority,
+                policyTriggerManager,
+                policyOverviewService,
+                processedLedger,
+                policyTriggers,
+                applicationProperties,
+                tempFileManager,
+                jobOwnershipService,
+                jobStore);
     }
 
     @Test
     void validateReportsAChainThatCannotRun() {
         // Delegates to PolicyValidator so the endpoint and the save-time gate cannot disagree.
         ToolDiagnostic mismatch =
-                ToolDiagnostic.error(
-                        1, ToolDiagnostic.FORMAT_MISMATCH, "rotate cannot take an image");
+                ToolDiagnostic.error(1, ToolDiagnostic.FORMAT_MISMATCH, "rotate cannot take an image");
         when(policyValidator.diagnoseChain(anyList(), any())).thenReturn(List.of(mismatch));
 
-        PipelineValidation.Response response =
-                controller.validateChain(
-                        new PipelineValidation.Request(
-                                List.of(
-                                        new PipelineStep(
-                                                "/api/v1/misc/extract-images", Map.of(), Map.of()),
-                                        new PipelineStep(
-                                                "/api/v1/general/rotate-pdf", Map.of(), Map.of())),
-                                null));
+        PipelineValidation.Response response = controller.validateChain(new PipelineValidation.Request(
+                List.of(
+                        new PipelineStep("/api/v1/misc/extract-images", Map.of(), Map.of()),
+                        new PipelineStep("/api/v1/general/rotate-pdf", Map.of(), Map.of())),
+                null));
 
         assertFalse(response.valid());
         assertEquals(List.of(mismatch), response.diagnostics());
@@ -144,19 +159,14 @@ class PolicyControllerTest {
     @Test
     void validateReportsAWorkableChainAsValid() {
         // Warnings and fan-out notes come back without making the chain invalid.
-        ToolDiagnostic fanOut =
-                ToolDiagnostic.info(1, ToolDiagnostic.FAN_OUT, "runs once per file");
+        ToolDiagnostic fanOut = ToolDiagnostic.info(1, ToolDiagnostic.FAN_OUT, "runs once per file");
         when(policyValidator.diagnoseChain(anyList(), any())).thenReturn(List.of(fanOut));
 
-        PipelineValidation.Response response =
-                controller.validateChain(
-                        new PipelineValidation.Request(
-                                List.of(
-                                        new PipelineStep(
-                                                "/api/v1/general/split-pages", Map.of(), Map.of()),
-                                        new PipelineStep(
-                                                "/api/v1/general/rotate-pdf", Map.of(), Map.of())),
-                                null));
+        PipelineValidation.Response response = controller.validateChain(new PipelineValidation.Request(
+                List.of(
+                        new PipelineStep("/api/v1/general/split-pages", Map.of(), Map.of()),
+                        new PipelineStep("/api/v1/general/rotate-pdf", Map.of(), Map.of())),
+                null));
 
         assertTrue(response.valid());
         assertEquals(List.of(fanOut), response.diagnostics());
@@ -166,8 +176,7 @@ class PolicyControllerTest {
     void validateToleratesNoSteps() {
         when(policyValidator.diagnoseChain(anyList(), any())).thenReturn(List.of());
 
-        PipelineValidation.Response response =
-                controller.validateChain(new PipelineValidation.Request(null, null));
+        PipelineValidation.Response response = controller.validateChain(new PipelineValidation.Request(null, null));
 
         assertTrue(response.valid());
     }
@@ -193,8 +202,7 @@ class PolicyControllerTest {
     }
 
     private static PipelineDefinition definitionWithStep() {
-        return new PipelineDefinition(
-                "pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), List.of());
+        return new PipelineDefinition("pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), List.of());
     }
 
     private static Policy policy(String id, Long teamId) {
@@ -202,13 +210,12 @@ class PolicyControllerTest {
     }
 
     private static Policy s3OutputPolicy(String id, String secret) {
-        OutputSpec output =
-                new OutputSpec(
-                        "s3",
-                        Map.of(
-                                "bucket", "outbox",
-                                "accessKeyId", "AKIAEXAMPLE",
-                                "secretAccessKey", secret));
+        OutputSpec output = new OutputSpec(
+                "s3",
+                Map.of(
+                        "bucket", "outbox",
+                        "accessKeyId", "AKIAEXAMPLE",
+                        "secretAccessKey", secret));
         return new Policy(id, "name", "owner", true, List.of(), List.of(), output, 1L);
     }
 
@@ -227,8 +234,7 @@ class PolicyControllerTest {
             when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
                     .thenReturn(handle("run-1"));
 
-            ResponseEntity<JobResponse<Void>> response =
-                    controller.run(definitionWithStep(), new PolicyRunFiles());
+            ResponseEntity<JobResponse<Void>> response = controller.run(definitionWithStep(), new PolicyRunFiles());
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
             assertThat(response.getBody().getJobId()).isEqualTo("run-1");
@@ -253,10 +259,8 @@ class PolicyControllerTest {
 
             assertThatThrownBy(() -> controller.run(empty, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.BAD_REQUEST));
+                    .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                            .isEqualTo(HttpStatus.BAD_REQUEST));
         }
 
         @Test
@@ -264,21 +268,18 @@ class PolicyControllerTest {
         void rejectsUnauthorizedAdHocOutput() {
             // The confused-deputy guard: an S3 output referencing a connection the caller may not
             // use is validated here (principal present) and refused before any worker dispatch.
-            PipelineDefinition definition =
-                    new PipelineDefinition(
-                            "pipe",
-                            List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)),
-                            new OutputSpec("s3", Map.of("connectionId", 999)));
+            PipelineDefinition definition = new PipelineDefinition(
+                    "pipe",
+                    List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)),
+                    new OutputSpec("s3", Map.of("connectionId", 999)));
             doThrow(new IllegalArgumentException("unknown or inaccessible s3 connection"))
                     .when(policyValidator)
                     .validateOutput(any());
 
             assertThatThrownBy(() -> controller.run(definition, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.BAD_REQUEST));
+                    .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                            .isEqualTo(HttpStatus.BAD_REQUEST));
             verify(policyRunner, never()).runAdHoc(any(), any(), any());
         }
     }
@@ -393,8 +394,7 @@ class PolicyControllerTest {
             when(policyAccessGuard.canAccess(existing)).thenReturn(true);
             when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
 
-            ResponseEntity<Policy> response =
-                    controller.savePolicy(s3OutputPolicy("p1", SecretMasker.REDACTED));
+            ResponseEntity<Policy> response = controller.savePolicy(s3OutputPolicy("p1", SecretMasker.REDACTED));
 
             ArgumentCaptor<Policy> stored = ArgumentCaptor.forClass(Policy.class);
             verify(policyStore).save(stored.capture());
@@ -413,10 +413,8 @@ class PolicyControllerTest {
 
             assertThatThrownBy(() -> controller.savePolicy(policy(null, null)))
                     .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.FORBIDDEN));
+                    .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                            .isEqualTo(HttpStatus.FORBIDDEN));
             verify(policyStore, never()).save(any());
             verify(policyTriggerManager, never()).notifyPoliciesChanged();
         }
@@ -433,10 +431,8 @@ class PolicyControllerTest {
 
             assertThatThrownBy(() -> controller.savePolicy(policy(null, null)))
                     .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.BAD_REQUEST));
+                    .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                            .isEqualTo(HttpStatus.BAD_REQUEST));
         }
 
         @Test
@@ -449,26 +445,21 @@ class PolicyControllerTest {
 
             assertThatThrownBy(() -> controller.savePolicy(policy("p1", null)))
                     .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.NOT_FOUND));
+                    .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                            .isEqualTo(HttpStatus.NOT_FOUND));
         }
 
         @Test
         @DisplayName("update preserves the existing owner and team")
         void updatePreservesOwnership() {
             applicationProperties.getSecurity().setEnableLogin(false);
-            Policy existing =
-                    new Policy("p2", "name", "origOwner", true, List.of(), List.of(), null, 3L);
+            Policy existing = new Policy("p2", "name", "origOwner", true, List.of(), List.of(), null, 3L);
             when(policyStore.get("p2")).thenReturn(Optional.of(existing));
             when(policyAccessGuard.canAccess(existing)).thenReturn(true);
             when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
 
             ResponseEntity<Policy> response =
-                    controller.savePolicy(
-                            new Policy(
-                                    "p2", "name", "forged", true, List.of(), List.of(), null, 77L));
+                    controller.savePolicy(new Policy("p2", "name", "forged", true, List.of(), List.of(), null, 77L));
 
             assertThat(response.getBody().owner()).isEqualTo("origOwner");
             assertThat(response.getBody().teamId()).isEqualTo(3L);
@@ -512,8 +503,7 @@ class PolicyControllerTest {
 
             Policy read = controller.getPolicy("a").getBody();
 
-            assertThat(read.output().options().get("secretAccessKey"))
-                    .isEqualTo(SecretMasker.REDACTED);
+            assertThat(read.output().options().get("secretAccessKey")).isEqualTo(SecretMasker.REDACTED);
             assertThat(read.output().options().get("bucket")).isEqualTo("outbox");
         }
 
@@ -583,10 +573,8 @@ class PolicyControllerTest {
 
             assertThatThrownBy(() -> controller.deletePolicy("a"))
                     .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.FORBIDDEN));
+                    .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                            .isEqualTo(HttpStatus.FORBIDDEN));
         }
     }
 
@@ -630,10 +618,8 @@ class PolicyControllerTest {
 
             assertThatThrownBy(() -> controller.clearProcessedHistory("a"))
                     .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.FORBIDDEN));
+                    .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                            .isEqualTo(HttpStatus.FORBIDDEN));
         }
     }
 
@@ -650,8 +636,7 @@ class PolicyControllerTest {
             when(policyRunner.runWith(eq(p), any(), eq(PolicyProgressListener.NOOP)))
                     .thenReturn(handle("run-9"));
 
-            ResponseEntity<JobResponse<Void>> response =
-                    controller.runStoredPolicy("a", new PolicyRunFiles());
+            ResponseEntity<JobResponse<Void>> response = controller.runStoredPolicy("a", new PolicyRunFiles());
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
             assertThat(response.getBody().getJobId()).isEqualTo("run-9");
@@ -664,10 +649,8 @@ class PolicyControllerTest {
 
             assertThatThrownBy(() -> controller.runStoredPolicy("a", new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.NOT_FOUND));
+                    .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                            .isEqualTo(HttpStatus.NOT_FOUND));
         }
     }
 
@@ -678,8 +661,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("lists triggers sorted, with source compatibility")
         void listsTriggers() {
-            List<stirling.software.proprietary.policy.trigger.TriggerInfo> infos =
-                    controller.triggers();
+            List<stirling.software.proprietary.policy.trigger.TriggerInfo> infos = controller.triggers();
 
             assertThat(infos).extracting(t -> t.type()).containsExactly("folder-watch", "schedule");
             stirling.software.proprietary.policy.trigger.TriggerInfo folderWatch = infos.get(0);
@@ -711,10 +693,8 @@ class PolicyControllerTest {
 
             assertThatThrownBy(() -> controller.trigger("z"))
                     .isInstanceOf(ResponseStatusException.class)
-                    .satisfies(
-                            e ->
-                                    assertThat(((ResponseStatusException) e).getStatusCode())
-                                            .isEqualTo(HttpStatus.NOT_FOUND));
+                    .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+                            .isEqualTo(HttpStatus.NOT_FOUND));
         }
     }
 }

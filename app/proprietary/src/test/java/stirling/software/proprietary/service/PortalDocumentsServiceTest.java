@@ -25,13 +25,15 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class PortalDocumentsServiceTest {
 
-    @Mock private PortalAuditReadService auditReadService;
+    @Mock
+    private PortalAuditReadService auditReadService;
 
     private PortalDocumentsService service;
 
     @BeforeEach
     void setUp() {
-        service = new PortalDocumentsService(auditReadService, JsonMapper.builder().build());
+        service = new PortalDocumentsService(
+                auditReadService, JsonMapper.builder().build());
     }
 
     private static PortalAuditEventRow row(long id, String data) {
@@ -46,11 +48,9 @@ class PortalDocumentsServiceTest {
 
     @Test
     void policyStepDocumentIsLabelledAutomation() {
-        PortalReviewDocumentDto doc =
-                onlyDoc(
-                        "{\"path\":\"/api/v1/security/auto-redact\",\"automation\":true,"
-                                + "\"__origin\":\"API\",\"files\":[{\"name\":\"mushroom life.pdf\","
-                                + "\"type\":\"application/pdf\"}],\"statusCode\":200}");
+        PortalReviewDocumentDto doc = onlyDoc("{\"path\":\"/api/v1/security/auto-redact\",\"automation\":true,"
+                + "\"__origin\":\"API\",\"files\":[{\"name\":\"mushroom life.pdf\","
+                + "\"type\":\"application/pdf\"}],\"statusCode\":200}");
 
         assertThat(doc.getName()).isEqualTo("mushroom life.pdf");
         assertThat(doc.getAction()).isEqualTo("Auto Redact");
@@ -61,11 +61,9 @@ class PortalDocumentsServiceTest {
 
     @Test
     void directApiDocumentStaysApi() {
-        PortalReviewDocumentDto doc =
-                onlyDoc(
-                        "{\"path\":\"/api/v1/misc/compress-pdf\",\"__origin\":\"API\","
-                                + "\"files\":[{\"name\":\"a.pdf\",\"type\":\"application/pdf\"}],"
-                                + "\"statusCode\":200}");
+        PortalReviewDocumentDto doc = onlyDoc("{\"path\":\"/api/v1/misc/compress-pdf\",\"__origin\":\"API\","
+                + "\"files\":[{\"name\":\"a.pdf\",\"type\":\"application/pdf\"}],"
+                + "\"statusCode\":200}");
 
         assertThat(doc.getProduct()).isEqualTo("API");
         assertThat(doc.getSource()).isEqualTo("API integration");
@@ -73,12 +71,10 @@ class PortalDocumentsServiceTest {
 
     @Test
     void apiDocumentIsAttributedToItsNamedKey() {
-        PortalReviewDocumentDto doc =
-                onlyDoc(
-                        "{\"path\":\"/api/v1/misc/compress-pdf\",\"__origin\":\"API\","
-                                + "\"__apiKeyLabel\":\"Production ingest (sk_demo0000)\","
-                                + "\"files\":[{\"name\":\"a.pdf\",\"type\":\"application/pdf\"}],"
-                                + "\"statusCode\":200}");
+        PortalReviewDocumentDto doc = onlyDoc("{\"path\":\"/api/v1/misc/compress-pdf\",\"__origin\":\"API\","
+                + "\"__apiKeyLabel\":\"Production ingest (sk_demo0000)\","
+                + "\"files\":[{\"name\":\"a.pdf\",\"type\":\"application/pdf\"}],"
+                + "\"statusCode\":200}");
 
         // The specific key label surfaces as the source; product stays "API".
         assertThat(doc.getProduct()).isEqualTo("API");

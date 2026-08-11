@@ -38,20 +38,14 @@ public class ConfigInitializer {
             if (settingsFileExists) {
                 // move settings.yml to settings.yml.{timestamp}.bak
                 Path backupPath =
-                        Path.of(
-                                InstallationPathConfig.getSettingsPath()
-                                        + "."
-                                        + System.currentTimeMillis()
-                                        + ".bak");
+                        Path.of(InstallationPathConfig.getSettingsPath() + "." + System.currentTimeMillis() + ".bak");
                 Files.move(destPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
                 log.info("Moved existing settings file to backup: {}", backupPath);
             }
             Files.createDirectories(destPath.getParent());
-            try (InputStream in =
-                    getClass().getClassLoader().getResourceAsStream("settings.yml.template")) {
+            try (InputStream in = getClass().getClassLoader().getResourceAsStream("settings.yml.template")) {
                 if (in == null) {
-                    throw new FileNotFoundException(
-                            "Resource file not found: settings.yml.template");
+                    throw new FileNotFoundException("Resource file not found: settings.yml.template");
                 }
                 Files.copy(in, destPath);
             }
@@ -81,8 +75,7 @@ public class ConfigInitializer {
             migrateEnterpriseEditionToPremium(settingsFile, settingsTemplateFile);
             migrateProFeaturesKeyCasing(settingsFile, settingsTemplateFile);
 
-            boolean changesMade =
-                    settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile);
+            boolean changesMade = settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile);
             if (changesMade) {
                 settingsTemplateFile.save(destPath);
                 log.info("Settings file updated based on template changes.");
@@ -106,25 +99,20 @@ public class ConfigInitializer {
     private void migrateEnterpriseEditionToPremium(YamlHelper yaml, YamlHelper template) {
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "enabled") != null) {
             template.updateValue(
-                    List.of("premium", "enabled"),
-                    yaml.getValueByExactKeyPath("enterpriseEdition", "enabled"));
+                    List.of("premium", "enabled"), yaml.getValueByExactKeyPath("enterpriseEdition", "enabled"));
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "key") != null) {
-            template.updateValue(
-                    List.of("premium", "key"),
-                    yaml.getValueByExactKeyPath("enterpriseEdition", "key"));
+            template.updateValue(List.of("premium", "key"), yaml.getValueByExactKeyPath("enterpriseEdition", "key"));
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "SSOAutoLogin") != null) {
             template.updateValue(
                     List.of("premium", "proFeatures", "ssoAutoLogin"),
                     yaml.getValueByExactKeyPath("enterpriseEdition", "SSOAutoLogin"));
         }
-        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "autoUpdateMetadata")
-                != null) {
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "autoUpdateMetadata") != null) {
             template.updateValue(
                     List.of("premium", "proFeatures", "customMetadata", "autoUpdateMetadata"),
-                    yaml.getValueByExactKeyPath(
-                            "enterpriseEdition", "CustomMetadata", "autoUpdateMetadata"));
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "autoUpdateMetadata"));
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author") != null) {
             template.updateValue(
@@ -136,8 +124,7 @@ public class ConfigInitializer {
                     List.of("premium", "proFeatures", "customMetadata", "creator"),
                     yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator"));
         }
-        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer")
-                != null) {
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer") != null) {
             template.updateValue(
                     List.of("premium", "proFeatures", "customMetadata", "producer"),
                     yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer"));
@@ -156,11 +143,9 @@ public class ConfigInitializer {
             template.updateValue(List.of("premium", "proFeatures", "ssoAutoLogin"), ssoAutoLogin);
         }
         for (String field : List.of("autoUpdateMetadata", "author", "creator", "producer")) {
-            Object value =
-                    yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", field);
+            Object value = yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", field);
             if (value != null) {
-                template.updateValue(
-                        List.of("premium", "proFeatures", "customMetadata", field), value);
+                template.updateValue(List.of("premium", "proFeatures", "customMetadata", field), value);
             }
         }
     }

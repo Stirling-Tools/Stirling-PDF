@@ -52,18 +52,16 @@ public class BookletImpositionController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Create a booklet with proper page imposition",
-            description =
-                    "This operation combines page reordering for booklet printing with multi-page"
-                            + " layout. It rearranges pages in the correct order for booklet printing and"
-                            + " places multiple pages on each sheet for proper folding and binding.")
-    public ResponseEntity<Resource> createBookletImposition(
-            @ModelAttribute BookletImpositionRequest request) throws IOException {
+            description = "This operation combines page reordering for booklet printing with multi-page"
+                    + " layout. It rearranges pages in the correct order for booklet printing and"
+                    + " places multiple pages on each sheet for proper folding and binding.")
+    public ResponseEntity<Resource> createBookletImposition(@ModelAttribute BookletImpositionRequest request)
+            throws IOException {
 
         MultipartFile file = request.getFileInput();
         int pagesPerSheet = request.getPagesPerSheet();
         boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
-        String spineLocation =
-                request.getSpineLocation() != null ? request.getSpineLocation() : "LEFT";
+        String spineLocation = request.getSpineLocation() != null ? request.getSpineLocation() : "LEFT";
         boolean addGutter = Boolean.TRUE.equals(request.getAddGutter());
         float gutterSize = request.getGutterSize();
         boolean doubleSided = Boolean.TRUE.equals(request.getDoubleSided());
@@ -80,23 +78,21 @@ public class BookletImpositionController {
             int totalPages = sourceDocument.getNumberOfPages();
 
             // Create proper booklet with signature-based page ordering
-            try (PDDocument newDocument =
-                    createSaddleBooklet(
-                            sourceDocument,
-                            totalPages,
-                            addBorder,
-                            spineLocation,
-                            addGutter,
-                            gutterSize,
-                            doubleSided,
-                            duplexPass,
-                            flipOnShortEdge)) {
+            try (PDDocument newDocument = createSaddleBooklet(
+                    sourceDocument,
+                    totalPages,
+                    addBorder,
+                    spineLocation,
+                    addGutter,
+                    gutterSize,
+                    doubleSided,
+                    duplexPass,
+                    flipOnShortEdge)) {
 
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
                         GeneralUtils.generateFilename(
-                                Filenames.toSimpleFileName(file.getOriginalFilename()),
-                                "_booklet.pdf"),
+                                Filenames.toSimpleFileName(file.getOriginalFilename()), "_booklet.pdf"),
                         tempFileManager);
             }
         }
@@ -118,10 +114,7 @@ public class BookletImpositionController {
     }
 
     private static List<Side> saddleStitchSides(
-            int totalPagesOriginal,
-            boolean doubleSided,
-            String duplexPass,
-            boolean flipOnShortEdge) {
+            int totalPagesOriginal, boolean doubleSided, String duplexPass, boolean flipOnShortEdge) {
         int N = padToMultipleOf4(totalPagesOriginal);
         List<Side> out = new ArrayList<>();
         int sheets = N / 4;
@@ -209,8 +202,7 @@ public class BookletImpositionController {
             LayerUtility layerUtility = new LayerUtility(dst);
 
             try (PDPageContentStream cs =
-                    new PDPageContentStream(
-                            dst, out, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                    new PDPageContentStream(dst, out, PDPageContentStream.AppendMode.APPEND, true, true)) {
 
                 if (addBorder) {
                     cs.setLineWidth(1.5f);
@@ -218,29 +210,9 @@ public class BookletImpositionController {
                 }
 
                 // draw left cell
-                drawCell(
-                        src,
-                        dst,
-                        cs,
-                        layerUtility,
-                        side.left,
-                        leftCellX,
-                        0f,
-                        leftCellW,
-                        cellH,
-                        addBorder);
+                drawCell(src, dst, cs, layerUtility, side.left, leftCellX, 0f, leftCellW, cellH, addBorder);
                 // draw right cell
-                drawCell(
-                        src,
-                        dst,
-                        cs,
-                        layerUtility,
-                        side.right,
-                        rightCellX,
-                        0f,
-                        rightCellW,
-                        cellH,
-                        addBorder);
+                drawCell(src, dst, cs, layerUtility, side.right, rightCellX, 0f, rightCellW, cellH, addBorder);
             }
         }
         return dst;
@@ -314,7 +286,7 @@ public class BookletImpositionController {
                 cs.transform(Matrix.getTranslateInstance(-r.getHeight(), 0));
                 break;
             default:
-                // 0°: no-op
+            // 0°: no-op
         }
 
         // Reuse LayerUtility passed from caller

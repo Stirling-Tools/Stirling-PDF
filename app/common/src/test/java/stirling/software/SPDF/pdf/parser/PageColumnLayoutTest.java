@@ -26,8 +26,7 @@ class PageColumnLayoutTest {
 
     @Test
     void singleColumn_classifyAnchor_returnsZero() {
-        PageColumnLayout layout =
-                PageColumnLayout.fromLineBoxes(List.of(lineBox(72f, 396f)), PAGE_WIDTH);
+        PageColumnLayout layout = PageColumnLayout.fromLineBoxes(List.of(lineBox(72f, 396f)), PAGE_WIDTH);
 
         assertThat(layout.columnOf(100f, 200f)).isEqualTo(0);
     }
@@ -36,8 +35,7 @@ class PageColumnLayoutTest {
 
     @Test
     void twoColumn_detectsGutter() {
-        PageColumnLayout layout =
-                PageColumnLayout.fromLineBoxes(buildTwoColumnLines(3), PAGE_WIDTH);
+        PageColumnLayout layout = PageColumnLayout.fromLineBoxes(buildTwoColumnLines(3), PAGE_WIDTH);
 
         assertThat(layout.columnCount()).isEqualTo(2);
         assertThat(layout.gutters()).hasSize(1);
@@ -51,16 +49,14 @@ class PageColumnLayoutTest {
 
     @Test
     void twoColumn_classifyLeftAndRightAnchors() {
-        PageColumnLayout layout =
-                PageColumnLayout.fromLineBoxes(buildTwoColumnLines(3), PAGE_WIDTH);
+        PageColumnLayout layout = PageColumnLayout.fromLineBoxes(buildTwoColumnLines(3), PAGE_WIDTH);
         assertThat(layout.columnOf(100f, 200f)).isEqualTo(0);
         assertThat(layout.columnOf(380f, 460f)).isEqualTo(1);
     }
 
     @Test
     void twoColumn_columnsCrossing_leftLineOnlyHitsLeft() {
-        PageColumnLayout layout =
-                PageColumnLayout.fromLineBoxes(buildTwoColumnLines(3), PAGE_WIDTH);
+        PageColumnLayout layout = PageColumnLayout.fromLineBoxes(buildTwoColumnLines(3), PAGE_WIDTH);
         assertThat(layout.columnsCrossing(72f, 280f)).containsExactly(0);
         assertThat(layout.columnsCrossing(320f, 540f)).containsExactly(1);
     }

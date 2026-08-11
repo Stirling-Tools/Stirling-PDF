@@ -34,8 +34,7 @@ class MultiPatternTextFinderTest {
         return doc;
     }
 
-    private Map<Integer, List<PDFText>> scan(PDDocument doc, List<Pattern> patterns)
-            throws IOException {
+    private Map<Integer, List<PDFText>> scan(PDDocument doc, List<Pattern> patterns) throws IOException {
         MultiPatternTextFinder finder = new MultiPatternTextFinder(patterns);
         finder.setStartPage(1);
         finder.setEndPage(doc.getNumberOfPages());

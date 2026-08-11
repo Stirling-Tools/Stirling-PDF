@@ -29,7 +29,8 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn("ignored/path");
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -37,10 +38,9 @@ class UIDataTessdataControllerTest {
                 };
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-        mvc.perform(
-                        post("/api/v1/ui-data/tessdata/download")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"languages\":[]}"))
+        mvc.perform(post("/api/v1/ui-data/tessdata/download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"languages\":[]}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("No languages provided for download"));
     }
@@ -51,7 +51,8 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -59,10 +60,9 @@ class UIDataTessdataControllerTest {
                 };
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-        mvc.perform(
-                        post("/api/v1/ui-data/tessdata/download")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"languages\":[\"../evil\"]}"))
+        mvc.perform(post("/api/v1/ui-data/tessdata/download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"languages\":[\"../evil\"]}"))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.downloaded").isArray())
                 .andExpect(jsonPath("$.downloaded").isEmpty())
@@ -79,7 +79,8 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -87,10 +88,9 @@ class UIDataTessdataControllerTest {
                 };
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-        mvc.perform(
-                        post("/api/v1/ui-data/tessdata/download")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"languages\":[\"fra\"]}"))
+        mvc.perform(post("/api/v1/ui-data/tessdata/download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"languages\":[\"fra\"]}"))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.downloaded").isEmpty())
                 .andExpect(jsonPath("$.failed[0]").value("fra"));
@@ -102,15 +102,15 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng", "fra");
                     }
 
                     @Override
-                    protected boolean downloadLanguageFile(
-                            String safeLang, Path targetFile, String downloadUrl) {
+                    protected boolean downloadLanguageFile(String safeLang, Path targetFile, String downloadUrl) {
                         if ("eng".equals(safeLang)) {
                             try {
                                 Files.writeString(targetFile, "dummy");
@@ -125,23 +125,22 @@ class UIDataTessdataControllerTest {
 
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-        mvc.perform(
-                        post("/api/v1/ui-data/tessdata/download")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"languages\":[\"eng\",\"fra\"]}"))
+        mvc.perform(post("/api/v1/ui-data/tessdata/download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"languages\":[\"eng\",\"fra\"]}"))
                 .andExpect(status().isMultiStatus())
                 .andExpect(jsonPath("$.downloaded[0]").value("eng"))
                 .andExpect(jsonPath("$.failed[0]").value("fra"));
     }
 
     @Test
-    void downloadTessdataLanguages_handlesInvalidSanitizedLanguage(@TempDir Path tempDir)
-            throws Exception {
+    void downloadTessdataLanguages_handlesInvalidSanitizedLanguage(@TempDir Path tempDir) throws Exception {
         RuntimePathConfig runtimePathConfig = Mockito.mock(RuntimePathConfig.class);
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -150,23 +149,22 @@ class UIDataTessdataControllerTest {
 
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-        mvc.perform(
-                        post("/api/v1/ui-data/tessdata/download")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"languages\":[\"eng/\"]}"))
+        mvc.perform(post("/api/v1/ui-data/tessdata/download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"languages\":[\"eng/\"]}"))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.downloaded").isEmpty())
                 .andExpect(jsonPath("$.failed[0]").value("eng/"));
     }
 
     @Test
-    void downloadTessdataLanguages_returnsForbiddenWhenNotWritable(@TempDir Path tempDir)
-            throws Exception {
+    void downloadTessdataLanguages_returnsForbiddenWhenNotWritable(@TempDir Path tempDir) throws Exception {
         RuntimePathConfig runtimePathConfig = Mockito.mock(RuntimePathConfig.class);
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected boolean isWritableDirectory(Path dir) {
                         return false;
@@ -175,10 +173,9 @@ class UIDataTessdataControllerTest {
 
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-        mvc.perform(
-                        post("/api/v1/ui-data/tessdata/download")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"languages\":[\"eng\"]}"))
+        mvc.perform(post("/api/v1/ui-data/tessdata/download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"languages\":[\"eng\"]}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -188,25 +185,24 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
                     }
 
                     @Override
-                    protected boolean downloadLanguageFile(
-                            String safeLang, Path targetFile, String downloadUrl) {
+                    protected boolean downloadLanguageFile(String safeLang, Path targetFile, String downloadUrl) {
                         return false; // simulate network failure
                     }
                 };
 
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-        mvc.perform(
-                        post("/api/v1/ui-data/tessdata/download")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"languages\":[\"eng\"]}"))
+        mvc.perform(post("/api/v1/ui-data/tessdata/download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"languages\":[\"eng\"]}"))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.downloaded").isArray())
                 .andExpect(jsonPath("$.downloaded").isEmpty())
@@ -219,15 +215,15 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
                     }
 
                     @Override
-                    protected boolean downloadLanguageFile(
-                            String safeLang, Path targetFile, String downloadUrl) {
+                    protected boolean downloadLanguageFile(String safeLang, Path targetFile, String downloadUrl) {
                         try {
                             Files.writeString(targetFile, "dummy");
                             return true;
@@ -239,10 +235,9 @@ class UIDataTessdataControllerTest {
 
         MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
 
-        mvc.perform(
-                        post("/api/v1/ui-data/tessdata/download")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"languages\":[\"eng\"]}"))
+        mvc.perform(post("/api/v1/ui-data/tessdata/download")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"languages\":[\"eng\"]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.downloaded[0]").value("eng"))
                 .andExpect(jsonPath("$.failed").isArray())
@@ -250,8 +245,7 @@ class UIDataTessdataControllerTest {
     }
 
     @Test
-    void tessdataLanguages_returnsInstalledAvailableAndWritable(@TempDir Path tempDir)
-            throws Exception {
+    void tessdataLanguages_returnsInstalledAvailableAndWritable(@TempDir Path tempDir) throws Exception {
         Files.createFile(tempDir.resolve("eng.traineddata"));
         Files.createFile(tempDir.resolve("deu.traineddata"));
         Files.createFile(tempDir.resolve("osd.traineddata")); // should be filtered
@@ -260,7 +254,8 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng", "fra");
@@ -284,7 +279,8 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -309,7 +305,8 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -332,7 +329,8 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(missingDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected List<String> getRemoteTessdataLanguages() {
                         return List.of("eng");
@@ -354,7 +352,8 @@ class UIDataTessdataControllerTest {
         Mockito.when(runtimePathConfig.getTessDataPath()).thenReturn(tempDir.toString());
 
         UIDataTessdataController controller =
-                new UIDataTessdataController(runtimePathConfig, JsonMapper.builder().build()) {
+                new UIDataTessdataController(
+                        runtimePathConfig, JsonMapper.builder().build()) {
                     @Override
                     protected boolean isWritableDirectory(Path dir) {
                         return false;

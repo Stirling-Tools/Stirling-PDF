@@ -50,26 +50,27 @@ class ConvertSvgToPDFTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private SvgSanitizer svgSanitizer;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertSvgToPDF controller;
+    @Mock
+    private SvgSanitizer svgSanitizer;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private ConvertSvgToPDF controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     @Test
@@ -80,9 +81,7 @@ class ConvertSvgToPDFTest {
         ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(
-                new String(drainBody(response), StandardCharsets.UTF_8)
-                        .contains("No files provided"));
+        assertTrue(new String(drainBody(response), StandardCharsets.UTF_8).contains("No files provided"));
     }
 
     @Test
@@ -97,8 +96,7 @@ class ConvertSvgToPDFTest {
 
     @Test
     void convertSvgToPdf_nonSvgFileSkipped() throws IOException {
-        MockMultipartFile txtFile =
-                new MockMultipartFile("fileInput", "test.txt", "text/plain", "content".getBytes());
+        MockMultipartFile txtFile = new MockMultipartFile("fileInput", "test.txt", "text/plain", "content".getBytes());
 
         SvgToPdfRequest request = new SvgToPdfRequest();
         request.setFileInput(new MockMultipartFile[] {txtFile});
@@ -107,14 +105,12 @@ class ConvertSvgToPDFTest {
         ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(
-                new String(drainBody(response), StandardCharsets.UTF_8).contains("No valid SVG"));
+        assertTrue(new String(drainBody(response), StandardCharsets.UTF_8).contains("No valid SVG"));
     }
 
     @Test
     void convertSvgToPdf_emptyFileSkipped() throws IOException {
-        MockMultipartFile emptyFile =
-                new MockMultipartFile("fileInput", "test.svg", "image/svg+xml", new byte[0]);
+        MockMultipartFile emptyFile = new MockMultipartFile("fileInput", "test.svg", "image/svg+xml", new byte[0]);
 
         SvgToPdfRequest request = new SvgToPdfRequest();
         request.setFileInput(new MockMultipartFile[] {emptyFile});
@@ -132,33 +128,27 @@ class ConvertSvgToPDFTest {
         byte[] pdfBytes = "pdf-output".getBytes();
         byte[] processedPdf = "processed-pdf".getBytes();
 
-        MockMultipartFile svgFile =
-                new MockMultipartFile("fileInput", "drawing.svg", "image/svg+xml", svgContent);
+        MockMultipartFile svgFile = new MockMultipartFile("fileInput", "drawing.svg", "image/svg+xml", svgContent);
 
         SvgToPdfRequest request = new SvgToPdfRequest();
         request.setFileInput(new MockMultipartFile[] {svgFile});
         request.setCombineIntoSinglePdf(false);
 
         when(svgSanitizer.sanitize(svgContent)).thenReturn(sanitizedSvg);
-        when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes))
-                .thenReturn(processedPdf);
+        when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes)).thenReturn(processedPdf);
 
         ResponseEntity<Resource> expectedResponse = streamingOk(processedPdf);
 
         try (MockedStatic<SvgToPdf> svgMock = Mockito.mockStatic(SvgToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<WebResponseUtils> wrMock =
-                        Mockito.mockStatic(WebResponseUtils.class)) {
+                MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
 
             svgMock.when(() -> SvgToPdf.convert(sanitizedSvg)).thenReturn(pdfBytes);
 
             guMock.when(() -> GeneralUtils.generateFilename("drawing.svg", ".pdf"))
                     .thenReturn("drawing.pdf");
 
-            wrMock.when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+            wrMock.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
@@ -176,10 +166,8 @@ class ConvertSvgToPDFTest {
         byte[] combinedPdf = "combined-pdf".getBytes();
         byte[] processedPdf = "processed-combined".getBytes();
 
-        MockMultipartFile svgFile1 =
-                new MockMultipartFile("fileInput", "a.svg", "image/svg+xml", svgContent1);
-        MockMultipartFile svgFile2 =
-                new MockMultipartFile("fileInput", "b.svg", "image/svg+xml", svgContent2);
+        MockMultipartFile svgFile1 = new MockMultipartFile("fileInput", "a.svg", "image/svg+xml", svgContent1);
+        MockMultipartFile svgFile2 = new MockMultipartFile("fileInput", "b.svg", "image/svg+xml", svgContent2);
 
         SvgToPdfRequest request = new SvgToPdfRequest();
         request.setFileInput(new MockMultipartFile[] {svgFile1, svgFile2});
@@ -187,25 +175,20 @@ class ConvertSvgToPDFTest {
 
         when(svgSanitizer.sanitize(svgContent1)).thenReturn(sanitizedSvg1);
         when(svgSanitizer.sanitize(svgContent2)).thenReturn(sanitizedSvg2);
-        when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(combinedPdf))
-                .thenReturn(processedPdf);
+        when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(combinedPdf)).thenReturn(processedPdf);
 
         ResponseEntity<Resource> expectedResponse = streamingOk(processedPdf);
 
         try (MockedStatic<SvgToPdf> svgMock = Mockito.mockStatic(SvgToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<WebResponseUtils> wrMock =
-                        Mockito.mockStatic(WebResponseUtils.class)) {
+                MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
 
             svgMock.when(() -> SvgToPdf.combineIntoPdf(any())).thenReturn(combinedPdf);
 
             guMock.when(() -> GeneralUtils.generateFilename("a.svg", "_combined.pdf"))
                     .thenReturn("a_combined.pdf");
 
-            wrMock.when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+            wrMock.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = controller.convertSvgToPdf(request);
@@ -216,8 +199,7 @@ class ConvertSvgToPDFTest {
 
     @Test
     void convertSvgToPdf_nullFilenameSkipped() throws IOException {
-        MockMultipartFile nullNameFile =
-                new MockMultipartFile("fileInput", null, "image/svg+xml", "svg".getBytes());
+        MockMultipartFile nullNameFile = new MockMultipartFile("fileInput", null, "image/svg+xml", "svg".getBytes());
 
         SvgToPdfRequest request = new SvgToPdfRequest();
         request.setFileInput(new MockMultipartFile[] {nullNameFile});
@@ -231,8 +213,7 @@ class ConvertSvgToPDFTest {
     @Test
     void convertSvgToPdf_sanitizationFailureSkipsFile() throws IOException {
         byte[] svgContent = "<svg>bad</svg>".getBytes();
-        MockMultipartFile svgFile =
-                new MockMultipartFile("fileInput", "bad.svg", "image/svg+xml", svgContent);
+        MockMultipartFile svgFile = new MockMultipartFile("fileInput", "bad.svg", "image/svg+xml", svgContent);
 
         SvgToPdfRequest request = new SvgToPdfRequest();
         request.setFileInput(new MockMultipartFile[] {svgFile});

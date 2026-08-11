@@ -46,11 +46,20 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 @ExtendWith(MockitoExtension.class)
 class FolderServiceTest {
 
-    @Mock private FolderRepository folderRepository;
-    @Mock private StoredFileRepository storedFileRepository;
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private ApplicationProperties.Security security;
-    @Mock private ApplicationProperties.Storage storage;
+    @Mock
+    private FolderRepository folderRepository;
+
+    @Mock
+    private StoredFileRepository storedFileRepository;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private ApplicationProperties.Security security;
+
+    @Mock
+    private ApplicationProperties.Storage storage;
 
     private FolderService service;
     private User user;
@@ -70,8 +79,7 @@ class FolderServiceTest {
         user.setId(42L);
         user.setUsername("alice");
         SecurityContext ctx = SecurityContextHolder.createEmptyContext();
-        ctx.setAuthentication(
-                new UsernamePasswordAuthenticationToken(user, null, java.util.List.of()));
+        ctx.setAuthentication(new UsernamePasswordAuthenticationToken(user, null, java.util.List.of()));
         SecurityContextHolder.setContext(ctx);
     }
 
@@ -85,10 +93,9 @@ class FolderServiceTest {
         when(security.isEnableLogin()).thenReturn(false);
         assertThatThrownBy(() -> service.listFolders())
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
-                                        .isEqualTo(403));
+                .satisfies(e -> assertThat(
+                                ((ResponseStatusException) e).getStatusCode().value())
+                        .isEqualTo(403));
     }
 
     @Test
@@ -96,10 +103,9 @@ class FolderServiceTest {
         when(storage.isEnabled()).thenReturn(false);
         assertThatThrownBy(() -> service.listFolders())
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
-                                        .isEqualTo(403));
+                .satisfies(e -> assertThat(
+                                ((ResponseStatusException) e).getStatusCode().value())
+                        .isEqualTo(403));
     }
 
     @Test
@@ -108,8 +114,7 @@ class FolderServiceTest {
         // returns Optional.empty() and the service must surface a generic 400, not a 404 that
         // could be used to probe for existence by id-guessing.
         UUID foreignParentId = UUID.randomUUID();
-        when(folderRepository.findByIdAndOwner(eq(foreignParentId), eq(user)))
-                .thenReturn(Optional.empty());
+        when(folderRepository.findByIdAndOwner(eq(foreignParentId), eq(user))).thenReturn(Optional.empty());
 
         CreateFolderRequest req = new CreateFolderRequest();
         req.setName("Child");
@@ -117,12 +122,11 @@ class FolderServiceTest {
 
         assertThatThrownBy(() -> service.createFolder(req))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e -> {
-                            ResponseStatusException rse = (ResponseStatusException) e;
-                            assertThat(rse.getStatusCode().value()).isEqualTo(400);
-                            assertThat(rse.getReason()).doesNotContain(foreignParentId.toString());
-                        });
+                .satisfies(e -> {
+                    ResponseStatusException rse = (ResponseStatusException) e;
+                    assertThat(rse.getStatusCode().value()).isEqualTo(400);
+                    assertThat(rse.getReason()).doesNotContain(foreignParentId.toString());
+                });
     }
 
     @Test
@@ -140,10 +144,9 @@ class FolderServiceTest {
 
         assertThatThrownBy(() -> service.createFolder(req))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
-                                        .isEqualTo(409));
+                .satisfies(e -> assertThat(
+                                ((ResponseStatusException) e).getStatusCode().value())
+                        .isEqualTo(409));
     }
 
     @Test
@@ -161,8 +164,7 @@ class FolderServiceTest {
         // the new child to depth 65 - past the cap. resolveParent walks cursor->root counting
         // ancestors, which is exactly 64, and rejects.
         Folder deepest = cursor;
-        when(folderRepository.findByIdAndOwner(eq(deepest.getId()), eq(user)))
-                .thenReturn(Optional.of(deepest));
+        when(folderRepository.findByIdAndOwner(eq(deepest.getId()), eq(user))).thenReturn(Optional.of(deepest));
 
         CreateFolderRequest req = new CreateFolderRequest();
         req.setName("Too deep");
@@ -170,12 +172,11 @@ class FolderServiceTest {
 
         assertThatThrownBy(() -> service.createFolder(req))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e -> {
-                            ResponseStatusException rse = (ResponseStatusException) e;
-                            assertThat(rse.getStatusCode().value()).isEqualTo(400);
-                            assertThat(rse.getReason()).containsIgnoringCase("nesting limit");
-                        });
+                .satisfies(e -> {
+                    ResponseStatusException rse = (ResponseStatusException) e;
+                    assertThat(rse.getStatusCode().value()).isEqualTo(400);
+                    assertThat(rse.getReason()).containsIgnoringCase("nesting limit");
+                });
     }
 
     @Test
@@ -198,12 +199,11 @@ class FolderServiceTest {
 
         assertThatThrownBy(() -> service.updateFolder(a.getId(), req))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e -> {
-                            ResponseStatusException rse = (ResponseStatusException) e;
-                            assertThat(rse.getStatusCode().value()).isEqualTo(400);
-                            assertThat(rse.getReason()).containsIgnoringCase("descendants");
-                        });
+                .satisfies(e -> {
+                    ResponseStatusException rse = (ResponseStatusException) e;
+                    assertThat(rse.getStatusCode().value()).isEqualTo(400);
+                    assertThat(rse.getReason()).containsIgnoringCase("descendants");
+                });
     }
 
     @Test
@@ -212,8 +212,7 @@ class FolderServiceTest {
         // ids to probing users. Stays consistent with the createFolder-under-unknown-parent test
         // above.
         UUID foreignId = UUID.randomUUID();
-        when(folderRepository.findByIdAndOwner(eq(foreignId), eq(user)))
-                .thenReturn(Optional.empty());
+        when(folderRepository.findByIdAndOwner(eq(foreignId), eq(user))).thenReturn(Optional.empty());
 
         stirling.software.proprietary.storage.model.api.UpdateFolderRequest req =
                 new stirling.software.proprietary.storage.model.api.UpdateFolderRequest();
@@ -221,10 +220,9 @@ class FolderServiceTest {
 
         assertThatThrownBy(() -> service.updateFolder(foreignId, req))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
-                                        .isEqualTo(404));
+                .satisfies(e -> assertThat(
+                                ((ResponseStatusException) e).getStatusCode().value())
+                        .isEqualTo(404));
     }
 
     @Test
@@ -234,17 +232,14 @@ class FolderServiceTest {
         UUID foreignFolderId = UUID.randomUUID();
         stirling.software.proprietary.storage.model.StoredFile file =
                 mock(stirling.software.proprietary.storage.model.StoredFile.class);
-        when(storedFileRepository.findByIdAndOwner(eq(100L), eq(user)))
-                .thenReturn(Optional.of(file));
-        when(folderRepository.findByIdAndOwner(eq(foreignFolderId), eq(user)))
-                .thenReturn(Optional.empty());
+        when(storedFileRepository.findByIdAndOwner(eq(100L), eq(user))).thenReturn(Optional.of(file));
+        when(folderRepository.findByIdAndOwner(eq(foreignFolderId), eq(user))).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.moveFileToFolder(100L, foreignFolderId))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
-                                        .isEqualTo(400));
+                .satisfies(e -> assertThat(
+                                ((ResponseStatusException) e).getStatusCode().value())
+                        .isEqualTo(400));
     }
 
     @Test
@@ -256,18 +251,16 @@ class FolderServiceTest {
 
         assertThatThrownBy(() -> service.bulkMoveFilesToFolder(null, tooMany))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
-                                        .isEqualTo(400));
+                .satisfies(e -> assertThat(
+                                ((ResponseStatusException) e).getStatusCode().value())
+                        .isEqualTo(400));
     }
 
     @Test
     void bulkMove_returns_moved_and_skipped_split() {
         // Ownership filter on the repository returns a subset; the rest land in skippedFileIds.
         Folder target = makeFolder(UUID.randomUUID(), null);
-        when(folderRepository.findByIdAndOwner(eq(target.getId()), eq(user)))
-                .thenReturn(Optional.of(target));
+        when(folderRepository.findByIdAndOwner(eq(target.getId()), eq(user))).thenReturn(Optional.of(target));
 
         stirling.software.proprietary.storage.model.StoredFile fileA =
                 mock(stirling.software.proprietary.storage.model.StoredFile.class);
@@ -275,8 +268,7 @@ class FolderServiceTest {
         stirling.software.proprietary.storage.model.StoredFile fileB =
                 mock(stirling.software.proprietary.storage.model.StoredFile.class);
         when(fileB.getId()).thenReturn(2L);
-        when(storedFileRepository.findAllByIdInAndOwner(any(), eq(user)))
-                .thenReturn(java.util.List.of(fileA, fileB));
+        when(storedFileRepository.findAllByIdInAndOwner(any(), eq(user))).thenReturn(java.util.List.of(fileA, fileB));
 
         FolderService.BulkMoveResult result =
                 service.bulkMoveFilesToFolder(target.getId(), java.util.List.of(1L, 2L, 3L, 4L));

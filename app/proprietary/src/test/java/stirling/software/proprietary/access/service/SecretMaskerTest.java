@@ -44,8 +44,7 @@ class SecretMaskerTest {
 
     @Test
     void mergeAcceptsARealNewSecret() {
-        Map<String, Object> merged =
-                masker.merge(Map.of("secretKey", "OLD"), Map.of("secretKey", "NEW"));
+        Map<String, Object> merged = masker.merge(Map.of("secretKey", "OLD"), Map.of("secretKey", "NEW"));
         assertThat(merged.get("secretKey")).isEqualTo("NEW");
     }
 

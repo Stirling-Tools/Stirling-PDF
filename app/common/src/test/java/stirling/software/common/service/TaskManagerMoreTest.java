@@ -38,11 +38,17 @@ import stirling.software.common.model.job.ResultFile;
 /** Additional coverage for TaskManager branches not exercised by TaskManagerTest. */
 class TaskManagerMoreTest {
 
-    @Mock private FileStorage fileStorage;
-    @Mock private JobStore jobStore;
-    @Mock private ClusterBackplane clusterBackplane;
+    @Mock
+    private FileStorage fileStorage;
 
-    @InjectMocks private TaskManager taskManager;
+    @Mock
+    private JobStore jobStore;
+
+    @Mock
+    private ClusterBackplane clusterBackplane;
+
+    @InjectMocks
+    private TaskManager taskManager;
 
     private AutoCloseable closeable;
 
@@ -82,8 +88,7 @@ class TaskManagerMoreTest {
             taskManager.createTask(jobId);
 
             byte[] zipBytes = buildZip("a.pdf", "b.txt");
-            when(fileStorage.retrieveInputStream("zip-file-id"))
-                    .thenReturn(new ByteArrayInputStream(zipBytes));
+            when(fileStorage.retrieveInputStream("zip-file-id")).thenReturn(new ByteArrayInputStream(zipBytes));
             // Each extracted entry is stored, returning a distinct StoredFile.
             when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
                     .thenReturn(new FileStorage.StoredFile("extracted-a", 11L))
@@ -97,10 +102,8 @@ class TaskManagerMoreTest {
             assertThat(result.hasMultipleFiles()).isTrue();
             assertThat(result.getAllResultFiles()).hasSize(2);
             // Content type is derived from the entry extension, not the ZIP content type.
-            assertThat(result.getAllResultFiles().get(0).getContentType())
-                    .isEqualTo(MediaType.APPLICATION_PDF_VALUE);
-            assertThat(result.getAllResultFiles().get(1).getContentType())
-                    .isEqualTo(MediaType.TEXT_PLAIN_VALUE);
+            assertThat(result.getAllResultFiles().get(0).getContentType()).isEqualTo(MediaType.APPLICATION_PDF_VALUE);
+            assertThat(result.getAllResultFiles().get(1).getContentType()).isEqualTo(MediaType.TEXT_PLAIN_VALUE);
             verify(fileStorage).deleteFile("zip-file-id");
         }
 
@@ -111,8 +114,7 @@ class TaskManagerMoreTest {
             taskManager.createTask(jobId);
 
             byte[] emptyZip = buildZip();
-            when(fileStorage.retrieveInputStream("empty-zip-id"))
-                    .thenReturn(new ByteArrayInputStream(emptyZip));
+            when(fileStorage.retrieveInputStream("empty-zip-id")).thenReturn(new ByteArrayInputStream(emptyZip));
             when(fileStorage.getFileSize("empty-zip-id")).thenReturn(7L);
 
             taskManager.setFileResult(jobId, "empty-zip-id", "empty.zip", "application/zip");
@@ -130,12 +132,10 @@ class TaskManagerMoreTest {
             taskManager.createTask(jobId);
 
             // retrieveInputStream throws so extractZipToIndividualFiles fails and we fall back.
-            when(fileStorage.retrieveInputStream("bad-zip-id"))
-                    .thenThrow(new java.io.IOException("boom"));
+            when(fileStorage.retrieveInputStream("bad-zip-id")).thenThrow(new java.io.IOException("boom"));
             when(fileStorage.getFileSize("bad-zip-id")).thenReturn(99L);
 
-            taskManager.setFileResult(
-                    jobId, "bad-zip-id", "broken.zip", "application/x-zip-compressed");
+            taskManager.setFileResult(jobId, "bad-zip-id", "broken.zip", "application/x-zip-compressed");
 
             JobResult result = taskManager.getJobResult(jobId);
             assertThat(result.hasFiles()).isTrue();
@@ -170,10 +170,9 @@ class TaskManagerMoreTest {
         void storesProvidedList() {
             String jobId = "multi-job";
             taskManager.createTask(jobId);
-            List<ResultFile> files =
-                    List.of(
-                            ResultFile.builder().fileId("f1").fileName("1.pdf").build(),
-                            ResultFile.builder().fileId("f2").fileName("2.pdf").build());
+            List<ResultFile> files = List.of(
+                    ResultFile.builder().fileId("f1").fileName("1.pdf").build(),
+                    ResultFile.builder().fileId("f2").fileName("2.pdf").build());
 
             taskManager.setMultipleFileResults(jobId, files);
 
@@ -243,8 +242,7 @@ class TaskManagerMoreTest {
         void returnsLocalKey() throws Exception {
             taskManager.createTask("owner-job");
             when(fileStorage.getFileSize("owned")).thenReturn(3L);
-            taskManager.setFileResult(
-                    "owner-job", "owned", "o.pdf", MediaType.APPLICATION_PDF_VALUE);
+            taskManager.setFileResult("owner-job", "owned", "o.pdf", MediaType.APPLICATION_PDF_VALUE);
 
             assertThat(taskManager.findJobKeyByFileId("owned")).isEqualTo("owner-job");
             // Local hit must not consult the JobStore.
@@ -261,8 +259,7 @@ class TaskManagerMoreTest {
         @Test
         @DisplayName("propagates JobStore lookup failures instead of returning null")
         void propagatesJobStoreFailure() {
-            when(jobStore.findJobIdByFileId("blip"))
-                    .thenThrow(new RuntimeException("backplane down"));
+            when(jobStore.findJobIdByFileId("blip")).thenThrow(new RuntimeException("backplane down"));
             assertThatThrownBy(() -> taskManager.findJobKeyByFileId("blip"))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("backplane down");
@@ -279,13 +276,12 @@ class TaskManagerMoreTest {
             String jobId = "old-file-job";
             taskManager.createTask(jobId);
             JobResult job = taskManager.getJobResult(jobId);
-            ResultFile rf =
-                    ResultFile.builder()
-                            .fileId("doomed")
-                            .fileName("d.pdf")
-                            .contentType(MediaType.APPLICATION_PDF_VALUE)
-                            .fileSize(1L)
-                            .build();
+            ResultFile rf = ResultFile.builder()
+                    .fileId("doomed")
+                    .fileName("d.pdf")
+                    .contentType(MediaType.APPLICATION_PDF_VALUE)
+                    .fileSize(1L)
+                    .build();
             ReflectionTestUtils.setField(job, "resultFiles", List.of(rf));
             ReflectionTestUtils.setField(job, "complete", true);
             ReflectionTestUtils.setField(job, "completedAt", LocalDateTime.now().minusHours(2));
@@ -297,8 +293,7 @@ class TaskManagerMoreTest {
 
             @SuppressWarnings("unchecked")
             Map<String, JobResult> map =
-                    (Map<String, JobResult>)
-                            ReflectionTestUtils.getField(taskManager, "jobResults");
+                    (Map<String, JobResult>) ReflectionTestUtils.getField(taskManager, "jobResults");
             assertThat(map).doesNotContainKey(jobId);
         }
     }
@@ -329,18 +324,12 @@ class TaskManagerMoreTest {
             taskManager.createTask("fail-job");
             taskManager.setError("fail-job", "kaboom");
 
-            var captor =
-                    org.mockito.ArgumentCaptor.forClass(
-                            stirling.software.common.cluster.JobStoreEntry.class);
+            var captor = org.mockito.ArgumentCaptor.forClass(stirling.software.common.cluster.JobStoreEntry.class);
             verify(jobStore, org.mockito.Mockito.atLeastOnce()).put(captor.capture(), any());
             assertThat(captor.getValue().jobId()).isEqualTo("fail-job");
             assertThat(captor.getAllValues())
-                    .anySatisfy(
-                            e ->
-                                    assertThat(e.state())
-                                            .isEqualTo(
-                                                    stirling.software.common.cluster.JobStoreEntry
-                                                            .JobState.FAILED));
+                    .anySatisfy(e -> assertThat(e.state())
+                            .isEqualTo(stirling.software.common.cluster.JobStoreEntry.JobState.FAILED));
         }
     }
 
@@ -354,9 +343,7 @@ class TaskManagerMoreTest {
             taskManager.createTask("note-job");
             assertThat(taskManager.addNote("note-job", "hello")).isTrue();
 
-            var captor =
-                    org.mockito.ArgumentCaptor.forClass(
-                            stirling.software.common.cluster.JobStoreEntry.class);
+            var captor = org.mockito.ArgumentCaptor.forClass(stirling.software.common.cluster.JobStoreEntry.class);
             verify(jobStore, org.mockito.Mockito.atLeastOnce()).put(captor.capture(), any());
             assertThat(captor.getAllValues())
                     .anySatisfy(e -> assertThat(e.resultMeta()).containsKey("notesCount"));

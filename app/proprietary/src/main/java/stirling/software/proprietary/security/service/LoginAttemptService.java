@@ -39,8 +39,7 @@ public class LoginAttemptService {
             log.info("Login attempt tracking is disabled.");
         }
         ATTEMPT_INCREMENT_TIME =
-                TimeUnit.MINUTES.toMillis(
-                        applicationProperties.getSecurity().getLoginResetTimeMinutes());
+                TimeUnit.MINUTES.toMillis(applicationProperties.getSecurity().getLoginResetTimeMinutes());
         attemptsCache = new ConcurrentHashMap<>();
     }
 

@@ -44,8 +44,7 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 public class ConvertEbookToPDFController {
 
-    private static final Set<String> SUPPORTED_EXTENSIONS =
-            Set.of("epub", "mobi", "azw3", "fb2", "txt", "docx");
+    private static final Set<String> SUPPORTED_EXTENSIONS = Set.of("epub", "mobi", "azw3", "fb2", "txt", "docx");
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -66,11 +65,10 @@ public class ConvertEbookToPDFController {
     @ToolIO(accepts = ToolFormat.EBOOK, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert an eBook file to PDF",
-            description =
-                    "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
-                            + " to PDF using Calibre.")
-    public ResponseEntity<Resource> convertEbookToPdf(
-            @ModelAttribute ConvertEbookToPdfRequest request) throws Exception {
+            description = "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
+                    + " to PDF using Calibre.")
+    public ResponseEntity<Resource> convertEbookToPdf(@ModelAttribute ConvertEbookToPdfRequest request)
+            throws Exception {
         if (!isCalibreEnabled()) {
             throw new IllegalStateException("Calibre support is disabled");
         }
@@ -82,9 +80,8 @@ public class ConvertEbookToPDFController {
 
         boolean optimizeForEbook = Boolean.TRUE.equals(request.getOptimizeForEbook());
         if (optimizeForEbook && !isGhostscriptEnabled()) {
-            log.warn(
-                    "Ghostscript optimization requested but Ghostscript is not enabled/available"
-                            + " for ebook conversion");
+            log.warn("Ghostscript optimization requested but Ghostscript is not enabled/available"
+                    + " for ebook conversion");
             optimizeForEbook = false;
         }
         boolean embedAllFonts = Boolean.TRUE.equals(request.getEmbedAllFonts());
@@ -120,15 +117,9 @@ public class ConvertEbookToPDFController {
         }
 
         List<String> command =
-                buildCalibreCommand(
-                        inputPath,
-                        outputPath,
-                        embedAllFonts,
-                        includeTableOfContents,
-                        includePageNumbers);
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
-                        .runCommandWithOutputHandling(command, workingDirectory.toFile());
+                buildCalibreCommand(inputPath, outputPath, embedAllFonts, includeTableOfContents, includePageNumbers);
+        ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
+                .runCommandWithOutputHandling(command, workingDirectory.toFile());
 
         if (result == null) {
             throw new IllegalStateException("Calibre conversion returned no result");
@@ -146,8 +137,7 @@ public class ConvertEbookToPDFController {
             throw new IllegalStateException("Calibre did not produce a PDF output");
         }
 
-        String outputFilename =
-                GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
+        String outputFilename = GeneralUtils.generateFilename(originalFilename, "_convertedToPDF.pdf");
 
         TempFile tempOut = null;
         try {
@@ -158,10 +148,7 @@ public class ConvertEbookToPDFController {
                     byte[] optimizedPdf = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
                     Files.write(tempOut.getPath(), optimizedPdf);
                 } catch (IOException e) {
-                    log.warn(
-                            "Ghostscript optimization failed for ebook conversion, returning"
-                                    + " original PDF",
-                            e);
+                    log.warn("Ghostscript optimization failed for ebook conversion, returning" + " original PDF", e);
                     Files.write(tempOut.getPath(), pdfBytes);
                 }
             } else {
@@ -169,8 +156,7 @@ public class ConvertEbookToPDFController {
                     document.save(tempOut.getFile());
                 }
             }
-            ResponseEntity<Resource> response =
-                    WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+            ResponseEntity<Resource> response = WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
             tempOut = null;
             return response;
         } catch (Exception e) {

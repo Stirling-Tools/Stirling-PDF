@@ -30,7 +30,8 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
     @Override
     @Transactional
     public void updateToken(String series, String tokenValue, Date lastUsed) {
-        PersistentLogin existingToken = persistentLoginRepository.findById(series).orElse(null);
+        PersistentLogin existingToken =
+                persistentLoginRepository.findById(series).orElse(null);
         if (existingToken != null) {
             existingToken.setToken(tokenValue);
             existingToken.setLastUsed(lastUsed.toInstant());
@@ -43,10 +44,7 @@ public class JPATokenRepositoryImpl implements PersistentTokenRepository {
         PersistentLogin token = persistentLoginRepository.findById(seriesId).orElse(null);
         if (token != null) {
             return new PersistentRememberMeToken(
-                    token.getUsername(),
-                    token.getSeries(),
-                    token.getToken(),
-                    Date.from(token.getLastUsed()));
+                    token.getUsername(), token.getSeries(), token.getToken(), Date.from(token.getLastUsed()));
         }
         return null;
     }

@@ -40,10 +40,7 @@ class DocumentTimestampValidationTest {
         CustomPDFDocumentFactory factory = org.mockito.Mockito.mock(CustomPDFDocumentFactory.class);
         // Delegate to the real loader so the signature dictionary is parsed as in production.
         when(factory.load(any(InputStream.class)))
-                .thenAnswer(
-                        invocation ->
-                                Loader.loadPDF(
-                                        ((InputStream) invocation.getArgument(0)).readAllBytes()));
+                .thenAnswer(invocation -> Loader.loadPDF(((InputStream) invocation.getArgument(0)).readAllBytes()));
         controller = new ValidateSignatureController(factory, certValidationService);
     }
 
@@ -71,8 +68,7 @@ class DocumentTimestampValidationTest {
         SignatureValidationResult result = validate("timestamp/doc-timestamped-tampered.pdf");
 
         assertThat(result.isValid()).isFalse();
-        assertThat(result.getErrorMessage())
-                .isEqualTo("Timestamp message imprint does not match the document");
+        assertThat(result.getErrorMessage()).isEqualTo("Timestamp message imprint does not match the document");
     }
 
     private SignatureValidationResult validate(String resource) throws IOException {
@@ -81,10 +77,10 @@ class DocumentTimestampValidationTest {
             bytes = in.readAllBytes();
         }
         SignatureValidationRequest request = new SignatureValidationRequest();
-        request.setFileInput(
-                new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", bytes));
+        request.setFileInput(new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", bytes));
 
-        List<SignatureValidationResult> results = controller.validateSignature(request).getBody();
+        List<SignatureValidationResult> results =
+                controller.validateSignature(request).getBody();
         assertThat(results).hasSize(1);
         return results.get(0);
     }

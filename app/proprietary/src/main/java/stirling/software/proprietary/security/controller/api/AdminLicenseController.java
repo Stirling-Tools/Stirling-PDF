@@ -49,7 +49,8 @@ public class AdminLicenseController {
     @Autowired(required = false)
     private KeygenLicenseVerifier keygenLicenseVerifier;
 
-    @Autowired private ApplicationProperties applicationProperties;
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     /**
      * Get the installation ID (machine fingerprint) for this self-hosted instance. This ID is used
@@ -61,8 +62,7 @@ public class AdminLicenseController {
     @Operation(
             summary = "Get installation ID",
             description =
-                    "Returns the unique installation ID (MAC-based fingerprint) for this"
-                            + " self-hosted instance")
+                    "Returns the unique installation ID (MAC-based fingerprint) for this" + " self-hosted instance")
     public ResponseEntity<Map<String, String>> getInstallationId() {
         try {
             String installationId = GeneralUtils.generateMachineFingerprint();
@@ -70,8 +70,7 @@ public class AdminLicenseController {
             return ResponseEntity.ok(Map.of("installationId", installationId));
         } catch (Exception e) {
             log.error("Failed to generate installation ID", e);
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Failed to generate installation ID"));
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to generate installation ID"));
         }
     }
 
@@ -86,16 +85,13 @@ public class AdminLicenseController {
     @Operation(
             summary = "Save and activate license key",
             description =
-                    "Accepts a license key and activates it on the backend. Returns the activated"
-                            + " license type.")
-    public ResponseEntity<Map<String, Object>> saveLicenseKey(
-            @RequestBody Map<String, String> request) {
+                    "Accepts a license key and activates it on the backend. Returns the activated" + " license type.")
+    public ResponseEntity<Map<String, Object>> saveLicenseKey(@RequestBody Map<String, String> request) {
         String licenseKey = request.get("licenseKey");
 
         // Reject null but allow empty string to clear license
         if (licenseKey == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "License key is required"));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "License key is required"));
         }
 
         try {
@@ -142,12 +138,7 @@ public class AdminLicenseController {
         } catch (Exception e) {
             log.error("Failed to save license key", e);
             return ResponseEntity.badRequest()
-                    .body(
-                            Map.of(
-                                    "success",
-                                    false,
-                                    "error",
-                                    "Failed to activate license: " + e.getMessage()));
+                    .body(Map.of("success", false, "error", "Failed to activate license: " + e.getMessage()));
         }
     }
 
@@ -161,9 +152,8 @@ public class AdminLicenseController {
     @PostMapping("/license/resync")
     @Operation(
             summary = "Resync license with Keygen",
-            description =
-                    "Re-validates the existing license key with Keygen and updates local settings."
-                            + " Used after subscription upgrades.")
+            description = "Re-validates the existing license key with Keygen and updates local settings."
+                    + " Used after subscription upgrades.")
     public ResponseEntity<Map<String, Object>> resyncLicense() {
         try {
             if (licenseKeyChecker == null) {
@@ -173,8 +163,7 @@ public class AdminLicenseController {
 
             String currentKey = applicationProperties.getPremium().getKey();
             if (currentKey == null || currentKey.trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "error", "No license key configured"));
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "No license key configured"));
             }
 
             log.info("Resyncing license with Keygen");
@@ -193,21 +182,13 @@ public class AdminLicenseController {
             response.put("maxUsers", premium.getMaxUsers());
             response.put("message", "License resynced successfully");
 
-            log.info(
-                    "License resynced: type={}, maxUsers={}",
-                    license.name(),
-                    premium.getMaxUsers());
+            log.info("License resynced: type={}, maxUsers={}", license.name(), premium.getMaxUsers());
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Failed to resync license", e);
             return ResponseEntity.internalServerError()
-                    .body(
-                            Map.of(
-                                    "success",
-                                    false,
-                                    "error",
-                                    "Failed to resync license: " + e.getMessage()));
+                    .body(Map.of("success", false, "error", "Failed to resync license: " + e.getMessage()));
         }
     }
 
@@ -221,8 +202,7 @@ public class AdminLicenseController {
     @Operation(
             summary = "Get license information",
             description =
-                    "Returns information about the current license including type, enabled status,"
-                            + " and max users")
+                    "Returns information about the current license including type, enabled status," + " and max users")
     public ResponseEntity<Map<String, Object>> getLicenseInfo() {
         try {
             Map<String, Object> response = new HashMap<>();
@@ -237,7 +217,9 @@ public class AdminLicenseController {
             ApplicationProperties.Premium premium = applicationProperties.getPremium();
             response.put("enabled", premium.isEnabled());
             response.put("maxUsers", premium.getMaxUsers());
-            response.put("hasKey", premium.getKey() != null && !premium.getKey().trim().isEmpty());
+            response.put(
+                    "hasKey",
+                    premium.getKey() != null && !premium.getKey().trim().isEmpty());
 
             // Include license key for upgrades (admin-only endpoint)
             if (premium.getKey() != null && !premium.getKey().trim().isEmpty()) {
@@ -247,8 +229,7 @@ public class AdminLicenseController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Failed to get license info", e);
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Failed to retrieve license information"));
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to retrieve license information"));
         }
     }
 
@@ -262,43 +243,29 @@ public class AdminLicenseController {
     @PostMapping(value = "/license-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Upload license certificate file",
-            description =
-                    "Upload a license certificate file (.lic, .cert) for offline activation."
-                            + " Validates the file format and activates the license.")
-    public ResponseEntity<Map<String, Object>> uploadLicenseFile(
-            @RequestParam("file") MultipartFile file) {
+            description = "Upload a license certificate file (.lic, .cert) for offline activation."
+                    + " Validates the file format and activates the license.")
+    public ResponseEntity<Map<String, Object>> uploadLicenseFile(@RequestParam("file") MultipartFile file) {
 
         // Validate file exists
         if (file == null || file.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "File is empty"));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "File is empty"));
         }
 
         String filename = file.getOriginalFilename();
         if (filename == null || filename.trim().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("success", false, "error", "Invalid filename"));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Invalid filename"));
         }
         // Prevent path traversal and enforce single filename component
         if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
             return ResponseEntity.badRequest()
-                    .body(
-                            Map.of(
-                                    "success",
-                                    false,
-                                    "error",
-                                    "Filename must not contain path separators or '..'"));
+                    .body(Map.of("success", false, "error", "Filename must not contain path separators or '..'"));
         }
 
         // Validate file extension
         if (!isValidLicenseFile(filename)) {
             return ResponseEntity.badRequest()
-                    .body(
-                            Map.of(
-                                    "success",
-                                    false,
-                                    "error",
-                                    "Invalid file type. Expected .lic or .cert"));
+                    .body(Map.of("success", false, "error", "Invalid file type. Expected .lic or .cert"));
         }
 
         // Check file size (max 1MB for license files)
@@ -319,12 +286,7 @@ public class AdminLicenseController {
             if (!content.trim().startsWith("-----BEGIN LICENSE FILE-----")) {
                 log.warn("License upload rejected: invalid certificate header");
                 return ResponseEntity.badRequest()
-                        .body(
-                                Map.of(
-                                        "success",
-                                        false,
-                                        "error",
-                                        "Invalid license certificate format"));
+                        .body(Map.of("success", false, "error", "Invalid license certificate format"));
             }
 
             // Get config directory and target path
@@ -338,8 +300,7 @@ public class AdminLicenseController {
             // Prevent directory traversal: ensure targetPath is inside configPath
             if (!targetPath.startsWith(configPathAbs)) {
                 log.warn("License upload rejected: target path outside config path");
-                return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "error", "Invalid file path"));
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Invalid file path"));
             }
 
             // Backup existing file if present
@@ -377,31 +338,18 @@ public class AdminLicenseController {
             response.put("maxUsers", applicationProperties.getPremium().getMaxUsers());
             response.put("message", "License file uploaded and activated");
 
-            log.info(
-                    "License file uploaded and activated: filename={}, type={}",
-                    filename,
-                    license.name());
+            log.info("License file uploaded and activated: filename={}, type={}", filename, license.name());
 
             return ResponseEntity.ok(response);
 
         } catch (IOException e) {
             log.error("Failed to save license file", e);
             return ResponseEntity.internalServerError()
-                    .body(
-                            Map.of(
-                                    "success",
-                                    false,
-                                    "error",
-                                    "Failed to save license file: " + e.getMessage()));
+                    .body(Map.of("success", false, "error", "Failed to save license file: " + e.getMessage()));
         } catch (Exception e) {
             log.error("Failed to activate license from file", e);
             return ResponseEntity.badRequest()
-                    .body(
-                            Map.of(
-                                    "success",
-                                    false,
-                                    "error",
-                                    "Failed to activate license: " + e.getMessage()));
+                    .body(Map.of("success", false, "error", "Failed to activate license: " + e.getMessage()));
         }
     }
 

@@ -50,42 +50,41 @@ import stirling.software.common.util.TempFileManager;
 @DisplayName("ScannerEffectController Tests")
 class ScannerEffectControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private ScannerEffectController controller;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private ScannerEffectController controller;
 
     @BeforeEach
     void setUp() throws Exception {
         // Real temp file backing so WebResponseUtils.pdfDocToWebResponse can save the output.
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("scanner_test", inv.<String>getArgument(0))
-                                            .toFile();
-                            f.deleteOnExit();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("scanner_test", inv.<String>getArgument(0))
+                    .toFile();
+            f.deleteOnExit();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     // ---------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------
 
-    private static MockMultipartFile pdfFile(String filename, int pageCount, PDRectangle pageSize)
-            throws IOException {
+    private static MockMultipartFile pdfFile(String filename, int pageCount, PDRectangle pageSize) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             for (int i = 0; i < pageCount; i++) {
                 doc.addPage(new PDPage(pageSize));
             }
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             doc.save(baos);
-            return new MockMultipartFile(
-                    "fileInput", filename, "application/pdf", baos.toByteArray());
+            return new MockMultipartFile("fileInput", filename, "application/pdf", baos.toByteArray());
         }
     }
 
@@ -112,13 +111,10 @@ class ScannerEffectControllerTest {
     /** Stub both factory.load overloads to return fresh real documents loaded from bytes. */
     private void stubFactoryLoad(byte[] pdfBytes) throws IOException {
         // Used for page count + as output base (load(byte[])).
-        lenient()
-                .when(pdfDocumentFactory.load(any(byte[].class)))
-                .thenAnswer(
-                        inv -> {
-                            byte[] b = inv.getArgument(0);
-                            return Loader.loadPDF(b);
-                        });
+        lenient().when(pdfDocumentFactory.load(any(byte[].class))).thenAnswer(inv -> {
+            byte[] b = inv.getArgument(0);
+            return Loader.loadPDF(b);
+        });
         // Used by RenderingResources.fromBytes (load(byte[], true)).
         lenient()
                 .when(pdfDocumentFactory.load(any(byte[].class), anyBoolean()))
@@ -243,9 +239,7 @@ class ScannerEffectControllerTest {
             MockMultipartFile file = pdfFile("empty.pdf", 1, PDRectangle.A6);
             ScannerEffectRequest request = baseRequest(file);
 
-            lenient()
-                    .when(pdfDocumentFactory.load(any(byte[].class)))
-                    .thenAnswer(inv -> new PDDocument());
+            lenient().when(pdfDocumentFactory.load(any(byte[].class))).thenAnswer(inv -> new PDDocument());
             lenient()
                     .when(pdfDocumentFactory.load(any(byte[].class), anyBoolean()))
                     .thenAnswer(inv -> new PDDocument());
@@ -261,15 +255,12 @@ class ScannerEffectControllerTest {
             MockMultipartFile file = pdfFile("io.pdf", 1, PDRectangle.A6);
             ScannerEffectRequest request = baseRequest(file);
 
-            lenient()
-                    .when(pdfDocumentFactory.load(any(byte[].class)))
-                    .thenThrow(new IOException("boom-load"));
+            lenient().when(pdfDocumentFactory.load(any(byte[].class))).thenThrow(new IOException("boom-load"));
             lenient()
                     .when(pdfDocumentFactory.load(any(byte[].class), anyBoolean()))
                     .thenThrow(new IOException("boom-load"));
 
-            assertThatThrownBy(() -> controller.scannerEffect(request))
-                    .isInstanceOf(IOException.class);
+            assertThatThrownBy(() -> controller.scannerEffect(request)).isInstanceOf(IOException.class);
         }
     }
 
@@ -285,9 +276,8 @@ class ScannerEffectControllerTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "calculateSafeResolution", float.class, float.class, int.class);
+            method = ScannerEffectController.class.getDeclaredMethod(
+                    "calculateSafeResolution", float.class, float.class, int.class);
             method.setAccessible(true);
         }
 
@@ -326,9 +316,8 @@ class ScannerEffectControllerTest {
         @Test
         @DisplayName("returns the request resolution unchanged")
         void returnsRequestResolution() throws Exception {
-            Method method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "determineRenderResolution", ScannerEffectRequest.class);
+            Method method = ScannerEffectController.class.getDeclaredMethod(
+                    "determineRenderResolution", ScannerEffectRequest.class);
             method.setAccessible(true);
 
             ScannerEffectRequest request = new ScannerEffectRequest();
@@ -356,11 +345,8 @@ class ScannerEffectControllerTest {
         @EnumSource(ScannerEffectRequest.Colorspace.class)
         @DisplayName("returns an INT_RGB image of the same dimensions for any colorspace")
         void preservesDimensions(ScannerEffectRequest.Colorspace colorspace) throws Exception {
-            Method method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "convertColorspace",
-                            BufferedImage.class,
-                            ScannerEffectRequest.Colorspace.class);
+            Method method = ScannerEffectController.class.getDeclaredMethod(
+                    "convertColorspace", BufferedImage.class, ScannerEffectRequest.Colorspace.class);
             method.setAccessible(true);
 
             BufferedImage src = solid(0x123456);
@@ -374,18 +360,13 @@ class ScannerEffectControllerTest {
         @Test
         @DisplayName("grayscale collapses the channels to a single grey value")
         void grayscaleEqualisesChannels() throws Exception {
-            Method method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "convertColorspace",
-                            BufferedImage.class,
-                            ScannerEffectRequest.Colorspace.class);
+            Method method = ScannerEffectController.class.getDeclaredMethod(
+                    "convertColorspace", BufferedImage.class, ScannerEffectRequest.Colorspace.class);
             method.setAccessible(true);
 
             // R=90, G=120, B=150 -> avg 120 -> 0x787878
             BufferedImage src = solid((90 << 16) | (120 << 8) | 150);
-            BufferedImage result =
-                    (BufferedImage)
-                            method.invoke(null, src, ScannerEffectRequest.Colorspace.grayscale);
+            BufferedImage result = (BufferedImage) method.invoke(null, src, ScannerEffectRequest.Colorspace.grayscale);
 
             int px = result.getRGB(0, 0) & 0xFFFFFF;
             int r = (px >> 16) & 0xFF;
@@ -398,9 +379,7 @@ class ScannerEffectControllerTest {
         @Test
         @DisplayName("convertToGrayscale mutates the buffer in place")
         void convertToGrayscaleInPlace() throws Exception {
-            Method method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "convertToGrayscale", BufferedImage.class);
+            Method method = ScannerEffectController.class.getDeclaredMethod("convertToGrayscale", BufferedImage.class);
             method.setAccessible(true);
 
             BufferedImage img = solid((30 << 16) | (60 << 8) | 90); // avg 60
@@ -419,9 +398,7 @@ class ScannerEffectControllerTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "calculateRotation", int.class, int.class);
+            method = ScannerEffectController.class.getDeclaredMethod("calculateRotation", int.class, int.class);
             method.setAccessible(true);
         }
 
@@ -456,9 +433,7 @@ class ScannerEffectControllerTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "blendColors", int.class, int.class, float.class);
+            method = ScannerEffectController.class.getDeclaredMethod("blendColors", int.class, int.class, float.class);
             method.setAccessible(true);
         }
 
@@ -500,14 +475,8 @@ class ScannerEffectControllerTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "fillWithGradient",
-                            int[].class,
-                            int.class,
-                            int.class,
-                            int[].class,
-                            boolean.class);
+            method = ScannerEffectController.class.getDeclaredMethod(
+                    "fillWithGradient", int[].class, int.class, int.class, int[].class, boolean.class);
             method.setAccessible(true);
         }
 
@@ -554,21 +523,17 @@ class ScannerEffectControllerTest {
 
         private Object gradient(boolean vertical, Color start, Color end) throws Exception {
             Class<?> gradientClass =
-                    Class.forName(
-                            "stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
-            Constructor<?> ctor =
-                    gradientClass.getDeclaredConstructor(boolean.class, Color.class, Color.class);
+                    Class.forName("stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
+            Constructor<?> ctor = gradientClass.getDeclaredConstructor(boolean.class, Color.class, Color.class);
             ctor.setAccessible(true);
             return ctor.newInstance(vertical, start, end);
         }
 
         private int[] invokeLut(int width, int height, Object gradientConfig) throws Exception {
             Class<?> gradientClass =
-                    Class.forName(
-                            "stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
-            Method method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "createGradientLUT", int.class, int.class, gradientClass);
+                    Class.forName("stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
+            Method method = ScannerEffectController.class.getDeclaredMethod(
+                    "createGradientLUT", int.class, int.class, gradientClass);
             method.setAccessible(true);
             return (int[]) method.invoke(null, width, height, gradientConfig);
         }
@@ -615,14 +580,13 @@ class ScannerEffectControllerTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "applyAllEffectsSinglePass",
-                            BufferedImage.class,
-                            float.class,
-                            float.class,
-                            boolean.class,
-                            double.class);
+            method = ScannerEffectController.class.getDeclaredMethod(
+                    "applyAllEffectsSinglePass",
+                    BufferedImage.class,
+                    float.class,
+                    float.class,
+                    boolean.class,
+                    double.class);
             method.setAccessible(true);
         }
 
@@ -700,14 +664,8 @@ class ScannerEffectControllerTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "softenEdges",
-                            BufferedImage.class,
-                            int.class,
-                            Color.class,
-                            Color.class,
-                            boolean.class);
+            method = ScannerEffectController.class.getDeclaredMethod(
+                    "softenEdges", BufferedImage.class, int.class, Color.class, Color.class, boolean.class);
             method.setAccessible(true);
         }
 
@@ -719,8 +677,7 @@ class ScannerEffectControllerTest {
             int[] pixels = ((DataBufferInt) src.getRaster().getDataBuffer()).getData();
             java.util.Arrays.fill(pixels, fg);
 
-            BufferedImage out =
-                    (BufferedImage) method.invoke(null, src, 2, Color.WHITE, Color.WHITE, true);
+            BufferedImage out = (BufferedImage) method.invoke(null, src, 2, Color.WHITE, Color.WHITE, true);
 
             // Centre is far from any edge (distance 5 >= feather radius 2) so alpha=1.
             assertThat(out.getRGB(5, 5) & 0xFFFFFF).isEqualTo(fg);
@@ -735,8 +692,7 @@ class ScannerEffectControllerTest {
             java.util.Arrays.fill(pixels, fg);
 
             // Background is pure white; corner distance d=0 -> alpha=0 -> background.
-            BufferedImage out =
-                    (BufferedImage) method.invoke(null, src, 3, Color.WHITE, Color.WHITE, true);
+            BufferedImage out = (BufferedImage) method.invoke(null, src, 3, Color.WHITE, Color.WHITE, true);
 
             assertThat(out.getRGB(0, 0) & 0xFFFFFF).isEqualTo(0xFFFFFF);
         }
@@ -745,8 +701,7 @@ class ScannerEffectControllerTest {
         @DisplayName("preserves image dimensions")
         void preservesDimensions() throws Exception {
             BufferedImage src = new BufferedImage(6, 9, BufferedImage.TYPE_INT_RGB);
-            BufferedImage out =
-                    (BufferedImage) method.invoke(null, src, 1, Color.GRAY, Color.DARK_GRAY, false);
+            BufferedImage out = (BufferedImage) method.invoke(null, src, 1, Color.GRAY, Color.DARK_GRAY, false);
 
             assertThat(out.getWidth()).isEqualTo(6);
             assertThat(out.getHeight()).isEqualTo(9);
@@ -761,9 +716,8 @@ class ScannerEffectControllerTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "applyGaussianBlur", BufferedImage.class, double.class);
+            method = ScannerEffectController.class.getDeclaredMethod(
+                    "applyGaussianBlur", BufferedImage.class, double.class);
             method.setAccessible(true);
         }
 
@@ -807,21 +761,17 @@ class ScannerEffectControllerTest {
 
         private Object gradient() throws Exception {
             Class<?> gradientClass =
-                    Class.forName(
-                            "stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
-            Constructor<?> ctor =
-                    gradientClass.getDeclaredConstructor(boolean.class, Color.class, Color.class);
+                    Class.forName("stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
+            Constructor<?> ctor = gradientClass.getDeclaredConstructor(boolean.class, Color.class, Color.class);
             ctor.setAccessible(true);
             return ctor.newInstance(true, Color.WHITE, Color.WHITE);
         }
 
         private Method rotateMethod() throws Exception {
             Class<?> gradientClass =
-                    Class.forName(
-                            "stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
-            Method method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "rotateImage", BufferedImage.class, double.class, gradientClass);
+                    Class.forName("stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
+            Method method = ScannerEffectController.class.getDeclaredMethod(
+                    "rotateImage", BufferedImage.class, double.class, gradientClass);
             method.setAccessible(true);
             return method;
         }
@@ -863,21 +813,17 @@ class ScannerEffectControllerTest {
 
         private Object gradient(boolean vertical) throws Exception {
             Class<?> gradientClass =
-                    Class.forName(
-                            "stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
-            Constructor<?> ctor =
-                    gradientClass.getDeclaredConstructor(boolean.class, Color.class, Color.class);
+                    Class.forName("stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
+            Constructor<?> ctor = gradientClass.getDeclaredConstructor(boolean.class, Color.class, Color.class);
             ctor.setAccessible(true);
             return ctor.newInstance(vertical, Color.GRAY, Color.LIGHT_GRAY);
         }
 
         private Method borderMethod() throws Exception {
             Class<?> gradientClass =
-                    Class.forName(
-                            "stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
-            Method method =
-                    ScannerEffectController.class.getDeclaredMethod(
-                            "addBorderWithGradient", BufferedImage.class, int.class, gradientClass);
+                    Class.forName("stirling.software.SPDF.controller.api.misc.ScannerEffectController$GradientConfig");
+            Method method = ScannerEffectController.class.getDeclaredMethod(
+                    "addBorderWithGradient", BufferedImage.class, int.class, gradientClass);
             method.setAccessible(true);
             return method;
         }
@@ -887,8 +833,7 @@ class ScannerEffectControllerTest {
         void growsByTwiceBorder() throws Exception {
             BufferedImage src = new BufferedImage(10, 12, BufferedImage.TYPE_INT_RGB);
             int border = 5;
-            BufferedImage out =
-                    (BufferedImage) borderMethod().invoke(null, src, border, gradient(true));
+            BufferedImage out = (BufferedImage) borderMethod().invoke(null, src, border, gradient(true));
 
             assertThat(out.getWidth()).isEqualTo(10 + 2 * border);
             assertThat(out.getHeight()).isEqualTo(12 + 2 * border);
@@ -898,8 +843,7 @@ class ScannerEffectControllerTest {
         @DisplayName("zero border keeps the original dimensions")
         void zeroBorderKeepsDimensions() throws Exception {
             BufferedImage src = new BufferedImage(8, 8, BufferedImage.TYPE_INT_RGB);
-            BufferedImage out =
-                    (BufferedImage) borderMethod().invoke(null, src, 0, gradient(false));
+            BufferedImage out = (BufferedImage) borderMethod().invoke(null, src, 0, gradient(false));
 
             assertThat(out.getWidth()).isEqualTo(8);
             assertThat(out.getHeight()).isEqualTo(8);
@@ -914,8 +858,7 @@ class ScannerEffectControllerTest {
             java.util.Arrays.fill(pixels, fg);
 
             int border = 3;
-            BufferedImage out =
-                    (BufferedImage) borderMethod().invoke(null, src, border, gradient(true));
+            BufferedImage out = (BufferedImage) borderMethod().invoke(null, src, border, gradient(true));
 
             // Source top-left maps to (border, border) in the composed image.
             assertThat(out.getRGB(border, border) & 0xFFFFFF).isEqualTo(fg);

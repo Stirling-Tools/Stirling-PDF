@@ -19,17 +19,7 @@ public class KeycloakProvider extends Provider {
             String clientSecret,
             Collection<String> scopes,
             UsernameAttribute useAsUsername) {
-        super(
-                issuer,
-                NAME,
-                CLIENT_NAME,
-                clientId,
-                clientSecret,
-                scopes,
-                useAsUsername,
-                null,
-                null,
-                null);
+        super(issuer, NAME, CLIENT_NAME, clientId, clientSecret, scopes, useAsUsername, null, null, null);
     }
 
     @Override

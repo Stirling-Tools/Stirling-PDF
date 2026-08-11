@@ -12,8 +12,7 @@ import stirling.software.common.model.api.PDFFile;
 public class MergeMultiplePagesRequest extends PDFFile {
 
     @Schema(
-            description =
-                    "Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols x rows.",
+            description = "Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols x rows.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             type = "string",
             defaultValue = "DEFAULT",

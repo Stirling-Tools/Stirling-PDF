@@ -50,20 +50,27 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SplitPdfByChaptersControllerTest {
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private PdfMetadataService pdfMetadataService;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private SplitPdfByChaptersController controller;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private PdfMetadataService pdfMetadataService;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private SplitPdfByChaptersController controller;
 
     @BeforeEach
     void setUp() throws IOException {
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            String suffix = inv.getArgument(0);
-                            return Files.createTempFile(tempDir, "test", suffix).toFile();
-                        });
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> {
+            String suffix = inv.getArgument(0);
+            return Files.createTempFile(tempDir, "test", suffix).toFile();
+        });
         lenient()
                 .when(pdfDocumentFactory.load(any(File.class)))
                 .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
@@ -100,8 +107,7 @@ class SplitPdfByChaptersControllerTest {
 
     private List<byte[]> unzip(Resource zipResource) throws IOException {
         List<byte[]> entries = new ArrayList<>();
-        try (ZipInputStream zis =
-                new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 entries.add(zis.readAllBytes());
@@ -126,8 +132,7 @@ class SplitPdfByChaptersControllerTest {
     void shouldSplitByChapters() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(6, "Chapter 1", "Chapter 2", "Chapter 3");
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
         request.setFileInput(file);
@@ -148,8 +153,7 @@ class SplitPdfByChaptersControllerTest {
     void shouldSplitByChaptersWithDuplicates() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(4, "Chapter 1", "Chapter 2");
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
         request.setFileInput(file);
@@ -170,8 +174,7 @@ class SplitPdfByChaptersControllerTest {
     void shouldThrowForNegativeBookmarkLevel() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(2, "Ch1");
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
         request.setFileInput(file);
@@ -192,8 +195,7 @@ class SplitPdfByChaptersControllerTest {
             byte[] pdfBytes = Files.readAllBytes(pdfPath);
 
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                    new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
             SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
             request.setFileInput(file);
@@ -210,8 +212,7 @@ class SplitPdfByChaptersControllerTest {
     void shouldSplitSingleChapter() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(3, "Only Chapter");
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
         request.setFileInput(file);
@@ -232,8 +233,7 @@ class SplitPdfByChaptersControllerTest {
     void shouldSplitWithMetadata() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(4, "Chapter 1", "Chapter 2");
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
         request.setFileInput(file);
@@ -257,8 +257,7 @@ class SplitPdfByChaptersControllerTest {
     void shouldHandleBookmarkLevel0() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(6, "Part 1", "Part 2", "Part 3");
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
         request.setFileInput(file);
@@ -279,8 +278,7 @@ class SplitPdfByChaptersControllerTest {
     void shouldHandleManyChapters() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(10, "Ch1", "Ch2", "Ch3", "Ch4", "Ch5");
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
         request.setFileInput(file);

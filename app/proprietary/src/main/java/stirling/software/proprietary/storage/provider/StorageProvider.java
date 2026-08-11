@@ -37,8 +37,7 @@ public interface StorageProvider extends AutoCloseable {
     /**
      * Like {@link #signedDownloadUrl(String, Duration)} with explicit Content-Disposition control.
      */
-    default Optional<URI> signedDownloadUrl(
-            String storageKey, Duration ttl, boolean inline, String originalFilename)
+    default Optional<URI> signedDownloadUrl(String storageKey, Duration ttl, boolean inline, String originalFilename)
             throws IOException {
         return Optional.empty();
     }

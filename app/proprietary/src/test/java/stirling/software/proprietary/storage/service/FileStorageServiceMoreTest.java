@@ -51,33 +51,52 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class FileStorageServiceMoreTest {
 
-    @Mock private StoredFileRepository storedFileRepository;
-    @Mock private FileShareRepository fileShareRepository;
-    @Mock private FileShareAccessRepository fileShareAccessRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private StorageProvider storageProvider;
-    @Mock private StorageCleanupEntryRepository storageCleanupEntryRepository;
+    @Mock
+    private StoredFileRepository storedFileRepository;
 
-    @Mock private ApplicationProperties.Security securityProperties;
-    @Mock private ApplicationProperties.System systemProperties;
-    @Mock private ApplicationProperties.Storage storageProperties;
-    @Mock private ApplicationProperties.Storage.Sharing sharingProperties;
+    @Mock
+    private FileShareRepository fileShareRepository;
+
+    @Mock
+    private FileShareAccessRepository fileShareAccessRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private StorageProvider storageProvider;
+
+    @Mock
+    private StorageCleanupEntryRepository storageCleanupEntryRepository;
+
+    @Mock
+    private ApplicationProperties.Security securityProperties;
+
+    @Mock
+    private ApplicationProperties.System systemProperties;
+
+    @Mock
+    private ApplicationProperties.Storage storageProperties;
+
+    @Mock
+    private ApplicationProperties.Storage.Sharing sharingProperties;
 
     private FileStorageService service;
 
     @BeforeEach
     void setUp() {
-        service =
-                new FileStorageService(
-                        storedFileRepository,
-                        fileShareRepository,
-                        fileShareAccessRepository,
-                        userRepository,
-                        applicationProperties,
-                        storageProvider,
-                        Optional.empty(),
-                        storageCleanupEntryRepository);
+        service = new FileStorageService(
+                storedFileRepository,
+                fileShareRepository,
+                fileShareAccessRepository,
+                userRepository,
+                applicationProperties,
+                storageProvider,
+                Optional.empty(),
+                storageCleanupEntryRepository);
 
         when(applicationProperties.getSecurity()).thenReturn(securityProperties);
         when(securityProperties.isEnableLogin()).thenReturn(true);
@@ -135,7 +154,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.ensureStorageEnabled())
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(403);
         }
 
@@ -145,7 +165,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.ensureStorageEnabled())
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(403);
         }
 
@@ -155,7 +176,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.ensureSharingEnabled())
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(403);
         }
 
@@ -165,7 +187,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.ensureShareLinksEnabled())
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(403);
         }
     }
@@ -184,7 +207,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.requireAuthenticatedUser())
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(401);
         }
 
@@ -202,13 +226,12 @@ class FileStorageServiceMoreTest {
         @Test
         void nonUserPrincipal_throwsUnauthorized() {
             SecurityContextHolder.getContext()
-                    .setAuthentication(
-                            new UsernamePasswordAuthenticationToken(
-                                    "plainString", "n/a", List.of()));
+                    .setAuthentication(new UsernamePasswordAuthenticationToken("plainString", "n/a", List.of()));
             try {
                 assertThatThrownBy(() -> service.requireAuthenticatedUser())
                         .isInstanceOf(ResponseStatusException.class)
-                        .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                        .extracting(e ->
+                                ((ResponseStatusException) e).getStatusCode().value())
                         .isEqualTo(401);
             } finally {
                 SecurityContextHolder.clearContext();
@@ -231,7 +254,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.leaveUserShare(owner, f))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(403);
         }
 
@@ -240,12 +264,12 @@ class FileStorageServiceMoreTest {
             User owner = user(1L);
             User requester = user(2L);
             StoredFile f = ownedFile(owner);
-            when(fileShareRepository.findByFileAndSharedWithUser(f, requester))
-                    .thenReturn(Optional.empty());
+            when(fileShareRepository.findByFileAndSharedWithUser(f, requester)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.leaveUserShare(requester, f))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(404);
         }
 
@@ -255,8 +279,7 @@ class FileStorageServiceMoreTest {
             User requester = user(2L);
             StoredFile f = ownedFile(owner);
             FileShare share = shareFor(f, requester, ShareAccessRole.VIEWER);
-            when(fileShareRepository.findByFileAndSharedWithUser(f, requester))
-                    .thenReturn(Optional.of(share));
+            when(fileShareRepository.findByFileAndSharedWithUser(f, requester)).thenReturn(Optional.of(share));
 
             service.leaveUserShare(requester, f);
 
@@ -287,7 +310,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.getShareByToken("x"))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(404);
         }
 
@@ -300,7 +324,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.getShareByToken("t"))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(404);
         }
     }
@@ -339,8 +364,7 @@ class FileStorageServiceMoreTest {
         @Test
         void anonymousPrincipal_returnsFalse() {
             FileShare share = new FileShare();
-            Authentication anon =
-                    new UsernamePasswordAuthenticationToken("anonymousUser", "n/a", List.of());
+            Authentication anon = new UsernamePasswordAuthenticationToken("anonymousUser", "n/a", List.of());
 
             assertThat(service.canAccessShareLink(share, anon)).isFalse();
         }
@@ -434,7 +458,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.listShareAccesses(intruder, f, "t"))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(403);
         }
 
@@ -446,7 +471,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.listShareAccesses(owner, f, "t"))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(404);
         }
 
@@ -463,7 +489,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.listShareAccesses(owner, f, "t"))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(403);
         }
 
@@ -476,8 +503,7 @@ class FileStorageServiceMoreTest {
             when(fileShareRepository.findByShareToken("t")).thenReturn(Optional.of(share));
             FileShareAccess access = new FileShareAccess();
             access.setUser(user(2L));
-            access.setAccessType(
-                    stirling.software.proprietary.storage.model.FileShareAccessType.VIEW);
+            access.setAccessType(stirling.software.proprietary.storage.model.FileShareAccessType.VIEW);
             when(fileShareAccessRepository.findByFileShareWithUserOrderByAccessedAtDesc(share))
                     .thenReturn(List.of(access));
 
@@ -512,7 +538,8 @@ class FileStorageServiceMoreTest {
         void invalidRole_throwsBadRequest() {
             assertThatThrownBy(() -> service.normalizeShareRole("bogus"))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(400);
         }
     }
@@ -540,7 +567,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.requireEditorAccess(share))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(403);
         }
 
@@ -564,12 +592,12 @@ class FileStorageServiceMoreTest {
         @Test
         void emptyFile_throwsBadRequest() {
             User owner = user(1L);
-            MockMultipartFile empty =
-                    new MockMultipartFile("file", "f.pdf", "application/pdf", new byte[0]);
+            MockMultipartFile empty = new MockMultipartFile("file", "f.pdf", "application/pdf", new byte[0]);
 
             assertThatThrownBy(() -> service.storeFile(owner, empty))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(400);
         }
 
@@ -577,12 +605,12 @@ class FileStorageServiceMoreTest {
         void blockedContentType_throwsBadRequest() {
             User owner = user(1L);
             MockMultipartFile jar =
-                    new MockMultipartFile(
-                            "file", "evil.jar", "application/java-archive", new byte[] {1});
+                    new MockMultipartFile("file", "evil.jar", "application/java-archive", new byte[] {1});
 
             assertThatThrownBy(() -> service.storeFile(owner, jar))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(400);
         }
     }
@@ -599,8 +627,7 @@ class FileStorageServiceMoreTest {
         void found_returnsFile() {
             User owner = user(1L);
             StoredFile f = ownedFile(owner);
-            when(storedFileRepository.findByIdAndOwnerWithShares(100L, owner))
-                    .thenReturn(Optional.of(f));
+            when(storedFileRepository.findByIdAndOwnerWithShares(100L, owner)).thenReturn(Optional.of(f));
 
             assertThat(service.getOwnedFile(owner, 100L)).isSameAs(f);
         }
@@ -608,12 +635,12 @@ class FileStorageServiceMoreTest {
         @Test
         void notFound_throwsNotFound() {
             User owner = user(1L);
-            when(storedFileRepository.findByIdAndOwnerWithShares(99L, owner))
-                    .thenReturn(Optional.empty());
+            when(storedFileRepository.findByIdAndOwnerWithShares(99L, owner)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.getOwnedFile(owner, 99L))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(404);
         }
     }
@@ -644,7 +671,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.loadFile(f))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(500);
         }
     }
@@ -661,21 +689,18 @@ class FileStorageServiceMoreTest {
         void storeWorkflowFile_setsPurposeAndSession() throws IOException {
             when(storageProperties.getQuotas()).thenReturn(null);
             User owner = user(1L);
-            MockMultipartFile file =
-                    new MockMultipartFile("file", "f.pdf", "application/pdf", new byte[] {1});
+            MockMultipartFile file = new MockMultipartFile("file", "f.pdf", "application/pdf", new byte[] {1});
             when(storageProvider.store(any(), any()))
-                    .thenReturn(
-                            stirling.software.proprietary.storage.provider.StoredObject.builder()
-                                    .storageKey("k")
-                                    .originalFilename("f.pdf")
-                                    .contentType("application/pdf")
-                                    .sizeBytes(1L)
-                                    .build());
+                    .thenReturn(stirling.software.proprietary.storage.provider.StoredObject.builder()
+                            .storageKey("k")
+                            .originalFilename("f.pdf")
+                            .contentType("application/pdf")
+                            .sizeBytes(1L)
+                            .build());
             when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             WorkflowSession session = new WorkflowSession();
 
-            StoredFile result =
-                    service.storeWorkflowFile(owner, file, FilePurpose.SIGNING_ORIGINAL, session);
+            StoredFile result = service.storeWorkflowFile(owner, file, FilePurpose.SIGNING_ORIGINAL, session);
 
             assertThat(result.getPurpose()).isEqualTo(FilePurpose.SIGNING_ORIGINAL);
             assertThat(result.getWorkflowSession()).isSameAs(session);
@@ -728,7 +753,8 @@ class FileStorageServiceMoreTest {
 
             assertThatThrownBy(() -> service.validateWorkflowDeletion(f, user(1L)))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(400);
         }
     }

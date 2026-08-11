@@ -113,10 +113,8 @@ public class GeneralFormCopyUtils {
             float scale = Math.min(scaleWidth, scaleHeight);
 
             float x = colIndex * cellWidth + (cellWidth - sourceRect.getWidth() * scale) / 2;
-            float y =
-                    destinationPage.getMediaBox().getHeight()
-                            - ((rowIndex + 1) * cellHeight
-                                    - (cellHeight - sourceRect.getHeight() * scale) / 2);
+            float y = destinationPage.getMediaBox().getHeight()
+                    - ((rowIndex + 1) * cellHeight - (cellHeight - sourceRect.getHeight() * scale) / 2);
 
             copyBasicFormFields(
                     sourceAcroForm,
@@ -137,9 +135,8 @@ public class GeneralFormCopyUtils {
             newAcroForm.refreshAppearances();
             appearancesGenerated = true;
         } catch (NoSuchMethodError nsme) {
-            log.warn(
-                    "AcroForm.refreshAppearances() not available in this PDFBox version; "
-                            + "leaving NeedAppearances=true for viewer-side rendering.");
+            log.warn("AcroForm.refreshAppearances() not available in this PDFBox version; "
+                    + "leaving NeedAppearances=true for viewer-side rendering.");
         } catch (Exception t) {
             log.warn(
                     "Failed to refresh field appearances via AcroForm: {}. "
@@ -183,8 +180,7 @@ public class GeneralFormCopyUtils {
                     if (widgetAnnotation.getRectangle() == null) {
                         continue;
                     }
-                    PDField sourceField =
-                            widgetFieldMap != null ? widgetFieldMap.get(widgetAnnotation) : null;
+                    PDField sourceField = widgetFieldMap != null ? widgetFieldMap.get(widgetAnnotation) : null;
                     if (sourceField == null) {
                         continue; // skip widgets without a matching field
                     }
@@ -192,8 +188,7 @@ public class GeneralFormCopyUtils {
                         continue;
                     }
 
-                    GeneralFormFieldTypeSupport handler =
-                            GeneralFormFieldTypeSupport.forField(terminalField);
+                    GeneralFormFieldTypeSupport handler = GeneralFormFieldTypeSupport.forField(terminalField);
                     if (handler == null) {
                         log.debug(
                                 "Skipping unsupported field type '{}' for widget '{}'",
@@ -218,11 +213,7 @@ public class GeneralFormCopyUtils {
                 }
             }
         } catch (Exception e) {
-            log.warn(
-                    "Failed to copy basic form fields for page {}: {}",
-                    pageIndex,
-                    e.getMessage(),
-                    e);
+            log.warn("Failed to copy basic form fields for page {}: {}", pageIndex, e.getMessage(), e);
         }
     }
 
@@ -241,20 +232,19 @@ public class GeneralFormCopyUtils {
 
         try {
             PDTerminalField newField = handler.createField(newAcroForm);
-            boolean initialized =
-                    initializeFieldWithWidget(
-                            newAcroForm,
-                            destinationPage,
-                            destinationAnnotations,
-                            newField,
-                            sourceField.getPartialName(),
-                            handler.fallbackWidgetName(),
-                            sourceWidget,
-                            offsetX,
-                            offsetY,
-                            scale,
-                            pageIndex,
-                            fieldNameCounters);
+            boolean initialized = initializeFieldWithWidget(
+                    newAcroForm,
+                    destinationPage,
+                    destinationAnnotations,
+                    newField,
+                    sourceField.getPartialName(),
+                    handler.fallbackWidgetName(),
+                    sourceWidget,
+                    offsetX,
+                    offsetY,
+                    scale,
+                    pageIndex,
+                    fieldNameCounters);
 
             if (!initialized) {
                 return;
@@ -265,8 +255,7 @@ public class GeneralFormCopyUtils {
             log.warn(
                     "Failed to copy {} field '{}': {}",
                     handler.typeName(),
-                    Optional.ofNullable(sourceField.getFullyQualifiedName())
-                            .orElseGet(sourceField::getPartialName),
+                    Optional.ofNullable(sourceField.getFullyQualifiedName()).orElseGet(sourceField::getPartialName),
                     e.getMessage(),
                     e);
         }
@@ -310,8 +299,7 @@ public class GeneralFormCopyUtils {
         return true;
     }
 
-    private String generateUniqueFieldName(
-            String originalName, int pageIndex, Map<String, Integer> fieldNameCounters) {
+    private String generateUniqueFieldName(String originalName, int pageIndex, Map<String, Integer> fieldNameCounters) {
         String baseName = "page" + pageIndex + "_" + originalName;
 
         Integer counter = fieldNameCounters.get(baseName);

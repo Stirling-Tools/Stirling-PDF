@@ -10,9 +10,6 @@ import java.util.List;
 public record TriggerInfo(String type, boolean requiresSource, List<String> supportedSourceTypes) {
 
     public static TriggerInfo of(PolicyTrigger trigger) {
-        return new TriggerInfo(
-                trigger.type(),
-                trigger.requiresSource(),
-                List.copyOf(trigger.supportedSourceTypes()));
+        return new TriggerInfo(trigger.type(), trigger.requiresSource(), List.copyOf(trigger.supportedSourceTypes()));
     }
 }

@@ -37,7 +37,8 @@ class McpScopeMetadataDisabledTest {
     private static final String ISSUER = "https://test-issuer.example.com";
     private static final String RESOURCE_ID = "http://localhost/mcp";
 
-    @LocalServerPort private int port;
+    @LocalServerPort
+    private int port;
 
     private final HttpClient http = HttpClient.newHttpClient();
 
@@ -68,11 +69,10 @@ class McpScopeMetadataDisabledTest {
     }
 
     private String getMetadata(String path) throws Exception {
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create("http://localhost:" + port + path))
-                        .GET()
-                        .build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + path))
+                .GET()
+                .build();
         HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
         assertThat(response.statusCode()).isEqualTo(200);
         return response.body();

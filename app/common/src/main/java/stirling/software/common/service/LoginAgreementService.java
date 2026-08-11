@@ -29,8 +29,7 @@ public class LoginAgreementService {
 
     // Locale codes only: rejects path separators and dots so the value can never escape the
     // disclaimer directory. Matches e.g. en, en-GB, fr-FR, zh-Hant, pt-BR.
-    private static final Pattern LOCALE_PATTERN =
-            Pattern.compile("^[A-Za-z]{2,3}([_-][A-Za-z0-9]{2,8})*$");
+    private static final Pattern LOCALE_PATTERN = Pattern.compile("^[A-Za-z]{2,3}([_-][A-Za-z0-9]{2,8})*$");
 
     // BCP-47 tags are well under this; the cap also prevents the regex's repetition group
     // from recursing far enough to overflow the stack on a hostile over-length input.
@@ -103,11 +102,7 @@ public class LoginAgreementService {
         try {
             Files.writeString(tmp, content, StandardCharsets.UTF_8);
             try {
-                Files.move(
-                        tmp,
-                        file,
-                        StandardCopyOption.ATOMIC_MOVE,
-                        StandardCopyOption.REPLACE_EXISTING);
+                Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
             } catch (AtomicMoveNotSupportedException e) {
                 Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING);
             }
@@ -141,7 +136,8 @@ public class LoginAgreementService {
     }
 
     private Path disclaimerDir() {
-        return Path.of(InstallationPathConfig.getCustomFilesPath(), "disclaimer").normalize();
+        return Path.of(InstallationPathConfig.getCustomFilesPath(), "disclaimer")
+                .normalize();
     }
 
     private void addLocaleCandidates(List<String> out, String locale) {
@@ -167,10 +163,7 @@ public class LoginAgreementService {
             // planted symlink can't expose files outside the disclaimer dir via the public read.
             if (Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS)) {
                 if (Files.size(file) > MAX_FILE_BYTES) {
-                    log.warn(
-                            "Login agreement file for locale {} exceeds {} bytes; ignoring",
-                            locale,
-                            MAX_FILE_BYTES);
+                    log.warn("Login agreement file for locale {} exceeds {} bytes; ignoring", locale, MAX_FILE_BYTES);
                     return null;
                 }
                 return Files.readString(file, StandardCharsets.UTF_8);

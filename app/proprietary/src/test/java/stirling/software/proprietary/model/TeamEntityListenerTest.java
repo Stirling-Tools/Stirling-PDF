@@ -13,7 +13,8 @@ import org.springframework.context.ApplicationEventPublisher;
 @ExtendWith(MockitoExtension.class)
 class TeamEntityListenerTest {
 
-    @Mock private ApplicationEventPublisher publisher;
+    @Mock
+    private ApplicationEventPublisher publisher;
 
     private static Team team(Long id, String name) {
         Team team = new Team();

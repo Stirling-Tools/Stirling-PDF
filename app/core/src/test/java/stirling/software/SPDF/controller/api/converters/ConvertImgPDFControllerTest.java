@@ -39,19 +39,24 @@ class ConvertImgPDFControllerTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertImgPDFController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @InjectMocks
+    private ConvertImgPDFController controller;
 
     @Test
     void convertToPdf_singleImage() throws Exception {
         byte[] imgContent = "fake-image".getBytes();
         byte[] pdfBytes = "pdf-output".getBytes();
 
-        MockMultipartFile imgFile =
-                new MockMultipartFile("fileInput", "photo.jpg", "image/jpeg", imgContent);
+        MockMultipartFile imgFile = new MockMultipartFile("fileInput", "photo.jpg", "image/jpeg", imgContent);
 
         ConvertToPdfRequest request = new ConvertToPdfRequest();
         request.setFileInput(new MockMultipartFile[] {imgFile});
@@ -63,17 +68,14 @@ class ConvertImgPDFControllerTest {
 
         try (MockedStatic<PdfUtils> puMock = Mockito.mockStatic(PdfUtils.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<WebResponseUtils> wrMock =
-                        Mockito.mockStatic(WebResponseUtils.class)) {
+                MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
 
-            puMock.when(
-                            () ->
-                                    PdfUtils.imageToPdf(
-                                            any(MockMultipartFile[].class),
-                                            eq("fillPage"),
-                                            eq(false),
-                                            eq("color"),
-                                            eq(pdfDocumentFactory)))
+            puMock.when(() -> PdfUtils.imageToPdf(
+                            any(MockMultipartFile[].class),
+                            eq("fillPage"),
+                            eq(false),
+                            eq("color"),
+                            eq(pdfDocumentFactory)))
                     .thenReturn(pdfBytes);
 
             guMock.when(() -> GeneralUtils.generateFilename("photo.jpg", "_converted.pdf"))
@@ -93,8 +95,7 @@ class ConvertImgPDFControllerTest {
         byte[] imgContent = "fake-image".getBytes();
         byte[] pdfBytes = "pdf-output".getBytes();
 
-        MockMultipartFile imgFile =
-                new MockMultipartFile("fileInput", "photo.png", "image/png", imgContent);
+        MockMultipartFile imgFile = new MockMultipartFile("fileInput", "photo.png", "image/png", imgContent);
 
         ConvertToPdfRequest request = new ConvertToPdfRequest();
         request.setFileInput(new MockMultipartFile[] {imgFile});
@@ -106,17 +107,14 @@ class ConvertImgPDFControllerTest {
 
         try (MockedStatic<PdfUtils> puMock = Mockito.mockStatic(PdfUtils.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<WebResponseUtils> wrMock =
-                        Mockito.mockStatic(WebResponseUtils.class)) {
+                MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
 
-            puMock.when(
-                            () ->
-                                    PdfUtils.imageToPdf(
-                                            any(MockMultipartFile[].class),
-                                            eq("fillPage"),
-                                            eq(false),
-                                            eq("color"),
-                                            eq(pdfDocumentFactory)))
+            puMock.when(() -> PdfUtils.imageToPdf(
+                            any(MockMultipartFile[].class),
+                            eq("fillPage"),
+                            eq(false),
+                            eq("color"),
+                            eq(pdfDocumentFactory)))
                     .thenReturn(pdfBytes);
 
             guMock.when(() -> GeneralUtils.generateFilename("photo.png", "_converted.pdf"))
@@ -136,8 +134,7 @@ class ConvertImgPDFControllerTest {
         byte[] imgContent = "fake-image".getBytes();
         byte[] pdfBytes = "pdf-output".getBytes();
 
-        MockMultipartFile imgFile =
-                new MockMultipartFile("fileInput", "photo.jpg", "image/jpeg", imgContent);
+        MockMultipartFile imgFile = new MockMultipartFile("fileInput", "photo.jpg", "image/jpeg", imgContent);
 
         ConvertToPdfRequest request = new ConvertToPdfRequest();
         request.setFileInput(new MockMultipartFile[] {imgFile});
@@ -149,17 +146,14 @@ class ConvertImgPDFControllerTest {
 
         try (MockedStatic<PdfUtils> puMock = Mockito.mockStatic(PdfUtils.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<WebResponseUtils> wrMock =
-                        Mockito.mockStatic(WebResponseUtils.class)) {
+                MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
 
-            puMock.when(
-                            () ->
-                                    PdfUtils.imageToPdf(
-                                            any(MockMultipartFile[].class),
-                                            eq("fitDocumentToImage"),
-                                            eq(true),
-                                            eq("greyscale"),
-                                            eq(pdfDocumentFactory)))
+            puMock.when(() -> PdfUtils.imageToPdf(
+                            any(MockMultipartFile[].class),
+                            eq("fitDocumentToImage"),
+                            eq(true),
+                            eq("greyscale"),
+                            eq(pdfDocumentFactory)))
                     .thenReturn(pdfBytes);
 
             guMock.when(() -> GeneralUtils.generateFilename("photo.jpg", "_converted.pdf"))

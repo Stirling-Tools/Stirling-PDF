@@ -14,8 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "security.enable-login", havingValue = "false", matchIfMissing = true)
-public class NoOpJobOwnershipService
-        implements stirling.software.common.service.JobOwnershipService {
+public class NoOpJobOwnershipService implements stirling.software.common.service.JobOwnershipService {
 
     @Override
     public Optional<String> getCurrentUserId() {

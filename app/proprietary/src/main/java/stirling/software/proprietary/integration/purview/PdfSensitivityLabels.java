@@ -48,14 +48,11 @@ import lombok.extern.slf4j.Slf4j;
 public final class PdfSensitivityLabels {
 
     /** Captures the GUID and the attribute name out of {@code MSIP_Label_<guid>_<attr>}. */
-    private static final Pattern LABEL_KEY =
-            Pattern.compile("^MSIP_Label_([0-9a-fA-F-]{36})_(\\w+)$");
+    private static final Pattern LABEL_KEY = Pattern.compile("^MSIP_Label_([0-9a-fA-F-]{36})_(\\w+)$");
 
     /** Finds the same keys inside a raw XMP packet, whatever schema wraps them. */
-    private static final Pattern XMP_LABEL_ENTRY =
-            Pattern.compile(
-                    "<([\\w-]+:)?(MSIP_Label_[0-9a-fA-F-]{36}_\\w+)>([^<]*)</\\1?\\2>",
-                    Pattern.CASE_INSENSITIVE);
+    private static final Pattern XMP_LABEL_ENTRY = Pattern.compile(
+            "<([\\w-]+:)?(MSIP_Label_[0-9a-fA-F-]{36}_\\w+)>([^<]*)</\\1?\\2>", Pattern.CASE_INSENSITIVE);
 
     /**
      * Adobe's extension schema for carrying arbitrary Document Info entries in XMP. Using it keeps
@@ -86,13 +83,12 @@ public final class PdfSensitivityLabels {
         collect(xmpPairs(document), byLabelId);
 
         List<SensitivityLabel> labels = new ArrayList<>();
-        byLabelId.forEach(
-                (labelId, attributes) -> {
-                    SensitivityLabel label = SensitivityLabel.fromAttributes(labelId, attributes);
-                    if (label != null) {
-                        labels.add(label);
-                    }
-                });
+        byLabelId.forEach((labelId, attributes) -> {
+            SensitivityLabel label = SensitivityLabel.fromAttributes(labelId, attributes);
+            if (label != null) {
+                labels.add(label);
+            }
+        });
         return labels;
     }
 
@@ -160,8 +156,7 @@ public final class PdfSensitivityLabels {
      * may carry schemas xmpbox does not model, and a round-trip through it would silently drop
      * them.
      */
-    private static void writeXmp(
-            PDDocument document, Map<String, String> pairs, Predicate<String> removeLabelId)
+    private static void writeXmp(PDDocument document, Map<String, String> pairs, Predicate<String> removeLabelId)
             throws IOException {
         PDDocumentCatalog catalog = document.getDocumentCatalog();
         String existing = readXmpString(catalog);
@@ -205,24 +200,18 @@ public final class PdfSensitivityLabels {
             return null;
         }
         StringBuilder properties = new StringBuilder();
-        pairs.forEach(
-                (key, value) ->
-                        properties
-                                .append("\n         <pdfx:")
-                                .append(key)
-                                .append('>')
-                                .append(escapeXml(value))
-                                .append("</pdfx:")
-                                .append(key)
-                                .append('>'));
+        pairs.forEach((key, value) -> properties
+                .append("\n         <pdfx:")
+                .append(key)
+                .append('>')
+                .append(escapeXml(value))
+                .append("</pdfx:")
+                .append(key)
+                .append('>'));
         String opening = description.group();
-        String withNamespace =
-                opening.contains("xmlns:pdfx=")
-                        ? opening
-                        : opening.substring(0, opening.length() - 1)
-                                + " xmlns:pdfx=\""
-                                + PDFX_NAMESPACE
-                                + "\">";
+        String withNamespace = opening.contains("xmlns:pdfx=")
+                ? opening
+                : opening.substring(0, opening.length() - 1) + " xmlns:pdfx=\"" + PDFX_NAMESPACE + "\">";
         return packet.substring(0, description.start())
                 + withNamespace
                 + properties
@@ -247,9 +236,7 @@ public final class PdfSensitivityLabels {
         try {
             packet = readXmpString(document.getDocumentCatalog());
         } catch (IOException e) {
-            log.debug(
-                    "Unreadable XMP packet; falling back to the info dictionary: {}",
-                    e.getMessage());
+            log.debug("Unreadable XMP packet; falling back to the info dictionary: {}", e.getMessage());
             return pairs;
         }
         if (packet == null) {
@@ -264,17 +251,16 @@ public final class PdfSensitivityLabels {
 
     /** Group raw pairs by label GUID, keeping the attribute name as the key. */
     private static void collect(Map<String, String> pairs, Map<String, Map<String, String>> into) {
-        pairs.forEach(
-                (key, value) -> {
-                    Matcher matcher = LABEL_KEY.matcher(key);
-                    if (!matcher.matches()) {
-                        return;
-                    }
-                    into.computeIfAbsent(matcher.group(1), id -> new LinkedHashMap<>())
-                            // Info-dictionary pairs are collected first and win: a stale XMP copy
-                            // must not override the value the labelling client wrote.
-                            .putIfAbsent(matcher.group(2), value);
-                });
+        pairs.forEach((key, value) -> {
+            Matcher matcher = LABEL_KEY.matcher(key);
+            if (!matcher.matches()) {
+                return;
+            }
+            into.computeIfAbsent(matcher.group(1), id -> new LinkedHashMap<>())
+                    // Info-dictionary pairs are collected first and win: a stale XMP copy
+                    // must not override the value the labelling client wrote.
+                    .putIfAbsent(matcher.group(2), value);
+        });
     }
 
     private static String readXmpString(PDDocumentCatalog catalog) throws IOException {

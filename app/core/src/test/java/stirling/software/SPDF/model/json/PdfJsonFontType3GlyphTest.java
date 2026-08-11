@@ -31,8 +31,11 @@ class PdfJsonFontType3GlyphTest {
     @Test
     @DisplayName("builder and setters round-trip")
     void builderAndSetters() {
-        PdfJsonFontType3Glyph g =
-                PdfJsonFontType3Glyph.builder().charCode(66).glyphName("B").unicode(0x42).build();
+        PdfJsonFontType3Glyph g = PdfJsonFontType3Glyph.builder()
+                .charCode(66)
+                .glyphName("B")
+                .unicode(0x42)
+                .build();
         assertThat(g.getCharCode()).isEqualTo(66);
         assertThat(g.getGlyphName()).isEqualTo("B");
         assertThat(g.getUnicode()).isEqualTo(0x42);

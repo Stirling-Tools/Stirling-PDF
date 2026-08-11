@@ -54,10 +54,7 @@ public class FilterController {
                 responseCode = "200",
                 description = "PDF passed filter",
                 content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
-        @ApiResponse(
-                responseCode = "204",
-                description = "PDF did not pass filter",
-                content = @Content())
+        @ApiResponse(responseCode = "204", description = "PDF did not pass filter", content = @Content())
     })
     public ResponseEntity<Resource> containsText(@ModelAttribute ContainsTextRequest request)
             throws IOException, InterruptedException {
@@ -68,9 +65,7 @@ public class FilterController {
         try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
             if (PdfUtils.hasText(pdfDocument, pageNumber, text)) {
                 return WebResponseUtils.pdfDocToWebResponse(
-                        pdfDocument,
-                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()),
-                        tempFileManager);
+                        pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()), tempFileManager);
             }
         }
         return ResponseEntity.noContent().build();
@@ -87,10 +82,7 @@ public class FilterController {
                 responseCode = "200",
                 description = "PDF passed filter",
                 content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
-        @ApiResponse(
-                responseCode = "204",
-                description = "PDF did not pass filter",
-                content = @Content())
+        @ApiResponse(responseCode = "204", description = "PDF did not pass filter", content = @Content())
     })
     public ResponseEntity<Resource> containsImage(@ModelAttribute PDFWithPageNums request)
             throws IOException, InterruptedException {
@@ -100,9 +92,7 @@ public class FilterController {
         try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
             if (PdfUtils.hasImages(pdfDocument, pageNumber)) {
                 return WebResponseUtils.pdfDocToWebResponse(
-                        pdfDocument,
-                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()),
-                        tempFileManager);
+                        pdfDocument, Filenames.toSimpleFileName(inputFile.getOriginalFilename()), tempFileManager);
             }
         }
         return ResponseEntity.noContent().build();
@@ -119,10 +109,7 @@ public class FilterController {
                 responseCode = "200",
                 description = "PDF passed filter",
                 content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
-        @ApiResponse(
-                responseCode = "204",
-                description = "PDF did not pass filter",
-                content = @Content())
+        @ApiResponse(responseCode = "204", description = "PDF did not pass filter", content = @Content())
     })
     public ResponseEntity<byte[]> pageCount(@ModelAttribute PDFComparisonAndCount request)
             throws IOException, InterruptedException {
@@ -152,10 +139,7 @@ public class FilterController {
                 responseCode = "200",
                 description = "PDF passed filter",
                 content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
-        @ApiResponse(
-                responseCode = "204",
-                description = "PDF did not pass filter",
-                content = @Content())
+        @ApiResponse(responseCode = "204", description = "PDF did not pass filter", content = @Content())
     })
     public ResponseEntity<byte[]> pageSize(@ModelAttribute PageSizeRequest request)
             throws IOException, InterruptedException {
@@ -191,10 +175,7 @@ public class FilterController {
                 responseCode = "200",
                 description = "PDF passed filter",
                 content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
-        @ApiResponse(
-                responseCode = "204",
-                description = "PDF did not pass filter",
-                content = @Content())
+        @ApiResponse(responseCode = "204", description = "PDF did not pass filter", content = @Content())
     })
     public ResponseEntity<byte[]> fileSize(@ModelAttribute FileSizeRequest request)
             throws IOException, InterruptedException {
@@ -221,10 +202,7 @@ public class FilterController {
                 responseCode = "200",
                 description = "PDF passed filter",
                 content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
-        @ApiResponse(
-                responseCode = "204",
-                description = "PDF did not pass filter",
-                content = @Content())
+        @ApiResponse(responseCode = "204", description = "PDF did not pass filter", content = @Content())
     })
     public ResponseEntity<byte[]> pageRotation(@ModelAttribute PageRotationRequest request)
             throws IOException, InterruptedException {
@@ -253,14 +231,12 @@ public class FilterController {
      * @param comparator The comparator to use (e.g., "Greater", "Less", "Equal").
      * @return True if the comparison is valid, false otherwise.
      */
-    private static <T extends Comparable<T>> boolean compare(
-            T actual, T expected, String comparator) {
+    private static <T extends Comparable<T>> boolean compare(T actual, T expected, String comparator) {
         return switch (comparator) {
             case "Greater" -> actual.compareTo(expected) > 0;
             case "Equal" -> actual.compareTo(expected) == 0;
             case "Less" -> actual.compareTo(expected) < 0;
-            default ->
-                    throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
+            default -> throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
         };
     }
 }

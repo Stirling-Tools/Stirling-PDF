@@ -12,8 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 class BookletImpositionRequestTest {
 
     private static MultipartFile file() {
-        return new MockMultipartFile(
-                "fileInput", "in.pdf", "application/pdf", new byte[] {1, 2, 3});
+        return new MockMultipartFile("fileInput", "in.pdf", "application/pdf", new byte[] {1, 2, 3});
     }
 
     @Nested

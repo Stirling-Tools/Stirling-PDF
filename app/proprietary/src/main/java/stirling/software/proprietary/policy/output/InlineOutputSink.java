@@ -39,28 +39,25 @@ public class InlineOutputSink implements PolicyOutputSink {
     }
 
     @Override
-    public List<ResultFile> deliver(
-            OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
+    public List<ResultFile> deliver(OutputDelivery delivery, List<Resource> outputs, OutputSpec spec)
+            throws IOException {
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);
-            String name =
-                    resource.getFilename() != null ? resource.getFilename() : "result-" + (i + 1);
-            String contentType =
-                    MediaTypeFactory.getMediaType(name)
-                            .orElse(MediaType.APPLICATION_OCTET_STREAM)
-                            .toString();
+            String name = resource.getFilename() != null ? resource.getFilename() : "result-" + (i + 1);
+            String contentType = MediaTypeFactory.getMediaType(name)
+                    .orElse(MediaType.APPLICATION_OCTET_STREAM)
+                    .toString();
             FileStorage.StoredFile stored;
             try (InputStream is = resource.getInputStream()) {
                 stored = fileStorage.storeInputStream(is, name);
             }
-            results.add(
-                    ResultFile.builder()
-                            .fileId(stored.fileId())
-                            .fileName(name)
-                            .contentType(contentType)
-                            .fileSize(stored.size())
-                            .build());
+            results.add(ResultFile.builder()
+                    .fileId(stored.fileId())
+                    .fileName(name)
+                    .contentType(contentType)
+                    .fileSize(stored.size())
+                    .build());
         }
         return results;
     }

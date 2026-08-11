@@ -39,7 +39,8 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class AuditDashboardControllerTest {
 
-    @Mock private PersistentAuditEventRepository auditRepository;
+    @Mock
+    private PersistentAuditEventRepository auditRepository;
 
     private ObjectMapper objectMapper;
     private AuditDashboardController controller;
@@ -114,14 +115,12 @@ class AuditDashboardControllerTest {
             AuditDataRequest req = new AuditDataRequest();
             req.setType("USER_LOGIN");
             req.setPrincipal("admin");
-            when(auditRepository.findByPrincipalAndType(
-                            eq("admin"), eq("USER_LOGIN"), any(Pageable.class)))
+            when(auditRepository.findByPrincipalAndType(eq("admin"), eq("USER_LOGIN"), any(Pageable.class)))
                     .thenReturn(page(List.of()));
 
             controller.getAuditData(req);
 
-            verify(auditRepository)
-                    .findByPrincipalAndType(eq("admin"), eq("USER_LOGIN"), any(Pageable.class));
+            verify(auditRepository).findByPrincipalAndType(eq("admin"), eq("USER_LOGIN"), any(Pageable.class));
         }
 
         @Test
@@ -130,15 +129,12 @@ class AuditDashboardControllerTest {
             AuditDataRequest req = new AuditDataRequest();
             req.setStartDate(LocalDate.of(2025, 1, 1));
             req.setEndDate(LocalDate.of(2025, 1, 31));
-            when(auditRepository.findByTimestampBetween(
-                            any(Instant.class), any(Instant.class), any(Pageable.class)))
+            when(auditRepository.findByTimestampBetween(any(Instant.class), any(Instant.class), any(Pageable.class)))
                     .thenReturn(page(List.of()));
 
             controller.getAuditData(req);
 
-            verify(auditRepository)
-                    .findByTimestampBetween(
-                            any(Instant.class), any(Instant.class), any(Pageable.class));
+            verify(auditRepository).findByTimestampBetween(any(Instant.class), any(Instant.class), any(Pageable.class));
         }
 
         @Test
@@ -149,20 +145,14 @@ class AuditDashboardControllerTest {
             req.setStartDate(LocalDate.of(2025, 1, 1));
             req.setEndDate(LocalDate.of(2025, 1, 31));
             when(auditRepository.findByTypeAndTimestampBetween(
-                            eq("PDF_PROCESS"),
-                            any(Instant.class),
-                            any(Instant.class),
-                            any(Pageable.class)))
+                            eq("PDF_PROCESS"), any(Instant.class), any(Instant.class), any(Pageable.class)))
                     .thenReturn(page(List.of()));
 
             controller.getAuditData(req);
 
             verify(auditRepository)
                     .findByTypeAndTimestampBetween(
-                            eq("PDF_PROCESS"),
-                            any(Instant.class),
-                            any(Instant.class),
-                            any(Pageable.class));
+                            eq("PDF_PROCESS"), any(Instant.class), any(Instant.class), any(Pageable.class));
         }
 
         @Test
@@ -173,20 +163,14 @@ class AuditDashboardControllerTest {
             req.setStartDate(LocalDate.of(2025, 1, 1));
             req.setEndDate(LocalDate.of(2025, 1, 31));
             when(auditRepository.findByPrincipalAndTimestampBetween(
-                            eq("admin"),
-                            any(Instant.class),
-                            any(Instant.class),
-                            any(Pageable.class)))
+                            eq("admin"), any(Instant.class), any(Instant.class), any(Pageable.class)))
                     .thenReturn(page(List.of()));
 
             controller.getAuditData(req);
 
             verify(auditRepository)
                     .findByPrincipalAndTimestampBetween(
-                            eq("admin"),
-                            any(Instant.class),
-                            any(Instant.class),
-                            any(Pageable.class));
+                            eq("admin"), any(Instant.class), any(Instant.class), any(Pageable.class));
         }
 
         @Test
@@ -198,22 +182,14 @@ class AuditDashboardControllerTest {
             req.setStartDate(LocalDate.of(2025, 1, 1));
             req.setEndDate(LocalDate.of(2025, 1, 31));
             when(auditRepository.findByPrincipalAndTypeAndTimestampBetween(
-                            eq("admin"),
-                            eq("USER_LOGIN"),
-                            any(Instant.class),
-                            any(Instant.class),
-                            any(Pageable.class)))
+                            eq("admin"), eq("USER_LOGIN"), any(Instant.class), any(Instant.class), any(Pageable.class)))
                     .thenReturn(page(List.of()));
 
             controller.getAuditData(req);
 
             verify(auditRepository)
                     .findByPrincipalAndTypeAndTimestampBetween(
-                            eq("admin"),
-                            eq("USER_LOGIN"),
-                            any(Instant.class),
-                            any(Instant.class),
-                            any(Pageable.class));
+                            eq("admin"), eq("USER_LOGIN"), any(Instant.class), any(Instant.class), any(Pageable.class));
         }
     }
 
@@ -224,11 +200,10 @@ class AuditDashboardControllerTest {
         @Test
         @DisplayName("groups events by type, principal and day")
         void aggregatesCounts() {
-            List<PersistentAuditEvent> events =
-                    List.of(
-                            event(1L, "admin", "USER_LOGIN", null),
-                            event(2L, "admin", "USER_LOGIN", null),
-                            event(3L, "bob", "PDF_PROCESS", null));
+            List<PersistentAuditEvent> events = List.of(
+                    event(1L, "admin", "USER_LOGIN", null),
+                    event(2L, "admin", "USER_LOGIN", null),
+                    event(3L, "bob", "PDF_PROCESS", null));
             when(auditRepository.findByTimestampAfter(any(Instant.class))).thenReturn(events);
 
             AuditStatsResponse resp = controller.getAuditStats(7);
@@ -259,8 +234,7 @@ class AuditDashboardControllerTest {
         @Test
         @DisplayName("merges db types with enum types and sorts distinct")
         void mergesAndSorts() {
-            when(auditRepository.findDistinctEventTypes())
-                    .thenReturn(List.of("CUSTOM_TYPE", "USER_LOGIN"));
+            when(auditRepository.findDistinctEventTypes()).thenReturn(List.of("CUSTOM_TYPE", "USER_LOGIN"));
 
             List<String> types = controller.getAuditTypes();
 
@@ -278,8 +252,7 @@ class AuditDashboardControllerTest {
         @DisplayName("returns CSV with header and escaped rows")
         void csvWithRows() {
             AuditExportRequest req = new AuditExportRequest();
-            when(auditRepository.findAll())
-                    .thenReturn(List.of(event(1L, "ad\"min", "USER_LOGIN", "{\"a\":1}")));
+            when(auditRepository.findAll()).thenReturn(List.of(event(1L, "ad\"min", "USER_LOGIN", "{\"a\":1}")));
 
             ResponseEntity<byte[]> resp = controller.exportAuditData(req);
 
@@ -288,8 +261,7 @@ class AuditDashboardControllerTest {
             assertThat(csv).startsWith("ID,Principal,Type,Timestamp,Data");
             // Quotes inside fields must be doubled
             assertThat(csv).contains("\"ad\"\"min\"");
-            assertThat(resp.getHeaders().getContentDisposition().getFilename())
-                    .isEqualTo("audit_export.csv");
+            assertThat(resp.getHeaders().getContentDisposition().getFilename()).isEqualTo("audit_export.csv");
         }
 
         @Test
@@ -314,16 +286,14 @@ class AuditDashboardControllerTest {
         @DisplayName("returns JSON body and attachment header")
         void jsonExport() {
             AuditExportRequest req = new AuditExportRequest();
-            when(auditRepository.findAll())
-                    .thenReturn(List.of(event(1L, "admin", "USER_LOGIN", null)));
+            when(auditRepository.findAll()).thenReturn(List.of(event(1L, "admin", "USER_LOGIN", null)));
 
             ResponseEntity<byte[]> resp = controller.exportAuditDataJson(req);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
             String json = new String(resp.getBody(), StandardCharsets.UTF_8);
             assertThat(json).contains("\"principal\":\"admin\"");
-            assertThat(resp.getHeaders().getContentDisposition().getFilename())
-                    .isEqualTo("audit_export.json");
+            assertThat(resp.getHeaders().getContentDisposition().getFilename()).isEqualTo("audit_export.json");
         }
 
         @Test

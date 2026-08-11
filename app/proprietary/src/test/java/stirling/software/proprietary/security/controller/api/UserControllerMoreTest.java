@@ -40,14 +40,29 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 @DisplayName("UserController - additional coverage")
 class UserControllerMoreTest {
 
-    @Mock private UserService userService;
-    @Mock private SessionPersistentRegistry sessionRegistry;
-    @Mock private TeamRepository teamRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private EmailService emailService;
-    @Mock private UserLicenseSettingsService licenseSettingsService;
-    @Mock private LoginAttemptService loginAttemptService;
-    @Mock private TeamMembershipService teamMembershipService;
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private SessionPersistentRegistry sessionRegistry;
+
+    @Mock
+    private TeamRepository teamRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private UserLicenseSettingsService licenseSettingsService;
+
+    @Mock
+    private LoginAttemptService loginAttemptService;
+
+    @Mock
+    private TeamMembershipService teamMembershipService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -57,17 +72,16 @@ class UserControllerMoreTest {
         applicationProperties = new ApplicationProperties();
         applicationProperties.getMail().setEnabled(true);
 
-        UserController controller =
-                new UserController(
-                        userService,
-                        sessionRegistry,
-                        applicationProperties,
-                        teamRepository,
-                        userRepository,
-                        Optional.of(emailService),
-                        licenseSettingsService,
-                        loginAttemptService,
-                        teamMembershipService);
+        UserController controller = new UserController(
+                userService,
+                sessionRegistry,
+                applicationProperties,
+                teamRepository,
+                userRepository,
+                Optional.of(emailService),
+                licenseSettingsService,
+                loginAttemptService,
+                teamMembershipService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -90,11 +104,10 @@ class UserControllerMoreTest {
         void userNotFound() throws Exception {
             when(userService.findByUsernameIgnoreCase("me")).thenReturn(Optional.empty());
 
-            mockMvc.perform(
-                            post("/api/v1/user/change-password")
-                                    .principal(auth("me"))
-                                    .param("currentPassword", "old")
-                                    .param("newPassword", "new"))
+            mockMvc.perform(post("/api/v1/user/change-password")
+                            .principal(auth("me"))
+                            .param("currentPassword", "old")
+                            .param("newPassword", "new"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error").value("userNotFound"));
         }
@@ -106,11 +119,10 @@ class UserControllerMoreTest {
             when(userService.findByUsernameIgnoreCase("me")).thenReturn(Optional.of(u));
             when(userService.isPasswordCorrect(u, "old")).thenReturn(false);
 
-            mockMvc.perform(
-                            post("/api/v1/user/change-password")
-                                    .principal(auth("me"))
-                                    .param("currentPassword", "old")
-                                    .param("newPassword", "new"))
+            mockMvc.perform(post("/api/v1/user/change-password")
+                            .principal(auth("me"))
+                            .param("currentPassword", "old")
+                            .param("newPassword", "new"))
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.error").value("incorrectPassword"));
         }
@@ -122,11 +134,10 @@ class UserControllerMoreTest {
             when(userService.findByUsernameIgnoreCase("me")).thenReturn(Optional.of(u));
             when(userService.isPasswordCorrect(u, "old")).thenReturn(true);
 
-            mockMvc.perform(
-                            post("/api/v1/user/change-password")
-                                    .principal(auth("me"))
-                                    .param("currentPassword", "old")
-                                    .param("newPassword", "new"))
+            mockMvc.perform(post("/api/v1/user/change-password")
+                            .principal(auth("me"))
+                            .param("currentPassword", "old")
+                            .param("newPassword", "new"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("credsUpdated"));
 
@@ -144,12 +155,11 @@ class UserControllerMoreTest {
             User u = user("me");
             when(userService.findByUsernameIgnoreCase("me")).thenReturn(Optional.of(u));
 
-            mockMvc.perform(
-                            post("/api/v1/user/change-password-on-login")
-                                    .principal(auth("me"))
-                                    .param("currentPassword", "old")
-                                    .param("newPassword", "a")
-                                    .param("confirmPassword", "b"))
+            mockMvc.perform(post("/api/v1/user/change-password-on-login")
+                            .principal(auth("me"))
+                            .param("currentPassword", "old")
+                            .param("newPassword", "a")
+                            .param("confirmPassword", "b"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("passwordMismatch"));
         }
@@ -160,12 +170,11 @@ class UserControllerMoreTest {
             User u = user("me");
             when(userService.findByUsernameIgnoreCase("me")).thenReturn(Optional.of(u));
 
-            mockMvc.perform(
-                            post("/api/v1/user/change-password-on-login")
-                                    .principal(auth("me"))
-                                    .param("currentPassword", "same")
-                                    .param("newPassword", "same")
-                                    .param("confirmPassword", "same"))
+            mockMvc.perform(post("/api/v1/user/change-password-on-login")
+                            .principal(auth("me"))
+                            .param("currentPassword", "same")
+                            .param("newPassword", "same")
+                            .param("confirmPassword", "same"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("passwordUnchanged"));
         }
@@ -178,12 +187,11 @@ class UserControllerMoreTest {
             when(userService.findByUsernameIgnoreCase("me")).thenReturn(Optional.of(u));
             when(userService.isPasswordCorrect(u, "old")).thenReturn(true);
 
-            mockMvc.perform(
-                            post("/api/v1/user/change-password-on-login")
-                                    .principal(auth("me"))
-                                    .param("currentPassword", "old")
-                                    .param("newPassword", "new")
-                                    .param("confirmPassword", "new"))
+            mockMvc.perform(post("/api/v1/user/change-password-on-login")
+                            .principal(auth("me"))
+                            .param("currentPassword", "old")
+                            .param("newPassword", "new")
+                            .param("confirmPassword", "new"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("credsUpdated"));
 
@@ -201,11 +209,10 @@ class UserControllerMoreTest {
         void invalidUsername() throws Exception {
             when(userService.isUsernameValid("x")).thenReturn(false);
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/saveUser")
-                                    .param("username", "x")
-                                    .param("role", "ROLE_USER")
-                                    .param("authType", "web"))
+            mockMvc.perform(post("/api/v1/user/admin/saveUser")
+                            .param("username", "x")
+                            .param("role", "ROLE_USER")
+                            .param("authType", "web"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -217,11 +224,10 @@ class UserControllerMoreTest {
             when(userService.findByUsernameIgnoreCase("new@ex.com")).thenReturn(Optional.empty());
             when(userService.usernameExistsIgnoreCase("new@ex.com")).thenReturn(false);
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/saveUser")
-                                    .param("username", "new@ex.com")
-                                    .param("role", "ROLE_BOGUS")
-                                    .param("authType", "web"))
+            mockMvc.perform(post("/api/v1/user/admin/saveUser")
+                            .param("username", "new@ex.com")
+                            .param("role", "ROLE_BOGUS")
+                            .param("authType", "web"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Invalid role specified."));
         }
@@ -234,11 +240,10 @@ class UserControllerMoreTest {
             when(userService.findByUsernameIgnoreCase("new@ex.com")).thenReturn(Optional.empty());
             when(userService.usernameExistsIgnoreCase("new@ex.com")).thenReturn(false);
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/saveUser")
-                                    .param("username", "new@ex.com")
-                                    .param("role", "ROLE_USER")
-                                    .param("authType", "web"))
+            mockMvc.perform(post("/api/v1/user/admin/saveUser")
+                            .param("username", "new@ex.com")
+                            .param("role", "ROLE_USER")
+                            .param("authType", "web"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Password is required."));
         }
@@ -253,15 +258,13 @@ class UserControllerMoreTest {
             Team defaultTeam = new Team();
             defaultTeam.setId(1L);
             defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-            when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
-                    .thenReturn(Optional.of(defaultTeam));
+            when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME)).thenReturn(Optional.of(defaultTeam));
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/saveUser")
-                                    .param("username", "new@ex.com")
-                                    .param("password", "secret1")
-                                    .param("role", "ROLE_USER")
-                                    .param("authType", "web"))
+            mockMvc.perform(post("/api/v1/user/admin/saveUser")
+                            .param("username", "new@ex.com")
+                            .param("password", "secret1")
+                            .param("role", "ROLE_USER")
+                            .param("authType", "web"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("User created successfully"));
 
@@ -278,26 +281,23 @@ class UserControllerMoreTest {
         void userNotFound() throws Exception {
             when(userService.findByUsernameIgnoreCase("ghost")).thenReturn(Optional.empty());
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/changeRole")
-                                    .principal(auth("admin"))
-                                    .param("username", "ghost")
-                                    .param("role", "ROLE_USER"))
+            mockMvc.perform(post("/api/v1/user/admin/changeRole")
+                            .principal(auth("admin"))
+                            .param("username", "ghost")
+                            .param("role", "ROLE_USER"))
                     .andExpect(status().isNotFound());
         }
 
         @Test
         @DisplayName("prevents an admin from changing their own role")
         void cannotChangeOwnRole() throws Exception {
-            when(userService.findByUsernameIgnoreCase("admin"))
-                    .thenReturn(Optional.of(user("admin")));
+            when(userService.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(user("admin")));
             when(userService.usernameExistsIgnoreCase("admin")).thenReturn(true);
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/changeRole")
-                                    .principal(auth("admin"))
-                                    .param("username", "admin")
-                                    .param("role", "ROLE_ADMIN"))
+            mockMvc.perform(post("/api/v1/user/admin/changeRole")
+                            .principal(auth("admin"))
+                            .param("username", "admin")
+                            .param("role", "ROLE_ADMIN"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Cannot change your own role."));
         }
@@ -309,11 +309,10 @@ class UserControllerMoreTest {
             when(userService.findByUsernameIgnoreCase("bob")).thenReturn(Optional.of(target));
             when(userService.usernameExistsIgnoreCase("bob")).thenReturn(true);
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/changeRole")
-                                    .principal(auth("admin"))
-                                    .param("username", "bob")
-                                    .param("role", "ROLE_ADMIN"))
+            mockMvc.perform(post("/api/v1/user/admin/changeRole")
+                            .principal(auth("admin"))
+                            .param("username", "bob")
+                            .param("role", "ROLE_ADMIN"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("User role updated successfully"));
 
@@ -328,14 +327,12 @@ class UserControllerMoreTest {
         @Test
         @DisplayName("prevents changing your own password via the admin route")
         void cannotChangeOwn() throws Exception {
-            when(userService.findByUsernameIgnoreCase("admin"))
-                    .thenReturn(Optional.of(user("admin")));
+            when(userService.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(user("admin")));
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/changePasswordForUser")
-                                    .principal(auth("admin"))
-                                    .param("username", "admin")
-                                    .param("newPassword", "x"))
+            mockMvc.perform(post("/api/v1/user/admin/changePasswordForUser")
+                            .principal(auth("admin"))
+                            .param("username", "admin")
+                            .param("newPassword", "x"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Cannot change your own password."));
         }
@@ -345,10 +342,9 @@ class UserControllerMoreTest {
         void requiresPassword() throws Exception {
             when(userService.findByUsernameIgnoreCase("bob")).thenReturn(Optional.of(user("bob")));
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/changePasswordForUser")
-                                    .principal(auth("admin"))
-                                    .param("username", "bob"))
+            mockMvc.perform(post("/api/v1/user/admin/changePasswordForUser")
+                            .principal(auth("admin"))
+                            .param("username", "bob"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("New password is required."));
         }
@@ -359,11 +355,10 @@ class UserControllerMoreTest {
             User target = user("bob");
             when(userService.findByUsernameIgnoreCase("bob")).thenReturn(Optional.of(target));
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/changePasswordForUser")
-                                    .principal(auth("admin"))
-                                    .param("username", "bob")
-                                    .param("newPassword", "newpass"))
+            mockMvc.perform(post("/api/v1/user/admin/changePasswordForUser")
+                            .principal(auth("admin"))
+                            .param("username", "bob")
+                            .param("newPassword", "newpass"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("User password updated successfully"));
 
@@ -444,10 +439,9 @@ class UserControllerMoreTest {
         void invitesDisabled() throws Exception {
             applicationProperties.getMail().setEnableInvites(false);
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/inviteUsers")
-                                    .principal(auth("admin"))
-                                    .param("emails", "a@ex.com"))
+            mockMvc.perform(post("/api/v1/user/admin/inviteUsers")
+                            .principal(auth("admin"))
+                            .param("emails", "a@ex.com"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Email invites are not enabled"));
         }
@@ -461,13 +455,11 @@ class UserControllerMoreTest {
             Team defaultTeam = new Team();
             defaultTeam.setId(1L);
             defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-            when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
-                    .thenReturn(Optional.of(defaultTeam));
+            when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME)).thenReturn(Optional.of(defaultTeam));
 
-            mockMvc.perform(
-                            post("/api/v1/user/admin/inviteUsers")
-                                    .principal(auth("admin"))
-                                    .param("emails", "new@ex.com"))
+            mockMvc.perform(post("/api/v1/user/admin/inviteUsers")
+                            .principal(auth("admin"))
+                            .param("emails", "new@ex.com"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.successCount").value(1));
 

@@ -41,18 +41,12 @@ public class DatabaseController {
             description = "Uploads and imports a database backup SQL file.")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "import-database")
     public ResponseEntity<?> importDatabase(
-            @Parameter(description = "SQL file to import", required = true)
-                    @RequestParam("fileInput")
+            @Parameter(description = "SQL file to import", required = true) @RequestParam("fileInput")
                     MultipartFile file)
             throws IOException {
         if (file == null || file.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            java.util.Map.of(
-                                    "error",
-                                    "fileNullOrEmpty",
-                                    "message",
-                                    "File is null or empty"));
+                    .body(java.util.Map.of("error", "fileNullOrEmpty", "message", "File is null or empty"));
         }
         log.info("Received file: {}", file.getOriginalFilename());
         Path tempTemplatePath = Files.createTempFile("backup_", ".sql");
@@ -60,30 +54,18 @@ public class DatabaseController {
             Files.copy(in, tempTemplatePath, StandardCopyOption.REPLACE_EXISTING);
             boolean importSuccess = databaseService.importDatabaseFromUI(tempTemplatePath);
             if (importSuccess) {
-                return ResponseEntity.ok(
-                        java.util.Map.of(
-                                "message",
-                                "importIntoDatabaseSuccessed",
-                                "description",
-                                "Database imported successfully"));
+                return ResponseEntity.ok(java.util.Map.of(
+                        "message", "importIntoDatabaseSuccessed", "description", "Database imported successfully"));
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(
-                                java.util.Map.of(
-                                        "error",
-                                        "failedImportFile",
-                                        "message",
-                                        "Failed to import database file"));
+                        .body(java.util.Map.of(
+                                "error", "failedImportFile", "message", "Failed to import database file"));
             }
         } catch (Exception e) {
             log.error("Error importing database: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(
-                            java.util.Map.of(
-                                    "error",
-                                    "failedImportFile",
-                                    "message",
-                                    "Failed to import database: " + e.getMessage()));
+                    .body(java.util.Map.of(
+                            "error", "failedImportFile", "message", "Failed to import database: " + e.getMessage()));
         }
     }
 
@@ -93,48 +75,27 @@ public class DatabaseController {
             description = "Imports a database backup file from the server using its file name.")
     @GetMapping("/import-database-file/{fileName}")
     public ResponseEntity<?> importDatabaseFromBackupUI(
-            @Parameter(description = "Name of the file to import", required = true) @PathVariable
-                    String fileName) {
+            @Parameter(description = "Name of the file to import", required = true) @PathVariable String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            java.util.Map.of(
-                                    "error",
-                                    "fileNullOrEmpty",
-                                    "message",
-                                    "File name is null or empty"));
+                    .body(java.util.Map.of("error", "fileNullOrEmpty", "message", "File name is null or empty"));
         }
         // Check if the file exists in the backup list
-        boolean fileExists =
-                databaseService.getBackupList().stream()
-                        .anyMatch(backup -> backup.getFileName().equals(fileName));
+        boolean fileExists = databaseService.getBackupList().stream()
+                .anyMatch(backup -> backup.getFileName().equals(fileName));
         if (!fileExists) {
             log.error("File {} not found in backup list", fileName);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(
-                            java.util.Map.of(
-                                    "error",
-                                    "fileNotFound",
-                                    "message",
-                                    "File not found in backup list"));
+                    .body(java.util.Map.of("error", "fileNotFound", "message", "File not found in backup list"));
         }
         log.info("Received file: {}", fileName);
         if (databaseService.importDatabaseFromUI(fileName)) {
             log.info("File {} imported to database", fileName);
-            return ResponseEntity.ok(
-                    java.util.Map.of(
-                            "message",
-                            "importIntoDatabaseSuccessed",
-                            "description",
-                            "Database backup imported successfully"));
+            return ResponseEntity.ok(java.util.Map.of(
+                    "message", "importIntoDatabaseSuccessed", "description", "Database backup imported successfully"));
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(
-                        java.util.Map.of(
-                                "error",
-                                "failedImportFile",
-                                "message",
-                                "Failed to import database file"));
+                .body(java.util.Map.of("error", "failedImportFile", "message", "Failed to import database file"));
     }
 
     @Hidden
@@ -143,16 +104,10 @@ public class DatabaseController {
             description = "Deletes a specified database backup file from the server.")
     @GetMapping("/delete/{fileName}")
     public ResponseEntity<?> deleteFile(
-            @Parameter(description = "Name of the file to delete", required = true) @PathVariable
-                    String fileName) {
+            @Parameter(description = "Name of the file to delete", required = true) @PathVariable String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            java.util.Map.of(
-                                    "error",
-                                    "invalidFileName",
-                                    "message",
-                                    "File must not be null or empty"));
+                    .body(java.util.Map.of("error", "invalidFileName", "message", "File must not be null or empty"));
         }
         try {
             if (databaseService.deleteBackupFile(fileName)) {
@@ -161,22 +116,14 @@ public class DatabaseController {
             } else {
                 log.error("Failed to delete file: {}", fileName);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(
-                                java.util.Map.of(
-                                        "error",
-                                        "failedToDeleteFile",
-                                        "message",
-                                        "Failed to delete backup file"));
+                        .body(java.util.Map.of(
+                                "error", "failedToDeleteFile", "message", "Failed to delete backup file"));
             }
         } catch (IOException e) {
             log.error("Error deleting file: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(
-                            java.util.Map.of(
-                                    "error",
-                                    "deleteError",
-                                    "message",
-                                    "Error deleting file: " + e.getMessage()));
+                    .body(java.util.Map.of(
+                            "error", "deleteError", "message", "Error deleting file: " + e.getMessage()));
         }
     }
 
@@ -186,8 +133,7 @@ public class DatabaseController {
             description = "Downloads the specified database backup file from the server.")
     @GetMapping("/download/{fileName}")
     public ResponseEntity<?> downloadFile(
-            @Parameter(description = "Name of the file to download", required = true) @PathVariable
-                    String fileName) {
+            @Parameter(description = "Name of the file to download", required = true) @PathVariable String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("File must not be null or empty");
         }
@@ -197,12 +143,7 @@ public class DatabaseController {
         if (!fileName.startsWith("backup_") || !fileName.endsWith(".sql")) {
             log.warn("Attempted download of non-backup file: {}", fileName);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            java.util.Map.of(
-                                    "error",
-                                    "invalidFileName",
-                                    "message",
-                                    "Only backup files are allowed"));
+                    .body(java.util.Map.of("error", "invalidFileName", "message", "Only backup files are allowed"));
         }
 
         try {
@@ -216,12 +157,8 @@ public class DatabaseController {
         } catch (IOException e) {
             log.error("Error downloading file: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(
-                            java.util.Map.of(
-                                    "error",
-                                    "downloadFailed",
-                                    "message",
-                                    "Failed to download file: " + e.getMessage()));
+                    .body(java.util.Map.of(
+                            "error", "downloadFailed", "message", "Failed to download file: " + e.getMessage()));
         }
     }
 
@@ -234,10 +171,6 @@ public class DatabaseController {
         databaseService.exportDatabase();
         log.info("Database backup successfully created.");
         return ResponseEntity.ok(
-                java.util.Map.of(
-                        "message",
-                        "backupCreated",
-                        "description",
-                        "Database backup created successfully"));
+                java.util.Map.of("message", "backupCreated", "description", "Database backup created successfully"));
     }
 }

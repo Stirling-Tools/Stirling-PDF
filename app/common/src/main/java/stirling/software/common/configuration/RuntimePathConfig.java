@@ -58,30 +58,23 @@ public class RuntimePathConfig {
 
         Pipeline pipeline = customPaths.getPipeline();
 
-        this.pipelinePath =
-                resolvePath(
-                        Path.of(basePath, "pipeline").toString(),
-                        pipeline != null ? pipeline.getPipelineDir() : null);
-        String defaultWatchedFolders = Path.of(this.pipelinePath, "watchedFolders").toString();
-        String defaultFinishedFolders = Path.of(this.pipelinePath, "finishedFolders").toString();
-        String defaultWebUIConfigs = Path.of(this.pipelinePath, "defaultWebUIConfigs").toString();
+        this.pipelinePath = resolvePath(
+                Path.of(basePath, "pipeline").toString(), pipeline != null ? pipeline.getPipelineDir() : null);
+        String defaultWatchedFolders =
+                Path.of(this.pipelinePath, "watchedFolders").toString();
+        String defaultFinishedFolders =
+                Path.of(this.pipelinePath, "finishedFolders").toString();
+        String defaultWebUIConfigs =
+                Path.of(this.pipelinePath, "defaultWebUIConfigs").toString();
 
-        List<String> watchedFoldersDirs =
-                sanitizePathList(pipeline != null ? pipeline.getWatchedFoldersDirs() : null);
-        this.pipelineWatchedFoldersPaths =
-                resolveWatchedFolderPaths(
-                        defaultWatchedFolders,
-                        watchedFoldersDirs,
-                        pipeline != null ? pipeline.getWatchedFoldersDir() : null);
+        List<String> watchedFoldersDirs = sanitizePathList(pipeline != null ? pipeline.getWatchedFoldersDirs() : null);
+        this.pipelineWatchedFoldersPaths = resolveWatchedFolderPaths(
+                defaultWatchedFolders, watchedFoldersDirs, pipeline != null ? pipeline.getWatchedFoldersDir() : null);
         this.pipelineWatchedFoldersPath = this.pipelineWatchedFoldersPaths.get(0);
         this.pipelineFinishedFoldersPath =
-                resolvePath(
-                        defaultFinishedFolders,
-                        pipeline != null ? pipeline.getFinishedFoldersDir() : null);
+                resolvePath(defaultFinishedFolders, pipeline != null ? pipeline.getFinishedFoldersDir() : null);
         this.pipelineDefaultWebUiConfigs =
-                resolvePath(
-                        defaultWebUIConfigs,
-                        pipeline != null ? pipeline.getWebUIConfigsDir() : null);
+                resolvePath(defaultWebUIConfigs, pipeline != null ? pipeline.getWebUIConfigsDir() : null);
 
         // Validate path conflicts after all paths are resolved
         validatePipelinePaths();
@@ -97,22 +90,12 @@ public class RuntimePathConfig {
 
         Operations operations = customPaths.getOperations();
         this.weasyPrintPath =
-                resolvePath(
-                        defaultWeasyPrintPath,
-                        operations != null ? operations.getWeasyprint() : null);
+                resolvePath(defaultWeasyPrintPath, operations != null ? operations.getWeasyprint() : null);
         this.unoConvertPath =
-                resolvePath(
-                        defaultUnoConvertPath,
-                        operations != null ? operations.getUnoconvert() : null);
-        this.calibrePath =
-                resolvePath(
-                        defaultCalibrePath, operations != null ? operations.getCalibre() : null);
-        this.ocrMyPdfPath =
-                resolvePath(
-                        defaultOcrMyPdfPath, operations != null ? operations.getOcrmypdf() : null);
-        this.sOfficePath =
-                resolvePath(
-                        defaultSOfficePath, operations != null ? operations.getSoffice() : null);
+                resolvePath(defaultUnoConvertPath, operations != null ? operations.getUnoconvert() : null);
+        this.calibrePath = resolvePath(defaultCalibrePath, operations != null ? operations.getCalibre() : null);
+        this.ocrMyPdfPath = resolvePath(defaultOcrMyPdfPath, operations != null ? operations.getOcrmypdf() : null);
+        this.sOfficePath = resolvePath(defaultSOfficePath, operations != null ? operations.getSoffice() : null);
 
         // Initialize Tesseract data path
         // Priority: config setting > TESSDATA_PREFIX env var > default path
@@ -165,9 +148,7 @@ public class RuntimePathConfig {
 
         // Ensure we have at least one valid path (critical for system to function)
         if (validatedPaths.isEmpty()) {
-            log.warn(
-                    "No valid watched folder paths configured, falling back to default: {}",
-                    defaultPath);
+            log.warn("No valid watched folder paths configured, falling back to default: {}", defaultPath);
             validatedPaths.add(defaultPath);
         }
 
@@ -213,8 +194,7 @@ public class RuntimePathConfig {
                 log.info("Registered watched folder path: {}", normalizedPath);
 
             } catch (InvalidPathException e) {
-                log.error(
-                        "Invalid watched folder path '{}' - skipping: {}", pathStr, e.getMessage());
+                log.error("Invalid watched folder path '{}' - skipping: {}", pathStr, e.getMessage());
             }
         }
 
@@ -245,7 +225,8 @@ public class RuntimePathConfig {
 
     private void validatePipelinePaths() {
         try {
-            Path finishedPath = Path.of(pipelineFinishedFoldersPath).toAbsolutePath().normalize();
+            Path finishedPath =
+                    Path.of(pipelineFinishedFoldersPath).toAbsolutePath().normalize();
 
             for (String watchedPathStr : pipelineWatchedFoldersPaths) {
                 Path watchedPath = Path.of(watchedPathStr).toAbsolutePath().normalize();
@@ -285,8 +266,7 @@ public class RuntimePathConfig {
             ApplicationProperties.ProcessExecutor processExecutor, int sessionLimit) {
         if (processExecutor == null) {
             log.warn("ProcessExecutor config missing; defaulting to a single UNO endpoint.");
-            return Collections.singletonList(
-                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint());
+            return Collections.singletonList(new ApplicationProperties.ProcessExecutor.UnoServerEndpoint());
         }
         if (!processExecutor.isAutoUnoServer()) {
             List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> configured =
@@ -302,17 +282,14 @@ public class RuntimePathConfig {
                 }
                 return configured;
             }
-            log.warn(
-                    "autoUnoServer disabled but no unoServerEndpoints configured; defaulting to 127.0.0.1:2003.");
-            return Collections.singletonList(
-                    new ApplicationProperties.ProcessExecutor.UnoServerEndpoint());
+            log.warn("autoUnoServer disabled but no unoServerEndpoints configured; defaulting to 127.0.0.1:2003.");
+            return Collections.singletonList(new ApplicationProperties.ProcessExecutor.UnoServerEndpoint());
         }
         int count = sessionLimit > 0 ? sessionLimit : 1;
         return buildAutoUnoServerEndpoints(count);
     }
 
-    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint>
-            buildAutoUnoServerEndpoints(int count) {
+    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> buildAutoUnoServerEndpoints(int count) {
         List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = new ArrayList<>();
         int basePort = 2003;
         for (int i = 0; i < count; i++) {
@@ -325,9 +302,8 @@ public class RuntimePathConfig {
         return endpoints;
     }
 
-    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint>
-            sanitizeUnoServerEndpoints(
-                    List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints) {
+    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> sanitizeUnoServerEndpoints(
+            List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints) {
         if (endpoints == null || endpoints.isEmpty()) {
             return Collections.emptyList();
         }

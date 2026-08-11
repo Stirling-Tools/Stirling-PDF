@@ -67,15 +67,13 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         // Start each request clean so a pooled thread can't inherit a prior request's key label -
         // but keep a label an upstream filter (JwtAuthenticationFilter) already set for a request
         // it API-key-authenticated, otherwise per-key attribution is lost on the JWT path.
-        if (!(SecurityContextHolder.getContext().getAuthentication()
-                instanceof ApiKeyAuthenticationToken)) {
+        if (!(SecurityContextHolder.getContext().getAuthentication() instanceof ApiKeyAuthenticationToken)) {
             MDC.remove(API_KEY_LABEL_MDC);
         }
 
@@ -108,17 +106,15 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 try {
                     // Resolves the multi-key table then the legacy key, records usage, and yields a
                     // per-key label for the processor's document-source attribution.
-                    Optional<ApiKeyAuthentication> resolved =
-                            apiKeyAuthenticationService.authenticate(apiKey);
+                    Optional<ApiKeyAuthentication> resolved = apiKeyAuthenticationService.authenticate(apiKey);
                     if (resolved.isEmpty()) {
                         response.setStatus(HttpStatus.UNAUTHORIZED.value());
                         response.getWriter().write("Invalid API Key.");
                         return;
                     }
                     User user = resolved.get().user();
-                    authentication =
-                            new ApiKeyAuthenticationToken(
-                                    user, apiKey, resolved.get().authorities());
+                    authentication = new ApiKeyAuthenticationToken(
+                            user, apiKey, resolved.get().authorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     if (resolved.get().auditLabel() != null) {
                         MDC.put(API_KEY_LABEL_MDC, resolved.get().auditLabel());
@@ -146,9 +142,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             // For API requests, return 401 with JSON response (no redirects)
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("application/json");
-            response.getWriter()
-                    .write(
-                            """
+            response.getWriter().write("""
                             {
                               "error": "Unauthorized",
                               "message": "Authentication required. Please provide valid credentials or X-API-KEY header.",
@@ -187,8 +181,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // Retrieve all active sessions for the user
-            List<SessionInformation> sessionsInformations =
-                    sessionPersistentRegistry.getAllSessions(principal, false);
+            List<SessionInformation> sessionsInformations = sessionPersistentRegistry.getAllSessions(principal, false);
 
             // Check if the user exists, is disabled, or needs session invalidation
             if (username != null) {
@@ -197,8 +190,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 boolean isUserDisabled = userService.isUserDisabled(username);
 
                 boolean notSsoLogin =
-                        !UserLoginType.OAUTH2USER.equals(loginMethod)
-                                && !UserLoginType.SAML2USER.equals(loginMethod);
+                        !UserLoginType.OAUTH2USER.equals(loginMethod) && !UserLoginType.SAML2USER.equals(loginMethod);
 
                 // Block user registration if not allowed by configuration
                 if (blockRegistration && !isUserExists) {
@@ -206,9 +198,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.clearContext();
                     response.setStatus(HttpStatus.FORBIDDEN.value());
                     response.setContentType("application/json");
-                    response.getWriter()
-                            .write(
-                                    """
+                    response.getWriter().write("""
                                     {
                                       "error": "Forbidden",
                                       "message": "User registration is blocked by administrator",
@@ -220,8 +210,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
                 // Expire sessions and logout if the user does not exist or is disabled
                 if (!isUserExists || isUserDisabled) {
-                    log.info(
-                            "Invalidating session for disabled or non-existent user: {}", username);
+                    log.info("Invalidating session for disabled or non-existent user: {}", username);
                     for (SessionInformation sessionsInformation : sessionsInformations) {
                         sessionsInformation.expireNow();
                         sessionPersistentRegistry.expireSession(sessionsInformation.getSessionId());
@@ -233,9 +222,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.clearContext();
                     response.setStatus(HttpStatus.UNAUTHORIZED.value());
                     response.setContentType("application/json");
-                    response.getWriter()
-                            .write(
-                                    """
+                    response.getWriter().write("""
                                     {
                                       "error": "Unauthorized",
                                       "message": "Invalid credentials",
@@ -248,9 +235,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.clearContext();
                     response.setStatus(HttpStatus.FORBIDDEN.value());
                     response.setContentType("application/json");
-                    response.getWriter()
-                            .write(
-                                    """
+                    response.getWriter().write("""
                                     {
                                       "error": "Forbidden",
                                       "message": "User account is disabled",
@@ -290,8 +275,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         String contextPath = request.getContextPath();
 
         // Allow unauthenticated access to static resources and SPA routes (GET/HEAD only)
-        if ("GET".equalsIgnoreCase(request.getMethod())
-                || "HEAD".equalsIgnoreCase(request.getMethod())) {
+        if ("GET".equalsIgnoreCase(request.getMethod()) || "HEAD".equalsIgnoreCase(request.getMethod())) {
             if (RequestUriUtils.isStaticResource(contextPath, uri)
                     || RequestUriUtils.isFrontendRoute(contextPath, uri)) {
                 return true;

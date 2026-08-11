@@ -55,21 +55,35 @@ import tools.jackson.databind.ObjectMapper;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class WorkflowSessionServiceMoreTest {
 
-    @Mock private WorkflowSessionRepository workflowSessionRepository;
-    @Mock private WorkflowParticipantRepository workflowParticipantRepository;
+    @Mock
+    private WorkflowSessionRepository workflowSessionRepository;
 
     @Mock
-    private stirling.software.proprietary.storage.repository.StoredFileRepository
-            storedFileRepository;
+    private WorkflowParticipantRepository workflowParticipantRepository;
 
-    @Mock private UserRepository userRepository;
-    @Mock private StorageProvider storageProvider;
-    @Mock private ObjectMapper objectMapper;
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private MetadataEncryptionService metadataEncryptionService;
-    @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
+    @Mock
+    private stirling.software.proprietary.storage.repository.StoredFileRepository storedFileRepository;
 
-    @InjectMocks private WorkflowSessionService service;
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private StorageProvider storageProvider;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private MetadataEncryptionService metadataEncryptionService;
+
+    @Mock
+    private CertificateSubmissionValidator certificateSubmissionValidator;
+
+    @InjectMocks
+    private WorkflowSessionService service;
 
     // -------------------------------------------------------------------------
     // Helpers
@@ -175,8 +189,7 @@ class WorkflowSessionServiceMoreTest {
 
         @Test
         void getSessionWithParticipants_notFound_throwsNotFound() {
-            when(workflowSessionRepository.findBySessionIdWithParticipants("x"))
-                    .thenReturn(Optional.empty());
+            when(workflowSessionRepository.findBySessionIdWithParticipants("x")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.getSessionWithParticipants("x"))
                     .isInstanceOf(ResponseStatusException.class)
@@ -580,8 +593,7 @@ class WorkflowSessionServiceMoreTest {
             WorkflowParticipant p = participant(user, ParticipantStatus.PENDING);
             s.addParticipant(p);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
-            when(storageProvider.load("orig-key"))
-                    .thenReturn(new ByteArrayResource(new byte[] {5}));
+            when(storageProvider.load("orig-key")).thenReturn(new ByteArrayResource(new byte[] {5}));
 
             assertThat(service.getSignRequestDocument("s1", user)).containsExactly(5);
         }

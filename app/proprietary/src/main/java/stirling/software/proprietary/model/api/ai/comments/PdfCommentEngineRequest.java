@@ -10,5 +10,4 @@ import java.util.List;
  * @param userMessage The user's natural-language prompt (e.g. "flag any ambiguous dates").
  * @param chunks Positioned text chunks extracted from the PDF that the model may comment on.
  */
-public record PdfCommentEngineRequest(
-        String sessionId, String userMessage, List<TextChunk> chunks) {}
+public record PdfCommentEngineRequest(String sessionId, String userMessage, List<TextChunk> chunks) {}

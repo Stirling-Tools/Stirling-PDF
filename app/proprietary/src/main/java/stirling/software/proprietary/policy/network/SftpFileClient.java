@@ -53,15 +53,11 @@ final class SftpFileClient implements RemoteFileClient {
         JSch jsch = new JSch();
         try {
             if (config.privateKey() != null) {
-                byte[] passphrase =
-                        config.privateKeyPassphrase() == null
-                                ? null
-                                : config.privateKeyPassphrase().getBytes(StandardCharsets.UTF_8);
+                byte[] passphrase = config.privateKeyPassphrase() == null
+                        ? null
+                        : config.privateKeyPassphrase().getBytes(StandardCharsets.UTF_8);
                 jsch.addIdentity(
-                        "network-source",
-                        config.privateKey().getBytes(StandardCharsets.UTF_8),
-                        null,
-                        passphrase);
+                        "network-source", config.privateKey().getBytes(StandardCharsets.UTF_8), null, passphrase);
             }
             Session session = jsch.getSession(config.username(), config.host(), config.port());
             if (config.password() != null) {
@@ -69,13 +65,11 @@ final class SftpFileClient implements RemoteFileClient {
             }
             if (config.hostKeyFingerprint() != null) {
                 // Pinned key: only the configured fingerprint is ever accepted.
-                session.setHostKeyRepository(
-                        new PinnedHostKeyRepository(config.hostKeyFingerprint()));
+                session.setHostKeyRepository(new PinnedHostKeyRepository(config.hostKeyFingerprint()));
             } else {
                 // Trust-on-first-use: the first key seen is recorded, a changed key is refused.
                 jsch.setKnownHosts(knownHostsFile().toString());
-                session.setHostKeyRepository(
-                        new TofuHostKeyRepository(jsch.getHostKeyRepository()));
+                session.setHostKeyRepository(new TofuHostKeyRepository(jsch.getHostKeyRepository()));
             }
             session.setConfig("StrictHostKeyChecking", "yes");
             session.connect(CONNECT_TIMEOUT_MS);
@@ -84,8 +78,7 @@ final class SftpFileClient implements RemoteFileClient {
             channel.connect(CONNECT_TIMEOUT_MS);
             return new SftpFileClient(session, channel);
         } catch (JSchException e) {
-            throw new IOException(
-                    "SFTP connection to " + config.host() + " failed: " + e.getMessage(), e);
+            throw new IOException("SFTP connection to " + config.host() + " failed: " + e.getMessage(), e);
         }
     }
 
@@ -228,8 +221,7 @@ final class SftpFileClient implements RemoteFileClient {
     }
 
     @SuppressWarnings("unchecked")
-    private void collect(String directory, boolean recursive, int depth, List<RemoteFile> out)
-            throws IOException {
+    private void collect(String directory, boolean recursive, int depth, List<RemoteFile> out) throws IOException {
         Vector<ChannelSftp.LsEntry> entries;
         try {
             entries = channel.ls(directory);

@@ -36,8 +36,7 @@ class CertificateValidationServiceTest {
     void setUp() throws Exception {
         applicationProperties = mock(ApplicationProperties.class);
         ApplicationProperties.Security security = mock(ApplicationProperties.Security.class);
-        ApplicationProperties.Security.Validation validation =
-                mock(ApplicationProperties.Security.Validation.class);
+        ApplicationProperties.Security.Validation validation = mock(ApplicationProperties.Security.Validation.class);
         ApplicationProperties.Security.Validation.Trust trust =
                 mock(ApplicationProperties.Security.Validation.Trust.class);
         ApplicationProperties.Security.Validation.Revocation revocation =
@@ -138,7 +137,9 @@ class CertificateValidationServiceTest {
         when(cert.getIssuerX500Principal()).thenReturn(principal);
         PublicKey publicKey = mock(PublicKey.class);
         when(cert.getPublicKey()).thenReturn(publicKey);
-        doThrow(new java.security.SignatureException("Bad signature")).when(cert).verify(publicKey);
+        doThrow(new java.security.SignatureException("Bad signature"))
+                .when(cert)
+                .verify(publicKey);
         assertFalse(validationService.isSelfSigned(cert));
     }
 
@@ -204,12 +205,10 @@ class CertificateValidationServiceTest {
         assertFalse(svc.isRevocationEnabled());
     }
 
-    private CertificateValidationService createServiceWithRevocationMode(String mode)
-            throws Exception {
+    private CertificateValidationService createServiceWithRevocationMode(String mode) throws Exception {
         ApplicationProperties props = mock(ApplicationProperties.class);
         ApplicationProperties.Security sec = mock(ApplicationProperties.Security.class);
-        ApplicationProperties.Security.Validation val =
-                mock(ApplicationProperties.Security.Validation.class);
+        ApplicationProperties.Security.Validation val = mock(ApplicationProperties.Security.Validation.class);
         ApplicationProperties.Security.Validation.Trust trust =
                 mock(ApplicationProperties.Security.Validation.Trust.class);
         ApplicationProperties.Security.Validation.Revocation rev =
@@ -234,8 +233,7 @@ class CertificateValidationServiceTest {
         SignerInformation signerInfo = mock(SignerInformation.class);
         when(signerInfo.getUnsignedAttributes()).thenReturn(null);
         when(signerInfo.getSignedAttributes()).thenReturn(null);
-        CertificateValidationService.ValidationTime result =
-                validationService.extractValidationTime(signerInfo);
+        CertificateValidationService.ValidationTime result = validationService.extractValidationTime(signerInfo);
         assertNull(result);
     }
 
@@ -283,8 +281,7 @@ class CertificateValidationServiceTest {
 
     @Test
     void testConstructorWithNullServerCertService() throws Exception {
-        CertificateValidationService svc =
-                new CertificateValidationService(null, applicationProperties);
+        CertificateValidationService svc = new CertificateValidationService(null, applicationProperties);
         assertNotNull(svc);
         // @PostConstruct not invoked in unit tests, trust store remains null
         assertNull(svc.getSigningTrustStore());
@@ -294,9 +291,6 @@ class CertificateValidationServiceTest {
     void testBuildAndValidatePath_NoAnchorsThrows() {
         X509Certificate signerCert = mock(X509Certificate.class);
         assertThrows(
-                Exception.class,
-                () ->
-                        validationService.buildAndValidatePath(
-                                signerCert, List.of(), null, new Date()));
+                Exception.class, () -> validationService.buildAndValidatePath(signerCert, List.of(), null, new Date()));
     }
 }

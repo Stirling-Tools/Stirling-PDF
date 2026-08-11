@@ -83,8 +83,7 @@ class StorageProviderConfigTest {
         StorageProviderConfig cfg = newConfig("local", License.NORMAL, false, true);
         StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
 
-        assertThat(cfg.storageProvider(state, Optional.empty()))
-                .isInstanceOf(EncryptingStorageProvider.class);
+        assertThat(cfg.storageProvider(state, Optional.empty())).isInstanceOf(EncryptingStorageProvider.class);
         assertThat(state.isWriteEnabled()).isFalse();
         // Encrypted content may exist -> presigned URLs must be suppressed on this node too.
         assertThat(state.suppressDirectDownloads()).isTrue();
@@ -125,15 +124,13 @@ class StorageProviderConfigTest {
         StorageProviderConfig cfg = newConfig("local", License.NORMAL, false);
         StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
 
-        assertThat(cfg.storageProvider(state, Optional.empty()))
-                .isInstanceOf(EncryptingStorageProvider.class);
+        assertThat(cfg.storageProvider(state, Optional.empty())).isInstanceOf(EncryptingStorageProvider.class);
     }
 
     @Test
     void unreadableKeyRegistry_stillStartsAndFailsSafeOnDirectDownloads() {
         FileEncryptionKeyRepository broken = mock(FileEncryptionKeyRepository.class);
-        when(broken.count())
-                .thenThrow(new InvalidDataAccessResourceUsageException("no such table"));
+        when(broken.count()).thenThrow(new InvalidDataAccessResourceUsageException("no such table"));
         StorageEncryptionState state = new StorageEncryptionState(false, () -> null, broken);
 
         assertThat(state.encryptedContentMayExist()).isFalse();
@@ -167,16 +164,14 @@ class StorageProviderConfigTest {
 
         assertThatThrownBy(() -> cfg.storageProvider(state, Optional.empty()))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining(
-                        "storage.provider=database requires a Pro or Enterprise license");
+                .hasMessageContaining("storage.provider=database requires a Pro or Enterprise license");
     }
 
     @Test
     void provider_database_serverLicense_builds() {
         StorageProviderConfig cfg = newConfig("database", License.SERVER, false);
         StorageEncryptionState state = cfg.storageEncryptionState(MASTER, false, txManager);
-        assertThatCode(() -> cfg.storageProvider(state, Optional.empty()))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> cfg.storageProvider(state, Optional.empty())).doesNotThrowAnyException();
     }
 
     @Test
@@ -202,8 +197,7 @@ class StorageProviderConfigTest {
                 .hasMessageNotContaining("license");
     }
 
-    private StorageProviderConfig newConfig(
-            String provider, License license, boolean encryptionEnabled) {
+    private StorageProviderConfig newConfig(String provider, License license, boolean encryptionEnabled) {
         return newConfig(provider, license, encryptionEnabled, false);
     }
 
@@ -220,12 +214,9 @@ class StorageProviderConfigTest {
             doNothing().when(checker).requireProOrEnterprise(anyString());
         } else {
             // Mirror real LicenseKeyChecker.requireProOrEnterprise so message assertions match.
-            doAnswer(
-                            inv -> {
-                                throw new IllegalStateException(
-                                        inv.getArgument(0)
-                                                + " requires a Pro or Enterprise license");
-                            })
+            doAnswer(inv -> {
+                        throw new IllegalStateException(inv.getArgument(0) + " requires a Pro or Enterprise license");
+                    })
                     .when(checker)
                     .requireProOrEnterprise(anyString());
         }

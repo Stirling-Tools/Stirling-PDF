@@ -11,9 +11,6 @@ import stirling.software.SPDF.model.api.PDFComparison;
 @EqualsAndHashCode(callSuper = true)
 public class PageRotationRequest extends PDFComparison {
 
-    @Schema(
-            description = "Rotation in degrees",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            defaultValue = "0")
+    @Schema(description = "Rotation in degrees", requiredMode = Schema.RequiredMode.REQUIRED, defaultValue = "0")
     private int rotation;
 }

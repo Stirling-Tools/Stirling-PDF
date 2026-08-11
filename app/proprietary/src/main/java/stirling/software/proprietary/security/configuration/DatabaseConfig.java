@@ -64,12 +64,10 @@ public class DatabaseConfig {
     private final boolean runningProOrHigher;
 
     public DatabaseConfig(
-            ApplicationProperties.Datasource datasource,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
-        DATASOURCE_DEFAULT_URL =
-                "jdbc:h2:file:"
-                        + InstallationPathConfig.getConfigPath()
-                        + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL";
+            ApplicationProperties.Datasource datasource, @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
+        DATASOURCE_DEFAULT_URL = "jdbc:h2:file:"
+                + InstallationPathConfig.getConfigPath()
+                + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL";
         log.debug("Database URL: {}", DATASOURCE_DEFAULT_URL);
         this.datasource = datasource;
         this.runningProOrHigher = runningProOrHigher;
@@ -101,10 +99,7 @@ public class DatabaseConfig {
         // Support AOT training: override URL via system property to avoid H2 file lock
         // conflicts when the AOT RECORD phase starts a second Spring context
         String overrideUrl = System.getProperty("stirling.datasource.url");
-        String url =
-                (overrideUrl != null && !overrideUrl.isBlank())
-                        ? overrideUrl
-                        : DATASOURCE_DEFAULT_URL;
+        String url = (overrideUrl != null && !overrideUrl.isBlank()) ? overrideUrl : DATASOURCE_DEFAULT_URL;
 
         log.info("Using default H2 database");
 
@@ -117,8 +112,7 @@ public class DatabaseConfig {
     }
 
     @ConditionalOnBooleanProperty(name = "premium.enabled")
-    private DataSource useCustomDataSource(DataSourceBuilder<?> dataSourceBuilder)
-            throws UnsupportedProviderException {
+    private DataSource useCustomDataSource(DataSourceBuilder<?> dataSourceBuilder) throws UnsupportedProviderException {
         log.info("Using custom database configuration");
 
         if (!datasource.getCustomDatabaseUrl().isBlank()) {
@@ -129,12 +123,8 @@ public class DatabaseConfig {
             dataSourceBuilder.url(datasource.getCustomDatabaseUrl());
         } else {
             dataSourceBuilder.driverClassName(getDriverClassName(datasource.getType()));
-            dataSourceBuilder.url(
-                    generateCustomDataSourceUrl(
-                            datasource.getType(),
-                            datasource.getHostName(),
-                            datasource.getPort(),
-                            datasource.getName()));
+            dataSourceBuilder.url(generateCustomDataSourceUrl(
+                    datasource.getType(), datasource.getHostName(), datasource.getPort(), datasource.getName()));
         }
         dataSourceBuilder.username(datasource.getUsername());
         dataSourceBuilder.password(datasource.getPassword());
@@ -179,8 +169,7 @@ public class DatabaseConfig {
                 }
                 default -> {
                     log.warn("{} driver selected", driverName);
-                    throw new UnsupportedProviderException(
-                            driverName + " is not currently supported");
+                    throw new UnsupportedProviderException(driverName + " is not currently supported");
                 }
             };
         } catch (IllegalArgumentException e) {

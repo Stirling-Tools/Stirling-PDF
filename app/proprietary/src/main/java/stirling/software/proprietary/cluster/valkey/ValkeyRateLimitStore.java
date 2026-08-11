@@ -42,20 +42,17 @@ public class ValkeyRateLimitStore implements RateLimitStore {
     void initProxyManager() {
         AbstractRedisClient client = connectionFactory.getNativeClient();
         if (!(client instanceof RedisClient redisClient)) {
-            throw new IllegalStateException(
-                    "ValkeyRateLimitStore requires a standalone Lettuce RedisClient; got "
-                            + (client == null ? "null" : client.getClass().getName())
-                            + " (cluster client not supported by this rate limit impl)");
+            throw new IllegalStateException("ValkeyRateLimitStore requires a standalone Lettuce RedisClient; got "
+                    + (client == null ? "null" : client.getClass().getName())
+                    + " (cluster client not supported by this rate limit impl)");
         }
         // Expire idle bucket keys so they do not accumulate forever in Valkey (one key per
         // user / API-key / IP). TTL tracks the time to refill the bucket from empty, capped at
         // 25h to cover the longest (daily) rate-limit window; an idle bucket evicts after that.
-        this.proxyManager =
-                Bucket4jLettuce.casBasedBuilder(redisClient)
-                        .expirationAfterWrite(
-                                ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(
-                                        Duration.ofHours(25)))
-                        .build();
+        this.proxyManager = Bucket4jLettuce.casBasedBuilder(redisClient)
+                .expirationAfterWrite(
+                        ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofHours(25)))
+                .build();
     }
 
     @PreDestroy
@@ -66,13 +63,9 @@ public class ValkeyRateLimitStore implements RateLimitStore {
     @Override
     public RateLimitDecision tryConsume(String bucketKey, long capacity, Duration refillPeriod) {
         byte[] key = (PREFIX + bucketKey).getBytes(StandardCharsets.UTF_8);
-        BucketConfiguration cfg =
-                BucketConfiguration.builder()
-                        .addLimit(
-                                stage ->
-                                        stage.capacity(capacity)
-                                                .refillGreedy(capacity, refillPeriod))
-                        .build();
+        BucketConfiguration cfg = BucketConfiguration.builder()
+                .addLimit(stage -> stage.capacity(capacity).refillGreedy(capacity, refillPeriod))
+                .build();
         BucketProxy bucket = proxyManager.builder().build(key, () -> cfg);
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
         if (probe.isConsumed()) {

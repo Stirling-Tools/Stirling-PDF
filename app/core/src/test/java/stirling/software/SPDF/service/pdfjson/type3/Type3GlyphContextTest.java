@@ -17,8 +17,11 @@ class Type3GlyphContextTest {
     @Test
     void getFont_returnsFontFromRequest() {
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder().font(font).fontId("F1").pageNumber(1).build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .pageNumber(1)
+                .build();
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
         Type3GlyphContext ctx = new Type3GlyphContext(request, extractor);
         assertSame(font, ctx.getFont());
@@ -28,21 +31,18 @@ class Type3GlyphContextTest {
     void getGlyphs_delegatesToExtractor() throws IOException {
         PDDocument doc = mock(PDDocument.class);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder()
-                        .document(doc)
-                        .font(font)
-                        .fontId("F1")
-                        .pageNumber(2)
-                        .build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .document(doc)
+                .font(font)
+                .fontId("F1")
+                .pageNumber(2)
+                .build();
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
-        List<Type3GlyphOutline> expected =
-                List.of(
-                        Type3GlyphOutline.builder()
-                                .glyphName("A")
-                                .charCode(65)
-                                .advanceWidth(500f)
-                                .build());
+        List<Type3GlyphOutline> expected = List.of(Type3GlyphOutline.builder()
+                .glyphName("A")
+                .charCode(65)
+                .advanceWidth(500f)
+                .build());
         when(extractor.extractGlyphs(doc, font, "F1", 2)).thenReturn(expected);
 
         Type3GlyphContext ctx = new Type3GlyphContext(request, extractor);
@@ -54,13 +54,12 @@ class Type3GlyphContextTest {
     void getGlyphs_cachesResult() throws IOException {
         PDDocument doc = mock(PDDocument.class);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder()
-                        .document(doc)
-                        .font(font)
-                        .fontId("F1")
-                        .pageNumber(1)
-                        .build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .document(doc)
+                .font(font)
+                .fontId("F1")
+                .pageNumber(1)
+                .build();
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
         List<Type3GlyphOutline> expected = List.of();
         when(extractor.extractGlyphs(doc, font, "F1", 1)).thenReturn(expected);
@@ -76,16 +75,14 @@ class Type3GlyphContextTest {
     void getGlyphs_propagatesIOException() throws IOException {
         PDDocument doc = mock(PDDocument.class);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder()
-                        .document(doc)
-                        .font(font)
-                        .fontId("F1")
-                        .pageNumber(1)
-                        .build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .document(doc)
+                .font(font)
+                .fontId("F1")
+                .pageNumber(1)
+                .build();
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
-        when(extractor.extractGlyphs(doc, font, "F1", 1))
-                .thenThrow(new IOException("extraction failed"));
+        when(extractor.extractGlyphs(doc, font, "F1", 1)).thenThrow(new IOException("extraction failed"));
 
         Type3GlyphContext ctx = new Type3GlyphContext(request, extractor);
         assertThrows(IOException.class, ctx::getGlyphs);
@@ -94,13 +91,12 @@ class Type3GlyphContextTest {
     @Test
     void getGlyphs_nullDocumentInRequest() throws IOException {
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder()
-                        .document(null)
-                        .font(font)
-                        .fontId("F1")
-                        .pageNumber(1)
-                        .build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .document(null)
+                .font(font)
+                .fontId("F1")
+                .pageNumber(1)
+                .build();
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
         when(extractor.extractGlyphs(null, font, "F1", 1)).thenReturn(List.of());
 
@@ -113,8 +109,11 @@ class Type3GlyphContextTest {
     @Test
     void constructor_storesRequestAndExtractor() {
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder().font(font).fontId("F2").pageNumber(3).build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F2")
+                .pageNumber(3)
+                .build();
         Type3GlyphExtractor extractor = mock(Type3GlyphExtractor.class);
         Type3GlyphContext ctx = new Type3GlyphContext(request, extractor);
         assertSame(font, ctx.getFont());

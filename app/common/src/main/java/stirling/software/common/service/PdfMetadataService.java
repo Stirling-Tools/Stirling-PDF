@@ -93,14 +93,10 @@ public class PdfMetadataService {
         Calendar modificationCal = pdf.getDocumentInformation().getModificationDate();
 
         ZonedDateTime creationDate =
-                creationCal != null
-                        ? ZonedDateTime.ofInstant(creationCal.toInstant(), ZoneId.systemDefault())
-                        : null;
-        ZonedDateTime modificationDate =
-                modificationCal != null
-                        ? ZonedDateTime.ofInstant(
-                                modificationCal.toInstant(), ZoneId.systemDefault())
-                        : null;
+                creationCal != null ? ZonedDateTime.ofInstant(creationCal.toInstant(), ZoneId.systemDefault()) : null;
+        ZonedDateTime modificationDate = modificationCal != null
+                ? ZonedDateTime.ofInstant(modificationCal.toInstant(), ZoneId.systemDefault())
+                : null;
 
         return PdfMetadata.builder()
                 .author(pdf.getDocumentInformation().getAuthor())
@@ -125,22 +121,20 @@ public class PdfMetadataService {
                         .isAutoUpdateMetadata()
                 && runningProOrHigher) {
 
-            creator =
-                    applicationProperties
-                            .getPremium()
-                            .getProFeatures()
-                            .getCustomMetadata()
-                            .getCreator();
+            creator = applicationProperties
+                    .getPremium()
+                    .getProFeatures()
+                    .getCustomMetadata()
+                    .getCreator();
             pdf.getDocumentInformation().setProducer(stirlingPDFLabel);
         }
 
         pdf.getDocumentInformation().setCreator(creator);
 
         // Use existing creation date if available, otherwise create new one
-        Calendar creationCal =
-                pdfMetadata.getCreationDate() != null
-                        ? toCalendar(pdfMetadata.getCreationDate())
-                        : Calendar.getInstance();
+        Calendar creationCal = pdfMetadata.getCreationDate() != null
+                ? toCalendar(pdfMetadata.getCreationDate())
+                : Calendar.getInstance();
         pdf.getDocumentInformation().setCreationDate(creationCal);
     }
 
@@ -152,10 +146,9 @@ public class PdfMetadataService {
         pdf.getDocumentInformation().setKeywords(pdfMetadata.getKeywords());
 
         // Convert ZonedDateTime to Calendar for PDFBox compatibility
-        Calendar modificationCal =
-                pdfMetadata.getModificationDate() != null
-                        ? toCalendar(pdfMetadata.getModificationDate())
-                        : Calendar.getInstance();
+        Calendar modificationCal = pdfMetadata.getModificationDate() != null
+                ? toCalendar(pdfMetadata.getModificationDate())
+                : Calendar.getInstance();
         pdf.getDocumentInformation().setModificationDate(modificationCal);
 
         String author = pdfMetadata.getAuthor();
@@ -165,12 +158,11 @@ public class PdfMetadataService {
                         .getCustomMetadata()
                         .isAutoUpdateMetadata()
                 && runningProOrHigher) {
-            author =
-                    applicationProperties
-                            .getPremium()
-                            .getProFeatures()
-                            .getCustomMetadata()
-                            .getAuthor();
+            author = applicationProperties
+                    .getPremium()
+                    .getProFeatures()
+                    .getCustomMetadata()
+                    .getAuthor();
 
             if (userService != null) {
                 String username = userService.getCurrentUsername();

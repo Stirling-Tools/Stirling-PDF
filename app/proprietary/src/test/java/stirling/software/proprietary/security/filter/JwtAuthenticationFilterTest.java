@@ -45,27 +45,38 @@ import stirling.software.proprietary.security.service.UserService;
 @ExtendWith(MockitoExtension.class)
 class JwtAuthenticationFilterTest {
 
-    @Mock private JwtServiceInterface jwtService;
+    @Mock
+    private JwtServiceInterface jwtService;
 
-    @Mock private CustomUserDetailsService userDetailsService;
+    @Mock
+    private CustomUserDetailsService userDetailsService;
 
-    @Mock private UserService userService;
+    @Mock
+    private UserService userService;
 
-    @Mock private ApplicationProperties.Security securityProperties;
+    @Mock
+    private ApplicationProperties.Security securityProperties;
 
-    @Mock private HttpServletRequest request;
+    @Mock
+    private HttpServletRequest request;
 
-    @Mock private HttpServletResponse response;
+    @Mock
+    private HttpServletResponse response;
 
-    @Mock private FilterChain filterChain;
+    @Mock
+    private FilterChain filterChain;
 
-    @Mock private UserDetails userDetails;
+    @Mock
+    private UserDetails userDetails;
 
-    @Mock private SecurityContext securityContext;
+    @Mock
+    private SecurityContext securityContext;
 
-    @Mock private AuthenticationEntryPoint authenticationEntryPoint;
+    @Mock
+    private AuthenticationEntryPoint authenticationEntryPoint;
 
-    @InjectMocks private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @InjectMocks
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     void shouldNotAuthenticateWhenJwtDisabled() throws ServletException, IOException {
@@ -107,15 +118,11 @@ class JwtAuthenticationFilterTest {
         try (MockedStatic<SecurityContextHolder> mockedSecurityContextHolder =
                 mockStatic(SecurityContextHolder.class)) {
             UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
             when(securityContext.getAuthentication()).thenReturn(null).thenReturn(authToken);
-            mockedSecurityContextHolder
-                    .when(SecurityContextHolder::getContext)
-                    .thenReturn(securityContext);
-            when(jwtService.generateToken(
-                            any(UsernamePasswordAuthenticationToken.class), eq(claims)))
+            mockedSecurityContextHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+            when(jwtService.generateToken(any(UsernamePasswordAuthenticationToken.class), eq(claims)))
                     .thenReturn(newToken);
 
             jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -123,10 +130,8 @@ class JwtAuthenticationFilterTest {
             verify(jwtService).validateToken(token);
             verify(jwtService).extractClaims(token);
             verify(userDetailsService).loadUserByUsername(username);
-            verify(securityContext)
-                    .setAuthentication(any(UsernamePasswordAuthenticationToken.class));
-            verify(jwtService)
-                    .generateToken(any(UsernamePasswordAuthenticationToken.class), eq(claims));
+            verify(securityContext).setAuthentication(any(UsernamePasswordAuthenticationToken.class));
+            verify(jwtService).generateToken(any(UsernamePasswordAuthenticationToken.class), eq(claims));
             verify(filterChain).doFilter(request, response);
         }
     }
@@ -159,8 +164,7 @@ class JwtAuthenticationFilterTest {
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
 
         verify(jwtService).validateToken(token);
-        verify(authenticationEntryPoint)
-                .commence(eq(request), eq(response), any(AuthenticationFailureException.class));
+        verify(authenticationEntryPoint).commence(eq(request), eq(response), any(AuthenticationFailureException.class));
         verify(filterChain, never()).doFilter(request, response);
     }
 
@@ -200,16 +204,11 @@ class JwtAuthenticationFilterTest {
         try (MockedStatic<SecurityContextHolder> mockedSecurityContextHolder =
                 mockStatic(SecurityContextHolder.class)) {
             when(securityContext.getAuthentication()).thenReturn(null);
-            mockedSecurityContextHolder
-                    .when(SecurityContextHolder::getContext)
-                    .thenReturn(securityContext);
+            mockedSecurityContextHolder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
 
-            UsernameNotFoundException result =
-                    assertThrows(
-                            UsernameNotFoundException.class,
-                            () ->
-                                    jwtAuthenticationFilter.doFilterInternal(
-                                            request, response, filterChain));
+            UsernameNotFoundException result = assertThrows(
+                    UsernameNotFoundException.class,
+                    () -> jwtAuthenticationFilter.doFilterInternal(request, response, filterChain));
 
             assertEquals("User not found: " + username, result.getMessage());
             verify(userDetailsService).loadUserByUsername(username);
@@ -218,8 +217,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void testAuthenticationEntryPointCalledWithCorrectException()
-            throws ServletException, IOException {
+    void testAuthenticationEntryPointCalledWithCorrectException() throws ServletException, IOException {
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(request.getRequestURI()).thenReturn("/protected");
         when(request.getContextPath()).thenReturn("/");
@@ -231,11 +229,7 @@ class JwtAuthenticationFilterTest {
                 .commence(
                         eq(request),
                         eq(response),
-                        argThat(
-                                exception ->
-                                        exception
-                                                .getMessage()
-                                                .equals("JWT is missing from the request")));
+                        argThat(exception -> exception.getMessage().equals("JWT is missing from the request")));
         verify(filterChain, never()).doFilter(request, response);
     }
 }

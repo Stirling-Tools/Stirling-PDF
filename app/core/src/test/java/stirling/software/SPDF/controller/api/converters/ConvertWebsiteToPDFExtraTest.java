@@ -30,26 +30,25 @@ import stirling.software.common.util.TempFileManager;
 @DisplayName("ConvertWebsiteToPDF scheme-detection helpers")
 class ConvertWebsiteToPDFExtraTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private RuntimePathConfig runtimePathConfig;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private ConvertWebsiteToPDF sut;
 
     @BeforeEach
     void setUp() {
-        sut =
-                new ConvertWebsiteToPDF(
-                        pdfDocumentFactory,
-                        runtimePathConfig,
-                        new ApplicationProperties(),
-                        tempFileManager);
+        sut = new ConvertWebsiteToPDF(
+                pdfDocumentFactory, runtimePathConfig, new ApplicationProperties(), tempFileManager);
     }
 
     private boolean containsDisallowed(String html) throws Exception {
-        Method m =
-                ConvertWebsiteToPDF.class.getDeclaredMethod(
-                        "containsDisallowedUriScheme", String.class);
+        Method m = ConvertWebsiteToPDF.class.getDeclaredMethod("containsDisallowedUriScheme", String.class);
         m.setAccessible(true);
         return (boolean) m.invoke(sut, html);
     }
@@ -61,9 +60,7 @@ class ConvertWebsiteToPDFExtraTest {
     }
 
     private String decodeEntities(String content) throws Exception {
-        Method m =
-                ConvertWebsiteToPDF.class.getDeclaredMethod(
-                        "decodeNumericHtmlEntities", String.class);
+        Method m = ConvertWebsiteToPDF.class.getDeclaredMethod("decodeNumericHtmlEntities", String.class);
         m.setAccessible(true);
         return (String) m.invoke(sut, content);
     }
@@ -82,43 +79,46 @@ class ConvertWebsiteToPDFExtraTest {
         @Test
         @DisplayName("plain safe html is allowed")
         void safeHtml() throws Exception {
-            assertThat(
-                            containsDisallowed(
-                                    "<html><body><a href=\"https://x.com\">ok</a></body></html>"))
+            assertThat(containsDisallowed("<html><body><a href=\"https://x.com\">ok</a></body></html>"))
                     .isFalse();
         }
 
         @Test
         @DisplayName("a literal file:/// scheme is rejected")
         void literalFileScheme() throws Exception {
-            assertThat(containsDisallowed("<a href=\"file:///etc/passwd\">x</a>")).isTrue();
+            assertThat(containsDisallowed("<a href=\"file:///etc/passwd\">x</a>"))
+                    .isTrue();
         }
 
         @Test
         @DisplayName("an uppercase FILE: scheme is rejected after lower-casing")
         void uppercaseFileScheme() throws Exception {
-            assertThat(containsDisallowed("<a href=\"FILE://server/share\">x</a>")).isTrue();
+            assertThat(containsDisallowed("<a href=\"FILE://server/share\">x</a>"))
+                    .isTrue();
         }
 
         @Test
         @DisplayName("a percent-encoded file scheme separator is rejected")
         void percentEncodedSeparator() throws Exception {
             // file:%2f%2f decodes to file:// during normalization
-            assertThat(containsDisallowed("<a href=\"file:%2f%2fetc/passwd\">x</a>")).isTrue();
+            assertThat(containsDisallowed("<a href=\"file:%2f%2fetc/passwd\">x</a>"))
+                    .isTrue();
         }
 
         @Test
         @DisplayName("an html-entity encoded slash sequence is rejected")
         void htmlEntitySlashes() throws Exception {
             // file:&#47;&#47; -> file:// after numeric-entity decoding
-            assertThat(containsDisallowed("<a href=\"file:&#47;&#47;etc\">x</a>")).isTrue();
+            assertThat(containsDisallowed("<a href=\"file:&#47;&#47;etc\">x</a>"))
+                    .isTrue();
         }
 
         @Test
         @DisplayName("a named-entity colon/slash sequence is rejected")
         void namedEntitySlashes() throws Exception {
             // file&colon;&sol;&sol; -> file:// after named-entity replacement
-            assertThat(containsDisallowed("<a href=\"file&colon;&sol;&sol;etc\">x</a>")).isTrue();
+            assertThat(containsDisallowed("<a href=\"file&colon;&sol;&sol;etc\">x</a>"))
+                    .isTrue();
         }
 
         @Test

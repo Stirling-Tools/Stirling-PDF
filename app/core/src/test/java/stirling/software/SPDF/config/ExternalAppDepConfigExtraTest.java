@@ -43,8 +43,11 @@ import stirling.software.common.configuration.RuntimePathConfig;
 @DisplayName("ExternalAppDepConfig helper coverage")
 class ExternalAppDepConfigExtraTest {
 
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
 
     private ExternalAppDepConfig config;
 
@@ -55,9 +58,7 @@ class ExternalAppDepConfigExtraTest {
         when(runtimePathConfig.getCalibrePath()).thenReturn("/opt/calibre");
         when(runtimePathConfig.getOcrMyPdfPath()).thenReturn("/opt/ocrmypdf");
         when(runtimePathConfig.getSOfficePath()).thenReturn("/opt/soffice");
-        lenient()
-                .when(endpointConfiguration.getEndpointsForGroup(anyString()))
-                .thenReturn(Set.of());
+        lenient().when(endpointConfiguration.getEndpointsForGroup(anyString())).thenReturn(Set.of());
         config = new ExternalAppDepConfig(endpointConfiguration, runtimePathConfig);
     }
 
@@ -87,8 +88,7 @@ class ExternalAppDepConfigExtraTest {
     class VersionComparator {
 
         private Comparable<Object> version(String v) throws Exception {
-            Class<?> versionClass =
-                    Class.forName("stirling.software.SPDF.config.ExternalAppDepConfig$Version");
+            Class<?> versionClass = Class.forName("stirling.software.SPDF.config.ExternalAppDepConfig$Version");
             Constructor<?> ctor = versionClass.getDeclaredConstructor(String.class);
             ctor.setAccessible(true);
             @SuppressWarnings("unchecked")
@@ -162,8 +162,7 @@ class ExternalAppDepConfigExtraTest {
         }
 
         private String formatEndpointAsFeature(String endpoint) throws Exception {
-            return (String)
-                    invoke("formatEndpointAsFeature", new Class<?>[] {String.class}, endpoint);
+            return (String) invoke("formatEndpointAsFeature", new Class<?>[] {String.class}, endpoint);
         }
 
         @Test
@@ -207,22 +206,18 @@ class ExternalAppDepConfigExtraTest {
 
         @SuppressWarnings("unchecked")
         private Optional<String> findFirstAvailable(List<String> commands) throws Exception {
-            return (Optional<String>)
-                    invoke("findFirstAvailable", new Class<?>[] {List.class}, commands);
+            return (Optional<String>) invoke("findFirstAvailable", new Class<?>[] {List.class}, commands);
         }
 
         @Test
         @DisplayName("returns the first command whose lookup probe succeeds")
         void returnsFirstSuccessful() throws Exception {
             // python3 lookup fails (exit 1), python lookup succeeds (exit 0)
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    mockConstruction(
-                            ProcessBuilder.class,
-                            (pbMock, ctx) -> {
-                                List<?> cmd = (List<?>) ctx.arguments().get(0);
-                                boolean python = cmd.contains("python");
-                                doReturn(processReturning(python ? 0 : 1, "")).when(pbMock).start();
-                            })) {
+            try (MockedConstruction<ProcessBuilder> ignored = mockConstruction(ProcessBuilder.class, (pbMock, ctx) -> {
+                List<?> cmd = (List<?>) ctx.arguments().get(0);
+                boolean python = cmd.contains("python");
+                doReturn(processReturning(python ? 0 : 1, "")).when(pbMock).start();
+            })) {
                 Optional<String> result = findFirstAvailable(List.of("python3", "python"));
                 assertThat(result).contains("python");
             }
@@ -231,11 +226,10 @@ class ExternalAppDepConfigExtraTest {
         @Test
         @DisplayName("returns empty when no command is available")
         void emptyWhenNoneAvailable() throws Exception {
-            try (MockedConstruction<ProcessBuilder> ignored =
-                    mockConstruction(
-                            ProcessBuilder.class,
-                            (pbMock, ctx) ->
-                                    doReturn(processReturning(1, "")).when(pbMock).start())) {
+            try (MockedConstruction<ProcessBuilder> ignored = mockConstruction(
+                    ProcessBuilder.class,
+                    (pbMock, ctx) ->
+                            doReturn(processReturning(1, "")).when(pbMock).start())) {
                 Optional<String> result = findFirstAvailable(List.of("nope1", "nope2"));
                 assertThat(result).isEmpty();
             }

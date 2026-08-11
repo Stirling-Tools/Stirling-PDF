@@ -44,25 +44,24 @@ import stirling.software.common.util.TempFileManager;
 @DisplayName("MultiPageLayoutController options")
 class MultiPageLayoutControllerMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private MultiPageLayoutController controller;
 
     @BeforeEach
     void setUp() throws Exception {
         controller = new MultiPageLayoutController(pdfDocumentFactory, tempFileManager);
-        when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("mpl", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("mpl", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     /** Wires the factory to load real source pages and return a real target document. */
@@ -73,8 +72,7 @@ class MultiPageLayoutControllerMoreTest {
         }
         when(pdfDocumentFactory.load(any(org.springframework.web.multipart.MultipartFile.class)))
                 .thenReturn(source);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(source))
-                .thenReturn(new PDDocument());
+        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(source)).thenReturn(new PDDocument());
     }
 
     private static MockMultipartFile file() {
@@ -97,9 +95,7 @@ class MultiPageLayoutControllerMoreTest {
         void unknownModeThrows() {
             MergeMultiplePagesRequest req = base();
             req.setMode("WEIRD");
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.mergeMultiplePagesIntoOne(req));
+            assertThrows(IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
         }
 
         @Test
@@ -109,9 +105,7 @@ class MultiPageLayoutControllerMoreTest {
             req.setMode("CUSTOM");
             req.setRows(0);
             req.setCols(2);
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.mergeMultiplePagesIntoOne(req));
+            assertThrows(IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
         }
 
         @Test
@@ -119,9 +113,7 @@ class MultiPageLayoutControllerMoreTest {
         void invalidOrientationThrows() {
             MergeMultiplePagesRequest req = base();
             req.setOrientation("DIAGONAL");
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.mergeMultiplePagesIntoOne(req));
+            assertThrows(IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
         }
 
         @Test
@@ -129,9 +121,7 @@ class MultiPageLayoutControllerMoreTest {
         void invalidArrangementThrows() {
             MergeMultiplePagesRequest req = base();
             req.setArrangement("SPIRAL");
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.mergeMultiplePagesIntoOne(req));
+            assertThrows(IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
         }
 
         @Test
@@ -139,9 +129,7 @@ class MultiPageLayoutControllerMoreTest {
         void invalidReadingDirectionThrows() {
             MergeMultiplePagesRequest req = base();
             req.setReadingDirection("DIAGONAL");
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.mergeMultiplePagesIntoOne(req));
+            assertThrows(IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
         }
 
         @Test
@@ -149,9 +137,7 @@ class MultiPageLayoutControllerMoreTest {
         void negativeMarginsThrows() {
             MergeMultiplePagesRequest req = base();
             req.setTopMargin(-1);
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.mergeMultiplePagesIntoOne(req));
+            assertThrows(IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
         }
 
         @Test
@@ -162,9 +148,7 @@ class MultiPageLayoutControllerMoreTest {
             // A4 width is ~595pt; 600 left margin alone makes cell width non-positive.
             req.setLeftMargin(600);
             req.setRightMargin(600);
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.mergeMultiplePagesIntoOne(req));
+            assertThrows(IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
         }
 
         @Test
@@ -173,9 +157,7 @@ class MultiPageLayoutControllerMoreTest {
             wireDocuments(1);
             MergeMultiplePagesRequest req = base();
             req.setInnerMargin(1000);
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.mergeMultiplePagesIntoOne(req));
+            assertThrows(IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
         }
     }
 

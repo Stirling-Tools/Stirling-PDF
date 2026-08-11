@@ -77,13 +77,8 @@ class CustomColorReplaceStrategyMoreTest {
         @Test
         @DisplayName("restyles text and overlays a background, returning a valid PDF")
         void customColoursProduceValidPdf() throws Exception {
-            CustomColorReplaceStrategy strategy =
-                    new CustomColorReplaceStrategy(
-                            pdf(pdfWithText("Hello World")),
-                            ReplaceAndInvert.CUSTOM_COLOR,
-                            "#000000",
-                            "#FFFFFF",
-                            null);
+            CustomColorReplaceStrategy strategy = new CustomColorReplaceStrategy(
+                    pdf(pdfWithText("Hello World")), ReplaceAndInvert.CUSTOM_COLOR, "#000000", "#FFFFFF", null);
 
             InputStreamResource result = strategy.replace();
             assertThat(result).isNotNull();
@@ -93,13 +88,8 @@ class CustomColorReplaceStrategyMoreTest {
         @Test
         @DisplayName("a page without any text still gets the background overlay")
         void emptyPageStillProcessed() throws Exception {
-            CustomColorReplaceStrategy strategy =
-                    new CustomColorReplaceStrategy(
-                            pdf(emptyPagePdf()),
-                            ReplaceAndInvert.CUSTOM_COLOR,
-                            "#112233",
-                            "#AABBCC",
-                            null);
+            CustomColorReplaceStrategy strategy = new CustomColorReplaceStrategy(
+                    pdf(emptyPagePdf()), ReplaceAndInvert.CUSTOM_COLOR, "#112233", "#AABBCC", null);
 
             InputStreamResource result = strategy.replace();
             assertThat(pageCount(result)).isEqualTo(1);
@@ -108,13 +98,8 @@ class CustomColorReplaceStrategyMoreTest {
         @Test
         @DisplayName("text restyling runs through the font-encoding path without failing")
         void fontEncodingPathExercised() throws Exception {
-            CustomColorReplaceStrategy strategy =
-                    new CustomColorReplaceStrategy(
-                            pdf(pdfWithText("Hi there 123")),
-                            ReplaceAndInvert.CUSTOM_COLOR,
-                            "#101010",
-                            "#FFFFFF",
-                            null);
+            CustomColorReplaceStrategy strategy = new CustomColorReplaceStrategy(
+                    pdf(pdfWithText("Hi there 123")), ReplaceAndInvert.CUSTOM_COLOR, "#101010", "#FFFFFF", null);
 
             InputStreamResource result = strategy.replace();
             assertThat(pageCount(result)).isEqualTo(1);
@@ -128,13 +113,12 @@ class CustomColorReplaceStrategyMoreTest {
         @Test
         @DisplayName("high-contrast mode resolves colours from the combination and produces a PDF")
         void highContrastProducesValidPdf() throws Exception {
-            CustomColorReplaceStrategy strategy =
-                    new CustomColorReplaceStrategy(
-                            pdf(pdfWithText("Contrast")),
-                            ReplaceAndInvert.HIGH_CONTRAST_COLOR,
-                            null,
-                            null,
-                            HighContrastColorCombination.WHITE_TEXT_ON_BLACK);
+            CustomColorReplaceStrategy strategy = new CustomColorReplaceStrategy(
+                    pdf(pdfWithText("Contrast")),
+                    ReplaceAndInvert.HIGH_CONTRAST_COLOR,
+                    null,
+                    null,
+                    HighContrastColorCombination.WHITE_TEXT_ON_BLACK);
 
             InputStreamResource result = strategy.replace();
             assertThat(pageCount(result)).isEqualTo(1);
@@ -148,13 +132,8 @@ class CustomColorReplaceStrategyMoreTest {
         @Test
         @DisplayName("a non-PDF payload causes replace() to throw")
         void nonPdfThrows() {
-            CustomColorReplaceStrategy strategy =
-                    new CustomColorReplaceStrategy(
-                            pdf("not a pdf".getBytes()),
-                            ReplaceAndInvert.CUSTOM_COLOR,
-                            "000000",
-                            "FFFFFF",
-                            null);
+            CustomColorReplaceStrategy strategy = new CustomColorReplaceStrategy(
+                    pdf("not a pdf".getBytes()), ReplaceAndInvert.CUSTOM_COLOR, "000000", "FFFFFF", null);
 
             assertThatThrownBy(strategy::replace).isInstanceOf(IOException.class);
         }

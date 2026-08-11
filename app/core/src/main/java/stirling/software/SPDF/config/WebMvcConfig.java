@@ -41,15 +41,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String staticPath =
-                "file:"
-                        + stirling.software.common.configuration.InstallationPathConfig
-                                .getStaticPath();
+        String staticPath = "file:" + stirling.software.common.configuration.InstallationPathConfig.getStaticPath();
 
         // 1. Service worker and PWA metadata (never store)
         // Browsers revalidate SW bytes anyway; no-store is the safest for atomic updates.
-        registry.addResourceHandler(
-                        "/sw.js", "/manifest.json", "/site.webmanifest", "/browserconfig.xml")
+        registry.addResourceHandler("/sw.js", "/manifest.json", "/site.webmanifest", "/browserconfig.xml")
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(CacheControl.noStore())
                 .resourceChain(true)
@@ -127,9 +123,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         staticPath + "classic-logo/",
                         "classpath:/static/classic-logo/")
                 .setCacheControl(
-                        CacheControl.maxAge(Duration.ofDays(1))
-                                .cachePublic()
-                                .staleWhileRevalidate(Duration.ofDays(7)))
+                        CacheControl.maxAge(Duration.ofDays(1)).cachePublic().staleWhileRevalidate(Duration.ofDays(7)))
                 .resourceChain(true)
                 .addResolver(new EncodedResourceResolver());
 
@@ -145,14 +139,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         // Check if running in Tauri mode
-        boolean isTauriMode =
-                Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
+        boolean isTauriMode = Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
 
         // Check if user has configured custom origins
-        boolean hasConfiguredOrigins =
-                applicationProperties.getSystem() != null
-                        && applicationProperties.getSystem().getCorsAllowedOrigins() != null
-                        && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty();
+        boolean hasConfiguredOrigins = applicationProperties.getSystem() != null
+                && applicationProperties.getSystem().getCorsAllowedOrigins() != null
+                && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty();
 
         if (isTauriMode) {
             // Automatically enable CORS for Tauri desktop app
@@ -234,9 +226,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     .maxAge(3600);
         } else {
             // Default to allowing all origins when nothing is configured
-            logger.debug(
-                    "No CORS allowed origins configured in settings.yml"
-                            + " (system.corsAllowedOrigins); WebMvcConfig allowing all origins.");
+            logger.debug("No CORS allowed origins configured in settings.yml"
+                    + " (system.corsAllowedOrigins); WebMvcConfig allowing all origins.");
             registry.addMapping("/**")
                     .allowedOriginPatterns("*")
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")

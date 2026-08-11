@@ -64,23 +64,20 @@ public class ValidateSignatureController {
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(
-                MultipartFile.class,
-                new PropertyEditorSupport() {
-                    @Override
-                    public void setAsText(String text) throws IllegalArgumentException {
-                        setValue(null);
-                    }
-                });
+        binder.registerCustomEditor(MultipartFile.class, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) throws IllegalArgumentException {
+                setValue(null);
+            }
+        });
     }
 
     @JsonDataResponse
     @ToolIO(produces = ToolFormat.JSON)
     @Operation(
             summary = "Validate PDF Digital Signature",
-            description =
-                    "Validates the digital signatures in a PDF file using PKIX path building and"
-                            + " time-of-signing semantics. Supports custom trust anchors.")
+            description = "Validates the digital signatures in a PDF file using PKIX path building and"
+                    + " time-of-signing semantics. Supports custom trust anchors.")
     @AutoJobPostMapping(
             value = "/validate-signature",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -99,11 +96,7 @@ public class ValidateSignatureController {
                 customCert = (X509Certificate) cf.generateCertificate(certStream);
             } catch (CertificateException e) {
                 throw ExceptionUtils.createRuntimeException(
-                        "error.invalidFormat",
-                        "Invalid {0} format: {1}",
-                        e,
-                        "certificate file",
-                        e.getMessage());
+                        "error.invalidFormat", "Invalid {0} format: {1}", e, "certificate file", e.getMessage());
             }
         }
 
@@ -148,9 +141,7 @@ public class ValidateSignatureController {
                         signedData = new CMSSignedData(new ByteArrayInputStream(signatureBytes));
                     } else {
                         CMSProcessable content = new CMSProcessableByteArray(signedContent);
-                        signedData =
-                                new CMSSignedData(
-                                        content, new ByteArrayInputStream(signatureBytes));
+                        signedData = new CMSSignedData(content, new ByteArrayInputStream(signatureBytes));
                     }
 
                     // What actually binds a timestamp to this document: the TSTInfo's message
@@ -163,8 +154,7 @@ public class ValidateSignatureController {
                         timeStampGenTime = info.getGenTime();
                         if (!timestampCoversContent(info, signedContent)) {
                             result.setValid(false);
-                            result.setErrorMessage(
-                                    "Timestamp message imprint does not match the document");
+                            result.setErrorMessage("Timestamp message imprint does not match the document");
                             results.add(result);
                             continue;
                         }
@@ -174,27 +164,25 @@ public class ValidateSignatureController {
                     SignerInformationStore signerStore = signedData.getSignerInfos();
 
                     for (SignerInformation signerInfo : signerStore.getSigners()) {
-                        X509CertificateHolder certHolder =
-                                (X509CertificateHolder)
-                                        certStore.getMatches(signerInfo.getSID()).iterator().next();
-                        X509Certificate signerCert =
-                                new JcaX509CertificateConverter().getCertificate(certHolder);
+                        X509CertificateHolder certHolder = (X509CertificateHolder) certStore
+                                .getMatches(signerInfo.getSID())
+                                .iterator()
+                                .next();
+                        X509Certificate signerCert = new JcaX509CertificateConverter().getCertificate(certHolder);
 
                         // Extract intermediate certificates from CMS
                         Collection<X509Certificate> intermediates =
-                                certValidationService.extractIntermediateCertificates(
-                                        certStore, signerCert);
+                                certValidationService.extractIntermediateCertificates(certStore, signerCert);
 
                         // Log what we found
-                        log.debug(
-                                "Found {} intermediate certificates in CMS signature",
-                                intermediates.size());
+                        log.debug("Found {} intermediate certificates in CMS signature", intermediates.size());
                         for (X509Certificate inter : intermediates) {
                             log.debug(
                                     "  → Intermediate: {}",
                                     inter.getSubjectX500Principal().getName());
                             log.debug(
-                                    "    Issuer DN: {}", inter.getIssuerX500Principal().getName());
+                                    "    Issuer DN: {}",
+                                    inter.getIssuerX500Principal().getName());
                         }
 
                         // Determine validation time (TSA timestamp or signingTime, or current)
@@ -219,17 +207,15 @@ public class ValidateSignatureController {
 
                         // Verify cryptographic signature
                         boolean cmsValid =
-                                signerInfo.verify(
-                                        new JcaSimpleSignerInfoVerifierBuilder().build(signerCert));
+                                signerInfo.verify(new JcaSimpleSignerInfoVerifierBuilder().build(signerCert));
                         result.setValid(cmsValid);
 
                         // Build and validate certificate path
                         boolean chainValid = false;
                         boolean trustValid = false;
                         try {
-                            PKIXCertPathBuilderResult pathResult =
-                                    certValidationService.buildAndValidatePath(
-                                            signerCert, intermediates, customCert, validationTime);
+                            PKIXCertPathBuilderResult pathResult = certValidationService.buildAndValidatePath(
+                                    signerCert, intermediates, customCert, validationTime);
                             chainValid = true;
                             trustValid = true; // Path ends at trust anchor
                             result.setCertPathLength(
@@ -250,9 +236,7 @@ public class ValidateSignatureController {
                         result.setTrustValid(trustValid);
 
                         // Check validity at validation time
-                        boolean outside =
-                                certValidationService.isOutsideValidityPeriod(
-                                        signerCert, validationTime);
+                        boolean outside = certValidationService.isOutsideValidityPeriod(signerCert, validationTime);
                         result.setNotExpired(!outside);
 
                         // Revocation status determination
@@ -269,9 +253,7 @@ public class ValidateSignatureController {
                                         .toLowerCase()
                                         .contains("revocation")) {
                             // Check if failure was revocation-related
-                            if (result.getChainValidationError()
-                                    .toLowerCase()
-                                    .contains("unable to check")) {
+                            if (result.getChainValidationError().toLowerCase().contains("unable to check")) {
                                 result.setRevocationStatus("soft-fail");
                             } else {
                                 result.setRevocationStatus("revoked");
@@ -295,18 +277,16 @@ public class ValidateSignatureController {
                         // Set certificate details (from signer cert)
                         result.setIssuerDN(signerCert.getIssuerX500Principal().getName());
                         result.setSubjectDN(signerCert.getSubjectX500Principal().getName());
-                        result.setSerialNumber(
-                                signerCert.getSerialNumber().toString(16)); // Hex format
+                        result.setSerialNumber(signerCert.getSerialNumber().toString(16)); // Hex format
                         result.setValidFrom(signerCert.getNotBefore().toString());
                         result.setValidUntil(signerCert.getNotAfter().toString());
                         result.setSignatureAlgorithm(signerCert.getSigAlgName());
 
                         // Get key size (if possible)
                         try {
-                            result.setKeySize(
-                                    ((RSAPublicKey) signerCert.getPublicKey())
-                                            .getModulus()
-                                            .bitLength());
+                            result.setKeySize(((RSAPublicKey) signerCert.getPublicKey())
+                                    .getModulus()
+                                    .bitLength());
                         } catch (Exception e) {
                             // If not RSA or error, set to 0
                             result.setKeySize(0);
@@ -358,8 +338,7 @@ public class ValidateSignatureController {
      * <p>The digest algorithm is taken from the token rather than assumed, because a TSA chooses it
      * - assuming SHA-256 would silently fail against any TSA that uses something else.
      */
-    private static boolean timestampCoversContent(TimeStampTokenInfo info, byte[] signedContent)
-            throws Exception {
+    private static boolean timestampCoversContent(TimeStampTokenInfo info, byte[] signedContent) throws Exception {
         org.bouncycastle.operator.DigestCalculator digest =
                 new JcaDigestCalculatorProviderBuilder().build().get(info.getHashAlgorithm());
         try (java.io.OutputStream out = digest.getOutputStream()) {

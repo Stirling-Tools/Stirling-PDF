@@ -79,8 +79,7 @@ public class McpSecurityConfig {
     @PostConstruct
     void validateConfigOnStartup() {
         log.info("MCP server enabled - validating configuration:");
-        for (McpConfigValidator.Finding finding :
-                McpConfigValidator.validate(applicationProperties.getMcp())) {
+        for (McpConfigValidator.Finding finding : McpConfigValidator.validate(applicationProperties.getMcp())) {
             if (finding.severity() == McpConfigValidator.Severity.WARN) {
                 log.warn("MCP config: {}", finding.message());
             } else {
@@ -91,8 +90,7 @@ public class McpSecurityConfig {
 
     @Bean
     @Order(0)
-    SecurityFilterChain mcpSecurityFilterChain(HttpSecurity http, JwtDecoder mcpJwtDecoder)
-            throws Exception {
+    SecurityFilterChain mcpSecurityFilterChain(HttpSecurity http, JwtDecoder mcpJwtDecoder) throws Exception {
         ApplicationProperties.Mcp.Auth auth = applicationProperties.getMcp().getAuth();
         if (isApiKeyMode()) {
             return apiKeyFilterChain(http);
@@ -101,7 +99,8 @@ public class McpSecurityConfig {
     }
 
     private boolean isApiKeyMode() {
-        return "apikey".equalsIgnoreCase(applicationProperties.getMcp().getAuth().getMode());
+        return "apikey"
+                .equalsIgnoreCase(applicationProperties.getMcp().getAuth().getMode());
     }
 
     /**
@@ -119,33 +118,25 @@ public class McpSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a.anyRequest().authenticated())
-                .exceptionHandling(
-                        e ->
-                                e.authenticationEntryPoint(
-                                        (request, response, ex) -> {
-                                            response.setStatus(401);
-                                            response.setHeader(
-                                                    "WWW-Authenticate",
-                                                    "Bearer realm=\"Stirling MCP (API key)\"");
-                                            response.setContentType("application/json");
-                                            response.getWriter()
-                                                    .write(
-                                                            "{\"error\":\"unauthorized\",\"message\":\"Provide a valid Stirling API key via the X-API-KEY header (or Authorization: Bearer <key>).\"}");
-                                        }))
+                .exceptionHandling(e -> e.authenticationEntryPoint((request, response, ex) -> {
+                    response.setStatus(401);
+                    response.setHeader("WWW-Authenticate", "Bearer realm=\"Stirling MCP (API key)\"");
+                    response.setContentType("application/json");
+                    response.getWriter()
+                            .write(
+                                    "{\"error\":\"unauthorized\",\"message\":\"Provide a valid Stirling API key via the X-API-KEY header (or Authorization: Bearer <key>).\"}");
+                }))
                 .addFilterBefore(
-                        new McpRequestSizeFilter(
-                                applicationProperties.getMcp().getMaxRequestBytes()),
+                        new McpRequestSizeFilter(applicationProperties.getMcp().getMaxRequestBytes()),
                         AuthorizationFilter.class)
                 // Authenticate before the anonymous filter sets an anonymous token.
-                .addFilterBefore(
-                        new McpApiKeyAuthFilter(userService), AnonymousAuthenticationFilter.class);
+                .addFilterBefore(new McpApiKeyAuthFilter(userService), AnonymousAuthenticationFilter.class);
         return http.build();
     }
 
     /** OAuth2 resource-server chain (JWT, RFC 8707 audience, RFC 9728 metadata). */
     private SecurityFilterChain oauthFilterChain(
-            HttpSecurity http, JwtDecoder mcpJwtDecoder, ApplicationProperties.Mcp.Auth auth)
-            throws Exception {
+            HttpSecurity http, JwtDecoder mcpJwtDecoder, ApplicationProperties.Mcp.Auth auth) throws Exception {
         String metadataPath = "/.well-known/oauth-protected-resource";
         applyCors(http);
         // RFC 9728 section 3.1: clients derive the metadata URL by inserting the well-known
@@ -161,45 +152,28 @@ public class McpSecurityConfig {
                 // guarantee, and the .well-known metadata endpoint only serves GET.
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(
-                        a ->
-                                a.requestMatchers(
-                                                HttpMethod.GET, metadataPath, metadataPath + "/**")
-                                        .permitAll()
-                                        .anyRequest()
-                                        .authenticated())
+                .authorizeHttpRequests(a -> a.requestMatchers(HttpMethod.GET, metadataPath, metadataPath + "/**")
+                        .permitAll()
+                        .anyRequest()
+                        .authenticated())
                 // Cap body size pre-auth, then bind the validated token to a Stirling user after
                 // the bearer filter.
                 .addFilterBefore(
-                        new McpRequestSizeFilter(
-                                applicationProperties.getMcp().getMaxRequestBytes()),
+                        new McpRequestSizeFilter(applicationProperties.getMcp().getMaxRequestBytes()),
                         BearerTokenAuthenticationFilter.class)
                 .addFilterAfter(
-                        new McpUserBindingFilter(
-                                userService,
-                                auth.getUsernameClaim(),
-                                auth.isRequireExistingAccount()),
+                        new McpUserBindingFilter(userService, auth.getUsernameClaim(), auth.isRequireExistingAccount()),
                         BearerTokenAuthenticationFilter.class)
-                .oauth2ResourceServer(
-                        oauth2 ->
-                                oauth2.authenticationEntryPoint(
-                                                // Advertise the path-inserted form; RFC 9728 makes
-                                                // it the canonical location for a resource with a
-                                                // path component.
-                                                new McpAuthenticationEntryPoint(
-                                                        metadataPath + BASE_PATH))
-                                        // RFC 9728 protected-resource metadata for OAuth discovery.
-                                        .protectedResourceMetadata(
-                                                prm ->
-                                                        prm.protectedResourceMetadataCustomizer(
-                                                                builder ->
-                                                                        buildResourceMetadata(
-                                                                                builder, auth)))
-                                        .jwt(
-                                                jwt ->
-                                                        jwt.decoder(mcpJwtDecoder)
-                                                                .jwtAuthenticationConverter(
-                                                                        mcpJwtAuthenticationConverter())));
+                .oauth2ResourceServer(oauth2 -> oauth2.authenticationEntryPoint(
+                                // Advertise the path-inserted form; RFC 9728 makes
+                                // it the canonical location for a resource with a
+                                // path component.
+                                new McpAuthenticationEntryPoint(metadataPath + BASE_PATH))
+                        // RFC 9728 protected-resource metadata for OAuth discovery.
+                        .protectedResourceMetadata(prm -> prm.protectedResourceMetadataCustomizer(
+                                builder -> buildResourceMetadata(builder, auth)))
+                        .jwt(jwt -> jwt.decoder(mcpJwtDecoder)
+                                .jwtAuthenticationConverter(mcpJwtAuthenticationConverter())));
         return http.build();
     }
 
@@ -233,17 +207,12 @@ public class McpSecurityConfig {
             };
         }
         String jwksUri = auth.getJwksUri();
-        NimbusJwtDecoder decoder =
-                jwksUri.isBlank()
-                        ? NimbusJwtDecoder.withIssuerLocation(auth.getIssuerUri()).build()
-                        : NimbusJwtDecoder.withJwkSetUri(jwksUri).build();
-        OAuth2TokenValidator<Jwt> defaultValidators =
-                JwtValidators.createDefaultWithIssuer(auth.getIssuerUri());
-        OAuth2TokenValidator<Jwt> combined =
-                new DelegatingOAuth2TokenValidator<>(
-                        defaultValidators,
-                        new McpAudienceValidator(
-                                auth.getResourceId(), auth.getAcceptedAudiences()));
+        NimbusJwtDecoder decoder = jwksUri.isBlank()
+                ? NimbusJwtDecoder.withIssuerLocation(auth.getIssuerUri()).build()
+                : NimbusJwtDecoder.withJwkSetUri(jwksUri).build();
+        OAuth2TokenValidator<Jwt> defaultValidators = JwtValidators.createDefaultWithIssuer(auth.getIssuerUri());
+        OAuth2TokenValidator<Jwt> combined = new DelegatingOAuth2TokenValidator<>(
+                defaultValidators, new McpAudienceValidator(auth.getResourceId(), auth.getAcceptedAudiences()));
         decoder.setJwtValidator(combined);
         return decoder;
     }
@@ -253,17 +222,16 @@ public class McpSecurityConfig {
         scopes.setAuthorityPrefix("SCOPE_");
         scopes.setAuthoritiesClaimName("scope");
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(
-                jwt -> {
-                    Collection<GrantedAuthority> out = new ArrayList<>(scopes.convert(jwt));
-                    List<String> aud = jwt.getAudience();
-                    if (aud != null) {
-                        for (String a : aud) {
-                            out.add(new SimpleGrantedAuthority("AUDIENCE_" + a));
-                        }
-                    }
-                    return out;
-                });
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Collection<GrantedAuthority> out = new ArrayList<>(scopes.convert(jwt));
+            List<String> aud = jwt.getAudience();
+            if (aud != null) {
+                for (String a : aud) {
+                    out.add(new SimpleGrantedAuthority("AUDIENCE_" + a));
+                }
+            }
+            return out;
+        });
         return converter;
     }
 }

@@ -42,8 +42,7 @@ class FileToolScopeTest {
     @Test
     void download_withoutReadScope_isRefused() {
         StirlingDownloadTool tool =
-                new StirlingDownloadTool(
-                        mapper, mock(FileStorage.class), new ApplicationProperties());
+                new StirlingDownloadTool(mapper, mock(FileStorage.class), new ApplicationProperties());
         ObjectNode args = mapper.createObjectNode();
         args.put("fileId", "abc");
 

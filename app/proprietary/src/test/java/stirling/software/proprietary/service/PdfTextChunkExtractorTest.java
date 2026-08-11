@@ -90,9 +90,7 @@ class PdfTextChunkExtractorTest {
         try (PDDocument doc = Loader.loadPDF(pdf)) {
             List<TextChunk> chunks = extractor.extract(doc);
             assertEquals(
-                    2000,
-                    chunks.size(),
-                    "Extractor should cap at MAX_CHUNKS_PER_DOC (2000); got=" + chunks.size());
+                    2000, chunks.size(), "Extractor should cap at MAX_CHUNKS_PER_DOC (2000); got=" + chunks.size());
         }
     }
 

@@ -17,9 +17,7 @@ public class MembershipTeamLeadLookup implements TeamLeadLookup {
 
     @Override
     public boolean isAnyTeamLeader(User user) {
-        return user != null
-                && user.getId() != null
-                && memberships.existsByUserIdAndRole(user.getId(), TeamRole.LEADER);
+        return user != null && user.getId() != null && memberships.existsByUserIdAndRole(user.getId(), TeamRole.LEADER);
     }
 
     @Override
@@ -27,7 +25,6 @@ public class MembershipTeamLeadLookup implements TeamLeadLookup {
         return user != null
                 && user.getId() != null
                 && teamId != null
-                && memberships.existsByTeamIdAndUserIdAndRole(
-                        teamId, user.getId(), TeamRole.LEADER);
+                && memberships.existsByTeamIdAndUserIdAndRole(teamId, user.getId(), TeamRole.LEADER);
     }
 }

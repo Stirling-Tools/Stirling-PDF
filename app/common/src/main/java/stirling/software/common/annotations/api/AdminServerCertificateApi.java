@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/admin/server-certificate")
-@Tag(
-        name = "Admin - Server Certificate",
-        description =
-                """
+@Tag(name = "Admin - Server Certificate", description = """
                 Server certificate management for secure enterprise deployments and encrypted communications.
 
                 This endpoint group provides certificate lifecycle management for organizations

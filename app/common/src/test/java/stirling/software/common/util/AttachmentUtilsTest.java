@@ -33,8 +33,7 @@ class AttachmentUtilsTest {
             AttachmentUtils.setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
 
             COSDictionary catalogDict = document.getDocumentCatalog().getCOSObject();
-            COSDictionary viewerPrefs =
-                    (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
+            COSDictionary viewerPrefs = (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
             assertNotNull(viewerPrefs);
         } catch (Exception e) {
             fail("Should not throw: " + e.getMessage());
@@ -48,8 +47,7 @@ class AttachmentUtilsTest {
             AttachmentUtils.setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
 
             COSDictionary catalogDict = document.getDocumentCatalog().getCOSObject();
-            COSDictionary viewerPrefs =
-                    (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
+            COSDictionary viewerPrefs = (COSDictionary) catalogDict.getDictionaryObject(COSName.VIEWER_PREFERENCES);
             assertTrue(viewerPrefs.getBoolean(COSName.getPDFName("DisplayDocTitle"), false));
         } catch (Exception e) {
             fail("Should not throw: " + e.getMessage());
@@ -62,9 +60,6 @@ class AttachmentUtilsTest {
         PDDocument document = mock(PDDocument.class);
         when(document.getDocumentCatalog()).thenReturn(null);
 
-        assertDoesNotThrow(
-                () ->
-                        AttachmentUtils.setCatalogViewerPreferences(
-                                document, PageMode.USE_ATTACHMENTS));
+        assertDoesNotThrow(() -> AttachmentUtils.setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS));
     }
 }

@@ -35,30 +35,28 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class RearrangePagesPDFControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private RearrangePagesPDFController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private RearrangePagesPDFController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private MockMultipartFile createMockPdf() {
-        return new MockMultipartFile(
-                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
+        return new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
     }
 
     /** Build a real, in-memory PDDocument with the requested number of blank pages. */
@@ -331,8 +329,7 @@ class RearrangePagesPDFControllerTest {
     }
 
     @Test
-    void testRearrangePages_SideStitchBooklet_RepeatedPaddingPagesAreDistinctNodes()
-            throws IOException {
+    void testRearrangePages_SideStitchBooklet_RepeatedPaddingPagesAreDistinctNodes() throws IOException {
         MockMultipartFile file = createMockPdf();
         RearrangePagesRequest request = new RearrangePagesRequest();
         request.setFileInput(file);

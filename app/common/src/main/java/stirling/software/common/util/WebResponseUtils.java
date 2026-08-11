@@ -25,8 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WebResponseUtils {
 
-    public static ResponseEntity<byte[]> baosToWebResponse(
-            ByteArrayOutputStream baos, String docName) throws IOException {
+    public static ResponseEntity<byte[]> baosToWebResponse(ByteArrayOutputStream baos, String docName)
+            throws IOException {
         return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), docName);
     }
 
@@ -35,8 +35,7 @@ public class WebResponseUtils {
         return WebResponseUtils.bytesToWebResponse(baos.toByteArray(), docName, mediaType);
     }
 
-    public static ResponseEntity<byte[]> multiPartFileToWebResponse(MultipartFile file)
-            throws IOException {
+    public static ResponseEntity<byte[]> multiPartFileToWebResponse(MultipartFile file) throws IOException {
         String fileName = Filenames.toSimpleFileName(file.getOriginalFilename());
         MediaType mediaType = MediaType.parseMediaType(file.getContentType());
 
@@ -45,8 +44,8 @@ public class WebResponseUtils {
         return bytesToWebResponse(bytes, fileName, mediaType);
     }
 
-    public static ResponseEntity<byte[]> bytesToWebResponse(
-            byte[] bytes, String docName, MediaType mediaType) throws IOException {
+    public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName, MediaType mediaType)
+            throws IOException {
 
         // Return the PDF as a response
         HttpHeaders headers = new HttpHeaders();
@@ -56,13 +55,11 @@ public class WebResponseUtils {
         return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
     }
 
-    public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName)
-            throws IOException {
+    public static ResponseEntity<byte[]> bytesToWebResponse(byte[] bytes, String docName) throws IOException {
         return bytesToWebResponse(bytes, docName, MediaType.APPLICATION_PDF);
     }
 
-    public static ResponseEntity<byte[]> pdfDocToWebResponse(PDDocument document, String docName)
-            throws IOException {
+    public static ResponseEntity<byte[]> pdfDocToWebResponse(PDDocument document, String docName) throws IOException {
 
         // Open Byte Array and save document to it
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -82,8 +79,7 @@ public class WebResponseUtils {
      * failures) that {@code StreamingResponseBody} introduced.
      */
     public static ResponseEntity<Resource> pdfDocToWebResponse(
-            PDDocument document, String docName, TempFileManager tempFileManager)
-            throws IOException {
+            PDDocument document, String docName, TempFileManager tempFileManager) throws IOException {
         TempFile tempFile = tempFileManager.createManagedTempFile(".pdf");
         try {
             document.save(tempFile.getFile());
@@ -103,8 +99,8 @@ public class WebResponseUtils {
      * @param docName The name of the document.
      * @return A ResponseEntity whose body streams the file, deleting it on close.
      */
-    public static ResponseEntity<Resource> pdfFileToWebResponse(
-            TempFile outputTempFile, String docName) throws IOException {
+    public static ResponseEntity<Resource> pdfFileToWebResponse(TempFile outputTempFile, String docName)
+            throws IOException {
         return fileToWebResponse(outputTempFile, docName, MediaType.APPLICATION_PDF);
     }
 
@@ -117,8 +113,8 @@ public class WebResponseUtils {
      * @param docName The name of the document.
      * @return A ResponseEntity whose body streams the file, deleting it on close.
      */
-    public static ResponseEntity<Resource> zipFileToWebResponse(
-            TempFile outputTempFile, String docName) throws IOException {
+    public static ResponseEntity<Resource> zipFileToWebResponse(TempFile outputTempFile, String docName)
+            throws IOException {
         return fileToWebResponse(outputTempFile, docName, MediaType.APPLICATION_OCTET_STREAM);
     }
 

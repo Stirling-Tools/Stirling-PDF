@@ -26,35 +26,33 @@ class PdfJsonTextElementTest {
         @Test
         @DisplayName("builder sets scalar, nested and array fields")
         void builder() {
-            PdfJsonTextColor fill =
-                    PdfJsonTextColor.builder()
-                            .colorSpace("RGB")
-                            .components(new float[] {1f})
-                            .build();
-            PdfJsonTextElement e =
-                    PdfJsonTextElement.builder()
-                            .text("Hello")
-                            .fontId("F1")
-                            .fontSize(12f)
-                            .fontMatrixSize(1f)
-                            .fontSizeInPt(12f)
-                            .characterSpacing(0.5f)
-                            .wordSpacing(1f)
-                            .spaceWidth(2f)
-                            .zOrder(1)
-                            .horizontalScaling(100f)
-                            .leading(14f)
-                            .rise(0f)
-                            .x(10f)
-                            .y(20f)
-                            .width(30f)
-                            .height(40f)
-                            .textMatrix(new float[] {1f, 0f, 0f, 1f, 0f, 0f})
-                            .fillColor(fill)
-                            .renderingMode(0)
-                            .fallbackUsed(false)
-                            .charCodes(new int[] {72, 101})
-                            .build();
+            PdfJsonTextColor fill = PdfJsonTextColor.builder()
+                    .colorSpace("RGB")
+                    .components(new float[] {1f})
+                    .build();
+            PdfJsonTextElement e = PdfJsonTextElement.builder()
+                    .text("Hello")
+                    .fontId("F1")
+                    .fontSize(12f)
+                    .fontMatrixSize(1f)
+                    .fontSizeInPt(12f)
+                    .characterSpacing(0.5f)
+                    .wordSpacing(1f)
+                    .spaceWidth(2f)
+                    .zOrder(1)
+                    .horizontalScaling(100f)
+                    .leading(14f)
+                    .rise(0f)
+                    .x(10f)
+                    .y(20f)
+                    .width(30f)
+                    .height(40f)
+                    .textMatrix(new float[] {1f, 0f, 0f, 1f, 0f, 0f})
+                    .fillColor(fill)
+                    .renderingMode(0)
+                    .fallbackUsed(false)
+                    .charCodes(new int[] {72, 101})
+                    .build();
 
             assertThat(e.getText()).isEqualTo("Hello");
             assertThat(e.getFontId()).isEqualTo("F1");
@@ -83,7 +81,8 @@ class PdfJsonTextElementTest {
         @DisplayName("setters round-trip including stroke color")
         void setters() {
             PdfJsonTextElement e = new PdfJsonTextElement();
-            PdfJsonTextColor stroke = PdfJsonTextColor.builder().colorSpace("Gray").build();
+            PdfJsonTextColor stroke =
+                    PdfJsonTextColor.builder().colorSpace("Gray").build();
             e.setText("t");
             e.setStrokeColor(stroke);
             assertThat(e.getText()).isEqualTo("t");
@@ -99,14 +98,20 @@ class PdfJsonTextElementTest {
         @Test
         @DisplayName("equal content arrays equal; different content not")
         void arrayEquality() {
-            PdfJsonTextElement a =
-                    PdfJsonTextElement.builder().text("t").charCodes(new int[] {1, 2}).build();
-            PdfJsonTextElement b =
-                    PdfJsonTextElement.builder().text("t").charCodes(new int[] {1, 2}).build();
+            PdfJsonTextElement a = PdfJsonTextElement.builder()
+                    .text("t")
+                    .charCodes(new int[] {1, 2})
+                    .build();
+            PdfJsonTextElement b = PdfJsonTextElement.builder()
+                    .text("t")
+                    .charCodes(new int[] {1, 2})
+                    .build();
             assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
 
-            PdfJsonTextElement c =
-                    PdfJsonTextElement.builder().text("t").charCodes(new int[] {9}).build();
+            PdfJsonTextElement c = PdfJsonTextElement.builder()
+                    .text("t")
+                    .charCodes(new int[] {9})
+                    .build();
             assertThat(a).isNotEqualTo(c).isNotEqualTo(null).isNotEqualTo("string");
         }
 

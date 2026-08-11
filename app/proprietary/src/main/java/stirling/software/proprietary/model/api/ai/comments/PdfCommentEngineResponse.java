@@ -10,5 +10,4 @@ import java.util.List;
  * @param comments The comments the agent wants to place on the document.
  * @param rationale Short free-text explanation of the agent's choices.
  */
-public record PdfCommentEngineResponse(
-        String sessionId, List<PdfCommentInstruction> comments, String rationale) {}
+public record PdfCommentEngineResponse(String sessionId, List<PdfCommentInstruction> comments, String rationale) {}

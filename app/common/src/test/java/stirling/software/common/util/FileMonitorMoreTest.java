@@ -31,7 +31,8 @@ import stirling.software.common.configuration.RuntimePathConfig;
  */
 class FileMonitorMoreTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private FileMonitor monitorWatching(Path watchDir, Predicate<Path> filter) throws IOException {
         RuntimePathConfig config = mock(RuntimePathConfig.class);
@@ -50,8 +51,7 @@ class FileMonitorMoreTest {
             Path file = tempDir.resolve("ready.pdf");
             Files.writeString(file, "data");
             // Backdate well beyond the 5000ms freshness window so the timestamp branch marks ready.
-            Files.setLastModifiedTime(
-                    file, FileTime.from(Instant.now().minus(1, ChronoUnit.HOURS)));
+            Files.setLastModifiedTime(file, FileTime.from(Instant.now().minus(1, ChronoUnit.HOURS)));
 
             assertTrue(monitor.isFileReadyForProcessing(file));
         }
@@ -62,8 +62,7 @@ class FileMonitorMoreTest {
             FileMonitor monitor = monitorWatching(tempDir, p -> true);
             Path file = tempDir.resolve("roundtrip.pdf");
             Files.writeString(file, "data");
-            Files.setLastModifiedTime(
-                    file, FileTime.from(Instant.now().minus(1, ChronoUnit.HOURS)));
+            Files.setLastModifiedTime(file, FileTime.from(Instant.now().minus(1, ChronoUnit.HOURS)));
 
             // First call acquires+releases a lock and returns ready; a second call still works,
             // proving the lock was released (no lingering handle).

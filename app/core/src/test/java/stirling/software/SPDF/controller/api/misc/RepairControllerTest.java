@@ -51,9 +51,11 @@ import stirling.software.common.util.TempFileRegistry;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class RepairControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @Mock private EndpointConfiguration endpointConfiguration;
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
 
     // Real TempFileManager so transferTo / temp file creation / file-backed response all work
     // end-to-end deterministically without touching any external tooling.
@@ -64,8 +66,7 @@ class RepairControllerTest {
     @BeforeEach
     void setUp() {
         tempFileManager = new TempFileManager(new TempFileRegistry(), new ApplicationProperties());
-        repairController =
-                new RepairController(pdfDocumentFactory, tempFileManager, endpointConfiguration);
+        repairController = new RepairController(pdfDocumentFactory, tempFileManager, endpointConfiguration);
 
         // Default: no external tools available -> forces the PDFBox last-resort branch.
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
@@ -116,11 +117,7 @@ class RepairControllerTest {
         @DisplayName("returns 200 with a non-empty PDF resource body")
         void repairPdf_pdfBoxFallback_returnsOkWithPdf() throws Exception {
             MockMultipartFile input =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "broken.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            buildPdfBytes(2));
+                    new MockMultipartFile("fileInput", "broken.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdfBytes(2));
 
             when(pdfDocumentFactory.load(any(File.class))).thenReturn(newRealDocument(2));
 
@@ -146,11 +143,7 @@ class RepairControllerTest {
         @DisplayName("loads the input file exactly once via the factory")
         void repairPdf_pdfBoxFallback_loadsInputOnce() throws Exception {
             MockMultipartFile input =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "broken.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            buildPdfBytes(1));
+                    new MockMultipartFile("fileInput", "broken.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdfBytes(1));
 
             when(pdfDocumentFactory.load(any(File.class))).thenReturn(newRealDocument(1));
 
@@ -163,11 +156,7 @@ class RepairControllerTest {
         @DisplayName("does not consult qpdf/ghostscript a second time once disabled")
         void repairPdf_checksToolAvailability() throws Exception {
             MockMultipartFile input =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "broken.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            buildPdfBytes(1));
+                    new MockMultipartFile("fileInput", "broken.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdfBytes(1));
 
             when(pdfDocumentFactory.load(any(File.class))).thenReturn(newRealDocument(1));
 
@@ -184,18 +173,15 @@ class RepairControllerTest {
         void repairPdf_transfersInputToRealTempFile() throws Exception {
             byte[] pdf = buildPdfBytes(3);
             MockMultipartFile input =
-                    new MockMultipartFile(
-                            "fileInput", "broken.pdf", MediaType.APPLICATION_PDF_VALUE, pdf);
+                    new MockMultipartFile("fileInput", "broken.pdf", MediaType.APPLICATION_PDF_VALUE, pdf);
 
             // Assert the file handed to load() is a real, non-empty file (transferTo succeeded).
-            when(pdfDocumentFactory.load(any(File.class)))
-                    .thenAnswer(
-                            invocation -> {
-                                File file = invocation.getArgument(0);
-                                assertTrue(file.exists(), "temp input file should exist");
-                                assertEquals(pdf.length, file.length());
-                                return newRealDocument(3);
-                            });
+            when(pdfDocumentFactory.load(any(File.class))).thenAnswer(invocation -> {
+                File file = invocation.getArgument(0);
+                assertTrue(file.exists(), "temp input file should exist");
+                assertEquals(pdf.length, file.length());
+                return newRealDocument(3);
+            });
 
             ResponseEntity<Resource> response = repairController.repairPdf(pdfFileFrom(input));
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -210,11 +196,7 @@ class RepairControllerTest {
         @DisplayName("appends _repaired.pdf to the base name in the Content-Disposition header")
         void repairPdf_setsRepairedFilename() throws Exception {
             MockMultipartFile input =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "mydoc.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            buildPdfBytes(1));
+                    new MockMultipartFile("fileInput", "mydoc.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdfBytes(1));
 
             when(pdfDocumentFactory.load(any(File.class))).thenReturn(newRealDocument(1));
 
@@ -223,20 +205,14 @@ class RepairControllerTest {
             HttpHeaders headers = response.getHeaders();
             String disposition = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
             assertNotNull(disposition);
-            assertTrue(
-                    disposition.contains("mydoc_repaired.pdf"),
-                    "expected repaired filename in: " + disposition);
+            assertTrue(disposition.contains("mydoc_repaired.pdf"), "expected repaired filename in: " + disposition);
         }
 
         @Test
         @DisplayName("filename without extension still gets _repaired.pdf appended")
         void repairPdf_filenameWithoutExtension() throws Exception {
             MockMultipartFile input =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "noext",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            buildPdfBytes(1));
+                    new MockMultipartFile("fileInput", "noext", MediaType.APPLICATION_PDF_VALUE, buildPdfBytes(1));
 
             when(pdfDocumentFactory.load(any(File.class))).thenReturn(newRealDocument(1));
 
@@ -244,9 +220,7 @@ class RepairControllerTest {
 
             String disposition = response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
             assertNotNull(disposition);
-            assertTrue(
-                    disposition.contains("noext_repaired.pdf"),
-                    "expected repaired filename in: " + disposition);
+            assertTrue(disposition.contains("noext_repaired.pdf"), "expected repaired filename in: " + disposition);
         }
 
         @Test
@@ -254,8 +228,7 @@ class RepairControllerTest {
         void repairPdf_nullOriginalFilename_usesDefault() throws Exception {
             // MockMultipartFile with null original filename.
             MockMultipartFile input =
-                    new MockMultipartFile(
-                            "fileInput", null, MediaType.APPLICATION_PDF_VALUE, buildPdfBytes(1));
+                    new MockMultipartFile("fileInput", null, MediaType.APPLICATION_PDF_VALUE, buildPdfBytes(1));
 
             when(pdfDocumentFactory.load(any(File.class))).thenReturn(newRealDocument(1));
 
@@ -266,8 +239,7 @@ class RepairControllerTest {
             assertNotNull(disposition);
             // MockMultipartFile maps a null name to "", so the base is empty -> leading underscore.
             assertTrue(
-                    disposition.contains("_repaired.pdf"),
-                    "expected empty-base repaired filename in: " + disposition);
+                    disposition.contains("_repaired.pdf"), "expected empty-base repaired filename in: " + disposition);
         }
     }
 
@@ -279,19 +251,11 @@ class RepairControllerTest {
         @DisplayName("IOException from the factory propagates to the caller")
         void repairPdf_loadThrowsIOException_propagates() throws Exception {
             MockMultipartFile input =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "broken.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            buildPdfBytes(1));
+                    new MockMultipartFile("fileInput", "broken.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdfBytes(1));
 
-            when(pdfDocumentFactory.load(any(File.class)))
-                    .thenThrow(new IOException("cannot load corrupt pdf"));
+            when(pdfDocumentFactory.load(any(File.class))).thenThrow(new IOException("cannot load corrupt pdf"));
 
-            IOException thrown =
-                    assertThrows(
-                            IOException.class,
-                            () -> repairController.repairPdf(pdfFileFrom(input)));
+            IOException thrown = assertThrows(IOException.class, () -> repairController.repairPdf(pdfFileFrom(input)));
             assertEquals("cannot load corrupt pdf", thrown.getMessage());
         }
 
@@ -299,19 +263,12 @@ class RepairControllerTest {
         @DisplayName("RuntimeException from the factory propagates to the caller")
         void repairPdf_loadThrowsRuntimeException_propagates() throws Exception {
             MockMultipartFile input =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "broken.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            buildPdfBytes(1));
+                    new MockMultipartFile("fileInput", "broken.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdfBytes(1));
 
-            when(pdfDocumentFactory.load(any(File.class)))
-                    .thenThrow(new IllegalStateException("boom"));
+            when(pdfDocumentFactory.load(any(File.class))).thenThrow(new IllegalStateException("boom"));
 
             IllegalStateException thrown =
-                    assertThrows(
-                            IllegalStateException.class,
-                            () -> repairController.repairPdf(pdfFileFrom(input)));
+                    assertThrows(IllegalStateException.class, () -> repairController.repairPdf(pdfFileFrom(input)));
             assertEquals("boom", thrown.getMessage());
         }
     }

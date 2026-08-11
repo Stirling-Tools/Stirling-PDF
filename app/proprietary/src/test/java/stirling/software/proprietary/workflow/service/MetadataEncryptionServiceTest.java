@@ -105,8 +105,7 @@ class MetadataEncryptionServiceTest {
         String encryptedByOther = otherService.encrypt("secret");
 
         // The original service cannot decrypt what the other service encrypted
-        assertThatThrownBy(() -> service.decrypt(encryptedByOther))
-                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> service.decrypt(encryptedByOther)).isInstanceOf(IllegalStateException.class);
     }
 
     // -------------------------------------------------------------------------
@@ -117,8 +116,7 @@ class MetadataEncryptionServiceTest {
     void encrypt_missingKey_throwsIllegalState() {
         MetadataEncryptionService noKeyService = serviceWithKey(null);
 
-        assertThatThrownBy(() -> noKeyService.encrypt("anything"))
-                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> noKeyService.encrypt("anything")).isInstanceOf(IllegalStateException.class);
     }
 
     // -------------------------------------------------------------------------

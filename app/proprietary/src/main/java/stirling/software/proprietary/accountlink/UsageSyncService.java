@@ -30,9 +30,7 @@ import stirling.software.proprietary.billing.BillingCategory;
 @Slf4j
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(
-        name = "stirling.billing.account-link.metering.enabled",
-        havingValue = "true")
+@ConditionalOnProperty(name = "stirling.billing.account-link.metering.enabled", havingValue = "true")
 public class UsageSyncService implements SchedulingConfigurer {
 
     // First run waits out startup churn; then every interval.
@@ -68,8 +66,7 @@ public class UsageSyncService implements SchedulingConfigurer {
     @Override
     public void configureTasks(ScheduledTaskRegistrar registrar) {
         Duration interval = Duration.ofHours(properties.getMetering().getSyncIntervalHours());
-        registrar.addFixedDelayTask(
-                new FixedDelayTask(this::scheduledSync, interval, INITIAL_DELAY));
+        registrar.addFixedDelayTask(new FixedDelayTask(this::scheduledSync, interval, INITIAL_DELAY));
     }
 
     public void scheduledSync() {
@@ -112,8 +109,7 @@ public class UsageSyncService implements SchedulingConfigurer {
             // its
             // own next refresh, so we don't synthesise the blocked state here.
             log.info(
-                    "Usage sync denied (HTTP {}); credential revoked/invalid — gate blocks on next"
-                            + " refresh",
+                    "Usage sync denied (HTTP {}); credential revoked/invalid — gate blocks on next" + " refresh",
                     e.status());
             return;
         }
@@ -132,15 +128,14 @@ public class UsageSyncService implements SchedulingConfigurer {
         }
         AccountLinkSyncState state = loadState();
         long seq = reserveNextSeq(state);
-        InstanceEntitlement fresh =
-                client.reportUsage(
-                        cred.getDeviceId(),
-                        cred.getDeviceSecret(),
-                        seq,
-                        period,
-                        cumulative.getOrDefault(BillingCategory.API, 0L),
-                        cumulative.getOrDefault(BillingCategory.AI, 0L),
-                        cumulative.getOrDefault(BillingCategory.AUTOMATION, 0L));
+        InstanceEntitlement fresh = client.reportUsage(
+                cred.getDeviceId(),
+                cred.getDeviceSecret(),
+                seq,
+                period,
+                cumulative.getOrDefault(BillingCategory.API, 0L),
+                cumulative.getOrDefault(BillingCategory.AI, 0L),
+                cumulative.getOrDefault(BillingCategory.AUTOMATION, 0L));
         if (fresh == null) {
             // Transport/server failure: leave the synced markers untouched. The burned seq is
             // harmless (seqs need only be monotonic) and the delta bills on the next successful
@@ -163,27 +158,21 @@ public class UsageSyncService implements SchedulingConfigurer {
      * Advances the per-category synced markers to the reported totals + stamps the success time.
      */
     private void recordSuccess(
-            LocalDateTime period,
-            EnumMap<BillingCategory, Long> cumulative,
-            AccountLinkSyncState state) {
-        cumulative.forEach(
-                (category, units) -> {
-                    if (units > 0) {
-                        counters.markSynced(period, category.name(), units);
-                    }
-                });
+            LocalDateTime period, EnumMap<BillingCategory, Long> cumulative, AccountLinkSyncState state) {
+        cumulative.forEach((category, units) -> {
+            if (units > 0) {
+                counters.markSynced(period, category.name(), units);
+            }
+        });
         state.setLastSuccessAt(LocalDateTime.now());
         syncState.save(state);
     }
 
     private AccountLinkSyncState loadState() {
-        return syncState
-                .findById(AccountLinkSyncState.SINGLETON_ID)
-                .orElseGet(
-                        () -> {
-                            AccountLinkSyncState s = new AccountLinkSyncState();
-                            s.setId(AccountLinkSyncState.SINGLETON_ID);
-                            return s;
-                        });
+        return syncState.findById(AccountLinkSyncState.SINGLETON_ID).orElseGet(() -> {
+            AccountLinkSyncState s = new AccountLinkSyncState();
+            s.setId(AccountLinkSyncState.SINGLETON_ID);
+            return s;
+        });
     }
 }

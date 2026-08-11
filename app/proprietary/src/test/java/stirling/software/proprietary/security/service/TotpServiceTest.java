@@ -89,10 +89,8 @@ class TotpServiceTest {
         assertTrue(uri.contains("issuer=Stirling%20PDF"));
     }
 
-    private String generateCode(TotpService service, byte[] secretBytes, long timeStep)
-            throws Exception {
-        Method generateCode =
-                TotpService.class.getDeclaredMethod("generateCode", byte[].class, long.class);
+    private String generateCode(TotpService service, byte[] secretBytes, long timeStep) throws Exception {
+        Method generateCode = TotpService.class.getDeclaredMethod("generateCode", byte[].class, long.class);
         generateCode.setAccessible(true);
         return (String) generateCode.invoke(service, secretBytes, timeStep);
     }

@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/team")
-@Tag(
-        name = "Team",
-        description =
-                """
+@Tag(name = "Team", description = """
                 Team management and collaboration services for organized document processing workflows.
 
                 This endpoint group enables organizations to structure collaborative document processing

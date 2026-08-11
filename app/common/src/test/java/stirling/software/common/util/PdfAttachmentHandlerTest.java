@@ -40,8 +40,7 @@ class PdfAttachmentHandlerTest {
 
     @Test
     void formatEmailDate_zonedDateTime_returnsUTCFormatted() {
-        ZonedDateTime dateTime =
-                ZonedDateTime.of(2024, 3, 15, 14, 30, 0, 0, ZoneId.of("America/New_York"));
+        ZonedDateTime dateTime = ZonedDateTime.of(2024, 3, 15, 14, 30, 0, 0, ZoneId.of("America/New_York"));
         String result = PdfAttachmentHandler.formatEmailDate(dateTime);
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -84,8 +83,7 @@ class PdfAttachmentHandlerTest {
 
     @Test
     void markerPosition_setters() {
-        PdfAttachmentHandler.MarkerPosition pos =
-                new PdfAttachmentHandler.MarkerPosition(0, 0f, 0f, "@", null);
+        PdfAttachmentHandler.MarkerPosition pos = new PdfAttachmentHandler.MarkerPosition(0, 0f, 0f, "@", null);
         pos.setPageIndex(5);
         pos.setX(50.0f);
         pos.setY(75.0f);

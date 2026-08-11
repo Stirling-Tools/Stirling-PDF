@@ -21,23 +21,22 @@ public class SecretMasker {
     // Key-name substrings that mark a value sensitive. Over-masking a non-secret is
     // safe; leaking a secret is not, so this errs broad - but a per-type schema
     // whitelist would be a stronger boundary for free-form config (follow-up).
-    private static final Set<String> SENSITIVE_HINTS =
-            Set.of(
-                    "secret",
-                    "password",
-                    "passphrase",
-                    "pwd",
-                    "token",
-                    "apikey",
-                    "accesskey",
-                    "credential",
-                    "privatekey",
-                    "authorization",
-                    "cookie",
-                    "session",
-                    "connectionstring",
-                    "bearer",
-                    "signature");
+    private static final Set<String> SENSITIVE_HINTS = Set.of(
+            "secret",
+            "password",
+            "passphrase",
+            "pwd",
+            "token",
+            "apikey",
+            "accesskey",
+            "credential",
+            "privatekey",
+            "authorization",
+            "cookie",
+            "session",
+            "connectionstring",
+            "bearer",
+            "signature");
 
     // Keys whose nested map holds secrets under arbitrary, caller-named keys - a free-form HTTP
     // headers map is the case in point: the secret can sit under any header name (X-API-Key,
@@ -78,9 +77,7 @@ public class SecretMasker {
             if (isSensitive(e.getKey()) && isRedacted(e.getValue(), depth)) {
                 continue;
             }
-            if (isSensitiveContainer(e.getKey())
-                    && e.getValue() instanceof Map<?, ?> m
-                    && depth < MAX_DEPTH) {
+            if (isSensitiveContainer(e.getKey()) && e.getValue() instanceof Map<?, ?> m && depth < MAX_DEPTH) {
                 out.put(e.getKey(), sanitizeAllValues(castMap(m), depth + 1));
                 continue;
             }
@@ -93,8 +90,7 @@ public class SecretMasker {
         return out;
     }
 
-    private Map<String, Object> merge(
-            Map<String, Object> stored, Map<String, Object> incoming, int depth) {
+    private Map<String, Object> merge(Map<String, Object> stored, Map<String, Object> incoming, int depth) {
         // Replace semantics (PUT): the result is the incoming document, except a redacted secret
         // keeps its stored value. Keys absent from incoming are dropped, so edits can remove them.
         Map<String, Object> out = new LinkedHashMap<>();
@@ -119,9 +115,7 @@ public class SecretMasker {
                 out.put(key, mergeAllValues(castMap(s), castMap(i), depth + 1));
                 continue;
             }
-            if (depth < MAX_DEPTH
-                    && stored.get(key) instanceof Map<?, ?> s
-                    && value instanceof Map<?, ?> i) {
+            if (depth < MAX_DEPTH && stored.get(key) instanceof Map<?, ?> s && value instanceof Map<?, ?> i) {
                 out.put(key, merge(castMap(s), castMap(i), depth + 1));
             } else {
                 out.put(key, value);
@@ -184,8 +178,7 @@ public class SecretMasker {
     }
 
     /** Merge a container map treating every entry as a secret, restoring redacted from stored. */
-    private Map<String, Object> mergeAllValues(
-            Map<String, Object> stored, Map<String, Object> incoming, int depth) {
+    private Map<String, Object> mergeAllValues(Map<String, Object> stored, Map<String, Object> incoming, int depth) {
         Map<String, Object> out = new LinkedHashMap<>();
         for (Map.Entry<String, Object> e : incoming.entrySet()) {
             if (isRedacted(e.getValue(), depth)) {

@@ -55,8 +55,11 @@ import stirling.software.common.util.TempFileManager;
 @DisplayName("WatermarkController image/convert/alphabet branches")
 class WatermarkControllerMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private WatermarkController controller;
 
@@ -67,16 +70,13 @@ class WatermarkControllerMoreTest {
     void setUp() throws Exception {
         controller = new WatermarkController(pdfDocumentFactory, tempFileManager);
 
-        when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("wm", inv.<String>getArgument(0)).toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("wm", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
 
         try (PDDocument doc = new PDDocument();
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
@@ -102,8 +102,7 @@ class WatermarkControllerMoreTest {
     private AddWatermarkRequest baseRequest() {
         AddWatermarkRequest request = new AddWatermarkRequest();
         request.setFileInput(
-                new MockMultipartFile(
-                        "fileInput", "in.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes));
+                new MockMultipartFile("fileInput", "in.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes));
         request.setAlphabet("roman");
         request.setFontSize(30);
         request.setRotation(0);
@@ -124,8 +123,7 @@ class WatermarkControllerMoreTest {
         void imageWatermarkSucceeds() throws Exception {
             AddWatermarkRequest request = baseRequest();
             request.setWatermarkType("image");
-            request.setWatermarkImage(
-                    new MockMultipartFile("watermarkImage", "wm.png", "image/png", pngBytes));
+            request.setWatermarkImage(new MockMultipartFile("watermarkImage", "wm.png", "image/png", pngBytes));
 
             ResponseEntity<Resource> response = controller.addWatermark(request);
 
@@ -140,8 +138,7 @@ class WatermarkControllerMoreTest {
             AddWatermarkRequest request = baseRequest();
             request.setWatermarkType("image");
             request.setRotation(30);
-            request.setWatermarkImage(
-                    new MockMultipartFile("watermarkImage", "wm.png", "image/png", pngBytes));
+            request.setWatermarkImage(new MockMultipartFile("watermarkImage", "wm.png", "image/png", pngBytes));
 
             ResponseEntity<Resource> response = controller.addWatermark(request);
 
@@ -205,11 +202,7 @@ class WatermarkControllerMoreTest {
     void pathTraversalRejected() {
         AddWatermarkRequest request = baseRequest();
         request.setFileInput(
-                new MockMultipartFile(
-                        "fileInput",
-                        "../evil.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        simplePdfBytes));
+                new MockMultipartFile("fileInput", "../evil.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes));
         request.setWatermarkType("text");
         request.setWatermarkText("x");
 

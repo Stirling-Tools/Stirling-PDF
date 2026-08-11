@@ -117,9 +117,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
             if ("/start".equals(messageText)) {
-                sendMessage(
-                        chatId,
-                        """
+                sendMessage(chatId, """
                         Welcome to the SPDF Telegram Bot!
 
                         To get started, please send me a PDF document that you would like to process.
@@ -136,46 +134,44 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
             return;
         }
         if (feedback(FeedbackEnum.NO_VALID_DOCUMENT, chat.getType())) {
-            sendMessage(
-                    chat.getId(),
-                    "No valid file found in the message. Please send a document to process.");
+            sendMessage(chat.getId(), "No valid file found in the message. Please send a document to process.");
         }
     }
 
     private boolean feedback(FeedbackEnum feedbackEnum, String chatType) {
         return switch (feedbackEnum) {
             case NO_VALID_DOCUMENT ->
-                    switch (chatType) {
-                        case CHAT_CHANNEL ->
-                                telegramProperties.getFeedback().getChannel().getNoValidDocument();
-                        case CHAT_PRIVATE ->
-                                telegramProperties.getFeedback().getUser().getNoValidDocument();
-                        default -> true;
-                    };
+                switch (chatType) {
+                    case CHAT_CHANNEL ->
+                        telegramProperties.getFeedback().getChannel().getNoValidDocument();
+                    case CHAT_PRIVATE ->
+                        telegramProperties.getFeedback().getUser().getNoValidDocument();
+                    default -> true;
+                };
             case ERROR_MESSAGE ->
-                    switch (chatType) {
-                        case CHAT_CHANNEL ->
-                                telegramProperties.getFeedback().getChannel().getErrorMessage();
-                        case CHAT_PRIVATE ->
-                                telegramProperties.getFeedback().getUser().getErrorMessage();
-                        default -> true;
-                    };
+                switch (chatType) {
+                    case CHAT_CHANNEL ->
+                        telegramProperties.getFeedback().getChannel().getErrorMessage();
+                    case CHAT_PRIVATE ->
+                        telegramProperties.getFeedback().getUser().getErrorMessage();
+                    default -> true;
+                };
             case ERROR_PROCESSING ->
-                    switch (chatType) {
-                        case CHAT_CHANNEL ->
-                                telegramProperties.getFeedback().getChannel().getErrorProcessing();
-                        case CHAT_PRIVATE ->
-                                telegramProperties.getFeedback().getUser().getErrorProcessing();
-                        default -> true;
-                    };
+                switch (chatType) {
+                    case CHAT_CHANNEL ->
+                        telegramProperties.getFeedback().getChannel().getErrorProcessing();
+                    case CHAT_PRIVATE ->
+                        telegramProperties.getFeedback().getUser().getErrorProcessing();
+                    default -> true;
+                };
             case PROCESSING ->
-                    switch (chatType) {
-                        case CHAT_CHANNEL ->
-                                telegramProperties.getFeedback().getChannel().getProcessing();
-                        case CHAT_PRIVATE ->
-                                telegramProperties.getFeedback().getUser().getProcessing();
-                        default -> true;
-                    };
+                switch (chatType) {
+                    case CHAT_CHANNEL ->
+                        telegramProperties.getFeedback().getChannel().getProcessing();
+                    case CHAT_PRIVATE ->
+                        telegramProperties.getFeedback().getUser().getProcessing();
+                    default -> true;
+                };
             default -> true;
         };
     }
@@ -199,8 +195,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
     // ---------------------------
 
     private boolean isAuthorized(Message message, Chat chat) {
-        if (!(telegramProperties.getEnableAllowUserIDs()
-                || telegramProperties.getEnableAllowChannelIDs())) {
+        if (!(telegramProperties.getEnableAllowUserIDs() || telegramProperties.getEnableAllowChannelIDs())) {
             return true;
         }
 
@@ -224,10 +219,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         }
 
         if (from == null || !allow.contains(from.getId())) {
-            log.info(
-                    "Rejecting user {} in private chat {}",
-                    from != null ? from.getId() : "unknown",
-                    chat.getId());
+            log.info("Rejecting user {} in private chat {}", from != null ? from.getId() : "unknown", chat.getId());
             if (feedback(FeedbackEnum.ERROR_MESSAGE, chat.getType())) {
                 sendMessage(chat.getId(), "You are not authorized to use this bot.");
             }
@@ -302,8 +294,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         }
 
         try {
-            if (!CHAT_CHANNEL.equalsIgnoreCase(chatType)
-                    && feedback(FeedbackEnum.PROCESSING, chatType)) {
+            if (!CHAT_CHANNEL.equalsIgnoreCase(chatType) && feedback(FeedbackEnum.PROCESSING, chatType)) {
                 sendMessage(chatId, "File received. Starting processing...");
             }
 
@@ -313,9 +304,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
             if (outputs.isEmpty()) {
                 if (feedback(FeedbackEnum.ERROR_PROCESSING, chatType)) {
                     sendMessage(
-                            chatId,
-                            "No results were found in the pipeline output folder. Check"
-                                    + " configuration.");
+                            chatId, "No results were found in the pipeline output folder. Check" + " configuration.");
                 }
                 return;
             }
@@ -345,12 +334,10 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
         }
     }
 
-    private PipelineFileInfo downloadMessageFile(Message message)
-            throws TelegramApiException, IOException {
+    private PipelineFileInfo downloadMessageFile(Message message) throws TelegramApiException, IOException {
         Document document = message.getDocument();
         String filename = document.getFileName();
-        String name =
-                StringUtils.isNotBlank(filename) ? filename : document.getFileUniqueId() + ".bin";
+        String name = StringUtils.isNotBlank(filename) ? filename : document.getFileUniqueId() + ".bin";
 
         return downloadFile(document.getFileId(), name, message);
     }
@@ -387,18 +374,16 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
     private URL buildDownloadUrl(String filePath) throws MalformedURLException {
         try {
-            URI uri =
-                    new URI(
-                            "https",
-                            "api.telegram.org",
-                            "/file/bot" + this.telegramProperties.getBotToken() + "/" + filePath,
-                            null);
+            URI uri = new URI(
+                    "https",
+                    "api.telegram.org",
+                    "/file/bot" + this.telegramProperties.getBotToken() + "/" + filePath,
+                    null);
             return uri.toURL();
         } catch (URISyntaxException e) {
             throw new MalformedURLException("Failed to build Telegram download URL");
         } catch (MalformedURLException e) {
-            MalformedURLException sanitized =
-                    new MalformedURLException("Failed to build Telegram download URL");
+            MalformedURLException sanitized = new MalformedURLException("Failed to build Telegram download URL");
             sanitized.initCause(e);
             throw sanitized;
         }
@@ -410,16 +395,12 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
     private Path getInboxFolder(Long chatId) throws IOException {
         Path baseInbox =
-                Path.of(
-                        runtimePathConfig.getPipelineWatchedFoldersPath(),
-                        telegramProperties.getPipelineInboxFolder());
+                Path.of(runtimePathConfig.getPipelineWatchedFoldersPath(), telegramProperties.getPipelineInboxFolder());
 
         Files.createDirectories(baseInbox);
 
         Path inboxFolder =
-                telegramProperties.getCustomFolderSuffix()
-                        ? baseInbox.resolve(chatId.toString())
-                        : baseInbox;
+                telegramProperties.getCustomFolderSuffix() ? baseInbox.resolve(chatId.toString()) : baseInbox;
 
         Files.createDirectories(inboxFolder);
 
@@ -454,12 +435,11 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
         while (Duration.between(start, Instant.now()).compareTo(timeout) <= 0) {
             try (Stream<Path> s = Files.list(finishedDir)) {
-                results =
-                        s.filter(Files::isRegularFile)
-                                .filter(path -> matchesBaseName(info.uniqueBaseName(), path))
-                                .filter(path -> isNewerThan(path, start))
-                                .sorted(Comparator.comparing(Path::toString))
-                                .toList();
+                results = s.filter(Files::isRegularFile)
+                        .filter(path -> matchesBaseName(info.uniqueBaseName(), path))
+                        .filter(path -> isNewerThan(path, start))
+                        .sorted(Comparator.comparing(Path::toString))
+                        .toList();
             }
 
             if (!results.isEmpty()) {

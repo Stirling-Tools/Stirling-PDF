@@ -15,8 +15,7 @@ class PdfJsonConversionProgressTest {
         @Test
         @DisplayName("sets fields and leaves complete false")
         void buildsProgress() {
-            PdfJsonConversionProgress p =
-                    PdfJsonConversionProgress.of(42, "loading", "Loading pages");
+            PdfJsonConversionProgress p = PdfJsonConversionProgress.of(42, "loading", "Loading pages");
 
             assertThat(p.getPercent()).isEqualTo(42);
             assertThat(p.getStage()).isEqualTo("loading");
@@ -34,8 +33,7 @@ class PdfJsonConversionProgressTest {
         @Test
         @DisplayName("includes current and total counters")
         void buildsProgressWithCounters() {
-            PdfJsonConversionProgress p =
-                    PdfJsonConversionProgress.of(50, "pages", "Processing", 3, 6);
+            PdfJsonConversionProgress p = PdfJsonConversionProgress.of(50, "pages", "Processing", 3, 6);
 
             assertThat(p.getPercent()).isEqualTo(50);
             assertThat(p.getStage()).isEqualTo("pages");
@@ -69,15 +67,14 @@ class PdfJsonConversionProgressTest {
         @Test
         @DisplayName("builder populates all fields")
         void builder() {
-            PdfJsonConversionProgress p =
-                    PdfJsonConversionProgress.builder()
-                            .percent(10)
-                            .stage("init")
-                            .message("starting")
-                            .complete(false)
-                            .current(1)
-                            .total(5)
-                            .build();
+            PdfJsonConversionProgress p = PdfJsonConversionProgress.builder()
+                    .percent(10)
+                    .stage("init")
+                    .message("starting")
+                    .complete(false)
+                    .current(1)
+                    .total(5)
+                    .build();
 
             assertThat(p.getPercent()).isEqualTo(10);
             assertThat(p.getStage()).isEqualTo("init");

@@ -81,16 +81,32 @@ class AiWorkflowServiceTest {
     private static final String COMPRESS_ENDPOINT = "/api/v1/misc/compress-pdf";
     private static final String MARKDOWN_ENDPOINT = "/api/v1/convert/pdf/markdown";
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private AiEngineClient aiEngineClient;
-    @Mock private PdfContentExtractor pdfContentExtractor;
-    @Mock private InternalApiClient internalApiClient;
-    @Mock private FileStorage fileStorage;
-    @Mock private ToolMetadataService toolMetadataService;
-    @Mock private FileIdStrategy fileIdStrategy;
-    @Mock private AiEngineEndpointResolver endpointResolver;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @TempDir Path tempDir;
+    @Mock
+    private AiEngineClient aiEngineClient;
+
+    @Mock
+    private PdfContentExtractor pdfContentExtractor;
+
+    @Mock
+    private InternalApiClient internalApiClient;
+
+    @Mock
+    private FileStorage fileStorage;
+
+    @Mock
+    private ToolMetadataService toolMetadataService;
+
+    @Mock
+    private FileIdStrategy fileIdStrategy;
+
+    @Mock
+    private AiEngineEndpointResolver endpointResolver;
+
+    @TempDir
+    Path tempDir;
 
     private TempFileManager tempFileManager;
     private ObjectMapper objectMapper;
@@ -111,32 +127,28 @@ class AiWorkflowServiceTest {
                 .thenAnswer(inv -> ((MultipartFile) inv.getArgument(0)).getOriginalFilename());
 
         PolicyExecutor policyExecutor =
-                new PolicyExecutor(
-                        internalApiClient, toolMetadataService, tempFileManager, objectMapper);
-        service =
-                new AiWorkflowService(
-                        pdfDocumentFactory,
-                        aiEngineClient,
-                        pdfContentExtractor,
-                        objectMapper,
-                        fileStorage,
-                        tempFileManager,
-                        fileIdStrategy,
-                        endpointResolver,
-                        policyExecutor,
-                        null,
-                        new ApplicationProperties());
+                new PolicyExecutor(internalApiClient, toolMetadataService, tempFileManager, objectMapper);
+        service = new AiWorkflowService(
+                pdfDocumentFactory,
+                aiEngineClient,
+                pdfContentExtractor,
+                objectMapper,
+                fileStorage,
+                tempFileManager,
+                fileIdStrategy,
+                endpointResolver,
+                policyExecutor,
+                null,
+                new ApplicationProperties());
         when(endpointResolver.getEnabledEndpointUrls()).thenReturn(List.of());
     }
 
     @Test
     void toolCallSingleFilePreservesInputFilename() throws IOException {
         MockMultipartFile input = pdf("input.pdf", "original-pdf-bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
-                """
-                        .formatted(ROTATE_ENDPOINT));
+                """.formatted(ROTATE_ENDPOINT));
         when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(ROTATE_ENDPOINT)).thenReturn(false);
         stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated-bytes", "rotated.pdf"));
@@ -156,11 +168,9 @@ class AiWorkflowServiceTest {
     @Test
     void toolCallZipResponseUnpacksIntoMultipleResults() throws IOException {
         MockMultipartFile input = pdf("doc.pdf", "original");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Splitting"}
-                """
-                        .formatted(SPLIT_ENDPOINT));
+                """.formatted(SPLIT_ENDPOINT));
         when(toolMetadataService.isMultiInput(SPLIT_ENDPOINT)).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(SPLIT_ENDPOINT)).thenReturn(true);
         stubEndpoint(
@@ -187,18 +197,15 @@ class AiWorkflowServiceTest {
     void multiInputEndpointIsCalledOnceWithAllFiles() throws IOException {
         MockMultipartFile a = pdf("a.pdf", "a-bytes");
         MockMultipartFile b = pdf("b.pdf", "b-bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Merging"}
-                """
-                        .formatted(MERGE_ENDPOINT));
+                """.formatted(MERGE_ENDPOINT));
         when(toolMetadataService.isMultiInput(MERGE_ENDPOINT)).thenReturn(true);
         when(toolMetadataService.shouldUnpackZipResponse(MERGE_ENDPOINT)).thenReturn(false);
         stubEndpoint(MERGE_ENDPOINT, pdfResource("merged-bytes", "merged.pdf"));
         stubFileStorage();
 
-        AiWorkflowResponse result =
-                service.orchestrate(requestFor(new MockMultipartFile[] {a, b}, "merge these"));
+        AiWorkflowResponse result = service.orchestrate(requestFor(new MockMultipartFile[] {a, b}, "merge these"));
 
         assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
         assertEquals(1, result.getResultFiles().size());
@@ -211,18 +218,15 @@ class AiWorkflowServiceTest {
     void singleInputEndpointIsCalledOncePerFile() throws IOException {
         MockMultipartFile a = pdf("a.pdf", "a-bytes");
         MockMultipartFile b = pdf("b.pdf", "b-bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
-                """
-                        .formatted(ROTATE_ENDPOINT));
+                """.formatted(ROTATE_ENDPOINT));
         when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(ROTATE_ENDPOINT)).thenReturn(false);
         stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated", "rotated.pdf"));
         stubFileStorage();
 
-        AiWorkflowResponse result =
-                service.orchestrate(requestFor(new MockMultipartFile[] {a, b}, "rotate both"));
+        AiWorkflowResponse result = service.orchestrate(requestFor(new MockMultipartFile[] {a, b}, "rotate both"));
 
         assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
         assertEquals(2, result.getResultFiles().size());
@@ -240,18 +244,15 @@ class AiWorkflowServiceTest {
     void mergeOutputHasNoSourceIndex() throws IOException {
         MockMultipartFile a = pdf("a.pdf", "a-bytes");
         MockMultipartFile b = pdf("b.pdf", "b-bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Merging"}
-                """
-                        .formatted(MERGE_ENDPOINT));
+                """.formatted(MERGE_ENDPOINT));
         when(toolMetadataService.isMultiInput(MERGE_ENDPOINT)).thenReturn(true);
         when(toolMetadataService.shouldUnpackZipResponse(MERGE_ENDPOINT)).thenReturn(false);
         stubEndpoint(MERGE_ENDPOINT, pdfResource("merged-bytes", "merged.pdf"));
         stubFileStorage();
 
-        AiWorkflowResponse result =
-                service.orchestrate(requestFor(new MockMultipartFile[] {a, b}, "merge these"));
+        AiWorkflowResponse result = service.orchestrate(requestFor(new MockMultipartFile[] {a, b}, "merge these"));
 
         // A merge draws on several inputs, so there is no single source to version in place.
         assertNull(result.getResultFiles().get(0).getSourceIndex());
@@ -260,11 +261,9 @@ class AiWorkflowServiceTest {
     @Test
     void splitOutputsHaveNoSourceIndex() throws IOException {
         MockMultipartFile input = pdf("doc.pdf", "original");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {"outcome":"tool_call","tool":"%s","parameters":{},"rationale":"Splitting"}
-                """
-                        .formatted(SPLIT_ENDPOINT));
+                """.formatted(SPLIT_ENDPOINT));
         when(toolMetadataService.isMultiInput(SPLIT_ENDPOINT)).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(SPLIT_ENDPOINT)).thenReturn(true);
         stubEndpoint(
@@ -287,8 +286,7 @@ class AiWorkflowServiceTest {
     @Test
     void planExecutesStepsSequentially() throws IOException {
         MockMultipartFile input = pdf("input.pdf", "bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {
                   "outcome":"plan",
                   "summary":"Rotate then compress",
@@ -297,8 +295,7 @@ class AiWorkflowServiceTest {
                     {"tool":"%s","parameters":{}}
                   ]
                 }
-                """
-                        .formatted(ROTATE_ENDPOINT, COMPRESS_ENDPOINT));
+                """.formatted(ROTATE_ENDPOINT, COMPRESS_ENDPOINT));
         when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
         stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated", "rotated.pdf"));
@@ -322,8 +319,7 @@ class AiWorkflowServiceTest {
         // pre-serialize such lists rather than splitting them into repeated form fields.
         String editTextEndpoint = "/api/v1/general/edit-text";
         MockMultipartFile input = pdf("input.pdf", "bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {
                   "outcome":"plan",
                   "summary":"Find and replace",
@@ -334,8 +330,7 @@ class AiWorkflowServiceTest {
                     }}
                   ]
                 }
-                """
-                        .formatted(editTextEndpoint));
+                """.formatted(editTextEndpoint));
         when(toolMetadataService.isMultiInput(editTextEndpoint)).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(editTextEndpoint)).thenReturn(false);
         stubEndpoint(editTextEndpoint, pdfResource("edited", "edited.pdf"));
@@ -344,8 +339,7 @@ class AiWorkflowServiceTest {
         service.orchestrate(requestFor(input, "find and replace"));
 
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
-                ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor = ArgumentCaptor.forClass(MultiValueMap.class);
         verify(internalApiClient).post(eq(editTextEndpoint), bodyCaptor.capture());
         MultiValueMap<String, Object> body = bodyCaptor.getValue();
 
@@ -355,8 +349,7 @@ class AiWorkflowServiceTest {
         assertNotNull(editsValues);
         assertEquals(1, editsValues.size());
         assertEquals(
-                "[{\"find\":\"foo\",\"replace\":\"bar\"},{\"find\":\"baz\",\"replace\":\"qux\"}]",
-                editsValues.get(0));
+                "[{\"find\":\"foo\",\"replace\":\"bar\"},{\"find\":\"baz\",\"replace\":\"qux\"}]", editsValues.get(0));
 
         // Primitive fields keep the original behavior (single value, not JSON-wrapped).
         List<Object> useRegex = body.get("useRegex");
@@ -371,8 +364,7 @@ class AiWorkflowServiceTest {
         // convention. The executor must preserve that behavior for primitive lists.
         String ocrEndpoint = "/api/v1/misc/ocr-pdf";
         MockMultipartFile input = pdf("input.pdf", "bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {
                   "outcome":"plan",
                   "summary":"OCR the document",
@@ -380,8 +372,7 @@ class AiWorkflowServiceTest {
                     {"tool":"%s","parameters":{"languages":["eng","fra","deu"]}}
                   ]
                 }
-                """
-                        .formatted(ocrEndpoint));
+                """.formatted(ocrEndpoint));
         when(toolMetadataService.isMultiInput(ocrEndpoint)).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(ocrEndpoint)).thenReturn(false);
         stubEndpoint(ocrEndpoint, pdfResource("ocred", "ocred.pdf"));
@@ -390,8 +381,7 @@ class AiWorkflowServiceTest {
         service.orchestrate(requestFor(input, "ocr"));
 
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
-                ArgumentCaptor.forClass(MultiValueMap.class);
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor = ArgumentCaptor.forClass(MultiValueMap.class);
         verify(internalApiClient).post(eq(ocrEndpoint), bodyCaptor.capture());
         List<Object> languages = bodyCaptor.getValue().get("languages");
         assertNotNull(languages);
@@ -404,18 +394,13 @@ class AiWorkflowServiceTest {
         // its read timeout fires. The workflow must convert that into a clean CANNOT_CONTINUE
         // outcome so the user sees an actionable message rather than the request hanging forever.
         MockMultipartFile input = pdf("input.pdf", "bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {"outcome":"tool_call","tool":"%s","parameters":{"angle":90},"rationale":"Rotating"}
-                """
-                        .formatted(ROTATE_ENDPOINT));
+                """.formatted(ROTATE_ENDPOINT));
         when(toolMetadataService.isMultiInput(ROTATE_ENDPOINT)).thenReturn(false);
         when(internalApiClient.post(eq(ROTATE_ENDPOINT), any()))
-                .thenThrow(
-                        new InternalApiTimeoutException(
-                                ROTATE_ENDPOINT,
-                                java.time.Duration.ofSeconds(300),
-                                new java.io.IOException("Read timed out")));
+                .thenThrow(new InternalApiTimeoutException(
+                        ROTATE_ENDPOINT, java.time.Duration.ofSeconds(300), new java.io.IOException("Read timed out")));
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "rotate"));
 
@@ -435,8 +420,7 @@ class AiWorkflowServiceTest {
         // Multi-step plans must also handle a hung tool gracefully (no partial leaks) and the
         // failure message must identify which step failed so the user can iterate.
         MockMultipartFile input = pdf("input.pdf", "bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {
                   "outcome":"plan",
                   "summary":"Rotate then compress",
@@ -445,18 +429,16 @@ class AiWorkflowServiceTest {
                     {"tool":"%s","parameters":{}}
                   ]
                 }
-                """
-                        .formatted(ROTATE_ENDPOINT, COMPRESS_ENDPOINT));
+                """.formatted(ROTATE_ENDPOINT, COMPRESS_ENDPOINT));
         when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
         stubEndpoint(ROTATE_ENDPOINT, pdfResource("rotated", "rotated.pdf"));
         // No fileStorage stub here: the second step times out before any output reaches storage.
         when(internalApiClient.post(eq(COMPRESS_ENDPOINT), any()))
-                .thenThrow(
-                        new InternalApiTimeoutException(
-                                COMPRESS_ENDPOINT,
-                                java.time.Duration.ofSeconds(300),
-                                new java.io.IOException("Read timed out")));
+                .thenThrow(new InternalApiTimeoutException(
+                        COMPRESS_ENDPOINT,
+                        java.time.Duration.ofSeconds(300),
+                        new java.io.IOException("Read timed out")));
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "rotate then compress"));
 
@@ -470,8 +452,7 @@ class AiWorkflowServiceTest {
     @Test
     void generateFileStoresContentDirectlyWithoutToolCall() throws IOException {
         MockMultipartFile input = pdf("report.pdf", "bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {
                   "outcome":"generate_file",
                   "content":"# Hello\\n\\nWorld",
@@ -497,15 +478,13 @@ class AiWorkflowServiceTest {
         // PDF→Markdown is a normal tool the edit agent emits as a plan step (no bespoke
         // outcome); the plan executor runs the converter and returns the .md file.
         MockMultipartFile input = pdf("multi-column-test_lorem.pdf", "pdf-bytes");
-        stubOrchestrator(
-                """
+        stubOrchestrator("""
                 {
                   "outcome":"plan",
                   "summary":"Convert to Markdown",
                   "steps":[{"tool":"%s","parameters":{}}]
                 }
-                """
-                        .formatted(MARKDOWN_ENDPOINT));
+                """.formatted(MARKDOWN_ENDPOINT));
         when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
         stubEndpoint(MARKDOWN_ENDPOINT, pdfResource("# Title", "multi-column-test_lorem.md"));
@@ -516,7 +495,8 @@ class AiWorkflowServiceTest {
         assertEquals(AiWorkflowOutcome.COMPLETED, result.getOutcome());
         assertEquals(1, result.getResultFiles().size());
         // Extension changes (pdf -> md), so the converter's response filename wins.
-        assertEquals("multi-column-test_lorem.md", result.getResultFiles().get(0).getFileName());
+        assertEquals(
+                "multi-column-test_lorem.md", result.getResultFiles().get(0).getFileName());
         verify(internalApiClient, times(1)).post(eq(MARKDOWN_ENDPOINT), any());
     }
 
@@ -541,17 +521,14 @@ class AiWorkflowServiceTest {
         document.addPage(new PDPage());
         document.addPage(new PDPage());
         when(pdfDocumentFactory.load(any(MultipartFile.class), anyBoolean())).thenReturn(document);
-        when(pdfContentExtractor.extractPageTextRaw(eq(document), anyInt()))
-                .thenReturn("page content");
+        when(pdfContentExtractor.extractPageTextRaw(eq(document), anyInt())).thenReturn("page content");
 
         int[] orchestratorCalls = {0};
-        doAnswer(
-                        inv -> {
-                            orchestratorCalls[0]++;
-                            String responseJson;
-                            if (orchestratorCalls[0] == 1) {
-                                responseJson =
-                                        """
+        doAnswer(inv -> {
+                    orchestratorCalls[0]++;
+                    String responseJson;
+                    if (orchestratorCalls[0] == 1) {
+                        responseJson = """
                                         {
                                           "outcome":"need_ingest",
                                           "resumeWith":"pdf_question",
@@ -560,24 +537,22 @@ class AiWorkflowServiceTest {
                                           "contentTypes":["page_text"]
                                         }
                                         """;
-                            } else {
-                                responseJson =
-                                        """
+                    } else {
+                        responseJson = """
                                         {"outcome":"answer","answer":"done","evidence":[]}
                                         """;
-                            }
-                            Consumer<String> consumer = inv.getArgument(3);
-                            consumer.accept(wrapAsResultEvent(responseJson));
-                            return null;
-                        })
+                    }
+                    Consumer<String> consumer = inv.getArgument(3);
+                    consumer.accept(wrapAsResultEvent(responseJson));
+                    return null;
+                })
                 .when(aiEngineClient)
                 .streamPost(eq("/api/v1/orchestrator"), anyString(), nullable(String.class), any());
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "summarise this"));
 
         assertEquals(AiWorkflowOutcome.ANSWER, result.getOutcome());
-        verify(aiEngineClient, times(1))
-                .postLongRunning(eq("/api/v1/documents"), anyString(), nullable(String.class));
+        verify(aiEngineClient, times(1)).postLongRunning(eq("/api/v1/documents"), anyString(), nullable(String.class));
         verify(aiEngineClient, times(2))
                 .streamPost(eq("/api/v1/orchestrator"), anyString(), nullable(String.class), any());
     }
@@ -585,12 +560,11 @@ class AiWorkflowServiceTest {
     // --- helpers ---
 
     private void stubOrchestrator(String responseJson) throws IOException {
-        doAnswer(
-                        inv -> {
-                            Consumer<String> consumer = inv.getArgument(3);
-                            consumer.accept(wrapAsResultEvent(responseJson));
-                            return null;
-                        })
+        doAnswer(inv -> {
+                    Consumer<String> consumer = inv.getArgument(3);
+                    consumer.accept(wrapAsResultEvent(responseJson));
+                    return null;
+                })
                 .when(aiEngineClient)
                 .streamPost(eq("/api/v1/orchestrator"), anyString(), nullable(String.class), any());
     }
@@ -608,8 +582,7 @@ class AiWorkflowServiceTest {
     }
 
     private void stubEndpoint(String endpoint, Resource body) {
-        when(internalApiClient.post(eq(endpoint), any(MultiValueMap.class)))
-                .thenReturn(ResponseEntity.ok(body));
+        when(internalApiClient.post(eq(endpoint), any(MultiValueMap.class))).thenReturn(ResponseEntity.ok(body));
     }
 
     /**
@@ -618,13 +591,11 @@ class AiWorkflowServiceTest {
      */
     private AtomicInteger stubFileStorage() throws IOException {
         AtomicInteger counter = new AtomicInteger();
-        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
-                .thenAnswer(
-                        inv -> {
-                            InputStream is = inv.getArgument(0);
-                            long size = is.readAllBytes().length;
-                            return new StoredFile("file-" + counter.incrementAndGet(), size);
-                        });
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString())).thenAnswer(inv -> {
+            InputStream is = inv.getArgument(0);
+            long size = is.readAllBytes().length;
+            return new StoredFile("file-" + counter.incrementAndGet(), size);
+        });
         return counter;
     }
 
@@ -658,8 +629,7 @@ class AiWorkflowServiceTest {
         };
     }
 
-    private static ByteArrayResource zipResource(String filename, List<ZipEntryBytes> entries)
-            throws IOException {
+    private static ByteArrayResource zipResource(String filename, List<ZipEntryBytes> entries) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {
             for (ZipEntryBytes entry : entries) {

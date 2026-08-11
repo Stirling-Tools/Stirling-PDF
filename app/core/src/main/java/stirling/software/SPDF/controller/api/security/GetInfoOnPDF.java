@@ -115,12 +115,10 @@ public class GetInfoOnPDF {
 
         if (!accessPermission.canAssembleDocument()) restrictedPermissions.add("document assembly");
         if (!accessPermission.canExtractContent()) restrictedPermissions.add("content extraction");
-        if (!accessPermission.canExtractForAccessibility())
-            restrictedPermissions.add("accessibility extraction");
+        if (!accessPermission.canExtractForAccessibility()) restrictedPermissions.add("accessibility extraction");
         if (!accessPermission.canFillInForm()) restrictedPermissions.add("form filling");
         if (!accessPermission.canModify()) restrictedPermissions.add("modification");
-        if (!accessPermission.canModifyAnnotations())
-            restrictedPermissions.add("annotation modification");
+        if (!accessPermission.canModifyAnnotations()) restrictedPermissions.add("annotation modification");
         if (!accessPermission.canPrint()) restrictedPermissions.add("printing");
 
         if (!restrictedPermissions.isEmpty()) {
@@ -147,18 +145,13 @@ public class GetInfoOnPDF {
     private static void setNodePermissions(PDDocument pdfBoxDoc, ObjectNode permissionsNode) {
         AccessPermission accessPermission = pdfBoxDoc.getCurrentAccessPermission();
 
+        permissionsNode.put("Document Assembly", getPermissionState(accessPermission.canAssembleDocument()));
+        permissionsNode.put("Extracting Content", getPermissionState(accessPermission.canExtractContent()));
         permissionsNode.put(
-                "Document Assembly", getPermissionState(accessPermission.canAssembleDocument()));
-        permissionsNode.put(
-                "Extracting Content", getPermissionState(accessPermission.canExtractContent()));
-        permissionsNode.put(
-                "Extracting for accessibility",
-                getPermissionState(accessPermission.canExtractForAccessibility()));
+                "Extracting for accessibility", getPermissionState(accessPermission.canExtractForAccessibility()));
         permissionsNode.put("Form Filling", getPermissionState(accessPermission.canFillInForm()));
         permissionsNode.put("Modifying", getPermissionState(accessPermission.canModify()));
-        permissionsNode.put(
-                "Modifying annotations",
-                getPermissionState(accessPermission.canModifyAnnotations()));
+        permissionsNode.put("Modifying annotations", getPermissionState(accessPermission.canModifyAnnotations()));
         permissionsNode.put("Printing", getPermissionState(accessPermission.canPrint()));
     }
 
@@ -198,10 +191,8 @@ public class GetInfoOnPDF {
         return "Custom";
     }
 
-    private static boolean isCloseToSize(
-            float width, float height, float standardWidth, float standardHeight) {
-        return Math.abs(width - standardWidth) <= SIZE_TOLERANCE
-                && Math.abs(height - standardHeight) <= SIZE_TOLERANCE;
+    private static boolean isCloseToSize(float width, float height, float standardWidth, float standardHeight) {
+        return Math.abs(width - standardWidth) <= SIZE_TOLERANCE && Math.abs(height - standardHeight) <= SIZE_TOLERANCE;
     }
 
     private static void setDimensionInfo(ObjectNode dimensionInfo, float width, float height) {
@@ -275,12 +266,9 @@ public class GetInfoOnPDF {
             errorNode.put("error", errorMessage);
             errorNode.put("timestamp", System.currentTimeMillis());
 
-            String jsonString =
-                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(errorNode);
+            String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(errorNode);
             return WebResponseUtils.bytesToWebResponse(
-                    jsonString.getBytes(StandardCharsets.UTF_8),
-                    "error.json",
-                    MediaType.APPLICATION_JSON);
+                    jsonString.getBytes(StandardCharsets.UTF_8), "error.json", MediaType.APPLICATION_JSON);
         } catch (Exception e) {
             log.error("Failed to create error response", e);
             return ResponseEntity.internalServerError().build();
@@ -292,17 +280,8 @@ public class GetInfoOnPDF {
      * surfaced as custom metadata (e.g. the classification policy's StirlingPDFClassification
      * entry).
      */
-    private static final java.util.Set<String> STANDARD_INFO_KEYS =
-            java.util.Set.of(
-                    "Title",
-                    "Author",
-                    "Subject",
-                    "Keywords",
-                    "Producer",
-                    "Creator",
-                    "CreationDate",
-                    "ModDate",
-                    "Trapped");
+    private static final java.util.Set<String> STANDARD_INFO_KEYS = java.util.Set.of(
+            "Title", "Author", "Subject", "Keywords", "Producer", "Creator", "CreationDate", "ModDate", "Trapped");
 
     private static ObjectNode extractMetadata(PDDocument document) {
         ObjectNode metadata = objectMapper.createObjectNode();
@@ -317,20 +296,16 @@ public class GetInfoOnPDF {
                 if (info.getProducer() != null) metadata.put("Producer", info.getProducer());
                 if (info.getCreator() != null) metadata.put("Creator", info.getCreator());
 
-                String creationDate =
-                        formatDate(
-                                info.getCreationDate() != null
-                                        ? info.getCreationDate().toInstant()
-                                        : null);
+                String creationDate = formatDate(
+                        info.getCreationDate() != null ? info.getCreationDate().toInstant() : null);
                 if (creationDate != null) {
                     metadata.put("CreationDate", creationDate);
                 }
 
-                String modificationDate =
-                        formatDate(
-                                info.getModificationDate() != null
-                                        ? info.getModificationDate().toInstant()
-                                        : null);
+                String modificationDate = formatDate(
+                        info.getModificationDate() != null
+                                ? info.getModificationDate().toInstant()
+                                : null);
                 if (modificationDate != null) {
                     metadata.put("ModificationDate", modificationDate);
                 }
@@ -376,8 +351,7 @@ public class GetInfoOnPDF {
         return docInfoNode;
     }
 
-    private static ObjectNode extractComplianceInfo(
-            PDDocument doc, List<PDFVerificationResult> verificationResults) {
+    private static ObjectNode extractComplianceInfo(PDDocument doc, List<PDFVerificationResult> verificationResults) {
         ObjectNode compliancy = objectMapper.createObjectNode();
 
         boolean isPdfA = false;
@@ -396,9 +370,7 @@ public class GetInfoOnPDF {
                         isPdfA = true;
                         String profile = result.getValidationProfile();
                         if (profile != null) {
-                            if (profile.contains("1b")
-                                    || profile.contains("2b")
-                                    || profile.contains("3b")) {
+                            if (profile.contains("1b") || profile.contains("2b") || profile.contains("3b")) {
                                 isPdfB = true;
                             }
                             // Simple extraction: remove "pdfa-" prefix
@@ -450,15 +422,13 @@ public class GetInfoOnPDF {
 
             // 2. Check for JavaScript (Active Content)
             if (catalog.getOpenAction() instanceof PDActionJavaScript) return false;
-            if (catalog.getNames() != null && catalog.getNames().getJavaScript() != null)
-                return false;
+            if (catalog.getNames() != null && catalog.getNames().getJavaScript() != null) return false;
 
             // Check for AcroForm
             if (catalog.getAcroForm() != null) return false;
 
             // 3. Check for Embedded Files
-            if (catalog.getNames() != null && catalog.getNames().getEmbeddedFiles() != null)
-                return false;
+            if (catalog.getNames() != null && catalog.getNames().getEmbeddedFiles() != null) return false;
 
             // 4. Check for External Links or Navigation Actions
             for (PDPage page : doc.getPages()) {
@@ -572,8 +542,7 @@ public class GetInfoOnPDF {
                 PDStructureTreeRoot structureTreeRoot =
                         document.getDocumentCatalog().getStructureTreeRoot();
                 if (structureTreeRoot != null) {
-                    ArrayNode structureTreeArray =
-                            exploreStructureTree(structureTreeRoot.getKids());
+                    ArrayNode structureTreeArray = exploreStructureTree(structureTreeRoot.getKids());
                     other.set("StructureTree", structureTreeArray);
                 }
             } catch (Exception e) {
@@ -597,8 +566,7 @@ public class GetInfoOnPDF {
                 if (efTree != null) {
                     Map<String, PDComplexFileSpecification> efMap = efTree.getNames();
                     if (efMap != null) {
-                        for (Map.Entry<String, PDComplexFileSpecification> entry :
-                                efMap.entrySet()) {
+                        for (Map.Entry<String, PDComplexFileSpecification> entry : efMap.entrySet()) {
                             ObjectNode embeddedFileNode = objectMapper.createObjectNode();
                             embeddedFileNode.put("Name", entry.getKey());
 
@@ -610,13 +578,17 @@ public class GetInfoOnPDF {
                                         "CreationDate",
                                         formatDate(
                                                 embeddedFile.getCreationDate() != null
-                                                        ? embeddedFile.getCreationDate().toInstant()
+                                                        ? embeddedFile
+                                                                .getCreationDate()
+                                                                .toInstant()
                                                         : null));
                                 embeddedFileNode.put(
                                         "ModificationDate",
                                         formatDate(
                                                 embeddedFile.getModDate() != null
-                                                        ? embeddedFile.getModDate().toInstant()
+                                                        ? embeddedFile
+                                                                .getModDate()
+                                                                .toInstant()
                                                         : null));
                             }
                             embeddedFilesArray.add(embeddedFileNode);
@@ -795,8 +767,7 @@ public class GetInfoOnPDF {
         return pageInfoParent;
     }
 
-    private static ObjectNode extractSinglePageInfo(PDDocument document, PDPage page, int pageNum)
-            throws IOException {
+    private static ObjectNode extractSinglePageInfo(PDDocument document, PDPage page, int pageNum) throws IOException {
         ObjectNode pageInfo = objectMapper.createObjectNode();
 
         // Page size and dimensions
@@ -815,14 +786,17 @@ public class GetInfoOnPDF {
         // Page boxes
         pageInfo.put("MediaBox", mediaBox.toString());
         pageInfo.put(
-                "CropBox", page.getCropBox() == null ? "Undefined" : page.getCropBox().toString());
+                "CropBox",
+                page.getCropBox() == null ? "Undefined" : page.getCropBox().toString());
         pageInfo.put(
                 "BleedBox",
                 page.getBleedBox() == null ? "Undefined" : page.getBleedBox().toString());
         pageInfo.put(
-                "TrimBox", page.getTrimBox() == null ? "Undefined" : page.getTrimBox().toString());
+                "TrimBox",
+                page.getTrimBox() == null ? "Undefined" : page.getTrimBox().toString());
         pageInfo.put(
-                "ArtBox", page.getArtBox() == null ? "Undefined" : page.getArtBox().toString());
+                "ArtBox",
+                page.getArtBox() == null ? "Undefined" : page.getArtBox().toString());
 
         // Text content
         PDFTextStripper textStripper = new PDFTextStripper();
@@ -1052,13 +1026,12 @@ public class GetInfoOnPDF {
                             stats.totalImages++;
 
                             // Create a hash based on image properties
-                            String imageHash =
-                                    String.format(
-                                            "%d_%d_%d_%s",
-                                            image.getWidth(),
-                                            image.getHeight(),
-                                            image.getBitsPerComponent(),
-                                            image.getSuffix());
+                            String imageHash = String.format(
+                                    "%d_%d_%d_%s",
+                                    image.getWidth(),
+                                    image.getHeight(),
+                                    image.getBitsPerComponent(),
+                                    image.getSuffix());
                             uniqueImageHashes.add(imageHash);
                         }
                     }
@@ -1126,13 +1099,10 @@ public class GetInfoOnPDF {
             }
 
             // Convert to JSON string
-            String jsonString =
-                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonOutput);
+            String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonOutput);
 
             return WebResponseUtils.bytesToWebResponse(
-                    jsonString.getBytes(StandardCharsets.UTF_8),
-                    "response.json",
-                    MediaType.APPLICATION_JSON);
+                    jsonString.getBytes(StandardCharsets.UTF_8), "response.json", MediaType.APPLICATION_JSON);
 
         } catch (IOException e) {
             log.error("IO error while processing PDF: {}", e.getMessage(), e);
@@ -1150,12 +1120,12 @@ public class GetInfoOnPDF {
             basicInfo.put("FileSizeInBytes", fileSizeInBytes);
 
             String fullText = new PDFTextStripper().getText(document);
-            String[] words = RegexPatternUtils.getInstance().getWhitespacePattern().split(fullText);
-            int paragraphCount =
-                    RegexPatternUtils.getInstance()
-                            .getMultiFormatNewlinePattern()
-                            .split(fullText)
-                            .length;
+            String[] words =
+                    RegexPatternUtils.getInstance().getWhitespacePattern().split(fullText);
+            int paragraphCount = RegexPatternUtils.getInstance()
+                    .getMultiFormatNewlinePattern()
+                    .split(fullText)
+                    .length;
 
             basicInfo.put("WordCount", words.length);
             basicInfo.put("ParagraphCount", paragraphCount);

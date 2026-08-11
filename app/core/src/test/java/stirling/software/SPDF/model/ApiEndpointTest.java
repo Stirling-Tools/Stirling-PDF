@@ -48,8 +48,7 @@ class ApiEndpointTest {
         provided.put("file", new byte[] {1});
         provided.put("mode", "fast");
 
-        assertTrue(
-                endpoint.areParametersValid(provided), "All required keys present should be valid");
+        assertTrue(endpoint.areParametersValid(provided), "All required keys present should be valid");
     }
 
     @Test
@@ -102,9 +101,7 @@ class ApiEndpointTest {
         JsonNode post = postNodeWithParams("desc", false, "fileOrder");
         ApiEndpoint endpoint = new ApiEndpoint("merge", post);
 
-        assertTrue(
-                endpoint.areParametersValid(Map.of()),
-                "Should be valid when optional param is omitted");
+        assertTrue(endpoint.areParametersValid(Map.of()), "Should be valid when optional param is omitted");
     }
 
     @Test
@@ -130,13 +127,10 @@ class ApiEndpointTest {
         provided.put("sortType", "byFileName");
 
         assertTrue(
-                endpoint.areParametersValid(provided),
-                "Should pass when required params present and optional omitted");
+                endpoint.areParametersValid(provided), "Should pass when required params present and optional omitted");
 
         provided.put("fileOrder", "0,1,2");
-        assertTrue(
-                endpoint.areParametersValid(provided),
-                "Should also pass when optional param is provided");
+        assertTrue(endpoint.areParametersValid(provided), "Should also pass when optional param is provided");
     }
 
     @Test

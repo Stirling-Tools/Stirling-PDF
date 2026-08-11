@@ -58,8 +58,8 @@ class FormUtilsGapTest {
         return new SetupDocument(page, acroForm);
     }
 
-    private static void attachWidget(
-            SetupDocument setup, PDTerminalField field, PDRectangle rectangle) throws IOException {
+    private static void attachWidget(SetupDocument setup, PDTerminalField field, PDRectangle rectangle)
+            throws IOException {
         PDAnnotationWidget widget = new PDAnnotationWidget();
         widget.setRectangle(rectangle);
         widget.setPage(setup.page());
@@ -114,8 +114,7 @@ class FormUtilsGapTest {
         void comboBoxDetected() throws IOException {
             try (PDDocument doc = new PDDocument()) {
                 SetupDocument setup = createBasicDocument(doc);
-                assertEquals(
-                        "combobox", FormUtils.detectFieldType(new PDComboBox(setup.acroForm())));
+                assertEquals("combobox", FormUtils.detectFieldType(new PDComboBox(setup.acroForm())));
             }
         }
 
@@ -131,8 +130,7 @@ class FormUtilsGapTest {
         void radioButtonDetected() throws IOException {
             try (PDDocument doc = new PDDocument()) {
                 SetupDocument setup = createBasicDocument(doc);
-                assertEquals(
-                        "radio", FormUtils.detectFieldType(new PDRadioButton(setup.acroForm())));
+                assertEquals("radio", FormUtils.detectFieldType(new PDRadioButton(setup.acroForm())));
             }
         }
 
@@ -140,9 +138,7 @@ class FormUtilsGapTest {
         void signatureDetected() throws IOException {
             try (PDDocument doc = new PDDocument()) {
                 SetupDocument setup = createBasicDocument(doc);
-                assertEquals(
-                        "signature",
-                        FormUtils.detectFieldType(new PDSignatureField(setup.acroForm())));
+                assertEquals("signature", FormUtils.detectFieldType(new PDSignatureField(setup.acroForm())));
             }
         }
     }
@@ -241,7 +237,8 @@ class FormUtilsGapTest {
 
         @Test
         void emptySelectionsReturnsEmpty() {
-            assertTrue(FormUtils.filterChoiceSelections(List.of(), List.of("A"), "f").isEmpty());
+            assertTrue(FormUtils.filterChoiceSelections(List.of(), List.of("A"), "f")
+                    .isEmpty());
         }
 
         @Test
@@ -249,14 +246,14 @@ class FormUtilsGapTest {
             List<String> selections = new ArrayList<>();
             selections.add("  ");
             selections.add(null);
-            assertTrue(FormUtils.filterChoiceSelections(selections, List.of("A"), "f").isEmpty());
+            assertTrue(FormUtils.filterChoiceSelections(selections, List.of("A"), "f")
+                    .isEmpty());
         }
 
         @Test
         void matchingSelectionsAreKeptCaseInsensitively() {
-            List<String> result =
-                    FormUtils.filterChoiceSelections(
-                            List.of("apple", "BANANA"), List.of("Apple", "Banana", "Cherry"), "f");
+            List<String> result = FormUtils.filterChoiceSelections(
+                    List.of("apple", "BANANA"), List.of("Apple", "Banana", "Cherry"), "f");
             // The resolved (canonical) allowed option is returned, not the input.
             assertEquals(List.of("Apple", "Banana"), result);
         }
@@ -264,8 +261,7 @@ class FormUtilsGapTest {
         @Test
         void unsupportedSelectionsAreDropped() {
             List<String> result =
-                    FormUtils.filterChoiceSelections(
-                            List.of("Apple", "Grape"), List.of("Apple", "Banana"), "f");
+                    FormUtils.filterChoiceSelections(List.of("Apple", "Grape"), List.of("Apple", "Banana"), "f");
             assertEquals(List.of("Apple"), result);
         }
 
@@ -399,8 +395,7 @@ class FormUtilsGapTest {
         @Test
         void comboBoxUsesCurrentValue() {
             FormUtils.FormFieldInfo info =
-                    new FormUtils.FormFieldInfo(
-                            "color", "Color", "combobox", "Red", null, false, 0, false, null, 0);
+                    new FormUtils.FormFieldInfo("color", "Color", "combobox", "Red", null, false, 0, false, null, 0);
             Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(info));
             assertEquals("Red", result.get("color"));
         }
@@ -408,8 +403,7 @@ class FormUtilsGapTest {
         @Test
         void singleSelectListBoxUsesValue() {
             FormUtils.FormFieldInfo info =
-                    new FormUtils.FormFieldInfo(
-                            "list", "List", "listbox", "Item1", null, false, 0, false, null, 0);
+                    new FormUtils.FormFieldInfo("list", "List", "listbox", "Item1", null, false, 0, false, null, 0);
             Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(info));
             assertEquals("Item1", result.get("list"));
         }
@@ -417,8 +411,7 @@ class FormUtilsGapTest {
         @Test
         void multiSelectListBoxUsesEmptyArray() {
             FormUtils.FormFieldInfo info =
-                    new FormUtils.FormFieldInfo(
-                            "list", "List", "listbox", "Item1", null, false, 0, true, null, 0);
+                    new FormUtils.FormFieldInfo("list", "List", "listbox", "Item1", null, false, 0, true, null, 0);
             Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(info));
             Object value = result.get("list");
             assertTrue(value instanceof List<?>);
@@ -428,8 +421,7 @@ class FormUtilsGapTest {
         @Test
         void nullValueDefaultsToEmptyString() {
             FormUtils.FormFieldInfo info =
-                    new FormUtils.FormFieldInfo(
-                            "name", "Name", "text", null, null, false, 0, false, null, 0);
+                    new FormUtils.FormFieldInfo("name", "Name", "text", null, null, false, 0, false, null, 0);
             Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(info));
             assertEquals("", result.get("name"));
         }
@@ -437,11 +429,9 @@ class FormUtilsGapTest {
         @Test
         void entriesWithBlankNamesAreSkipped() {
             FormUtils.FormFieldInfo blank =
-                    new FormUtils.FormFieldInfo(
-                            "  ", "Blank", "text", "x", null, false, 0, false, null, 0);
+                    new FormUtils.FormFieldInfo("  ", "Blank", "text", "x", null, false, 0, false, null, 0);
             FormUtils.FormFieldInfo good =
-                    new FormUtils.FormFieldInfo(
-                            "kept", "Kept", "text", "x", null, false, 0, false, null, 0);
+                    new FormUtils.FormFieldInfo("kept", "Kept", "text", "x", null, false, 0, false, null, 0);
             Map<String, Object> result = FormUtils.buildFillTemplateRecord(List.of(blank, good));
             assertEquals(1, result.size());
             assertTrue(result.containsKey("kept"));
@@ -699,17 +689,16 @@ class FormUtilsGapTest {
                 text.setDefaultAppearance("/Helv 12 Tf 0 g");
                 attachWidget(setup, text, new PDRectangle(50, 700, 200, 20));
 
-                FormUtils.ModifyFormFieldDefinition mod =
-                        new FormUtils.ModifyFormFieldDefinition(
-                                "oldName",
-                                "newName",
-                                "New Label",
-                                null, // keep type (text) -> in-place path
-                                Boolean.TRUE,
-                                null,
-                                null,
-                                null,
-                                null);
+                FormUtils.ModifyFormFieldDefinition mod = new FormUtils.ModifyFormFieldDefinition(
+                        "oldName",
+                        "newName",
+                        "New Label",
+                        null, // keep type (text) -> in-place path
+                        Boolean.TRUE,
+                        null,
+                        null,
+                        null,
+                        null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -729,9 +718,8 @@ class FormUtilsGapTest {
                 text.setPartialName("present");
                 attachWidget(setup, text, new PDRectangle(50, 700, 200, 20));
 
-                FormUtils.ModifyFormFieldDefinition mod =
-                        new FormUtils.ModifyFormFieldDefinition(
-                                "missing", null, null, null, null, null, null, null, null);
+                FormUtils.ModifyFormFieldDefinition mod = new FormUtils.ModifyFormFieldDefinition(
+                        "missing", null, null, null, null, null, null, null, null);
 
                 FormUtils.modifyFormFields(doc, List.of(mod));
 
@@ -752,9 +740,7 @@ class FormUtilsGapTest {
 
                 List<FormUtils.ModifyFormFieldDefinition> mods = new ArrayList<>();
                 mods.add(null);
-                mods.add(
-                        new FormUtils.ModifyFormFieldDefinition(
-                                "  ", null, null, null, null, null, null, null, null));
+                mods.add(new FormUtils.ModifyFormFieldDefinition("  ", null, null, null, null, null, null, null, null));
 
                 FormUtils.modifyFormFields(doc, mods);
                 assertEquals(1, FormUtils.extractFormFields(doc).size());

@@ -41,8 +41,7 @@ class ConvertPDFToMarkdownTest {
         ResponseEntity<Resource> handle(Exception ex) {
             String message = ex.getMessage();
             byte[] body = message != null ? message.getBytes(StandardCharsets.UTF_8) : new byte[0];
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ByteArrayResource(body));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ByteArrayResource(body));
         }
     }
 
@@ -54,25 +53,20 @@ class ConvertPDFToMarkdownTest {
         File tmpFile = File.createTempFile("test", ".pdf");
         tmpFile.deleteOnExit();
 
-        try (MockedConstruction<TempFile> tempMock =
-                        Mockito.mockConstruction(
-                                TempFile.class,
-                                (mock, ctx) -> {
-                                    when(mock.getFile()).thenReturn(tmpFile);
-                                    when(mock.getPath()).thenReturn(tmpFile.toPath());
-                                });
+        try (MockedConstruction<TempFile> tempMock = Mockito.mockConstruction(TempFile.class, (mock, ctx) -> {
+                    when(mock.getFile()).thenReturn(tmpFile);
+                    when(mock.getPath()).thenReturn(tmpFile.toPath());
+                });
                 MockedStatic<PdfDocument> docStatic = Mockito.mockStatic(PdfDocument.class);
-                MockedConstruction<PdfMarkdownConverter> converterMock =
-                        Mockito.mockConstruction(
-                                PdfMarkdownConverter.class,
-                                (mock, ctx) -> when(mock.convert(any())).thenReturn(expectedMd))) {
+                MockedConstruction<PdfMarkdownConverter> converterMock = Mockito.mockConstruction(
+                        PdfMarkdownConverter.class,
+                        (mock, ctx) -> when(mock.convert(any())).thenReturn(expectedMd))) {
 
             PdfDocument mockDoc = Mockito.mock(PdfDocument.class);
             docStatic.when(() -> PdfDocument.open(any(Path.class))).thenReturn(mockDoc);
 
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "input.pdf", "application/pdf", new byte[] {1, 2, 3});
+                    new MockMultipartFile("fileInput", "input.pdf", "application/pdf", new byte[] {1, 2, 3});
 
             mockMvc()
                     .perform(multipart("/api/v1/convert/pdf/markdown").file(file))
@@ -87,27 +81,19 @@ class ConvertPDFToMarkdownTest {
         File tmpFile = File.createTempFile("test", ".pdf");
         tmpFile.deleteOnExit();
 
-        try (MockedConstruction<TempFile> tempMock =
-                        Mockito.mockConstruction(
-                                TempFile.class,
-                                (mock, ctx) -> {
-                                    when(mock.getFile()).thenReturn(tmpFile);
-                                    when(mock.getPath()).thenReturn(tmpFile.toPath());
-                                });
+        try (MockedConstruction<TempFile> tempMock = Mockito.mockConstruction(TempFile.class, (mock, ctx) -> {
+                    when(mock.getFile()).thenReturn(tmpFile);
+                    when(mock.getPath()).thenReturn(tmpFile.toPath());
+                });
                 MockedStatic<PdfDocument> docStatic = Mockito.mockStatic(PdfDocument.class);
-                MockedConstruction<PdfMarkdownConverter> converterMock =
-                        Mockito.mockConstruction(
-                                PdfMarkdownConverter.class,
-                                (mock, ctx) ->
-                                        when(mock.convert(any()))
-                                                .thenThrow(new RuntimeException("boom")))) {
+                MockedConstruction<PdfMarkdownConverter> converterMock = Mockito.mockConstruction(
+                        PdfMarkdownConverter.class,
+                        (mock, ctx) -> when(mock.convert(any())).thenThrow(new RuntimeException("boom")))) {
 
             PdfDocument mockDoc = Mockito.mock(PdfDocument.class);
             docStatic.when(() -> PdfDocument.open(any(Path.class))).thenReturn(mockDoc);
 
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "x.pdf", "application/pdf", new byte[] {0x01});
+            MockMultipartFile file = new MockMultipartFile("fileInput", "x.pdf", "application/pdf", new byte[] {0x01});
 
             mockMvc()
                     .perform(multipart("/api/v1/convert/pdf/markdown").file(file))

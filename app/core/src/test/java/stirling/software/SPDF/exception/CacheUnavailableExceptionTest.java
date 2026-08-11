@@ -33,11 +33,9 @@ class CacheUnavailableExceptionTest {
     @Test
     void is_throwable() {
         CacheUnavailableException ex = new CacheUnavailableException("boom");
-        assertThrows(
-                CacheUnavailableException.class,
-                () -> {
-                    throw ex;
-                });
+        assertThrows(CacheUnavailableException.class, () -> {
+            throw ex;
+        });
     }
 
     @Test

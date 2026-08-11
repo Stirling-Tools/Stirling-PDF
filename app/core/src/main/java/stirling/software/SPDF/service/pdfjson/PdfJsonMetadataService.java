@@ -95,8 +95,7 @@ public class PdfJsonMetadataService {
         info.setCreator(metadata.getCreator());
         info.setProducer(metadata.getProducer());
         if (metadata.getCreationDate() != null) {
-            parseInstant(metadata.getCreationDate())
-                    .ifPresent(instant -> info.setCreationDate(toCalendar(instant)));
+            parseInstant(metadata.getCreationDate()).ifPresent(instant -> info.setCreationDate(toCalendar(instant)));
         }
         if (metadata.getModificationDate() != null) {
             parseInstant(metadata.getModificationDate())

@@ -11,8 +11,6 @@ import stirling.software.common.model.api.PDFFile;
 @EqualsAndHashCode(callSuper = true)
 public class PrintFileRequest extends PDFFile {
 
-    @Schema(
-            description = "Name of printer to match against",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Name of printer to match against", requiredMode = Schema.RequiredMode.REQUIRED)
     private String printerName;
 }

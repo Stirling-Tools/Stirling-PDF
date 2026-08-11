@@ -66,8 +66,7 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
             request.contentType(file.getContentType());
         }
         try (InputStream inputStream = file.getInputStream()) {
-            s3Client.putObject(
-                    request.build(), RequestBody.fromInputStream(inputStream, file.getSize()));
+            s3Client.putObject(request.build(), RequestBody.fromInputStream(inputStream, file.getSize()));
         } catch (SdkException e) {
             throw new IOException("Failed to upload object to S3", e);
         }
@@ -86,10 +85,9 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
                 GetObjectRequest.builder().bucket(bucket).key(storageKey).build();
         try {
             ResponseInputStream<GetObjectResponse> stream = s3Client.getObject(request);
-            long contentLength =
-                    stream.response().contentLength() != null
-                            ? stream.response().contentLength()
-                            : -1;
+            long contentLength = stream.response().contentLength() != null
+                    ? stream.response().contentLength()
+                    : -1;
             return new InputStreamResource(stream) {
                 @Override
                 public long contentLength() {
@@ -119,14 +117,12 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
     }
 
     @Override
-    public Optional<URI> signedDownloadUrl(
-            String storageKey, Duration ttl, boolean inline, String originalFilename)
+    public Optional<URI> signedDownloadUrl(String storageKey, Duration ttl, boolean inline, String originalFilename)
             throws IOException {
         if (storageKey == null || storageKey.isBlank()) {
             return Optional.empty();
         }
-        Duration effectiveTtl =
-                ttl == null || ttl.isZero() || ttl.isNegative() ? Duration.ofMinutes(5) : ttl;
+        Duration effectiveTtl = ttl == null || ttl.isZero() || ttl.isNegative() ? Duration.ofMinutes(5) : ttl;
         try {
             GetObjectRequest.Builder getBuilder =
                     GetObjectRequest.builder().bucket(bucket).key(storageKey);
@@ -134,11 +130,10 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
             if (disposition != null) {
                 getBuilder.responseContentDisposition(disposition);
             }
-            GetObjectPresignRequest presignRequest =
-                    GetObjectPresignRequest.builder()
-                            .signatureDuration(effectiveTtl)
-                            .getObjectRequest(getBuilder.build())
-                            .build();
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(effectiveTtl)
+                    .getObjectRequest(getBuilder.build())
+                    .build();
             PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignRequest);
             return Optional.of(presigned.url().toURI());
         } catch (SdkException | URISyntaxException e) {
@@ -186,10 +181,9 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        String stripped =
-                CONTROL_CHARACTER_PATTERN
-                        .matcher(Paths.get(filename).getFileName().toString())
-                        .replaceAll("");
+        String stripped = CONTROL_CHARACTER_PATTERN
+                .matcher(Paths.get(filename).getFileName().toString())
+                .replaceAll("");
         return stripped.isBlank() ? "file" : stripped;
     }
 }

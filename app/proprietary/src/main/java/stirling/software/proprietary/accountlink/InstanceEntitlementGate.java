@@ -61,8 +61,7 @@ public class InstanceEntitlementGate {
             return GateDecision.allow(GateDecision.Reason.MANUAL_FREE);
         }
         boolean linked = credentialStore.isLinked();
-        Optional<InstanceEntitlement> entitlement =
-                linked ? entitlementCache.current() : Optional.empty();
+        Optional<InstanceEntitlement> entitlement = linked ? entitlementCache.current() : Optional.empty();
         boolean graceExpired = linked && entitlement.isEmpty() && isGraceExpired();
         // Deplete the applicable ceiling — free grant (unsubscribed) or spend cap (capped
         // subscription) — by local usage not yet synced, so the gate stops in real time instead of
@@ -141,11 +140,10 @@ public class InstanceEntitlementGate {
     }
 
     private LocalDateTime lastAuthoritativeContact() {
-        LocalDateTime lastSuccess =
-                syncStateRepository
-                        .findById(AccountLinkSyncState.SINGLETON_ID)
-                        .map(AccountLinkSyncState::getLastSuccessAt)
-                        .orElse(null);
+        LocalDateTime lastSuccess = syncStateRepository
+                .findById(AccountLinkSyncState.SINGLETON_ID)
+                .map(AccountLinkSyncState::getLastSuccessAt)
+                .orElse(null);
         if (lastSuccess != null) {
             return lastSuccess;
         }

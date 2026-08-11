@@ -43,8 +43,7 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         if (!rateLimit) {
             // If rateLimit is not enabled, just pass all requests without rate limiting
@@ -80,22 +79,10 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
                 getRoleFromAuthentication(SecurityContextHolder.getContext().getAuthentication());
         if (request.getHeader("X-API-KEY") != null) {
             // It's an API call
-            processRequest(
-                    userRole.getApiCallsPerDay(),
-                    identifier,
-                    apiBuckets,
-                    request,
-                    response,
-                    filterChain);
+            processRequest(userRole.getApiCallsPerDay(), identifier, apiBuckets, request, response, filterChain);
         } else {
             // It's a Web UI call
-            processRequest(
-                    userRole.getWebCallsPerDay(),
-                    identifier,
-                    webBuckets,
-                    request,
-                    response,
-                    filterChain);
+            processRequest(userRole.getWebCallsPerDay(), identifier, webBuckets, request, response, filterChain);
         }
     }
 
@@ -130,23 +117,23 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
         } else {
             long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setHeader(
-                    "X-Rate-Limit-Retry-After-Seconds",
-                    Newlines.stripAll(String.valueOf(waitForRefill)));
+            response.setHeader("X-Rate-Limit-Retry-After-Seconds", Newlines.stripAll(String.valueOf(waitForRefill)));
             response.getWriter().write("Rate limit exceeded for POST requests.");
         }
     }
 
     private Bucket createUserBucket(int limitPerDay) {
-        Bandwidth limit =
-                Bandwidth.builder()
-                        .capacity(limitPerDay)
-                        .refillIntervally(limitPerDay, Duration.ofDays(1))
-                        .build();
+        Bandwidth limit = Bandwidth.builder()
+                .capacity(limitPerDay)
+                .refillIntervally(limitPerDay, Duration.ofDays(1))
+                .build();
         return Bucket.builder().addLimit(limit).build();
     }
 
     private static String stripNewlines(final String s) {
-        return RegexPatternUtils.getInstance().getNewlineCharsPattern().matcher(s).replaceAll("");
+        return RegexPatternUtils.getInstance()
+                .getNewlineCharsPattern()
+                .matcher(s)
+                .replaceAll("");
     }
 }

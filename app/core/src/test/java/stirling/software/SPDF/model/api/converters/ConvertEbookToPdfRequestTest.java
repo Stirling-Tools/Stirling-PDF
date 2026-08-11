@@ -12,8 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 class ConvertEbookToPdfRequestTest {
 
     private static MultipartFile file() {
-        return new MockMultipartFile(
-                "fileInput", "book.epub", "application/epub+zip", new byte[] {1, 2, 3});
+        return new MockMultipartFile("fileInput", "book.epub", "application/epub+zip", new byte[] {1, 2, 3});
     }
 
     @Nested

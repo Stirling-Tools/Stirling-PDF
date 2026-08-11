@@ -73,9 +73,7 @@ public final class Type3SignatureTool {
         output.put("pdf", pdfPath.toString());
         output.put("fonts", fonts);
         ObjectWriter writer =
-                arguments.pretty
-                        ? OBJECT_MAPPER.writerWithDefaultPrettyPrinter()
-                        : OBJECT_MAPPER.writer();
+                arguments.pretty ? OBJECT_MAPPER.writerWithDefaultPrettyPrinter() : OBJECT_MAPPER.writer();
         if (arguments.output != null) {
             Path parent = arguments.output.toAbsolutePath().getParent();
             if (parent != null) {
@@ -88,8 +86,7 @@ public final class Type3SignatureTool {
         }
     }
 
-    private static List<Map<String, Object>> collectType3Fonts(PDDocument document)
-            throws IOException {
+    private static List<Map<String, Object>> collectType3Fonts(PDDocument document) throws IOException {
         if (document == null || document.getNumberOfPages() == 0) {
             return List.of();
         }
@@ -129,8 +126,7 @@ public final class Type3SignatureTool {
             if (cosObject != null && !visited.add(cosObject)) {
                 continue;
             }
-            fonts.add(
-                    describeFont(document, pageNumber, name.getName(), type3Font, glyphExtractor));
+            fonts.add(describeFont(document, pageNumber, name.getName(), type3Font, glyphExtractor));
         }
 
         Deque<PDResources> embedded = new ArrayDeque<>();
@@ -146,11 +142,7 @@ public final class Type3SignatureTool {
     }
 
     private static Map<String, Object> describeFont(
-            PDDocument document,
-            int pageNumber,
-            String fontId,
-            PDType3Font font,
-            Type3GlyphExtractor glyphExtractor)
+            PDDocument document, int pageNumber, String fontId, PDType3Font font, Type3GlyphExtractor glyphExtractor)
             throws IOException {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("pageNumber", pageNumber);
@@ -160,8 +152,7 @@ public final class Type3SignatureTool {
         payload.put("encoding", resolveEncoding(font));
         payload.put("signature", Type3FontSignatureCalculator.computeSignature(font));
 
-        List<Type3GlyphOutline> glyphs =
-                glyphExtractor.extractGlyphs(document, font, fontId, pageNumber);
+        List<Type3GlyphOutline> glyphs = glyphExtractor.extractGlyphs(document, font, fontId, pageNumber);
         payload.put("glyphCount", glyphs != null ? glyphs.size() : 0);
 
         Set<Integer> coverage = new TreeSet<>();
@@ -204,8 +195,7 @@ public final class Type3SignatureTool {
         if (size == 0) {
             throw new IOException("Output file is empty: " + absolute);
         }
-        System.out.println(
-                "Wrote " + fontCount + " fonts to " + absolute + " (" + size + " bytes, verified)");
+        System.out.println("Wrote " + fontCount + " fonts to " + absolute + " (" + size + " bytes, verified)");
     }
 
     private static String resolveEncoding(PDType3Font font) {
@@ -246,8 +236,7 @@ public final class Type3SignatureTool {
     }
 
     private static void printUsage() {
-        System.out.println(
-                """
+        System.out.println("""
                 Type3SignatureTool - dump Type3 font signatures for library building
                 Usage:
                   --pdf <file.pdf>          Input PDF to analyse (required)

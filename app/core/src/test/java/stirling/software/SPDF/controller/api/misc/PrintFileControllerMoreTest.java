@@ -83,8 +83,7 @@ class PrintFileControllerMoreTest {
         @DisplayName("PDF to a matching printer returns 200 and invokes job.print()")
         void pdfPrintSuccess() throws Exception {
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, smallPdf());
+                    new MockMultipartFile("fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, smallPdf());
 
             PrintService service = printerNamed("Mock Office Printer");
             PrintService[] services = {service};
@@ -109,8 +108,7 @@ class PrintFileControllerMoreTest {
         @DisplayName("PrinterException during PDF print yields 400 with the error message")
         void pdfPrintErrorReturnsBadRequest() throws Exception {
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, smallPdf());
+                    new MockMultipartFile("fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, smallPdf());
 
             PrintService service = printerNamed("Mock Office Printer");
             PrintService[] services = {service};
@@ -138,8 +136,7 @@ class PrintFileControllerMoreTest {
         @Test
         @DisplayName("PNG to a matching printer returns 200 and invokes job.print()")
         void imagePrintSuccess() throws Exception {
-            MockMultipartFile file =
-                    new MockMultipartFile("fileInput", "pic.png", "image/png", smallPng());
+            MockMultipartFile file = new MockMultipartFile("fileInput", "pic.png", "image/png", smallPng());
 
             PrintService service = printerNamed("Photo Printer");
             PrintService[] services = {service};
@@ -169,8 +166,7 @@ class PrintFileControllerMoreTest {
         @DisplayName("no matching printer returns 400 with 'No matching printer'")
         void noMatchingPrinterReturnsBadRequest() throws Exception {
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, smallPdf());
+                    new MockMultipartFile("fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, smallPdf());
 
             PrintService service = printerNamed("Some Other Printer");
             PrintService[] services = {service};
@@ -179,8 +175,7 @@ class PrintFileControllerMoreTest {
                 lookup.when(() -> PrintServiceLookup.lookupPrintServices(isNull(), isNull()))
                         .thenReturn(services);
 
-                ResponseEntity<String> response =
-                        controller.printFile(request(file, "nonexistent"));
+                ResponseEntity<String> response = controller.printFile(request(file, "nonexistent"));
 
                 assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
                 assertTrue(response.getBody().contains("No matching printer"));
@@ -191,8 +186,7 @@ class PrintFileControllerMoreTest {
         @DisplayName("printer match is case-insensitive and substring based")
         void printerMatchCaseInsensitive() throws Exception {
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, smallPdf());
+                    new MockMultipartFile("fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, smallPdf());
 
             PrintService service = printerNamed("HP LaserJet 4000");
             PrintService[] services = {service};
@@ -222,8 +216,7 @@ class PrintFileControllerMoreTest {
         void unsupportedContentTypeNoPrint() throws Exception {
             // Neither application/pdf nor image/* -> neither print branch runs.
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "data.bin", "application/octet-stream", "x".getBytes());
+                    new MockMultipartFile("fileInput", "data.bin", "application/octet-stream", "x".getBytes());
 
             PrintService service = printerNamed("Generic Printer");
             PrintService[] services = {service};
@@ -247,12 +240,8 @@ class PrintFileControllerMoreTest {
         @Test
         @DisplayName("path traversal in filename throws before any printer lookup")
         void pathTraversalThrows() {
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "../../secret.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "data".getBytes());
+            MockMultipartFile file = new MockMultipartFile(
+                    "fileInput", "../../secret.pdf", MediaType.APPLICATION_PDF_VALUE, "data".getBytes());
 
             assertThrows(Exception.class, () -> controller.printFile(request(file, "any")));
         }

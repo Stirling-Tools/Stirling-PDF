@@ -28,9 +28,14 @@ import stirling.software.common.service.MobileScannerService.SessionInfo;
 @ExtendWith(MockitoExtension.class)
 class MobileScannerControllerTest {
 
-    @Mock private MobileScannerService mobileScannerService;
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private ApplicationProperties.System systemProps;
+    @Mock
+    private MobileScannerService mobileScannerService;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private ApplicationProperties.System systemProps;
 
     private MobileScannerController controller;
 
@@ -124,12 +129,9 @@ class MobileScannerControllerTest {
     void uploadFiles_withFiles_returnsOk() throws Exception {
         enableMobileScanner();
         List<MultipartFile> files =
-                List.of(
-                        new MockMultipartFile(
-                                "files", "scan.jpg", "image/jpeg", new byte[] {1, 2, 3}));
+                List.of(new MockMultipartFile("files", "scan.jpg", "image/jpeg", new byte[] {1, 2, 3}));
 
-        ResponseEntity<Map<String, Object>> response =
-                controller.uploadFiles("test-session", files);
+        ResponseEntity<Map<String, Object>> response = controller.uploadFiles("test-session", files);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(true, response.getBody().get("success"));
@@ -149,8 +151,7 @@ class MobileScannerControllerTest {
     void uploadFiles_withEmptyFiles_returnsBadRequest() {
         enableMobileScanner();
 
-        ResponseEntity<Map<String, Object>> response =
-                controller.uploadFiles("test-session", Collections.emptyList());
+        ResponseEntity<Map<String, Object>> response = controller.uploadFiles("test-session", Collections.emptyList());
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
@@ -159,15 +160,10 @@ class MobileScannerControllerTest {
     void uploadFiles_whenIOException_returns500() throws Exception {
         enableMobileScanner();
         List<MultipartFile> files =
-                List.of(
-                        new MockMultipartFile(
-                                "files", "scan.jpg", "image/jpeg", new byte[] {1, 2, 3}));
-        doThrow(new IOException("Disk full"))
-                .when(mobileScannerService)
-                .uploadFiles(eq("test-session"), any());
+                List.of(new MockMultipartFile("files", "scan.jpg", "image/jpeg", new byte[] {1, 2, 3}));
+        doThrow(new IOException("Disk full")).when(mobileScannerService).uploadFiles(eq("test-session"), any());
 
-        ResponseEntity<Map<String, Object>> response =
-                controller.uploadFiles("test-session", files);
+        ResponseEntity<Map<String, Object>> response = controller.uploadFiles("test-session", files);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }

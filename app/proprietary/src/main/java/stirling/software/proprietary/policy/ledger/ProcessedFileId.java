@@ -26,8 +26,7 @@ public class ProcessedFileId implements Serializable {
         if (!(o instanceof ProcessedFileId other)) {
             return false;
         }
-        return Objects.equals(policyId, other.policyId)
-                && Objects.equals(identityHash, other.identityHash);
+        return Objects.equals(policyId, other.policyId) && Objects.equals(identityHash, other.identityHash);
     }
 
     @Override

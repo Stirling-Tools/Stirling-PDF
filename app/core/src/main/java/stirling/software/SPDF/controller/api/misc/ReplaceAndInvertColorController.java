@@ -41,25 +41,21 @@ public class ReplaceAndInvertColorController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Replace-Invert Color PDF",
-            description =
-                    "This endpoint accepts a PDF file and provides options to invert all colors,"
-                            + " replace text and background colors, or convert to CMYK color space for"
-                            + " printing.")
-    public ResponseEntity<Resource> replaceAndInvertColor(
-            @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
+            description = "This endpoint accepts a PDF file and provides options to invert all colors,"
+                    + " replace text and background colors, or convert to CMYK color space for"
+                    + " printing.")
+    public ResponseEntity<Resource> replaceAndInvertColor(@ModelAttribute ReplaceAndInvertColorRequest request)
+            throws IOException {
 
-        InputStreamResource resource =
-                replaceAndInvertColorService.replaceAndInvertColor(
-                        request.getFileInput(),
-                        request.getReplaceAndInvertOption(),
-                        request.getHighContrastColorCombination(),
-                        request.getBackGroundColor(),
-                        request.getTextColor());
+        InputStreamResource resource = replaceAndInvertColorService.replaceAndInvertColor(
+                request.getFileInput(),
+                request.getReplaceAndInvertOption(),
+                request.getHighContrastColorCombination(),
+                request.getBackGroundColor(),
+                request.getTextColor());
 
         // Return the modified PDF as a downloadable file
-        String filename =
-                GeneralUtils.generateFilename(
-                        request.getFileInput().getOriginalFilename(), "_inverted.pdf");
+        String filename = GeneralUtils.generateFilename(request.getFileInput().getOriginalFilename(), "_inverted.pdf");
 
         TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
         try (InputStream in = resource.getInputStream()) {

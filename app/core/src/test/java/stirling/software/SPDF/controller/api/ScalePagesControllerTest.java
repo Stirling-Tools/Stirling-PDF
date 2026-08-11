@@ -46,25 +46,27 @@ class ScalePagesControllerTest {
         return baos.toByteArray();
     }
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private ScalePagesController controller;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private ScalePagesController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private byte[] createRealPdf(PDRectangle pageSize, int numPages) throws IOException {
@@ -79,12 +81,10 @@ class ScalePagesControllerTest {
     }
 
     private void setupFactory() throws IOException {
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(
-                        inv -> {
-                            byte[] bytes = ((MultipartFile) inv.getArgument(0)).getBytes();
-                            return org.apache.pdfbox.Loader.loadPDF(bytes);
-                        });
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> {
+            byte[] bytes = ((MultipartFile) inv.getArgument(0)).getBytes();
+            return org.apache.pdfbox.Loader.loadPDF(bytes);
+        });
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
                 .thenAnswer(inv -> new PDDocument());
     }
@@ -93,8 +93,7 @@ class ScalePagesControllerTest {
     void testScalePages_A4ToA3() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);
@@ -115,8 +114,7 @@ class ScalePagesControllerTest {
     void testScalePages_KeepSize() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 2);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);
@@ -135,8 +133,7 @@ class ScalePagesControllerTest {
     void testScalePages_WithScaleFactor() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);
@@ -155,8 +152,7 @@ class ScalePagesControllerTest {
     void testScalePages_Letter() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);
@@ -175,8 +171,7 @@ class ScalePagesControllerTest {
     void testScalePages_Legal() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);
@@ -195,8 +190,7 @@ class ScalePagesControllerTest {
     void testScalePages_InvalidPageSize() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);
@@ -212,8 +206,7 @@ class ScalePagesControllerTest {
     void testScalePages_MultiplePages() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 5);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);
@@ -232,8 +225,7 @@ class ScalePagesControllerTest {
     void testScalePages_LandscapeSize() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);
@@ -254,8 +246,7 @@ class ScalePagesControllerTest {
         // Create a PDF then load it, but mock factory to return empty doc for KEEP check
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);
@@ -274,8 +265,7 @@ class ScalePagesControllerTest {
     void testScalePages_A0Size() throws Exception {
         byte[] pdfBytes = createRealPdf(PDRectangle.A4, 1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         ScalePagesRequest request = new ScalePagesRequest();
         request.setFileInput(file);

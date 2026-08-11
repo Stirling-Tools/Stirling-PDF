@@ -50,19 +50,16 @@ class EmlToPdfTest {
         when(mockApplicationProperties.getSystem()).thenReturn(mockSystem);
         when(mockSystem.isDisableSanitize()).thenReturn(false);
 
-        customHtmlSanitizer =
-                new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
+        customHtmlSanitizer = new CustomHtmlSanitizer(mockSsrfProtectionService, mockApplicationProperties);
     }
 
     // Focus on testing EML to HTML conversion functionality since the PDF conversion relies on
     // WeasyPrint
     // But HTML to PDF conversion is also briefly tested at PdfConversionTests class.
-    private void testEmailConversion(
-            String emlContent, String[] expectedContent, boolean includeAttachments)
+    private void testEmailConversion(String emlContent, String[] expectedContent, boolean includeAttachments)
             throws IOException {
         byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
-        EmlToPdfRequest request =
-                includeAttachments ? createRequestWithAttachments() : createBasicRequest();
+        EmlToPdfRequest request = includeAttachments ? createRequestWithAttachments() : createBasicRequest();
 
         String htmlResult = EmlToPdf.convertEmlToHtml(emlBytes, request);
 
@@ -78,12 +75,11 @@ class EmlToPdfTest {
         @Test
         @DisplayName("Should parse simple text email correctly")
         void parseSimpleTextEmail() throws IOException {
-            String emlContent =
-                    createSimpleTextEmail(
-                            "sender@example.com",
-                            "recipient@example.com",
-                            "Simple Test Subject",
-                            "This is a simple plain text email body.");
+            String emlContent = createSimpleTextEmail(
+                    "sender@example.com",
+                    "recipient@example.com",
+                    "Simple Test Subject",
+                    "This is a simple plain text email body.");
 
             testEmailConversion(
                     emlContent,
@@ -110,30 +106,23 @@ class EmlToPdfTest {
             assertNotNull(htmlResult);
             assertTrue(htmlResult.contains("sender@example.com"));
             assertTrue(htmlResult.contains("This is an email body"));
-            assertTrue(
-                    htmlResult.contains("<title></title>")
-                            || htmlResult.contains("<title>No Subject</title>"));
+            assertTrue(htmlResult.contains("<title></title>") || htmlResult.contains("<title>No Subject</title>"));
         }
 
         @Test
         @DisplayName("Should parse HTML email with styling")
         void parseHtmlEmailWithStyling() throws IOException {
-            String htmlBody =
-                    "<html><head><style>.header{color:blue;font-weight:bold;}"
-                            + ".content{margin:10px;}.footer{font-size:12px;}</style></head>"
-                            + "<body><div class=\"header\">Important Notice</div>"
-                            + "<div class=\"content\">This is <strong>HTML content</strong> with styling.</div>"
-                            + "<div class=\"footer\">Best regards</div></body></html>";
+            String htmlBody = "<html><head><style>.header{color:blue;font-weight:bold;}"
+                    + ".content{margin:10px;}.footer{font-size:12px;}</style></head>"
+                    + "<body><div class=\"header\">Important Notice</div>"
+                    + "<div class=\"content\">This is <strong>HTML content</strong> with styling.</div>"
+                    + "<div class=\"footer\">Best regards</div></body></html>";
 
-            String emlContent =
-                    createHtmlEmail(
-                            "html@example.com", "user@example.com", "HTML Email Test", htmlBody);
+            String emlContent = createHtmlEmail("html@example.com", "user@example.com", "HTML Email Test", htmlBody);
 
             testEmailConversion(
                     emlContent,
-                    new String[] {
-                        "HTML Email Test", "Important Notice", "HTML content", "font-weight: bold"
-                    },
+                    new String[] {"HTML Email Test", "Important Notice", "HTML content", "font-weight: bold"},
                     false);
         }
 
@@ -141,20 +130,17 @@ class EmlToPdfTest {
         @DisplayName("Should parse multipart email with attachments")
         void parseMultipartEmailWithAttachments() throws IOException {
             String boundary = "----=_Part_" + getTimestamp();
-            String emlContent =
-                    createMultipartEmailWithAttachment(
-                            "multipart@example.com",
-                            "user@example.com",
-                            "Multipart Email Test",
-                            "This email has both text content and an attachment.",
-                            boundary,
-                            "document.txt",
-                            "Sample attachment content");
+            String emlContent = createMultipartEmailWithAttachment(
+                    "multipart@example.com",
+                    "user@example.com",
+                    "Multipart Email Test",
+                    "This email has both text content and an attachment.",
+                    boundary,
+                    "document.txt",
+                    "Sample attachment content");
 
             testEmailConversion(
-                    emlContent,
-                    new String[] {"Multipart Email Test", "This email has both text content"},
-                    true);
+                    emlContent, new String[] {"Multipart Email Test", "This email has both text content"}, true);
         }
     }
 
@@ -166,17 +152,10 @@ class EmlToPdfTest {
         @DisplayName("Should handle international characters and UTF-8")
         void handleInternationalCharacters() throws IOException {
             String bodyWithIntlChars = "Hello! 你好 Привет مرحبا Hëllö Thañks! Önë Mörë";
-            String emlContent =
-                    createSimpleTextEmail(
-                            "intl@example.com",
-                            "user@example.com",
-                            "International Characters Test",
-                            bodyWithIntlChars);
+            String emlContent = createSimpleTextEmail(
+                    "intl@example.com", "user@example.com", "International Characters Test", bodyWithIntlChars);
 
-            testEmailConversion(
-                    emlContent,
-                    new String[] {"你好", "Привет", "مرحبا", "Hëllö", "Önë", "Mörë"},
-                    false);
+            testEmailConversion(emlContent, new String[] {"你好", "Привет", "مرحبا", "Hëllö", "Önë", "Mörë"}, false);
         }
 
         @Test
@@ -186,10 +165,7 @@ class EmlToPdfTest {
 
             testEmailConversion(
                     content,
-                    new String[] {
-                        "Quoted-Printable Test",
-                        "This is quoted printable content with special chars: éàè."
-                    },
+                    new String[] {"Quoted-Printable Test", "This is quoted printable content with special chars: éàè."},
                     false);
         }
 
@@ -199,8 +175,7 @@ class EmlToPdfTest {
             String originalText = "This is Base64 encoded content: éàü ñ";
             String content = createBase64Email(originalText);
 
-            testEmailConversion(
-                    content, new String[] {"Base64 Test", "Base64 encoded content"}, false);
+            testEmailConversion(content, new String[] {"Base64 Test", "Base64 encoded content"}, false);
         }
 
         @Test
@@ -208,10 +183,7 @@ class EmlToPdfTest {
         void handleInlineImages() throws IOException {
             String boundary = "----=_Part_CID_1234567890";
             String cid = "image123@example.com";
-            String htmlBody =
-                    "<html><body><p>Here is an image:</p><img src=\"cid:"
-                            + cid
-                            + "\"></body></html>";
+            String htmlBody = "<html><body><p>Here is an image:</p><img src=\"cid:" + cid + "\"></body></html>";
             String imageBase64 =
                     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 
@@ -235,17 +207,11 @@ class EmlToPdfTest {
         @Test
         @DisplayName("Should generate valid HTML structure")
         void generateValidHtmlStructure() throws IOException {
-            String emlContent =
-                    createSimpleTextEmail(
-                            "structure@test.com",
-                            "user@test.com",
-                            "HTML Structure Test",
-                            "Testing HTML structure output");
+            String emlContent = createSimpleTextEmail(
+                    "structure@test.com", "user@test.com", "HTML Structure Test", "Testing HTML structure output");
 
             testEmailConversion(
-                    emlContent,
-                    new String[] {"<!DOCTYPE html>", "<html", "</html>", "HTML Structure Test"},
-                    false);
+                    emlContent, new String[] {"<!DOCTYPE html>", "<html", "</html>", "HTML Structure Test"}, false);
 
             byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
             String htmlResult = EmlToPdf.convertEmlToHtml(emlBytes, createBasicRequest());
@@ -255,19 +221,17 @@ class EmlToPdfTest {
         @Test
         @DisplayName("Should preserve safe CSS and remove problematic styles")
         void handleCssStylesCorrectly() throws IOException {
-            String styledHtml =
-                    "<html><head><style>"
-                            + ".safe { color: blue; font-size: 14px; }"
-                            + ".problematic { position: fixed; word-break: break-all; }"
-                            + ".good { margin: 10px; padding: 5px; }"
-                            + "</style></head><body>"
-                            + "<div class=\"safe\">Safe styling</div>"
-                            + "<div class=\"problematic\">Problematic styling</div>"
-                            + "<div class=\"good\">Good styling</div>"
-                            + "</body></html>";
+            String styledHtml = "<html><head><style>"
+                    + ".safe { color: blue; font-size: 14px; }"
+                    + ".problematic { position: fixed; word-break: break-all; }"
+                    + ".good { margin: 10px; padding: 5px; }"
+                    + "</style></head><body>"
+                    + "<div class=\"safe\">Safe styling</div>"
+                    + "<div class=\"problematic\">Problematic styling</div>"
+                    + "<div class=\"good\">Good styling</div>"
+                    + "</body></html>";
 
-            String emlContent =
-                    createHtmlEmail("css@test.com", "user@test.com", "CSS Test", styledHtml);
+            String emlContent = createHtmlEmail("css@test.com", "user@test.com", "CSS Test", styledHtml);
 
             byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
             EmlToPdfRequest request = createBasicRequest();
@@ -285,22 +249,17 @@ class EmlToPdfTest {
         @Test
         @DisplayName("Should handle complex nested HTML structures")
         void handleComplexNestedHtml() throws IOException {
-            String complexHtml =
-                    "<html><head><title>Complex Email</title></head><body>"
-                            + "<div class=\"container\"><header><h1>Email Header</h1></header><main><section>"
-                            + "<p>Paragraph with <a href=\"https://example.com\">link</a></p><ul>"
-                            + "<li>List item 1</li><li>List item 2 with <em>emphasis</em></li></ul><table>"
-                            + "<tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr>"
-                            + "</table></section></main></div></body></html>";
+            String complexHtml = "<html><head><title>Complex Email</title></head><body>"
+                    + "<div class=\"container\"><header><h1>Email Header</h1></header><main><section>"
+                    + "<p>Paragraph with <a href=\"https://example.com\">link</a></p><ul>"
+                    + "<li>List item 1</li><li>List item 2 with <em>emphasis</em></li></ul><table>"
+                    + "<tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr>"
+                    + "</table></section></main></div></body></html>";
 
-            String emlContent =
-                    createHtmlEmail(
-                            "complex@test.com", "user@test.com", "Complex HTML Test", complexHtml);
+            String emlContent = createHtmlEmail("complex@test.com", "user@test.com", "Complex HTML Test", complexHtml);
 
             testEmailConversion(
-                    emlContent,
-                    new String[] {"Email Header", "List item 2", "Cell 3", "example.com"},
-                    false);
+                    emlContent, new String[] {"Email Header", "List item 2", "Cell 3", "example.com"}, false);
 
             byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
             String htmlResult = EmlToPdf.convertEmlToHtml(emlBytes, createBasicRequest());
@@ -318,9 +277,7 @@ class EmlToPdfTest {
             EmlToPdfRequest request = createBasicRequest();
 
             Exception exception =
-                    assertThrows(
-                            IllegalArgumentException.class,
-                            () -> EmlToPdf.convertEmlToHtml(null, request));
+                    assertThrows(IllegalArgumentException.class, () -> EmlToPdf.convertEmlToHtml(null, request));
             assertTrue(exception.getMessage().contains("EML file is empty or null"));
         }
 
@@ -330,17 +287,14 @@ class EmlToPdfTest {
             EmlToPdfRequest request = createBasicRequest();
 
             Exception exception =
-                    assertThrows(
-                            IllegalArgumentException.class,
-                            () -> EmlToPdf.convertEmlToHtml(new byte[0], request));
+                    assertThrows(IllegalArgumentException.class, () -> EmlToPdf.convertEmlToHtml(new byte[0], request));
             assertTrue(exception.getMessage().contains("EML file is empty or null"));
         }
 
         @Test
         @DisplayName("Should handle malformed EML gracefully")
         void handleMalformedEmlGracefully() {
-            String malformedEml =
-                    """
+            String malformedEml = """
                     From: sender@test.com
                     Subject: Malformed EML
                     This line breaks header format
@@ -364,14 +318,11 @@ class EmlToPdfTest {
         @Test
         @DisplayName("Should reject invalid EML format")
         void rejectInvalidEmlFormat() {
-            byte[] invalidEml =
-                    "This is definitely not an EML file".getBytes(StandardCharsets.UTF_8);
+            byte[] invalidEml = "This is definitely not an EML file".getBytes(StandardCharsets.UTF_8);
             EmlToPdfRequest request = createBasicRequest();
 
             Exception exception =
-                    assertThrows(
-                            IllegalArgumentException.class,
-                            () -> EmlToPdf.convertEmlToHtml(invalidEml, request));
+                    assertThrows(IllegalArgumentException.class, () -> EmlToPdf.convertEmlToHtml(invalidEml, request));
             assertTrue(exception.getMessage().contains("Invalid EML file format"));
         }
     }
@@ -383,22 +334,20 @@ class EmlToPdfTest {
         @Test
         @DisplayName("Should successfully parse email using advanced parser")
         void initializeDependencyMailSession() {
-            assertDoesNotThrow(
-                    () -> {
-                        String emlContent =
-                                createSimpleTextEmail(
-                                        "Dependency@test.com",
-                                        "user@test.com",
-                                        "Dependency Mail Test",
-                                        "Testing Dependency Mail integration.");
+            assertDoesNotThrow(() -> {
+                String emlContent = createSimpleTextEmail(
+                        "Dependency@test.com",
+                        "user@test.com",
+                        "Dependency Mail Test",
+                        "Testing Dependency Mail integration.");
 
-                        byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
-                        EmlToPdfRequest request = createBasicRequest();
+                byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
+                EmlToPdfRequest request = createBasicRequest();
 
-                        String htmlResult = EmlToPdf.convertEmlToHtml(emlBytes, request);
-                        assertNotNull(htmlResult);
-                        assertTrue(htmlResult.contains("Dependency Mail Test"));
-                    });
+                String htmlResult = EmlToPdf.convertEmlToHtml(emlBytes, request);
+                assertNotNull(htmlResult);
+                assertTrue(htmlResult.contains("Dependency Mail Test"));
+            });
         }
 
         @Test
@@ -428,18 +377,16 @@ class EmlToPdfTest {
         @DisplayName("Should handle email with only an attachment and no body")
         void handleAttachmentOnlyEmail() throws IOException {
             String boundary = "----=_Part_AttachmentOnly_1234567890";
-            String emlContent =
-                    createMultipartEmailWithAttachment(
-                            "sender@example.com",
-                            "recipient@example.com",
-                            "Attachment Only Test",
-                            "",
-                            boundary,
-                            "data.bin",
-                            "binary data");
+            String emlContent = createMultipartEmailWithAttachment(
+                    "sender@example.com",
+                    "recipient@example.com",
+                    "Attachment Only Test",
+                    "",
+                    boundary,
+                    "data.bin",
+                    "binary data");
 
-            testEmailConversion(
-                    emlContent, new String[] {"Attachment Only Test", "data.bin"}, true);
+            testEmailConversion(emlContent, new String[] {"Attachment Only Test", "data.bin"}, true);
         }
 
         @Test
@@ -452,9 +399,7 @@ class EmlToPdfTest {
                     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR42mNkAAIAAAoAAb6A/yoAAAAASUVORK5CYII=";
             String attachmentText = "This is a text attachment.";
 
-            String emlContent =
-                    createEmailWithMixedAttachments(
-                            htmlBody, boundary, cid, imageBase64, attachmentText);
+            String emlContent = createEmailWithMixedAttachments(htmlBody, boundary, cid, imageBase64, attachmentText);
 
             byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
             EmlToPdfRequest request = createRequestWithAttachments();
@@ -475,13 +420,8 @@ class EmlToPdfTest {
             String subject = "Subject with ISO-8859-1 charset";
             String body = "Body content encoded in ISO-8859-1";
 
-            String emlContent =
-                    createSimpleTextEmailWithCharset(
-                            "sender@example.com",
-                            "recipient@example.com",
-                            subject,
-                            body,
-                            "ISO-8859-1");
+            String emlContent = createSimpleTextEmailWithCharset(
+                    "sender@example.com", "recipient@example.com", subject, body, "ISO-8859-1");
 
             byte[] emlBytes = emlContent.getBytes(StandardCharsets.ISO_8859_1);
             EmlToPdfRequest request = createBasicRequest();
@@ -490,12 +430,8 @@ class EmlToPdfTest {
 
             assertNotNull(htmlResult);
             // Verify the core subject text is present (charset should be decoded properly)
-            assertTrue(
-                    htmlResult.contains("Subject with ISO-8859-1 charset"),
-                    "HTML should contain subject text");
-            assertTrue(
-                    htmlResult.contains("Body content encoded in ISO-8859-1"),
-                    "HTML should contain body text");
+            assertTrue(htmlResult.contains("Subject with ISO-8859-1 charset"), "HTML should contain subject text");
+            assertTrue(htmlResult.contains("Body content encoded in ISO-8859-1"), "HTML should contain body text");
         }
 
         @Test
@@ -506,39 +442,28 @@ class EmlToPdfTest {
                 longLine.append("word").append(i).append(" ");
             }
 
-            String emlContent =
-                    createSimpleTextEmail(
-                            "sender@example.com",
-                            "recipient@example.com",
-                            "Long Line Test",
-                            longLine.toString());
+            String emlContent = createSimpleTextEmail(
+                    "sender@example.com", "recipient@example.com", "Long Line Test", longLine.toString());
 
             testEmailConversion(
-                    emlContent,
-                    new String[] {"Long Line Test", "This is a very long line", "word999"},
-                    false);
+                    emlContent, new String[] {"Long Line Test", "This is a very long line", "word999"}, false);
         }
 
         @Test
         @DisplayName("Should handle .eml files as attachments")
         void handleEmlAttachment() throws IOException {
             String boundary = "----=_Part_EmlAttachment_1234567890";
-            String innerEmlContent =
-                    createSimpleTextEmail(
-                            "inner@example.com",
-                            "inner_recipient@example.com",
-                            "Inner Email Subject",
-                            "This is the body of the attached email.");
+            String innerEmlContent = createSimpleTextEmail(
+                    "inner@example.com",
+                    "inner_recipient@example.com",
+                    "Inner Email Subject",
+                    "This is the body of the attached email.");
 
             String emlContent = createEmailWithEmlAttachment(boundary, innerEmlContent);
 
             testEmailConversion(
                     emlContent,
-                    new String[] {
-                        "Fwd: Inner Email Subject",
-                        "Please see the attached email.",
-                        "attached_email.eml"
-                    },
+                    new String[] {"Fwd: Inner Email Subject", "Please see the attached email.", "attached_email.eml"},
                     true);
         }
 
@@ -549,9 +474,8 @@ class EmlToPdfTest {
             String subject = "Encoding Test";
             String body = "Testing " + charset + " encoding";
 
-            String emlContent =
-                    createSimpleTextEmailWithCharset(
-                            "sender@example.com", "recipient@example.com", subject, body, charset);
+            String emlContent = createSimpleTextEmailWithCharset(
+                    "sender@example.com", "recipient@example.com", subject, body, charset);
 
             testEmailConversion(emlContent, new String[] {subject, body}, false);
         }
@@ -562,18 +486,20 @@ class EmlToPdfTest {
     @DisplayName("PDF Conversion Tests")
     class PdfConversionTests {
 
-        @Mock private CustomPDFDocumentFactory mockPdfDocumentFactory;
+        @Mock
+        private CustomPDFDocumentFactory mockPdfDocumentFactory;
 
-        @Mock private PDDocument mockPdDocument;
+        @Mock
+        private PDDocument mockPdDocument;
 
-        @Mock private TempFileManager mockTempFileManager;
+        @Mock
+        private TempFileManager mockTempFileManager;
 
         @Test
         @Disabled("Complex static mocking - temporarily disabled while refactoring")
         @DisplayName("Should convert EML to PDF without attachments when not requested")
         void convertEmlToPdfWithoutAttachments() throws Exception {
-            String emlContent =
-                    createSimpleTextEmail("from@test.com", "to@test.com", "Subject", "Body");
+            String emlContent = createSimpleTextEmail("from@test.com", "to@test.com", "Subject", "Body");
             byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
             EmlToPdfRequest request = createBasicRequest();
 
@@ -587,32 +513,27 @@ class EmlToPdfTest {
             when(mockPdfDocumentFactory.load(any(byte[].class))).thenReturn(mockPdDocument);
             when(mockPdDocument.getNumberOfPages()).thenReturn(1);
 
-            try (MockedStatic<FileToPdf> fileToPdf =
-                    mockStatic(
-                            FileToPdf.class,
-                            org.mockito.Mockito.withSettings()
-                                    .defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
+            try (MockedStatic<FileToPdf> fileToPdf = mockStatic(
+                    FileToPdf.class,
+                    org.mockito.Mockito.withSettings().defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
                 fileToPdf
-                        .when(
-                                () ->
-                                        FileToPdf.convertHtmlToPdf(
-                                                anyString(),
-                                                any(),
-                                                any(byte[].class),
-                                                anyString(),
-                                                any(TempFileManager.class),
-                                                any(CustomHtmlSanitizer.class)))
+                        .when(() -> FileToPdf.convertHtmlToPdf(
+                                anyString(),
+                                any(),
+                                any(byte[].class),
+                                anyString(),
+                                any(TempFileManager.class),
+                                any(CustomHtmlSanitizer.class)))
                         .thenReturn(fakePdfBytes);
 
-                byte[] resultPdf =
-                        EmlToPdf.convertEmlToPdf(
-                                "weasyprint",
-                                request,
-                                emlBytes,
-                                "test.eml",
-                                mockPdfDocumentFactory,
-                                mockTempFileManager,
-                                customHtmlSanitizer);
+                byte[] resultPdf = EmlToPdf.convertEmlToPdf(
+                        "weasyprint",
+                        request,
+                        emlBytes,
+                        "test.eml",
+                        mockPdfDocumentFactory,
+                        mockTempFileManager,
+                        customHtmlSanitizer);
 
                 assertArrayEquals(fakePdfBytes, resultPdf);
 
@@ -621,15 +542,13 @@ class EmlToPdfTest {
                     assertTrue(resultDoc.getNumberOfPages() > 0);
                 }
 
-                fileToPdf.verify(
-                        () ->
-                                FileToPdf.convertHtmlToPdf(
-                                        anyString(),
-                                        any(),
-                                        any(byte[].class),
-                                        anyString(),
-                                        any(TempFileManager.class),
-                                        any(CustomHtmlSanitizer.class)));
+                fileToPdf.verify(() -> FileToPdf.convertHtmlToPdf(
+                        anyString(),
+                        any(),
+                        any(byte[].class),
+                        anyString(),
+                        any(TempFileManager.class),
+                        any(CustomHtmlSanitizer.class)));
                 verify(mockPdfDocumentFactory).load(resultPdf);
             }
         }
@@ -639,15 +558,14 @@ class EmlToPdfTest {
         @DisplayName("Should convert EML to PDF with attachments when requested")
         void convertEmlToPdfWithAttachments() throws Exception {
             String boundary = "----=_Part_1234567890";
-            String emlContent =
-                    createMultipartEmailWithAttachment(
-                            "multipart@example.com",
-                            "user@example.com",
-                            "Multipart Email Test",
-                            "This email has both text content and an attachment.",
-                            boundary,
-                            "document.txt",
-                            "Sample attachment content");
+            String emlContent = createMultipartEmailWithAttachment(
+                    "multipart@example.com",
+                    "user@example.com",
+                    "Multipart Email Test",
+                    "This email has both text content and an attachment.",
+                    boundary,
+                    "document.txt",
+                    "Sample attachment content");
             byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
             EmlToPdfRequest request = createRequestWithAttachments();
 
@@ -661,43 +579,35 @@ class EmlToPdfTest {
             when(mockPdfDocumentFactory.load(any(byte[].class))).thenReturn(mockPdDocument);
             when(mockPdDocument.getNumberOfPages()).thenReturn(1);
 
-            try (MockedStatic<FileToPdf> fileToPdf =
-                    mockStatic(
-                            FileToPdf.class,
-                            org.mockito.Mockito.withSettings()
-                                    .defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
+            try (MockedStatic<FileToPdf> fileToPdf = mockStatic(
+                    FileToPdf.class,
+                    org.mockito.Mockito.withSettings().defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
                 fileToPdf
-                        .when(
-                                () ->
-                                        FileToPdf.convertHtmlToPdf(
-                                                anyString(),
-                                                any(),
-                                                any(byte[].class),
-                                                anyString(),
-                                                any(TempFileManager.class),
-                                                any(CustomHtmlSanitizer.class)))
+                        .when(() -> FileToPdf.convertHtmlToPdf(
+                                anyString(),
+                                any(),
+                                any(byte[].class),
+                                anyString(),
+                                any(TempFileManager.class),
+                                any(CustomHtmlSanitizer.class)))
                         .thenReturn(fakePdfBytes);
 
-                try (MockedStatic<EmlToPdf> ignored =
-                        mockStatic(
-                                EmlToPdf.class,
-                                invocation -> {
-                                    String methodName = invocation.getMethod().getName();
-                                    return switch (methodName) {
-                                        case "shouldAttachFiles" -> true;
-                                        case "attachFilesToPdf" -> fakePdfBytes;
-                                        default -> invocation.callRealMethod();
-                                    };
-                                })) {
-                    byte[] resultPdf =
-                            EmlToPdf.convertEmlToPdf(
-                                    "weasyprint",
-                                    request,
-                                    emlBytes,
-                                    "test.eml",
-                                    mockPdfDocumentFactory,
-                                    mockTempFileManager,
-                                    customHtmlSanitizer);
+                try (MockedStatic<EmlToPdf> ignored = mockStatic(EmlToPdf.class, invocation -> {
+                    String methodName = invocation.getMethod().getName();
+                    return switch (methodName) {
+                        case "shouldAttachFiles" -> true;
+                        case "attachFilesToPdf" -> fakePdfBytes;
+                        default -> invocation.callRealMethod();
+                    };
+                })) {
+                    byte[] resultPdf = EmlToPdf.convertEmlToPdf(
+                            "weasyprint",
+                            request,
+                            emlBytes,
+                            "test.eml",
+                            mockPdfDocumentFactory,
+                            mockTempFileManager,
+                            customHtmlSanitizer);
 
                     assertArrayEquals(fakePdfBytes, resultPdf);
 
@@ -706,15 +616,13 @@ class EmlToPdfTest {
                         assertTrue(resultDoc.getNumberOfPages() > 0);
                     }
 
-                    fileToPdf.verify(
-                            () ->
-                                    FileToPdf.convertHtmlToPdf(
-                                            anyString(),
-                                            any(),
-                                            any(byte[].class),
-                                            anyString(),
-                                            any(TempFileManager.class),
-                                            any(CustomHtmlSanitizer.class)));
+                    fileToPdf.verify(() -> FileToPdf.convertHtmlToPdf(
+                            anyString(),
+                            any(),
+                            any(byte[].class),
+                            anyString(),
+                            any(TempFileManager.class),
+                            any(CustomHtmlSanitizer.class)));
 
                     verify(mockPdfDocumentFactory).load(resultPdf);
                 }
@@ -725,41 +633,34 @@ class EmlToPdfTest {
         @Disabled("Complex static mocking - temporarily disabled while refactoring")
         @DisplayName("Should handle errors during EML to PDF conversion")
         void handleErrorsDuringConversion() {
-            String emlContent =
-                    createSimpleTextEmail("from@test.com", "to@test.com", "Subject", "Body");
+            String emlContent = createSimpleTextEmail("from@test.com", "to@test.com", "Subject", "Body");
             byte[] emlBytes = emlContent.getBytes(StandardCharsets.UTF_8);
             EmlToPdfRequest request = createBasicRequest();
             String errorMessage = "Conversion failed";
 
-            try (MockedStatic<FileToPdf> fileToPdf =
-                    mockStatic(
-                            FileToPdf.class,
-                            org.mockito.Mockito.withSettings()
-                                    .defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
+            try (MockedStatic<FileToPdf> fileToPdf = mockStatic(
+                    FileToPdf.class,
+                    org.mockito.Mockito.withSettings().defaultAnswer(org.mockito.Answers.RETURNS_DEFAULTS))) {
                 fileToPdf
-                        .when(
-                                () ->
-                                        FileToPdf.convertHtmlToPdf(
-                                                anyString(),
-                                                any(),
-                                                any(byte[].class),
-                                                anyString(),
-                                                any(TempFileManager.class),
-                                                any(CustomHtmlSanitizer.class)))
+                        .when(() -> FileToPdf.convertHtmlToPdf(
+                                anyString(),
+                                any(),
+                                any(byte[].class),
+                                anyString(),
+                                any(TempFileManager.class),
+                                any(CustomHtmlSanitizer.class)))
                         .thenThrow(new IOException(errorMessage));
 
-                IOException exception =
-                        assertThrows(
-                                IOException.class,
-                                () ->
-                                        EmlToPdf.convertEmlToPdf(
-                                                "weasyprint",
-                                                request,
-                                                emlBytes,
-                                                "test.eml",
-                                                mockPdfDocumentFactory,
-                                                mockTempFileManager,
-                                                customHtmlSanitizer));
+                IOException exception = assertThrows(
+                        IOException.class,
+                        () -> EmlToPdf.convertEmlToPdf(
+                                "weasyprint",
+                                request,
+                                emlBytes,
+                                "test.eml",
+                                mockPdfDocumentFactory,
+                                mockTempFileManager,
+                                customHtmlSanitizer));
 
                 assertTrue(exception.getMessage().contains(errorMessage));
             }
@@ -817,9 +718,7 @@ class EmlToPdfTest {
             String boundary,
             String filename,
             String attachmentContent) {
-        String encodedContent =
-                Base64.getEncoder()
-                        .encodeToString(attachmentContent.getBytes(StandardCharsets.UTF_8));
+        String encodedContent = Base64.getEncoder().encodeToString(attachmentContent.getBytes(StandardCharsets.UTF_8));
         return String.format(
                 Locale.ROOT,
                 """
@@ -858,8 +757,7 @@ class EmlToPdfTest {
 
     private String createEmailWithEmlAttachment(String boundary, String attachmentEmlContent) {
         String encodedContent =
-                Base64.getEncoder()
-                        .encodeToString(attachmentEmlContent.getBytes(StandardCharsets.UTF_8));
+                Base64.getEncoder().encodeToString(attachmentEmlContent.getBytes(StandardCharsets.UTF_8));
         return String.format(
                 Locale.ROOT,
                 """
@@ -897,8 +795,7 @@ class EmlToPdfTest {
                 boundary);
     }
 
-    private String createMultipartAlternativeEmail(
-            String textBody, String htmlBody, String boundary) {
+    private String createMultipartAlternativeEmail(String textBody, String htmlBody, String boundary) {
         return String.format(
                 Locale.ROOT,
                 """
@@ -946,8 +843,7 @@ class EmlToPdfTest {
     }
 
     private String createBase64Email(String body) {
-        String encodedBody =
-                Base64.getEncoder().encodeToString(body.getBytes(StandardCharsets.UTF_8));
+        String encodedBody = Base64.getEncoder().encodeToString(body.getBytes(StandardCharsets.UTF_8));
         return String.format(
                 Locale.ROOT,
                 "From: %s\nTo: %s\nSubject: %s\nDate: %s\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: base64\n\n%s",
@@ -958,8 +854,7 @@ class EmlToPdfTest {
                 encodedBody);
     }
 
-    private String createEmailWithInlineImage(
-            String htmlBody, String boundary, String contentId, String base64Image) {
+    private String createEmailWithInlineImage(String htmlBody, String boundary, String contentId, String base64Image) {
         return String.format(
                 Locale.ROOT,
                 """
@@ -998,13 +893,8 @@ class EmlToPdfTest {
     }
 
     private String createEmailWithMixedAttachments(
-            String htmlBody,
-            String boundary,
-            String contentId,
-            String base64Image,
-            String attachmentBody) {
-        String encodedAttachment =
-                Base64.getEncoder().encodeToString(attachmentBody.getBytes(StandardCharsets.UTF_8));
+            String htmlBody, String boundary, String contentId, String base64Image, String attachmentBody) {
+        String encodedAttachment = Base64.getEncoder().encodeToString(attachmentBody.getBytes(StandardCharsets.UTF_8));
         return String.format(
                 Locale.ROOT,
                 """

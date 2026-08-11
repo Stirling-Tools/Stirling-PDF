@@ -27,8 +27,11 @@ import stirling.software.common.model.ApplicationProperties;
 @ExtendWith(MockitoExtension.class)
 class TelegramPipelineBotTest {
 
-    @Mock private TelegramBotsApi telegramBotsApi;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private TelegramBotsApi telegramBotsApi;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
 
     private ApplicationProperties applicationProperties;
     private ApplicationProperties.Telegram telegramProps;
@@ -44,10 +47,7 @@ class TelegramPipelineBotTest {
         telegramProps.setEnableAllowChannelIDs(false);
         applicationProperties.setTelegram(telegramProps);
 
-        bot =
-                spy(
-                        new TelegramPipelineBot(
-                                applicationProperties, runtimePathConfig, telegramBotsApi));
+        bot = spy(new TelegramPipelineBot(applicationProperties, runtimePathConfig, telegramBotsApi));
     }
 
     // ---------------------------
@@ -63,10 +63,7 @@ class TelegramPipelineBotTest {
     @Test
     void register_blankBotUsername_doesNotRegister() throws TelegramApiException {
         telegramProps.setBotUsername("");
-        bot =
-                spy(
-                        new TelegramPipelineBot(
-                                applicationProperties, runtimePathConfig, telegramBotsApi));
+        bot = spy(new TelegramPipelineBot(applicationProperties, runtimePathConfig, telegramBotsApi));
 
         bot.register();
         verify(telegramBotsApi, never()).registerBot(any());
@@ -75,10 +72,7 @@ class TelegramPipelineBotTest {
     @Test
     void register_blankBotToken_doesNotRegister() throws TelegramApiException {
         telegramProps.setBotToken("");
-        bot =
-                spy(
-                        new TelegramPipelineBot(
-                                applicationProperties, runtimePathConfig, telegramBotsApi));
+        bot = spy(new TelegramPipelineBot(applicationProperties, runtimePathConfig, telegramBotsApi));
 
         bot.register();
         verify(telegramBotsApi, never()).registerBot(any());
@@ -156,17 +150,12 @@ class TelegramPipelineBotTest {
 
         bot.onUpdateReceived(update);
 
-        verify(bot)
-                .execute(
-                        (SendMessage)
-                                argThat(
-                                        arg -> {
-                                            if (arg instanceof SendMessage sm) {
-                                                return sm.getText().contains("Welcome")
-                                                        && "123".equals(sm.getChatId());
-                                            }
-                                            return false;
-                                        }));
+        verify(bot).execute((SendMessage) argThat(arg -> {
+            if (arg instanceof SendMessage sm) {
+                return sm.getText().contains("Welcome") && "123".equals(sm.getChatId());
+            }
+            return false;
+        }));
     }
 
     // ---------------------------
@@ -174,8 +163,7 @@ class TelegramPipelineBotTest {
     // ---------------------------
 
     @Test
-    void onUpdateReceived_noDocumentPrivateChat_sendsNoValidDocumentMessage()
-            throws TelegramApiException {
+    void onUpdateReceived_noDocumentPrivateChat_sendsNoValidDocumentMessage() throws TelegramApiException {
         Update update = mock(Update.class);
         Message message = mock(Message.class);
         Chat chat = mock(Chat.class);
@@ -192,21 +180,16 @@ class TelegramPipelineBotTest {
 
         bot.onUpdateReceived(update);
 
-        verify(bot)
-                .execute(
-                        (SendMessage)
-                                argThat(
-                                        arg -> {
-                                            if (arg instanceof SendMessage sm) {
-                                                return sm.getText().contains("No valid file");
-                                            }
-                                            return false;
-                                        }));
+        verify(bot).execute((SendMessage) argThat(arg -> {
+            if (arg instanceof SendMessage sm) {
+                return sm.getText().contains("No valid file");
+            }
+            return false;
+        }));
     }
 
     @Test
-    void onUpdateReceived_noDocumentChannelFeedbackDisabled_noMessage()
-            throws TelegramApiException {
+    void onUpdateReceived_noDocumentChannelFeedbackDisabled_noMessage() throws TelegramApiException {
         telegramProps.getFeedback().getChannel().setNoValidDocument(false);
 
         Update update = mock(Update.class);
@@ -230,8 +213,7 @@ class TelegramPipelineBotTest {
     // ---------------------------
 
     @Test
-    void onUpdateReceived_userIdFilterEnabled_unauthorizedUser_rejected()
-            throws TelegramApiException {
+    void onUpdateReceived_userIdFilterEnabled_unauthorizedUser_rejected() throws TelegramApiException {
         telegramProps.setEnableAllowUserIDs(true);
         telegramProps.setAllowUserIDs(List.of(999L));
 
@@ -252,21 +234,16 @@ class TelegramPipelineBotTest {
 
         bot.onUpdateReceived(update);
 
-        verify(bot)
-                .execute(
-                        (SendMessage)
-                                argThat(
-                                        arg -> {
-                                            if (arg instanceof SendMessage sm) {
-                                                return sm.getText().contains("not authorized");
-                                            }
-                                            return false;
-                                        }));
+        verify(bot).execute((SendMessage) argThat(arg -> {
+            if (arg instanceof SendMessage sm) {
+                return sm.getText().contains("not authorized");
+            }
+            return false;
+        }));
     }
 
     @Test
-    void onUpdateReceived_userIdFilterEnabled_authorizedUser_proceeds()
-            throws TelegramApiException {
+    void onUpdateReceived_userIdFilterEnabled_authorizedUser_proceeds() throws TelegramApiException {
         telegramProps.setEnableAllowUserIDs(true);
         telegramProps.setAllowUserIDs(List.of(111L));
 
@@ -290,21 +267,16 @@ class TelegramPipelineBotTest {
         bot.onUpdateReceived(update);
 
         // Should get past authorization and reach the "no valid document" message
-        verify(bot)
-                .execute(
-                        (SendMessage)
-                                argThat(
-                                        arg -> {
-                                            if (arg instanceof SendMessage sm) {
-                                                return sm.getText().contains("No valid file");
-                                            }
-                                            return false;
-                                        }));
+        verify(bot).execute((SendMessage) argThat(arg -> {
+            if (arg instanceof SendMessage sm) {
+                return sm.getText().contains("No valid file");
+            }
+            return false;
+        }));
     }
 
     @Test
-    void onUpdateReceived_userIdFilterEnabled_emptyAllowList_allowsAll()
-            throws TelegramApiException {
+    void onUpdateReceived_userIdFilterEnabled_emptyAllowList_allowsAll() throws TelegramApiException {
         telegramProps.setEnableAllowUserIDs(true);
         telegramProps.setAllowUserIDs(new ArrayList<>());
 
@@ -327,16 +299,12 @@ class TelegramPipelineBotTest {
         bot.onUpdateReceived(update);
 
         // Empty allow list = allow all, so we should reach "no valid file" message
-        verify(bot)
-                .execute(
-                        (SendMessage)
-                                argThat(
-                                        arg -> {
-                                            if (arg instanceof SendMessage sm) {
-                                                return sm.getText().contains("No valid file");
-                                            }
-                                            return false;
-                                        }));
+        verify(bot).execute((SendMessage) argThat(arg -> {
+            if (arg instanceof SendMessage sm) {
+                return sm.getText().contains("No valid file");
+            }
+            return false;
+        }));
     }
 
     // ---------------------------
@@ -344,8 +312,7 @@ class TelegramPipelineBotTest {
     // ---------------------------
 
     @Test
-    void onUpdateReceived_channelIdFilterEnabled_unauthorizedChannel_rejected()
-            throws TelegramApiException {
+    void onUpdateReceived_channelIdFilterEnabled_unauthorizedChannel_rejected() throws TelegramApiException {
         telegramProps.setEnableAllowChannelIDs(true);
         telegramProps.setAllowChannelIDs(List.of(999L));
 
@@ -367,16 +334,12 @@ class TelegramPipelineBotTest {
 
         bot.onUpdateReceived(update);
 
-        verify(bot)
-                .execute(
-                        (SendMessage)
-                                argThat(
-                                        arg -> {
-                                            if (arg instanceof SendMessage sm) {
-                                                return sm.getText().contains("not authorized");
-                                            }
-                                            return false;
-                                        }));
+        verify(bot).execute((SendMessage) argThat(arg -> {
+            if (arg instanceof SendMessage sm) {
+                return sm.getText().contains("not authorized");
+            }
+            return false;
+        }));
     }
 
     // ---------------------------
@@ -405,16 +368,12 @@ class TelegramPipelineBotTest {
         bot.onUpdateReceived(update);
 
         // Groups are always authorized, so should reach "no valid file"
-        verify(bot)
-                .execute(
-                        (SendMessage)
-                                argThat(
-                                        arg -> {
-                                            if (arg instanceof SendMessage sm) {
-                                                return sm.getText().contains("No valid file");
-                                            }
-                                            return false;
-                                        }));
+        verify(bot).execute((SendMessage) argThat(arg -> {
+            if (arg instanceof SendMessage sm) {
+                return sm.getText().contains("No valid file");
+            }
+            return false;
+        }));
     }
 
     // ---------------------------
@@ -422,8 +381,7 @@ class TelegramPipelineBotTest {
     // ---------------------------
 
     @Test
-    void onUpdateReceived_unsupportedMimeType_sendsUnsupportedMessage()
-            throws TelegramApiException {
+    void onUpdateReceived_unsupportedMimeType_sendsUnsupportedMessage() throws TelegramApiException {
         Update update = mock(Update.class);
         Message message = mock(Message.class);
         Chat chat = mock(Chat.class);
@@ -443,17 +401,12 @@ class TelegramPipelineBotTest {
 
         bot.onUpdateReceived(update);
 
-        verify(bot)
-                .execute(
-                        (SendMessage)
-                                argThat(
-                                        arg -> {
-                                            if (arg instanceof SendMessage sm) {
-                                                return sm.getText()
-                                                        .contains("Unsupported MIME type");
-                                            }
-                                            return false;
-                                        }));
+        verify(bot).execute((SendMessage) argThat(arg -> {
+            if (arg instanceof SendMessage sm) {
+                return sm.getText().contains("Unsupported MIME type");
+            }
+            return false;
+        }));
     }
 
     // ---------------------------
@@ -496,8 +449,7 @@ class TelegramPipelineBotTest {
     // ---------------------------
 
     @Test
-    void onUpdateReceived_hasDocumentButDocIsNull_sendsNoDocumentMessage()
-            throws TelegramApiException {
+    void onUpdateReceived_hasDocumentButDocIsNull_sendsNoDocumentMessage() throws TelegramApiException {
         Update update = mock(Update.class);
         Message message = mock(Message.class);
         Chat chat = mock(Chat.class);
@@ -515,15 +467,11 @@ class TelegramPipelineBotTest {
 
         bot.onUpdateReceived(update);
 
-        verify(bot)
-                .execute(
-                        (SendMessage)
-                                argThat(
-                                        arg -> {
-                                            if (arg instanceof SendMessage sm) {
-                                                return sm.getText().contains("No document found");
-                                            }
-                                            return false;
-                                        }));
+        verify(bot).execute((SendMessage) argThat(arg -> {
+            if (arg instanceof SendMessage sm) {
+                return sm.getText().contains("No document found");
+            }
+            return false;
+        }));
     }
 }

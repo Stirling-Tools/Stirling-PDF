@@ -97,12 +97,11 @@ public class ExternalApiCallController {
     @ToolIO(accepts = ToolFormat.ANY, produces = ToolFormat.ANY)
     @Operation(
             summary = "Send the document to an external API",
-            description =
-                    "Sends the document to a path under a stored API connection's base URL and"
-                            + " either records the response as a step report or replaces the"
-                            + " document with it. Fields, path and headers may reference"
-                            + " {{document.*}}, {{classification.*}}, {{sensitivityLabel.*}} and"
-                            + " {{run.*}}.")
+            description = "Sends the document to a path under a stored API connection's base URL and"
+                    + " either records the response as a step report or replaces the"
+                    + " document with it. Fields, path and headers may reference"
+                    + " {{document.*}}, {{classification.*}}, {{sensitivityLabel.*}} and"
+                    + " {{run.*}}.")
     public ResponseEntity<Resource> call(
             @RequestParam("fileInput") MultipartFile fileInput,
             @RequestParam("connectionId") String connectionId,
@@ -120,10 +119,8 @@ public class ExternalApiCallController {
             @RequestParam(value = "headers", required = false) String headers,
             @RequestParam(value = "includeContext", defaultValue = "false") boolean includeContext,
             @RequestParam(value = "includeFile", defaultValue = "true") boolean includeFile,
-            @RequestHeader(value = InternalApiClient.POLICY_NAME_HEADER, required = false)
-                    String policyName,
-            @RequestHeader(value = AutomationRunContext.RUN_ID_HEADER, required = false)
-                    String runId)
+            @RequestHeader(value = InternalApiClient.POLICY_NAME_HEADER, required = false) String policyName,
+            @RequestHeader(value = AutomationRunContext.RUN_ID_HEADER, required = false) String runId)
             throws IOException {
 
         String mode = normalise(responseMode, MODE_REPORT, MODE_REPORT, MODE_REPLACE);
@@ -137,50 +134,40 @@ public class ExternalApiCallController {
         ApiConnectionSettings settings = connectionResolver.resolve(id);
 
         String filename = safeFileName(fileInput.getOriginalFilename());
-        String contentType =
-                fileInput.getContentType() == null
-                        ? MediaType.APPLICATION_OCTET_STREAM_VALUE
-                        : fileInput.getContentType();
+        String contentType = fileInput.getContentType() == null
+                ? MediaType.APPLICATION_OCTET_STREAM_VALUE
+                : fileInput.getContentType();
         byte[] content = fileInput.getBytes();
 
-        ObjectNode context =
-                DocumentContext.build(fileInput, content, policyName, runId, objectMapper);
+        ObjectNode context = DocumentContext.build(fileInput, content, policyName, runId, objectMapper);
 
-        ExternalApiCaller.Response response =
-                caller.dispatch(
-                        settings,
-                        verb,
-                        Placeholders.resolve(path, context, Placeholders.Escaping.URL_PATH),
-                        buildBody(
-                                body,
-                                bodyTemplate,
-                                includeFile,
-                                includeContext,
-                                context,
-                                fileFieldName,
-                                filename,
-                                contentType,
-                                content,
-                                resolveAll(parseJsonObject(fields, "fields"), context)),
-                        validatedHeaders(resolveAll(parseJsonObject(headers, "headers"), context)));
+        ExternalApiCaller.Response response = caller.dispatch(
+                settings,
+                verb,
+                Placeholders.resolve(path, context, Placeholders.Escaping.URL_PATH),
+                buildBody(
+                        body,
+                        bodyTemplate,
+                        includeFile,
+                        includeContext,
+                        context,
+                        fileFieldName,
+                        filename,
+                        contentType,
+                        content,
+                        resolveAll(parseJsonObject(fields, "fields"), context)),
+                validatedHeaders(resolveAll(parseJsonObject(headers, "headers"), context)));
 
         if (!response.isSuccess()) {
             // Fail the step: a policy that silently continued past a rejected call-out would
             // deliver documents the external system believes it never approved.
-            throw new IOException(
-                    "External API returned HTTP " + response.status() + summarise(response));
+            throw new IOException("External API returned HTTP " + response.status() + summarise(response));
         }
 
         enforceVerdict(response, requireTrue);
 
         return MODE_REPLACE.equals(mode)
-                ? replaceDocument(
-                        settings,
-                        response,
-                        filename,
-                        resultUrlPath,
-                        resultUrlHeader,
-                        responseSelect)
+                ? replaceDocument(settings, response, filename, resultUrlPath, resultUrlHeader, responseSelect)
                 : reportOnly(fileInput, filename, contentType, response);
     }
 
@@ -236,8 +223,7 @@ public class ExternalApiCallController {
                     json.put("contentType", contentType);
                     json.put("content", Base64.getEncoder().encodeToString(content));
                 }
-                return ExternalApiCaller.raw(
-                        MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(json));
+                return ExternalApiCaller.raw(MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(json));
             }
             default -> {
                 Map<String, String> all = new LinkedHashMap<>(fields);
@@ -251,8 +237,7 @@ public class ExternalApiCallController {
                     body.addFields(all);
                     return new ExternalApiCaller.Body(body.contentType(), body.build());
                 }
-                return ExternalApiCaller.multipart(
-                        fileFieldName, filename, contentType, content, all);
+                return ExternalApiCaller.multipart(fileFieldName, filename, contentType, content, all);
             }
         }
     }
@@ -266,11 +251,7 @@ public class ExternalApiCallController {
      * size of the file, and {@code stirlingContext} must not silently grow by a whole document.
      */
     private ExternalApiCaller.Body templatedBody(
-            String bodyTemplate,
-            ObjectNode context,
-            String filename,
-            String contentType,
-            byte[] content)
+            String bodyTemplate, ObjectNode context, String filename, String contentType, byte[] content)
             throws IOException {
         JsonNode template;
         try {
@@ -286,41 +267,31 @@ public class ExternalApiCallController {
             document.put("resolvedContentType", contentType);
         }
         JsonNode resolved = Placeholders.resolveTree(template, withFile);
-        return ExternalApiCaller.raw(
-                MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(resolved));
+        return ExternalApiCaller.raw(MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(resolved));
     }
 
     /** Resolve every value's placeholders against the context. */
     private Map<String, String> resolveAll(Map<String, String> values, ObjectNode context) {
         Map<String, String> out = new LinkedHashMap<>();
-        values.forEach(
-                (key, value) ->
-                        out.put(
-                                key,
-                                Placeholders.resolve(value, context, Placeholders.Escaping.NONE)));
+        values.forEach((key, value) -> out.put(key, Placeholders.resolve(value, context, Placeholders.Escaping.NONE)));
         return out;
     }
 
     /** Per-step headers, held to the same rules as a connection's static headers. */
     private Map<String, String> validatedHeaders(Map<String, String> headers) {
-        headers.forEach(
-                (name, value) -> {
-                    if (!ExternalApiHeaders.isValidName(name)) {
-                        throw new IllegalArgumentException(
-                                "api step 'headers' has an invalid header name: " + name);
-                    }
-                    if (ExternalApiHeaders.isReserved(name)) {
-                        throw new IllegalArgumentException(
-                                "api step 'headers' must not set '"
-                                        + name
-                                        + "'; it is set by the connection or the client");
-                    }
-                    if (!ExternalApiHeaders.isValidValue(value)) {
-                        // A resolved placeholder could carry a newline out of document metadata.
-                        throw new IllegalArgumentException(
-                                "api step 'headers' has an invalid value for '" + name + "'");
-                    }
-                });
+        headers.forEach((name, value) -> {
+            if (!ExternalApiHeaders.isValidName(name)) {
+                throw new IllegalArgumentException("api step 'headers' has an invalid header name: " + name);
+            }
+            if (ExternalApiHeaders.isReserved(name)) {
+                throw new IllegalArgumentException(
+                        "api step 'headers' must not set '" + name + "'; it is set by the connection or the client");
+            }
+            if (!ExternalApiHeaders.isValidValue(value)) {
+                // A resolved placeholder could carry a newline out of document metadata.
+                throw new IllegalArgumentException("api step 'headers' has an invalid value for '" + name + "'");
+            }
+        });
         return headers;
     }
 
@@ -328,18 +299,15 @@ public class ExternalApiCallController {
         String verb = method == null ? "POST" : method.trim().toUpperCase(Locale.ROOT);
         // Only the verbs that carry a body; GET/DELETE would silently drop the document.
         if (!List.of("POST", "PUT", "PATCH").contains(verb)) {
-            throw new IllegalArgumentException(
-                    "'method' must be POST, PUT or PATCH; got " + method);
+            throw new IllegalArgumentException("'method' must be POST, PUT or PATCH; got " + method);
         }
         return verb;
     }
 
     private static String normalise(String value, String fallback, String... allowed) {
-        String out =
-                value == null || value.isBlank() ? fallback : value.trim().toLowerCase(Locale.ROOT);
+        String out = value == null || value.isBlank() ? fallback : value.trim().toLowerCase(Locale.ROOT);
         if (!List.of(allowed).contains(out)) {
-            throw new IllegalArgumentException(
-                    "must be one of " + String.join(", ", allowed) + "; got " + value);
+            throw new IllegalArgumentException("must be one of " + String.join(", ", allowed) + "; got " + value);
         }
         return out;
     }
@@ -365,26 +333,21 @@ public class ExternalApiCallController {
         String url = resultUrl(response, resultUrlPath, resultUrlHeader);
         if (url != null) {
             // The URL came out of the response, so ResultUrls decides whether it may be fetched.
-            payload =
-                    caller.getResult(
-                            settings, ResultUrls.validate(settings, url, applicationProperties));
+            payload = caller.getResult(settings, ResultUrls.validate(settings, url, applicationProperties));
             followed = true;
             if (!payload.isSuccess()) {
-                throw new IOException(
-                        "Fetching the API's result URL returned HTTP " + payload.status());
+                throw new IOException("Fetching the API's result URL returned HTTP " + payload.status());
             }
         }
 
         if (payload.body().length == 0) {
-            throw new IOException(
-                    "External API returned an empty body, so there is no document to replace with;"
-                            + " use responseMode=report to keep the original.");
+            throw new IOException("External API returned an empty body, so there is no document to replace with;"
+                    + " use responseMode=report to keep the original.");
         }
         if (payload.isJson() && !followed) {
-            throw new IOException(
-                    "External API returned JSON, which cannot replace the document. Use"
-                            + " responseMode=report to keep the original and record the answer, or"
-                            + " set resultUrlPath if the JSON points at the document.");
+            throw new IOException("External API returned JSON, which cannot replace the document. Use"
+                    + " responseMode=report to keep the original and record the answer, or"
+                    + " set resultUrlPath if the JSON points at the document.");
         }
 
         String filename = ResultFiles.nameFor(payload, requestFilename);
@@ -393,39 +356,31 @@ public class ExternalApiCallController {
         if (ResultFiles.isArchive(result)) {
             if (responseSelect == null || responseSelect.isBlank()) {
                 // Handing a .zip to a step that expects a PDF fails later and more obscurely.
-                throw new IOException(
-                        "External API returned an archive; set 'responseSelect' (e.g. *.pdf, or an"
-                                + " index) to say which entry becomes the document.");
+                throw new IOException("External API returned an archive; set 'responseSelect' (e.g. *.pdf, or an"
+                        + " index) to say which entry becomes the document.");
             }
             result = ResultFiles.selectFromArchive(result, responseSelect, tempFileManager);
             filename = result.getFilename();
         } else if (responseSelect != null && !responseSelect.isBlank()) {
-            throw new IOException(
-                    "'responseSelect' was set but the API returned a single file, not an archive");
+            throw new IOException("'responseSelect' was set but the API returned a single file, not an archive");
         }
 
-        MediaType type =
-                payload.contentType() == null || ResultFiles.isArchiveName(filename)
-                        ? MediaType.APPLICATION_OCTET_STREAM
-                        : MediaType.parseMediaType(payload.contentType().split(";")[0].trim());
+        MediaType type = payload.contentType() == null || ResultFiles.isArchiveName(filename)
+                ? MediaType.APPLICATION_OCTET_STREAM
+                : MediaType.parseMediaType(payload.contentType().split(";")[0].trim());
         return ResponseEntity.ok()
                 .contentType(type)
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + filename + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .body(result);
     }
 
     /** The result URL the API pointed at, from the body or a header; null when neither is set. */
-    private String resultUrl(
-            ExternalApiCaller.Response response, String resultUrlPath, String resultUrlHeader) {
+    private String resultUrl(ExternalApiCaller.Response response, String resultUrlPath, String resultUrlHeader) {
         if (resultUrlHeader != null && !resultUrlHeader.isBlank()) {
             String value = response.header(resultUrlHeader.trim());
             if (value == null || value.isBlank()) {
                 throw new IllegalArgumentException(
-                        "'resultUrlHeader' names '"
-                                + resultUrlHeader
-                                + "' but the response had no such header");
+                        "'resultUrlHeader' names '" + resultUrlHeader + "' but the response had no such header");
             }
             return value;
         }
@@ -453,8 +408,7 @@ public class ExternalApiCallController {
      * Fail-closed: a missing field, a non-boolean, a false, or a non-JSON body all stop the run.
      * This is what makes a scanner's "not clean" actually stop the pipeline.
      */
-    private void enforceVerdict(ExternalApiCaller.Response response, String requireTrue)
-            throws IOException {
+    private void enforceVerdict(ExternalApiCaller.Response response, String requireTrue) throws IOException {
         if (requireTrue == null || requireTrue.isBlank()) {
             return;
         }
@@ -466,27 +420,21 @@ public class ExternalApiCallController {
             node = node.get(segment);
         }
         if (node == null || !node.asBoolean(false)) {
-            throw new IOException(
-                    "External API verdict '"
-                            + requireTrue.trim()
-                            + "' was not true"
-                            + summarise(response)
-                            + "; the document was not approved, so the run was stopped.");
+            throw new IOException("External API verdict '"
+                    + requireTrue.trim()
+                    + "' was not true"
+                    + summarise(response)
+                    + "; the document was not approved, so the run was stopped.");
         }
     }
 
     /** The document passes through; the API's answer rides in the report header. */
     private ResponseEntity<Resource> reportOnly(
-            MultipartFile fileInput,
-            String filename,
-            String contentType,
-            ExternalApiCaller.Response response)
+            MultipartFile fileInput, String filename, String contentType, ExternalApiCaller.Response response)
             throws IOException {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + filename + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .header(AiToolResponseHeaders.TOOL_REPORT, buildReport(response))
                 .body(new ByteArrayResource(fileInput.getBytes()));
     }
@@ -524,9 +472,7 @@ public class ExternalApiCallController {
         }
         Map<String, Object> raw;
         try {
-            raw =
-                    objectMapper.readValue(
-                            json, new TypeReference<LinkedHashMap<String, Object>>() {});
+            raw = objectMapper.readValue(json, new TypeReference<LinkedHashMap<String, Object>>() {});
         } catch (Exception e) {
             throw new IllegalArgumentException("api step '" + what + "' must be a JSON object", e);
         }
@@ -545,9 +491,7 @@ public class ExternalApiCallController {
             return "";
         }
         String oneLine = text.replaceAll("\\s+", " ").trim();
-        return oneLine.length() <= MAX_REPORT_BODY_CHARS
-                ? oneLine
-                : oneLine.substring(0, MAX_REPORT_BODY_CHARS) + "…";
+        return oneLine.length() <= MAX_REPORT_BODY_CHARS ? oneLine : oneLine.substring(0, MAX_REPORT_BODY_CHARS) + "…";
     }
 
     private static String safeFileName(String originalFilename) {

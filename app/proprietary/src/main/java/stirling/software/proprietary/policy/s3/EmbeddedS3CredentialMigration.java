@@ -79,8 +79,7 @@ public class EmbeddedS3CredentialMigration {
             if (!"s3".equals(source.type()) || !embedsCredentials(source.options())) {
                 continue;
             }
-            IntegrationConfig connection =
-                    connectionFor(source.options(), source.teamId(), byCredentialKey);
+            IntegrationConfig connection = connectionFor(source.options(), source.teamId(), byCredentialKey);
             sourceStore.save(withOptions(source, referencing(connection, source.options(), true)));
             migrated++;
         }
@@ -89,14 +88,9 @@ public class EmbeddedS3CredentialMigration {
             if (!"s3".equals(output.type()) || !embedsCredentials(output.options())) {
                 continue;
             }
-            IntegrationConfig connection =
-                    connectionFor(output.options(), policy.teamId(), byCredentialKey);
-            policyStore.save(
-                    withOutput(
-                            policy,
-                            new OutputSpec(
-                                    output.type(),
-                                    referencing(connection, output.options(), false))));
+            IntegrationConfig connection = connectionFor(output.options(), policy.teamId(), byCredentialKey);
+            policyStore.save(withOutput(
+                    policy, new OutputSpec(output.type(), referencing(connection, output.options(), false))));
             migrated++;
         }
         if (migrated > 0) {
@@ -169,14 +163,11 @@ public class EmbeddedS3CredentialMigration {
                 continue;
             }
             try {
-                Map<String, Object> config =
-                        OBJECT_MAPPER.readValue(connection.getConfig(), Map.class);
+                Map<String, Object> config = OBJECT_MAPPER.readValue(connection.getConfig(), Map.class);
                 byKey.putIfAbsent(credentialKey(config), connection);
             } catch (Exception e) {
                 log.debug(
-                        "Skipping unreadable S3 connection {} while indexing: {}",
-                        connection.getId(),
-                        e.getMessage());
+                        "Skipping unreadable S3 connection {} while indexing: {}", connection.getId(), e.getMessage());
             }
         }
         return byKey;
@@ -191,22 +182,17 @@ public class EmbeddedS3CredentialMigration {
         return key.toString();
     }
 
-    private static String connectionName(
-            Map<String, Object> options, Map<String, IntegrationConfig> byKey) {
+    private static String connectionName(Map<String, Object> options, Map<String, IntegrationConfig> byKey) {
         String base = "S3: " + options.getOrDefault("bucket", "bucket");
-        long sameName = byKey.values().stream().filter(c -> c.getName().startsWith(base)).count();
+        long sameName = byKey.values().stream()
+                .filter(c -> c.getName().startsWith(base))
+                .count();
         return sameName == 0 ? base : base + " (" + (sameName + 1) + ")";
     }
 
     private static Source withOptions(Source source, Map<String, Object> options) {
         return new Source(
-                source.id(),
-                source.name(),
-                source.type(),
-                options,
-                source.enabled(),
-                source.owner(),
-                source.teamId());
+                source.id(), source.name(), source.type(), options, source.enabled(), source.owner(), source.teamId());
     }
 
     private static Policy withOutput(Policy policy, OutputSpec output) {

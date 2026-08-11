@@ -32,9 +32,8 @@ public class AiEngineClient {
         this(
                 applicationProperties,
                 HttpClient.newBuilder()
-                        .connectTimeout(
-                                Duration.ofSeconds(
-                                        applicationProperties.getAiEngine().getTimeoutSeconds()))
+                        .connectTimeout(Duration.ofSeconds(
+                                applicationProperties.getAiEngine().getTimeoutSeconds()))
                         .build());
     }
 
@@ -44,10 +43,7 @@ public class AiEngineClient {
     }
 
     /** Package-private constructor that also injects the engine shared secret; for tests. */
-    AiEngineClient(
-            ApplicationProperties applicationProperties,
-            HttpClient httpClient,
-            String engineSharedSecret) {
+    AiEngineClient(ApplicationProperties applicationProperties, HttpClient httpClient, String engineSharedSecret) {
         this.applicationProperties = applicationProperties;
         this.httpClient = httpClient;
         this.engineSharedSecret = engineSharedSecret;
@@ -55,8 +51,7 @@ public class AiEngineClient {
 
     public String post(String path, String jsonBody, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
-        return postWithTimeout(
-                path, jsonBody, Duration.ofSeconds(config.getTimeoutSeconds()), userId);
+        return postWithTimeout(path, jsonBody, Duration.ofSeconds(config.getTimeoutSeconds()), userId);
     }
 
     /**
@@ -65,28 +60,24 @@ public class AiEngineClient {
      */
     public String postLongRunning(String path, String jsonBody, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
-        return postWithTimeout(
-                path, jsonBody, Duration.ofSeconds(config.getLongRunningTimeoutSeconds()), userId);
+        return postWithTimeout(path, jsonBody, Duration.ofSeconds(config.getLongRunningTimeoutSeconds()), userId);
     }
 
-    private String postWithTimeout(String path, String jsonBody, Duration timeout, String userId)
-            throws IOException {
+    private String postWithTimeout(String path, String jsonBody, Duration timeout, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
         }
 
         String url = config.getUrl().stripTrailing() + path;
         log.debug("Proxying AI engine request to {} (timeout {}s)", url, timeout.toSeconds());
 
-        HttpRequest.Builder builder =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(url))
-                        .header("Content-Type", "application/json")
-                        .header("Accept", "application/json")
-                        .timeout(timeout)
-                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .timeout(timeout)
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
         addUserHeader(builder, userId);
         addEngineAuthHeader(builder);
         HttpResponse<String> response = sendRequest(builder.build());
@@ -121,29 +112,23 @@ public class AiEngineClient {
      * practice line arrival keeps the connection logically alive: as long as the engine emits
      * events, the work is progressing. Genuine engine hangs still hit the total timeout.
      */
-    public void streamPost(
-            String path, String jsonBody, String userId, Consumer<String> lineConsumer)
+    public void streamPost(String path, String jsonBody, String userId, Consumer<String> lineConsumer)
             throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
         }
 
         String url = config.getUrl().stripTrailing() + path;
         Duration timeout = Duration.ofSeconds(config.getLongRunningTimeoutSeconds());
-        log.debug(
-                "Proxying AI engine streaming request to {} (timeout {}s)",
-                url,
-                timeout.toSeconds());
+        log.debug("Proxying AI engine streaming request to {} (timeout {}s)", url, timeout.toSeconds());
 
-        HttpRequest.Builder builder =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(url))
-                        .header("Content-Type", "application/json")
-                        .header("Accept", "application/x-ndjson")
-                        .timeout(timeout)
-                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/x-ndjson")
+                .timeout(timeout)
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
         addUserHeader(builder, userId);
         addEngineAuthHeader(builder);
         HttpRequest request = builder.build();
@@ -158,24 +143,21 @@ public class AiEngineClient {
                     HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine request was interrupted");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI engine request was interrupted");
         }
 
         int status = response.statusCode();
         if (status >= 400) {
             throw new ResponseStatusException(
-                    HttpStatus.valueOf(status >= 500 ? 502 : status),
-                    "AI engine returned error: " + status);
+                    HttpStatus.valueOf(status >= 500 ? 502 : status), "AI engine returned error: " + status);
         }
 
         try (Stream<String> lines = response.body()) {
-            lines.forEach(
-                    line -> {
-                        if (!line.isEmpty()) {
-                            lineConsumer.accept(line);
-                        }
-                    });
+            lines.forEach(line -> {
+                if (!line.isEmpty()) {
+                    lineConsumer.accept(line);
+                }
+            });
         }
     }
 
@@ -187,19 +169,17 @@ public class AiEngineClient {
     public String delete(String path, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
         }
 
         String url = config.getUrl().stripTrailing() + path;
         log.debug("Proxying AI engine DELETE request to {}", url);
 
-        HttpRequest.Builder builder =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(url))
-                        .header("Accept", "application/json")
-                        .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
-                        .DELETE();
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
+                .DELETE();
         addUserHeader(builder, userId);
         addEngineAuthHeader(builder);
         HttpResponse<String> response = sendRequest(builder.build());
@@ -212,19 +192,17 @@ public class AiEngineClient {
     public String get(String path, String userId) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI engine is not enabled");
         }
 
         String url = config.getUrl().stripTrailing() + path;
         log.debug("Proxying AI engine GET request to {}", url);
 
-        HttpRequest.Builder builder =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(url))
-                        .header("Accept", "application/json")
-                        .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
-                        .GET();
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
+                .GET();
         addUserHeader(builder, userId);
         addEngineAuthHeader(builder);
         HttpResponse<String> response = sendRequest(builder.build());
@@ -247,21 +225,18 @@ public class AiEngineClient {
                     HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine request was interrupted");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI engine request was interrupted");
         }
     }
 
     private void checkResponseStatus(HttpResponse<String> response) {
         int status = response.statusCode();
         if (status >= 500) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY, "AI engine returned error: " + status);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "AI engine returned error: " + status);
         }
         if (status >= 400) {
             throw new ResponseStatusException(
-                    HttpStatus.valueOf(status),
-                    "AI engine returned client error: " + response.body());
+                    HttpStatus.valueOf(status), "AI engine returned client error: " + response.body());
         }
     }
 }

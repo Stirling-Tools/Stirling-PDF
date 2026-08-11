@@ -38,11 +38,20 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 @DisplayName("InviteLinkController - additional coverage")
 class InviteLinkControllerMoreTest {
 
-    @Mock private InviteTokenRepository inviteTokenRepository;
-    @Mock private TeamRepository teamRepository;
-    @Mock private UserService userService;
-    @Mock private EmailService emailService;
-    @Mock private UserLicenseSettingsService userLicenseSettingsService;
+    @Mock
+    private InviteTokenRepository inviteTokenRepository;
+
+    @Mock
+    private TeamRepository teamRepository;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private UserLicenseSettingsService userLicenseSettingsService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -57,14 +66,13 @@ class InviteLinkControllerMoreTest {
 
         adminPrincipal = () -> "admin";
 
-        InviteLinkController controller =
-                new InviteLinkController(
-                        inviteTokenRepository,
-                        teamRepository,
-                        userService,
-                        applicationProperties,
-                        Optional.of(emailService),
-                        userLicenseSettingsService);
+        InviteLinkController controller = new InviteLinkController(
+                inviteTokenRepository,
+                teamRepository,
+                userService,
+                applicationProperties,
+                Optional.of(emailService),
+                userLicenseSettingsService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -84,14 +92,11 @@ class InviteLinkControllerMoreTest {
         @Test
         @DisplayName("rejects sendEmail without an email address")
         void sendEmailWithoutAddress() throws Exception {
-            mockMvc.perform(
-                            post("/api/v1/invite/generate")
-                                    .principal(adminPrincipal)
-                                    .param("sendEmail", "true"))
+            mockMvc.perform(post("/api/v1/invite/generate")
+                            .principal(adminPrincipal)
+                            .param("sendEmail", "true"))
                     .andExpect(status().isBadRequest())
-                    .andExpect(
-                            jsonPath("$.error")
-                                    .value("Cannot send email without an email address"));
+                    .andExpect(jsonPath("$.error").value("Cannot send email without an email address"));
         }
 
         @Test
@@ -99,10 +104,9 @@ class InviteLinkControllerMoreTest {
         void userAlreadyExists() throws Exception {
             when(userService.usernameExistsIgnoreCase("dup@ex.com")).thenReturn(true);
 
-            mockMvc.perform(
-                            post("/api/v1/invite/generate")
-                                    .principal(adminPrincipal)
-                                    .param("email", "dup@ex.com"))
+            mockMvc.perform(post("/api/v1/invite/generate")
+                            .principal(adminPrincipal)
+                            .param("email", "dup@ex.com"))
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.error").value("User already exists"));
         }
@@ -111,28 +115,22 @@ class InviteLinkControllerMoreTest {
         @DisplayName("returns conflict when an active invite already exists")
         void activeInviteExists() throws Exception {
             when(userService.usernameExistsIgnoreCase("dup@ex.com")).thenReturn(false);
-            when(inviteTokenRepository.findByEmail("dup@ex.com"))
-                    .thenReturn(Optional.of(validInvite("existing")));
+            when(inviteTokenRepository.findByEmail("dup@ex.com")).thenReturn(Optional.of(validInvite("existing")));
 
-            mockMvc.perform(
-                            post("/api/v1/invite/generate")
-                                    .principal(adminPrincipal)
-                                    .param("email", "dup@ex.com"))
+            mockMvc.perform(post("/api/v1/invite/generate")
+                            .principal(adminPrincipal)
+                            .param("email", "dup@ex.com"))
                     .andExpect(status().isConflict())
                     .andExpect(
-                            jsonPath("$.error")
-                                    .value(
-                                            "An active invite already exists for this email"
-                                                    + " address"));
+                            jsonPath("$.error").value("An active invite already exists for this email" + " address"));
         }
 
         @Test
         @DisplayName("rejects assigning the INTERNAL_API_USER role")
         void rejectsInternalApiRole() throws Exception {
-            mockMvc.perform(
-                            post("/api/v1/invite/generate")
-                                    .principal(adminPrincipal)
-                                    .param("role", Role.INTERNAL_API_USER.getRoleId()))
+            mockMvc.perform(post("/api/v1/invite/generate")
+                            .principal(adminPrincipal)
+                            .param("role", Role.INTERNAL_API_USER.getRoleId()))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Cannot assign INTERNAL_API_USER role"));
         }

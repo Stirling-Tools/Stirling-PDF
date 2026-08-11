@@ -41,25 +41,20 @@ public class ClusterMetrics implements StickyMissRecorder {
     public ClusterMetrics(MeterRegistry registry, ApplicationProperties applicationProperties) {
         this.registry = registry;
         this.applicationProperties = applicationProperties;
-        this.stickyMissTotal =
-                Counter.builder("stirling_cluster_sticky_miss_total")
-                        .description(
-                                "Sticky-session misses: a download for a job whose result lives on"
-                                        + " a peer node landed on this node. High sustained value means"
-                                        + " LB affinity is broken.")
-                        .register(registry);
-        this.rateLimitRejected =
-                Counter.builder("stirling_cluster_ratelimit_rejected_total")
-                        .description("Cluster-wide rate limit rejections")
-                        .register(registry);
-        this.backplaneLatency =
-                Timer.builder("stirling_cluster_backplane_latency_seconds")
-                        .description("Backplane round-trip latency")
-                        .register(registry);
-        this.jobWaitSeconds =
-                Timer.builder("stirling_cluster_job_wait_seconds")
-                        .description("Time jobs spend queued before execution")
-                        .register(registry);
+        this.stickyMissTotal = Counter.builder("stirling_cluster_sticky_miss_total")
+                .description("Sticky-session misses: a download for a job whose result lives on"
+                        + " a peer node landed on this node. High sustained value means"
+                        + " LB affinity is broken.")
+                .register(registry);
+        this.rateLimitRejected = Counter.builder("stirling_cluster_ratelimit_rejected_total")
+                .description("Cluster-wide rate limit rejections")
+                .register(registry);
+        this.backplaneLatency = Timer.builder("stirling_cluster_backplane_latency_seconds")
+                .description("Backplane round-trip latency")
+                .register(registry);
+        this.jobWaitSeconds = Timer.builder("stirling_cluster_job_wait_seconds")
+                .description("Time jobs spend queued before execution")
+                .register(registry);
         Gauge.builder("stirling_cluster_jobs_inflight", jobsInflight, AtomicLong::doubleValue)
                 .description("Jobs currently in flight on this node")
                 .tag("node", applicationProperties.getCluster().resolvedNodeId())
@@ -99,15 +94,13 @@ public class ClusterMetrics implements StickyMissRecorder {
     }
 
     private AtomicLong ensureLaneGauge(String lane) {
-        return queueDepth.computeIfAbsent(
-                lane,
-                l -> {
-                    AtomicLong holder = new AtomicLong();
-                    Gauge.builder("stirling_cluster_queue_depth", holder, AtomicLong::doubleValue)
-                            .description("Pending items in a job queue lane")
-                            .tag("lane", l)
-                            .register(registry);
-                    return holder;
-                });
+        return queueDepth.computeIfAbsent(lane, l -> {
+            AtomicLong holder = new AtomicLong();
+            Gauge.builder("stirling_cluster_queue_depth", holder, AtomicLong::doubleValue)
+                    .description("Pending items in a job queue lane")
+                    .tag("lane", l)
+                    .register(registry);
+            return holder;
+        });
     }
 }

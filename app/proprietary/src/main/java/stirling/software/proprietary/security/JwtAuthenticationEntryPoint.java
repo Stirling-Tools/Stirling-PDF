@@ -13,9 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException)
+            HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException {
         String contextPath = request.getContextPath();
         String requestURI = request.getRequestURI();
@@ -25,8 +23,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            String message =
-                    authException != null ? authException.getMessage() : "Authentication required";
+            String message = authException != null ? authException.getMessage() : "Authentication required";
             response.getWriter().write("{\"error\":\"" + message + "\"}");
         } else {
             // For non-API requests, use default behavior

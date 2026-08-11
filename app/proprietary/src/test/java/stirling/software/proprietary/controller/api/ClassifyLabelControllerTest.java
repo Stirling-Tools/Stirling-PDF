@@ -40,28 +40,38 @@ import tools.jackson.databind.json.JsonMapper;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ClassifyLabelControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private PdfContentExtractor pdfContentExtractor;
-    @Mock private PdfMetadataService pdfMetadataService;
-    @Mock private AiEngineClient aiEngineClient;
-    @Mock private AiFeatureGate aiFeatureGate;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private PdfContentExtractor pdfContentExtractor;
+
+    @Mock
+    private PdfMetadataService pdfMetadataService;
+
+    @Mock
+    private AiEngineClient aiEngineClient;
+
+    @Mock
+    private AiFeatureGate aiFeatureGate;
 
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
     private ClassifyLabelController controller;
 
     private void withLabels(List<ClassificationLabel> labels) {
-        controller =
-                new ClassifyLabelController(
-                        pdfDocumentFactory,
-                        tempFileManager,
-                        pdfContentExtractor,
-                        pdfMetadataService,
-                        aiEngineClient,
-                        aiFeatureGate,
-                        objectMapper,
-                        ClassificationLabelProvider.withLabels(labels),
-                        null);
+        controller = new ClassifyLabelController(
+                pdfDocumentFactory,
+                tempFileManager,
+                pdfContentExtractor,
+                pdfMetadataService,
+                aiEngineClient,
+                aiFeatureGate,
+                objectMapper,
+                ClassificationLabelProvider.withLabels(labels),
+                null);
     }
 
     private void stubSinglePageDocument() throws Exception {
@@ -70,8 +80,7 @@ class ClassifyLabelControllerTest {
         when(file.getOriginalFilename()).thenReturn("invoice.pdf");
         when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(document);
         when(document.getNumberOfPages()).thenReturn(1);
-        when(pdfContentExtractor.extractPageTextRaw(document, 1))
-                .thenReturn("Invoice total due 100.00");
+        when(pdfContentExtractor.extractPageTextRaw(document, 1)).thenReturn("Invoice total due 100.00");
         when(aiEngineClient.post(eq("/api/v1/documents/classify"), anyString(), isNull()))
                 .thenReturn("{\"outcome\":\"classification\",\"labels\":[\"invoice\"]}");
 
@@ -96,8 +105,7 @@ class ClassifyLabelControllerTest {
         stubSinglePageDocument();
 
         ArgumentCaptor<String> value = ArgumentCaptor.forClass(String.class);
-        verify(pdfMetadataService)
-                .setClassificationMetadata(any(PDDocument.class), value.capture());
+        verify(pdfMetadataService).setClassificationMetadata(any(PDDocument.class), value.capture());
 
         JsonNode written = objectMapper.readTree(value.getValue());
         assertThat(written.has("outcome")).isFalse();
@@ -107,11 +115,10 @@ class ClassifyLabelControllerTest {
 
     @Test
     void classifyAndLabel_sendsLabelIdsAndNames() throws Exception {
-        withLabels(
-                List.of(
-                        new ClassificationLabel("invoice", "Invoice", "receipt-long"),
-                        new ClassificationLabel("contract", "Contract", null),
-                        new ClassificationLabel("timesheet", "Timesheet", null)));
+        withLabels(List.of(
+                new ClassificationLabel("invoice", "Invoice", "receipt-long"),
+                new ClassificationLabel("contract", "Contract", null),
+                new ClassificationLabel("timesheet", "Timesheet", null)));
 
         stubSinglePageDocument();
 
@@ -121,17 +128,15 @@ class ClassifyLabelControllerTest {
         assertThat(labels.isArray()).isTrue();
         assertThat(labels.size()).isEqualTo(3);
         // Each entry is an {id, name} pair — the model reasons over names, we store ids.
-        assertThat(
-                        List.of(
-                                labels.get(0).get("id").asText(),
-                                labels.get(1).get("id").asText(),
-                                labels.get(2).get("id").asText()))
+        assertThat(List.of(
+                        labels.get(0).get("id").asText(),
+                        labels.get(1).get("id").asText(),
+                        labels.get(2).get("id").asText()))
                 .containsExactly("invoice", "contract", "timesheet");
-        assertThat(
-                        List.of(
-                                labels.get(0).get("name").asText(),
-                                labels.get(1).get("name").asText(),
-                                labels.get(2).get("name").asText()))
+        assertThat(List.of(
+                        labels.get(0).get("name").asText(),
+                        labels.get(1).get("name").asText(),
+                        labels.get(2).get("name").asText()))
                 .containsExactly("Invoice", "Contract", "Timesheet");
     }
 
@@ -144,8 +149,7 @@ class ClassifyLabelControllerTest {
         // No vocabulary, and the engine holds no default of its own, so the file is passed through
         // unlabelled: neither the engine nor the metadata write is invoked.
         verify(aiEngineClient, never()).post(anyString(), anyString(), any());
-        verify(pdfMetadataService, never())
-                .setClassificationMetadata(any(PDDocument.class), anyString());
+        verify(pdfMetadataService, never()).setClassificationMetadata(any(PDDocument.class), anyString());
     }
 
     @Test

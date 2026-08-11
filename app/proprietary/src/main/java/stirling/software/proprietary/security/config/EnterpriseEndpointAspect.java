@@ -22,8 +22,7 @@ public class EnterpriseEndpointAspect {
             "@annotation(stirling.software.proprietary.security.config.EnterpriseEndpoint) || @within(stirling.software.proprietary.security.config.EnterpriseEndpoint)")
     public Object checkEnterpriseAccess(ProceedingJoinPoint joinPoint) throws Throwable {
         if (!runningEE) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "This endpoint requires an Enterprise license");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This endpoint requires an Enterprise license");
         }
         return joinPoint.proceed();
     }

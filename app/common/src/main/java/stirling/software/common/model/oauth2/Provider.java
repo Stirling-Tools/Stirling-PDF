@@ -46,8 +46,7 @@ public class Provider {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.scopes = scopes == null ? new ArrayList<>() : scopes;
-        this.useAsUsername =
-                useAsUsername != null ? validateUsernameAttribute(useAsUsername) : EMAIL;
+        this.useAsUsername = useAsUsername != null ? validateUsernameAttribute(useAsUsername) : EMAIL;
         this.authorizationUri = authorizationUri;
         this.tokenUri = tokenUri;
         this.userInfoUri = userInfoUri;
@@ -76,15 +75,13 @@ public class Provider {
         }
     }
 
-    private UsernameAttribute validateKeycloakUsernameAttribute(
-            UsernameAttribute usernameAttribute) {
+    private UsernameAttribute validateKeycloakUsernameAttribute(UsernameAttribute usernameAttribute) {
         switch (usernameAttribute) {
             case EMAIL, NAME, GIVEN_NAME, FAMILY_NAME, PREFERRED_USERNAME -> {
                 return usernameAttribute;
             }
             default ->
-                    throw new UnsupportedClaimException(
-                            String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
+                throw new UnsupportedClaimException(String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
         }
     }
 
@@ -94,8 +91,7 @@ public class Provider {
                 return usernameAttribute;
             }
             default ->
-                    throw new UnsupportedClaimException(
-                            String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
+                throw new UnsupportedClaimException(String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
         }
     }
 
@@ -105,8 +101,7 @@ public class Provider {
                 return usernameAttribute;
             }
             default ->
-                    throw new UnsupportedClaimException(
-                            String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
+                throw new UnsupportedClaimException(String.format(EXCEPTION_MESSAGE, usernameAttribute, clientName));
         }
     }
 

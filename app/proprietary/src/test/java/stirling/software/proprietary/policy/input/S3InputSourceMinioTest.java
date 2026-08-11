@@ -50,9 +50,7 @@ class S3InputSourceMinioTest {
 
     @Container
     static MinIOContainer minio =
-            new MinIOContainer("minio/minio:latest")
-                    .withUserName(ACCESS_KEY)
-                    .withPassword(SECRET_KEY);
+            new MinIOContainer("minio/minio:latest").withUserName(ACCESS_KEY).withPassword(SECRET_KEY);
 
     private static S3Client adminClient;
     private static int bucketCounter;
@@ -65,17 +63,16 @@ class S3InputSourceMinioTest {
     @BeforeEach
     void setUp() {
         if (adminClient == null) {
-            adminClient =
-                    S3Client.builder()
-                            .endpointOverride(java.net.URI.create(minio.getS3URL()))
-                            .httpClient(UrlConnectionHttpClient.create())
-                            .region(Region.US_EAST_1)
-                            .credentialsProvider(
-                                    StaticCredentialsProvider.create(
-                                            AwsBasicCredentials.create(ACCESS_KEY, SECRET_KEY)))
-                            .serviceConfiguration(
-                                    S3Configuration.builder().pathStyleAccessEnabled(true).build())
-                            .build();
+            adminClient = S3Client.builder()
+                    .endpointOverride(java.net.URI.create(minio.getS3URL()))
+                    .httpClient(UrlConnectionHttpClient.create())
+                    .region(Region.US_EAST_1)
+                    .credentialsProvider(
+                            StaticCredentialsProvider.create(AwsBasicCredentials.create(ACCESS_KEY, SECRET_KEY)))
+                    .serviceConfiguration(S3Configuration.builder()
+                            .pathStyleAccessEnabled(true)
+                            .build())
+                    .build();
         }
         bucket = "policy-inbox-" + ++bucketCounter;
         adminClient.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
@@ -83,9 +80,7 @@ class S3InputSourceMinioTest {
         // The MinIO endpoint resolves to loopback, so the operator opt-in must be on.
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowPrivateS3Endpoints(true);
-        source =
-                new S3InputSource(
-                        new S3ConnectionPool(properties), S3TestConnections.legacyResolver());
+        source = new S3InputSource(new S3ConnectionPool(properties), S3TestConnections.legacyResolver());
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
     }
@@ -100,8 +95,7 @@ class S3InputSourceMinioTest {
         assertThat(work).hasSize(2);
         assertThat(ctx.present)
                 .containsExactlyInAnyOrder(
-                        "s3://" + bucket + "/incoming/doc.pdf",
-                        "s3://" + bucket + "/incoming/other.txt");
+                        "s3://" + bucket + "/incoming/doc.pdf", "s3://" + bucket + "/incoming/other.txt");
         assertThat(read(work.get(0))).isIn("pdf bytes", "text");
         // In flight: nothing to claim on a second sweep.
         assertThat(source.resolve(spec(Map.of("prefix", "incoming/")), ctx)).isEmpty();
@@ -163,10 +157,8 @@ class S3InputSourceMinioTest {
 
     @Test
     void aPrivateEndpointIsRejectedWithoutTheOperatorOptIn() {
-        S3InputSource guarded =
-                new S3InputSource(
-                        new S3ConnectionPool(new ApplicationProperties()),
-                        S3TestConnections.legacyResolver());
+        S3InputSource guarded = new S3InputSource(
+                new S3ConnectionPool(new ApplicationProperties()), S3TestConnections.legacyResolver());
 
         assertThatThrownBy(() -> guarded.validate(spec(Map.of())))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -195,7 +187,8 @@ class S3InputSourceMinioTest {
 
     private boolean exists(String key) {
         try {
-            adminClient.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
+            adminClient.headObject(
+                    HeadObjectRequest.builder().bucket(bucket).key(key).build());
             return true;
         } catch (NoSuchKeyException e) {
             return false;
@@ -218,8 +211,7 @@ class S3InputSourceMinioTest {
         }
 
         @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
+        public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
             ledger.settle(POLICY, identity, finalGate, finalContentHash, success);
         }
 

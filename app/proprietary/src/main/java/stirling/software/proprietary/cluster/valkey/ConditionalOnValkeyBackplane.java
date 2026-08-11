@@ -14,6 +14,5 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@ConditionalOnExpression(
-        "${cluster.enabled:false} and '${cluster.backplane:inprocess}'.equals('valkey')")
+@ConditionalOnExpression("${cluster.enabled:false} and '${cluster.backplane:inprocess}'.equals('valkey')")
 public @interface ConditionalOnValkeyBackplane {}

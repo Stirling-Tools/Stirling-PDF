@@ -45,9 +45,7 @@ public class EntitlementCache {
     private final AtomicBoolean refreshing = new AtomicBoolean(false);
 
     public EntitlementCache(
-            DeviceCredentialStore credentialStore,
-            AccountLinkClient client,
-            AccountLinkProperties properties) {
+            DeviceCredentialStore credentialStore, AccountLinkClient client, AccountLinkProperties properties) {
         this.credentialStore = credentialStore;
         this.client = client;
         this.ttl = Duration.ofSeconds(properties.getEntitlementCacheSeconds());
@@ -96,16 +94,13 @@ public class EntitlementCache {
             } else {
                 // Unreachable / server error: keep the last known entitlement but stamp the attempt
                 // so we don't hammer SaaS; the gate fails open meanwhile.
-                log.debug(
-                        "Entitlement refresh failed; reusing last known snapshot, backing off a TTL");
+                log.debug("Entitlement refresh failed; reusing last known snapshot, backing off a TTL");
                 snapshot = new Snapshot(snapshot.entitlement(), Instant.now());
             }
         } catch (AccountLinkClient.RevokedException e) {
             // Authoritative deny — block immediately rather than serving the stale entitled
             // snapshot.
-            log.info(
-                    "Entitlement denied (HTTP {}); blocking billable work for the revoked credential",
-                    e.status());
+            log.info("Entitlement denied (HTTP {}); blocking billable work for the revoked credential", e.status());
             snapshot = new Snapshot(REVOKED, Instant.now());
         }
     }

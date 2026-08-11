@@ -36,43 +36,34 @@ class ResultUrlsTest {
 
     @Test
     void allowsTheConnectionsOwnHostWithoutBeingDeclared() {
-        assertThat(ResultUrls.isAllowedHost(connection(null), "api.vendor.example")).isTrue();
+        assertThat(ResultUrls.isAllowedHost(connection(null), "api.vendor.example"))
+                .isTrue();
     }
 
     @Test
     void allowsADeclaredResultHost() {
         // The common real case: the API answers on one host, the file lives on a CDN.
-        assertThat(
-                        ResultUrls.isAllowedHost(
-                                connection(List.of("cdn.vendor.example")), "cdn.vendor.example"))
+        assertThat(ResultUrls.isAllowedHost(connection(List.of("cdn.vendor.example")), "cdn.vendor.example"))
                 .isTrue();
     }
 
     @Test
     void allowsASubdomainOfADeclaredHost() {
-        assertThat(
-                        ResultUrls.isAllowedHost(
-                                connection(List.of("vendor.example")), "files.eu.vendor.example"))
+        assertThat(ResultUrls.isAllowedHost(connection(List.of("vendor.example")), "files.eu.vendor.example"))
                 .isTrue();
     }
 
     @Test
     void hostMatchingIsCaseInsensitive() {
-        assertThat(
-                        ResultUrls.isAllowedHost(
-                                connection(List.of("CDN.Vendor.Example")), "cdn.vendor.example"))
+        assertThat(ResultUrls.isAllowedHost(connection(List.of("CDN.Vendor.Example")), "cdn.vendor.example"))
                 .isTrue();
     }
 
     @Test
     void anUnresolvableHostIsRefusedRatherThanAssumedSafe() {
         // Fail closed: if we cannot see where a name points, we cannot say it is not internal.
-        assertThatThrownBy(
-                        () ->
-                                ResultUrls.validate(
-                                        connection(null),
-                                        "https://api.vendor.example/files/signed.pdf",
-                                        properties))
+        assertThatThrownBy(() -> ResultUrls.validate(
+                        connection(null), "https://api.vendor.example/files/signed.pdf", properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unable to resolve");
     }
@@ -84,18 +75,13 @@ class ResultUrlsTest {
         config.put("baseUrl", "http://127.0.0.1:9000/v1");
         ApiConnectionSettings settings = ApiConnectionSettings.from(config);
 
-        assertThat(
-                        ResultUrls.validate(
-                                settings, "http://127.0.0.1:9000/files/signed.pdf", properties))
+        assertThat(ResultUrls.validate(settings, "http://127.0.0.1:9000/files/signed.pdf", properties))
                 .isEqualTo(URI.create("http://127.0.0.1:9000/files/signed.pdf"));
     }
 
     @Test
     void refusesAnUndeclaredHost() {
-        assertThatThrownBy(
-                        () ->
-                                ResultUrls.validate(
-                                        connection(null), "https://evil.example/x.pdf", properties))
+        assertThatThrownBy(() -> ResultUrls.validate(connection(null), "https://evil.example/x.pdf", properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("does not allow");
     }
@@ -103,12 +89,8 @@ class ResultUrlsTest {
     @Test
     void refusesAHostThatMerelyEndsWithADeclaredOne() {
         // "evilvendor.example" must not be admitted by an entry of "vendor.example".
-        assertThatThrownBy(
-                        () ->
-                                ResultUrls.validate(
-                                        connection(List.of("vendor.example")),
-                                        "https://evilvendor.example/x.pdf",
-                                        properties))
+        assertThatThrownBy(() -> ResultUrls.validate(
+                        connection(List.of("vendor.example")), "https://evilvendor.example/x.pdf", properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("does not allow");
     }
@@ -116,24 +98,18 @@ class ResultUrlsTest {
     @Test
     void refusesTheCloudMetadataServiceEvenIfDeclared() {
         // The headline SSRF: an integration answering with the metadata address.
-        assertThatThrownBy(
-                        () ->
-                                ResultUrls.validate(
-                                        connection(List.of("169.254.169.254")),
-                                        "http://169.254.169.254/latest/meta-data/iam/",
-                                        properties))
+        assertThatThrownBy(() -> ResultUrls.validate(
+                        connection(List.of("169.254.169.254")),
+                        "http://169.254.169.254/latest/meta-data/iam/",
+                        properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("private/link-local");
     }
 
     @Test
     void refusesLoopbackEvenIfDeclared() {
-        assertThatThrownBy(
-                        () ->
-                                ResultUrls.validate(
-                                        connection(List.of("localhost")),
-                                        "http://localhost:8080/admin",
-                                        properties))
+        assertThatThrownBy(() -> ResultUrls.validate(
+                        connection(List.of("localhost")), "http://localhost:8080/admin", properties))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -141,11 +117,8 @@ class ResultUrlsTest {
     void anOperatorCanOptInToPrivateResultHostsForOnPrem() {
         properties.getPolicies().setAllowPrivateApiEndpoints(true);
 
-        assertThat(
-                        ResultUrls.validate(
-                                connection(List.of("localhost")),
-                                "http://localhost:8080/files/signed.pdf",
-                                properties))
+        assertThat(ResultUrls.validate(
+                        connection(List.of("localhost")), "http://localhost:8080/files/signed.pdf", properties))
                 .hasHost("localhost");
     }
 
@@ -165,12 +138,10 @@ class ResultUrlsTest {
 
     @Test
     void refusesCredentialsEmbeddedInTheUrl() {
-        assertThatThrownBy(
-                        () ->
-                                ResultUrls.validate(
-                                        connection(List.of("cdn.vendor.example")),
-                                        "https://user:pw@cdn.vendor.example/x.pdf",
-                                        properties))
+        assertThatThrownBy(() -> ResultUrls.validate(
+                        connection(List.of("cdn.vendor.example")),
+                        "https://user:pw@cdn.vendor.example/x.pdf",
+                        properties))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("credentials");
     }
@@ -187,7 +158,6 @@ class ResultUrlsTest {
         assertThatThrownBy(() -> connection(List.of("https://cdn.vendor.example/x")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("bare hostnames");
-        assertThatThrownBy(() -> connection(List.of("*.vendor.example")))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> connection(List.of("*.vendor.example"))).isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -63,25 +63,24 @@ class ConvertPDFToEpubControllerTest {
 
     private static final MediaType EPUB_MEDIA_TYPE = MediaType.valueOf("application/epub+zip");
 
-    @Mock private TempFileManager tempFileManager;
-    @Mock private EndpointConfiguration endpointConfiguration;
+    @Mock
+    private TempFileManager tempFileManager;
 
-    @InjectMocks private ConvertPDFToEpubController controller;
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @InjectMocks
+    private ConvertPDFToEpubController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     @Test
@@ -89,8 +88,7 @@ class ConvertPDFToEpubControllerTest {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
 
         MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "novel.pdf", "application/pdf", "content".getBytes());
+                new MockMultipartFile("fileInput", "novel.pdf", "application/pdf", "content".getBytes());
 
         ConvertPdfToEpubRequest request = new ConvertPdfToEpubRequest();
         request.setFileInput(pdfFile);
@@ -99,24 +97,21 @@ class ConvertPDFToEpubControllerTest {
         when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
 
         AtomicReference<Path> deletedDir = new AtomicReference<>();
-        doAnswer(
-                        invocation -> {
-                            Path dir = invocation.getArgument(0);
-                            deletedDir.set(dir);
-                            if (Files.exists(dir)) {
-                                try (Stream<Path> paths = Files.walk(dir)) {
-                                    paths.sorted(Comparator.reverseOrder())
-                                            .forEach(
-                                                    path -> {
-                                                        try {
-                                                            Files.deleteIfExists(path);
-                                                        } catch (IOException ignored) {
-                                                        }
-                                                    });
+        doAnswer(invocation -> {
+                    Path dir = invocation.getArgument(0);
+                    deletedDir.set(dir);
+                    if (Files.exists(dir)) {
+                        try (Stream<Path> paths = Files.walk(dir)) {
+                            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                                try {
+                                    Files.deleteIfExists(path);
+                                } catch (IOException ignored) {
                                 }
-                            }
-                            return null;
-                        })
+                            });
+                        }
+                    }
+                    return null;
+                })
                 .when(tempFileManager)
                 .deleteTempDirectory(any(Path.class));
 
@@ -134,13 +129,11 @@ class ConvertPDFToEpubControllerTest {
             Path expectedInput = workingDir.resolve("novel.pdf");
             Path expectedOutput = workingDir.resolve("novel.epub");
 
-            when(executor.runCommandWithOutputHandling(
-                            commandCaptor.capture(), eq(workingDir.toFile())))
-                    .thenAnswer(
-                            invocation -> {
-                                Files.writeString(expectedOutput, "epub");
-                                return execResult;
-                            });
+            when(executor.runCommandWithOutputHandling(commandCaptor.capture(), eq(workingDir.toFile())))
+                    .thenAnswer(invocation -> {
+                        Files.writeString(expectedOutput, "epub");
+                        return execResult;
+                    });
 
             gu.when(() -> GeneralUtils.generateFilename("novel.pdf", "_convertedToEPUB.epub"))
                     .thenReturn("novel_convertedToEPUB.epub");
@@ -156,9 +149,7 @@ class ConvertPDFToEpubControllerTest {
             assertTrue(command.contains("--enable-heuristics"));
             assertTrue(command.contains("--insert-blank-line"));
             assertTrue(command.contains("--filter-css"));
-            assertTrue(
-                    command.contains(
-                            "font-family,color,background-color,margin-left,margin-right"));
+            assertTrue(command.contains("font-family,color,background-color,margin-left,margin-right"));
             assertTrue(command.contains("--chapter"));
             assertTrue(command.stream().anyMatch(arg -> arg.contains("Chapter\\s+")));
             assertTrue(command.contains("--output-profile"));
@@ -182,8 +173,7 @@ class ConvertPDFToEpubControllerTest {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
 
         MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "story.pdf", "application/pdf", "content".getBytes());
+                new MockMultipartFile("fileInput", "story.pdf", "application/pdf", "content".getBytes());
 
         ConvertPdfToEpubRequest request = new ConvertPdfToEpubRequest();
         request.setFileInput(pdfFile);
@@ -193,23 +183,20 @@ class ConvertPDFToEpubControllerTest {
         Path workingDir = Files.createTempDirectory("pdf-epub-options-test-");
         when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
 
-        doAnswer(
-                        invocation -> {
-                            Path dir = invocation.getArgument(0);
-                            if (Files.exists(dir)) {
-                                try (Stream<Path> paths = Files.walk(dir)) {
-                                    paths.sorted(Comparator.reverseOrder())
-                                            .forEach(
-                                                    path -> {
-                                                        try {
-                                                            Files.deleteIfExists(path);
-                                                        } catch (IOException ignored) {
-                                                        }
-                                                    });
+        doAnswer(invocation -> {
+                    Path dir = invocation.getArgument(0);
+                    if (Files.exists(dir)) {
+                        try (Stream<Path> paths = Files.walk(dir)) {
+                            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                                try {
+                                    Files.deleteIfExists(path);
+                                } catch (IOException ignored) {
                                 }
-                            }
-                            return null;
-                        })
+                            });
+                        }
+                    }
+                    return null;
+                })
                 .when(tempFileManager)
                 .deleteTempDirectory(any(Path.class));
 
@@ -226,13 +213,11 @@ class ConvertPDFToEpubControllerTest {
             ArgumentCaptor<List<String>> commandCaptor = ArgumentCaptor.forClass(List.class);
             Path expectedOutput = workingDir.resolve("story.epub");
 
-            when(executor.runCommandWithOutputHandling(
-                            commandCaptor.capture(), eq(workingDir.toFile())))
-                    .thenAnswer(
-                            invocation -> {
-                                Files.writeString(expectedOutput, "epub");
-                                return execResult;
-                            });
+            when(executor.runCommandWithOutputHandling(commandCaptor.capture(), eq(workingDir.toFile())))
+                    .thenAnswer(invocation -> {
+                        Files.writeString(expectedOutput, "epub");
+                        return execResult;
+                    });
 
             gu.when(() -> GeneralUtils.generateFilename("story.pdf", "_convertedToEPUB.epub"))
                     .thenReturn("story_convertedToEPUB.epub");
@@ -245,9 +230,7 @@ class ConvertPDFToEpubControllerTest {
             assertTrue(command.contains("--pdf-engine"));
             assertTrue(command.contains("pdftohtml"));
             assertTrue(command.contains("--filter-css"));
-            assertTrue(
-                    command.contains(
-                            "font-family,color,background-color,margin-left,margin-right"));
+            assertTrue(command.contains("font-family,color,background-color,margin-left,margin-right"));
             assertTrue(command.size() >= 11);
 
             assertEquals(EPUB_MEDIA_TYPE, response.getHeaders().getContentType());
@@ -265,8 +248,7 @@ class ConvertPDFToEpubControllerTest {
         when(endpointConfiguration.isGroupEnabled("Calibre")).thenReturn(true);
 
         MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "book.pdf", "application/pdf", "content".getBytes());
+                new MockMultipartFile("fileInput", "book.pdf", "application/pdf", "content".getBytes());
 
         ConvertPdfToEpubRequest request = new ConvertPdfToEpubRequest();
         request.setFileInput(pdfFile);
@@ -277,23 +259,20 @@ class ConvertPDFToEpubControllerTest {
         Path workingDir = Files.createTempDirectory("pdf-azw3-test-");
         when(tempFileManager.createTempDirectory()).thenReturn(workingDir);
 
-        doAnswer(
-                        invocation -> {
-                            Path dir = invocation.getArgument(0);
-                            if (Files.exists(dir)) {
-                                try (Stream<Path> paths = Files.walk(dir)) {
-                                    paths.sorted(Comparator.reverseOrder())
-                                            .forEach(
-                                                    path -> {
-                                                        try {
-                                                            Files.deleteIfExists(path);
-                                                        } catch (IOException ignored) {
-                                                        }
-                                                    });
+        doAnswer(invocation -> {
+                    Path dir = invocation.getArgument(0);
+                    if (Files.exists(dir)) {
+                        try (Stream<Path> paths = Files.walk(dir)) {
+                            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                                try {
+                                    Files.deleteIfExists(path);
+                                } catch (IOException ignored) {
                                 }
-                            }
-                            return null;
-                        })
+                            });
+                        }
+                    }
+                    return null;
+                })
                 .when(tempFileManager)
                 .deleteTempDirectory(any(Path.class));
 
@@ -311,13 +290,11 @@ class ConvertPDFToEpubControllerTest {
             Path expectedInput = workingDir.resolve("book.pdf");
             Path expectedOutput = workingDir.resolve("book.azw3");
 
-            when(executor.runCommandWithOutputHandling(
-                            commandCaptor.capture(), eq(workingDir.toFile())))
-                    .thenAnswer(
-                            invocation -> {
-                                Files.writeString(expectedOutput, "azw3");
-                                return execResult;
-                            });
+            when(executor.runCommandWithOutputHandling(commandCaptor.capture(), eq(workingDir.toFile())))
+                    .thenAnswer(invocation -> {
+                        Files.writeString(expectedOutput, "azw3");
+                        return execResult;
+                    });
 
             gu.when(() -> GeneralUtils.generateFilename("book.pdf", "_convertedToAZW3.azw3"))
                     .thenReturn("book_convertedToAZW3.azw3");
@@ -355,14 +332,12 @@ class ConvertPDFToEpubControllerTest {
             return;
         }
         try (Stream<Path> paths = Files.walk(directory)) {
-            paths.sorted(Comparator.reverseOrder())
-                    .forEach(
-                            path -> {
-                                try {
-                                    Files.deleteIfExists(path);
-                                } catch (IOException ignored) {
-                                }
-                            });
+            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException ignored) {
+                }
+            });
         }
     }
 }

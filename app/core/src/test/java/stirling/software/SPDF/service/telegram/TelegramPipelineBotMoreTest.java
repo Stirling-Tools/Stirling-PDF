@@ -45,11 +45,17 @@ import stirling.software.common.model.ApplicationProperties;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class TelegramPipelineBotMoreTest {
 
-    @Mock private TelegramBotsApi telegramBotsApi;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private TelegramBotsApi telegramBotsApi;
 
-    @TempDir Path watchedRoot;
-    @TempDir Path finishedRoot;
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @TempDir
+    Path watchedRoot;
+
+    @TempDir
+    Path finishedRoot;
 
     private ApplicationProperties applicationProperties;
     private ApplicationProperties.Telegram telegramProps;
@@ -68,13 +74,9 @@ class TelegramPipelineBotMoreTest {
         applicationProperties.setTelegram(telegramProps);
 
         when(runtimePathConfig.getPipelineWatchedFoldersPath()).thenReturn(watchedRoot.toString());
-        when(runtimePathConfig.getPipelineFinishedFoldersPath())
-                .thenReturn(finishedRoot.toString());
+        when(runtimePathConfig.getPipelineFinishedFoldersPath()).thenReturn(finishedRoot.toString());
 
-        bot =
-                spy(
-                        new TelegramPipelineBot(
-                                applicationProperties, runtimePathConfig, telegramBotsApi));
+        bot = spy(new TelegramPipelineBot(applicationProperties, runtimePathConfig, telegramBotsApi));
     }
 
     private Update textUpdate(String text, String chatType, long chatId) {
@@ -136,14 +138,8 @@ class TelegramPipelineBotMoreTest {
 
             bot.onUpdateReceived(textUpdate("/help", "private", 100L));
 
-            verify(bot)
-                    .execute(
-                            (SendMessage)
-                                    org.mockito.ArgumentMatchers.argThat(
-                                            arg ->
-                                                    arg instanceof SendMessage sm
-                                                            && sm.getText()
-                                                                    .contains("No valid file")));
+            verify(bot).execute((SendMessage) org.mockito.ArgumentMatchers.argThat(
+                    arg -> arg instanceof SendMessage sm && sm.getText().contains("No valid file")));
         }
 
         @Test
@@ -169,16 +165,8 @@ class TelegramPipelineBotMoreTest {
 
             bot.onUpdateReceived(documentUpdate("application/pdf", "doc.pdf", 200L));
 
-            verify(bot)
-                    .execute(
-                            (SendMessage)
-                                    org.mockito.ArgumentMatchers.argThat(
-                                            arg ->
-                                                    arg instanceof SendMessage sm
-                                                            && sm.getText()
-                                                                    .contains(
-                                                                            "No JSON"
-                                                                                    + " configuration")));
+            verify(bot).execute((SendMessage) org.mockito.ArgumentMatchers.argThat(
+                    arg -> arg instanceof SendMessage sm && sm.getText().contains("No JSON" + " configuration")));
         }
 
         @Test
@@ -189,16 +177,8 @@ class TelegramPipelineBotMoreTest {
 
             bot.onUpdateReceived(documentUpdate("APPLICATION/PDF", "doc.pdf", 201L));
 
-            verify(bot)
-                    .execute(
-                            (SendMessage)
-                                    org.mockito.ArgumentMatchers.argThat(
-                                            arg ->
-                                                    arg instanceof SendMessage sm
-                                                            && sm.getText()
-                                                                    .contains(
-                                                                            "No JSON"
-                                                                                    + " configuration")));
+            verify(bot).execute((SendMessage) org.mockito.ArgumentMatchers.argThat(
+                    arg -> arg instanceof SendMessage sm && sm.getText().contains("No JSON" + " configuration")));
         }
 
         @Test
@@ -208,16 +188,8 @@ class TelegramPipelineBotMoreTest {
 
             bot.onUpdateReceived(documentUpdate(null, "doc.pdf", 202L));
 
-            verify(bot)
-                    .execute(
-                            (SendMessage)
-                                    org.mockito.ArgumentMatchers.argThat(
-                                            arg ->
-                                                    arg instanceof SendMessage sm
-                                                            && sm.getText()
-                                                                    .contains(
-                                                                            "No JSON"
-                                                                                    + " configuration")));
+            verify(bot).execute((SendMessage) org.mockito.ArgumentMatchers.argThat(
+                    arg -> arg instanceof SendMessage sm && sm.getText().contains("No JSON" + " configuration")));
         }
     }
 
@@ -231,34 +203,16 @@ class TelegramPipelineBotMoreTest {
             writeJsonInInbox();
             doReturn(null).when(bot).execute(any(SendMessage.class));
             // GetFile execution fails -> caught as TelegramApiException -> error reply.
-            doThrow(new TelegramApiException("get file failed"))
-                    .when(bot)
-                    .execute(any(GetFile.class));
+            doThrow(new TelegramApiException("get file failed")).when(bot).execute(any(GetFile.class));
 
             bot.onUpdateReceived(documentUpdate("application/pdf", "doc.pdf", 300L));
 
             // "File received. Starting processing..." processing feedback was sent.
-            verify(bot)
-                    .execute(
-                            (SendMessage)
-                                    org.mockito.ArgumentMatchers.argThat(
-                                            arg ->
-                                                    arg instanceof SendMessage sm
-                                                            && sm.getText()
-                                                                    .contains(
-                                                                            "Starting"
-                                                                                    + " processing")));
+            verify(bot).execute((SendMessage) org.mockito.ArgumentMatchers.argThat(
+                    arg -> arg instanceof SendMessage sm && sm.getText().contains("Starting" + " processing")));
             // The Telegram API error reply was sent.
-            verify(bot)
-                    .execute(
-                            (SendMessage)
-                                    org.mockito.ArgumentMatchers.argThat(
-                                            arg ->
-                                                    arg instanceof SendMessage sm
-                                                            && sm.getText()
-                                                                    .contains(
-                                                                            "Telegram API"
-                                                                                    + " error")));
+            verify(bot).execute((SendMessage) org.mockito.ArgumentMatchers.argThat(
+                    arg -> arg instanceof SendMessage sm && sm.getText().contains("Telegram API" + " error")));
         }
 
         @Test
@@ -267,22 +221,12 @@ class TelegramPipelineBotMoreTest {
             writeJsonInInbox();
             telegramProps.getFeedback().getUser().setProcessing(false);
             doReturn(null).when(bot).execute(any(SendMessage.class));
-            doThrow(new TelegramApiException("get file failed"))
-                    .when(bot)
-                    .execute(any(GetFile.class));
+            doThrow(new TelegramApiException("get file failed")).when(bot).execute(any(GetFile.class));
 
             bot.onUpdateReceived(documentUpdate("application/pdf", "doc.pdf", 301L));
 
-            verify(bot, never())
-                    .execute(
-                            (SendMessage)
-                                    org.mockito.ArgumentMatchers.argThat(
-                                            arg ->
-                                                    arg instanceof SendMessage sm
-                                                            && sm.getText()
-                                                                    .contains(
-                                                                            "Starting"
-                                                                                    + " processing")));
+            verify(bot, never()).execute((SendMessage) org.mockito.ArgumentMatchers.argThat(
+                    arg -> arg instanceof SendMessage sm && sm.getText().contains("Starting" + " processing")));
         }
 
         @Test
@@ -298,13 +242,8 @@ class TelegramPipelineBotMoreTest {
 
             bot.onUpdateReceived(documentUpdate("application/pdf", "doc.pdf", 302L));
 
-            verify(bot)
-                    .execute(
-                            (SendMessage)
-                                    org.mockito.ArgumentMatchers.argThat(
-                                            arg ->
-                                                    arg instanceof SendMessage sm
-                                                            && sm.getText().contains("IO error")));
+            verify(bot).execute((SendMessage) org.mockito.ArgumentMatchers.argThat(
+                    arg -> arg instanceof SendMessage sm && sm.getText().contains("IO error")));
         }
     }
 }

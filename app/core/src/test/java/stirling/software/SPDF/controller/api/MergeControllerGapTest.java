@@ -46,9 +46,11 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class MergeControllerGapTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private MergeController mergeController;
+    @InjectMocks
+    private MergeController mergeController;
 
     private MockMultipartFile fileA;
     private MockMultipartFile fileB;
@@ -56,15 +58,9 @@ class MergeControllerGapTest {
 
     @BeforeEach
     void setUp() {
-        fileA =
-                new MockMultipartFile(
-                        "fileInput", "Apple.pdf", MediaType.APPLICATION_PDF_VALUE, "a".getBytes());
-        fileB =
-                new MockMultipartFile(
-                        "fileInput", "banana.pdf", MediaType.APPLICATION_PDF_VALUE, "b".getBytes());
-        fileC =
-                new MockMultipartFile(
-                        "fileInput", "Cherry.pdf", MediaType.APPLICATION_PDF_VALUE, "c".getBytes());
+        fileA = new MockMultipartFile("fileInput", "Apple.pdf", MediaType.APPLICATION_PDF_VALUE, "a".getBytes());
+        fileB = new MockMultipartFile("fileInput", "banana.pdf", MediaType.APPLICATION_PDF_VALUE, "b".getBytes());
+        fileC = new MockMultipartFile("fileInput", "Cherry.pdf", MediaType.APPLICATION_PDF_VALUE, "c".getBytes());
     }
 
     // ---- reflection helpers -------------------------------------------------
@@ -77,9 +73,8 @@ class MergeControllerGapTest {
     }
 
     private MultipartFile[] reorder(MultipartFile[] files, String fileOrder) throws Exception {
-        Method m =
-                MergeController.class.getDeclaredMethod(
-                        "reorderFilesByProvidedOrder", MultipartFile[].class, String.class);
+        Method m = MergeController.class.getDeclaredMethod(
+                "reorderFilesByProvidedOrder", MultipartFile[].class, String.class);
         m.setAccessible(true);
         return (MultipartFile[]) m.invoke(null, files, fileOrder);
     }
@@ -91,17 +86,14 @@ class MergeControllerGapTest {
     }
 
     private long getPdfDateTimeSafe(MultipartFile file) throws Exception {
-        Method m =
-                MergeController.class.getDeclaredMethod("getPdfDateTimeSafe", MultipartFile.class);
+        Method m = MergeController.class.getDeclaredMethod("getPdfDateTimeSafe", MultipartFile.class);
         m.setAccessible(true);
         return (long) m.invoke(mergeController, file);
     }
 
     @SuppressWarnings("unchecked")
     private int indexOfByOriginalFilename(List<MultipartFile> list, String name) throws Exception {
-        Method m =
-                MergeController.class.getDeclaredMethod(
-                        "indexOfByOriginalFilename", List.class, String.class);
+        Method m = MergeController.class.getDeclaredMethod("indexOfByOriginalFilename", List.class, String.class);
         m.setAccessible(true);
         return (int) m.invoke(null, list, name);
     }
@@ -447,11 +439,7 @@ class MergeControllerGapTest {
         @DisplayName("returns first match index when duplicates exist")
         void returnsFirstMatch() throws Exception {
             MockMultipartFile dup =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "Apple.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "dup".getBytes());
+                    new MockMultipartFile("fileInput", "Apple.pdf", MediaType.APPLICATION_PDF_VALUE, "dup".getBytes());
             List<MultipartFile> list = new ArrayList<>(Arrays.asList(fileA, dup));
             assertEquals(0, indexOfByOriginalFilename(list, "Apple.pdf"));
         }

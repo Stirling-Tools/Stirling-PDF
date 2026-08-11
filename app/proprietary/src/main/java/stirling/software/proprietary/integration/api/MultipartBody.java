@@ -47,17 +47,11 @@ final class MultipartBody {
         return this;
     }
 
-    MultipartBody addFile(String name, String filename, String contentType, byte[] content)
-            throws IOException {
+    MultipartBody addFile(String name, String filename, String contentType, byte[] content) throws IOException {
         requireSafe(name, "file field name");
         requireSafe(filename, "filename");
         writeAscii("--" + boundary + "\r\n");
-        writeAscii(
-                "Content-Disposition: form-data; name=\""
-                        + name
-                        + "\"; filename=\""
-                        + filename
-                        + "\"\r\n");
+        writeAscii("Content-Disposition: form-data; name=\"" + name + "\"; filename=\"" + filename + "\"\r\n");
         writeAscii("Content-Type: " + contentType + "\r\n\r\n");
         out.write(content);
         writeAscii("\r\n");
@@ -90,8 +84,7 @@ final class MultipartBody {
                 || value.indexOf('\r') >= 0
                 || value.indexOf('\n') >= 0
                 || value.indexOf('\\') >= 0) {
-            throw new IllegalArgumentException(
-                    "api step " + what + " contains an illegal character: " + value);
+            throw new IllegalArgumentException("api step " + what + " contains an illegal character: " + value);
         }
     }
 

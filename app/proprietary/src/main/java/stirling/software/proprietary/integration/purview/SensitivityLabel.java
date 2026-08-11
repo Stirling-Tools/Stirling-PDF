@@ -22,12 +22,7 @@ import java.util.regex.Pattern;
  * and may be absent on a label written by an older client, so readers here tolerate their absence.
  */
 public record SensitivityLabel(
-        String labelId,
-        String name,
-        String siteId,
-        AssignmentMethod method,
-        Instant setDate,
-        Integer contentBits) {
+        String labelId, String name, String siteId, AssignmentMethod method, Instant setDate, Integer contentBits) {
 
     /** How the label came to be applied. */
     public enum AssignmentMethod {
@@ -65,8 +60,7 @@ public record SensitivityLabel(
      * Extended ISO 8601, matching the {@code 2018-11-08T21:13:16-0800} form Microsoft documents.
      */
     private static final DateTimeFormatter SET_DATE =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ROOT)
-                    .withZone(ZoneOffset.UTC);
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ROOT).withZone(ZoneOffset.UTC);
 
     /**
      * Microsoft caps each key and value at 255 characters "to maintain compatibility across common

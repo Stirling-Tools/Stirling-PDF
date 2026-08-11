@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/general")
-@Tag(
-        name = "General",
-        description =
-                """
+@Tag(name = "General", description = """
                 Page-level PDF editing: split, merge, rotate, crop, rearrange, and scale pages.
                 These endpoints handle most daily "I opened a PDF editor just to…" type tasks.
 

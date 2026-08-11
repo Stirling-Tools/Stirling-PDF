@@ -17,9 +17,8 @@ import org.junit.jupiter.api.Test;
 /** Coverage for {@link SvgOverlayUtil}: the real Batik overlay happy path plus isSvgImage edges. */
 class SvgOverlayUtilMoreTest {
 
-    private static final String TINY_SVG =
-            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\">"
-                    + "<rect x=\"2\" y=\"2\" width=\"16\" height=\"16\" fill=\"red\"/></svg>";
+    private static final String TINY_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\">"
+            + "<rect x=\"2\" y=\"2\" width=\"16\" height=\"16\" fill=\"red\"/></svg>";
 
     @Nested
     @DisplayName("overlaySvgOnPage")
@@ -32,8 +31,7 @@ class SvgOverlayUtilMoreTest {
                 PDPage page = new PDPage(PDRectangle.A4);
                 doc.addPage(page);
 
-                SvgOverlayUtil.overlaySvgOnPage(
-                        doc, page, TINY_SVG.getBytes(StandardCharsets.UTF_8), 50f, 60f);
+                SvgOverlayUtil.overlaySvgOnPage(doc, page, TINY_SVG.getBytes(StandardCharsets.UTF_8), 50f, 60f);
 
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 doc.save(out);
@@ -48,14 +46,8 @@ class SvgOverlayUtilMoreTest {
                 PDPage page = new PDPage(PDRectangle.A4);
                 doc.addPage(page);
 
-                assertThatThrownBy(
-                                () ->
-                                        SvgOverlayUtil.overlaySvgOnPage(
-                                                doc,
-                                                page,
-                                                "not an svg".getBytes(StandardCharsets.UTF_8),
-                                                0f,
-                                                0f))
+                assertThatThrownBy(() -> SvgOverlayUtil.overlaySvgOnPage(
+                                doc, page, "not an svg".getBytes(StandardCharsets.UTF_8), 0f, 0f))
                         .isInstanceOf(IOException.class);
             }
         }
@@ -76,7 +68,8 @@ class SvgOverlayUtilMoreTest {
         @DisplayName("recognizes an xml-declared svg document")
         void recognizesXmlSvg() {
             String xml = "<?xml version=\"1.0\"?><svg xmlns=\"x\"></svg>";
-            assertThat(SvgOverlayUtil.isSvgImage(xml.getBytes(StandardCharsets.UTF_8))).isTrue();
+            assertThat(SvgOverlayUtil.isSvgImage(xml.getBytes(StandardCharsets.UTF_8)))
+                    .isTrue();
         }
 
         @Test

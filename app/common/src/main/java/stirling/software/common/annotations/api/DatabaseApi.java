@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/database")
-@Tag(
-        name = "Database",
-        description =
-                """
+@Tag(name = "Database", description = """
                 Database operations for data protection and business continuity management.
 
                 This endpoint group provides essential database operations for organizations requiring

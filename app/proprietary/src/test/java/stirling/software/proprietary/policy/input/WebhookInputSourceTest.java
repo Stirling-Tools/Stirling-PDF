@@ -36,9 +36,11 @@ class WebhookInputSourceTest {
     private static final String POLICY = "p1";
     private static final String WEBHOOK_ID = "testwebhookid1234";
 
-    @Mock private FileReadinessChecker readinessChecker;
+    @Mock
+    private FileReadinessChecker readinessChecker;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private WebhookSpool spool;
     private WebhookInputSource source;
@@ -55,9 +57,7 @@ class WebhookInputSourceTest {
     }
 
     private static InputSpec spec(String mode) {
-        return new InputSpec(
-                "webhook",
-                Map.of("webhookId", WEBHOOK_ID, "signingSecret", "secret", "mode", mode));
+        return new InputSpec("webhook", Map.of("webhookId", WEBHOOK_ID, "signingSecret", "secret", "mode", mode));
     }
 
     @Test
@@ -105,8 +105,7 @@ class WebhookInputSourceTest {
 
     @Test
     void prepareMintsIdAndSecretOnCreate() {
-        Map<String, Object> prepared =
-                source.prepareOptionsForSave(Map.of("mode", "consume"), true);
+        Map<String, Object> prepared = source.prepareOptionsForSave(Map.of("mode", "consume"), true);
 
         String id = prepared.get(WebhookConfig.WEBHOOK_ID_OPTION).toString();
         String secret = prepared.get(WebhookConfig.SIGNING_SECRET_OPTION).toString();
@@ -130,8 +129,7 @@ class WebhookInputSourceTest {
     @Test
     void prepareIgnoresClientSuppliedIdAndSecretOnCreate() {
         Map<String, Object> prepared =
-                source.prepareOptionsForSave(
-                        Map.of("webhookId", "client-chosen-id", "signingSecret", "weak"), true);
+                source.prepareOptionsForSave(Map.of("webhookId", "client-chosen-id", "signingSecret", "weak"), true);
 
         assertNotEquals("client-chosen-id", prepared.get(WebhookConfig.WEBHOOK_ID_OPTION));
         assertNotEquals("weak", prepared.get(WebhookConfig.SIGNING_SECRET_OPTION));
@@ -147,8 +145,7 @@ class WebhookInputSourceTest {
         }
 
         @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
+        public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
             ledger.settle(POLICY, identity, finalGate, finalContentHash, success);
         }
 

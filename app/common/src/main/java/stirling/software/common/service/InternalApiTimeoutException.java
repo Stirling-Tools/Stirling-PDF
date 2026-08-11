@@ -30,7 +30,6 @@ public class InternalApiTimeoutException extends RuntimeException {
     private static String buildMessage(String endpointPath, Duration readTimeout, Throwable cause) {
         String reason = cause != null && cause.getMessage() != null ? cause.getMessage() : "";
         return String.format(
-                "Internal tool %s did not respond within %ds (%s)",
-                endpointPath, readTimeout.toSeconds(), reason);
+                "Internal tool %s did not respond within %ds (%s)", endpointPath, readTimeout.toSeconds(), reason);
     }
 }

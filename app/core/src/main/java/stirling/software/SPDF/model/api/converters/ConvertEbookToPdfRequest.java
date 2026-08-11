@@ -12,13 +12,10 @@ import lombok.EqualsAndHashCode;
 public class ConvertEbookToPdfRequest {
 
     @Schema(
-            description =
-                    "The input eBook file to be converted to a PDF file (EPUB, MOBI, AZW3, FB2,"
-                            + " TXT, DOCX)",
-            contentMediaType =
-                    "application/epub+zip, application/x-mobipocket-ebook, application/x-azw3,"
-                            + " text/xml, text/plain,"
-                            + " application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            description = "The input eBook file to be converted to a PDF file (EPUB, MOBI, AZW3, FB2," + " TXT, DOCX)",
+            contentMediaType = "application/epub+zip, application/x-mobipocket-ebook, application/x-azw3,"
+                    + " text/xml, text/plain,"
+                    + " application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
 
@@ -45,8 +42,7 @@ public class ConvertEbookToPdfRequest {
 
     @Schema(
             description =
-                    "Optimize the PDF for eBook reading (smaller file size, better rendering on"
-                            + " eInk devices)",
+                    "Optimize the PDF for eBook reading (smaller file size, better rendering on" + " eInk devices)",
             allowableValues = {"true", "false"},
             defaultValue = "false")
     private Boolean optimizeForEbook;

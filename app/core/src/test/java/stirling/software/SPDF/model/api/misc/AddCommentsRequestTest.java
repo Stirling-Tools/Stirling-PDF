@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Test;
 class AddCommentsRequestTest {
 
     private static final String SAMPLE =
-            "[{\"pageIndex\":0,\"x\":72,\"y\":720,\"width\":20,\"height\":20,"
-                    + "\"text\":\"Check this paragraph\"}]";
+            "[{\"pageIndex\":0,\"x\":72,\"y\":720,\"width\":20,\"height\":20," + "\"text\":\"Check this paragraph\"}]";
 
     @Nested
     @DisplayName("defaults")

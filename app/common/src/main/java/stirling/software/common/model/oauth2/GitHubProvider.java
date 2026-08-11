@@ -17,10 +17,7 @@ public class GitHubProvider extends Provider {
     private static final String USER_INFO_URI = "https://api.github.com/user";
 
     public GitHubProvider(
-            String clientId,
-            String clientSecret,
-            Collection<String> scopes,
-            UsernameAttribute useAsUsername) {
+            String clientId, String clientSecret, Collection<String> scopes, UsernameAttribute useAsUsername) {
         super(
                 null,
                 NAME,

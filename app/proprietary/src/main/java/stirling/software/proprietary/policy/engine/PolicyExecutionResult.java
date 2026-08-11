@@ -14,5 +14,4 @@ import tools.jackson.databind.JsonNode;
  * file it came from. {@code report}/{@code reportTool} carry the last step's structured report and
  * its operation, or null if no step produced one.
  */
-public record PolicyExecutionResult(
-        List<Resource> files, List<Integer> origins, JsonNode report, String reportTool) {}
+public record PolicyExecutionResult(List<Resource> files, List<Integer> origins, JsonNode report, String reportTool) {}

@@ -19,7 +19,8 @@ class TempFileUtilTest {
 
     private TempFileManager manager;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -33,15 +34,11 @@ class TempFileUtilTest {
     @Test
     void testWithTempFile_executesAndCleansUp() throws IOException {
         final File[] fileRef = new File[1];
-        String result =
-                TempFileUtil.withTempFile(
-                        manager,
-                        ".tmp",
-                        file -> {
-                            fileRef[0] = file;
-                            assertTrue(file.exists());
-                            return "done";
-                        });
+        String result = TempFileUtil.withTempFile(manager, ".tmp", file -> {
+            fileRef[0] = file;
+            assertTrue(file.exists());
+            return "done";
+        });
         assertEquals("done", result);
         assertFalse(fileRef[0].exists());
     }
@@ -49,19 +46,14 @@ class TempFileUtilTest {
     @Test
     void testWithMultipleTempFiles() throws IOException {
         final List<File>[] filesRef = new List[1];
-        String result =
-                TempFileUtil.withMultipleTempFiles(
-                        manager,
-                        3,
-                        ".tmp",
-                        files -> {
-                            filesRef[0] = files;
-                            assertEquals(3, files.size());
-                            for (File f : files) {
-                                assertTrue(f.exists());
-                            }
-                            return "ok";
-                        });
+        String result = TempFileUtil.withMultipleTempFiles(manager, 3, ".tmp", files -> {
+            filesRef[0] = files;
+            assertEquals(3, files.size());
+            for (File f : files) {
+                assertTrue(f.exists());
+            }
+            return "ok";
+        });
         assertEquals("ok", result);
         for (File f : filesRef[0]) {
             assertFalse(f.exists());

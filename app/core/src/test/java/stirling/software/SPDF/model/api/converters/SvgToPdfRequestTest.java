@@ -12,9 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 class SvgToPdfRequestTest {
 
     private static MultipartFile[] files() {
-        return new MultipartFile[] {
-            new MockMultipartFile("fileInput", "a.svg", "image/svg+xml", new byte[] {1})
-        };
+        return new MultipartFile[] {new MockMultipartFile("fileInput", "a.svg", "image/svg+xml", new byte[] {1})};
     }
 
     @Nested

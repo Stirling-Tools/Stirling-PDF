@@ -47,14 +47,26 @@ class AdminSettingsQueryPostgresTest {
         registry.add("spring.jpa.properties.hibernate.default_batch_fetch_size", () -> "100");
     }
 
-    @Autowired private UserRepository userRepository;
-    @Autowired private SessionRepository sessionRepository;
-    @Autowired private TeamRepository teamRepository;
-    @Autowired private TeamMembershipRepository teamMembershipRepository;
-    @Autowired private ResourceGrantRepository resourceGrantRepository;
-    @Autowired private EntityManagerFactory emf;
+    @Autowired
+    private UserRepository userRepository;
 
-    @PersistenceContext private EntityManager em;
+    @Autowired
+    private SessionRepository sessionRepository;
+
+    @Autowired
+    private TeamRepository teamRepository;
+
+    @Autowired
+    private TeamMembershipRepository teamMembershipRepository;
+
+    @Autowired
+    private ResourceGrantRepository resourceGrantRepository;
+
+    @Autowired
+    private EntityManagerFactory emf;
+
+    @PersistenceContext
+    private EntityManager em;
 
     private AdminSettingsPerfHarness harness() {
         return new AdminSettingsPerfHarness(
@@ -86,9 +98,7 @@ class AdminSettingsQueryPostgresTest {
         assertEquals(400, large.users(), "roster returns every seeded user on Postgres");
         assertTrue(
                 large.statements() - small.statements() <= 40,
-                "roster must not scale per-user on Postgres (delta="
-                        + (large.statements() - small.statements())
-                        + ")");
+                "roster must not scale per-user on Postgres (delta=" + (large.statements() - small.statements()) + ")");
         assertEquals(0, large.updates(), "no writes during the GET on Postgres");
     }
 

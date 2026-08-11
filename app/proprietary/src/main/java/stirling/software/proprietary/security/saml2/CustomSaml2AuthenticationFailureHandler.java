@@ -26,17 +26,14 @@ public class CustomSaml2AuthenticationFailureHandler extends SimpleUrlAuthentica
     @Override
     @Audited(type = AuditEventType.USER_FAILED_LOGIN, level = AuditLevel.BASIC)
     public void onAuthenticationFailure(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException exception)
+            HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
             throws IOException {
         log.error("Authentication error", exception);
 
         if (exception instanceof Saml2AuthenticationException) {
             Saml2Error error = ((Saml2AuthenticationException) exception).getSaml2Error();
             if (TauriSamlUtils.isTauriRelayState(request)) {
-                String redirectUrl =
-                        TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath());
+                String redirectUrl = TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath());
                 String nonce = TauriSamlUtils.extractNonceFromRequest(request);
                 if (nonce != null) {
                     redirectUrl = appendQueryParam(redirectUrl, "nonce", nonce);
@@ -45,27 +42,20 @@ public class CustomSaml2AuthenticationFailureHandler extends SimpleUrlAuthentica
                 getRedirectStrategy().sendRedirect(request, response, redirectUrl);
                 return;
             }
-            getRedirectStrategy()
-                    .sendRedirect(request, response, "/login?errorOAuth=" + error.getErrorCode());
+            getRedirectStrategy().sendRedirect(request, response, "/login?errorOAuth=" + error.getErrorCode());
         } else if (exception instanceof ProviderNotFoundException) {
             if (TauriSamlUtils.isTauriRelayState(request)) {
-                String redirectUrl =
-                        TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath());
+                String redirectUrl = TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath());
                 String nonce = TauriSamlUtils.extractNonceFromRequest(request);
                 if (nonce != null) {
                     redirectUrl = appendQueryParam(redirectUrl, "nonce", nonce);
                 }
-                redirectUrl =
-                        appendQueryParam(
-                                redirectUrl, "errorOAuth", "not_authentication_provider_found");
+                redirectUrl = appendQueryParam(redirectUrl, "errorOAuth", "not_authentication_provider_found");
                 getRedirectStrategy().sendRedirect(request, response, redirectUrl);
                 return;
             }
             getRedirectStrategy()
-                    .sendRedirect(
-                            request,
-                            response,
-                            "/login?errorOAuth=not_authentication_provider_found");
+                    .sendRedirect(request, response, "/login?errorOAuth=not_authentication_provider_found");
         }
     }
 
@@ -74,13 +64,9 @@ public class CustomSaml2AuthenticationFailureHandler extends SimpleUrlAuthentica
             return path;
         }
         String separator = path.contains("?") ? "&" : "?";
-        String encodedKey =
-                java.net.URLEncoder.encode(key, java.nio.charset.StandardCharsets.UTF_8);
+        String encodedKey = java.net.URLEncoder.encode(key, java.nio.charset.StandardCharsets.UTF_8);
         String encodedValue =
-                value == null
-                        ? ""
-                        : java.net.URLEncoder.encode(
-                                value, java.nio.charset.StandardCharsets.UTF_8);
+                value == null ? "" : java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
         return path + separator + encodedKey + "=" + encodedValue;
     }
 }

@@ -11,8 +11,7 @@ import org.junit.jupiter.api.Test;
 class ProcessExecutorTest {
 
     // Use reflection to test private validateCommand method
-    private void invokeValidateCommand(ProcessExecutor executor, List<String> command)
-            throws Exception {
+    private void invokeValidateCommand(ProcessExecutor executor, List<String> command) throws Exception {
         Method method = ProcessExecutor.class.getDeclaredMethod("validateCommand", List.class);
         method.setAccessible(true);
         try {
@@ -28,15 +27,12 @@ class ProcessExecutorTest {
 
     @Test
     void testValidateCommand_nullCommand() {
-        assertThrows(
-                IllegalArgumentException.class, () -> invokeValidateCommand(getExecutor(), null));
+        assertThrows(IllegalArgumentException.class, () -> invokeValidateCommand(getExecutor(), null));
     }
 
     @Test
     void testValidateCommand_emptyCommand() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> invokeValidateCommand(getExecutor(), List.of()));
+        assertThrows(IllegalArgumentException.class, () -> invokeValidateCommand(getExecutor(), List.of()));
     }
 
     @Test
@@ -44,9 +40,7 @@ class ProcessExecutorTest {
         List<String> command = new ArrayList<>();
         command.add("echo");
         command.add(null);
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> invokeValidateCommand(getExecutor(), command));
+        assertThrows(IllegalArgumentException.class, () -> invokeValidateCommand(getExecutor(), command));
     }
 
     @Test
@@ -73,15 +67,12 @@ class ProcessExecutorTest {
     @Test
     void testValidateCommand_pathTraversal() {
         assertThrows(
-                IllegalArgumentException.class,
-                () -> invokeValidateCommand(getExecutor(), List.of("../../bin/evil")));
+                IllegalArgumentException.class, () -> invokeValidateCommand(getExecutor(), List.of("../../bin/evil")));
     }
 
     @Test
     void testValidateCommand_blankExecutable() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> invokeValidateCommand(getExecutor(), List.of("  ")));
+        assertThrows(IllegalArgumentException.class, () -> invokeValidateCommand(getExecutor(), List.of("  ")));
     }
 
     @Test
@@ -107,8 +98,7 @@ class ProcessExecutorTest {
     @Test
     void testProcessExecutorResult() {
         ProcessExecutor executor = getExecutor();
-        ProcessExecutor.ProcessExecutorResult result =
-                executor.new ProcessExecutorResult(0, "success");
+        ProcessExecutor.ProcessExecutorResult result = executor.new ProcessExecutorResult(0, "success");
         assertEquals(0, result.getRc());
         assertEquals("success", result.getMessages());
 

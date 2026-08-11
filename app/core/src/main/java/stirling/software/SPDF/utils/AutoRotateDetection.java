@@ -65,8 +65,7 @@ public final class AutoRotateDetection {
      */
     public record OsdResult(int rotate, double confidence) {}
 
-    private static final Pattern OSD_ROTATE =
-            Pattern.compile("^Rotate:\\s*(\\d+)", Pattern.MULTILINE);
+    private static final Pattern OSD_ROTATE = Pattern.compile("^Rotate:\\s*(\\d+)", Pattern.MULTILINE);
     private static final Pattern OSD_CONFIDENCE =
             Pattern.compile("^Orientation confidence:\\s*([0-9.]+)", Pattern.MULTILINE);
 
@@ -149,9 +148,7 @@ public final class AutoRotateDetection {
         }
         try {
             return Optional.of(
-                    new OsdResult(
-                            Integer.parseInt(rotate.group(1)),
-                            Double.parseDouble(confidence.group(1))));
+                    new OsdResult(Integer.parseInt(rotate.group(1)), Double.parseDouble(confidence.group(1))));
         } catch (NumberFormatException e) {
             return Optional.empty();
         }

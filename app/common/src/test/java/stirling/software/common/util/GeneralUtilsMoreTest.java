@@ -178,8 +178,7 @@ class GeneralUtilsMoreTest {
         @Test
         @DisplayName("open-ended range extends to the last page")
         void openEndedRange() {
-            assertEquals(
-                    List.of(3, 4, 5), GeneralUtils.parsePageList(new String[] {"3-"}, 5, true));
+            assertEquals(List.of(3, 4, 5), GeneralUtils.parsePageList(new String[] {"3-"}, 5, true));
         }
 
         @Test
@@ -235,8 +234,7 @@ class GeneralUtilsMoreTest {
         @Test
         @DisplayName("non-numeric component throws NumberFormatException")
         void nonNumericComponentThrows() {
-            assertThrows(
-                    NumberFormatException.class, () -> GeneralUtils.isVersionHigher("1.x", "1.0"));
+            assertThrows(NumberFormatException.class, () -> GeneralUtils.isVersionHigher("1.x", "1.0"));
         }
     }
 
@@ -333,8 +331,7 @@ class GeneralUtilsMoreTest {
         void missingResource(@TempDir Path tempDir) {
             // Point the pipeline path at a temp dir; default pipeline JSONs are absent from
             // the common module test classpath, so extraction fails with an IOException.
-            try (MockedStatic<InstallationPathConfig> mocked =
-                    Mockito.mockStatic(InstallationPathConfig.class)) {
+            try (MockedStatic<InstallationPathConfig> mocked = Mockito.mockStatic(InstallationPathConfig.class)) {
                 mocked.when(InstallationPathConfig::getPipelinePath).thenReturn(tempDir.toString());
                 assertThrows(IOException.class, GeneralUtils::extractPipeline);
             }
@@ -348,8 +345,7 @@ class GeneralUtilsMoreTest {
         @Test
         @DisplayName("non-zero return code raises a Ghostscript exception")
         void nonZeroReturnCode() throws Exception {
-            ProcessExecutor.ProcessExecutorResult result =
-                    mock(ProcessExecutor.ProcessExecutorResult.class);
+            ProcessExecutor.ProcessExecutorResult result = mock(ProcessExecutor.ProcessExecutorResult.class);
             when(result.getMessages()).thenReturn("some ghostscript chatter");
             when(result.getRc()).thenReturn(1);
 
@@ -358,35 +354,25 @@ class GeneralUtilsMoreTest {
             Mockito.doReturn(result).when(executor).runCommandWithOutputHandling(Mockito.anyList());
 
             try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.GHOSTSCRIPT))
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
                         .thenReturn(executor);
-                assertThrows(
-                        IOException.class,
-                        () -> GeneralUtils.optimizePdfWithGhostscript(new byte[] {1, 2, 3}));
+                assertThrows(IOException.class, () -> GeneralUtils.optimizePdfWithGhostscript(new byte[] {1, 2, 3}));
             }
         }
 
         @Test
         @DisplayName("detected critical Ghostscript error is rethrown")
         void criticalErrorDetected() throws Exception {
-            ProcessExecutor.ProcessExecutorResult result =
-                    mock(ProcessExecutor.ProcessExecutorResult.class);
+            ProcessExecutor.ProcessExecutorResult result = mock(ProcessExecutor.ProcessExecutorResult.class);
             when(result.getMessages()).thenReturn("Page 1\ncould not draw this page");
 
             ProcessExecutor executor = mock(ProcessExecutor.class);
             Mockito.doReturn(result).when(executor).runCommandWithOutputHandling(Mockito.anyList());
 
             try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.GHOSTSCRIPT))
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT))
                         .thenReturn(executor);
-                assertThatThrownBy(
-                                () -> GeneralUtils.optimizePdfWithGhostscript(new byte[] {1, 2, 3}))
+                assertThatThrownBy(() -> GeneralUtils.optimizePdfWithGhostscript(new byte[] {1, 2, 3}))
                         .isInstanceOf(ExceptionUtils.GhostscriptException.class);
             }
         }
@@ -405,17 +391,16 @@ class GeneralUtilsMoreTest {
         @Test
         @DisplayName("non-private routable-style site-local IP still scores and is selected")
         void otherRangeStillSelected() {
-            GeneralUtils.NetworkInterfaceInfo other =
-                    new GeneralUtils.NetworkInterfaceInfo(
-                            "eth0",
-                            "Realtek PCIe GbE Family Controller",
-                            2,
-                            true,
-                            false,
-                            false,
-                            false,
-                            true,
-                            List.of("172.16.5.5"));
+            GeneralUtils.NetworkInterfaceInfo other = new GeneralUtils.NetworkInterfaceInfo(
+                    "eth0",
+                    "Realtek PCIe GbE Family Controller",
+                    2,
+                    true,
+                    false,
+                    false,
+                    false,
+                    true,
+                    List.of("172.16.5.5"));
             assertEquals("172.16.5.5", GeneralUtils.selectBestSiteLocalIp(List.of(other)));
         }
     }

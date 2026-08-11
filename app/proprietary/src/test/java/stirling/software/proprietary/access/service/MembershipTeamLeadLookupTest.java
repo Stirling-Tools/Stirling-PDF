@@ -17,19 +17,23 @@ import stirling.software.proprietary.security.repository.TeamMembershipRepositor
 @ExtendWith(MockitoExtension.class)
 class MembershipTeamLeadLookupTest {
 
-    @Mock private TeamMembershipRepository memberships;
+    @Mock
+    private TeamMembershipRepository memberships;
 
-    @InjectMocks private MembershipTeamLeadLookup lookup;
+    @InjectMocks
+    private MembershipTeamLeadLookup lookup;
 
     @Test
     void leaderMembershipMakesTeamLeader() {
-        when(memberships.existsByTeamIdAndUserIdAndRole(7L, 5L, TeamRole.LEADER)).thenReturn(true);
+        when(memberships.existsByTeamIdAndUserIdAndRole(7L, 5L, TeamRole.LEADER))
+                .thenReturn(true);
         assertThat(lookup.isLeaderOfTeam(user(5), 7L)).isTrue();
     }
 
     @Test
     void memberOnlyIsNotTeamLeader() {
-        when(memberships.existsByTeamIdAndUserIdAndRole(7L, 5L, TeamRole.LEADER)).thenReturn(false);
+        when(memberships.existsByTeamIdAndUserIdAndRole(7L, 5L, TeamRole.LEADER))
+                .thenReturn(false);
         assertThat(lookup.isLeaderOfTeam(user(5), 7L)).isFalse();
     }
 

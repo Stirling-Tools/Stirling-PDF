@@ -86,8 +86,7 @@ class EntitlementCacheTest {
 
     @Test
     void linked_revoked_blocksAndDropsStaleEntitlement() {
-        InstanceEntitlement entitled =
-                new InstanceEntitlement(true, 0, 1, 100L, EntitlementState.OK);
+        InstanceEntitlement entitled = new InstanceEntitlement(true, 0, 1, 100L, EntitlementState.OK);
         when(store.get()).thenReturn(Optional.of(cred()));
         when(client.fetchEntitlement(anyString(), anyString())).thenReturn(entitled);
         assertEquals(entitled, cache.current().orElseThrow());
@@ -95,8 +94,7 @@ class EntitlementCacheTest {
         // Credential revoked: the next refresh is an authoritative deny. The cache must NOT keep
         // serving the stale entitled snapshot — it replaces it with a blocked REVOKED one.
         cache.invalidate();
-        when(client.fetchEntitlement(anyString(), anyString()))
-                .thenThrow(new AccountLinkClient.RevokedException(401));
+        when(client.fetchEntitlement(anyString(), anyString())).thenThrow(new AccountLinkClient.RevokedException(401));
         assertEquals(EntitlementState.REVOKED, cache.current().orElseThrow().state());
     }
 

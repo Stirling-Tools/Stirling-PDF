@@ -35,11 +35,17 @@ import stirling.software.common.util.TempFileManager;
 @DisplayName("ConvertPdfJsonController remaining branch coverage")
 class ConvertPdfJsonControllerExtraTest {
 
-    @Mock private PdfJsonConversionService pdfJsonConversionService;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private JobOwnershipService jobOwnershipService;
+    @Mock
+    private PdfJsonConversionService pdfJsonConversionService;
 
-    @InjectMocks private ConvertPdfJsonController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private JobOwnershipService jobOwnershipService;
+
+    @InjectMocks
+    private ConvertPdfJsonController controller;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -164,11 +170,7 @@ class ConvertPdfJsonControllerExtraTest {
         @DisplayName("a null path is logged without throwing")
         void nullPathHandled() throws Exception {
             // exercises the early null-path guard branch
-            invoke(
-                    "logJsonResponse",
-                    new Class<?>[] {String.class, java.nio.file.Path.class},
-                    "x",
-                    null);
+            invoke("logJsonResponse", new Class<?>[] {String.class, java.nio.file.Path.class}, "x", null);
         }
 
         @Test
@@ -181,11 +183,7 @@ class ConvertPdfJsonControllerExtraTest {
                 System.clearProperty("spdf.pdfjson.repeatScan");
                 // a non-existent path must not be read because all flags are off
                 java.nio.file.Path missing = java.nio.file.Path.of("does-not-exist-123.json");
-                invoke(
-                        "logJsonResponse",
-                        new Class<?>[] {String.class, java.nio.file.Path.class},
-                        "label",
-                        missing);
+                invoke("logJsonResponse", new Class<?>[] {String.class, java.nio.file.Path.class}, "label", missing);
             } finally {
                 if (dumpPrev != null) System.setProperty("spdf.pdfjson.dump", dumpPrev);
                 if (scanPrev != null) System.setProperty("spdf.pdfjson.repeatScan", scanPrev);
@@ -200,9 +198,7 @@ class ConvertPdfJsonControllerExtraTest {
         @Test
         @DisplayName("extractSinglePage rejects an unauthorized job before doing work")
         void singlePageRejected() {
-            doThrow(new SecurityException("denied"))
-                    .when(jobOwnershipService)
-                    .validateJobAccess("bad");
+            doThrow(new SecurityException("denied")).when(jobOwnershipService).validateJobAccess("bad");
 
             assertThrows(SecurityException.class, () -> controller.extractSinglePage("bad", 1));
             verifyNoConversion();
@@ -211,9 +207,7 @@ class ConvertPdfJsonControllerExtraTest {
         @Test
         @DisplayName("extractPageFonts rejects an unauthorized job before doing work")
         void pageFontsRejected() {
-            doThrow(new SecurityException("denied"))
-                    .when(jobOwnershipService)
-                    .validateJobAccess("bad");
+            doThrow(new SecurityException("denied")).when(jobOwnershipService).validateJobAccess("bad");
 
             assertThrows(SecurityException.class, () -> controller.extractPageFonts("bad", 2));
             verifyNoConversion();
@@ -222,30 +216,22 @@ class ConvertPdfJsonControllerExtraTest {
         @Test
         @DisplayName("exportPartialPdf rejects an unauthorized job before doing work")
         void exportPartialRejected() {
-            when(jobOwnershipService.validateJobAccess(anyString()))
-                    .thenThrow(new SecurityException("denied"));
+            when(jobOwnershipService.validateJobAccess(anyString())).thenThrow(new SecurityException("denied"));
 
             assertThrows(
                     SecurityException.class,
-                    () ->
-                            controller.exportPartialPdf(
-                                    "bad",
-                                    new stirling.software.SPDF.model.json.PdfJsonDocument(),
-                                    "out.pdf"));
+                    () -> controller.exportPartialPdf(
+                            "bad", new stirling.software.SPDF.model.json.PdfJsonDocument(), "out.pdf"));
         }
 
         private void verifyNoConversion() {
             try {
                 verify(pdfJsonConversionService, never())
                         .extractSinglePage(
-                                anyString(),
-                                org.mockito.ArgumentMatchers.anyInt(),
-                                org.mockito.ArgumentMatchers.any());
+                                anyString(), org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.any());
                 verify(pdfJsonConversionService, never())
                         .extractPageFonts(
-                                anyString(),
-                                org.mockito.ArgumentMatchers.anyInt(),
-                                org.mockito.ArgumentMatchers.any());
+                                anyString(), org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.any());
             } catch (Exception e) {
                 throw new AssertionError(e);
             }

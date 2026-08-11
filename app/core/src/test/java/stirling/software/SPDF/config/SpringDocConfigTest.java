@@ -74,8 +74,7 @@ class SpringDocConfigTest {
 
             assertThat(api.getGroup()).isEqualTo("management");
             assertThat(api.getDisplayName()).isEqualTo("Management");
-            assertThat(api.getPathsToMatch())
-                    .contains("/api/v1/admin/**", "/api/v1/user/**", "/api/v1/auth/**");
+            assertThat(api.getPathsToMatch()).contains("/api/v1/admin/**", "/api/v1/user/**", "/api/v1/auth/**");
         }
 
         @Test

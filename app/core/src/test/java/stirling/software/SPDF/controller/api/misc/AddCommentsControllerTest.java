@@ -51,9 +51,14 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class AddCommentsControllerTest {
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private PdfAnnotationService pdfAnnotationService;
     private PdfTextLocator pdfTextLocator;
@@ -65,37 +70,26 @@ class AddCommentsControllerTest {
         pdfAnnotationService = new PdfAnnotationService();
         pdfTextLocator = new PdfTextLocator();
         objectMapper = JsonMapper.builder().build();
-        controller =
-                new AddCommentsController(
-                        pdfDocumentFactory,
-                        tempFileManager,
-                        pdfAnnotationService,
-                        pdfTextLocator,
-                        objectMapper);
+        controller = new AddCommentsController(
+                pdfDocumentFactory, tempFileManager, pdfAnnotationService, pdfTextLocator, objectMapper);
 
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File file =
-                                    Files.createTempFile(tempDir, "addcomments", ".pdf").toFile();
-                            TempFile tf = org.mockito.Mockito.mock(TempFile.class);
-                            lenient().when(tf.getPath()).thenReturn(file.toPath());
-                            lenient().when(tf.getFile()).thenReturn(file);
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File file = Files.createTempFile(tempDir, "addcomments", ".pdf").toFile();
+            TempFile tf = org.mockito.Mockito.mock(TempFile.class);
+            lenient().when(tf.getPath()).thenReturn(file.toPath());
+            lenient().when(tf.getFile()).thenReturn(file);
+            return tf;
+        });
     }
 
     @Test
     void appliesEachCommentSpecAsStickyNote() throws Exception {
         MockMultipartFile file = pdf("doc.pdf", twoPagePdfBytes());
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
 
         AddCommentsRequest request = new AddCommentsRequest();
         request.setFileInput(file);
-        request.setComments(
-                """
+        request.setComments("""
                 [{"pageIndex":0,"x":72,"y":700,"width":20,"height":20,"text":"First","author":"me","subject":"S1"},
                  {"pageIndex":1,"x":100,"y":650,"width":20,"height":20,"text":"Second"}]
                 """);
@@ -118,14 +112,12 @@ class AddCommentsControllerTest {
     void anchorsStickyNoteAtLocatedTextWhenAnchorTextMatches() throws Exception {
         byte[] pdfBytes = singlePagePdfWithLine("Revenue: $215,000");
         MockMultipartFile file = pdf("doc.pdf", pdfBytes);
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
 
         AddCommentsRequest request = new AddCommentsRequest();
         request.setFileInput(file);
         // Fallback coords deliberately far from the line so we can tell which path ran.
-        request.setComments(
-                """
+        request.setComments("""
                 [{"pageIndex":0,"x":10,"y":10,"width":5,"height":5,
                   "text":"Check this total","author":"tester","subject":"S",
                   "anchorText":"215000"}]
@@ -151,13 +143,11 @@ class AddCommentsControllerTest {
     void fallsBackToAbsoluteCoordsWhenAnchorTextMisses() throws Exception {
         byte[] pdfBytes = singlePagePdfWithLine("Revenue: $215,000");
         MockMultipartFile file = pdf("doc.pdf", pdfBytes);
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
 
         AddCommentsRequest request = new AddCommentsRequest();
         request.setFileInput(file);
-        request.setComments(
-                """
+        request.setComments("""
                 [{"pageIndex":0,"x":55,"y":33,"width":7,"height":9,
                   "text":"No match","anchorText":"not-on-this-page"}]
                 """);
@@ -216,8 +206,7 @@ class AddCommentsControllerTest {
         // should still get back the input PDF without any error so pipelines that
         // produce zero comments don't have to special-case the empty result.
         MockMultipartFile file = pdf("doc.pdf", twoPagePdfBytes());
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
 
         AddCommentsRequest request = new AddCommentsRequest();
         request.setFileInput(file);

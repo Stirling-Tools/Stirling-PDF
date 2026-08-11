@@ -32,10 +32,9 @@ class LiveValkeyAuthIntegrationTest {
 
     // @Container is intentionally NOT used: lifecycle is managed manually so the container can be
     // shared across the password-only and ACL-user cases without a per-method restart.
-    static final GenericContainer<?> VALKEY =
-            new GenericContainer<>(DockerImageName.parse("valkey/valkey:8.0-alpine"))
-                    .withExposedPorts(6379)
-                    .withCommand("valkey-server", "--requirepass", PASSWORD);
+    static final GenericContainer<?> VALKEY = new GenericContainer<>(DockerImageName.parse("valkey/valkey:8.0-alpine"))
+            .withExposedPorts(6379)
+            .withCommand("valkey-server", "--requirepass", PASSWORD);
 
     static boolean isDockerAvailable() {
         return DockerClientFactory.instance().isDockerAvailable();
@@ -90,18 +89,8 @@ class LiveValkeyAuthIntegrationTest {
     @DisplayName("user:password URL (ACL named user) authenticates and round-trips a key")
     void namedUserAuthWorks() throws Exception {
         // Default user is password-protected; create a named ACL user to exercise two-arg AUTH.
-        Container.ExecResult res =
-                VALKEY.execInContainer(
-                        "valkey-cli",
-                        "-a",
-                        PASSWORD,
-                        "ACL",
-                        "SETUSER",
-                        "alice",
-                        "on",
-                        ">alicepass",
-                        "~*",
-                        "+@all");
+        Container.ExecResult res = VALKEY.execInContainer(
+                "valkey-cli", "-a", PASSWORD, "ACL", "SETUSER", "alice", "on", ">alicepass", "~*", "+@all");
         assertEquals(0, res.getExitCode(), "ACL SETUSER failed: " + res.getStderr());
 
         String url = "redis://alice:alicepass@" + host() + ":" + port();
@@ -120,24 +109,20 @@ class LiveValkeyAuthIntegrationTest {
     }
 
     @Test
-    @DisplayName(
-            "wrong password → fast IllegalStateException (real WRONGPASS short-circuits retries)")
+    @DisplayName("wrong password → fast IllegalStateException (real WRONGPASS short-circuits retries)")
     void wrongPasswordFailsFast() {
         String url = "redis://:wrong-" + PASSWORD + "@" + host() + ":" + port();
         ValkeyConnectionConfiguration cfg = new ValkeyConnectionConfiguration(propsWithUrl(url));
 
         long start = System.nanoTime();
-        IllegalStateException ex =
-                assertThrows(IllegalStateException.class, cfg::valkeyConnectionFactory);
+        IllegalStateException ex = assertThrows(IllegalStateException.class, cfg::valkeyConnectionFactory);
         long elapsedMs = (System.nanoTime() - start) / 1_000_000;
 
         assertTrue(
                 ex.getMessage().toLowerCase().contains("authentication failed"),
-                "real Valkey WRONGPASS must be classified as an auth failure; got: "
-                        + ex.getMessage());
+                "real Valkey WRONGPASS must be classified as an auth failure; got: " + ex.getMessage());
         // The retry loop is 10 x 3s; a recognised auth failure must abort well before that.
         assertTrue(
-                elapsedMs < 10_000,
-                "auth failure must short-circuit the 30s retry loop; elapsed=" + elapsedMs + " ms");
+                elapsedMs < 10_000, "auth failure must short-circuit the 30s retry loop; elapsed=" + elapsedMs + " ms");
     }
 }

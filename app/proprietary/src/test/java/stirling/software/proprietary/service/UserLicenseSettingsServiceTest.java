@@ -29,13 +29,26 @@ import stirling.software.proprietary.security.service.UserService;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class UserLicenseSettingsServiceTest {
 
-    @Mock private UserLicenseSettingsRepository settingsRepository;
-    @Mock private UserService userService;
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private ApplicationProperties.Premium premium;
-    @Mock private ApplicationProperties.AutomaticallyGenerated automaticallyGenerated;
-    @Mock private LicenseKeyChecker licenseKeyChecker;
-    @Mock private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
+    @Mock
+    private UserLicenseSettingsRepository settingsRepository;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private ApplicationProperties.Premium premium;
+
+    @Mock
+    private ApplicationProperties.AutomaticallyGenerated automaticallyGenerated;
+
+    @Mock
+    private LicenseKeyChecker licenseKeyChecker;
+
+    @Mock
+    private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
 
     private UserLicenseSettingsService service;
     private UserLicenseSettings mockSettings;
@@ -51,8 +64,7 @@ class UserLicenseSettingsServiceTest {
 
         when(applicationProperties.getPremium()).thenReturn(premium);
         when(applicationProperties.getAutomaticallyGenerated()).thenReturn(automaticallyGenerated);
-        when(automaticallyGenerated.getIsNewServer())
-                .thenReturn(false); // Default: not a new server
+        when(automaticallyGenerated.getIsNewServer()).thenReturn(false); // Default: not a new server
         when(settingsRepository.findSettings()).thenReturn(Optional.of(mockSettings));
         when(userService.getTotalUsersCount()).thenReturn(80L);
         when(settingsRepository.save(any(UserLicenseSettings.class)))
@@ -63,10 +75,7 @@ class UserLicenseSettingsServiceTest {
         // Create service with overridden validateSettingsIntegrity to bypass signature validation
         service =
                 new UserLicenseSettingsService(
-                        settingsRepository,
-                        userService,
-                        applicationProperties,
-                        licenseKeyCheckerProvider) {
+                        settingsRepository, userService, applicationProperties, licenseKeyCheckerProvider) {
                     @Override
                     public void validateSettingsIntegrity() {
                         // Override to do nothing in tests - avoid HMAC signature validation
@@ -107,10 +116,7 @@ class UserLicenseSettingsServiceTest {
 
         int result = service.calculateMaxAllowedUsers();
 
-        assertEquals(
-                5,
-                result,
-                "ENTERPRISE license should return license seats only (NOT grandfathered + seats)");
+        assertEquals(5, result, "ENTERPRISE license should return license seats only (NOT grandfathered + seats)");
     }
 
     @Test
@@ -123,10 +129,7 @@ class UserLicenseSettingsServiceTest {
 
         int result = service.calculateMaxAllowedUsers();
 
-        assertEquals(
-                20,
-                result,
-                "ENTERPRISE license should ignore grandfathering and use license seats only");
+        assertEquals(20, result, "ENTERPRISE license should ignore grandfathering and use license seats only");
     }
 
     @Test
@@ -150,10 +153,7 @@ class UserLicenseSettingsServiceTest {
 
         int result = service.calculateMaxAllowedUsers();
 
-        assertEquals(
-                Integer.MAX_VALUE,
-                result,
-                "Fresh install with SERVER license should return unlimited");
+        assertEquals(Integer.MAX_VALUE, result, "Fresh install with SERVER license should return unlimited");
     }
 
     @Test
@@ -166,8 +166,7 @@ class UserLicenseSettingsServiceTest {
 
         int result = service.calculateMaxAllowedUsers();
 
-        assertEquals(
-                10, result, "Fresh install with ENTERPRISE license should return license seats");
+        assertEquals(10, result, "Fresh install with ENTERPRISE license should return license seats");
     }
 
     @Test
@@ -191,8 +190,7 @@ class UserLicenseSettingsServiceTest {
 
         int result = service.calculateMaxAllowedUsers();
 
-        assertEquals(
-                5, result, "ENTERPRISE 5 seats should override grandfathered 80 users (not 85)");
+        assertEquals(5, result, "ENTERPRISE 5 seats should override grandfathered 80 users (not 85)");
     }
 
     @Test
@@ -316,8 +314,7 @@ class UserLicenseSettingsServiceTest {
 
         boolean result = service.isOAuthEligible(user);
 
-        assertEquals(
-                true, result, "Non-grandfathered user with ENTERPRISE license should be eligible");
+        assertEquals(true, result, "Non-grandfathered user with ENTERPRISE license should be eligible");
     }
 
     @Test
@@ -332,10 +329,7 @@ class UserLicenseSettingsServiceTest {
 
         boolean result = service.isOAuthEligible(user);
 
-        assertEquals(
-                false,
-                result,
-                "Non-grandfathered user without paid license should NOT be eligible");
+        assertEquals(false, result, "Non-grandfathered user without paid license should NOT be eligible");
     }
 
     @Test
@@ -345,8 +339,7 @@ class UserLicenseSettingsServiceTest {
 
         boolean result = service.isOAuthEligible(null);
 
-        assertEquals(
-                true, result, "New user with SERVER license should be eligible for auto-creation");
+        assertEquals(true, result, "New user with SERVER license should be eligible for auto-creation");
     }
 
     @Test
@@ -356,10 +349,7 @@ class UserLicenseSettingsServiceTest {
 
         boolean result = service.isOAuthEligible(null);
 
-        assertEquals(
-                false,
-                result,
-                "New user without paid license should NOT be eligible for auto-creation");
+        assertEquals(false, result, "New user without paid license should NOT be eligible for auto-creation");
     }
 
     @Test
@@ -374,8 +364,7 @@ class UserLicenseSettingsServiceTest {
 
         boolean result = service.isOAuthEligible(user);
 
-        assertEquals(
-                false, result, "OAuth should be blocked when LicenseKeyChecker is unavailable");
+        assertEquals(false, result, "OAuth should be blocked when LicenseKeyChecker is unavailable");
     }
 
     // ===== SAML Eligibility Tests =====
@@ -407,10 +396,7 @@ class UserLicenseSettingsServiceTest {
 
         boolean result = service.isSamlEligible(user);
 
-        assertEquals(
-                true,
-                result,
-                "Non-grandfathered user with ENTERPRISE license should be eligible for SAML");
+        assertEquals(true, result, "Non-grandfathered user with ENTERPRISE license should be eligible for SAML");
     }
 
     @Test
@@ -425,10 +411,7 @@ class UserLicenseSettingsServiceTest {
 
         boolean result = service.isSamlEligible(user);
 
-        assertEquals(
-                false,
-                result,
-                "Non-grandfathered user with SERVER license should NOT be eligible for SAML");
+        assertEquals(false, result, "Non-grandfathered user with SERVER license should NOT be eligible for SAML");
     }
 
     @Test
@@ -444,9 +427,7 @@ class UserLicenseSettingsServiceTest {
         boolean result = service.isSamlEligible(user);
 
         assertEquals(
-                false,
-                result,
-                "Non-grandfathered user without ENTERPRISE license should NOT be eligible for SAML");
+                false, result, "Non-grandfathered user without ENTERPRISE license should NOT be eligible for SAML");
     }
 
     @Test
@@ -456,10 +437,7 @@ class UserLicenseSettingsServiceTest {
 
         boolean result = service.isSamlEligible(null);
 
-        assertEquals(
-                true,
-                result,
-                "New user with ENTERPRISE license should be eligible for SAML auto-creation");
+        assertEquals(true, result, "New user with ENTERPRISE license should be eligible for SAML auto-creation");
     }
 
     @Test
@@ -470,9 +448,7 @@ class UserLicenseSettingsServiceTest {
         boolean result = service.isSamlEligible(null);
 
         assertEquals(
-                false,
-                result,
-                "New user with SERVER license should NOT be eligible for SAML (requires ENTERPRISE)");
+                false, result, "New user with SERVER license should NOT be eligible for SAML (requires ENTERPRISE)");
     }
 
     @Test

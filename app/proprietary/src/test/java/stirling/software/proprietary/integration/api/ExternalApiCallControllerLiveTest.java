@@ -63,7 +63,8 @@ import tools.jackson.databind.ObjectMapper;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ExternalApiCallControllerLiveTest {
 
-    @Mock private ApiConnectionResolver connectionResolver;
+    @Mock
+    private ApiConnectionResolver connectionResolver;
 
     private HttpServer server;
     private String baseUrl;
@@ -87,126 +88,98 @@ class ExternalApiCallControllerLiveTest {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
 
         // Records, then answers with a verdict - the DLP/scanner shape.
-        server.createContext(
-                "/v1/scan",
-                exchange -> {
-                    capture(exchange);
-                    respond(
-                            exchange,
-                            200,
-                            "application/json",
-                            "{\"verdict\":\"clean\",\"score\":0.02}"
-                                    .getBytes(StandardCharsets.UTF_8));
-                });
+        server.createContext("/v1/scan", exchange -> {
+            capture(exchange);
+            respond(
+                    exchange,
+                    200,
+                    "application/json",
+                    "{\"verdict\":\"clean\",\"score\":0.02}".getBytes(StandardCharsets.UTF_8));
+        });
 
         // Answers with a different document - the converter shape.
-        server.createContext(
-                "/v1/convert",
-                exchange -> {
-                    capture(exchange);
-                    exchange.getResponseHeaders()
-                            .add("Content-Disposition", "attachment; filename=\"converted.docx\"");
-                    respond(
-                            exchange,
-                            200,
-                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            "DOCX-BYTES".getBytes(StandardCharsets.UTF_8));
-                });
+        server.createContext("/v1/convert", exchange -> {
+            capture(exchange);
+            exchange.getResponseHeaders().add("Content-Disposition", "attachment; filename=\"converted.docx\"");
+            respond(
+                    exchange,
+                    200,
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "DOCX-BYTES".getBytes(StandardCharsets.UTF_8));
+        });
 
         // Answers with a link to the result - the async/large-file shape.
-        server.createContext(
-                "/v1/deferred",
-                exchange -> {
-                    capture(exchange);
-                    respond(
-                            exchange,
-                            200,
-                            "application/json",
-                            ("{\"status\":\"done\",\"data\":{\"downloadUrl\":\""
-                                            + baseUrl
-                                            + "/files/result.pdf\"}}")
-                                    .getBytes(StandardCharsets.UTF_8));
-                });
+        server.createContext("/v1/deferred", exchange -> {
+            capture(exchange);
+            respond(
+                    exchange,
+                    200,
+                    "application/json",
+                    ("{\"status\":\"done\",\"data\":{\"downloadUrl\":\"" + baseUrl + "/files/result.pdf\"}}")
+                            .getBytes(StandardCharsets.UTF_8));
+        });
 
         // Answers with a link on a host the connection never authorised.
-        server.createContext(
-                "/v1/evil",
-                exchange -> {
-                    capture(exchange);
-                    respond(
-                            exchange,
-                            200,
-                            "application/json",
-                            "{\"data\":{\"downloadUrl\":\"http://169.254.169.254/latest/meta-data/\"}}"
-                                    .getBytes(StandardCharsets.UTF_8));
-                });
+        server.createContext("/v1/evil", exchange -> {
+            capture(exchange);
+            respond(
+                    exchange,
+                    200,
+                    "application/json",
+                    "{\"data\":{\"downloadUrl\":\"http://169.254.169.254/latest/meta-data/\"}}"
+                            .getBytes(StandardCharsets.UTF_8));
+        });
 
         server.createContext(
                 "/files/result.pdf",
                 exchange ->
-                        respond(
-                                exchange,
-                                200,
-                                "application/pdf",
-                                "%PDF-1.7 fetched".getBytes(StandardCharsets.UTF_8)));
+                        respond(exchange, 200, "application/pdf", "%PDF-1.7 fetched".getBytes(StandardCharsets.UTF_8)));
 
         // Answers with an archive - ConsignO's "PDF (single) or ZIP (multiple)" shape.
-        server.createContext(
-                "/v1/bundle",
-                exchange -> {
-                    capture(exchange);
-                    respond(exchange, 200, "application/zip", zip());
-                });
+        server.createContext("/v1/bundle", exchange -> {
+            capture(exchange);
+            respond(exchange, 200, "application/zip", zip());
+        });
 
-        server.createContext(
-                "/v1/reject",
-                exchange -> {
-                    capture(exchange);
-                    respond(
-                            exchange,
-                            422,
-                            "application/json",
-                            "{\"error\":\"policy violation\"}".getBytes(StandardCharsets.UTF_8));
-                });
+        server.createContext("/v1/reject", exchange -> {
+            capture(exchange);
+            respond(
+                    exchange,
+                    422,
+                    "application/json",
+                    "{\"error\":\"policy violation\"}".getBytes(StandardCharsets.UTF_8));
+        });
 
         // Cloudmersive's scan shape: HTTP 200 with the verdict in the body, clean or not.
-        server.createContext(
-                "/v1/clean",
-                exchange -> {
-                    capture(exchange);
-                    respond(
-                            exchange,
-                            200,
-                            "application/json",
-                            "{\"CleanResult\":true}".getBytes(StandardCharsets.UTF_8));
-                });
-        server.createContext(
-                "/v1/infected",
-                exchange -> {
-                    capture(exchange);
-                    respond(
-                            exchange,
-                            200,
-                            "application/json",
-                            "{\"CleanResult\":false,\"FoundViruses\":[{\"VirusName\":\"EICAR\"}]}"
-                                    .getBytes(StandardCharsets.UTF_8));
-                });
+        server.createContext("/v1/clean", exchange -> {
+            capture(exchange);
+            respond(exchange, 200, "application/json", "{\"CleanResult\":true}".getBytes(StandardCharsets.UTF_8));
+        });
+        server.createContext("/v1/infected", exchange -> {
+            capture(exchange);
+            respond(
+                    exchange,
+                    200,
+                    "application/json",
+                    "{\"CleanResult\":false,\"FoundViruses\":[{\"VirusName\":\"EICAR\"}]}"
+                            .getBytes(StandardCharsets.UTF_8));
+        });
 
         server.start();
         baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
 
-        ExternalApiCaller caller =
-                new ExternalApiCaller(
-                        HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build(),
-                        properties,
-                        objectMapper);
-        controller =
-                new ExternalApiCallController(
-                        connectionResolver,
-                        caller,
-                        objectMapper,
-                        new TempFileManager(new TempFileRegistry(), properties),
-                        properties);
+        ExternalApiCaller caller = new ExternalApiCaller(
+                HttpClient.newBuilder()
+                        .followRedirects(HttpClient.Redirect.NEVER)
+                        .build(),
+                properties,
+                objectMapper);
+        controller = new ExternalApiCallController(
+                connectionResolver,
+                caller,
+                objectMapper,
+                new TempFileManager(new TempFileRegistry(), properties),
+                properties);
     }
 
     @AfterEach
@@ -218,12 +191,10 @@ class ExternalApiCallControllerLiveTest {
         receivedMethod = exchange.getRequestMethod();
         receivedBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         receivedContentType = exchange.getRequestHeaders().getFirst("Content-Type");
-        exchange.getRequestHeaders()
-                .forEach((name, values) -> receivedHeaders.put(name, values.get(0)));
+        exchange.getRequestHeaders().forEach((name, values) -> receivedHeaders.put(name, values.get(0)));
     }
 
-    private static void respond(HttpExchange exchange, int status, String contentType, byte[] body)
-            throws IOException {
+    private static void respond(HttpExchange exchange, int status, String contentType, byte[] body) throws IOException {
         exchange.getResponseHeaders().add("Content-Type", contentType);
         exchange.sendResponseHeaders(status, body.length);
         exchange.getResponseBody().write(body);
@@ -251,8 +222,7 @@ class ExternalApiCallControllerLiveTest {
             document.getDocumentInformation().setTitle("Q3 Claim");
             document.getDocumentInformation()
                     .setCustomMetadataValue(
-                            PdfMetadataService.CLASSIFICATION_KEY,
-                            "{\"label\":\"invoice\",\"confidence\":0.91}");
+                            PdfMetadataService.CLASSIFICATION_KEY, "{\"label\":\"invoice\",\"confidence\":0.91}");
             PdfSensitivityLabels.apply(
                     document,
                     new SensitivityLabel(
@@ -264,8 +234,7 @@ class ExternalApiCallControllerLiveTest {
                             null));
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             document.save(out);
-            return new MockMultipartFile(
-                    "fileInput", "claim.pdf", "application/pdf", out.toByteArray());
+            return new MockMultipartFile("fileInput", "claim.pdf", "application/pdf", out.toByteArray());
         }
     }
 
@@ -393,14 +362,12 @@ class ExternalApiCallControllerLiveTest {
     void sendsTheDocumentAndWhatWeKnowAboutItToTheReceiver() throws IOException {
         connection(Map.of());
 
-        ResponseEntity<Resource> response =
-                step().path("/v1/scan")
-                        .fields(
-                                "{\"sha256\":\"{{document.sha256}}\",\"label\":\"{{sensitivityLabel.name}}\","
-                                        + "\"class\":\"{{classification.label}}\",\"pages\":\"{{document.pageCount}}\"}")
-                        .includeContext(true)
-                        .run("Outbound review", "run-42")
-                        .go();
+        ResponseEntity<Resource> response = step().path("/v1/scan")
+                .fields("{\"sha256\":\"{{document.sha256}}\",\"label\":\"{{sensitivityLabel.name}}\","
+                        + "\"class\":\"{{classification.label}}\",\"pages\":\"{{document.pageCount}}\"}")
+                .includeContext(true)
+                .run("Outbound review", "run-42")
+                .go();
 
         assertThat(receivedMethod).isEqualTo("POST");
         assertThat(receivedContentType).startsWith("multipart/form-data");
@@ -410,16 +377,16 @@ class ExternalApiCallControllerLiveTest {
         assertThat(receivedBody).contains("name=\"pages\"").contains("2");
         assertThat(receivedBody).containsPattern("name=\"sha256\"[\\s\\S]{0,24}[0-9a-f]{64}");
         // The document itself, under the field name the vendor expects.
-        assertThat(receivedBody).contains("name=\"file\"; filename=\"claim.pdf\"").contains("%PDF");
+        assertThat(receivedBody)
+                .contains("name=\"file\"; filename=\"claim.pdf\"")
+                .contains("%PDF");
         // The context, including which policy and run sent it.
         assertThat(receivedBody)
                 .contains("stirlingContext")
                 .contains("Outbound review")
                 .contains("run-42");
 
-        JsonNode report =
-                objectMapper.readTree(
-                        response.getHeaders().getFirst(AiToolResponseHeaders.TOOL_REPORT));
+        JsonNode report = objectMapper.readTree(response.getHeaders().getFirst(AiToolResponseHeaders.TOOL_REPORT));
         assertThat(report.at("/status").asInt()).isEqualTo(200);
         assertThat(report.at("/body/verdict").asString()).isEqualTo("clean");
     }
@@ -431,8 +398,7 @@ class ExternalApiCallControllerLiveTest {
         ResponseEntity<Resource> response = step().path("/v1/scan").go();
 
         // Byte-for-byte: an inspecting call-out must not perturb what it inspected.
-        assertThat(response.getBody().getInputStream().readAllBytes())
-                .startsWith("%PDF".getBytes());
+        assertThat(response.getBody().getInputStream().readAllBytes()).startsWith("%PDF".getBytes());
         assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("claim.pdf");
     }
 
@@ -440,27 +406,27 @@ class ExternalApiCallControllerLiveTest {
     void replaceModeAdoptsTheReturnedDocumentAndItsRealName() throws IOException {
         connection(Map.of());
 
-        ResponseEntity<Resource> response =
-                step().path("/v1/convert").bodyMode("binary").responseMode("replace").go();
+        ResponseEntity<Resource> response = step().path("/v1/convert")
+                .bodyMode("binary")
+                .responseMode("replace")
+                .go();
 
         assertThat(receivedContentType).isEqualTo("application/pdf");
         assertThat(receivedBody).startsWith("%PDF");
         assertThat(response.getBody().getInputStream().readAllBytes())
                 .isEqualTo("DOCX-BYTES".getBytes(StandardCharsets.UTF_8));
         // Named for what came back, not what went out: a DOCX must not be called .pdf.
-        assertThat(response.getHeaders().getFirst("Content-Disposition"))
-                .contains("converted.docx");
+        assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("converted.docx");
     }
 
     @Test
     void followsAResultUrlOnTheConnectionsOwnHost() throws IOException {
         connection(Map.of());
 
-        ResponseEntity<Resource> response =
-                step().path("/v1/deferred")
-                        .responseMode("replace")
-                        .resultUrlPath("data.downloadUrl")
-                        .go();
+        ResponseEntity<Resource> response = step().path("/v1/deferred")
+                .responseMode("replace")
+                .resultUrlPath("data.downloadUrl")
+                .go();
 
         assertThat(response.getBody().getInputStream().readAllBytes())
                 .isEqualTo("%PDF-1.7 fetched".getBytes(StandardCharsets.UTF_8));
@@ -471,12 +437,10 @@ class ExternalApiCallControllerLiveTest {
         connection(Map.of());
 
         // The URL is chosen by the remote service at run time; obeying it would be an SSRF.
-        assertThatThrownBy(
-                        () ->
-                                step().path("/v1/evil")
-                                        .responseMode("replace")
-                                        .resultUrlPath("data.downloadUrl")
-                                        .go())
+        assertThatThrownBy(() -> step().path("/v1/evil")
+                        .responseMode("replace")
+                        .resultUrlPath("data.downloadUrl")
+                        .go())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("does not allow");
     }
@@ -485,8 +449,10 @@ class ExternalApiCallControllerLiveTest {
     void picksTheWantedFileOutOfAReturnedArchive() throws IOException {
         connection(Map.of());
 
-        ResponseEntity<Resource> response =
-                step().path("/v1/bundle").responseMode("replace").responseSelect("*.pdf").go();
+        ResponseEntity<Resource> response = step().path("/v1/bundle")
+                .responseMode("replace")
+                .responseSelect("*.pdf")
+                .go();
 
         assertThat(response.getBody().getInputStream().readAllBytes())
                 .isEqualTo("%PDF-1.7 signed".getBytes(StandardCharsets.UTF_8));
@@ -497,7 +463,8 @@ class ExternalApiCallControllerLiveTest {
         connection(Map.of());
 
         // Handing a .zip to a step that expects a PDF fails later and more obscurely.
-        assertThatThrownBy(() -> step().path("/v1/bundle").responseMode("replace").go())
+        assertThatThrownBy(
+                        () -> step().path("/v1/bundle").responseMode("replace").go())
                 .isInstanceOf(IOException.class)
                 .hasMessageContaining("responseSelect");
     }
@@ -523,8 +490,7 @@ class ExternalApiCallControllerLiveTest {
         ResponseEntity<Resource> response =
                 step().path("/v1/clean").requireTrue("CleanResult").go();
 
-        assertThat(response.getBody().getInputStream().readAllBytes())
-                .startsWith("%PDF".getBytes());
+        assertThat(response.getBody().getInputStream().readAllBytes()).startsWith("%PDF".getBytes());
     }
 
     @Test
@@ -532,7 +498,8 @@ class ExternalApiCallControllerLiveTest {
         connection(Map.of());
 
         // The whole security proposition: HTTP 200 with CleanResult=false must NOT sail through.
-        assertThatThrownBy(() -> step().path("/v1/infected").requireTrue("CleanResult").go())
+        assertThatThrownBy(() ->
+                        step().path("/v1/infected").requireTrue("CleanResult").go())
                 .isInstanceOf(IOException.class)
                 .hasMessageContaining("CleanResult")
                 .hasMessageContaining("not true");
@@ -544,7 +511,8 @@ class ExternalApiCallControllerLiveTest {
 
         // /v1/scan answers {"verdict":"clean"} - it has no CleanResult field at all. A gate that
         // cannot find its verdict must stop the run, not wave the document through.
-        assertThatThrownBy(() -> step().path("/v1/scan").requireTrue("CleanResult").go())
+        assertThatThrownBy(
+                        () -> step().path("/v1/scan").requireTrue("CleanResult").go())
                 .isInstanceOf(IOException.class)
                 .hasMessageContaining("not true");
     }
@@ -556,10 +524,9 @@ class ExternalApiCallControllerLiveTest {
         // ConsignO's submit shape: the PDF base64'd into documents[0].data.
         step().path("/v1/scan")
                 .bodyMode("json")
-                .bodyTemplate(
-                        "{\"name\":\"{{document.filename}}\",\"status\":1,"
-                                + "\"documents\":[{\"name\":\"{{document.filename}}\",\"data\":\"{{document.base64}}\"}],"
-                                + "\"actions\":[{\"mode\":\"remote\",\"signer\":{\"type\":\"certifio\"}}]}")
+                .bodyTemplate("{\"name\":\"{{document.filename}}\",\"status\":1,"
+                        + "\"documents\":[{\"name\":\"{{document.filename}}\",\"data\":\"{{document.base64}}\"}],"
+                        + "\"actions\":[{\"mode\":\"remote\",\"signer\":{\"type\":\"certifio\"}}]}")
                 .go();
 
         assertThat(receivedContentType).isEqualTo("application/json");

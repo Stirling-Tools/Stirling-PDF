@@ -67,8 +67,7 @@ public class HardwareKeyStoreService {
 
     private final String machineType;
 
-    public HardwareKeyStoreService(
-            @Autowired(required = false) @Qualifier("machineType") String machineType) {
+    public HardwareKeyStoreService(@Autowired(required = false) @Qualifier("machineType") String machineType) {
         this.machineType = machineType;
     }
 
@@ -110,8 +109,7 @@ public class HardwareKeyStoreService {
         }
         if (request != null && !isLocalRequest(request.getRemoteAddr())) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.hardwareSigningLocalOnly",
-                    "Hardware-backed signing can only be used from this device");
+                    "error.hardwareSigningLocalOnly", "Hardware-backed signing can only be used from this device");
         }
     }
 
@@ -163,16 +161,11 @@ public class HardwareKeyStoreService {
         String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
 
         if (os.contains("win")) {
+            candidates.put("OpenSC", List.of("C:\\Program Files\\OpenSC Project\\OpenSC\\pkcs11\\opensc-pkcs11.dll"));
             candidates.put(
-                    "OpenSC",
-                    List.of(
-                            "C:\\Program Files\\OpenSC Project\\OpenSC\\pkcs11\\opensc-pkcs11.dll"));
-            candidates.put(
-                    "YubiKey (ykcs11)",
-                    List.of("C:\\Program Files\\Yubico\\Yubico PIV Tool\\bin\\libykcs11.dll"));
+                    "YubiKey (ykcs11)", List.of("C:\\Program Files\\Yubico\\Yubico PIV Tool\\bin\\libykcs11.dll"));
             candidates.put("SafeNet eToken", List.of("C:\\Windows\\System32\\eTPKCS11.dll"));
-            candidates.put(
-                    "Thales/Gemalto IDPrime", List.of("C:\\Windows\\System32\\IDPrimePKCS11.dll"));
+            candidates.put("Thales/Gemalto IDPrime", List.of("C:\\Windows\\System32\\IDPrimePKCS11.dll"));
             candidates.put(
                     "SoftHSM2",
                     List.of(
@@ -180,18 +173,12 @@ public class HardwareKeyStoreService {
                             "C:\\SoftHSM2\\lib\\softhsm2-x64.dll"));
         } else if (os.contains("mac")) {
             candidates.put(
-                    "OpenSC",
-                    List.of(
-                            "/Library/OpenSC/lib/opensc-pkcs11.so",
-                            "/usr/local/lib/opensc-pkcs11.so"));
+                    "OpenSC", List.of("/Library/OpenSC/lib/opensc-pkcs11.so", "/usr/local/lib/opensc-pkcs11.so"));
             candidates.put(
-                    "YubiKey (ykcs11)",
-                    List.of("/usr/local/lib/libykcs11.dylib", "/opt/homebrew/lib/libykcs11.dylib"));
+                    "YubiKey (ykcs11)", List.of("/usr/local/lib/libykcs11.dylib", "/opt/homebrew/lib/libykcs11.dylib"));
             candidates.put(
                     "SoftHSM2",
-                    List.of(
-                            "/usr/local/lib/softhsm/libsofthsm2.so",
-                            "/opt/homebrew/lib/softhsm/libsofthsm2.so"));
+                    List.of("/usr/local/lib/softhsm/libsofthsm2.so", "/opt/homebrew/lib/softhsm/libsofthsm2.so"));
         } else {
             candidates.put(
                     "OpenSC",
@@ -201,9 +188,7 @@ public class HardwareKeyStoreService {
                             "/usr/lib64/opensc-pkcs11.so"));
             candidates.put(
                     "YubiKey (ykcs11)",
-                    List.of(
-                            "/usr/lib/x86_64-linux-gnu/libykcs11.so",
-                            "/usr/local/lib/libykcs11.so"));
+                    List.of("/usr/lib/x86_64-linux-gnu/libykcs11.so", "/usr/local/lib/libykcs11.so"));
             candidates.put(
                     "SoftHSM2",
                     List.of(
@@ -213,16 +198,13 @@ public class HardwareKeyStoreService {
         }
 
         List<Pkcs11LibraryInfo> result = new ArrayList<>();
-        candidates.forEach(
-                (name, paths) ->
-                        paths.stream()
-                                .filter(p -> Files.exists(Path.of(p)))
-                                .findFirst()
-                                .ifPresent(p -> result.add(new Pkcs11LibraryInfo(name, p))));
+        candidates.forEach((name, paths) -> paths.stream()
+                .filter(p -> Files.exists(Path.of(p)))
+                .findFirst()
+                .ifPresent(p -> result.add(new Pkcs11LibraryInfo(name, p))));
 
         for (String configured : configuredLibraries()) {
-            if (Files.exists(Path.of(configured))
-                    && result.stream().noneMatch(l -> sameFile(l.path(), configured))) {
+            if (Files.exists(Path.of(configured)) && result.stream().noneMatch(l -> sameFile(l.path(), configured))) {
                 result.add(new Pkcs11LibraryInfo(fileName(configured), configured));
             }
         }
@@ -258,8 +240,7 @@ public class HardwareKeyStoreService {
     public KeyStore loadWindowsKeyStore() throws Exception {
         if (!windowsStoreSupported()) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.windowsStoreUnavailable",
-                    "The Windows certificate store is not available on this platform");
+                    "error.windowsStoreUnavailable", "The Windows certificate store is not available on this platform");
         }
         KeyStore ks = KeyStore.getInstance(WINDOWS_KEYSTORE_TYPE, MSCAPI_PROVIDER);
         ks.load(null, null);
@@ -312,9 +293,7 @@ public class HardwareKeyStoreService {
         }
 
         String cacheKey = libraryPath + "|" + slot;
-        Provider provider =
-                pkcs11Providers.computeIfAbsent(
-                        cacheKey, k -> buildPkcs11Provider(libraryPath, slot));
+        Provider provider = pkcs11Providers.computeIfAbsent(cacheKey, k -> buildPkcs11Provider(libraryPath, slot));
         try {
             KeyStore ks = KeyStore.getInstance("PKCS11", provider);
             ks.load(null, pin);
@@ -327,9 +306,7 @@ public class HardwareKeyStoreService {
                 throw e;
             }
             pkcs11Providers.remove(cacheKey, provider);
-            Provider fresh =
-                    pkcs11Providers.computeIfAbsent(
-                            cacheKey, k -> buildPkcs11Provider(libraryPath, slot));
+            Provider fresh = pkcs11Providers.computeIfAbsent(cacheKey, k -> buildPkcs11Provider(libraryPath, slot));
             KeyStore ks = KeyStore.getInstance("PKCS11", fresh);
             ks.load(null, pin);
             return new Pkcs11Session(ks, fresh);
@@ -362,14 +339,12 @@ public class HardwareKeyStoreService {
             return Security.getProvider(PKCS11_BASE_PROVIDER).configure(config.toString());
         } catch (Exception e) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.pkcs11ConfigFailed",
-                    "Failed to initialise the PKCS#11 driver: {0}",
-                    e.getMessage());
+                    "error.pkcs11ConfigFailed", "Failed to initialise the PKCS#11 driver: {0}", e.getMessage());
         }
     }
 
-    public List<HardwareCertificateInfo> listPkcs11Certificates(
-            String libraryPath, Integer slot, char[] pin) throws Exception {
+    public List<HardwareCertificateInfo> listPkcs11Certificates(String libraryPath, Integer slot, char[] pin)
+            throws Exception {
         try (Pkcs11Session session = openPkcs11(libraryPath, slot, pin)) {
             return listSigningCertificates(session.keyStore(), SOURCE_PKCS11);
         }
@@ -384,9 +359,7 @@ public class HardwareKeyStoreService {
                     "error.pkcs11LibraryRequired", "A PKCS#11 driver library path is required");
         }
         Set<String> allowed =
-                detectPkcs11Libraries().stream()
-                        .map(Pkcs11LibraryInfo::path)
-                        .collect(Collectors.toSet());
+                detectPkcs11Libraries().stream().map(Pkcs11LibraryInfo::path).collect(Collectors.toSet());
         boolean ok = allowed.stream().anyMatch(p -> sameFile(p, libraryPath));
         if (!ok) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -401,8 +374,7 @@ public class HardwareKeyStoreService {
     // Shared helpers
     // ---------------------------------------------------------------------
 
-    private List<HardwareCertificateInfo> listSigningCertificates(KeyStore ks, String source)
-            throws Exception {
+    private List<HardwareCertificateInfo> listSigningCertificates(KeyStore ks, String source) throws Exception {
         List<HardwareCertificateInfo> certs = new ArrayList<>();
         Enumeration<String> aliases = ks.aliases();
         while (aliases.hasMoreElements()) {
@@ -418,8 +390,7 @@ public class HardwareKeyStoreService {
         return certs;
     }
 
-    private static HardwareCertificateInfo toInfo(
-            String alias, X509Certificate cert, String source) {
+    private static HardwareCertificateInfo toInfo(String alias, X509Certificate cert, String source) {
         java.util.Date now = new java.util.Date();
         return new HardwareCertificateInfo(
                 alias,

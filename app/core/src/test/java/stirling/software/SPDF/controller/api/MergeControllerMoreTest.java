@@ -88,17 +88,12 @@ class MergeControllerMoreTest {
     }
 
     private static MockMultipartFile pdf(String name, int pages) throws IOException {
-        return new MockMultipartFile(
-                "fileInput", name, MediaType.APPLICATION_PDF_VALUE, buildPdf(pages, null, null));
+        return new MockMultipartFile("fileInput", name, MediaType.APPLICATION_PDF_VALUE, buildPdf(pages, null, null));
     }
 
-    private static MockMultipartFile pdf(String name, int pages, String title, Long modMillis)
-            throws IOException {
+    private static MockMultipartFile pdf(String name, int pages, String title, Long modMillis) throws IOException {
         return new MockMultipartFile(
-                "fileInput",
-                name,
-                MediaType.APPLICATION_PDF_VALUE,
-                buildPdf(pages, title, modMillis));
+                "fileInput", name, MediaType.APPLICATION_PDF_VALUE, buildPdf(pages, title, modMillis));
     }
 
     private static MergePdfsRequest request(
@@ -175,8 +170,7 @@ class MergeControllerMoreTest {
         @DisplayName("empty file array returns an empty (zero-byte) body")
         void emptyFileArray() throws Exception {
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(
-                            request(new MockMultipartFile[0], "orderProvided", false, false), null);
+                    mergeController.mergePdfs(request(new MockMultipartFile[0], "orderProvided", false, false), null);
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
     }
@@ -202,8 +196,7 @@ class MergeControllerMoreTest {
                 pdf("alpha.pdf", 1, "Alpha", 1_000L),
                 pdf("bravo.pdf", 1, "Beta", 2_000L)
             };
-            ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(request(files, sortType, false, false), null);
+            ResponseEntity<Resource> response = mergeController.mergePdfs(request(files, sortType, false, false), null);
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(3);
             }
@@ -216,8 +209,7 @@ class MergeControllerMoreTest {
             ResponseEntity<Resource> response =
                     mergeController.mergePdfs(request(files, "byFileName", false, false), null);
             String disposition =
-                    response.getHeaders()
-                            .getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
+                    response.getHeaders().getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
             // apple.pdf sorts first so it seeds the generated merged filename
             assertThat(disposition).contains("apple");
         }
@@ -232,11 +224,9 @@ class MergeControllerMoreTest {
         void fileOrderOverridesSort() throws Exception {
             MockMultipartFile[] files = {pdf("first.pdf", 1), pdf("second.pdf", 2)};
             ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(
-                            request(files, "byFileName", false, false), "second.pdf\nfirst.pdf");
+                    mergeController.mergePdfs(request(files, "byFileName", false, false), "second.pdf\nfirst.pdf");
             String disposition =
-                    response.getHeaders()
-                            .getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
+                    response.getHeaders().getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
             assertThat(disposition).contains("second");
             try (PDDocument result = readResponse(response)) {
                 assertThat(result.getNumberOfPages()).isEqualTo(3);
@@ -276,11 +266,7 @@ class MergeControllerMoreTest {
         @DisplayName("a blank filename falls back to a generated Document N title")
         void tocBlankFilenameFallback() throws Exception {
             MockMultipartFile blankName =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            buildPdf(1, null, null));
+                    new MockMultipartFile("fileInput", "", MediaType.APPLICATION_PDF_VALUE, buildPdf(1, null, null));
             MockMultipartFile[] files = {blankName, pdf("named.pdf", 1)};
             ResponseEntity<Resource> response =
                     mergeController.mergePdfs(request(files, "orderProvided", false, true), null);
@@ -330,14 +316,9 @@ class MergeControllerMoreTest {
         @DisplayName("a non-PDF payload exercises the pre-validate and merge error branch")
         void corruptedPayloadHandled() throws Exception {
             MockMultipartFile good = pdf("good.pdf", 1);
-            MockMultipartFile bad =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "broken.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "this is not a pdf at all".getBytes());
-            MergePdfsRequest req =
-                    request(new MockMultipartFile[] {good, bad}, "orderProvided", false, false);
+            MockMultipartFile bad = new MockMultipartFile(
+                    "fileInput", "broken.pdf", MediaType.APPLICATION_PDF_VALUE, "this is not a pdf at all".getBytes());
+            MergePdfsRequest req = request(new MockMultipartFile[] {good, bad}, "orderProvided", false, false);
             try {
                 ResponseEntity<Resource> response = mergeController.mergePdfs(req, null);
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -350,10 +331,8 @@ class MergeControllerMoreTest {
         @DisplayName("an entirely empty payload still runs through the merge pipeline")
         void emptyPayloadHandled() throws Exception {
             MockMultipartFile empty =
-                    new MockMultipartFile(
-                            "fileInput", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0]);
-            MergePdfsRequest req =
-                    request(new MockMultipartFile[] {empty}, "orderProvided", false, false);
+                    new MockMultipartFile("fileInput", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0]);
+            MergePdfsRequest req = request(new MockMultipartFile[] {empty}, "orderProvided", false, false);
             try {
                 ResponseEntity<Resource> response = mergeController.mergePdfs(req, null);
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

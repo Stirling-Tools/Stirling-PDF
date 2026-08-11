@@ -54,8 +54,7 @@ import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class InstanceEntitlementInterceptor implements HandlerInterceptor {
 
-    private static final String ATTR_CATEGORY =
-            InstanceEntitlementInterceptor.class.getName() + ".category";
+    private static final String ATTR_CATEGORY = InstanceEntitlementInterceptor.class.getName() + ".category";
 
     private final InstanceEntitlementGate gate;
     private final EntitlementCache entitlementCache;
@@ -74,23 +73,20 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(
-            HttpServletRequest request, HttpServletResponse response, Object handler)
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
         GateDecision decision;
         try {
             // API-key tool calls are billable (category API); stash the category for the meter.
             boolean apiKey =
-                    SecurityContextHolder.getContext().getAuthentication()
-                            instanceof ApiKeyAuthenticationToken;
+                    SecurityContextHolder.getContext().getAuthentication() instanceof ApiKeyAuthenticationToken;
             BillingCategory category = BillableOperationClassifier.categorize(request, apiKey);
             request.setAttribute(ATTR_CATEGORY, category);
             // A policy run kicks off billable automation, so block it up front when unentitled
             // rather than after its first tool. It carries no automation header itself (category
             // BYPASSED), so it's gated here but metered only via its dispatched sub-steps - keeping
             // the BYPASSED meter category avoids double-counting.
-            boolean billable =
-                    category != BillingCategory.BYPASSED || PolicyRunRoutes.matches(request);
+            boolean billable = category != BillingCategory.BYPASSED || PolicyRunRoutes.matches(request);
             decision = gate.evaluate(billable);
         } catch (RuntimeException e) {
             // Fail open: an inability to resolve entitlement (e.g. a DB or SaaS blip) must never
@@ -106,19 +102,15 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         response.setStatus(HttpStatus.PAYMENT_REQUIRED.value());
         response.setContentType("application/json");
         response.getWriter()
-                .write(
-                        "{\"error\":\"ACCOUNT_LINK_REQUIRED\",\"reason\":\""
-                                + decision.reason().name()
-                                + "\"}");
+                .write("{\"error\":\"ACCOUNT_LINK_REQUIRED\",\"reason\":\""
+                        + decision.reason().name()
+                        + "\"}");
         return false;
     }
 
     @Override
     public void afterCompletion(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            Exception ex) {
+            HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         // Meter successful billable ops only.
         if (ex != null || response.getStatus() >= 400) {
             return;
@@ -151,13 +143,9 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
      * null signature (no dedup), billed the 1-unit floor each time.
      */
     private void meterRequest(
-            HttpServletRequest request,
-            BillingCategory category,
-            InstanceEntitlement ent,
-            UsageMeterService meter) {
+            HttpServletRequest request, BillingCategory category, InstanceEntitlement ent, UsageMeterService meter) {
         UnitCalcPolicy policy = ent.unitCalcPolicy();
-        MultipartHttpServletRequest mreq =
-                WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
+        MultipartHttpServletRequest mreq = WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
         if (mreq == null) {
             long fileless = DocumentUnitCalculator.unitsForFile(0, 0, policy);
             meter.accrue(ent.periodStart(), category, fileless, null);
@@ -179,8 +167,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                         MessageDigest digest = ContentHasher.newSha256();
                         try (InputStream in = f.getInputStream();
                                 DigestOutputStream out =
-                                        new DigestOutputStream(
-                                                Files.newOutputStream(temp.getPath()), digest)) {
+                                        new DigestOutputStream(Files.newOutputStream(temp.getPath()), digest)) {
                             in.transferTo(out);
                         }
                         sizes.add(new FileSize(pageCount(temp.getPath(), f), f.getSize()));
@@ -189,21 +176,17 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                         // Couldn't materialise/hash this input — bill on bytes only and, by leaving
                         // it out of `hashes`, drop dedup for the whole op rather than risk a
                         // mismatch.
-                        log.debug(
-                                "Metering materialise/hash failed for {}; bytes-only",
-                                f.getOriginalFilename());
+                        log.debug("Metering materialise/hash failed for {}; bytes-only", f.getOriginalFilename());
                         sizes.add(new FileSize(0, f.getSize()));
                     }
                 }
             }
-            long units =
-                    sizes.isEmpty()
-                            ? DocumentUnitCalculator.unitsForFile(0, 0, policy)
-                            : DocumentUnitCalculator.unitsForGroup(sizes, policy);
+            long units = sizes.isEmpty()
+                    ? DocumentUnitCalculator.unitsForFile(0, 0, policy)
+                    : DocumentUnitCalculator.unitsForGroup(sizes, policy);
             // Only dedup when every input hashed; a partial signature could collide with a
             // different input set, so fall back to no-dedup (bill it) if any file failed.
-            String opSignature =
-                    fileCount > 0 && hashes.size() == fileCount ? opSignature(hashes) : null;
+            String opSignature = fileCount > 0 && hashes.size() == fileCount ? opSignature(hashes) : null;
             meter.accrue(ent.periodStart(), category, units, opSignature);
         } finally {
             for (TempFile temp : temps) {
@@ -225,9 +208,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             return doc.pageCount();
         } catch (RuntimeException e) {
             // Malformed / encrypted → byte axis only, matching the SaaS classifier.
-            log.debug(
-                    "Page count unavailable for {}; metering on bytes only",
-                    file.getOriginalFilename());
+            log.debug("Page count unavailable for {}; metering on bytes only", file.getOriginalFilename());
             return 0;
         }
     }

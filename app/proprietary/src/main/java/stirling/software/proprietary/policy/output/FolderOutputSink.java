@@ -67,8 +67,8 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     @Override
-    public List<ResultFile> deliver(
-            OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
+    public List<ResultFile> deliver(OutputDelivery delivery, List<Resource> outputs, OutputSpec spec)
+            throws IOException {
         Path targetDir = accessGuard.requirePermitted(directoryOf(spec));
         Files.createDirectories(targetDir);
         Path canonicalDir = FolderIdentities.canonicalDir(targetDir);
@@ -86,17 +86,15 @@ public class FolderOutputSink implements PolicyOutputSink {
             // Size and mtime survive the rename.
             String gate = FolderIdentities.statGate(staged);
             Path target = moveIntoPlace(delivery, canonicalDir, name, staged, gate, contentHash);
-            String contentType =
-                    MediaTypeFactory.getMediaType(name)
-                            .orElse(MediaType.APPLICATION_OCTET_STREAM)
-                            .toString();
-            results.add(
-                    ResultFile.builder()
-                            .fileId(UUID.randomUUID().toString())
-                            .fileName(target.toString())
-                            .contentType(contentType)
-                            .fileSize(size)
-                            .build());
+            String contentType = MediaTypeFactory.getMediaType(name)
+                    .orElse(MediaType.APPLICATION_OCTET_STREAM)
+                    .toString();
+            results.add(ResultFile.builder()
+                    .fileId(UUID.randomUUID().toString())
+                    .fileName(target.toString())
+                    .contentType(contentType)
+                    .fileSize(size)
+                    .build());
             log.debug("Wrote policy run {} output to {}", delivery.runId(), target);
         }
         return results;
@@ -116,8 +114,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         }
         MessageDigest digest = ContentHasher.newSha256();
         try (InputStream is = resource.getInputStream();
-                DigestOutputStream out =
-                        new DigestOutputStream(Files.newOutputStream(staged), digest)) {
+                DigestOutputStream out = new DigestOutputStream(Files.newOutputStream(staged), digest)) {
             is.transferTo(out);
         }
         return ContentHasher.toHex(digest.digest());
@@ -130,18 +127,12 @@ public class FolderOutputSink implements PolicyOutputSink {
      * claimable at any version - then re-picks.
      */
     private Path moveIntoPlace(
-            OutputDelivery delivery,
-            Path dir,
-            String name,
-            Path staged,
-            String gate,
-            String contentHash)
+            OutputDelivery delivery, Path dir, String name, Path staged, String gate, String contentHash)
             throws IOException {
         while (true) {
             Path target = uniqueTarget(dir, name);
             if (delivery.policyId() != null) {
-                processedLedger.recordOutput(
-                        delivery.policyId(), target.toString(), gate, contentHash);
+                processedLedger.recordOutput(delivery.policyId(), target.toString(), gate, contentHash);
             }
             try {
                 Files.move(staged, target, StandardCopyOption.ATOMIC_MOVE);
@@ -160,27 +151,20 @@ public class FolderOutputSink implements PolicyOutputSink {
         Instant cutoff = Instant.now().minus(STALE_TMP_AGE);
         try (Stream<Path> entries = Files.list(tmpDir)) {
             entries.filter(Files::isRegularFile)
-                    .filter(
-                            entry -> {
-                                try {
-                                    return Files.getLastModifiedTime(entry)
-                                            .toInstant()
-                                            .isBefore(cutoff);
-                                } catch (IOException e) {
-                                    return false;
-                                }
-                            })
-                    .forEach(
-                            entry -> {
-                                try {
-                                    Files.deleteIfExists(entry);
-                                } catch (IOException e) {
-                                    log.debug(
-                                            "Could not remove stale staging file {}: {}",
-                                            entry,
-                                            e.getMessage());
-                                }
-                            });
+                    .filter(entry -> {
+                        try {
+                            return Files.getLastModifiedTime(entry).toInstant().isBefore(cutoff);
+                        } catch (IOException e) {
+                            return false;
+                        }
+                    })
+                    .forEach(entry -> {
+                        try {
+                            Files.deleteIfExists(entry);
+                        } catch (IOException e) {
+                            log.debug("Could not remove stale staging file {}: {}", entry, e.getMessage());
+                        }
+                    });
         } catch (IOException e) {
             log.debug("Could not sweep staging dir {}: {}", tmpDir, e.getMessage());
         }
@@ -189,8 +173,7 @@ public class FolderOutputSink implements PolicyOutputSink {
     private static Path directoryOf(OutputSpec spec) {
         Object directory = spec.options().get(DIRECTORY_OPTION);
         if (directory == null || directory.toString().isBlank()) {
-            throw new IllegalArgumentException(
-                    "folder output requires a '" + DIRECTORY_OPTION + "' option");
+            throw new IllegalArgumentException("folder output requires a '" + DIRECTORY_OPTION + "' option");
         }
         return Path.of(directory.toString());
     }

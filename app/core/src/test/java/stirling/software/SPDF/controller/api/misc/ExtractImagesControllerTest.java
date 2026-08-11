@@ -33,10 +33,17 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class ExtractImagesControllerTest {
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private ExtractImagesController controller;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private ExtractImagesController controller;
 
     private File createTempFile(String suffix) throws IOException {
         return Files.createTempFile(tempDir, "test", suffix).toFile();
@@ -65,10 +72,7 @@ class ExtractImagesControllerTest {
             doc.save(path.toFile());
         }
         return new MockMultipartFile(
-                "fileInput",
-                "empty.pdf",
-                MediaType.APPLICATION_PDF_VALUE,
-                Files.readAllBytes(path));
+                "fileInput", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
     }
 
     @Test
@@ -80,8 +84,7 @@ class ExtractImagesControllerTest {
 
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> createTempFile(inv.getArgument(0)));
 
         var response = controller.extractImages(request);
 
@@ -97,8 +100,7 @@ class ExtractImagesControllerTest {
 
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> createTempFile(inv.getArgument(0)));
 
         var response = controller.extractImages(request);
 
@@ -114,8 +116,7 @@ class ExtractImagesControllerTest {
 
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> createTempFile(inv.getArgument(0)));
 
         var response = controller.extractImages(request);
 
@@ -130,8 +131,7 @@ class ExtractImagesControllerTest {
         request.setFormat("png");
 
         when(pdfDocumentFactory.load(file)).thenThrow(new IOException("load error"));
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> createTempFile(inv.getArgument(0)));
 
         assertThatThrownBy(() -> controller.extractImages(request)).isInstanceOf(IOException.class);
     }
@@ -145,8 +145,7 @@ class ExtractImagesControllerTest {
 
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(inv -> createTempFile(inv.getArgument(0)));
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> createTempFile(inv.getArgument(0)));
 
         var response = controller.extractImages(request);
 

@@ -112,10 +112,7 @@ class Type3SignatureToolMoreTest {
             ByteArrayOutputStream captured = new ByteArrayOutputStream();
             System.setOut(new PrintStream(captured));
             try {
-                Type3SignatureTool.main(
-                        new String[] {
-                            "--pdf", pdf.toString(), "--output", out.toString(), "--pretty"
-                        });
+                Type3SignatureTool.main(new String[] {"--pdf", pdf.toString(), "--output", out.toString(), "--pretty"});
             } finally {
                 System.setOut(original);
             }
@@ -156,8 +153,7 @@ class Type3SignatureToolMoreTest {
             PrintStream original = System.out;
             System.setOut(new PrintStream(new ByteArrayOutputStream()));
             try {
-                Type3SignatureTool.main(
-                        new String[] {"--pdf", pdf.toString(), "--output", out.toString()});
+                Type3SignatureTool.main(new String[] {"--pdf", pdf.toString(), "--output", out.toString()});
             } finally {
                 System.setOut(original);
             }
@@ -187,8 +183,7 @@ class Type3SignatureToolMoreTest {
             PrintStream original = System.out;
             System.setOut(new PrintStream(new ByteArrayOutputStream()));
             try {
-                Type3SignatureTool.main(
-                        new String[] {"--pdf", pdf.toString(), "--output", out.toString()});
+                Type3SignatureTool.main(new String[] {"--pdf", pdf.toString(), "--output", out.toString()});
             } finally {
                 System.setOut(original);
             }
@@ -236,8 +231,7 @@ class Type3SignatureToolMoreTest {
             PrintStream original = System.out;
             System.setOut(new PrintStream(new ByteArrayOutputStream()));
             try {
-                Type3SignatureTool.main(
-                        new String[] {"--pdf", pdf.toString(), "--output", out.toString()});
+                Type3SignatureTool.main(new String[] {"--pdf", pdf.toString(), "--output", out.toString()});
             } finally {
                 System.setOut(original);
             }

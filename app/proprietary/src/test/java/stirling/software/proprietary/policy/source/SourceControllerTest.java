@@ -52,7 +52,8 @@ class SourceControllerTest {
     private SourceController controller;
     private SourceController webhookController;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -62,59 +63,43 @@ class SourceControllerTest {
         PolicyManagementAuthority authority = mock(PolicyManagementAuthority.class);
         SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
-        SourceOverviewService overviewService =
-                new SourceOverviewService(
-                        sourceStore,
-                        policyStore,
-                        sourceGuard,
-                        policyGuard,
-                        new InProcessSourceDocCounter());
+        SourceOverviewService overviewService = new SourceOverviewService(
+                sourceStore, policyStore, sourceGuard, policyGuard, new InProcessSourceDocCounter());
         triggerManager = mock(PolicyTriggerManager.class);
         // A permissive input source so config validation passes and save can be exercised.
         InputSource folderInput = mock(InputSource.class);
         when(folderInput.supports(any())).thenReturn(true);
         when(folderInput.prepareOptionsForSave(any(), anyBoolean()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        controller =
-                new SourceController(
-                        sourceStore,
-                        sourceGuard,
-                        overviewService,
-                        policyStore,
-                        policyGuard,
-                        authority,
-                        triggerManager,
-                        properties,
-                        List.of(folderInput));
+        controller = new SourceController(
+                sourceStore,
+                sourceGuard,
+                overviewService,
+                policyStore,
+                policyGuard,
+                authority,
+                triggerManager,
+                properties,
+                List.of(folderInput));
         WebhookInputSource webhookInput =
                 new WebhookInputSource(new WebhookSpool(tempDir), mock(FileReadinessChecker.class));
-        webhookController =
-                new SourceController(
-                        sourceStore,
-                        sourceGuard,
-                        overviewService,
-                        policyStore,
-                        policyGuard,
-                        authority,
-                        triggerManager,
-                        properties,
-                        List.of(webhookInput));
+        webhookController = new SourceController(
+                sourceStore,
+                sourceGuard,
+                overviewService,
+                policyStore,
+                policyGuard,
+                authority,
+                triggerManager,
+                properties,
+                List.of(webhookInput));
     }
 
     @Test
     void creatingAWebhookRevealsItsSecretOnceThenMasks() {
-        Source created =
-                webhookController
-                        .save(
-                                new Source(
-                                        null,
-                                        "Partner uploads",
-                                        "webhook",
-                                        Map.of("mode", "consume"),
-                                        true,
-                                        null,
-                                        null))
-                        .getBody();
+        Source created = webhookController
+                .save(new Source(null, "Partner uploads", "webhook", Map.of("mode", "consume"), true, null, null))
+                .getBody();
 
         String secret = String.valueOf(created.options().get("signingSecret"));
         String webhookId = String.valueOf(created.options().get("webhookId"));
@@ -132,8 +117,7 @@ class SourceControllerTest {
         Source source = sourceStore.save(folderSource());
         policyStore.save(policyReferencing("Redact incoming", source.id()));
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> controller.delete(source.id()));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> controller.delete(source.id()));
 
         assertEquals(409, ex.getStatusCode().value());
         assertTrue(sourceStore.get(source.id()).isPresent());
@@ -174,8 +158,7 @@ class SourceControllerTest {
     @Test
     void theEditorIsBuiltInAndCannotBeDeleted() {
         ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class, () -> controller.delete(EditorSource.ID));
+                assertThrows(ResponseStatusException.class, () -> controller.delete(EditorSource.ID));
 
         assertEquals(400, ex.getStatusCode().value());
     }
@@ -184,8 +167,7 @@ class SourceControllerTest {
     void theEditorIsBuiltInAndCannotBeSaved() {
         Source editor = new Source(null, "Editor", "editor", Map.of(), true, null, null);
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> controller.save(editor));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> controller.save(editor));
 
         assertEquals(400, ex.getStatusCode().value());
     }
@@ -199,30 +181,27 @@ class SourceControllerTest {
         assertEquals(SecretMasker.REDACTED, read.options().get("secretAccessKey"));
         assertEquals("AKIAEXAMPLE", read.options().get("accessKeyId"));
         // The store itself keeps the real value.
-        assertEquals(
-                "shh", sourceStore.get(saved.id()).orElseThrow().options().get("secretAccessKey"));
+        assertEquals("shh", sourceStore.get(saved.id()).orElseThrow().options().get("secretAccessKey"));
     }
 
     @Test
     void savingTheSentinelBackKeepsTheStoredSecret() {
         Source saved = sourceStore.save(s3Source("shh"));
 
-        Source edited =
-                new Source(
-                        saved.id(),
-                        "Renamed",
-                        saved.type(),
-                        Map.of(
-                                "bucket", "inbox",
-                                "accessKeyId", "AKIAEXAMPLE",
-                                "secretAccessKey", SecretMasker.REDACTED),
-                        true,
-                        saved.owner(),
-                        saved.teamId());
+        Source edited = new Source(
+                saved.id(),
+                "Renamed",
+                saved.type(),
+                Map.of(
+                        "bucket", "inbox",
+                        "accessKeyId", "AKIAEXAMPLE",
+                        "secretAccessKey", SecretMasker.REDACTED),
+                true,
+                saved.owner(),
+                saved.teamId());
         Source response = controller.save(edited).getBody();
 
-        assertEquals(
-                "shh", sourceStore.get(saved.id()).orElseThrow().options().get("secretAccessKey"));
+        assertEquals("shh", sourceStore.get(saved.id()).orElseThrow().options().get("secretAccessKey"));
         // The save response is masked too; only the store sees the real value.
         assertEquals(SecretMasker.REDACTED, response.options().get("secretAccessKey"));
     }
@@ -231,18 +210,17 @@ class SourceControllerTest {
     void savingANewSecretReplacesTheStoredOne() {
         Source saved = sourceStore.save(s3Source("old-secret"));
 
-        Source edited =
-                new Source(
-                        saved.id(),
-                        saved.name(),
-                        saved.type(),
-                        Map.of(
-                                "bucket", "inbox",
-                                "accessKeyId", "AKIAEXAMPLE",
-                                "secretAccessKey", "new-secret"),
-                        true,
-                        saved.owner(),
-                        saved.teamId());
+        Source edited = new Source(
+                saved.id(),
+                saved.name(),
+                saved.type(),
+                Map.of(
+                        "bucket", "inbox",
+                        "accessKeyId", "AKIAEXAMPLE",
+                        "secretAccessKey", "new-secret"),
+                true,
+                saved.owner(),
+                saved.teamId());
         controller.save(edited);
 
         assertEquals(
@@ -265,8 +243,7 @@ class SourceControllerTest {
     }
 
     private static Source folderSource() {
-        return new Source(
-                null, "Claims intake", "folder", Map.of("directory", "/in"), true, "owner", null);
+        return new Source(null, "Claims intake", "folder", Map.of("directory", "/in"), true, "owner", null);
     }
 
     private static Policy policyReferencing(String name, String sourceId) {

@@ -76,8 +76,7 @@ public class FolderInputSource implements InputSource {
             // Fail rather than return empty: an unmounted drive must read as "could not list",
             // which vetoes the sweep's presence cleanup, not as "verifiably no files", which
             // would wipe the policy's history and reprocess everything on remount.
-            throw new NoSuchFileException(
-                    inputDir.toString(), null, "input directory does not exist");
+            throw new NoSuchFileException(inputDir.toString(), null, "input directory does not exist");
         }
         Path canonicalDir = FolderIdentities.canonicalDir(inputDir);
         List<Path> present = listFiles(inputDir, config.recursive());
@@ -92,10 +91,9 @@ public class FolderInputSource implements InputSource {
             return work;
         }
 
-        ctx.reportPresent(
-                present.stream()
-                        .map(file -> FolderIdentities.identity(canonicalDir, inputDir, file))
-                        .toList());
+        ctx.reportPresent(present.stream()
+                .map(file -> FolderIdentities.identity(canonicalDir, inputDir, file))
+                .toList());
 
         List<ResolvedInput> work = new ArrayList<>();
         for (Path file : present) {
@@ -103,8 +101,7 @@ public class FolderInputSource implements InputSource {
                 continue;
             }
             String identity = FolderIdentities.identity(canonicalDir, inputDir, file);
-            MemoizedContentHash contentHash =
-                    config.hashIdentity() ? new MemoizedContentHash(file) : null;
+            MemoizedContentHash contentHash = config.hashIdentity() ? new MemoizedContentHash(file) : null;
             String gate;
             boolean claimed;
             try {
@@ -117,12 +114,9 @@ public class FolderInputSource implements InputSource {
             if (!claimed) {
                 continue;
             }
-            work.add(
-                    new ResolvedInput(
-                            PolicyInputs.of(List.of(fileResource(file))),
-                            success ->
-                                    completeConsumed(
-                                            ctx, identity, file, gate, contentHash, success)));
+            work.add(new ResolvedInput(
+                    PolicyInputs.of(List.of(fileResource(file))),
+                    success -> completeConsumed(ctx, identity, file, gate, contentHash, success)));
         }
         return work;
     }
@@ -219,32 +213,29 @@ public class FolderInputSource implements InputSource {
             return files;
         }
         // Hidden subtrees are pruned wholesale; symlinked directories are not followed.
-        Files.walkFileTree(
-                inputDir,
-                new SimpleFileVisitor<>() {
-                    @Override
-                    public FileVisitResult preVisitDirectory(
-                            Path dir, BasicFileAttributes attributes) {
-                        if (!dir.equals(inputDir) && hidden(dir)) {
-                            return FileVisitResult.SKIP_SUBTREE;
-                        }
-                        return FileVisitResult.CONTINUE;
-                    }
+        Files.walkFileTree(inputDir, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) {
+                if (!dir.equals(inputDir) && hidden(dir)) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
 
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
-                        if (attributes.isRegularFile() && !hidden(file)) {
-                            files.add(file);
-                        }
-                        return FileVisitResult.CONTINUE;
-                    }
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                if (attributes.isRegularFile() && !hidden(file)) {
+                    files.add(file);
+                }
+                return FileVisitResult.CONTINUE;
+            }
 
-                    @Override
-                    public FileVisitResult visitFileFailed(Path file, IOException e) {
-                        log.debug("Skipping unreadable entry {}: {}", file, e.getMessage());
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException e) {
+                log.debug("Skipping unreadable entry {}: {}", file, e.getMessage());
+                return FileVisitResult.CONTINUE;
+            }
+        });
         return files;
     }
 
@@ -294,8 +285,7 @@ public class FolderInputSource implements InputSource {
             if (identity != null
                     && !IDENTITY_STAT.equals(identity.toString())
                     && !IDENTITY_HASH.equals(identity.toString())) {
-                throw new IllegalArgumentException(
-                        "folder input 'identity' must be 'stat' or 'hash'");
+                throw new IllegalArgumentException("folder input 'identity' must be 'stat' or 'hash'");
             }
             return new FolderConfig(Path.of(directory.toString()), snapshot, recurse, hash);
         }

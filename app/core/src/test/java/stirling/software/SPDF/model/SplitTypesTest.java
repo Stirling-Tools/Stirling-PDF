@@ -50,8 +50,7 @@ class SplitTypesTest {
         @Test
         @DisplayName("throws for unknown name")
         void unknownThrows() {
-            assertThatThrownBy(() -> SplitTypes.valueOf("NOT_A_TYPE"))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> SplitTypes.valueOf("NOT_A_TYPE")).isInstanceOf(IllegalArgumentException.class);
         }
     }
 

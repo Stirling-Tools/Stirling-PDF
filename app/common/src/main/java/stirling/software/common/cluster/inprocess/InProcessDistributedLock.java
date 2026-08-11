@@ -49,18 +49,16 @@ public class InProcessDistributedLock implements DistributedLock {
         long nowNanos = System.nanoTime();
         long expiryNanos = nowNanos + leaseTime.toNanos();
         boolean[] acquired = {false};
-        locks.compute(
-                lockKey,
-                (k, existing) -> {
-                    if (existing == null || existing.expiryNanos - nowNanos <= 0L) {
-                        // No lock, or the previous lease has expired - we take it. Subtraction
-                        // form avoids the long-overflow trap that would bite a naive
-                        // expiryNanos <= nowNanos comparison around System.nanoTime() rollover.
-                        acquired[0] = true;
-                        return new LockState(token, expiryNanos);
-                    }
-                    return existing;
-                });
+        locks.compute(lockKey, (k, existing) -> {
+            if (existing == null || existing.expiryNanos - nowNanos <= 0L) {
+                // No lock, or the previous lease has expired - we take it. Subtraction
+                // form avoids the long-overflow trap that would bite a naive
+                // expiryNanos <= nowNanos comparison around System.nanoTime() rollover.
+                acquired[0] = true;
+                return new LockState(token, expiryNanos);
+            }
+            return existing;
+        });
         if (!acquired[0]) {
             return Optional.empty();
         }
@@ -68,33 +66,27 @@ public class InProcessDistributedLock implements DistributedLock {
     }
 
     private void releaseInternal(String lockKey, long token) {
-        locks.compute(
-                lockKey,
-                (k, existing) -> {
-                    if (existing == null || existing.ownerToken != token) {
-                        // Already removed, expired-and-replaced, or never ours.
-                        return existing;
-                    }
-                    return null;
-                });
+        locks.compute(lockKey, (k, existing) -> {
+            if (existing == null || existing.ownerToken != token) {
+                // Already removed, expired-and-replaced, or never ours.
+                return existing;
+            }
+            return null;
+        });
     }
 
     private boolean renewInternal(String lockKey, long token, Duration leaseTime) {
         long nowNanos = System.nanoTime();
         boolean[] renewed = {false};
-        locks.compute(
-                lockKey,
-                (k, existing) -> {
-                    if (existing == null
-                            || existing.ownerToken != token
-                            || existing.expiryNanos - nowNanos <= 0L) {
-                        // Lock is gone or expired; renewal is a no-op so the caller can detect it.
-                        return existing;
-                    }
-                    existing.expiryNanos = nowNanos + leaseTime.toNanos();
-                    renewed[0] = true;
-                    return existing;
-                });
+        locks.compute(lockKey, (k, existing) -> {
+            if (existing == null || existing.ownerToken != token || existing.expiryNanos - nowNanos <= 0L) {
+                // Lock is gone or expired; renewal is a no-op so the caller can detect it.
+                return existing;
+            }
+            existing.expiryNanos = nowNanos + leaseTime.toNanos();
+            renewed[0] = true;
+            return existing;
+        });
         return renewed[0];
     }
 

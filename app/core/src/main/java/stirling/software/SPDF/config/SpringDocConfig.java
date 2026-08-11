@@ -40,14 +40,13 @@ public class SpringDocConfig {
                         "/api/v1/security/cert-sign/sign-requests/**",
                         "/api/v1/security/cert-sign/validate-certificate")
                 .addOpenApiCustomizer(pdfFileOneOfCustomizer)
-                .addOpenApiCustomizer(
-                        openApi -> {
-                            openApi.info(
-                                    openApi.getInfo()
-                                            .title("Stirling PDF - Processing API")
-                                            .description(
-                                                    "APIs for converting, editing, securing, and analysing PDF documents. Use these endpoints to automate common PDF tasks (like split, merge, convert, OCR) and plug them into your own apps and backend jobs."));
-                        })
+                .addOpenApiCustomizer(openApi -> {
+                    openApi.info(
+                            openApi.getInfo()
+                                    .title("Stirling PDF - Processing API")
+                                    .description(
+                                            "APIs for converting, editing, securing, and analysing PDF documents. Use these endpoints to automate common PDF tasks (like split, merge, convert, OCR) and plug them into your own apps and backend jobs."));
+                })
                 .build();
     }
 
@@ -73,14 +72,13 @@ public class SpringDocConfig {
                         "/api/v1/security/cert-sign/sign-requests",
                         "/api/v1/security/cert-sign/sign-requests/**",
                         "/api/v1/security/cert-sign/validate-certificate")
-                .addOpenApiCustomizer(
-                        openApi -> {
-                            openApi.info(
-                                    openApi.getInfo()
-                                            .title("Stirling PDF - Management API")
-                                            .description(
-                                                    "Endpoints for authentication, user management, invitations, audit logging, and system configuration."));
-                        })
+                .addOpenApiCustomizer(openApi -> {
+                    openApi.info(
+                            openApi.getInfo()
+                                    .title("Stirling PDF - Management API")
+                                    .description(
+                                            "Endpoints for authentication, user management, invitations, audit logging, and system configuration."));
+                })
                 .build();
     }
 
@@ -96,14 +94,12 @@ public class SpringDocConfig {
                         "/api/v1/general/job/**",
                         "/api/v1/general/files/**",
                         "/api/v1/general/signatures/**")
-                .addOpenApiCustomizer(
-                        openApi -> {
-                            openApi.info(
-                                    openApi.getInfo()
-                                            .title("Stirling PDF - System API")
-                                            .description(
-                                                    "System information, UI metadata, job status, and file management endpoints."));
-                        })
+                .addOpenApiCustomizer(openApi -> {
+                    openApi.info(openApi.getInfo()
+                            .title("Stirling PDF - System API")
+                            .description(
+                                    "System information, UI metadata, job status, and file management endpoints."));
+                })
                 .build();
     }
 }

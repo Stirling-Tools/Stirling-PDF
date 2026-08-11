@@ -32,16 +32,12 @@ public class FormFieldWithCoordinates {
     @Schema(description = "Current field value")
     private String value;
 
-    @Schema(
-            description =
-                    "Available options (export values) for choice fields"
-                            + " (dropdown, radio, listbox)")
+    @Schema(description = "Available options (export values) for choice fields" + " (dropdown, radio, listbox)")
     private List<String> options;
 
     @Schema(
-            description =
-                    "Human-readable display labels for choice field options,"
-                            + " parallel to the 'options' list. Null when identical to options.")
+            description = "Human-readable display labels for choice field options,"
+                    + " parallel to the 'options' list. Null when identical to options.")
     private List<String> displayOptions;
 
     @Schema(description = "Whether the field is required")

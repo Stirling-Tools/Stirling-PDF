@@ -14,5 +14,4 @@ import java.util.List;
  *     pageCount}.
  * @param round Which negotiation round this manifest belongs to (1–3).
  */
-public record FolioManifest(
-        String sessionId, int pageCount, List<FolioType> folioTypes, int round) {}
+public record FolioManifest(String sessionId, int pageCount, List<FolioType> folioTypes, int round) {}

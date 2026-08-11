@@ -43,9 +43,7 @@ public class ShowJavascript {
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @JavaScriptResponse
     @ToolIO(produces = ToolFormat.JAVASCRIPT)
-    @Operation(
-            summary = "Grabs all JS from a PDF and returns a single JS file with all code",
-            description = "desc.")
+    @Operation(summary = "Grabs all JS from a PDF and returns a single JS file with all code", description = "desc.")
     public ResponseEntity<Resource> extractHeader(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
         StringBuilder script = new StringBuilder();
@@ -68,9 +66,7 @@ public class ShowJavascript {
 
                         if (jsCodeStr != null && !jsCodeStr.trim().isEmpty()) {
                             script.append("// File: ")
-                                    .append(
-                                            Filenames.toSimpleFileName(
-                                                    inputFile.getOriginalFilename()))
+                                    .append(Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
                                     .append(", Script: ")
                                     .append(name)
                                     .append("\n")
@@ -83,25 +79,20 @@ public class ShowJavascript {
             }
 
             if (!foundScript) {
-                script =
-                        new StringBuilder("PDF '")
-                                .append(Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
-                                .append("' does not contain Javascript");
+                script = new StringBuilder("PDF '")
+                        .append(Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
+                        .append("' does not contain Javascript");
             }
 
             TempFile tempOut = tempFileManager.createManagedTempFile(".js");
             try {
-                Files.write(
-                        tempOut.getFile().toPath(),
-                        script.toString().getBytes(StandardCharsets.UTF_8));
+                Files.write(tempOut.getFile().toPath(), script.toString().getBytes(StandardCharsets.UTF_8));
             } catch (Exception e) {
                 tempOut.close();
                 throw e;
             }
             return WebResponseUtils.fileToWebResponse(
-                    tempOut,
-                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js",
-                    MediaType.TEXT_PLAIN);
+                    tempOut, Filenames.toSimpleFileName(inputFile.getOriginalFilename()) + ".js", MediaType.TEXT_PLAIN);
         }
     }
 }

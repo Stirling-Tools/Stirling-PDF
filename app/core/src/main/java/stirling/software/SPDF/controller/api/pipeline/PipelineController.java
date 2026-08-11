@@ -57,9 +57,8 @@ public class PipelineController {
     @MultiFileResponse
     @Operation(
             summary = "Execute automated PDF processing pipeline",
-            description =
-                    "This endpoint processes multiple PDF files through a configurable pipeline of operations. "
-                            + "Users provide files and a JSON configuration defining the sequence of operations to perform.")
+            description = "This endpoint processes multiple PDF files through a configurable pipeline of operations. "
+                    + "Users provide files and a JSON configuration defining the sequence of operations to perform.")
     public ResponseEntity<Resource> handleData(@ModelAttribute HandleDataRequest request)
             throws DatabindException, JacksonException {
         MultipartFile[] files = request.getFileInput();
@@ -70,8 +69,9 @@ public class PipelineController {
         PipelineConfig config = objectMapper.readValue(jsonString, PipelineConfig.class);
         log.info("Received POST request to /handleData with {} files", files.length);
 
-        List<String> operationNames =
-                config.getOperations().stream().map(PipelineOperation::getOperation).toList();
+        List<String> operationNames = config.getOperations().stream()
+                .map(PipelineOperation::getOperation)
+                .toList();
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("operations", operationNames);
@@ -96,9 +96,7 @@ public class PipelineController {
                     }
                     log.info("Returning single file response...");
                     return WebResponseUtils.fileToWebResponse(
-                            singleTempFile,
-                            singleFile.getFilename(),
-                            MediaType.APPLICATION_OCTET_STREAM);
+                            singleTempFile, singleFile.getFilename(), MediaType.APPLICATION_OCTET_STREAM);
                 } catch (Exception e) {
                     singleTempFile.close();
                     throw e;
@@ -110,16 +108,13 @@ public class PipelineController {
             TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
             try {
                 Map<String, Integer> filenameCount = new HashMap<>();
-                try (ZipOutputStream zipOut =
-                        new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+                try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
                     for (Resource file : outputFiles) {
                         String originalFilename = file.getFilename();
                         String filename = originalFilename;
                         if (filenameCount.containsKey(originalFilename)) {
                             int count = filenameCount.get(originalFilename);
-                            filename =
-                                    GeneralUtils.generateFilename(
-                                            originalFilename, "(" + count + ")");
+                            filename = GeneralUtils.generateFilename(originalFilename, "(" + count + ")");
                             filenameCount.put(originalFilename, count + 1);
                         } else {
                             filenameCount.put(originalFilename, 1);

@@ -86,10 +86,7 @@ public class RefreshRateLimitService {
     public void cleanupExpiredEntries() {
         // Use configured grace period with same normalization as runtime checks
         int configuredMinutes = jwtProperties.getRefreshGraceMinutes();
-        int graceMinutes =
-                configuredMinutes >= 0
-                        ? configuredMinutes
-                        : JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES;
+        int graceMinutes = configuredMinutes >= 0 ? configuredMinutes : JwtConstants.DEFAULT_REFRESH_GRACE_MINUTES;
         Instant cutoff = Instant.now().minusMillis(graceMinutes * 60000L);
         int beforeSize = attempts.size();
         attempts.entrySet().removeIf(entry -> entry.getValue().firstAttempt().isBefore(cutoff));
@@ -103,9 +100,6 @@ public class RefreshRateLimitService {
     /** Get current tracking statistics for monitoring. */
     public Map<String, Object> getStats() {
         return Map.of(
-                "tracked_tokens",
-                attempts.size(),
-                "max_attempts_allowed",
-                JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE);
+                "tracked_tokens", attempts.size(), "max_attempts_allowed", JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE);
     }
 }

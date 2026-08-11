@@ -51,8 +51,7 @@ public class PageNumbersController {
     @Operation(
             summary = "Add page numbers to a PDF document",
             description = "This operation takes an input PDF file and adds page numbers to it.")
-    public ResponseEntity<Resource> addPageNumbers(@ModelAttribute AddPageNumbersRequest request)
-            throws IOException {
+    public ResponseEntity<Resource> addPageNumbers(@ModelAttribute AddPageNumbersRequest request) throws IOException {
 
         MultipartFile file = request.getFileInput();
         String customMargin = request.getCustomMargin();
@@ -99,8 +98,7 @@ public class PageNumbersController {
             }
 
             List<Integer> pagesToNumberList =
-                    GeneralUtils.parsePageList(
-                            pagesToNumber.split(","), document.getNumberOfPages());
+                    GeneralUtils.parsePageList(pagesToNumber.split(","), document.getNumberOfPages());
 
             // Clamp position to 1..9 (1 = top-left, 9 = bottom-right)
             int pos = Math.max(1, Math.min(9, position));
@@ -110,15 +108,12 @@ public class PageNumbersController {
                 PDRectangle pageSize = page.getMediaBox();
 
                 String nFormatted = String.format(formatN, pageNumber);
-                String text =
-                        customText
-                                .replace("{n}", nFormatted)
-                                .replace("{total}", String.valueOf(document.getNumberOfPages()))
-                                .replace(
-                                        "{filename}",
-                                        GeneralUtils.removeExtension(
-                                                Filenames.toSimpleFileName(
-                                                        file.getOriginalFilename())));
+                String text = customText
+                        .replace("{n}", nFormatted)
+                        .replace("{total}", String.valueOf(document.getNumberOfPages()))
+                        .replace(
+                                "{filename}",
+                                GeneralUtils.removeExtension(Filenames.toSimpleFileName(file.getOriginalFilename())));
 
                 PDType1Font currentFont =
                         switch (fontType == null ? "" : fontType.toLowerCase(Locale.ROOT)) {
@@ -166,12 +161,7 @@ public class PageNumbersController {
                         };
 
                 try (PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                document,
-                                page,
-                                PDPageContentStream.AppendMode.APPEND,
-                                true,
-                                true)) {
+                        new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                     contentStream.beginText();
                     contentStream.setFont(currentFont, fontSize);
                     contentStream.setNonStrokingColor(color);
@@ -192,9 +182,7 @@ public class PageNumbersController {
             }
 
             return WebResponseUtils.pdfFileToWebResponse(
-                    tempOut,
-                    GeneralUtils.generateFilename(
-                            file.getOriginalFilename(), "_page_numbers_added.pdf"));
+                    tempOut, GeneralUtils.generateFilename(file.getOriginalFilename(), "_page_numbers_added.pdf"));
         }
     }
 }

@@ -36,8 +36,7 @@ class ExtractImageScansRequestTest {
         @DisplayName("all fields round-trip")
         void allFieldsRoundTrip() {
             ExtractImageScansRequest req = new ExtractImageScansRequest();
-            MultipartFile file =
-                    new MockMultipartFile("fileInput", "scan.png", "image/png", new byte[] {1});
+            MultipartFile file = new MockMultipartFile("fileInput", "scan.png", "image/png", new byte[] {1});
             req.setFileInput(file);
             req.setAngleThreshold(5);
             req.setTolerance(20);

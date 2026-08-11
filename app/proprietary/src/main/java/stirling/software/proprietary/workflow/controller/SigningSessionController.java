@@ -47,9 +47,7 @@ import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/security")
-@Tag(
-        name = "Signing Sessions",
-        description = "Signing session lifecycle and participant management")
+@Tag(name = "Signing Sessions", description = "Signing session lifecycle and participant management")
 @RequiredArgsConstructor
 public class SigningSessionController {
 
@@ -71,17 +69,13 @@ public class SigningSessionController {
             User user = getCurrentUser(principal);
             List<stirling.software.proprietary.workflow.model.WorkflowSession> sessions =
                     workflowSessionService.listUserSessions(user);
-            List<stirling.software.proprietary.workflow.dto.WorkflowSessionResponse> responses =
-                    sessions.stream()
-                            .map(
-                                    stirling.software.proprietary.workflow.util.WorkflowMapper
-                                            ::toResponse)
-                            .toList();
+            List<stirling.software.proprietary.workflow.dto.WorkflowSessionResponse> responses = sessions.stream()
+                    .map(stirling.software.proprietary.workflow.util.WorkflowMapper::toResponse)
+                    .toList();
             return ResponseEntity.ok(responses);
         } catch (Exception e) {
             log.error("Error listing sessions for user {}", principal.getName(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error listing sessions");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error listing sessions");
         }
     }
 
@@ -91,9 +85,8 @@ public class SigningSessionController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create a shared signing session",
-            description =
-                    "Starts a collaboration session, distributes share links, and optionally notifies"
-                            + " participants.")
+            description = "Starts a collaboration session, distributes share links, and optionally notifies"
+                    + " participants.")
     public ResponseEntity<?> createSession(
             @org.springframework.web.bind.annotation.RequestParam("file")
                     org.springframework.web.multipart.MultipartFile file,
@@ -108,8 +101,7 @@ public class SigningSessionController {
         try {
             User owner = getCurrentUser(principal);
             WorkflowSession session = workflowSessionService.createSession(owner, file, request);
-            return ResponseEntity.ok(
-                    stirling.software.proprietary.workflow.util.WorkflowMapper.toResponse(session));
+            return ResponseEntity.ok(stirling.software.proprietary.workflow.util.WorkflowMapper.toResponse(session));
         } catch (Exception e) {
             log.error("Error creating signing session", e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -119,8 +111,7 @@ public class SigningSessionController {
     @Operation(summary = "Fetch signing session details")
     @Transactional(readOnly = true)
     @GetMapping(value = "/cert-sign/sessions/{sessionId}")
-    public ResponseEntity<?> getSession(
-            @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+    public ResponseEntity<?> getSession(@PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
         workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
@@ -130,19 +121,16 @@ public class SigningSessionController {
             WorkflowSession session = workflowSessionService.getSessionForOwner(sessionId, owner);
             // Include wet signatures in response for owner preview
             return ResponseEntity.ok(
-                    stirling.software.proprietary.workflow.util.WorkflowMapper.toResponse(
-                            session, objectMapper));
+                    stirling.software.proprietary.workflow.util.WorkflowMapper.toResponse(session, objectMapper));
         } catch (Exception e) {
             log.error("Error fetching session {}", sessionId, e);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Access denied or session not found");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied or session not found");
         }
     }
 
     @Operation(summary = "Delete a signing session")
     @DeleteMapping(value = "/cert-sign/sessions/{sessionId}")
-    public ResponseEntity<?> deleteSession(
-            @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+    public ResponseEntity<?> deleteSession(@PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
         workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
@@ -153,8 +141,7 @@ public class SigningSessionController {
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             log.error("Error deleting session {}", sessionId, e);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Cannot delete session: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot delete session: " + e.getMessage());
         }
     }
 
@@ -171,14 +158,11 @@ public class SigningSessionController {
         try {
             User owner = getCurrentUser(principal);
             workflowSessionService.addParticipants(sessionId, participants, owner);
-            WorkflowSession session =
-                    workflowSessionService.getSessionWithParticipantsForOwner(sessionId, owner);
-            return ResponseEntity.ok(
-                    stirling.software.proprietary.workflow.util.WorkflowMapper.toResponse(session));
+            WorkflowSession session = workflowSessionService.getSessionWithParticipantsForOwner(sessionId, owner);
+            return ResponseEntity.ok(stirling.software.proprietary.workflow.util.WorkflowMapper.toResponse(session));
         } catch (Exception e) {
             log.error("Error adding participants to session {}", sessionId, e);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Cannot add participants: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot add participants: " + e.getMessage());
         }
     }
 
@@ -198,8 +182,7 @@ public class SigningSessionController {
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             log.error("Error removing participant {} from session {}", participantId, sessionId, e);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Cannot remove participant: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot remove participant: " + e.getMessage());
         }
     }
 
@@ -226,12 +209,10 @@ public class SigningSessionController {
     @Operation(
             summary = "Finalize signing session",
             description =
-                    "Applies collected wet signatures and digital certificates, then returns the"
-                            + " signed document.")
+                    "Applies collected wet signatures and digital certificates, then returns the" + " signed document.")
     @StandardPdfResponse
     public ResponseEntity<byte[]> finalizeSession(
-            @PathVariable("sessionId") @NotBlank String sessionId, Principal principal)
-            throws Exception {
+            @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) throws Exception {
         workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -239,8 +220,7 @@ public class SigningSessionController {
 
         try {
             User owner = getCurrentUser(principal);
-            WorkflowSession session =
-                    workflowSessionService.getSessionWithParticipantsForOwner(sessionId, owner);
+            WorkflowSession session = workflowSessionService.getSessionWithParticipantsForOwner(sessionId, owner);
 
             byte[] originalPdf = workflowSessionService.getOriginalFile(sessionId);
             byte[] pdf = signingFinalizationService.finalizeDocument(session, originalPdf);
@@ -259,7 +239,9 @@ public class SigningSessionController {
                                 + "database until manual cleanup.",
                         sessionId,
                         session.getParticipants() != null
-                                ? session.getParticipants().stream().map(p -> p.getEmail()).toList()
+                                ? session.getParticipants().stream()
+                                        .map(p -> p.getEmail())
+                                        .toList()
                                 : "unknown",
                         e);
                 throw new ResponseStatusException(
@@ -288,13 +270,11 @@ public class SigningSessionController {
             User owner = getCurrentUser(principal);
             byte[] signedPdf = workflowSessionService.getProcessedFile(sessionId, owner);
             if (signedPdf == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Session not finalized".getBytes());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Session not finalized".getBytes());
             }
             WorkflowSession session = workflowSessionService.getSessionForOwner(sessionId, owner);
             return WebResponseUtils.bytesToWebResponse(
-                    signedPdf,
-                    GeneralUtils.generateFilename(session.getDocumentName(), "_shared_signed.pdf"));
+                    signedPdf, GeneralUtils.generateFilename(session.getDocumentName(), "_shared_signed.pdf"));
         } catch (Exception e) {
             log.error("Error fetching signed PDF for session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -361,10 +341,7 @@ public class SigningSessionController {
     @Operation(summary = "Sign a document with certificate and optional wet signature")
     @PostMapping(
             value = "/cert-sign/sign-requests/{sessionId}/sign",
-            consumes = {
-                MediaType.MULTIPART_FORM_DATA_VALUE,
-                MediaType.APPLICATION_FORM_URLENCODED_VALUE
-            })
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public ResponseEntity<?> signDocument(
             @PathVariable("sessionId") @NotBlank String sessionId,
             @ModelAttribute stirling.software.proprietary.workflow.dto.SignDocumentRequest request,
@@ -401,17 +378,15 @@ public class SigningSessionController {
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             log.error("Error declining sign request for session {}", sessionId, e);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Cannot decline sign request: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot decline sign request: " + e.getMessage());
         }
     }
 
     @Operation(
             summary = "Pre-validate a certificate before signing",
-            description =
-                    "Validates that the provided certificate is loadable, not expired, and can "
-                            + "successfully sign a document. Returns validation details so the "
-                            + "user can confirm the correct certificate before committing.")
+            description = "Validates that the provided certificate is loadable, not expired, and can "
+                    + "successfully sign a document. Returns validation details so the "
+                    + "user can confirm the correct certificate before committing.")
     @PostMapping(
             value = "/cert-sign/validate-certificate",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -432,8 +407,7 @@ public class SigningSessionController {
                 && !"USER_CERT".equalsIgnoreCase(certType)
                 && (p12File == null || p12File.isEmpty())
                 && (jksFile == null || jksFile.isEmpty())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "No certificate file provided");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No certificate file provided");
         }
 
         try {
@@ -445,42 +419,28 @@ public class SigningSessionController {
             }
 
             CertificateInfo info =
-                    certificateSubmissionValidator.validateAndExtractInfo(
-                            keystoreBytes, certType, password);
+                    certificateSubmissionValidator.validateAndExtractInfo(keystoreBytes, certType, password);
 
             if (info == null) {
-                return ResponseEntity.ok(
-                        new CertificateValidationResponse(
-                                true, null, null, null, null, false, null));
+                return ResponseEntity.ok(new CertificateValidationResponse(true, null, null, null, null, false, null));
             }
 
-            return ResponseEntity.ok(
-                    new CertificateValidationResponse(
-                            true,
-                            info.subjectName(),
-                            info.issuerName(),
-                            info.notAfter() != null ? info.notAfter().toInstant().toString() : null,
-                            info.notBefore() != null
-                                    ? info.notBefore().toInstant().toString()
-                                    : null,
-                            info.selfSigned(),
-                            null));
+            return ResponseEntity.ok(new CertificateValidationResponse(
+                    true,
+                    info.subjectName(),
+                    info.issuerName(),
+                    info.notAfter() != null ? info.notAfter().toInstant().toString() : null,
+                    info.notBefore() != null ? info.notBefore().toInstant().toString() : null,
+                    info.selfSigned(),
+                    null));
 
         } catch (ResponseStatusException e) {
             return ResponseEntity.ok(
-                    new CertificateValidationResponse(
-                            false, null, null, null, null, false, e.getReason()));
+                    new CertificateValidationResponse(false, null, null, null, null, false, e.getReason()));
         } catch (IOException e) {
             log.error("Error reading certificate file during pre-validation", e);
-            return ResponseEntity.ok(
-                    new CertificateValidationResponse(
-                            false,
-                            null,
-                            null,
-                            null,
-                            null,
-                            false,
-                            "Failed to read certificate file"));
+            return ResponseEntity.ok(new CertificateValidationResponse(
+                    false, null, null, null, null, false, "Failed to read certificate file"));
         }
     }
 
@@ -489,7 +449,6 @@ public class SigningSessionController {
     private User getCurrentUser(Principal principal) {
         return userService
                 .findByUsernameIgnoreCase(principal.getName())
-                .orElseThrow(
-                        () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
     }
 }

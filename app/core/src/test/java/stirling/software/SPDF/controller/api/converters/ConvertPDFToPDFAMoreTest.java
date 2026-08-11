@@ -59,11 +59,17 @@ import stirling.software.common.util.WebResponseUtils;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ConvertPDFToPDFAMoreTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock private RuntimePathConfig runtimePathConfig;
-    @Mock private VeraPDFService veraPDFService;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @Mock
+    private VeraPDFService veraPDFService;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private ConvertPDFToPDFA newController() {
         return new ConvertPDFToPDFA(runtimePathConfig, veraPDFService, tempFileManager);
@@ -76,8 +82,7 @@ class ConvertPDFToPDFAMoreTest {
     // ---- reflection helpers ----------------------------------------------------------------
 
     @SuppressWarnings("unchecked")
-    private <T> T invokeInstance(Object target, String methodName, Object... args)
-            throws Exception {
+    private <T> T invokeInstance(Object target, String methodName, Object... args) throws Exception {
         Method method = findMethod(methodName, args.length);
         method.setAccessible(true);
         try {
@@ -97,8 +102,7 @@ class ConvertPDFToPDFAMoreTest {
                 return method;
             }
         }
-        throw new IllegalStateException(
-                "No method " + methodName + " with " + argCount + " params");
+        throw new IllegalStateException("No method " + methodName + " with " + argCount + " params");
     }
 
     private static Object resolvePdfaProfile(String token) throws Exception {
@@ -158,15 +162,11 @@ class ConvertPDFToPDFAMoreTest {
      * decides the result: ghostscript conversion commands write a valid output pdf, version/probe
      * commands return rc 0, everything else returns rc 0 without side effects.
      */
-    private ProcessExecutor wireProcessExecutor(MockedStatic<ProcessExecutor> pe, int gsConvertRc)
-            throws Exception {
+    private ProcessExecutor wireProcessExecutor(MockedStatic<ProcessExecutor> pe, int gsConvertRc) throws Exception {
         ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
         pe.when(() -> ProcessExecutor.getInstance(any(ProcessExecutor.Processes.class)))
                 .thenReturn(executor);
-        pe.when(
-                        () ->
-                                ProcessExecutor.getInstance(
-                                        any(ProcessExecutor.Processes.class), Mockito.anyBoolean()))
+        pe.when(() -> ProcessExecutor.getInstance(any(ProcessExecutor.Processes.class), Mockito.anyBoolean()))
                 .thenReturn(executor);
 
         ProcessExecutorResult okResult = mock(ProcessExecutorResult.class);
@@ -176,32 +176,28 @@ class ConvertPDFToPDFAMoreTest {
         lenient().when(gsResult.getRc()).thenReturn(gsConvertRc);
         lenient().when(gsResult.getMessages()).thenReturn("gs output");
 
-        lenient()
-                .when(executor.runCommandWithOutputHandling(any(List.class)))
-                .thenAnswer(
-                        invocation -> {
-                            List<String> command = invocation.getArgument(0);
-                            // The real ghostscript conversion command contains -sOutputFile=...
-                            String outFileArg =
-                                    command.stream()
-                                            .filter(a -> a.startsWith("-sOutputFile="))
-                                            .findFirst()
-                                            .orElse(null);
-                            if (outFileArg != null) {
-                                Path out = Path.of(outFileArg.substring("-sOutputFile=".length()));
-                                if (gsConvertRc == 0) {
-                                    Files.write(out, simplePdfBytes());
-                                }
-                                return gsResult;
-                            }
-                            // qpdf normalize/clean writes its (last-arg) output file
-                            if (command.contains("--normalize-content=y")) {
-                                // qpdf produced file is the last argument
-                                Path out = Path.of(command.get(command.size() - 1));
-                                Files.write(out, simplePdfBytes());
-                            }
-                            return okResult;
-                        });
+        lenient().when(executor.runCommandWithOutputHandling(any(List.class))).thenAnswer(invocation -> {
+            List<String> command = invocation.getArgument(0);
+            // The real ghostscript conversion command contains -sOutputFile=...
+            String outFileArg = command.stream()
+                    .filter(a -> a.startsWith("-sOutputFile="))
+                    .findFirst()
+                    .orElse(null);
+            if (outFileArg != null) {
+                Path out = Path.of(outFileArg.substring("-sOutputFile=".length()));
+                if (gsConvertRc == 0) {
+                    Files.write(out, simplePdfBytes());
+                }
+                return gsResult;
+            }
+            // qpdf normalize/clean writes its (last-arg) output file
+            if (command.contains("--normalize-content=y")) {
+                // qpdf produced file is the last argument
+                Path out = Path.of(command.get(command.size() - 1));
+                Files.write(out, simplePdfBytes());
+            }
+            return okResult;
+        });
         return executor;
     }
 
@@ -234,8 +230,7 @@ class ConvertPDFToPDFAMoreTest {
                 ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
                 pe.when(() -> ProcessExecutor.getInstance(any(ProcessExecutor.Processes.class)))
                         .thenReturn(executor);
-                when(executor.runCommandWithOutputHandling(any(List.class)))
-                        .thenThrow(new IOException("gs missing"));
+                when(executor.runCommandWithOutputHandling(any(List.class))).thenThrow(new IOException("gs missing"));
 
                 boolean available = invokeInstance(newController(), "isGhostscriptAvailable");
                 assertThat(available).isFalse();
@@ -260,23 +255,16 @@ class ConvertPDFToPDFAMoreTest {
             ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 wireProcessExecutor(pe, 0);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = newController().pdfToPdfA(request);
 
                 assertThat(response).isSameAs(expected);
-                wr.verify(
-                        () ->
-                                WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class),
-                                        org.mockito.ArgumentMatchers.contains("_PDFA-2b.pdf")));
+                wr.verify(() -> WebResponseUtils.pdfFileToWebResponse(
+                        any(TempFile.class), org.mockito.ArgumentMatchers.contains("_PDFA-2b.pdf")));
             }
         }
 
@@ -293,13 +281,9 @@ class ConvertPDFToPDFAMoreTest {
             ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 wireProcessExecutor(pe, 0);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = newController().pdfToPdfA(request);
@@ -328,13 +312,9 @@ class ConvertPDFToPDFAMoreTest {
             ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 wireProcessExecutor(pe, 0);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = newController().pdfToPdfA(request);
@@ -362,23 +342,16 @@ class ConvertPDFToPDFAMoreTest {
             ResponseEntity<Resource> expected = streamingOk("ok".getBytes());
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
-                    MockedStatic<WebResponseUtils> wr =
-                            Mockito.mockStatic(WebResponseUtils.class)) {
+                    MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
                 wireProcessExecutor(pe, 0);
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = newController().pdfToPdfA(request);
 
                 assertThat(response).isSameAs(expected);
-                wr.verify(
-                        () ->
-                                WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class),
-                                        org.mockito.ArgumentMatchers.contains("_PDFX.pdf")));
+                wr.verify(() -> WebResponseUtils.pdfFileToWebResponse(
+                        any(TempFile.class), org.mockito.ArgumentMatchers.contains("_PDFX.pdf")));
             }
         }
 
@@ -392,14 +365,12 @@ class ConvertPDFToPDFAMoreTest {
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 // gs --version returns non-zero -> not available
                 wireProcessExecutor(pe, 0);
-                ProcessExecutor executor =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT);
+                ProcessExecutor executor = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT);
                 ProcessExecutorResult notAvail = mock(ProcessExecutorResult.class);
                 when(notAvail.getRc()).thenReturn(127);
                 when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(notAvail);
 
-                assertThatThrownBy(() -> newController().pdfToPdfA(request))
-                        .isInstanceOf(RuntimeException.class);
+                assertThatThrownBy(() -> newController().pdfToPdfA(request)).isInstanceOf(RuntimeException.class);
             }
         }
     }
@@ -440,27 +411,18 @@ class ConvertPDFToPDFAMoreTest {
             Object colorProfiles = newColorProfiles(rgb, gray);
             Object profile = resolvePdfaProfile("pdfa-1");
 
-            Method m =
-                    ConvertPDFToPDFA.class.getDeclaredMethod(
-                            "buildGhostscriptCommand",
-                            Path.class,
-                            Path.class,
-                            colorProfiles.getClass(),
-                            Path.class,
-                            profile.getClass(),
-                            Path.class);
+            Method m = ConvertPDFToPDFA.class.getDeclaredMethod(
+                    "buildGhostscriptCommand",
+                    Path.class,
+                    Path.class,
+                    colorProfiles.getClass(),
+                    Path.class,
+                    profile.getClass(),
+                    Path.class);
             m.setAccessible(true);
             @SuppressWarnings("unchecked")
             List<String> command =
-                    (List<String>)
-                            m.invoke(
-                                    null,
-                                    input,
-                                    output,
-                                    colorProfiles,
-                                    workingDir,
-                                    profile,
-                                    defFile);
+                    (List<String>) m.invoke(null, input, output, colorProfiles, workingDir, profile, defFile);
 
             assertThat(command).isNotEmpty();
             assertThat(command.get(0)).isEqualTo("gs");
@@ -480,19 +442,16 @@ class ConvertPDFToPDFAMoreTest {
             Object colorProfiles = newColorProfiles(rgb, gray);
             Object profile = resolvePdfXProfile("pdfx");
 
-            Method m =
-                    ConvertPDFToPDFA.class.getDeclaredMethod(
-                            "buildGhostscriptCommandX",
-                            Path.class,
-                            Path.class,
-                            colorProfiles.getClass(),
-                            Path.class,
-                            profile.getClass());
+            Method m = ConvertPDFToPDFA.class.getDeclaredMethod(
+                    "buildGhostscriptCommandX",
+                    Path.class,
+                    Path.class,
+                    colorProfiles.getClass(),
+                    Path.class,
+                    profile.getClass());
             m.setAccessible(true);
             @SuppressWarnings("unchecked")
-            List<String> command =
-                    (List<String>)
-                            m.invoke(null, input, output, colorProfiles, workingDir, profile);
+            List<String> command = (List<String>) m.invoke(null, input, output, colorProfiles, workingDir, profile);
 
             assertThat(command).contains("-dPDFX=2008", "-sDEVICE=pdfwrite");
             assertThat(command).anyMatch(a -> a.startsWith("-dColorImageResolution="));
@@ -508,12 +467,8 @@ class ConvertPDFToPDFAMoreTest {
             Object colorProfiles = newColorProfiles(rgb, gray);
             Object profile = resolvePdfaProfile("pdfa-2b");
 
-            Method m =
-                    ConvertPDFToPDFA.class.getDeclaredMethod(
-                            "createPdfaDefFile",
-                            Path.class,
-                            colorProfiles.getClass(),
-                            profile.getClass());
+            Method m = ConvertPDFToPDFA.class.getDeclaredMethod(
+                    "createPdfaDefFile", Path.class, colorProfiles.getClass(), profile.getClass());
             m.setAccessible(true);
             Path defFile = (Path) m.invoke(null, workingDir, colorProfiles, profile);
 
@@ -527,8 +482,7 @@ class ConvertPDFToPDFAMoreTest {
         @DisplayName("prepareColorProfiles copies the sRGB icc and writes a gray profile")
         void preparesColorProfiles() throws Exception {
             Path workingDir = Files.createDirectories(tempDir.resolve("colors"));
-            Object colorProfiles =
-                    invokeInstance(newController(), "prepareColorProfiles", workingDir);
+            Object colorProfiles = invokeInstance(newController(), "prepareColorProfiles", workingDir);
             assertThat(colorProfiles).isNotNull();
 
             Method rgbAccessor = colorProfiles.getClass().getDeclaredMethod("rgb");
@@ -580,8 +534,7 @@ class ConvertPDFToPDFAMoreTest {
                 ProcessExecutor executor = Mockito.mock(ProcessExecutor.class);
                 pe.when(() -> ProcessExecutor.getInstance(any(ProcessExecutor.Processes.class)))
                         .thenReturn(executor);
-                when(executor.runCommandWithOutputHandling(any(List.class)))
-                        .thenThrow(new IOException("qpdf boom"));
+                when(executor.runCommandWithOutputHandling(any(List.class))).thenThrow(new IOException("qpdf boom"));
 
                 Path result = invokeInstance(newController(), "cleanCidSetWithQpdf", input);
                 assertThat(result).isNull();

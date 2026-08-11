@@ -69,22 +69,38 @@ import tools.jackson.databind.json.JsonMapper;
 @org.mockito.junit.jupiter.MockitoSettings(strictness = Strictness.LENIENT)
 class PdfJsonConversionServiceRoundTripTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private TaskManager taskManager;
-    @Mock private PdfJsonFallbackFontService fallbackFontService;
-    @Mock private PdfJsonFontService fontService;
-    @Mock private Type3FontConversionService type3FontConversionService;
-    @Mock private Type3GlyphExtractor type3GlyphExtractor;
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private TaskManager taskManager;
+
+    @Mock
+    private PdfJsonFallbackFontService fallbackFontService;
+
+    @Mock
+    private PdfJsonFontService fontService;
+
+    @Mock
+    private Type3FontConversionService type3FontConversionService;
+
+    @Mock
+    private Type3GlyphExtractor type3GlyphExtractor;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
 
     private final PdfJsonCosMapper cosMapper = new PdfJsonCosMapper();
 
-    private final ObjectMapper objectMapper =
-            JsonMapper.builder()
-                    .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-                    .build();
+    private final ObjectMapper objectMapper = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+            .build();
 
     private PdfJsonConversionService service;
 
@@ -92,43 +108,36 @@ class PdfJsonConversionServiceRoundTripTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        service =
-                new PdfJsonConversionService(
-                        pdfDocumentFactory,
-                        objectMapper,
-                        endpointConfiguration,
-                        tempFileManager,
-                        taskManager,
-                        cosMapper,
-                        fallbackFontService,
-                        fontService,
-                        type3FontConversionService,
-                        type3GlyphExtractor,
-                        applicationProperties);
+        service = new PdfJsonConversionService(
+                pdfDocumentFactory,
+                objectMapper,
+                endpointConfiguration,
+                tempFileManager,
+                taskManager,
+                cosMapper,
+                fallbackFontService,
+                fontService,
+                type3FontConversionService,
+                type3GlyphExtractor,
+                applicationProperties);
 
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        invocation -> {
-                            String suffix = invocation.getArgument(0);
-                            Path path = Files.createTempFile("pdfjson-rt-test", suffix);
-                            createdTempFiles.add(path);
-                            return path.toFile();
-                        });
-        when(tempFileManager.deleteTempFile(any(File.class)))
-                .thenAnswer(
-                        invocation -> {
-                            File file = invocation.getArgument(0);
-                            return file != null && file.delete();
-                        });
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(invocation -> {
+            String suffix = invocation.getArgument(0);
+            Path path = Files.createTempFile("pdfjson-rt-test", suffix);
+            createdTempFiles.add(path);
+            return path.toFile();
+        });
+        when(tempFileManager.deleteTempFile(any(File.class))).thenAnswer(invocation -> {
+            File file = invocation.getArgument(0);
+            return file != null && file.delete();
+        });
         when(fallbackFontService.buildFallbackFontModel())
-                .thenAnswer(
-                        invocation ->
-                                PdfJsonFont.builder()
-                                        .id(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
-                                        .uid(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
-                                        .baseName("Fallback")
-                                        .subtype("TrueType")
-                                        .build());
+                .thenAnswer(invocation -> PdfJsonFont.builder()
+                        .id(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
+                        .uid(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
+                        .baseName("Fallback")
+                        .subtype("TrueType")
+                        .build());
         when(fallbackFontService.loadFallbackPdfFont(any(PDDocument.class)))
                 .thenAnswer(invocation -> new PDType1Font(Standard14Fonts.FontName.HELVETICA));
     }
@@ -160,9 +169,8 @@ class PdfJsonConversionServiceRoundTripTest {
     /** Stubs the factory to load from a Path (used by convertPdfToJson). */
     private void stubFactoryFromPath() throws IOException {
         when(pdfDocumentFactory.load(any(Path.class), eq(true)))
-                .thenAnswer(
-                        invocation ->
-                                Loader.loadPDF(invocation.getArgument(0, Path.class).toFile()));
+                .thenAnswer(invocation ->
+                        Loader.loadPDF(invocation.getArgument(0, Path.class).toFile()));
     }
 
     private PdfJsonDocument toJsonDocument(byte[] pdfBytes) throws IOException {
@@ -322,10 +330,9 @@ class PdfJsonConversionServiceRoundTripTest {
         void xmpRoundTrip() throws IOException {
             PDDocument document = new PDDocument();
             document.addPage(new PDPage(PDRectangle.LETTER));
-            String xmp =
-                    "<?xpacket begin=\"\"?><x:xmpmeta xmlns:x=\"adobe:ns:meta/\">"
-                            + "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">"
-                            + "</rdf:RDF></x:xmpmeta><?xpacket end=\"w\"?>";
+            String xmp = "<?xpacket begin=\"\"?><x:xmpmeta xmlns:x=\"adobe:ns:meta/\">"
+                    + "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">"
+                    + "</rdf:RDF></x:xmpmeta><?xpacket end=\"w\"?>";
             PDMetadata metadata = new PDMetadata(document);
             metadata.importXMPMetadata(xmp.getBytes(StandardCharsets.UTF_8));
             document.getDocumentCatalog().setMetadata(metadata);
@@ -334,10 +341,7 @@ class PdfJsonConversionServiceRoundTripTest {
             PdfJsonDocument doc = toJsonDocument(bytes);
             assertThat(doc.getXmpMetadata()).isNotBlank();
             // Round-tripped base64 should decode back to XMP content.
-            String decoded =
-                    new String(
-                            Base64.getDecoder().decode(doc.getXmpMetadata()),
-                            StandardCharsets.UTF_8);
+            String decoded = new String(Base64.getDecoder().decode(doc.getXmpMetadata()), StandardCharsets.UTF_8);
             assertThat(decoded).contains("xmpmeta");
 
             byte[] rebuilt = runJsonToPdf(doc);
@@ -364,31 +368,28 @@ class PdfJsonConversionServiceRoundTripTest {
             assertEquals(1, doc.getPages().size());
 
             // Append a brand new page with synthesized text.
-            PdfJsonFont font =
-                    PdfJsonFont.builder()
-                            .id("F-new")
-                            .uid("F-new")
-                            .baseName("Helvetica")
-                            .subtype("Type1")
-                            .standard14Name("Helvetica")
-                            .build();
+            PdfJsonFont font = PdfJsonFont.builder()
+                    .id("F-new")
+                    .uid("F-new")
+                    .baseName("Helvetica")
+                    .subtype("Type1")
+                    .standard14Name("Helvetica")
+                    .build();
             doc.getFonts().add(font);
 
-            PdfJsonTextElement element =
-                    PdfJsonTextElement.builder()
-                            .text("Appended page")
-                            .fontId("F-new")
-                            .fontSize(12f)
-                            .x(72f)
-                            .y(700f)
-                            .build();
-            PdfJsonPage newPage =
-                    PdfJsonPage.builder()
-                            .pageNumber(2)
-                            .width(612f)
-                            .height(792f)
-                            .textElements(List.of(element))
-                            .build();
+            PdfJsonTextElement element = PdfJsonTextElement.builder()
+                    .text("Appended page")
+                    .fontId("F-new")
+                    .fontSize(12f)
+                    .x(72f)
+                    .y(700f)
+                    .build();
+            PdfJsonPage newPage = PdfJsonPage.builder()
+                    .pageNumber(2)
+                    .width(612f)
+                    .height(792f)
+                    .textElements(List.of(element))
+                    .build();
             List<PdfJsonPage> pages = new ArrayList<>(doc.getPages());
             pages.add(newPage);
             doc.setPages(pages);

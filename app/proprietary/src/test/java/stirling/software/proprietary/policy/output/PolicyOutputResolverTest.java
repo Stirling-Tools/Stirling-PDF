@@ -29,8 +29,7 @@ class PolicyOutputResolverTest {
         Source archive = sourceStore.save(folder("Archive", "/out"));
         Source backup = sourceStore.save(folder("Backup", "/backup"));
 
-        List<OutputSpec> specs =
-                resolver.resolve(policy().withOutputIds(List.of(archive.id(), backup.id())));
+        List<OutputSpec> specs = resolver.resolve(policy().withOutputIds(List.of(archive.id(), backup.id())));
 
         assertEquals(2, specs.size());
         assertEquals("/out", specs.get(0).options().get("directory"));
@@ -47,16 +46,14 @@ class PolicyOutputResolverTest {
 
     @Test
     void whenNoReferencesResolveItFallsBackToInline() {
-        List<OutputSpec> specs =
-                resolver.resolve(policy().withOutputIds(List.of("does-not-exist")));
+        List<OutputSpec> specs = resolver.resolve(policy().withOutputIds(List.of("does-not-exist")));
 
         assertEquals(1, specs.size());
         assertEquals("inline", specs.get(0).type());
     }
 
     private static Source folder(String name, String directory) {
-        return new Source(
-                null, name, "folder", Map.of("directory", directory), true, "owner", null);
+        return new Source(null, name, "folder", Map.of("directory", directory), true, "owner", null);
     }
 
     private static Policy policy() {

@@ -12,9 +12,7 @@ import stirling.software.common.model.api.PDFFile;
 public class FlattenRequest extends PDFFile {
 
     @Schema(
-            description =
-                    "True to flatten only the forms, false to flatten full PDF (Convert page to"
-                            + " image)",
+            description = "True to flatten only the forms, false to flatten full PDF (Convert page to" + " image)",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "false")
     private Boolean flattenOnlyForms;

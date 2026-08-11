@@ -55,7 +55,8 @@ class S3OutputSinkTest {
     private static final OutputDelivery DELIVERY = new OutputDelivery("run-1", POLICY);
     private static final OutputDelivery AD_HOC = new OutputDelivery("run-2", null);
 
-    @Mock private S3Client s3Client;
+    @Mock
+    private S3Client s3Client;
 
     private S3OutputSink sink;
     private InProcessProcessedLedger ledger;
@@ -64,11 +65,10 @@ class S3OutputSinkTest {
     @BeforeEach
     void setUp() {
         ledger = new InProcessProcessedLedger();
-        sink =
-                new S3OutputSink(
-                        new S3ConnectionPool(new ApplicationProperties(), config -> s3Client),
-                        S3TestConnections.legacyResolver(),
-                        ledger);
+        sink = new S3OutputSink(
+                new S3ConnectionPool(new ApplicationProperties(), config -> s3Client),
+                S3TestConnections.legacyResolver(),
+                ledger);
     }
 
     @Test
@@ -77,16 +77,14 @@ class S3OutputSinkTest {
         // record-before-visible, asserted from inside the upload itself.
         List<ClaimState> stateAtPutTime = new ArrayList<>();
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenAnswer(
-                        invocation -> {
-                            PutObjectRequest request = invocation.getArgument(0);
-                            puts.add(request);
-                            stateAtPutTime.add(stateFor(identity(request.key())));
-                            return PutObjectResponse.builder().eTag(quotedMd5("data")).build();
-                        });
+                .thenAnswer(invocation -> {
+                    PutObjectRequest request = invocation.getArgument(0);
+                    puts.add(request);
+                    stateAtPutTime.add(stateFor(identity(request.key())));
+                    return PutObjectResponse.builder().eTag(quotedMd5("data")).build();
+                });
 
-        List<ResultFile> results =
-                sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec());
+        List<ResultFile> results = sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec());
 
         assertEquals(1, results.size());
         assertEquals("s3://" + BUCKET + "/processed/doc.pdf", results.get(0).getFileName());
@@ -100,18 +98,16 @@ class S3OutputSinkTest {
     @Test
     void aTakenKeyIsForgottenAndRePicked() throws IOException {
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenAnswer(
-                        invocation -> {
-                            PutObjectRequest request = invocation.getArgument(0);
-                            puts.add(request);
-                            if (puts.size() == 1) {
-                                throw s3Error(412, "PreconditionFailed");
-                            }
-                            return PutObjectResponse.builder().eTag(quotedMd5("data")).build();
-                        });
+                .thenAnswer(invocation -> {
+                    PutObjectRequest request = invocation.getArgument(0);
+                    puts.add(request);
+                    if (puts.size() == 1) {
+                        throw s3Error(412, "PreconditionFailed");
+                    }
+                    return PutObjectResponse.builder().eTag(quotedMd5("data")).build();
+                });
 
-        List<ResultFile> results =
-                sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec());
+        List<ResultFile> results = sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec());
 
         assertEquals("s3://" + BUCKET + "/processed/doc (1).pdf", results.get(0).getFileName());
         // The lost candidate's row is gone; only the delivered key is recorded.
@@ -122,7 +118,8 @@ class S3OutputSinkTest {
     @Test
     void anEncryptedBucketETagIsReRecordedAtTheActualGate() throws IOException {
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().eTag("\"kms-opaque-etag\"").build());
+                .thenReturn(
+                        PutObjectResponse.builder().eTag("\"kms-opaque-etag\"").build());
 
         sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec());
 
@@ -144,9 +141,7 @@ class S3OutputSinkTest {
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
                 .thenThrow(SdkClientException.create("connection refused"));
 
-        assertThrows(
-                IOException.class,
-                () -> sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec()));
+        assertThrows(IOException.class, () -> sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec()));
 
         assertNull(stateFor(identity("processed/doc.pdf")));
     }
@@ -155,18 +150,16 @@ class S3OutputSinkTest {
     void aStoreWithoutConditionalPutsFallsBackToExistenceChecks() throws IOException {
         when(s3Client.headObject(any(HeadObjectRequest.class))).thenThrow(s3Error(404, "NotFound"));
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenAnswer(
-                        invocation -> {
-                            PutObjectRequest request = invocation.getArgument(0);
-                            puts.add(request);
-                            if (request.ifNoneMatch() != null) {
-                                throw s3Error(501, "NotImplemented");
-                            }
-                            return PutObjectResponse.builder().eTag(quotedMd5("data")).build();
-                        });
+                .thenAnswer(invocation -> {
+                    PutObjectRequest request = invocation.getArgument(0);
+                    puts.add(request);
+                    if (request.ifNoneMatch() != null) {
+                        throw s3Error(501, "NotImplemented");
+                    }
+                    return PutObjectResponse.builder().eTag(quotedMd5("data")).build();
+                });
 
-        List<ResultFile> results =
-                sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec());
+        List<ResultFile> results = sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec());
 
         // Same key, second attempt unconditional.
         assertEquals("s3://" + BUCKET + "/processed/doc.pdf", results.get(0).getFileName());
@@ -178,11 +171,10 @@ class S3OutputSinkTest {
     @Test
     void aBarePrefixGetsItsSlash() throws IOException {
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenAnswer(
-                        invocation -> {
-                            puts.add(invocation.getArgument(0));
-                            return PutObjectResponse.builder().eTag(quotedMd5("data")).build();
-                        });
+                .thenAnswer(invocation -> {
+                    puts.add(invocation.getArgument(0));
+                    return PutObjectResponse.builder().eTag(quotedMd5("data")).build();
+                });
 
         sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec("processed"));
 
@@ -191,19 +183,13 @@ class S3OutputSinkTest {
 
     @Test
     void validateRejectsBadConfigShape() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> sink.validate(new OutputSpec("s3", Map.of())));
+        assertThrows(IllegalArgumentException.class, () -> sink.validate(new OutputSpec("s3", Map.of())));
         // Credentials are required, never the server's own identity.
         assertThrows(
-                IllegalArgumentException.class,
-                () -> sink.validate(new OutputSpec("s3", Map.of("bucket", BUCKET))));
+                IllegalArgumentException.class, () -> sink.validate(new OutputSpec("s3", Map.of("bucket", BUCKET))));
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        sink.validate(
-                                new OutputSpec(
-                                        "s3", Map.of("bucket", BUCKET, "accessKeyId", "AKIA"))));
+                () -> sink.validate(new OutputSpec("s3", Map.of("bucket", BUCKET, "accessKeyId", "AKIA"))));
     }
 
     @Test
@@ -220,15 +206,7 @@ class S3OutputSinkTest {
     private static OutputSpec spec(String prefix) {
         return new OutputSpec(
                 "s3",
-                Map.of(
-                        "bucket",
-                        BUCKET,
-                        "prefix",
-                        prefix,
-                        "accessKeyId",
-                        "AKIAEXAMPLE",
-                        "secretAccessKey",
-                        "shh"));
+                Map.of("bucket", BUCKET, "prefix", prefix, "accessKeyId", "AKIAEXAMPLE", "secretAccessKey", "shh"));
     }
 
     private static String identity(String key) {
@@ -251,9 +229,7 @@ class S3OutputSinkTest {
     private static String md5(String content) {
         try {
             return HexFormat.of()
-                    .formatHex(
-                            MessageDigest.getInstance("MD5")
-                                    .digest(content.getBytes(StandardCharsets.UTF_8)));
+                    .formatHex(MessageDigest.getInstance("MD5").digest(content.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

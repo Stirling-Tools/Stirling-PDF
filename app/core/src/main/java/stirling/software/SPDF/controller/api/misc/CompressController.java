@@ -134,8 +134,7 @@ public class CompressController {
     }
 
     // Find all images in the document, both direct and nested within forms
-    private static Map<ImageIdentity, List<ImageReference>> findImages(PDDocument doc)
-            throws IOException {
+    private static Map<ImageIdentity, List<ImageReference>> findImages(PDDocument doc) throws IOException {
         Map<ImageIdentity, List<ImageReference>> uniqueImages = new HashMap<>();
 
         // Scan through all pages in the document
@@ -169,10 +168,7 @@ public class CompressController {
     }
 
     private static ImageReference addDirectImage(
-            int pageNum,
-            COSName name,
-            PDImageXObject image,
-            Map<ImageIdentity, List<ImageReference>> uniqueImages)
+            int pageNum, COSName name, PDImageXObject image, Map<ImageIdentity, List<ImageReference>> uniqueImages)
             throws IOException {
         ImageReference ref = new ImageReference();
         ref.pageNum = pageNum;
@@ -196,10 +192,7 @@ public class CompressController {
             return;
         }
 
-        log.info(
-                "Checking form XObject '{}' on page {} for nested images",
-                formName.getName(),
-                pageNum + 1);
+        log.info("Checking form XObject '{}' on page {} for nested images", formName.getName(), pageNum + 1);
 
         // Process all XObjects within the form
         for (COSName nestedName : formResources.getXObjectNames()) {
@@ -277,13 +270,7 @@ public class CompressController {
 
             // Process this unique image
             PDImageXObject compressedImage =
-                    compressImage(
-                            doc,
-                            originalImage,
-                            originalSize,
-                            scaleFactor,
-                            jpegQuality,
-                            convertToGrayscale);
+                    compressImage(doc, originalImage, originalSize, scaleFactor, jpegQuality, convertToGrayscale);
 
             if (compressedImage != null) {
                 // Store the compressed version in our map
@@ -302,8 +289,7 @@ public class CompressController {
                         GeneralUtils.formatBytes(compressedSize),
                         String.format(Locale.ROOT, "%.1f", reductionPercentage));
             } else {
-                log.info(
-                        "Image identity {}: Not suitable for compression, skipping", imageIdentity);
+                log.info("Image identity {}: Not suitable for compression, skipping", imageIdentity);
                 stats.totalCompressedBytes += (long) originalSize * references.size();
                 stats.skippedImages++;
             }
@@ -318,22 +304,19 @@ public class CompressController {
                 byte[] buffer = new byte[16384];
                 int bytesRead = stream.read(buffer);
                 if (bytesRead > 0) {
-                    byte[] dataToHash =
-                            bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
+                    byte[] dataToHash = bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
 
-                    String enhancedData =
-                            new String(dataToHash, StandardCharsets.UTF_8)
-                                    + "_"
-                                    + image.getWidth()
-                                    + "_"
-                                    + image.getHeight()
-                                    + "_"
-                                    + image.getColorSpace().getName()
-                                    + "_"
-                                    + image.getBitsPerComponent();
+                    String enhancedData = new String(dataToHash, StandardCharsets.UTF_8)
+                            + "_"
+                            + image.getWidth()
+                            + "_"
+                            + image.getHeight()
+                            + "_"
+                            + image.getColorSpace().getName()
+                            + "_"
+                            + image.getBitsPerComponent();
 
-                    return bytesToHexString(
-                            generateMD5(enhancedData.getBytes(StandardCharsets.UTF_8)));
+                    return bytesToHexString(generateMD5(enhancedData.getBytes(StandardCharsets.UTF_8)));
                 }
                 return "empty-stream";
             }
@@ -343,8 +326,7 @@ public class CompressController {
         }
     }
 
-    public TempFile compressImagesInPDF(
-            Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
+    public TempFile compressImagesInPDF(Path pdfFile, double scaleFactor, float jpegQuality, boolean convertToGrayscale)
             throws Exception {
         TempFile newCompressedPDF = tempFileManager.createManagedTempFile(".pdf");
         long originalFileSize = Files.size(pdfFile);
@@ -367,8 +349,7 @@ public class CompressController {
 
             // Create compressed versions of unique images
             Map<ImageIdentity, PDImageXObject> compressedVersions =
-                    createCompressedImages(
-                            doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
+                    createCompressedImages(doc, uniqueImages, scaleFactor, jpegQuality, convertToGrayscale, stats);
 
             // Replace all instances with compressed versions
             replaceImages(doc, uniqueImages, compressedVersions);
@@ -410,10 +391,7 @@ public class CompressController {
                     byte[] buffer = new byte[4096];
                     int bytesRead = stream.read(buffer);
                     if (bytesRead > 0) {
-                        byte[] dataToHash =
-                                bytesRead == buffer.length
-                                        ? buffer
-                                        : Arrays.copyOf(buffer, bytesRead);
+                        byte[] dataToHash = bytesRead == buffer.length ? buffer : Arrays.copyOf(buffer, bytesRead);
                         return bytesToHexString(generateMD5(dataToHash));
                     }
                     return "empty-mask";
@@ -427,8 +405,7 @@ public class CompressController {
     }
 
     // Get original image from a reference
-    private static PDImageXObject getOriginalImage(PDDocument doc, ImageReference ref)
-            throws IOException {
+    private static PDImageXObject getOriginalImage(PDDocument doc, ImageReference ref) throws IOException {
         if (ref instanceof NestedImageReference nestedRef) {
             PDPage page = doc.getPage(nestedRef.pageNum);
             PDResources pageResources = page.getResources();
@@ -459,8 +436,7 @@ public class CompressController {
 
         // Process and compress the image
         BufferedImage processedImage =
-                processAndCompressImage(
-                        originalImage, scaleFactor, jpegQuality, convertToGrayscale);
+                processAndCompressImage(originalImage, scaleFactor, jpegQuality, convertToGrayscale);
 
         if (processedImage == null) {
             return null;
@@ -488,8 +464,8 @@ public class CompressController {
     }
 
     // Replace a specific image reference with a compressed version
-    private static void replaceImageReference(
-            PDDocument doc, ImageReference ref, PDImageXObject compressedImage) throws IOException {
+    private static void replaceImageReference(PDDocument doc, ImageReference ref, PDImageXObject compressedImage)
+            throws IOException {
         if (ref instanceof NestedImageReference nestedRef) {
             // Replace nested image within form XObject
             PDPage page = doc.getPage(nestedRef.pageNum);
@@ -520,10 +496,9 @@ public class CompressController {
     // Log final stats about the compression
     private static void logCompressionStats(CompressionStats stats, long originalFileSize) {
         // Calculate image reduction percentage
-        double overallImageReduction =
-                stats.totalOriginalBytes > 0
-                        ? 100.0 - ((stats.totalCompressedBytes * 100.0) / stats.totalOriginalBytes)
-                        : 0;
+        double overallImageReduction = stats.totalOriginalBytes > 0
+                ? 100.0 - ((stats.totalCompressedBytes * 100.0) / stats.totalOriginalBytes)
+                : 0;
 
         int duplicatedImages = stats.totalImages - stats.uniqueImagesCount;
 
@@ -543,9 +518,7 @@ public class CompressController {
     }
 
     private static BufferedImage convertToGrayscale(BufferedImage image) {
-        BufferedImage grayImage =
-                new BufferedImage(
-                        image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        BufferedImage grayImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
 
         Graphics2D g = grayImage.createGraphics();
         g.drawImage(image, 0, 0, null);
@@ -617,17 +590,15 @@ public class CompressController {
             scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_BYTE_GRAY);
         } else {
             // Otherwise use original color model
-            scaledImage =
-                    new BufferedImage(
-                            newWidth,
-                            newHeight,
-                            bufferedImage.getColorModel().hasAlpha()
-                                    ? BufferedImage.TYPE_INT_ARGB
-                                    : BufferedImage.TYPE_INT_RGB);
+            scaledImage = new BufferedImage(
+                    newWidth,
+                    newHeight,
+                    bufferedImage.getColorModel().hasAlpha()
+                            ? BufferedImage.TYPE_INT_ARGB
+                            : BufferedImage.TYPE_INT_RGB);
         }
         Graphics2D g2d = scaledImage.createGraphics();
-        g2d.setRenderingHint(
-                RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.drawImage(bufferedImage, 0, 0, newWidth, newHeight, null);
@@ -637,8 +608,7 @@ public class CompressController {
     }
 
     // Convert image to byte array with quality settings
-    private static byte[] convertToBytes(BufferedImage scaledImage, float jpegQuality)
-            throws IOException {
+    private static byte[] convertToBytes(BufferedImage scaledImage, float jpegQuality) throws IOException {
         String format = scaledImage.getColorModel().hasAlpha() ? "png" : "jpeg";
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -732,8 +702,7 @@ public class CompressController {
                 params.append("_").append(image.getDecode().toString());
             }
 
-            return bytesToHexString(
-                    generateMD5(params.toString().getBytes(StandardCharsets.UTF_8)));
+            return bytesToHexString(generateMD5(params.toString().getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
             return "fallback-decode-" + System.identityHashCode(image);
         }
@@ -804,8 +773,7 @@ public class CompressController {
                     metadata.append("_softmask");
                 }
 
-                return bytesToHexString(
-                        generateMD5(metadata.toString().getBytes(StandardCharsets.UTF_8)));
+                return bytesToHexString(generateMD5(metadata.toString().getBytes(StandardCharsets.UTF_8)));
             } catch (Exception e) {
                 return "fallback-meta-" + System.identityHashCode(image);
             }
@@ -932,11 +900,8 @@ public class CompressController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Optimize PDF file",
-            description =
-                    "This endpoint accepts a PDF file and optimizes it based on the provided"
-                            + " parameters.")
-    public ResponseEntity<Resource> optimizePdf(@ModelAttribute OptimizePdfRequest request)
-            throws Exception {
+            description = "This endpoint accepts a PDF file and optimizes it based on the provided" + " parameters.")
+    public ResponseEntity<Resource> optimizePdf(@ModelAttribute OptimizePdfRequest request) throws Exception {
         MultipartFile inputFile = request.getFileInput();
 
         // Validate input file
@@ -951,8 +916,7 @@ public class CompressController {
         Double lineArtThreshold = request.getLineArtThreshold();
         Integer lineArtEdgeLevel = request.getLineArtEdgeLevel();
         if (expectedOutputSizeString == null && optimizeLevel == null) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    ExceptionUtils.ErrorCode.COMPRESSION_OPTIONS);
+            throw ExceptionUtils.createIllegalArgumentException(ExceptionUtils.ErrorCode.COMPRESSION_OPTIONS);
         }
 
         Long expectedOutputSize = 0L;
@@ -985,21 +949,14 @@ public class CompressController {
             if (Boolean.TRUE.equals(convertToLineArt)) {
                 if (lineArtConversionService == null) {
                     throw new ResponseStatusException(
-                            HttpStatus.FORBIDDEN,
-                            "Line art conversion is unavailable - ImageMagick service not found");
+                            HttpStatus.FORBIDDEN, "Line art conversion is unavailable - ImageMagick service not found");
                 }
                 if (!isImageMagickEnabled()) {
-                    throw new IOException(
-                            "ImageMagick is not enabled but line art conversion was requested");
+                    throw new IOException("ImageMagick is not enabled but line art conversion was requested");
                 }
-                double thresholdValue =
-                        lineArtThreshold == null
-                                ? 55d
-                                : Math.min(100d, Math.max(0d, lineArtThreshold));
-                int edgeLevel =
-                        lineArtEdgeLevel == null ? 1 : Math.min(3, Math.max(1, lineArtEdgeLevel));
-                currentFile =
-                        applyLineArtConversion(currentFile, tempFiles, thresholdValue, edgeLevel);
+                double thresholdValue = lineArtThreshold == null ? 55d : Math.min(100d, Math.max(0d, lineArtThreshold));
+                int edgeLevel = lineArtEdgeLevel == null ? 1 : Math.min(3, Math.max(1, lineArtEdgeLevel));
+                currentFile = applyLineArtConversion(currentFile, tempFiles, thresholdValue, edgeLevel);
             }
 
             boolean sizeMet = false;
@@ -1019,9 +976,7 @@ public class CompressController {
                         log.error("Ghostscript encountered a critical error: {}", e.getMessage());
                         throw e;
                     } catch (IOException e) {
-                        log.warn(
-                                "Ghostscript compression failed, continuing with other methods: {}",
-                                e.getMessage());
+                        log.warn("Ghostscript compression failed, continuing with other methods: {}", e.getMessage());
                     }
                 }
 
@@ -1034,9 +989,7 @@ public class CompressController {
                         log.warn("QPDF compression failed: {}", e.getMessage());
                     }
                 } else if (!ghostscriptSuccess) {
-                    log.info(
-                            "No external compression tools available, using image compression"
-                                    + " only");
+                    log.info("No external compression tools available, using image compression" + " only");
                 }
 
                 // Skip image compression if Ghostscript succeeded
@@ -1045,8 +998,7 @@ public class CompressController {
                 }
 
                 // Apply image compression for levels 4+ only if Ghostscript didn't run
-                if ((optimizeLevel >= 4 || Boolean.TRUE.equals(convertToGrayscale))
-                        && !imageCompressionApplied) {
+                if ((optimizeLevel >= 4 || Boolean.TRUE.equals(convertToGrayscale)) && !imageCompressionApplied) {
                     // Use different scale factors based on level
                     double scaleFactor = getScaleFactorForLevel(optimizeLevel);
                     // Use JPEG quality settings based on optimization level
@@ -1056,12 +1008,8 @@ public class CompressController {
                             "Applying image compression with scale factor: {} and JPEG quality: {}",
                             scaleFactor,
                             jpegQuality);
-                    TempFile compressedImageFile =
-                            compressImagesInPDF(
-                                    currentFile,
-                                    scaleFactor,
-                                    jpegQuality,
-                                    Boolean.TRUE.equals(convertToGrayscale));
+                    TempFile compressedImageFile = compressImagesInPDF(
+                            currentFile, scaleFactor, jpegQuality, Boolean.TRUE.equals(convertToGrayscale));
 
                     tempFiles.add(compressedImageFile);
                     currentFile = compressedImageFile.getPath();
@@ -1073,9 +1021,7 @@ public class CompressController {
                 if (outputFileSize <= expectedOutputSize || !autoMode) {
                     sizeMet = true;
                 } else {
-                    int newOptimizeLevel =
-                            incrementOptimizeLevel(
-                                    optimizeLevel, outputFileSize, expectedOutputSize);
+                    int newOptimizeLevel = incrementOptimizeLevel(optimizeLevel, outputFileSize, expectedOutputSize);
 
                     // Check if we can't increase the level further
                     if (newOptimizeLevel == optimizeLevel) {
@@ -1096,20 +1042,15 @@ public class CompressController {
             }
             long finalFileSize = Files.size(currentFile);
             if (finalFileSize >= inputFileSize) {
-                log.warn(
-                        "Optimized file is larger than the original. Using the original file"
-                                + " instead.");
+                log.warn("Optimized file is larger than the original. Using the original file" + " instead.");
                 currentFile = originalFile;
             }
 
-            String outputFilename =
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_Optimized.pdf");
+            String outputFilename = GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_Optimized.pdf");
 
             try {
                 try (PDDocument document = pdfDocumentFactory.load(currentFile.toFile())) {
-                    return WebResponseUtils.pdfDocToWebResponse(
-                            document, outputFilename, tempFileManager);
+                    return WebResponseUtils.pdfDocToWebResponse(document, outputFilename, tempFileManager);
                 }
             } catch (IOException e) {
                 throw ExceptionUtils.handlePdfException(e, "PDF optimization");
@@ -1127,8 +1068,7 @@ public class CompressController {
         }
     }
 
-    private Path applyLineArtConversion(
-            Path currentFile, List<TempFile> tempFiles, double threshold, int edgeLevel)
+    private Path applyLineArtConversion(Path currentFile, List<TempFile> tempFiles, double threshold, int edgeLevel)
             throws IOException {
 
         TempFile lineArtFile = new TempFile(tempFileManager, ".pdf");
@@ -1176,8 +1116,7 @@ public class CompressController {
             stats.totalOriginalBytes += originalSize;
 
             PDImageXObject converted =
-                    lineArtConversionService.convertImageToLineArt(
-                            doc, originalImage, threshold, edgeLevel);
+                    lineArtConversionService.convertImageToLineArt(doc, originalImage, threshold, edgeLevel);
             convertedImages.put(imageIdentity, converted);
             stats.compressedImages++;
 
@@ -1197,8 +1136,8 @@ public class CompressController {
     }
 
     // Run Ghostscript compression
-    private void applyGhostscriptCompression(
-            OptimizePdfRequest request, int optimizeLevel, Path currentFile) throws IOException {
+    private void applyGhostscriptCompression(OptimizePdfRequest request, int optimizeLevel, Path currentFile)
+            throws IOException {
 
         long preGsSize = Files.size(currentFile);
         log.info("Pre-Ghostscript file size: {}", GeneralUtils.formatBytes(preGsSize));
@@ -1286,17 +1225,15 @@ public class CompressController {
 
             ProcessExecutorResult returnCode;
             try {
-                returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                                .runCommandWithOutputHandling(command);
+                returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                        .runCommandWithOutputHandling(command);
 
                 // Check for critical errors in the output before checking return code
                 String gsOutput = returnCode.getMessages();
                 ExceptionUtils.GhostscriptException criticalError =
                         ExceptionUtils.detectGhostscriptCriticalError(gsOutput);
                 if (criticalError != null) {
-                    log.error(
-                            "Ghostscript critical error detected: {}", criticalError.getMessage());
+                    log.error("Ghostscript critical error detected: {}", criticalError.getMessage());
                     throw criticalError;
                 }
 
@@ -1308,12 +1245,9 @@ public class CompressController {
                     double gsReduction = 100.0 - ((postGsSize * 100.0) / preGsSize);
                     log.info(
                             "Post-Ghostscript file size: {} (reduced by {}%)",
-                            GeneralUtils.formatBytes(postGsSize),
-                            String.format(Locale.ROOT, "%.1f", gsReduction));
+                            GeneralUtils.formatBytes(postGsSize), String.format(Locale.ROOT, "%.1f", gsReduction));
                 } else {
-                    log.warn(
-                            "Ghostscript compression failed with return code: {}",
-                            returnCode.getRc());
+                    log.warn("Ghostscript compression failed with return code: {}", returnCode.getRc());
                     throw ExceptionUtils.createGhostscriptCompressionException(gsOutput);
                 }
 
@@ -1330,8 +1264,8 @@ public class CompressController {
     }
 
     // Run QPDF compression
-    private void applyQpdfCompression(
-            OptimizePdfRequest request, int optimizeLevel, Path currentFile) throws IOException {
+    private void applyQpdfCompression(OptimizePdfRequest request, int optimizeLevel, Path currentFile)
+            throws IOException {
 
         long preQpdfSize = Files.size(currentFile);
         log.info("Pre-QPDF file size: {}", GeneralUtils.formatBytes(preQpdfSize));
@@ -1401,9 +1335,8 @@ public class CompressController {
                         command = zopfliCommand;
                     }
                 }
-                returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                                .runCommandWithOutputHandling(command, null);
+                returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                        .runCommandWithOutputHandling(command, null);
 
                 // Update current file to the QPDF output
                 Files.copy(qpdfOutputPath, currentFile, StandardCopyOption.REPLACE_EXISTING);
@@ -1412,8 +1345,7 @@ public class CompressController {
                 double qpdfReduction = 100.0 - ((postQpdfSize * 100.0) / preQpdfSize);
                 log.info(
                         "Post-QPDF file size: {} (reduced by {}%)",
-                        GeneralUtils.formatBytes(postQpdfSize),
-                        String.format(Locale.ROOT, "%.1f", qpdfReduction));
+                        GeneralUtils.formatBytes(postQpdfSize), String.format(Locale.ROOT, "%.1f", qpdfReduction));
 
             } catch (IOException e) {
                 if (returnCode != null && returnCode.getRc() != 3) {

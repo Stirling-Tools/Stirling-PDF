@@ -29,23 +29,31 @@ import stirling.software.common.service.TaskManager;
 
 class JobControllerTest {
 
-    @Mock private TaskManager taskManager;
+    @Mock
+    private TaskManager taskManager;
 
-    @Mock private FileStorage fileStorage;
+    @Mock
+    private FileStorage fileStorage;
 
-    @Mock private JobQueue jobQueue;
+    @Mock
+    private JobQueue jobQueue;
 
-    @Mock private HttpServletRequest request;
+    @Mock
+    private HttpServletRequest request;
 
-    @Mock private JobOwnershipService jobOwnershipService;
+    @Mock
+    private JobOwnershipService jobOwnershipService;
 
-    @Mock private ClusterBackplane clusterBackplane;
+    @Mock
+    private ClusterBackplane clusterBackplane;
 
-    @Mock private JobStore jobStore;
+    @Mock
+    private JobStore jobStore;
 
     private MockHttpSession session;
 
-    @InjectMocks private JobController controller;
+    @InjectMocks
+    private JobController controller;
 
     @BeforeEach
     void setUp() {
@@ -143,8 +151,7 @@ class JobControllerTest {
 
         JobResult mockResult = new JobResult();
         mockResult.setJobId(jobId);
-        mockResult.completeWithSingleFile(
-                fileId, originalFileName, contentType, fileContent.length);
+        mockResult.completeWithSingleFile(fileId, originalFileName, contentType, fileContent.length);
 
         when(taskManager.getJobResult(jobId)).thenReturn(mockResult);
         when(fileStorage.retrieveBytes(fileId)).thenReturn(fileContent);
@@ -155,8 +162,7 @@ class JobControllerTest {
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(contentType, response.getHeaders().getFirst("Content-Type"));
-        assertTrue(
-                response.getHeaders().getFirst("Content-Disposition").contains(originalFileName));
+        assertTrue(response.getHeaders().getFirst("Content-Disposition").contains(originalFileName));
         assertEquals(fileContent, response.getBody());
     }
 

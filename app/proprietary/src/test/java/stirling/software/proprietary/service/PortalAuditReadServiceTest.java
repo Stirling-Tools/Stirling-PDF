@@ -29,9 +29,11 @@ import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 @ExtendWith(MockitoExtension.class)
 class PortalAuditReadServiceTest {
 
-    @Mock private PersistentAuditEventRepository repo;
+    @Mock
+    private PersistentAuditEventRepository repo;
 
-    @InjectMocks private PortalAuditReadService service;
+    @InjectMocks
+    private PortalAuditReadService service;
 
     private static Page<PersistentAuditEvent> emptyPage() {
         return new PageImpl<>(List.of());
@@ -59,15 +61,13 @@ class PortalAuditReadServiceTest {
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<String>> excluded = ArgumentCaptor.forClass(List.class);
-        verify(repo)
-                .findByTypeNotInAndPrincipalIn(excluded.capture(), anyList(), any(Pageable.class));
+        verify(repo).findByTypeNotInAndPrincipalIn(excluded.capture(), anyList(), any(Pageable.class));
         assertThat(excluded.getValue()).contains("UI_DATA", "HTTP_REQUEST");
     }
 
     @Test
     void emptyTeamPrincipalsShortCircuitToNoQuery() {
         assertThat(service.scopedEvents("team:1", List.of())).isEmpty();
-        verify(repo, never())
-                .findByTypeNotInAndPrincipalIn(anyList(), anyList(), any(Pageable.class));
+        verify(repo, never()).findByTypeNotInAndPrincipalIn(anyList(), anyList(), any(Pageable.class));
     }
 }

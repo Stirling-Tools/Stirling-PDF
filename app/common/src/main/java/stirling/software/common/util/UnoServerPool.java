@@ -46,8 +46,7 @@ public class UnoServerPool {
     }
 
     /** Fail-fast variant; non-positive timeout falls back to unbounded acquire. */
-    public UnoServerLease acquireEndpoint(long timeout, TimeUnit unit)
-            throws InterruptedException, TimeoutException {
+    public UnoServerLease acquireEndpoint(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
         if (endpoints.isEmpty()) {
             return new UnoServerLease(defaultEndpoint(), null, this);
         }
@@ -57,11 +56,10 @@ public class UnoServerPool {
 
         Integer index = availableIndices.poll(timeout, unit);
         if (index == null) {
-            throw new TimeoutException(
-                    "Timed out waiting for a free unoserver endpoint after "
-                            + timeout
-                            + " "
-                            + unit.name().toLowerCase(Locale.ROOT));
+            throw new TimeoutException("Timed out waiting for a free unoserver endpoint after "
+                    + timeout
+                    + " "
+                    + unit.name().toLowerCase(Locale.ROOT));
         }
         return new UnoServerLease(endpoints.get(index), index, this);
     }
@@ -83,9 +81,7 @@ public class UnoServerPool {
         private final AtomicBoolean closed = new AtomicBoolean(false);
 
         public UnoServerLease(
-                ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint,
-                Integer index,
-                UnoServerPool pool) {
+                ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint, Integer index, UnoServerPool pool) {
             this.endpoint = endpoint;
             this.index = index;
             this.pool = pool;

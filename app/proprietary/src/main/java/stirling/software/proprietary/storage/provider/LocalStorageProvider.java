@@ -30,12 +30,11 @@ public class LocalStorageProvider implements StorageProvider {
             throw new IllegalArgumentException("owner.id is required for local storage key");
         }
         String originalFilename = sanitizeFilename(file.getOriginalFilename());
-        String storageKey =
-                owner.getId()
-                        + "/"
-                        + UUID.randomUUID()
-                        + "_"
-                        + Optional.ofNullable(originalFilename).orElse("file");
+        String storageKey = owner.getId()
+                + "/"
+                + UUID.randomUUID()
+                + "_"
+                + Optional.ofNullable(originalFilename).orElse("file");
         Path targetPath = basePath.resolve(storageKey).normalize();
 
         if (!targetPath.startsWith(basePath)) {
@@ -82,10 +81,9 @@ public class LocalStorageProvider implements StorageProvider {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        String stripped =
-                CONTROL_CHARACTER_PATTERN
-                        .matcher(Paths.get(filename).getFileName().toString())
-                        .replaceAll("");
+        String stripped = CONTROL_CHARACTER_PATTERN
+                .matcher(Paths.get(filename).getFileName().toString())
+                .replaceAll("");
         return stripped.isBlank() ? "file" : stripped;
     }
 }

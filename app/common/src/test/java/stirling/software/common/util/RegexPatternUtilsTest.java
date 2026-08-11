@@ -24,8 +24,7 @@ public class RegexPatternUtilsTest {
         Pattern pattern1 = utils.getPattern(regex);
         assertNotNull(pattern1);
         assertTrue(utils.isCached(regex));
-        assertEquals(
-                1, utils.getCacheSize()); // Should have at least 1 pattern (plus precompiled ones
+        assertEquals(1, utils.getCacheSize()); // Should have at least 1 pattern (plus precompiled ones
         // are cleared)
 
         Pattern pattern2 = utils.getPattern(regex);
@@ -64,9 +63,7 @@ public class RegexPatternUtilsTest {
     void testNullRegexHandling() {
         assertThrows(IllegalArgumentException.class, () -> utils.getPattern(null));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> utils.getPattern(null, Pattern.CASE_INSENSITIVE));
+        assertThrows(IllegalArgumentException.class, () -> utils.getPattern(null, Pattern.CASE_INSENSITIVE));
 
         assertFalse(utils.isCached(null));
         assertFalse(utils.removeFromCache(null));

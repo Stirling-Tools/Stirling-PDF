@@ -53,9 +53,7 @@ class PdfJsonFallbackFontServiceTest {
         ApplicationProperties props = new ApplicationProperties();
         sharedService = new PdfJsonFallbackFontService(resourceLoader, props);
         ReflectionTestUtils.setField(
-                sharedService,
-                "legacyFallbackFontLocation",
-                PdfJsonFallbackFontService.DEFAULT_FALLBACK_FONT_LOCATION);
+                sharedService, "legacyFallbackFontLocation", PdfJsonFallbackFontService.DEFAULT_FALLBACK_FONT_LOCATION);
         Method loadConfig = PdfJsonFallbackFontService.class.getDeclaredMethod("loadConfig");
         loadConfig.setAccessible(true);
         loadConfig.invoke(sharedService);
@@ -63,8 +61,7 @@ class PdfJsonFallbackFontServiceTest {
         // Parse the large CJK fallback exactly once; the CanEncode tests only read this font.
         sharedCjkDocument = new PDDocument();
         sharedCjkFont =
-                sharedService.loadFallbackPdfFont(
-                        sharedCjkDocument, PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID);
+                sharedService.loadFallbackPdfFont(sharedCjkDocument, PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID);
     }
 
     @AfterAll
@@ -90,9 +87,7 @@ class PdfJsonFallbackFontServiceTest {
         service = new PdfJsonFallbackFontService(resourceLoader, applicationProperties);
         // The @Value field is normally injected by Spring; set it explicitly for the unit test.
         ReflectionTestUtils.setField(
-                service,
-                "legacyFallbackFontLocation",
-                PdfJsonFallbackFontService.DEFAULT_FALLBACK_FONT_LOCATION);
+                service, "legacyFallbackFontLocation", PdfJsonFallbackFontService.DEFAULT_FALLBACK_FONT_LOCATION);
     }
 
     /** Invoke the private @PostConstruct loadConfig() to populate fallbackFontLocation. */
@@ -151,99 +146,77 @@ class PdfJsonFallbackFontServiceTest {
         @Test
         @DisplayName("Latin letters resolve to the generic Noto Sans fallback")
         void latinResolvesToNotoSans() {
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_ID,
-                    service.resolveFallbackFontId('A'));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_ID, service.resolveFallbackFontId('A'));
         }
 
         @Test
         @DisplayName("CJK unified ideographs resolve to the CJK fallback")
         void cjkIdeographResolvesToCjk() {
             // U+4E2D (中) is a CJK Unified Ideograph.
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID,
-                    service.resolveFallbackFontId(0x4E2D));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID, service.resolveFallbackFontId(0x4E2D));
         }
 
         @Test
         @DisplayName("Bopomofo resolves to the Traditional Chinese fallback")
         void bopomofoResolvesToTc() {
             // U+3105 (ㄅ) is in the Bopomofo block.
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_TC_ID,
-                    service.resolveFallbackFontId(0x3105));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_TC_ID, service.resolveFallbackFontId(0x3105));
         }
 
         @Test
         @DisplayName("CJK compatibility ideographs resolve to the Traditional Chinese fallback")
         void compatibilityIdeographResolvesToTc() {
             // U+F900 is in the CJK Compatibility Ideographs block.
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_TC_ID,
-                    service.resolveFallbackFontId(0xF900));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_TC_ID, service.resolveFallbackFontId(0xF900));
         }
 
         @Test
         @DisplayName("Hiragana resolves to the Japanese fallback")
         void hiraganaResolvesToJp() {
             // U+3042 (あ) is Hiragana.
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_JP_ID,
-                    service.resolveFallbackFontId(0x3042));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_JP_ID, service.resolveFallbackFontId(0x3042));
         }
 
         @Test
         @DisplayName("Hangul resolves to the Korean fallback")
         void hangulResolvesToKr() {
             // U+AC00 (가) is a Hangul syllable.
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_KR_ID,
-                    service.resolveFallbackFontId(0xAC00));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_KR_ID, service.resolveFallbackFontId(0xAC00));
         }
 
         @Test
         @DisplayName("Arabic resolves to the Arabic fallback")
         void arabicResolvesToAr() {
             // U+0627 (ا) is Arabic.
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_AR_ID,
-                    service.resolveFallbackFontId(0x0627));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_AR_ID, service.resolveFallbackFontId(0x0627));
         }
 
         @Test
         @DisplayName("Thai resolves to the Thai fallback")
         void thaiResolvesToTh() {
             // U+0E01 (ก) is Thai.
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_TH_ID,
-                    service.resolveFallbackFontId(0x0E01));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_TH_ID, service.resolveFallbackFontId(0x0E01));
         }
 
         @Test
         @DisplayName("Devanagari resolves to the Devanagari fallback")
         void devanagariResolves() {
             // U+0905 (अ) is Devanagari.
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_DEVANAGARI_ID,
-                    service.resolveFallbackFontId(0x0905));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_DEVANAGARI_ID, service.resolveFallbackFontId(0x0905));
         }
 
         @Test
         @DisplayName("Malayalam resolves to the Malayalam fallback")
         void malayalamResolves() {
             // U+0D05 (അ) is Malayalam.
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_MALAYALAM_ID,
-                    service.resolveFallbackFontId(0x0D05));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_MALAYALAM_ID, service.resolveFallbackFontId(0x0D05));
         }
 
         @Test
         @DisplayName("Tibetan resolves to the Tibetan fallback")
         void tibetanResolves() {
             // U+0F40 (ཀ) is Tibetan.
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_TIBETAN_ID,
-                    service.resolveFallbackFontId(0x0F40));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_TIBETAN_ID, service.resolveFallbackFontId(0x0F40));
         }
     }
 
@@ -261,73 +234,58 @@ class PdfJsonFallbackFontServiceTest {
         @DisplayName("Times New Roman maps to Liberation Serif")
         void timesNewRomanMapsToLiberationSerif() {
             // Spaces are stripped: "Times New Roman" -> "timesnewroman".
-            assertEquals(
-                    "fallback-liberation-serif",
-                    service.resolveFallbackFontId("Times New Roman", 'A'));
+            assertEquals("fallback-liberation-serif", service.resolveFallbackFontId("Times New Roman", 'A'));
         }
 
         @Test
         @DisplayName("Courier New maps to Liberation Mono")
         void courierNewMapsToLiberationMono() {
-            assertEquals(
-                    "fallback-liberation-mono", service.resolveFallbackFontId("Courier New", 'A'));
+            assertEquals("fallback-liberation-mono", service.resolveFallbackFontId("Courier New", 'A'));
         }
 
         @Test
         @DisplayName("Arial-Bold maps to bold Liberation Sans variant")
         void arialBoldMapsToBoldVariant() {
-            assertEquals(
-                    "fallback-liberation-sans-bold",
-                    service.resolveFallbackFontId("Arial-Bold", 'A'));
+            assertEquals("fallback-liberation-sans-bold", service.resolveFallbackFontId("Arial-Bold", 'A'));
         }
 
         @Test
         @DisplayName("Arial-Italic maps to italic Liberation Sans variant")
         void arialItalicMapsToItalicVariant() {
-            assertEquals(
-                    "fallback-liberation-sans-italic",
-                    service.resolveFallbackFontId("Arial-Italic", 'A'));
+            assertEquals("fallback-liberation-sans-italic", service.resolveFallbackFontId("Arial-Italic", 'A'));
         }
 
         @Test
         @DisplayName("Arial-BoldItalic maps to bold-italic Liberation Sans variant")
         void arialBoldItalicMapsToBoldItalicVariant() {
-            assertEquals(
-                    "fallback-liberation-sans-bolditalic",
-                    service.resolveFallbackFontId("Arial-BoldItalic", 'A'));
+            assertEquals("fallback-liberation-sans-bolditalic", service.resolveFallbackFontId("Arial-BoldItalic", 'A'));
         }
 
         @Test
         @DisplayName("numeric weight 700 is detected as bold")
         void numericWeightDetectedAsBold() {
             // "Arimo_700wght" -> base "arimo" -> liberation-sans, bold via 700 weight pattern.
-            assertEquals(
-                    "fallback-liberation-sans-bold",
-                    service.resolveFallbackFontId("Arimo_700wght", 'A'));
+            assertEquals("fallback-liberation-sans-bold", service.resolveFallbackFontId("Arimo_700wght", 'A'));
         }
 
         @Test
         @DisplayName("subset prefix is stripped before alias matching")
         void subsetPrefixStripped() {
             // "ABCDEF+Arial" -> subset prefix removed -> "arial".
-            assertEquals(
-                    "fallback-liberation-sans", service.resolveFallbackFontId("ABCDEF+Arial", 'A'));
+            assertEquals("fallback-liberation-sans", service.resolveFallbackFontId("ABCDEF+Arial", 'A'));
         }
 
         @Test
         @DisplayName("DejaVu Sans bold-italic uses the 'oblique' naming convention")
         void dejaVuUsesObliqueNaming() {
             assertEquals(
-                    "fallback-dejavu-sans-boldoblique",
-                    service.resolveFallbackFontId("DejaVuSans-BoldItalic", 'A'));
+                    "fallback-dejavu-sans-boldoblique", service.resolveFallbackFontId("DejaVuSans-BoldItalic", 'A'));
         }
 
         @Test
         @DisplayName("DejaVu Serif italic keeps the 'italic' naming convention")
         void dejaVuSerifKeepsItalicNaming() {
-            assertEquals(
-                    "fallback-dejavu-serif-italic",
-                    service.resolveFallbackFontId("DejaVuSerif-Italic", 'A'));
+            assertEquals("fallback-dejavu-serif-italic", service.resolveFallbackFontId("DejaVuSerif-Italic", 'A'));
         }
 
         @Test
@@ -335,32 +293,25 @@ class PdfJsonFallbackFontServiceTest {
         void tcAliasIgnoresWeightStyle() {
             // MingLiU maps to fallback-noto-tc, which has no bold variant registered.
             assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_TC_ID,
-                    service.resolveFallbackFontId("MingLiU-Bold", 'A'));
+                    PdfJsonFallbackFontService.FALLBACK_FONT_TC_ID, service.resolveFallbackFontId("MingLiU-Bold", 'A'));
         }
 
         @Test
         @DisplayName("Simplified Chinese aliased name maps to the CJK fallback")
         void simsunMapsToCjk() {
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID,
-                    service.resolveFallbackFontId("SimSun", 'A'));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID, service.resolveFallbackFontId("SimSun", 'A'));
         }
 
         @Test
         @DisplayName("null font name falls through to Unicode-based resolution")
         void nullNameFallsThroughToUnicode() {
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_ID,
-                    service.resolveFallbackFontId(null, 'A'));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_ID, service.resolveFallbackFontId(null, 'A'));
         }
 
         @Test
         @DisplayName("empty font name falls through to Unicode-based resolution")
         void emptyNameFallsThroughToUnicode() {
-            assertEquals(
-                    PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID,
-                    service.resolveFallbackFontId("", 0x4E2D));
+            assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID, service.resolveFallbackFontId("", 0x4E2D));
         }
 
         @Test
@@ -458,8 +409,7 @@ class PdfJsonFallbackFontServiceTest {
         @Test
         @DisplayName("builds a model for a built-in CJK font with base64 program bytes")
         void buildsCjkModel() throws IOException {
-            PdfJsonFont model =
-                    service.buildFallbackFontModel(PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID);
+            PdfJsonFont model = service.buildFallbackFontModel(PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID);
 
             assertNotNull(model);
             assertEquals(PdfJsonFallbackFontService.FALLBACK_FONT_CJK_ID, model.getId());
@@ -490,20 +440,15 @@ class PdfJsonFallbackFontServiceTest {
         @Test
         @DisplayName("unknown fallback id throws IOException")
         void unknownIdThrows() {
-            IOException ex =
-                    assertThrows(
-                            IOException.class,
-                            () -> service.buildFallbackFontModel("does-not-exist"));
+            IOException ex = assertThrows(IOException.class, () -> service.buildFallbackFontModel("does-not-exist"));
             assertTrue(ex.getMessage().contains("Unknown fallback font id"));
         }
 
         @Test
         @DisplayName("font bytes are cached and reused across calls")
         void fontBytesAreCached() throws IOException {
-            PdfJsonFont first =
-                    service.buildFallbackFontModel(PdfJsonFallbackFontService.FALLBACK_FONT_TH_ID);
-            PdfJsonFont second =
-                    service.buildFallbackFontModel(PdfJsonFallbackFontService.FALLBACK_FONT_TH_ID);
+            PdfJsonFont first = service.buildFallbackFontModel(PdfJsonFallbackFontService.FALLBACK_FONT_TH_ID);
+            PdfJsonFont second = service.buildFallbackFontModel(PdfJsonFallbackFontService.FALLBACK_FONT_TH_ID);
             // Same cached bytes -> identical base64 program payload.
             assertEquals(first.getProgram(), second.getProgram());
         }
@@ -517,9 +462,7 @@ class PdfJsonFallbackFontServiceTest {
         @DisplayName("loads a Type0 PDFont for a built-in fallback id")
         void loadsType0Font() throws IOException {
             try (PDDocument document = new PDDocument()) {
-                PDFont font =
-                        service.loadFallbackPdfFont(
-                                document, PdfJsonFallbackFontService.FALLBACK_FONT_AR_ID);
+                PDFont font = service.loadFallbackPdfFont(document, PdfJsonFallbackFontService.FALLBACK_FONT_AR_ID);
                 assertNotNull(font);
                 assertTrue(font instanceof PDType0Font);
             }
@@ -540,10 +483,7 @@ class PdfJsonFallbackFontServiceTest {
         @DisplayName("unknown fallback id throws IOException")
         void unknownIdThrows() throws IOException {
             try (PDDocument document = new PDDocument()) {
-                IOException ex =
-                        assertThrows(
-                                IOException.class,
-                                () -> service.loadFallbackPdfFont(document, "nope"));
+                IOException ex = assertThrows(IOException.class, () -> service.loadFallbackPdfFont(document, "nope"));
                 assertTrue(ex.getMessage().contains("Unknown fallback font id"));
             }
         }
@@ -554,12 +494,8 @@ class PdfJsonFallbackFontServiceTest {
             // Instance-identity contract holds for any built-in font; use the tiny Thai fallback
             // (~22 KB) instead of the multi-MB Korean font to keep two loads cheap.
             try (PDDocument document = new PDDocument()) {
-                PDFont a =
-                        service.loadFallbackPdfFont(
-                                document, PdfJsonFallbackFontService.FALLBACK_FONT_TH_ID);
-                PDFont b =
-                        service.loadFallbackPdfFont(
-                                document, PdfJsonFallbackFontService.FALLBACK_FONT_TH_ID);
+                PDFont a = service.loadFallbackPdfFont(document, PdfJsonFallbackFontService.FALLBACK_FONT_TH_ID);
+                PDFont b = service.loadFallbackPdfFont(document, PdfJsonFallbackFontService.FALLBACK_FONT_TH_ID);
                 assertNotNull(a);
                 assertNotNull(b);
                 // Two independent PDType0Font wrappers loaded into the same document.

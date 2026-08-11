@@ -85,25 +85,41 @@ import tools.jackson.databind.json.JsonMapper;
 @org.mockito.junit.jupiter.MockitoSettings(strictness = Strictness.LENIENT)
 class PdfJsonConversionServiceCoverageTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private TaskManager taskManager;
-    @Mock private PdfJsonFallbackFontService fallbackFontService;
-    @Mock private PdfJsonFontService fontService;
-    @Mock private Type3FontConversionService type3FontConversionService;
-    @Mock private Type3GlyphExtractor type3GlyphExtractor;
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private TaskManager taskManager;
+
+    @Mock
+    private PdfJsonFallbackFontService fallbackFontService;
+
+    @Mock
+    private PdfJsonFontService fontService;
+
+    @Mock
+    private Type3FontConversionService type3FontConversionService;
+
+    @Mock
+    private Type3GlyphExtractor type3GlyphExtractor;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
 
     // Real COS mapper: serialization is pure and complex, so the real component gives best
     // coverage.
     private final PdfJsonCosMapper cosMapper = new PdfJsonCosMapper();
 
     // Mirror production application.properties so primitive defaults map cleanly on round-trip.
-    private final ObjectMapper objectMapper =
-            JsonMapper.builder()
-                    .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-                    .build();
+    private final ObjectMapper objectMapper = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+            .build();
 
     private PdfJsonConversionService service;
 
@@ -111,34 +127,29 @@ class PdfJsonConversionServiceCoverageTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        service =
-                new PdfJsonConversionService(
-                        pdfDocumentFactory,
-                        objectMapper,
-                        endpointConfiguration,
-                        tempFileManager,
-                        taskManager,
-                        cosMapper,
-                        fallbackFontService,
-                        fontService,
-                        type3FontConversionService,
-                        type3GlyphExtractor,
-                        applicationProperties);
+        service = new PdfJsonConversionService(
+                pdfDocumentFactory,
+                objectMapper,
+                endpointConfiguration,
+                tempFileManager,
+                taskManager,
+                cosMapper,
+                fallbackFontService,
+                fontService,
+                type3FontConversionService,
+                type3GlyphExtractor,
+                applicationProperties);
 
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        invocation -> {
-                            String suffix = invocation.getArgument(0);
-                            Path path = Files.createTempFile("pdfjson-cov-test", suffix);
-                            createdTempFiles.add(path);
-                            return path.toFile();
-                        });
-        when(tempFileManager.deleteTempFile(any(File.class)))
-                .thenAnswer(
-                        invocation -> {
-                            File file = invocation.getArgument(0);
-                            return file != null && file.delete();
-                        });
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(invocation -> {
+            String suffix = invocation.getArgument(0);
+            Path path = Files.createTempFile("pdfjson-cov-test", suffix);
+            createdTempFiles.add(path);
+            return path.toFile();
+        });
+        when(tempFileManager.deleteTempFile(any(File.class))).thenAnswer(invocation -> {
+            File file = invocation.getArgument(0);
+            return file != null && file.delete();
+        });
         when(taskManager.addNote(anyString(), anyString())).thenReturn(true);
     }
 
@@ -157,14 +168,12 @@ class PdfJsonConversionServiceCoverageTest {
 
     private void stubFallbackFont() throws IOException {
         when(fallbackFontService.buildFallbackFontModel())
-                .thenAnswer(
-                        invocation ->
-                                PdfJsonFont.builder()
-                                        .id(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
-                                        .uid(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
-                                        .baseName("Fallback")
-                                        .subtype("TrueType")
-                                        .build());
+                .thenAnswer(invocation -> PdfJsonFont.builder()
+                        .id(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
+                        .uid(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
+                        .baseName("Fallback")
+                        .subtype("TrueType")
+                        .build());
         when(fallbackFontService.loadFallbackPdfFont(any(PDDocument.class)))
                 .thenAnswer(invocation -> new PDType1Font(Standard14Fonts.FontName.HELVETICA));
     }
@@ -269,8 +278,7 @@ class PdfJsonConversionServiceCoverageTest {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage(PDRectangle.LETTER);
         document.addPage(page);
-        PDImageXObject image =
-                LosslessFactory.createFromImage(document, colorTile(32, 24, Color.GREEN));
+        PDImageXObject image = LosslessFactory.createFromImage(document, colorTile(32, 24, Color.GREEN));
         try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
             cs.drawImage(image, 100, 500, 128, 96);
             cs.beginText();
@@ -328,9 +336,8 @@ class PdfJsonConversionServiceCoverageTest {
     /** Converts the given PDF bytes to the in-memory JSON model using the real factory load. */
     private PdfJsonDocument toJsonDocument(byte[] pdfBytes) throws IOException {
         when(pdfDocumentFactory.load(any(Path.class), eq(true)))
-                .thenAnswer(
-                        invocation ->
-                                Loader.loadPDF(invocation.getArgument(0, Path.class).toFile()));
+                .thenAnswer(invocation ->
+                        Loader.loadPDF(invocation.getArgument(0, Path.class).toFile()));
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         service.convertPdfToJson(pdfMultipart(pdfBytes), out);
         return objectMapper.readValue(out.toByteArray(), PdfJsonDocument.class);
@@ -349,9 +356,8 @@ class PdfJsonConversionServiceCoverageTest {
      */
     private PdfJsonDocument cacheLazyDocument(String jobId, byte[] pdfBytes) throws IOException {
         when(pdfDocumentFactory.load(any(Path.class), eq(true)))
-                .thenAnswer(
-                        invocation ->
-                                Loader.loadPDF(invocation.getArgument(0, Path.class).toFile()));
+                .thenAnswer(invocation ->
+                        Loader.loadPDF(invocation.getArgument(0, Path.class).toFile()));
         when(pdfDocumentFactory.load(any(byte[].class), eq(true)))
                 .thenAnswer(invocation -> Loader.loadPDF(invocation.getArgument(0, byte[].class)));
         JobContext.setJobId(jobId);
@@ -376,8 +382,7 @@ class PdfJsonConversionServiceCoverageTest {
             assertEquals(1, doc.getPages().size());
             List<PdfJsonTextElement> elements = doc.getPages().get(0).getTextElements();
             assertThat(elements).isNotEmpty();
-            String joined =
-                    elements.stream().map(PdfJsonTextElement::getText).reduce("", (a, b) -> a + b);
+            String joined = elements.stream().map(PdfJsonTextElement::getText).reduce("", (a, b) -> a + b);
             assertThat(joined).contains("Hello");
             assertThat(doc.getFonts()).isNotEmpty();
             // Every text run should reference a known font id.
@@ -391,12 +396,11 @@ class PdfJsonConversionServiceCoverageTest {
 
             assertEquals(3, doc.getPages().size());
             // The first page used three different base fonts.
-            long distinctBaseNames =
-                    doc.getFonts().stream()
-                            .map(PdfJsonFont::getBaseName)
-                            .filter(java.util.Objects::nonNull)
-                            .distinct()
-                            .count();
+            long distinctBaseNames = doc.getFonts().stream()
+                    .map(PdfJsonFont::getBaseName)
+                    .filter(java.util.Objects::nonNull)
+                    .distinct()
+                    .count();
             assertThat(distinctBaseNames).isGreaterThanOrEqualTo(3);
             assertEquals(90, doc.getPages().get(1).getRotation());
             assertEquals(180, doc.getPages().get(2).getRotation());
@@ -453,7 +457,8 @@ class PdfJsonConversionServiceCoverageTest {
         @DisplayName("lightweight extraction still returns parseable pages")
         void lightweightExtraction() throws IOException {
             when(pdfDocumentFactory.load(any(Path.class), eq(true)))
-                    .thenAnswer(inv -> Loader.loadPDF(inv.getArgument(0, Path.class).toFile()));
+                    .thenAnswer(
+                            inv -> Loader.loadPDF(inv.getArgument(0, Path.class).toFile()));
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             service.convertPdfToJson(pdfMultipart(richTextPdf()), true, out);
             PdfJsonDocument doc = objectMapper.readValue(out.toByteArray(), PdfJsonDocument.class);
@@ -487,13 +492,13 @@ class PdfJsonConversionServiceCoverageTest {
         @DisplayName("progress callback observes increasing percentages through to completion")
         void progressMonotonic() throws IOException {
             when(pdfDocumentFactory.load(any(Path.class), eq(true)))
-                    .thenAnswer(inv -> Loader.loadPDF(inv.getArgument(0, Path.class).toFile()));
+                    .thenAnswer(
+                            inv -> Loader.loadPDF(inv.getArgument(0, Path.class).toFile()));
             AtomicInteger maxPercent = new AtomicInteger(-1);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             service.convertPdfToJson(
                     pdfMultipart(richTextPdf()),
-                    progress ->
-                            maxPercent.updateAndGet(prev -> Math.max(prev, progress.getPercent())),
+                    progress -> maxPercent.updateAndGet(prev -> Math.max(prev, progress.getPercent())),
                     out);
             assertEquals(100, maxPercent.get());
         }
@@ -599,31 +604,28 @@ class PdfJsonConversionServiceCoverageTest {
         @DisplayName("text element drawn with a Standard14 font reference renders")
         void standard14TextRenders() throws IOException {
             stubFallbackFont();
-            PdfJsonFont font =
-                    PdfJsonFont.builder()
-                            .id("F1")
-                            .uid("F1")
-                            .baseName("Helvetica")
-                            .subtype("Type1")
-                            .standard14Name("Helvetica")
-                            .build();
+            PdfJsonFont font = PdfJsonFont.builder()
+                    .id("F1")
+                    .uid("F1")
+                    .baseName("Helvetica")
+                    .subtype("Type1")
+                    .standard14Name("Helvetica")
+                    .build();
 
-            PdfJsonTextElement element =
-                    PdfJsonTextElement.builder()
-                            .text("Synth text")
-                            .fontId("F1")
-                            .fontSize(12f)
-                            .x(72f)
-                            .y(700f)
-                            .build();
+            PdfJsonTextElement element = PdfJsonTextElement.builder()
+                    .text("Synth text")
+                    .fontId("F1")
+                    .fontSize(12f)
+                    .x(72f)
+                    .y(700f)
+                    .build();
 
-            PdfJsonPage page =
-                    PdfJsonPage.builder()
-                            .pageNumber(1)
-                            .width(612f)
-                            .height(792f)
-                            .textElements(List.of(element))
-                            .build();
+            PdfJsonPage page = PdfJsonPage.builder()
+                    .pageNumber(1)
+                    .width(612f)
+                    .height(792f)
+                    .textElements(List.of(element))
+                    .build();
 
             PdfJsonDocument doc = docWith(page);
             doc.setFonts(new ArrayList<>(List.of(font)));
@@ -637,44 +639,40 @@ class PdfJsonConversionServiceCoverageTest {
         @DisplayName("text element with full style attributes renders via regeneration")
         void styledTextRenders() throws IOException {
             stubFallbackFont();
-            PdfJsonFont font =
-                    PdfJsonFont.builder()
-                            .id("F1")
-                            .uid("F1")
-                            .baseName("Times-Roman")
-                            .subtype("Type1")
-                            .standard14Name("Times-Roman")
-                            .build();
+            PdfJsonFont font = PdfJsonFont.builder()
+                    .id("F1")
+                    .uid("F1")
+                    .baseName("Times-Roman")
+                    .subtype("Type1")
+                    .standard14Name("Times-Roman")
+                    .build();
 
-            PdfJsonTextColor fill =
-                    PdfJsonTextColor.builder()
-                            .colorSpace("DeviceRGB")
-                            .components(new float[] {0.2f, 0.4f, 0.6f})
-                            .build();
+            PdfJsonTextColor fill = PdfJsonTextColor.builder()
+                    .colorSpace("DeviceRGB")
+                    .components(new float[] {0.2f, 0.4f, 0.6f})
+                    .build();
 
-            PdfJsonTextElement element =
-                    PdfJsonTextElement.builder()
-                            .text("Styled")
-                            .fontId("F1")
-                            .fontSize(20f)
-                            .characterSpacing(1.2f)
-                            .wordSpacing(2.0f)
-                            .horizontalScaling(95f)
-                            .rise(1.0f)
-                            .renderingMode(0)
-                            .fillColor(fill)
-                            .textMatrix(new float[] {1f, 0f, 0f, 1f, 100f, 600f})
-                            .x(100f)
-                            .y(600f)
-                            .build();
+            PdfJsonTextElement element = PdfJsonTextElement.builder()
+                    .text("Styled")
+                    .fontId("F1")
+                    .fontSize(20f)
+                    .characterSpacing(1.2f)
+                    .wordSpacing(2.0f)
+                    .horizontalScaling(95f)
+                    .rise(1.0f)
+                    .renderingMode(0)
+                    .fillColor(fill)
+                    .textMatrix(new float[] {1f, 0f, 0f, 1f, 100f, 600f})
+                    .x(100f)
+                    .y(600f)
+                    .build();
 
-            PdfJsonPage page =
-                    PdfJsonPage.builder()
-                            .pageNumber(1)
-                            .width(612f)
-                            .height(792f)
-                            .textElements(List.of(element))
-                            .build();
+            PdfJsonPage page = PdfJsonPage.builder()
+                    .pageNumber(1)
+                    .width(612f)
+                    .height(792f)
+                    .textElements(List.of(element))
+                    .build();
             PdfJsonDocument doc = docWith(page);
             doc.setFonts(new ArrayList<>(List.of(font)));
 
@@ -691,26 +689,24 @@ class PdfJsonConversionServiceCoverageTest {
             javax.imageio.ImageIO.write(tile, "png", pngOut);
             String base64 = Base64.getEncoder().encodeToString(pngOut.toByteArray());
 
-            PdfJsonImageElement image =
-                    PdfJsonImageElement.builder()
-                            .id("Im1")
-                            .imageData(base64)
-                            .imageFormat("png")
-                            .x(50f)
-                            .y(500f)
-                            .width(64f)
-                            .height(64f)
-                            .nativeWidth(8)
-                            .nativeHeight(8)
-                            .build();
+            PdfJsonImageElement image = PdfJsonImageElement.builder()
+                    .id("Im1")
+                    .imageData(base64)
+                    .imageFormat("png")
+                    .x(50f)
+                    .y(500f)
+                    .width(64f)
+                    .height(64f)
+                    .nativeWidth(8)
+                    .nativeHeight(8)
+                    .build();
 
-            PdfJsonPage page =
-                    PdfJsonPage.builder()
-                            .pageNumber(1)
-                            .width(612f)
-                            .height(792f)
-                            .imageElements(List.of(image))
-                            .build();
+            PdfJsonPage page = PdfJsonPage.builder()
+                    .pageNumber(1)
+                    .width(612f)
+                    .height(792f)
+                    .imageElements(List.of(image))
+                    .build();
 
             try (PDDocument loaded = Loader.loadPDF(runJsonToPdf(docWith(page)))) {
                 assertEquals(1, loaded.getNumberOfPages());
@@ -726,24 +722,22 @@ class PdfJsonConversionServiceCoverageTest {
             javax.imageio.ImageIO.write(tile, "png", pngOut);
             String base64 = Base64.getEncoder().encodeToString(pngOut.toByteArray());
 
-            PdfJsonImageElement image =
-                    PdfJsonImageElement.builder()
-                            .id("Im2")
-                            .imageData(base64)
-                            .imageFormat("png")
-                            .left(30f)
-                            .bottom(40f)
-                            .right(110f)
-                            .top(120f)
-                            .build();
+            PdfJsonImageElement image = PdfJsonImageElement.builder()
+                    .id("Im2")
+                    .imageData(base64)
+                    .imageFormat("png")
+                    .left(30f)
+                    .bottom(40f)
+                    .right(110f)
+                    .top(120f)
+                    .build();
 
-            PdfJsonPage page =
-                    PdfJsonPage.builder()
-                            .pageNumber(1)
-                            .width(612f)
-                            .height(792f)
-                            .imageElements(List.of(image))
-                            .build();
+            PdfJsonPage page = PdfJsonPage.builder()
+                    .pageNumber(1)
+                    .width(612f)
+                    .height(792f)
+                    .imageElements(List.of(image))
+                    .build();
             assertThat(runJsonToPdf(docWith(page))).isNotEmpty();
         }
 
@@ -751,21 +745,19 @@ class PdfJsonConversionServiceCoverageTest {
         @DisplayName("annotation model is restored onto the rebuilt page")
         void synthesizedAnnotationRestored() throws IOException {
             stubFallbackFont();
-            PdfJsonAnnotation annotation =
-                    PdfJsonAnnotation.builder()
-                            .subtype("Text")
-                            .contents("synthetic note")
-                            .rect(new float[] {50f, 700f, 70f, 720f})
-                            .color(new float[] {1f, 1f, 0f})
-                            .build();
+            PdfJsonAnnotation annotation = PdfJsonAnnotation.builder()
+                    .subtype("Text")
+                    .contents("synthetic note")
+                    .rect(new float[] {50f, 700f, 70f, 720f})
+                    .color(new float[] {1f, 1f, 0f})
+                    .build();
 
-            PdfJsonPage page =
-                    PdfJsonPage.builder()
-                            .pageNumber(1)
-                            .width(612f)
-                            .height(792f)
-                            .annotations(List.of(annotation))
-                            .build();
+            PdfJsonPage page = PdfJsonPage.builder()
+                    .pageNumber(1)
+                    .width(612f)
+                    .height(792f)
+                    .annotations(List.of(annotation))
+                    .build();
 
             try (PDDocument loaded = Loader.loadPDF(runJsonToPdf(docWith(page)))) {
                 // The rebuild ran the annotation-restore path and produced a valid single-page doc.
@@ -778,21 +770,19 @@ class PdfJsonConversionServiceCoverageTest {
         @DisplayName("text referencing a missing font falls back without failing")
         void missingFontFallsBack() throws IOException {
             stubFallbackFont();
-            PdfJsonTextElement element =
-                    PdfJsonTextElement.builder()
-                            .text("No font defined")
-                            .fontId("does-not-exist")
-                            .fontSize(12f)
-                            .x(72f)
-                            .y(700f)
-                            .build();
-            PdfJsonPage page =
-                    PdfJsonPage.builder()
-                            .pageNumber(1)
-                            .width(612f)
-                            .height(792f)
-                            .textElements(List.of(element))
-                            .build();
+            PdfJsonTextElement element = PdfJsonTextElement.builder()
+                    .text("No font defined")
+                    .fontId("does-not-exist")
+                    .fontSize(12f)
+                    .x(72f)
+                    .y(700f)
+                    .build();
+            PdfJsonPage page = PdfJsonPage.builder()
+                    .pageNumber(1)
+                    .width(612f)
+                    .height(792f)
+                    .textElements(List.of(element))
+                    .build();
             assertThat(runJsonToPdf(docWith(page))).isNotEmpty();
         }
 
@@ -805,41 +795,37 @@ class PdfJsonConversionServiceCoverageTest {
             javax.imageio.ImageIO.write(tile, "png", pngOut);
             String base64 = Base64.getEncoder().encodeToString(pngOut.toByteArray());
 
-            PdfJsonFont font =
-                    PdfJsonFont.builder()
-                            .id("F1")
-                            .uid("F1")
-                            .baseName("Helvetica")
-                            .subtype("Type1")
-                            .standard14Name("Helvetica")
-                            .build();
-            PdfJsonTextElement text =
-                    PdfJsonTextElement.builder()
-                            .text("Mixed")
-                            .fontId("F1")
-                            .fontSize(12f)
-                            .x(72f)
-                            .y(700f)
-                            .build();
-            PdfJsonImageElement image =
-                    PdfJsonImageElement.builder()
-                            .id("Im1")
-                            .imageData(base64)
-                            .imageFormat("png")
-                            .x(72f)
-                            .y(500f)
-                            .width(48f)
-                            .height(48f)
-                            .build();
+            PdfJsonFont font = PdfJsonFont.builder()
+                    .id("F1")
+                    .uid("F1")
+                    .baseName("Helvetica")
+                    .subtype("Type1")
+                    .standard14Name("Helvetica")
+                    .build();
+            PdfJsonTextElement text = PdfJsonTextElement.builder()
+                    .text("Mixed")
+                    .fontId("F1")
+                    .fontSize(12f)
+                    .x(72f)
+                    .y(700f)
+                    .build();
+            PdfJsonImageElement image = PdfJsonImageElement.builder()
+                    .id("Im1")
+                    .imageData(base64)
+                    .imageFormat("png")
+                    .x(72f)
+                    .y(500f)
+                    .width(48f)
+                    .height(48f)
+                    .build();
 
-            PdfJsonPage page =
-                    PdfJsonPage.builder()
-                            .pageNumber(1)
-                            .width(612f)
-                            .height(792f)
-                            .textElements(List.of(text))
-                            .imageElements(List.of(image))
-                            .build();
+            PdfJsonPage page = PdfJsonPage.builder()
+                    .pageNumber(1)
+                    .width(612f)
+                    .height(792f)
+                    .textElements(List.of(text))
+                    .imageElements(List.of(image))
+                    .build();
             PdfJsonDocument doc = docWith(page);
             doc.setFonts(new ArrayList<>(List.of(font)));
             assertThat(runJsonToPdf(doc)).isNotEmpty();
@@ -904,9 +890,7 @@ class PdfJsonConversionServiceCoverageTest {
         void extractSinglePageOutOfRange() throws IOException {
             cacheLazyDocument("job-range", simpleTextPdf());
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> service.extractSinglePage("job-range", 99, out));
+            assertThrows(IllegalArgumentException.class, () -> service.extractSinglePage("job-range", 99, out));
         }
 
         @Test
@@ -924,9 +908,7 @@ class PdfJsonConversionServiceCoverageTest {
         void extractPageFontsOutOfRange() throws IOException {
             cacheLazyDocument("job-fonts-range", simpleTextPdf());
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> service.extractPageFonts("job-fonts-range", 5, out));
+            assertThrows(IllegalArgumentException.class, () -> service.extractPageFonts("job-fonts-range", 5, out));
         }
 
         @Test
@@ -936,8 +918,7 @@ class PdfJsonConversionServiceCoverageTest {
                     .thenAnswer(inv -> Loader.loadPDF(inv.getArgument(0, byte[].class)));
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             service.extractDocumentMetadata(pdfMultipart(richTextPdf()), "job-meta", out);
-            PdfJsonDocumentMetadata md =
-                    objectMapper.readValue(out.toByteArray(), PdfJsonDocumentMetadata.class);
+            PdfJsonDocumentMetadata md = objectMapper.readValue(out.toByteArray(), PdfJsonDocumentMetadata.class);
             assertThat(md.getPageDimensions()).hasSize(3);
 
             // The page is now cached, so a single page can be pulled back out.
@@ -1008,9 +989,7 @@ class PdfJsonConversionServiceCoverageTest {
             cacheLazyDocument("job-clear", simpleTextPdf());
             service.clearCachedDocument("job-clear");
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThrows(
-                    CacheUnavailableException.class,
-                    () -> service.extractSinglePage("job-clear", 1, out));
+            assertThrows(CacheUnavailableException.class, () -> service.extractSinglePage("job-clear", 1, out));
         }
     }
 
@@ -1025,12 +1004,11 @@ class PdfJsonConversionServiceCoverageTest {
         @Test
         @DisplayName("malformed JSON input surfaces as a runtime parsing failure")
         void malformedJsonThrows() {
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "broken.json",
-                            "application/json",
-                            "{ not valid json ]".getBytes(StandardCharsets.UTF_8));
+            MockMultipartFile file = new MockMultipartFile(
+                    "fileInput",
+                    "broken.json",
+                    "application/json",
+                    "{ not valid json ]".getBytes(StandardCharsets.UTF_8));
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             assertThrows(Exception.class, () -> service.convertJsonToPdf(file, out));
         }
@@ -1051,7 +1029,8 @@ class PdfJsonConversionServiceCoverageTest {
         @DisplayName("page with neither text nor images is skipped cleanly")
         void emptyContentPageSkipped() throws IOException {
             stubFallbackFont();
-            PdfJsonPage page = PdfJsonPage.builder().pageNumber(1).width(200f).height(200f).build();
+            PdfJsonPage page =
+                    PdfJsonPage.builder().pageNumber(1).width(200f).height(200f).build();
             PdfJsonDocument doc = new PdfJsonDocument();
             doc.setPages(List.of(page));
             try (PDDocument loaded = Loader.loadPDF(runJsonToPdf(doc))) {
@@ -1073,23 +1052,21 @@ class PdfJsonConversionServiceCoverageTest {
         @DisplayName("image element with invalid base64 data does not abort the conversion")
         void invalidImageDataTolerated() throws IOException {
             stubFallbackFont();
-            PdfJsonImageElement image =
-                    PdfJsonImageElement.builder()
-                            .id("bad")
-                            .imageData("@@@not-base64@@@")
-                            .imageFormat("png")
-                            .x(10f)
-                            .y(10f)
-                            .width(20f)
-                            .height(20f)
-                            .build();
-            PdfJsonPage page =
-                    PdfJsonPage.builder()
-                            .pageNumber(1)
-                            .width(200f)
-                            .height(200f)
-                            .imageElements(List.of(image))
-                            .build();
+            PdfJsonImageElement image = PdfJsonImageElement.builder()
+                    .id("bad")
+                    .imageData("@@@not-base64@@@")
+                    .imageFormat("png")
+                    .x(10f)
+                    .y(10f)
+                    .width(20f)
+                    .height(20f)
+                    .build();
+            PdfJsonPage page = PdfJsonPage.builder()
+                    .pageNumber(1)
+                    .width(200f)
+                    .height(200f)
+                    .imageElements(List.of(image))
+                    .build();
             PdfJsonDocument doc = new PdfJsonDocument();
             doc.setPages(List.of(page));
             assertDoesNotThrow(() -> runJsonToPdf(doc));
@@ -1102,8 +1079,7 @@ class PdfJsonConversionServiceCoverageTest {
                     .thenAnswer(inv -> Loader.loadPDF(inv.getArgument(0, byte[].class)));
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             service.extractDocumentMetadata(pdfMultipart(simpleTextPdf()), null, out);
-            PdfJsonDocumentMetadata md =
-                    objectMapper.readValue(out.toByteArray(), PdfJsonDocumentMetadata.class);
+            PdfJsonDocumentMetadata md = objectMapper.readValue(out.toByteArray(), PdfJsonDocumentMetadata.class);
             assertThat(md.getPageDimensions()).hasSize(1);
         }
     }

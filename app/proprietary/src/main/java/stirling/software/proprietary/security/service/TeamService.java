@@ -17,24 +17,18 @@ public class TeamService {
     public static final String INTERNAL_TEAM_NAME = "Internal";
 
     public Team getOrCreateDefaultTeam() {
-        return teamRepository
-                .findByName(DEFAULT_TEAM_NAME)
-                .orElseGet(
-                        () -> {
-                            Team defaultTeam = new Team();
-                            defaultTeam.setName(DEFAULT_TEAM_NAME);
-                            return teamRepository.save(defaultTeam);
-                        });
+        return teamRepository.findByName(DEFAULT_TEAM_NAME).orElseGet(() -> {
+            Team defaultTeam = new Team();
+            defaultTeam.setName(DEFAULT_TEAM_NAME);
+            return teamRepository.save(defaultTeam);
+        });
     }
 
     public Team getOrCreateInternalTeam() {
-        return teamRepository
-                .findByName(INTERNAL_TEAM_NAME)
-                .orElseGet(
-                        () -> {
-                            Team internalTeam = new Team();
-                            internalTeam.setName(INTERNAL_TEAM_NAME);
-                            return teamRepository.save(internalTeam);
-                        });
+        return teamRepository.findByName(INTERNAL_TEAM_NAME).orElseGet(() -> {
+            Team internalTeam = new Team();
+            internalTeam.setName(INTERNAL_TEAM_NAME);
+            return teamRepository.save(internalTeam);
+        });
     }
 }

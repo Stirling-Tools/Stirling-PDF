@@ -30,15 +30,13 @@ class ToolIORegistryTest {
         return new ToolIOSpec(Set.of(accepts), produces, arity, List.of());
     }
 
-    private final ToolIORegistry registry =
-            ToolIORegistry.forSpecs(
-                    Map.of(
-                            SPLIT, spec(ToolFormat.PDF, ToolFormat.PDF, ToolArity.SIMO),
-                            MERGE, spec(ToolFormat.PDF, ToolFormat.PDF, ToolArity.MISO),
-                            ROTATE, spec(ToolFormat.PDF, ToolFormat.PDF, ToolArity.SISO),
-                            ATTACHMENTS, spec(ToolFormat.PDF, ToolFormat.ZIP, ToolArity.SISO),
-                            EXTRACT_IMAGES, spec(ToolFormat.PDF, ToolFormat.IMAGE, ToolArity.SIMO),
-                            CONVERT_ANY, spec(ToolFormat.ANY, ToolFormat.PDF, ToolArity.SISO)));
+    private final ToolIORegistry registry = ToolIORegistry.forSpecs(Map.of(
+            SPLIT, spec(ToolFormat.PDF, ToolFormat.PDF, ToolArity.SIMO),
+            MERGE, spec(ToolFormat.PDF, ToolFormat.PDF, ToolArity.MISO),
+            ROTATE, spec(ToolFormat.PDF, ToolFormat.PDF, ToolArity.SISO),
+            ATTACHMENTS, spec(ToolFormat.PDF, ToolFormat.ZIP, ToolArity.SISO),
+            EXTRACT_IMAGES, spec(ToolFormat.PDF, ToolFormat.IMAGE, ToolArity.SIMO),
+            CONVERT_ANY, spec(ToolFormat.ANY, ToolFormat.PDF, ToolArity.SISO)));
 
     @Test
     void multiInputFollowsArity() {

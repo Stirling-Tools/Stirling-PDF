@@ -45,8 +45,7 @@ class LiveValkeyIntegrationTest {
 
     @Container
     static final GenericContainer<?> VALKEY =
-            new GenericContainer<>(DockerImageName.parse("valkey/valkey:8.0-alpine"))
-                    .withExposedPorts(6379);
+            new GenericContainer<>(DockerImageName.parse("valkey/valkey:8.0-alpine")).withExposedPorts(6379);
 
     static boolean isDockerAvailable() {
         return DockerClientFactory.instance().isDockerAvailable();
@@ -92,16 +91,15 @@ class LiveValkeyIntegrationTest {
         ValkeyJobStore storeA = new ValkeyJobStore(templateA);
         ValkeyJobStore storeB = new ValkeyJobStore(templateB);
 
-        JobStoreEntry entry =
-                new JobStoreEntry(
-                        "live-job-1",
-                        JobStoreEntry.JobState.RUNNING,
-                        "node-A",
-                        Instant.now(),
-                        null,
-                        null,
-                        List.of("live-file-1"),
-                        Map.of("k", "v"));
+        JobStoreEntry entry = new JobStoreEntry(
+                "live-job-1",
+                JobStoreEntry.JobState.RUNNING,
+                "node-A",
+                Instant.now(),
+                null,
+                null,
+                List.of("live-file-1"),
+                Map.of("k", "v"));
         storeA.put(entry, Duration.ofSeconds(30));
 
         Optional<JobStoreEntry> seen = storeB.get("live-job-1");
@@ -167,10 +165,7 @@ class LiveValkeyIntegrationTest {
             RateLimitDecision d = store.tryConsume(key, capacity, Duration.ofSeconds(30));
             if (d.allowed()) allowed.incrementAndGet();
         }
-        assertEquals(
-                4,
-                allowed.get(),
-                "exactly 4 (the global capacity) must be allowed across both instances");
+        assertEquals(4, allowed.get(), "exactly 4 (the global capacity) must be allowed across both instances");
     }
 
     @Test
@@ -179,19 +174,16 @@ class LiveValkeyIntegrationTest {
         ValkeyDistributedLock lockA = new ValkeyDistributedLock(templateA);
         ValkeyDistributedLock lockB = new ValkeyDistributedLock(templateB);
 
-        Optional<DistributedLock.LockHandle> heldByA =
-                lockA.tryAcquire("election-X", Duration.ofSeconds(30));
+        Optional<DistributedLock.LockHandle> heldByA = lockA.tryAcquire("election-X", Duration.ofSeconds(30));
         assertTrue(heldByA.isPresent());
 
-        Optional<DistributedLock.LockHandle> heldByB =
-                lockB.tryAcquire("election-X", Duration.ofSeconds(30));
+        Optional<DistributedLock.LockHandle> heldByB = lockB.tryAcquire("election-X", Duration.ofSeconds(30));
         assertFalse(heldByB.isPresent(), "second acquirer must fail while A holds the lock");
 
         heldByA.get().release();
 
         // After release, B can acquire
-        Optional<DistributedLock.LockHandle> retry =
-                lockB.tryAcquire("election-X", Duration.ofSeconds(30));
+        Optional<DistributedLock.LockHandle> retry = lockB.tryAcquire("election-X", Duration.ofSeconds(30));
         assertTrue(retry.isPresent());
         retry.get().release();
     }
@@ -205,13 +197,9 @@ class LiveValkeyIntegrationTest {
         assertTrue(held.isPresent());
 
         assertTrue(held.get().renew(Duration.ofSeconds(30)), "renew on a held lock must succeed");
-        Long ttlMs =
-                templateA.getExpire(
-                        "stirling:lock:" + key, java.util.concurrent.TimeUnit.MILLISECONDS);
+        Long ttlMs = templateA.getExpire("stirling:lock:" + key, java.util.concurrent.TimeUnit.MILLISECONDS);
         assertNotNull(ttlMs);
-        assertTrue(
-                ttlMs > 1500 && ttlMs <= 30_000,
-                "renew must reset TTL to the new 30s lease, got " + ttlMs + " ms");
+        assertTrue(ttlMs > 1500 && ttlMs <= 30_000, "renew must reset TTL to the new 30s lease, got " + ttlMs + " ms");
         held.get().release();
     }
 
@@ -232,8 +220,7 @@ class LiveValkeyIntegrationTest {
 
         // A's stale handle (different UUID value) must touch neither B's renew nor B's key.
         assertFalse(
-                a.get().renew(Duration.ofSeconds(30)),
-                "stale owner must not be able to renew a lock now owned by B");
+                a.get().renew(Duration.ofSeconds(30)), "stale owner must not be able to renew a lock now owned by B");
         a.get().release(); // value-checked DEL: must be a no-op, must NOT delete B's key
 
         assertFalse(
@@ -247,18 +234,11 @@ class LiveValkeyIntegrationTest {
     void registryRegisterIsAtomic() {
         ValkeyInstanceRegistry reg = new ValkeyInstanceRegistry(templateA);
         ClusterNode node =
-                new ClusterNode(
-                        "atomic-node-" + java.util.UUID.randomUUID(),
-                        "10.0.0.99:8080",
-                        Instant.now(),
-                        "BOTH");
+                new ClusterNode("atomic-node-" + java.util.UUID.randomUUID(), "10.0.0.99:8080", Instant.now(), "BOTH");
         reg.register(node, Duration.ofSeconds(30));
 
         // TTL must be positive; -1 would mean EXPIRE did not commit inside MULTI/EXEC.
-        Long ttlMs =
-                templateA.getExpire(
-                        "stirling:nodes:" + node.nodeId(),
-                        java.util.concurrent.TimeUnit.MILLISECONDS);
+        Long ttlMs = templateA.getExpire("stirling:nodes:" + node.nodeId(), java.util.concurrent.TimeUnit.MILLISECONDS);
         assertNotNull(ttlMs);
         assertTrue(
                 ttlMs > 0 && ttlMs <= 30_000,
@@ -284,8 +264,7 @@ class LiveValkeyIntegrationTest {
         assertTrue(seen.isPresent());
         assertEquals("10.0.0.7:8080", seen.get().internalAddress());
 
-        boolean inActive =
-                regB.activeNodes().stream().anyMatch(n -> "live-node-7".equals(n.nodeId()));
+        boolean inActive = regB.activeNodes().stream().anyMatch(n -> "live-node-7".equals(n.nodeId()));
         assertTrue(inActive);
 
         regA.deregister("live-node-7");
@@ -364,23 +343,18 @@ class LiveValkeyIntegrationTest {
                 Duration.ofSeconds(30));
 
         assertTrue(store.exists(jobId), "hash must be visible after put");
-        Long jobTtl =
-                templateA.getExpire(
-                        "stirling:job:" + jobId, java.util.concurrent.TimeUnit.MILLISECONDS);
+        Long jobTtl = templateA.getExpire("stirling:job:" + jobId, java.util.concurrent.TimeUnit.MILLISECONDS);
         assertNotNull(jobTtl);
         assertTrue(jobTtl > 0, "hash must have TTL armed inside the same transaction");
         assertEquals(jobId, store.findJobIdByFileId(fileId).orElse(null));
-        Long indexTtl =
-                templateA.getExpire(
-                        "stirling:file2job:" + fileId, java.util.concurrent.TimeUnit.MILLISECONDS);
+        Long indexTtl = templateA.getExpire("stirling:file2job:" + fileId, java.util.concurrent.TimeUnit.MILLISECONDS);
         assertNotNull(indexTtl);
         assertTrue(indexTtl > 0, "reverse index must also have TTL armed");
     }
 
     @Test
-    @DisplayName(
-            "JobStore.delete(): WATCH aborts when put() races between read and EXEC, no orphaned"
-                    + " reverse-index entries")
+    @DisplayName("JobStore.delete(): WATCH aborts when put() races between read and EXEC, no orphaned"
+            + " reverse-index entries")
     void jobStoreDeleteWatchRaceRetriesAndCleansUp() {
         ValkeyJobStore store = new ValkeyJobStore(templateA);
         String jobId = "watch-race-job-" + java.util.UUID.randomUUID();
@@ -401,26 +375,24 @@ class LiveValkeyIntegrationTest {
 
         // Simulate the race: between delete()'s WATCH read and EXEC, add a new fileId.
         // The first EXEC aborts; the retry catches the new fileId and deletes both entries.
-        Thread mutator =
-                new Thread(
-                        () -> {
-                            try {
-                                Thread.sleep(20);
-                            } catch (InterruptedException ignored) {
-                                Thread.currentThread().interrupt();
-                            }
-                            store.put(
-                                    new JobStoreEntry(
-                                            jobId,
-                                            JobStoreEntry.JobState.RUNNING,
-                                            "node-A",
-                                            Instant.now(),
-                                            null,
-                                            null,
-                                            List.of(originalFile, newFile),
-                                            Map.of()),
-                                    Duration.ofSeconds(30));
-                        });
+        Thread mutator = new Thread(() -> {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            }
+            store.put(
+                    new JobStoreEntry(
+                            jobId,
+                            JobStoreEntry.JobState.RUNNING,
+                            "node-A",
+                            Instant.now(),
+                            null,
+                            null,
+                            List.of(originalFile, newFile),
+                            Map.of()),
+                    Duration.ofSeconds(30));
+        });
         mutator.start();
 
         store.delete(jobId);
@@ -434,9 +406,7 @@ class LiveValkeyIntegrationTest {
         boolean origIndexGone = !store.findJobIdByFileId(originalFile).isPresent();
         boolean newIndexGone = !store.findJobIdByFileId(newFile).isPresent();
         if (hashGone) {
-            assertTrue(
-                    origIndexGone,
-                    "if hash is deleted, original reverse-index entry must also be gone");
+            assertTrue(origIndexGone, "if hash is deleted, original reverse-index entry must also be gone");
             assertTrue(
                     newIndexGone,
                     "if hash is deleted after the racing put(), the WATCH retry must catch the"
@@ -475,11 +445,9 @@ class LiveValkeyIntegrationTest {
         // entries would cause findJobIdByFileId() to return a deleted jobId.
         assertFalse(store.exists(jobId), "main hash must be deleted");
         assertFalse(
-                store.findJobIdByFileId(fileA).isPresent(),
-                "reverse-index entry for fileA must not survive delete()");
+                store.findJobIdByFileId(fileA).isPresent(), "reverse-index entry for fileA must not survive delete()");
         assertFalse(
-                store.findJobIdByFileId(fileB).isPresent(),
-                "reverse-index entry for fileB must not survive delete()");
+                store.findJobIdByFileId(fileB).isPresent(), "reverse-index entry for fileB must not survive delete()");
         assertFalse(
                 Boolean.TRUE.equals(templateA.hasKey("stirling:file2job:" + fileA)),
                 "raw reverse-index key for fileA must not survive delete()");
@@ -505,10 +473,10 @@ class LiveValkeyIntegrationTest {
                             Map.of()),
                     Duration.ofSeconds(30));
         }
-        long observed = store.all().stream().filter(e -> e.jobId().startsWith("scan-job-")).count();
-        assertTrue(
-                observed >= 15,
-                "SCAN-based all() must surface every inserted job, saw " + observed);
+        long observed = store.all().stream()
+                .filter(e -> e.jobId().startsWith("scan-job-"))
+                .count();
+        assertTrue(observed >= 15, "SCAN-based all() must surface every inserted job, saw " + observed);
     }
 
     @Test
@@ -530,9 +498,7 @@ class LiveValkeyIntegrationTest {
         ApplicationProperties p = new ApplicationProperties();
         p.getCluster().setEnabled(true);
         p.getCluster().setBackplane("valkey");
-        p.getCluster()
-                .getValkey()
-                .setUrl("redis://" + VALKEY.getHost() + ":" + VALKEY.getMappedPort(6379));
+        p.getCluster().getValkey().setUrl("redis://" + VALKEY.getHost() + ":" + VALKEY.getMappedPort(6379));
         p.getCluster().getNode().setId(nodeId);
         return p;
     }

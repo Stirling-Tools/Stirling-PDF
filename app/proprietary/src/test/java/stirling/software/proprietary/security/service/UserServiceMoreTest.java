@@ -55,31 +55,66 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 @DisplayName("UserService - additional coverage")
 class UserServiceMoreTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private TeamRepository teamRepository;
-    @Mock private AuthorityRepository authorityRepository;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private MessageSource messageSource;
-    @Mock private SessionPersistentRegistry sessionRegistry;
-    @Mock private DatabaseServiceInterface databaseService;
-    @Mock private ApplicationProperties.Security.OAUTH2 oAuth2;
-    @Mock private PersistentLoginRepository persistentLoginRepository;
-    @Mock private UserServerCertificateService userServerCertificateService;
-    @Mock private WorkflowParticipantRepository workflowParticipantRepository;
-    @Mock private WorkflowSessionRepository workflowSessionRepository;
-    @Mock private StoredFileRepository storedFileRepository;
-    @Mock private StorageCleanupEntryRepository storageCleanupEntryRepository;
-    @Mock private FileShareRepository fileShareRepository;
-    @Mock private FileShareAccessRepository fileShareAccessRepository;
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private TeamRepository teamRepository;
+
+    @Mock
+    private AuthorityRepository authorityRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private MessageSource messageSource;
+
+    @Mock
+    private SessionPersistentRegistry sessionRegistry;
+
+    @Mock
+    private DatabaseServiceInterface databaseService;
+
+    @Mock
+    private ApplicationProperties.Security.OAUTH2 oAuth2;
+
+    @Mock
+    private PersistentLoginRepository persistentLoginRepository;
+
+    @Mock
+    private UserServerCertificateService userServerCertificateService;
+
+    @Mock
+    private WorkflowParticipantRepository workflowParticipantRepository;
+
+    @Mock
+    private WorkflowSessionRepository workflowSessionRepository;
+
+    @Mock
+    private StoredFileRepository storedFileRepository;
+
+    @Mock
+    private StorageCleanupEntryRepository storageCleanupEntryRepository;
+
+    @Mock
+    private FileShareRepository fileShareRepository;
+
+    @Mock
+    private FileShareAccessRepository fileShareAccessRepository;
 
     @Mock
     private stirling.software.proprietary.integration.repository.IntegrationConfigRepository
             integrationConfigRepository;
 
-    @Mock private TeamMembershipService teamMembershipService;
-    @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
+    @Mock
+    private TeamMembershipService teamMembershipService;
 
-    @InjectMocks private UserService userService;
+    @Mock
+    private ApiKeyAuthenticationService apiKeyAuthenticationService;
+
+    @InjectMocks
+    private UserService userService;
 
     @AfterEach
     void clearSecurityContext() {
@@ -145,8 +180,7 @@ class UserServiceMoreTest {
         @DisplayName("getCurrentUserApiKey throws when no current user")
         void getCurrentUserApiKeyNoUser() {
             SecurityContextHolder.clearContext();
-            assertThatThrownBy(() -> userService.getCurrentUserApiKey())
-                    .isInstanceOf(IllegalStateException.class);
+            assertThatThrownBy(() -> userService.getCurrentUserApiKey()).isInstanceOf(IllegalStateException.class);
         }
     }
 
@@ -346,11 +380,8 @@ class UserServiceMoreTest {
         @Test
         @DisplayName("isCurrentUserAdmin true when the admin authority is present")
         void isCurrentUserAdminTrue() {
-            UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(
-                            "admin",
-                            null,
-                            List.of(new SimpleGrantedAuthority(Role.ADMIN.getRoleId())));
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                    "admin", null, List.of(new SimpleGrantedAuthority(Role.ADMIN.getRoleId())));
             SecurityContextHolder.getContext().setAuthentication(auth);
 
             assertThat(userService.isCurrentUserAdmin()).isTrue();
@@ -375,8 +406,7 @@ class UserServiceMoreTest {
         @DisplayName("updateUserSettings replaces the settings map and exports")
         void updateUserSettings() throws SQLException, UnsupportedProviderException {
             User u = user("p");
-            when(userRepository.findByUsernameIgnoreCaseWithSettings("p"))
-                    .thenReturn(Optional.of(u));
+            when(userRepository.findByUsernameIgnoreCaseWithSettings("p")).thenReturn(Optional.of(u));
 
             userService.updateUserSettings("p", Map.of("theme", "dark"));
 
@@ -439,8 +469,7 @@ class UserServiceMoreTest {
         @Test
         @DisplayName("syncCustomApiUser creates the user when missing")
         void syncCustomApiUserCreates() {
-            when(userRepository.findByUsernameIgnoreCase("CUSTOM_API_USER"))
-                    .thenReturn(Optional.empty());
+            when(userRepository.findByUsernameIgnoreCase("CUSTOM_API_USER")).thenReturn(Optional.empty());
 
             userService.syncCustomApiUser("custom-key");
 
@@ -457,8 +486,7 @@ class UserServiceMoreTest {
             u.setApiKey("old");
             when(userRepository.findByUsernameIgnoreCase("r")).thenReturn(Optional.of(u));
             when(userRepository.findByApiKey(any())).thenReturn(Optional.empty());
-            when(userRepository.save(any(User.class)))
-                    .thenAnswer(inv -> inv.getArgument(0, User.class));
+            when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0, User.class));
 
             User updated = userService.refreshApiKeyForUser("r");
 

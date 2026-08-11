@@ -34,7 +34,8 @@ class ZipExtractionUtilsTest {
     private TempFileManager tempFileManager;
     private final List<TempFile> created = new ArrayList<>();
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -97,7 +98,8 @@ class ZipExtractionUtilsTest {
         @Test
         @DisplayName("non-ZIP content is rejected")
         void rejectsNonZip() throws IOException {
-            assertThat(ZipExtractionUtils.isZip(resource(bytes("not a zip at all")))).isFalse();
+            assertThat(ZipExtractionUtils.isZip(resource(bytes("not a zip at all"))))
+                    .isFalse();
         }
 
         @Test
@@ -109,7 +111,8 @@ class ZipExtractionUtilsTest {
         @Test
         @DisplayName("content shorter than the magic prefix is not a ZIP")
         void tooShort() throws IOException {
-            assertThat(ZipExtractionUtils.isZip(resource(new byte[] {0x50, 0x4B}))).isFalse();
+            assertThat(ZipExtractionUtils.isZip(resource(new byte[] {0x50, 0x4B})))
+                    .isFalse();
         }
 
         @Test
@@ -148,27 +151,21 @@ class ZipExtractionUtilsTest {
         @Test
         @DisplayName("flat ZIP extracts one resource per file entry with filenames preserved")
         void flatExtraction() throws IOException {
-            byte[] zip =
-                    buildZip(
-                            new String[] {"first.txt", "second.txt"},
-                            new byte[][] {bytes("one"), bytes("two")});
+            byte[] zip = buildZip(new String[] {"first.txt", "second.txt"}, new byte[][] {bytes("one"), bytes("two")});
 
             List<Resource> result = ZipExtractionUtils.extractZip(resource(zip), tempFileManager);
 
             assertThat(result).hasSize(2);
-            assertThat(result)
-                    .extracting(Resource::getFilename)
-                    .containsExactlyInAnyOrder("first.txt", "second.txt");
-            assertThat(drain(result.get(0)) + drain(result.get(1))).contains("one").contains("two");
+            assertThat(result).extracting(Resource::getFilename).containsExactlyInAnyOrder("first.txt", "second.txt");
+            assertThat(drain(result.get(0)) + drain(result.get(1)))
+                    .contains("one")
+                    .contains("two");
         }
 
         @Test
         @DisplayName("directory entries are skipped")
         void directoriesSkipped() throws IOException {
-            byte[] zip =
-                    buildZip(
-                            new String[] {"dir/", "dir/file.txt"},
-                            new byte[][] {null, bytes("payload")});
+            byte[] zip = buildZip(new String[] {"dir/", "dir/file.txt"}, new byte[][] {null, bytes("payload")});
 
             List<Resource> result = ZipExtractionUtils.extractZip(resource(zip), tempFileManager);
 
@@ -187,38 +184,26 @@ class ZipExtractionUtilsTest {
         @Test
         @DisplayName("nested ZIP entries are recursively expanded")
         void nestedExtraction() throws IOException {
-            byte[] inner =
-                    buildZip(new String[] {"inner.txt"}, new byte[][] {bytes("nested-content")});
-            byte[] outer =
-                    buildZip(
-                            new String[] {"top.txt", "child.zip"},
-                            new byte[][] {bytes("top-content"), inner});
+            byte[] inner = buildZip(new String[] {"inner.txt"}, new byte[][] {bytes("nested-content")});
+            byte[] outer = buildZip(new String[] {"top.txt", "child.zip"}, new byte[][] {bytes("top-content"), inner});
 
             List<Resource> result = ZipExtractionUtils.extractZip(resource(outer), tempFileManager);
 
             // top.txt + the single file inside child.zip => 2 flat resources
             assertThat(result).hasSize(2);
-            assertThat(result)
-                    .extracting(Resource::getFilename)
-                    .containsExactlyInAnyOrder("top.txt", "inner.txt");
+            assertThat(result).extracting(Resource::getFilename).containsExactlyInAnyOrder("top.txt", "inner.txt");
         }
 
         @Test
         @DisplayName("tempFileConsumer receives every created temp file")
         void consumerInvoked() throws IOException {
-            byte[] zip =
-                    buildZip(
-                            new String[] {"a.txt", "b.txt"}, new byte[][] {bytes("a"), bytes("b")});
+            byte[] zip = buildZip(new String[] {"a.txt", "b.txt"}, new byte[][] {bytes("a"), bytes("b")});
 
             List<TempFile> seen = new ArrayList<>();
-            List<Resource> result =
-                    ZipExtractionUtils.extractZip(
-                            resource(zip),
-                            tempFileManager,
-                            tf -> {
-                                seen.add(tf);
-                                created.add(tf);
-                            });
+            List<Resource> result = ZipExtractionUtils.extractZip(resource(zip), tempFileManager, tf -> {
+                seen.add(tf);
+                created.add(tf);
+            });
 
             assertThat(result).hasSize(2);
             assertThat(seen).hasSize(2);
@@ -241,15 +226,11 @@ class ZipExtractionUtilsTest {
         void corruptZip() throws IOException {
             // Build a real ZIP with compressible content, then truncate it mid-stream so the
             // deflate entry cannot be fully read and extraction fails.
-            byte[] valid =
-                    buildZip(new String[] {"big.txt"}, new byte[][] {bytes("A".repeat(8192))});
+            byte[] valid = buildZip(new String[] {"big.txt"}, new byte[][] {bytes("A".repeat(8192))});
             byte[] truncated = new byte[valid.length / 2];
             System.arraycopy(valid, 0, truncated, 0, truncated.length);
 
-            assertThatThrownBy(
-                            () ->
-                                    ZipExtractionUtils.extractZip(
-                                            resource(truncated), tempFileManager))
+            assertThatThrownBy(() -> ZipExtractionUtils.extractZip(resource(truncated), tempFileManager))
                     .isInstanceOf(IOException.class);
         }
     }

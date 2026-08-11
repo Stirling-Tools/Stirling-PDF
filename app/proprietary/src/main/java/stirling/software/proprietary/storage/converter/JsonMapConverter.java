@@ -55,19 +55,12 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
             try {
                 JsonNode node = objectMapper.readTree(dbData);
                 if (node.isTextual()) {
-                    log.warn(
-                            "╔════════════════════════════════════════════════════════════════════╗");
-                    log.warn(
-                            "║ WARNING: DOUBLE-ENCODED JSON DETECTED - LEGACY DATA FOUND         ║");
-                    log.warn(
-                            "║ This should not occur in newly created records.                   ║");
-                    log.warn(
-                            "║ Data preview: {}",
-                            dbData.length() > 100 ? dbData.substring(0, 100) + "..." : dbData);
-                    log.warn(
-                            "╚════════════════════════════════════════════════════════════════════╝");
-                    return objectMapper.readValue(
-                            node.asText(), new TypeReference<Map<String, Object>>() {});
+                    log.warn("╔════════════════════════════════════════════════════════════════════╗");
+                    log.warn("║ WARNING: DOUBLE-ENCODED JSON DETECTED - LEGACY DATA FOUND         ║");
+                    log.warn("║ This should not occur in newly created records.                   ║");
+                    log.warn("║ Data preview: {}", dbData.length() > 100 ? dbData.substring(0, 100) + "..." : dbData);
+                    log.warn("╚════════════════════════════════════════════════════════════════════╝");
+                    return objectMapper.readValue(node.asText(), new TypeReference<Map<String, Object>>() {});
                 }
             } catch (JsonProcessingException e2) {
                 log.error("Failed to parse metadata even with double-decode fallback", e2);

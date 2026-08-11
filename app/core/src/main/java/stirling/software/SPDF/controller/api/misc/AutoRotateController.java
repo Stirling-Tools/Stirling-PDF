@@ -90,27 +90,24 @@ public class AutoRotateController {
                             arity = ToolArity.SISO))
     @Operation(
             summary = "Detect and fix the orientation of every page",
-            description =
-                    "Detects each page's orientation (embedded-text direction first, Tesseract OSD"
-                            + " for scanned pages) and sets the page rotation so the content"
-                            + " displays upright. With dryRun=true, returns a JSON per-page report"
-                            + " instead of the PDF. With pageRotations set, applies the given"
-                            + " corrections without running detection.")
+            description = "Detects each page's orientation (embedded-text direction first, Tesseract OSD"
+                    + " for scanned pages) and sets the page rotation so the content"
+                    + " displays upright. With dryRun=true, returns a JSON per-page report"
+                    + " instead of the PDF. With pageRotations set, applies the given"
+                    + " corrections without running detection.")
     public ResponseEntity<?> autoRotatePdf(@Valid @ModelAttribute AutoRotatePdfRequest request)
             throws IOException, InterruptedException {
-        String mode =
-                request.getDetectionMode() == null
-                        ? "auto"
-                        : request.getDetectionMode().toLowerCase(Locale.ROOT);
+        String mode = request.getDetectionMode() == null
+                ? "auto"
+                : request.getDetectionMode().toLowerCase(Locale.ROOT);
         if (!"auto".equals(mode) && !"text".equals(mode) && !"osd".equals(mode)) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    ExceptionUtils.ErrorCode.INVALID_ARGUMENT,
-                    "detectionMode",
-                    "must be one of auto, text, osd");
+                    ExceptionUtils.ErrorCode.INVALID_ARGUMENT, "detectionMode", "must be one of auto, text, osd");
         }
 
         try (PDDocument document = pdfDocumentFactory.load(request)) {
-            if (request.getPageRotations() != null && !request.getPageRotations().isEmpty()) {
+            if (request.getPageRotations() != null
+                    && !request.getPageRotations().isEmpty()) {
                 applyExplicitRotations(document, request.getPageRotations());
                 return pdfResponse(document, request);
             }
@@ -122,19 +119,16 @@ public class AutoRotateController {
             for (PageResult pageResult : analysis.getPages()) {
                 if (pageResult.isApply()) {
                     PDPage page = document.getPage(pageResult.getPageNumber() - 1);
-                    page.setRotation(
-                            Math.floorMod(page.getRotation() + pageResult.getCorrection(), 360));
+                    page.setRotation(Math.floorMod(page.getRotation() + pageResult.getCorrection(), 360));
                 }
             }
             return pdfResponse(document, request);
         }
     }
 
-    private AutoRotateAnalysisResult analyse(
-            PDDocument document, String mode, AutoRotatePdfRequest request)
+    private AutoRotateAnalysisResult analyse(PDDocument document, String mode, AutoRotatePdfRequest request)
             throws IOException, InterruptedException {
-        double threshold =
-                request.getConfidenceThreshold() == null ? 14.0 : request.getConfidenceThreshold();
+        double threshold = request.getConfidenceThreshold() == null ? 14.0 : request.getConfidenceThreshold();
         boolean tesseractAvailable = endpointConfiguration.isGroupEnabled("tesseract");
         boolean useText = !"osd".equals(mode);
         boolean useOsd = !"text".equals(mode);
@@ -144,24 +138,21 @@ public class AutoRotateController {
 
         int pageCount = document.getNumberOfPages();
         // One walk of the document for all pages, rather than one walk per page.
-        List<TextDirection> textDirections =
-                useText ? AutoRotateDetection.detectTextDirections(document) : List.of();
+        List<TextDirection> textDirections = useText ? AutoRotateDetection.detectTextDirections(document) : List.of();
 
         for (int i = 0; i < pageCount; i++) {
             int currentRotation = Math.floorMod(document.getPage(i).getRotation(), 360);
-            PageResult result =
-                    PageResult.builder()
-                            .pageNumber(i + 1)
-                            .currentRotation(currentRotation)
-                            .method(METHOD_NONE)
-                            .build();
+            PageResult result = PageResult.builder()
+                    .pageNumber(i + 1)
+                    .currentRotation(currentRotation)
+                    .method(METHOD_NONE)
+                    .build();
 
             if (useText) {
                 TextDirection direction = textDirections.get(i);
                 if (direction.isConclusive()) {
-                    int correction =
-                            AutoRotateDetection.correctionFromTextDirection(
-                                    direction.dominantDirection(), currentRotation);
+                    int correction = AutoRotateDetection.correctionFromTextDirection(
+                            direction.dominantDirection(), currentRotation);
                     result.setMethod(METHOD_TEXT);
                     result.setCorrection(correction);
                     result.setConfidence(direction.dominance() * 100);
@@ -240,14 +231,10 @@ public class AutoRotateController {
     }
 
     private void runOsdOnPages(
-            PDDocument document,
-            List<Integer> pageIndexes,
-            List<PageResult> results,
-            double threshold)
+            PDDocument document, List<Integer> pageIndexes, List<PageResult> results, double threshold)
             throws IOException, InterruptedException {
         String tessDataPath = runtimePathConfig.getTessDataPath();
-        boolean haveOsdData =
-                tessDataPath != null && new File(tessDataPath, "osd.traineddata").exists();
+        boolean haveOsdData = tessDataPath != null && new File(tessDataPath, "osd.traineddata").exists();
 
         int dpi = OSD_RENDER_DPI;
         if (applicationProperties != null && applicationProperties.getSystem() != null) {
@@ -267,13 +254,10 @@ public class AutoRotateController {
                 try {
                     // Rendering honours the page's current /Rotate, so OSD sees the page exactly
                     // as a viewer would and its verdict is always an additive correction.
-                    BufferedImage image =
-                            ExceptionUtils.handleOomRendering(
-                                    pageIndex + 1,
-                                    renderDpi,
-                                    () ->
-                                            renderer.renderImageWithDPI(
-                                                    pageIndex, renderDpi, ImageType.GRAY));
+                    BufferedImage image = ExceptionUtils.handleOomRendering(
+                            pageIndex + 1,
+                            renderDpi,
+                            () -> renderer.renderImageWithDPI(pageIndex, renderDpi, ImageType.GRAY));
 
                     if (AutoRotateDetection.isBlankRender(image)) {
                         // Nothing for OSD to read; skip the process spawn entirely.
@@ -296,12 +280,11 @@ public class AutoRotateController {
                         command.add(tessDataPath);
                     }
 
-                    ProcessExecutorResult processResult =
-                            ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT)
-                                    .runCommandWithOutputHandling(command);
+                    ProcessExecutorResult processResult = ProcessExecutor.getInstance(
+                                    ProcessExecutor.Processes.TESSERACT)
+                            .runCommandWithOutputHandling(command);
 
-                    Optional<OsdResult> osd =
-                            AutoRotateDetection.parseOsd(processResult.getMessages());
+                    Optional<OsdResult> osd = AutoRotateDetection.parseOsd(processResult.getMessages());
                     if (osd.isEmpty()) {
                         result.setNote("osdNoVerdict");
                         continue;
@@ -331,11 +314,7 @@ public class AutoRotateController {
         for (PageRotation entry : rotations) {
             Integer pageNumber = entry.getPageNumber();
             Integer angle = entry.getRotation();
-            if (pageNumber == null
-                    || angle == null
-                    || pageNumber < 1
-                    || pageNumber > pageCount
-                    || angle % 90 != 0) {
+            if (pageNumber == null || angle == null || pageNumber < 1 || pageNumber > pageCount || angle % 90 != 0) {
                 throw ExceptionUtils.createIllegalArgumentException(
                         ExceptionUtils.ErrorCode.INVALID_ARGUMENT,
                         "pageRotations",
@@ -382,15 +361,10 @@ public class AutoRotateController {
                 .build();
     }
 
-    private ResponseEntity<?> pdfResponse(PDDocument document, AutoRotatePdfRequest request)
-            throws IOException {
+    private ResponseEntity<?> pdfResponse(PDDocument document, AutoRotatePdfRequest request) throws IOException {
         String originalName =
-                request.getFileInput() != null
-                        ? request.getFileInput().getOriginalFilename()
-                        : "document.pdf";
+                request.getFileInput() != null ? request.getFileInput().getOriginalFilename() : "document.pdf";
         return WebResponseUtils.pdfDocToWebResponse(
-                document,
-                GeneralUtils.generateFilename(originalName, "_auto_rotated.pdf"),
-                tempFileManager);
+                document, GeneralUtils.generateFilename(originalName, "_auto_rotated.pdf"), tempFileManager);
     }
 }

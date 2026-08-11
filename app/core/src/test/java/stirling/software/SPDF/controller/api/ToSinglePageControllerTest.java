@@ -39,26 +39,28 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ToSinglePageControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private ToSinglePageController controller;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private ToSinglePageController controller;
 
     @BeforeEach
     void setUp() throws Exception {
         // Each managed temp file is backed by a real on-disk file so the response can be read back.
-        when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("tsp-test", inv.<String>getArgument(0))
-                                            .toFile();
-                            f.deleteOnExit();
-                            TempFile tf = mock(TempFile.class);
-                            when(tf.getFile()).thenReturn(f);
-                            when(tf.getPath()).thenReturn(f.toPath());
-                            when(tf.getAbsolutePath()).thenReturn(f.getAbsolutePath());
-                            return tf;
-                        });
+        when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f =
+                    Files.createTempFile("tsp-test", inv.<String>getArgument(0)).toFile();
+            f.deleteOnExit();
+            TempFile tf = mock(TempFile.class);
+            when(tf.getFile()).thenReturn(f);
+            when(tf.getPath()).thenReturn(f.toPath());
+            when(tf.getAbsolutePath()).thenReturn(f.getAbsolutePath());
+            return tf;
+        });
     }
 
     /** Build a real in-memory PDF with the given per-page sizes and return its bytes. */
@@ -75,8 +77,7 @@ class ToSinglePageControllerTest {
 
     private PDFFile requestFor(String filename, byte[] pdfBytes) {
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", filename, MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", filename, MediaType.APPLICATION_PDF_VALUE, pdfBytes);
         PDFFile request = new PDFFile();
         request.setFileInput(file);
         return request;
@@ -87,12 +88,10 @@ class ToSinglePageControllerTest {
      * createNewDocumentBasedOnOldDocument() returns a fresh empty document.
      */
     private void setupFactory() throws IOException {
-        when(pdfDocumentFactory.load(any(PDFFile.class)))
-                .thenAnswer(
-                        inv -> {
-                            PDFFile pf = inv.getArgument(0);
-                            return Loader.loadPDF(pf.getFileInput().getBytes());
-                        });
+        when(pdfDocumentFactory.load(any(PDFFile.class))).thenAnswer(inv -> {
+            PDFFile pf = inv.getArgument(0);
+            return Loader.loadPDF(pf.getFileInput().getBytes());
+        });
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
                 .thenAnswer(inv -> new PDDocument());
     }
@@ -129,16 +128,9 @@ class ToSinglePageControllerTest {
             try (PDDocument result = Loader.loadPDF(out)) {
                 assertEquals(1, result.getNumberOfPages(), "result must be a single page");
                 PDRectangle box = result.getPage(0).getMediaBox();
+                assertEquals(PDRectangle.A4.getWidth(), box.getWidth(), 0.5f, "width matches the input width");
                 assertEquals(
-                        PDRectangle.A4.getWidth(),
-                        box.getWidth(),
-                        0.5f,
-                        "width matches the input width");
-                assertEquals(
-                        PDRectangle.A4.getHeight() * 3,
-                        box.getHeight(),
-                        0.5f,
-                        "height is the sum of all page heights");
+                        PDRectangle.A4.getHeight() * 3, box.getHeight(), 0.5f, "height is the sum of all page heights");
             }
         }
 
@@ -175,10 +167,7 @@ class ToSinglePageControllerTest {
                 assertEquals(1, result.getNumberOfPages());
                 PDRectangle box = result.getPage(0).getMediaBox();
                 assertEquals(PDRectangle.A3.getWidth(), box.getWidth(), 0.5f);
-                assertEquals(
-                        PDRectangle.A4.getHeight() + PDRectangle.A3.getHeight(),
-                        box.getHeight(),
-                        0.5f);
+                assertEquals(PDRectangle.A4.getHeight() + PDRectangle.A3.getHeight(), box.getHeight(), 0.5f);
             }
         }
 
@@ -252,8 +241,7 @@ class ToSinglePageControllerTest {
             ResponseEntity<Resource> response = controller.pdfToSinglePage(request);
 
             String disposition =
-                    response.getHeaders()
-                            .getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
+                    response.getHeaders().getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
             assertNotNull(disposition);
             // generateFilename strips the extension and appends _singlePage.pdf
             assertTrue(
@@ -267,8 +255,7 @@ class ToSinglePageControllerTest {
             byte[] pdfBytes = createPdf(PDRectangle.A4);
             // MockMultipartFile with a null original filename.
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", null, MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                    new MockMultipartFile("fileInput", null, MediaType.APPLICATION_PDF_VALUE, pdfBytes);
             PDFFile request = new PDFFile();
             request.setFileInput(file);
             setupFactory();
@@ -279,8 +266,7 @@ class ToSinglePageControllerTest {
             assertNotNull(response.getBody());
             // MockMultipartFile maps a null name to "", so the base is empty -> leading underscore.
             String disposition =
-                    response.getHeaders()
-                            .getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
+                    response.getHeaders().getFirst(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION);
             assertNotNull(disposition);
             assertTrue(
                     disposition.contains("_singlePage.pdf"),
@@ -296,15 +282,12 @@ class ToSinglePageControllerTest {
         @DisplayName("IOException from load() propagates to the caller")
         void loadIOExceptionPropagates() throws Exception {
             PDFFile request = requestFor("broken.pdf", new byte[] {1, 2, 3});
-            when(pdfDocumentFactory.load(any(PDFFile.class)))
-                    .thenThrow(new IOException("cannot load"));
+            when(pdfDocumentFactory.load(any(PDFFile.class))).thenThrow(new IOException("cannot load"));
 
-            IOException ex =
-                    assertThrows(IOException.class, () -> controller.pdfToSinglePage(request));
+            IOException ex = assertThrows(IOException.class, () -> controller.pdfToSinglePage(request));
             assertEquals("cannot load", ex.getMessage());
             // No new document or temp file should be created when load fails.
-            verify(pdfDocumentFactory, never())
-                    .createNewDocumentBasedOnOldDocument(any(PDDocument.class));
+            verify(pdfDocumentFactory, never()).createNewDocumentBasedOnOldDocument(any(PDDocument.class));
             verifyNoInteractions(tempFileManager);
         }
 
@@ -314,11 +297,9 @@ class ToSinglePageControllerTest {
             byte[] pdfBytes = createPdf(PDRectangle.A4);
             PDFFile request = requestFor("input.pdf", pdfBytes);
             setupFactory();
-            when(tempFileManager.createManagedTempFile(anyString()))
-                    .thenThrow(new IOException("disk full"));
+            when(tempFileManager.createManagedTempFile(anyString())).thenThrow(new IOException("disk full"));
 
-            IOException ex =
-                    assertThrows(IOException.class, () -> controller.pdfToSinglePage(request));
+            IOException ex = assertThrows(IOException.class, () -> controller.pdfToSinglePage(request));
             assertEquals("disk full", ex.getMessage());
         }
     }

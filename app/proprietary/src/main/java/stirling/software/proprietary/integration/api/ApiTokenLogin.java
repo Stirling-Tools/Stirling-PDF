@@ -70,11 +70,10 @@ record ApiTokenLogin(
         String responseHeader = trimmed(options.get(TOKEN_RESPONSE_HEADER_OPTION));
         String responseJsonPath = trimmed(options.get(TOKEN_RESPONSE_JSON_PATH_OPTION));
         if ((responseHeader == null) == (responseJsonPath == null)) {
-            throw new IllegalArgumentException(
-                    "api config authType 'TOKEN_LOGIN' needs exactly one of"
-                            + " 'tokenResponseHeader' (e.g. X-Auth-Token) or"
-                            + " 'tokenResponseJsonPath' (e.g. access_token) to say where the token"
-                            + " comes back");
+            throw new IllegalArgumentException("api config authType 'TOKEN_LOGIN' needs exactly one of"
+                    + " 'tokenResponseHeader' (e.g. X-Auth-Token) or"
+                    + " 'tokenResponseJsonPath' (e.g. access_token) to say where the token"
+                    + " comes back");
         }
         String tokenHeaderName = trimmed(options.get(TOKEN_HEADER_NAME_OPTION));
         if (tokenHeaderName == null) {
@@ -84,13 +83,11 @@ record ApiTokenLogin(
         }
         if (!ExternalApiHeaders.isValidName(tokenHeaderName)) {
             throw new IllegalArgumentException(
-                    "api config 'tokenHeaderName' is not a valid HTTP header name: "
-                            + tokenHeaderName);
+                    "api config 'tokenHeaderName' is not a valid HTTP header name: " + tokenHeaderName);
         }
         if (responseHeader != null && !ExternalApiHeaders.isValidName(responseHeader)) {
             throw new IllegalArgumentException(
-                    "api config 'tokenResponseHeader' is not a valid HTTP header name: "
-                            + responseHeader);
+                    "api config 'tokenResponseHeader' is not a valid HTTP header name: " + responseHeader);
         }
 
         return new ApiTokenLogin(
@@ -112,9 +109,7 @@ record ApiTokenLogin(
             String value = response.header(tokenResponseHeader);
             if (value == null || value.isBlank()) {
                 throw new IllegalStateException(
-                        "Login succeeded but returned no '"
-                                + tokenResponseHeader
-                                + "' response header");
+                        "Login succeeded but returned no '" + tokenResponseHeader + "' response header");
             }
             return value;
         }
@@ -151,24 +146,16 @@ record ApiTokenLogin(
 
     private static Map<String, String> loginHeaders(Object value) {
         Map<String, String> out = new LinkedHashMap<>();
-        nestedObject(value, LOGIN_HEADERS_OPTION)
-                .forEach(
-                        (name, entry) -> {
-                            String headerValue = entry == null ? null : entry.toString();
-                            if (!ExternalApiHeaders.isValidName(name)) {
-                                throw new IllegalArgumentException(
-                                        "api config 'loginHeaders' has an invalid header name: "
-                                                + name);
-                            }
-                            if (headerValue == null
-                                    || !ExternalApiHeaders.isValidValue(headerValue)) {
-                                throw new IllegalArgumentException(
-                                        "api config 'loginHeaders' has an invalid value for '"
-                                                + name
-                                                + "'");
-                            }
-                            out.put(name, headerValue);
-                        });
+        nestedObject(value, LOGIN_HEADERS_OPTION).forEach((name, entry) -> {
+            String headerValue = entry == null ? null : entry.toString();
+            if (!ExternalApiHeaders.isValidName(name)) {
+                throw new IllegalArgumentException("api config 'loginHeaders' has an invalid header name: " + name);
+            }
+            if (headerValue == null || !ExternalApiHeaders.isValidValue(headerValue)) {
+                throw new IllegalArgumentException("api config 'loginHeaders' has an invalid value for '" + name + "'");
+            }
+            out.put(name, headerValue);
+        });
         return out;
     }
 
@@ -200,10 +187,6 @@ record ApiTokenLogin(
     /** Never prints the login body or headers: both carry the credentials. */
     @Override
     public String toString() {
-        return "ApiTokenLogin[loginPath="
-                + loginPath
-                + ", tokenTtlSeconds="
-                + tokenTtlSeconds
-                + "]";
+        return "ApiTokenLogin[loginPath=" + loginPath + ", tokenTtlSeconds=" + tokenTtlSeconds + "]";
     }
 }

@@ -79,9 +79,7 @@ class ClusterNodeBootstrapTest {
         bootstrap.registerOnStartup();
         bootstrap.heartbeat();
         verify(registry, times(2))
-                .register(
-                        any(ClusterNode.class),
-                        org.mockito.ArgumentMatchers.eq(Duration.ofSeconds(30)));
+                .register(any(ClusterNode.class), org.mockito.ArgumentMatchers.eq(Duration.ofSeconds(30)));
     }
 
     @Test

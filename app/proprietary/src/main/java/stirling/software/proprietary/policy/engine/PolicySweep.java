@@ -40,10 +40,9 @@ final class PolicySweep implements ResolveContext {
 
     @Override
     public synchronized boolean claim(String identity, String gate, Supplier<String> contentHash) {
-        ClaimState observed =
-                prefetchedIdentities.contains(identity)
-                        ? prefetched.get(identity)
-                        : ledger.statesFor(policyId, List.of(identity)).get(identity);
+        ClaimState observed = prefetchedIdentities.contains(identity)
+                ? prefetched.get(identity)
+                : ledger.statesFor(policyId, List.of(identity)).get(identity);
         boolean claimed = ledger.claim(policyId, identity, gate, contentHash, observed);
         if (claimed) {
             // A nested source surfacing the same file later in this sweep sees it in flight
@@ -55,8 +54,7 @@ final class PolicySweep implements ResolveContext {
     }
 
     @Override
-    public void settle(
-            String identity, String finalGate, String finalContentHash, boolean success) {
+    public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
         ledger.settle(policyId, identity, finalGate, finalContentHash, success);
     }
 
@@ -108,10 +106,6 @@ final class PolicySweep implements ResolveContext {
             }
         }
         return new SweepOutcome(
-                runIds,
-                present.size(),
-                alreadyProcessed,
-                parked,
-                Math.max(0, processing - runIds.size()));
+                runIds, present.size(), alreadyProcessed, parked, Math.max(0, processing - runIds.size()));
     }
 }

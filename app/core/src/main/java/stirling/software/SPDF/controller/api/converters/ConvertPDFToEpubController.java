@@ -44,10 +44,8 @@ public class ConvertPDFToEpubController {
 
     private static final String CALIBRE_GROUP = "Calibre";
     private static final String DEFAULT_EXTENSION = "pdf";
-    private static final String FILTERED_CSS =
-            "font-family,color,background-color,margin-left,margin-right";
-    private static final String SMART_CHAPTER_EXPRESSION =
-            "//h:*[re:test(., '\\s*Chapter\\s+', 'i')]";
+    private static final String FILTERED_CSS = "font-family,color,background-color,margin-left,margin-right";
+    private static final String SMART_CHAPTER_EXPRESSION = "//h:*[re:test(., '\\s*Chapter\\s+', 'i')]";
 
     private final TempFileManager tempFileManager;
     private final EndpointConfiguration endpointConfiguration;
@@ -92,8 +90,7 @@ public class ConvertPDFToEpubController {
     @Operation(
             summary = "Convert PDF to EPUB/AZW3",
             description = "Convert a PDF file to a high-quality EPUB or AZW3 ebook using Calibre.")
-    public ResponseEntity<Resource> convertPdfToEpub(
-            @ModelAttribute ConvertPdfToEpubRequest request) throws Exception {
+    public ResponseEntity<Resource> convertPdfToEpub(@ModelAttribute ConvertPdfToEpubRequest request) throws Exception {
 
         if (!endpointConfiguration.isGroupEnabled(CALIBRE_GROUP)) {
             throw new IllegalStateException(
@@ -108,11 +105,8 @@ public class ConvertPDFToEpubController {
 
         boolean detectChapters = !Boolean.FALSE.equals(request.getDetectChapters());
         TargetDevice targetDevice =
-                request.getTargetDevice() == null
-                        ? TargetDevice.TABLET_PHONE_IMAGES
-                        : request.getTargetDevice();
-        OutputFormat outputFormat =
-                request.getOutputFormat() == null ? OutputFormat.EPUB : request.getOutputFormat();
+                request.getTargetDevice() == null ? TargetDevice.TABLET_PHONE_IMAGES : request.getTargetDevice();
+        OutputFormat outputFormat = request.getOutputFormat() == null ? OutputFormat.EPUB : request.getOutputFormat();
 
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
@@ -146,11 +140,9 @@ public class ConvertPDFToEpubController {
                 Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
             }
 
-            List<String> command =
-                    buildCalibreCommand(inputPath, outputPath, detectChapters, targetDevice);
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
-                            .runCommandWithOutputHandling(command, workingDirectory.toFile());
+            List<String> command = buildCalibreCommand(inputPath, outputPath, detectChapters, targetDevice);
+            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
+                    .runCommandWithOutputHandling(command, workingDirectory.toFile());
 
             if (result == null) {
                 throw new IllegalStateException("Calibre conversion returned no result");
@@ -165,21 +157,14 @@ public class ConvertPDFToEpubController {
             }
 
             if (!Files.exists(outputPath) || Files.size(outputPath) == 0L) {
-                throw new IllegalStateException(
-                        "Calibre did not produce a " + outputFormat.name() + " output");
+                throw new IllegalStateException("Calibre did not produce a " + outputFormat.name() + " output");
             }
 
-            String outputFilename =
-                    GeneralUtils.generateFilename(
-                            originalFilename,
-                            "_convertedTo"
-                                    + outputFormat.name()
-                                    + "."
-                                    + outputFormat.getExtension());
+            String outputFilename = GeneralUtils.generateFilename(
+                    originalFilename, "_convertedTo" + outputFormat.name() + "." + outputFormat.getExtension());
 
             MediaType mediaType = MediaType.valueOf(outputFormat.getMediaType());
-            TempFile tempOut =
-                    tempFileManager.createManagedTempFile("." + outputFormat.getExtension());
+            TempFile tempOut = tempFileManager.createManagedTempFile("." + outputFormat.getExtension());
             try {
                 Files.copy(outputPath, tempOut.getPath(), StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {

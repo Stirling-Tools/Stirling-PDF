@@ -81,8 +81,7 @@ class StampControllerMoreTest {
     }
 
     private static MockMultipartFile pdfFile(int pageCount) throws IOException {
-        return new MockMultipartFile(
-                "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdf(pageCount));
+        return new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdf(pageCount));
     }
 
     /** Build a small PNG image as a multipart file. */
@@ -94,8 +93,7 @@ class StampControllerMoreTest {
         g.dispose();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(img, "png", baos);
-        return new MockMultipartFile(
-                "stampImage", name, MediaType.IMAGE_PNG_VALUE, baos.toByteArray());
+        return new MockMultipartFile("stampImage", name, MediaType.IMAGE_PNG_VALUE, baos.toByteArray());
     }
 
     /** A request prefilled with sensible defaults; tests override what they need. */
@@ -118,8 +116,7 @@ class StampControllerMoreTest {
     }
 
     /** Read the response body back into a PDDocument and assert page count. */
-    private static void assertValidPdf(ResponseEntity<Resource> response, int expectedPages)
-            throws IOException {
+    private static void assertValidPdf(ResponseEntity<Resource> response, int expectedPages) throws IOException {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         byte[] out;
@@ -328,28 +325,18 @@ class StampControllerMoreTest {
         @DisplayName("rejects a PDF filename containing a path traversal sequence")
         void rejectsTraversalPdfName() throws Exception {
             MockMultipartFile bad =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "../evil.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            buildPdf(1));
+                    new MockMultipartFile("fileInput", "../evil.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdf(1));
             AddStampRequest req = baseRequest(bad);
-            assertThatThrownBy(() -> stampController.addStamp(req))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> stampController.addStamp(req)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         @DisplayName("rejects a PDF filename starting with a slash")
         void rejectsAbsolutePdfName() throws Exception {
             MockMultipartFile bad =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "/etc/passwd.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            buildPdf(1));
+                    new MockMultipartFile("fileInput", "/etc/passwd.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdf(1));
             AddStampRequest req = baseRequest(bad);
-            assertThatThrownBy(() -> stampController.addStamp(req))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> stampController.addStamp(req)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -358,8 +345,7 @@ class StampControllerMoreTest {
             AddStampRequest req = baseRequest(pdfFile(1));
             req.setStampType("image");
             req.setStampImage(null);
-            assertThatThrownBy(() -> stampController.addStamp(req))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> stampController.addStamp(req)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -368,8 +354,7 @@ class StampControllerMoreTest {
             AddStampRequest req = baseRequest(pdfFile(1));
             req.setStampType("image");
             req.setStampImage(pngImage("../evil.png"));
-            assertThatThrownBy(() -> stampController.addStamp(req))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> stampController.addStamp(req)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test

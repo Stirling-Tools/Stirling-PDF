@@ -129,9 +129,7 @@ public enum GeneralFormFieldTypeSupport {
     private final Class<? extends PDTerminalField> fieldClass;
 
     GeneralFormFieldTypeSupport(
-            String typeName,
-            String fallbackWidgetName,
-            Class<? extends PDTerminalField> fieldClass) {
+            String typeName, String fallbackWidgetName, Class<? extends PDTerminalField> fieldClass) {
         this.typeName = typeName;
         this.fallbackWidgetName = fallbackWidgetName;
         this.fieldClass = fieldClass;

@@ -18,9 +18,7 @@ import lombok.Data;
 public class NamedAsset {
 
     @NotBlank
-    @Schema(
-            description = "Asset key referenced by a step's fileParameters",
-            example = "company-logo")
+    @Schema(description = "Asset key referenced by a step's fileParameters", example = "company-logo")
     private String key;
 
     @NotNull

@@ -75,8 +75,7 @@ public class FolderService {
      */
     private void ensureStorageEnabled() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Storage requires login to be enabled");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Storage requires login to be enabled");
         }
         if (!applicationProperties.getStorage().isEnabled()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Storage is disabled");
@@ -103,8 +102,7 @@ public class FolderService {
         // parentFolderId they sent was ignored. For new ids the parent lookup would
         // 404, but the message is misleading.
         if (request.getId() != null && request.getId().equals(request.getParentFolderId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "A folder cannot be its own parent");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A folder cannot be its own parent");
         }
         Folder parent = resolveParent(request.getParentFolderId(), user, null);
 
@@ -123,14 +121,12 @@ public class FolderService {
         // the caller can pick a fresh id.
         if (folderRepository.existsById(id)) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "A folder with this id already exists; choose a different id");
+                    HttpStatus.CONFLICT, "A folder with this id already exists; choose a different id");
         }
 
         if (folderRepository.countByOwner(user) >= MAX_FOLDERS_PER_USER) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Folder limit reached (max " + MAX_FOLDERS_PER_USER + " per user)");
+                    HttpStatus.CONFLICT, "Folder limit reached (max " + MAX_FOLDERS_PER_USER + " per user)");
         }
 
         Folder folder = new Folder();
@@ -166,8 +162,7 @@ public class FolderService {
                 // Bean validation should already catch this via @Pattern, but be explicit so
                 // an empty-after-trim payload reaches the user as a 400 instead of being
                 // silently dropped.
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Folder name cannot be blank");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Folder name cannot be blank");
             }
             folder.setName(trimmed);
         }
@@ -231,11 +226,7 @@ public class FolderService {
         if (!removed.isEmpty()) {
             folderRepository.clearFolderForFiles(removed);
             folderRepository.deleteAllByIdInBatch(removed);
-            log.info(
-                    "Folder subtree deleted: user={} root={} count={}",
-                    user.getId(),
-                    folder.getId(),
-                    removed.size());
+            log.info("Folder subtree deleted: user={} root={} count={}", user.getId(), folder.getId(), removed.size());
         }
 
         return removed;
@@ -250,14 +241,10 @@ public class FolderService {
     public void moveFileToFolder(Long fileId, UUID folderId) {
         ensureStorageEnabled();
         User user = requireAuthenticatedUser();
-        StoredFile file =
-                storedFileRepository
-                        .findByIdAndOwner(fileId, user)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "File not found or not owned by current user"));
+        StoredFile file = storedFileRepository
+                .findByIdAndOwner(fileId, user)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "File not found or not owned by current user"));
         file.setFolder(resolveOwnedFolder(folderId, user));
         storedFileRepository.save(file);
     }
@@ -274,8 +261,7 @@ public class FolderService {
         }
         if (fileIds.size() > BULK_MOVE_MAX_FILES) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "fileIds must contain between 1 and " + BULK_MOVE_MAX_FILES + " entries");
+                    HttpStatus.BAD_REQUEST, "fileIds must contain between 1 and " + BULK_MOVE_MAX_FILES + " entries");
         }
         User user = requireAuthenticatedUser();
         Folder target = resolveOwnedFolder(folderId, user);
@@ -294,13 +280,12 @@ public class FolderService {
             storedFileRepository.flush();
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Target folder no longer exists; refresh and try again",
-                    ex);
+                    HttpStatus.CONFLICT, "Target folder no longer exists; refresh and try again", ex);
         }
 
         List<Long> moved = owned.stream().map(StoredFile::getId).toList();
-        List<Long> skipped = fileIds.stream().filter(id -> !ownedIds.contains(id)).toList();
+        List<Long> skipped =
+                fileIds.stream().filter(id -> !ownedIds.contains(id)).toList();
         if (!skipped.isEmpty()) {
             log.warn(
                     "bulkMove: user {} skipped {} of {} files (not owned or missing)",
@@ -325,37 +310,26 @@ public class FolderService {
         if (folderId == null) return null;
         return folderRepository
                 .findByIdAndOwner(folderId, user)
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Folder does not exist or is not owned by you"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Folder does not exist or is not owned by you"));
     }
 
     private Folder requireOwnedFolder(UUID id, User user) {
         return folderRepository
                 .findByIdAndOwner(id, user)
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND,
-                                        "Folder not found or not owned by current user"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Folder not found or not owned by current user"));
     }
 
     private Folder resolveParent(UUID parentId, User user, UUID forbidId) {
         if (parentId == null) return null;
         if (forbidId != null && parentId.equals(forbidId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "A folder cannot be its own parent");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A folder cannot be its own parent");
         }
-        Folder parent =
-                folderRepository
-                        .findByIdAndOwner(parentId, user)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.BAD_REQUEST,
-                                                "Parent folder does not exist or is not owned by you"));
+        Folder parent = folderRepository
+                .findByIdAndOwner(parentId, user)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Parent folder does not exist or is not owned by you"));
         // Reject before the child is created/moved if attaching it would push the chain past the
         // depth cap. Done in one pass that also returns the cycle answer so we don't walk the
         // lazy-proxy chain twice.
@@ -384,8 +358,7 @@ public class FolderService {
             }
             if (forbidId != null && cursor.getId().equals(forbidId)) {
                 throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Cannot move a folder inside one of its descendants");
+                        HttpStatus.BAD_REQUEST, "Cannot move a folder inside one of its descendants");
             }
             if (!seen.add(cursor.getId())) {
                 // broken graph (cycle in stored data)
@@ -398,8 +371,7 @@ public class FolderService {
             // depth at which the new child would live. Reject before exceeding the cap.
             if (depth >= MAX_FOLDER_DEPTH) {
                 throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Folder nesting limit reached (max " + MAX_FOLDER_DEPTH + " levels)");
+                        HttpStatus.BAD_REQUEST, "Folder nesting limit reached (max " + MAX_FOLDER_DEPTH + " levels)");
             }
             cursor = cursor.getParent();
         }

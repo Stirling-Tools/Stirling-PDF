@@ -58,8 +58,7 @@ class ConvertPdfToEpubRequestTest {
         @Test
         @DisplayName("valueOf round trips")
         void valueOf() {
-            assertThat(TargetDevice.valueOf("KINDLE_EINK_TEXT"))
-                    .isSameAs(TargetDevice.KINDLE_EINK_TEXT);
+            assertThat(TargetDevice.valueOf("KINDLE_EINK_TEXT")).isSameAs(TargetDevice.KINDLE_EINK_TEXT);
             assertThat(TargetDevice.values()).hasSize(2);
         }
     }

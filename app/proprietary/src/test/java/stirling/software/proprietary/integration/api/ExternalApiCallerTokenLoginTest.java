@@ -50,61 +50,41 @@ class ExternalApiCallerTokenLoginTest {
     void startServer() throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
 
-        server.createContext(
-                "/api/v1/auth/login",
-                exchange -> {
-                    logins.incrementAndGet();
-                    String body =
-                            new String(
-                                    exchange.getRequestBody().readAllBytes(),
-                                    StandardCharsets.UTF_8);
-                    // The vendor authenticates the app by header and the user by body.
-                    if (!"client-abc".equals(exchange.getRequestHeaders().getFirst("X-Client-Id"))
-                            || !"client-xyz"
-                                    .equals(
-                                            exchange.getRequestHeaders()
-                                                    .getFirst("X-Client-Secret"))
-                            || !body.contains("\"password\":\"s3cr3t\"")
-                            || !body.contains("\"tenantId\":\"acme\"")) {
-                        respond(exchange, 401, "{}");
-                        return;
-                    }
-                    exchange.getResponseHeaders().add("X-Auth-Token", issuedToken);
-                    respond(exchange, 200, "{\"msg\":\"ok\"}");
-                });
+        server.createContext("/api/v1/auth/login", exchange -> {
+            logins.incrementAndGet();
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            // The vendor authenticates the app by header and the user by body.
+            if (!"client-abc".equals(exchange.getRequestHeaders().getFirst("X-Client-Id"))
+                    || !"client-xyz".equals(exchange.getRequestHeaders().getFirst("X-Client-Secret"))
+                    || !body.contains("\"password\":\"s3cr3t\"")
+                    || !body.contains("\"tenantId\":\"acme\"")) {
+                respond(exchange, 401, "{}");
+                return;
+            }
+            exchange.getResponseHeaders().add("X-Auth-Token", issuedToken);
+            respond(exchange, 200, "{\"msg\":\"ok\"}");
+        });
 
-        server.createContext(
-                "/api/v1/documents",
-                exchange -> {
-                    Map<String, String> headers = new LinkedHashMap<>();
-                    exchange.getRequestHeaders()
-                            .forEach((name, values) -> headers.put(name, values.get(0)));
-                    callHeaders.add(headers);
-                    String token = exchange.getRequestHeaders().getFirst("X-Auth-Token");
-                    if (rejectToken || token == null || !token.equals(issuedToken)) {
-                        respond(exchange, 401, "{\"msg\":\"expired\"}");
-                        return;
-                    }
-                    respond(
-                            exchange,
-                            201,
-                            "{\"response\":{\"metadata\":{\"documentId\":\"doc-9\"}}}");
-                });
+        server.createContext("/api/v1/documents", exchange -> {
+            Map<String, String> headers = new LinkedHashMap<>();
+            exchange.getRequestHeaders().forEach((name, values) -> headers.put(name, values.get(0)));
+            callHeaders.add(headers);
+            String token = exchange.getRequestHeaders().getFirst("X-Auth-Token");
+            if (rejectToken || token == null || !token.equals(issuedToken)) {
+                respond(exchange, 401, "{\"msg\":\"expired\"}");
+                return;
+            }
+            respond(exchange, 201, "{\"response\":{\"metadata\":{\"documentId\":\"doc-9\"}}}");
+        });
 
-        server.createContext(
-                "/api/v1/workflows",
-                exchange -> {
-                    if (!issuedToken.equals(
-                            exchange.getRequestHeaders().getFirst("X-Auth-Token"))) {
-                        respond(exchange, 401, "{\"msg\":\"expired\"}");
-                        return;
-                    }
-                    workflowBody =
-                            new String(
-                                    exchange.getRequestBody().readAllBytes(),
-                                    StandardCharsets.UTF_8);
-                    respond(exchange, 201, "{\"response\":{\"id\":\"wf-7\",\"status\":1}}");
-                });
+        server.createContext("/api/v1/workflows", exchange -> {
+            if (!issuedToken.equals(exchange.getRequestHeaders().getFirst("X-Auth-Token"))) {
+                respond(exchange, 401, "{\"msg\":\"expired\"}");
+                return;
+            }
+            workflowBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            respond(exchange, 201, "{\"response\":{\"id\":\"wf-7\",\"status\":1}}");
+        });
 
         server.start();
         baseUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/api/v1";
@@ -128,7 +108,9 @@ class ExternalApiCallerTokenLoginTest {
         // The server is on loopback, which is exactly what the guard blocks by default.
         properties.getPolicies().setAllowPrivateApiEndpoints(true);
         return new ExternalApiCaller(
-                HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build(),
+                HttpClient.newBuilder()
+                        .followRedirects(HttpClient.Redirect.NEVER)
+                        .build(),
                 properties,
                 objectMapper);
     }
@@ -139,12 +121,8 @@ class ExternalApiCallerTokenLoginTest {
         config.put("baseUrl", baseUrl);
         config.put("authType", "TOKEN_LOGIN");
         config.put("loginPath", "/auth/login");
-        config.put(
-                "loginBody",
-                Map.of("username", "api@acme.test", "password", "s3cr3t", "tenantId", "acme"));
-        config.put(
-                "loginHeaders",
-                Map.of("X-Client-Id", "client-abc", "X-Client-Secret", "client-xyz"));
+        config.put("loginBody", Map.of("username", "api@acme.test", "password", "s3cr3t", "tenantId", "acme"));
+        config.put("loginHeaders", Map.of("X-Client-Id", "client-abc", "X-Client-Secret", "client-xyz"));
         config.put("tokenResponseHeader", "X-Auth-Token");
         config.put("tokenHeaderName", "X-Auth-Token");
         return ApiConnectionSettings.from(config);
@@ -227,8 +205,7 @@ class ExternalApiCallerTokenLoginTest {
         document.put("filename", "contract.pdf");
         document.put("base64", Base64.getEncoder().encodeToString(pdf));
 
-        String template =
-                """
+        String template = """
                 {
                   "name": "{{document.filename}}",
                   "status": 1,
@@ -243,19 +220,20 @@ class ExternalApiCallerTokenLoginTest {
                 """;
         JsonNode body = Placeholders.resolveTree(objectMapper.readTree(template), context);
 
-        ExternalApiCaller.Response response =
-                caller().dispatch(
-                                consignoConnection(),
-                                "POST",
-                                "/workflows",
-                                ExternalApiCaller.raw(
-                                        "application/json", objectMapper.writeValueAsBytes(body)),
-                                Map.of());
+        ExternalApiCaller.Response response = caller().dispatch(
+                        consignoConnection(),
+                        "POST",
+                        "/workflows",
+                        ExternalApiCaller.raw("application/json", objectMapper.writeValueAsBytes(body)),
+                        Map.of());
 
         assertThat(response.status()).isEqualTo(201);
         // The workflow id the vendor hands back - the thing a later fetch would need, and which a
         // step currently has no way to carry to the next step.
-        assertThat(objectMapper.readTree(response.bodyAsText()).at("/response/id").asString())
+        assertThat(objectMapper
+                        .readTree(response.bodyAsText())
+                        .at("/response/id")
+                        .asString())
                 .isEqualTo("wf-7");
         assertThat(logins.get()).isEqualTo(1);
 
@@ -278,16 +256,14 @@ class ExternalApiCallerTokenLoginTest {
         config.put("tokenHeaderName", "X-Auth-Token");
         ApiConnectionSettings settings = ApiConnectionSettings.from(config);
 
-        assertThatThrownBy(
-                        () ->
-                                caller().postFile(
-                                                settings,
-                                                "/documents",
-                                                "file",
-                                                "c.pdf",
-                                                "application/pdf",
-                                                "%PDF".getBytes(StandardCharsets.UTF_8),
-                                                Map.of()))
+        assertThatThrownBy(() -> caller().postFile(
+                                settings,
+                                "/documents",
+                                "file",
+                                "c.pdf",
+                                "application/pdf",
+                                "%PDF".getBytes(StandardCharsets.UTF_8),
+                                Map.of()))
                 .isInstanceOf(IOException.class)
                 .hasMessageContaining("returned HTTP 401")
                 // The login body is echoed by some vendors; the message must not carry it onward.

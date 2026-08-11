@@ -33,27 +33,21 @@ final class ResultUrls {
      * @return the URL to fetch
      * @throws IllegalArgumentException if the response named a host the operator did not authorise
      */
-    static URI validate(
-            ApiConnectionSettings settings,
-            String url,
-            ApplicationProperties applicationProperties) {
+    static URI validate(ApiConnectionSettings settings, String url, ApplicationProperties applicationProperties) {
         URI uri;
         try {
             uri = new URI(url.trim());
         } catch (URISyntaxException e) {
-            throw new IllegalArgumentException(
-                    "The API returned a result URL that is not a valid URL: " + url, e);
+            throw new IllegalArgumentException("The API returned a result URL that is not a valid URL: " + url, e);
         }
         String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
         if (!"http".equals(scheme) && !"https".equals(scheme)) {
             // file:, gopher:, jar: and friends are how a URL fetch becomes a local file read.
-            throw new IllegalArgumentException(
-                    "The API returned a result URL that is not http(s): " + url);
+            throw new IllegalArgumentException("The API returned a result URL that is not http(s): " + url);
         }
         String host = uri.getHost();
         if (host == null || host.isBlank()) {
-            throw new IllegalArgumentException(
-                    "The API returned a result URL with no host: " + url);
+            throw new IllegalArgumentException("The API returned a result URL with no host: " + url);
         }
         if (uri.getUserInfo() != null) {
             // Credentials in a URL are also the classic way to make a host look like another one.
@@ -62,11 +56,10 @@ final class ResultUrls {
         }
 
         if (!isAllowedHost(settings, host)) {
-            throw new IllegalArgumentException(
-                    "The API returned a result URL on '"
-                            + host
-                            + "', which this connection does not allow. Add it to the connection's"
-                            + " 'resultUrlHosts' if results are meant to come from there.");
+            throw new IllegalArgumentException("The API returned a result URL on '"
+                    + host
+                    + "', which this connection does not allow. Add it to the connection's"
+                    + " 'resultUrlHosts' if results are meant to come from there.");
         }
         // Even an allowlisted name must not resolve somewhere internal: a hostile or compromised
         // DNS record for cdn.vendor.example pointing at 169.254.169.254 would otherwise be obeyed.
@@ -75,8 +68,7 @@ final class ResultUrls {
                     uri,
                     applicationProperties.getPolicies().isAllowPrivateApiEndpoints(),
                     "API result URL",
-                    "set policies.allowPrivateApiEndpoints=true to opt in (e.g. for an on-prem"
-                            + " integration).");
+                    "set policies.allowPrivateApiEndpoints=true to opt in (e.g. for an on-prem" + " integration).");
         } catch (IllegalStateException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }

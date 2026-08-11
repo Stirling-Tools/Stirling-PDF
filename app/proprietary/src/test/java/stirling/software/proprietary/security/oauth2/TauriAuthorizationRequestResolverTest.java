@@ -14,27 +14,24 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 class TauriAuthorizationRequestResolverTest {
 
     private TauriAuthorizationRequestResolver buildResolver() {
-        ClientRegistration registration =
-                ClientRegistration.withRegistrationId("google")
-                        .clientId("client-id")
-                        .clientSecret("client-secret")
-                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                        .authorizationUri("https://accounts.example.com/o/oauth2/auth")
-                        .tokenUri("https://accounts.example.com/o/oauth2/token")
-                        .redirectUri("http://localhost:8080/login/oauth2/code/google")
-                        .userInfoUri("https://accounts.example.com/userinfo")
-                        .userNameAttributeName("sub")
-                        .clientName("Google")
-                        .scope("email")
-                        .build();
+        ClientRegistration registration = ClientRegistration.withRegistrationId("google")
+                .clientId("client-id")
+                .clientSecret("client-secret")
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationUri("https://accounts.example.com/o/oauth2/auth")
+                .tokenUri("https://accounts.example.com/o/oauth2/token")
+                .redirectUri("http://localhost:8080/login/oauth2/code/google")
+                .userInfoUri("https://accounts.example.com/userinfo")
+                .userNameAttributeName("sub")
+                .clientName("Google")
+                .scope("email")
+                .build();
 
-        return new TauriAuthorizationRequestResolver(
-                new InMemoryClientRegistrationRepository(registration));
+        return new TauriAuthorizationRequestResolver(new InMemoryClientRegistrationRepository(registration));
     }
 
     private MockHttpServletRequest buildRequest(boolean tauri) {
-        MockHttpServletRequest request =
-                new MockHttpServletRequest("GET", "/oauth2/authorization/google");
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/oauth2/authorization/google");
         request.setServletPath("/oauth2/authorization/google");
         if (tauri) {
             request.setParameter("tauri", "1");

@@ -34,8 +34,7 @@ class LiveValkeyChaosTest {
 
     @Container
     static final GenericContainer<?> VALKEY =
-            new GenericContainer<>(DockerImageName.parse("valkey/valkey:8.0-alpine"))
-                    .withExposedPorts(6379);
+            new GenericContainer<>(DockerImageName.parse("valkey/valkey:8.0-alpine")).withExposedPorts(6379);
 
     static boolean isDockerAvailable() {
         return DockerClientFactory.instance().isDockerAvailable();
@@ -47,21 +46,23 @@ class LiveValkeyChaosTest {
         ApplicationProperties p = new ApplicationProperties();
         p.getCluster().setEnabled(true);
         p.getCluster().setBackplane("valkey");
-        p.getCluster()
-                .getValkey()
-                .setUrl("redis://" + VALKEY.getHost() + ":" + VALKEY.getMappedPort(6379));
+        p.getCluster().getValkey().setUrl("redis://" + VALKEY.getHost() + ":" + VALKEY.getMappedPort(6379));
         p.getCluster().getNode().setId("chaos");
         // Built via the production bean so the real 2s commandTimeout is in effect.
         return new ValkeyConnectionConfiguration(p).valkeyConnectionFactory();
     }
 
     private void pause() {
-        DockerClientFactory.lazyClient().pauseContainerCmd(VALKEY.getContainerId()).exec();
+        DockerClientFactory.lazyClient()
+                .pauseContainerCmd(VALKEY.getContainerId())
+                .exec();
         paused = true;
     }
 
     private void unpause() {
-        DockerClientFactory.lazyClient().unpauseContainerCmd(VALKEY.getContainerId()).exec();
+        DockerClientFactory.lazyClient()
+                .unpauseContainerCmd(VALKEY.getContainerId())
+                .exec();
         paused = false;
     }
 
@@ -92,9 +93,7 @@ class LiveValkeyChaosTest {
             long elapsedMs = (System.nanoTime() - start) / 1_000_000;
             assertTrue(
                     elapsedMs < 15_000,
-                    "command must abort on the ~2s timeout, not hang on the 60s default; elapsed="
-                            + elapsedMs
-                            + " ms");
+                    "command must abort on the ~2s timeout, not hang on the 60s default; elapsed=" + elapsedMs + " ms");
 
             unpause();
             // After the partition heals the client must recover (Lettuce reconnects lazily).

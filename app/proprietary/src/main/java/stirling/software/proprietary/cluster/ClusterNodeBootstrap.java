@@ -46,16 +46,14 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
     private volatile String internalAddress;
     private volatile boolean running = false;
 
-    public ClusterNodeBootstrap(
-            ApplicationProperties applicationProperties, InstanceRegistry instanceRegistry) {
+    public ClusterNodeBootstrap(ApplicationProperties applicationProperties, InstanceRegistry instanceRegistry) {
         this.applicationProperties = applicationProperties;
         this.instanceRegistry = instanceRegistry;
         Cluster cluster = applicationProperties.getCluster();
         // Default must match the @Scheduled fallback below AND the model default
         // (ApplicationProperties.Cluster.Node.heartbeatIntervalMs = 5000); otherwise the TTL is
         // computed from a different interval than the scheduler runs at and the 3x margin breaks.
-        long heartbeatMs =
-                cluster.getNode() == null ? 5000L : cluster.getNode().getHeartbeatIntervalMs();
+        long heartbeatMs = cluster.getNode() == null ? 5000L : cluster.getNode().getHeartbeatIntervalMs();
         // TTL = 3x heartbeat: tolerate two missed ticks before the node drops out of the registry.
         this.heartbeatTtl = Duration.ofMillis(heartbeatMs * 3);
     }
@@ -85,8 +83,7 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
 
     private void registerSelf(String reason) {
         try {
-            instanceRegistry.register(
-                    new ClusterNode(nodeId, internalAddress, Instant.now(), role()), heartbeatTtl);
+            instanceRegistry.register(new ClusterNode(nodeId, internalAddress, Instant.now(), role()), heartbeatTtl);
             if ("register".equals(reason)) {
                 log.info(
                         "Cluster node registered: nodeId={}, internalAddress={}, role={}, ttl={}s",
@@ -149,8 +146,7 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
      */
     private String resolveInternalAddress() {
         Cluster cluster = applicationProperties.getCluster();
-        String configured =
-                cluster.getNode() == null ? null : cluster.getNode().getInternalAddress();
+        String configured = cluster.getNode() == null ? null : cluster.getNode().getInternalAddress();
         if (configured != null && !configured.isBlank()) {
             return ensurePort(configured);
         }
@@ -159,11 +155,7 @@ public class ClusterNodeBootstrap implements SmartLifecycle {
             return scheme() + "://" + podIp + ":" + serverPort;
         }
         try {
-            return scheme()
-                    + "://"
-                    + InetAddress.getLocalHost().getHostAddress()
-                    + ":"
-                    + serverPort;
+            return scheme() + "://" + InetAddress.getLocalHost().getHostAddress() + ":" + serverPort;
         } catch (UnknownHostException e) {
             throw new IllegalStateException(
                     "Could not resolve this host's address for cluster registration; set"

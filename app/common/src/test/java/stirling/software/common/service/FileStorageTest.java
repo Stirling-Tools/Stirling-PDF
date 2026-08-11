@@ -27,9 +27,11 @@ import stirling.software.common.cluster.inprocess.LocalDiskFileStore;
 
 class FileStorageTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock private FileOrUploadService fileOrUploadService;
+    @Mock
+    private FileOrUploadService fileOrUploadService;
 
     private FileStorage fileStorage;
 
@@ -39,10 +41,7 @@ class FileStorageTest {
     void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
         fileStorage =
-                new FileStorage(
-                        fileOrUploadService,
-                        new LocalDiskFileStore(tempDir.toString()),
-                        Optional.empty());
+                new FileStorage(fileOrUploadService, new LocalDiskFileStore(tempDir.toString()), Optional.empty());
 
         // Create a mock MultipartFile
         mockFile = mock(MultipartFile.class);
@@ -209,34 +208,33 @@ class FileStorageTest {
         // emitting a few bytes. The finally block in storeFromResource should remove
         // the partial file on disk.
         byte[] head = "partial".getBytes(StandardCharsets.UTF_8);
-        Resource flakyResource =
-                new ByteArrayResource(head) {
+        Resource flakyResource = new ByteArrayResource(head) {
+            @Override
+            public InputStream getInputStream() {
+                return new InputStream() {
+                    private int position = 0;
+
                     @Override
-                    public InputStream getInputStream() {
-                        return new InputStream() {
-                            private int position = 0;
+                    public int read() throws IOException {
+                        if (position < head.length) {
+                            return head[position++] & 0xFF;
+                        }
+                        throw new IOException("simulated mid-copy read failure");
+                    }
 
-                            @Override
-                            public int read() throws IOException {
-                                if (position < head.length) {
-                                    return head[position++] & 0xFF;
-                                }
-                                throw new IOException("simulated mid-copy read failure");
-                            }
-
-                            @Override
-                            public int read(byte[] b, int off, int len) throws IOException {
-                                if (position >= head.length) {
-                                    throw new IOException("simulated mid-copy read failure");
-                                }
-                                int toCopy = Math.min(len, head.length - position);
-                                System.arraycopy(head, position, b, off, toCopy);
-                                position += toCopy;
-                                return toCopy;
-                            }
-                        };
+                    @Override
+                    public int read(byte[] b, int off, int len) throws IOException {
+                        if (position >= head.length) {
+                            throw new IOException("simulated mid-copy read failure");
+                        }
+                        int toCopy = Math.min(len, head.length - position);
+                        System.arraycopy(head, position, b, off, toCopy);
+                        position += toCopy;
+                        return toCopy;
                     }
                 };
+            }
+        };
 
         // Snapshot dir contents before the call so we can detect any lingering file.
         long filesBefore;
@@ -245,8 +243,7 @@ class FileStorageTest {
         }
 
         // Act + Assert: IOException must propagate out - not be swallowed.
-        assertThrows(
-                IOException.class, () -> fileStorage.storeFromResource(flakyResource, "n.pdf"));
+        assertThrows(IOException.class, () -> fileStorage.storeFromResource(flakyResource, "n.pdf"));
 
         // Assert: no partial file lingers under the storage directory - the finally
         // branch's deleteIfExists must have cleaned it up.
@@ -254,9 +251,6 @@ class FileStorageTest {
         try (Stream<Path> s = Files.list(tempDir)) {
             filesAfter = s.count();
         }
-        assertEquals(
-                filesBefore,
-                filesAfter,
-                "partial file must be cleaned up by storeFromResource finally block");
+        assertEquals(filesBefore, filesAfter, "partial file must be cleaned up by storeFromResource finally block");
     }
 }

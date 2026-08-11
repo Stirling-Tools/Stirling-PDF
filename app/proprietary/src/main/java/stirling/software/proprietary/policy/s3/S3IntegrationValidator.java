@@ -40,8 +40,7 @@ public class S3IntegrationValidator implements IntegrationConfigValidator {
                     URI.create(parsed.endpoint()),
                     applicationProperties.getPolicies().isAllowPrivateS3Endpoints(),
                     "S3 connection endpoint",
-                    "set policies.allowPrivateS3Endpoints=true to opt in (e.g. for a local"
-                            + " MinIO).");
+                    "set policies.allowPrivateS3Endpoints=true to opt in (e.g. for a local" + " MinIO).");
         } catch (IllegalStateException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }

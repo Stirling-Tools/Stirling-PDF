@@ -43,19 +43,16 @@ public class ResourceMonitor {
     @Value("${stirling.resource.monitor.interval-ms:60000}")
     private long monitorIntervalMs = 60000; // 60 seconds
 
-    private final ScheduledExecutorService scheduler =
-            Executors.newSingleThreadScheduledExecutor(
-                    Thread.ofVirtual().name("resource-monitor-", 0).factory());
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
+            Thread.ofVirtual().name("resource-monitor-", 0).factory());
     private final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
     private final OperatingSystemMXBean osMXBean = ManagementFactory.getOperatingSystemMXBean();
 
     @Getter
-    private final AtomicReference<ResourceStatus> currentStatus =
-            new AtomicReference<>(ResourceStatus.OK);
+    private final AtomicReference<ResourceStatus> currentStatus = new AtomicReference<>(ResourceStatus.OK);
 
     @Getter
-    private final AtomicReference<ResourceMetrics> latestMetrics =
-            new AtomicReference<>(new ResourceMetrics());
+    private final AtomicReference<ResourceMetrics> latestMetrics = new AtomicReference<>(new ResourceMetrics());
 
     /** Represents the current status of system resources. */
     public enum ResourceStatus {
@@ -121,8 +118,7 @@ public class ResourceMonitor {
     @PostConstruct
     public void initialize() {
         log.debug("Starting resource monitoring with interval of {}ms", monitorIntervalMs);
-        scheduler.scheduleAtFixedRate(
-                this::updateResourceMetrics, 0, monitorIntervalMs, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(this::updateResourceMetrics, 0, monitorIntervalMs, TimeUnit.MILLISECONDS);
     }
 
     @PreDestroy
@@ -151,13 +147,7 @@ public class ResourceMonitor {
 
             // Create new metrics
             ResourceMetrics metrics =
-                    new ResourceMetrics(
-                            cpuUsage,
-                            memoryUsage,
-                            freeMemory,
-                            totalMemory,
-                            maxMemory,
-                            Instant.now());
+                    new ResourceMetrics(cpuUsage, memoryUsage, freeMemory, totalMemory, maxMemory, Instant.now());
             latestMetrics.set(metrics);
 
             // Determine system status
@@ -196,20 +186,17 @@ public class ResourceMonitor {
             // Try to get CPU time if available through reflection
             // This is a fallback since we can't directly cast to platform-specific classes
             try {
-                java.lang.reflect.Method m =
-                        osMXBean.getClass().getDeclaredMethod("getProcessCpuLoad");
+                java.lang.reflect.Method m = osMXBean.getClass().getDeclaredMethod("getProcessCpuLoad");
                 m.setAccessible(true);
                 return (double) m.invoke(osMXBean);
             } catch (Exception e) {
                 // Try the older method
                 try {
-                    java.lang.reflect.Method m =
-                            osMXBean.getClass().getDeclaredMethod("getSystemCpuLoad");
+                    java.lang.reflect.Method m = osMXBean.getClass().getDeclaredMethod("getSystemCpuLoad");
                     m.setAccessible(true);
                     return (double) m.invoke(osMXBean);
                 } catch (Exception e2) {
-                    log.trace(
-                            "Could not get CPU load through reflection, assuming moderate load (0.5)");
+                    log.trace("Could not get CPU load through reflection, assuming moderate load (0.5)");
                     return 0.5;
                 }
             }

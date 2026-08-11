@@ -42,15 +42,20 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class JwtServiceTest {
 
-    @Mock private Authentication authentication;
+    @Mock
+    private Authentication authentication;
 
-    @Mock private User userDetails;
+    @Mock
+    private User userDetails;
 
-    @Mock private HttpServletRequest request;
+    @Mock
+    private HttpServletRequest request;
 
-    @Mock private HttpServletResponse response;
+    @Mock
+    private HttpServletResponse response;
 
-    @Mock private KeyPersistenceServiceInterface keystoreService;
+    @Mock
+    private KeyPersistenceServiceInterface keystoreService;
 
     private JwtService jwtService;
     private KeyPair testKeyPair;
@@ -130,11 +135,9 @@ class JwtServiceTest {
         when(keystoreService.decodePublicKey(testVerificationKey.getVerifyingKey()))
                 .thenReturn(testKeyPair.getPublic());
 
-        assertThrows(
-                AuthenticationFailureException.class,
-                () -> {
-                    jwtService.validateToken("invalid-token");
-                });
+        assertThrows(AuthenticationFailureException.class, () -> {
+            jwtService.validateToken("invalid-token");
+        });
     }
 
     @Test
@@ -143,12 +146,9 @@ class JwtServiceTest {
         when(keystoreService.decodePublicKey(testVerificationKey.getVerifyingKey()))
                 .thenReturn(testKeyPair.getPublic());
 
-        AuthenticationFailureException exception =
-                assertThrows(
-                        AuthenticationFailureException.class,
-                        () -> {
-                            jwtService.validateToken("malformed.token");
-                        });
+        AuthenticationFailureException exception = assertThrows(AuthenticationFailureException.class, () -> {
+            jwtService.validateToken("malformed.token");
+        });
 
         assertTrue(exception.getMessage().contains("Invalid"));
     }
@@ -159,16 +159,12 @@ class JwtServiceTest {
         when(keystoreService.decodePublicKey(testVerificationKey.getVerifyingKey()))
                 .thenReturn(testKeyPair.getPublic());
 
-        AuthenticationFailureException exception =
-                assertThrows(
-                        AuthenticationFailureException.class,
-                        () -> {
-                            jwtService.validateToken("");
-                        });
+        AuthenticationFailureException exception = assertThrows(AuthenticationFailureException.class, () -> {
+            jwtService.validateToken("");
+        });
 
-        assertTrue(
-                exception.getMessage().contains("Claims are empty")
-                        || exception.getMessage().contains("Invalid"));
+        assertTrue(exception.getMessage().contains("Claims are empty")
+                || exception.getMessage().contains("Invalid"));
     }
 
     @Test
@@ -193,9 +189,7 @@ class JwtServiceTest {
         when(keystoreService.decodePublicKey(testVerificationKey.getVerifyingKey()))
                 .thenReturn(testKeyPair.getPublic());
 
-        assertThrows(
-                AuthenticationFailureException.class,
-                () -> jwtService.extractUsername("invalid-token"));
+        assertThrows(AuthenticationFailureException.class, () -> jwtService.extractUsername("invalid-token"));
     }
 
     @Test
@@ -224,9 +218,7 @@ class JwtServiceTest {
         when(keystoreService.decodePublicKey(testVerificationKey.getVerifyingKey()))
                 .thenReturn(testKeyPair.getPublic());
 
-        assertThrows(
-                AuthenticationFailureException.class,
-                () -> jwtService.extractClaims("invalid-token"));
+        assertThrows(AuthenticationFailureException.class, () -> jwtService.extractClaims("invalid-token"));
     }
 
     @Test
@@ -313,9 +305,7 @@ class JwtServiceTest {
         String token = jwtService.generateToken(authentication, claims);
 
         // Mock extraction of key ID and verification (lenient to avoid unused stubbing)
-        lenient()
-                .when(keystoreService.getKeyPair("test-key-id"))
-                .thenReturn(Optional.of(testKeyPair));
+        lenient().when(keystoreService.getKeyPair("test-key-id")).thenReturn(Optional.of(testKeyPair));
 
         // Verify token can be validated
         assertDoesNotThrow(() -> jwtService.validateToken(token));
@@ -337,10 +327,9 @@ class JwtServiceTest {
 
         // Now mock the scenario for validation - key not found, but fallback works
         // Create a fallback key pair that can be used
-        JwtVerificationKey fallbackKey =
-                new JwtVerificationKey(
-                        "fallback-key",
-                        Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded()));
+        JwtVerificationKey fallbackKey = new JwtVerificationKey(
+                "fallback-key",
+                Base64.getEncoder().encodeToString(testKeyPair.getPublic().getEncoded()));
 
         // Mock the specific key lookup to fail, but the active key should work
         when(keystoreService.getKeyPair("test-key-id")).thenReturn(Optional.empty());

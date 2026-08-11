@@ -68,9 +68,7 @@ class AiDocumentHtmlRendererTest {
         items.setRows(List.of(List.of("Widget", "$10")));
         items.setTotalRow(List.of("Total", "$10"));
 
-        assertTrue(
-                renderer.render(document("Table", List.of(items)))
-                        .contains("<tr class=\"total-row\">"));
+        assertTrue(renderer.render(document("Table", List.of(items))).contains("<tr class=\"total-row\">"));
     }
 
     @Test
@@ -79,9 +77,7 @@ class AiDocumentHtmlRendererTest {
         items.setColumns(List.of("Item"));
         items.setRows(List.of(List.of("Widget")));
 
-        assertFalse(
-                renderer.render(document("Table", List.of(items)))
-                        .contains("<tr class=\"total-row\">"));
+        assertFalse(renderer.render(document("Table", List.of(items))).contains("<tr class=\"total-row\">"));
     }
 
     @Test

@@ -32,9 +32,14 @@ class SPDFApplicationMoreTest {
     private static final String TAURI_PROP = "STIRLING_PDF_TAURI_MODE";
     private static final String BROWSER_OPEN = "BROWSER_OPEN";
 
-    @Mock private AppConfig appConfig;
-    @Mock private Environment env;
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock
+    private AppConfig appConfig;
+
+    @Mock
+    private Environment env;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
 
     private String originalTauri;
 
@@ -53,8 +58,7 @@ class SPDFApplicationMoreTest {
         }
     }
 
-    private static Object invokeStatic(String name, Class<?>[] sig, Object... args)
-            throws Exception {
+    private static Object invokeStatic(String name, Class<?>[] sig, Object... args) throws Exception {
         Method m = SPDFApplication.class.getDeclaredMethod(name, sig);
         m.setAccessible(true);
         return m.invoke(null, args);
@@ -65,12 +69,7 @@ class SPDFApplicationMoreTest {
     class NormalizeBackendUrl {
 
         private String normalize(String url, String port) throws Exception {
-            return (String)
-                    invokeStatic(
-                            "normalizeBackendUrl",
-                            new Class<?>[] {String.class, String.class},
-                            url,
-                            port);
+            return (String) invokeStatic("normalizeBackendUrl", new Class<?>[] {String.class, String.class}, url, port);
         }
 
         @Test
@@ -106,8 +105,7 @@ class SPDFApplicationMoreTest {
         @Test
         @DisplayName("keeps an explicit port already in the url")
         void keepsExplicitPort() throws Exception {
-            assertThat(normalize("http://example.com:1234", null))
-                    .isEqualTo("http://example.com:1234");
+            assertThat(normalize("http://example.com:1234", null)).isEqualTo("http://example.com:1234");
         }
     }
 
@@ -116,13 +114,8 @@ class SPDFApplicationMoreTest {
     class BuildFullUrl {
 
         private String build(String base, String port, String ctx) throws Exception {
-            return (String)
-                    invokeStatic(
-                            "buildFullUrl",
-                            new Class<?>[] {String.class, String.class, String.class},
-                            base,
-                            port,
-                            ctx);
+            return (String) invokeStatic(
+                    "buildFullUrl", new Class<?>[] {String.class, String.class, String.class}, base, port, ctx);
         }
 
         @Test
@@ -134,8 +127,7 @@ class SPDFApplicationMoreTest {
         @Test
         @DisplayName("non-root context path is prefixed with a slash")
         void prefixesContext() throws Exception {
-            assertThat(build("http://localhost", "8080", "app"))
-                    .isEqualTo("http://localhost:8080/app");
+            assertThat(build("http://localhost", "8080", "app")).isEqualTo("http://localhost:8080/app");
         }
 
         @Test
@@ -175,11 +167,7 @@ class SPDFApplicationMoreTest {
 
         private String append(String base, Integer port) throws Exception {
             return (String)
-                    invokeStatic(
-                            "appendPortFallback",
-                            new Class<?>[] {String.class, Integer.class},
-                            base,
-                            port);
+                    invokeStatic("appendPortFallback", new Class<?>[] {String.class, Integer.class}, base, port);
         }
 
         @Test

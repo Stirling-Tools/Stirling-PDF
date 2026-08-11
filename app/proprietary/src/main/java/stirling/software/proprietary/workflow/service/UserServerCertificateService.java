@@ -62,10 +62,7 @@ public class UserServerCertificateService {
             return existing.get();
         }
 
-        User user =
-                userRepository
-                        .findById(userId)
-                        .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         return generateUserCertificate(user);
     }
 
@@ -84,13 +81,11 @@ public class UserServerCertificateService {
         X500Name subject = new X500Name("CN=" + username + ", OU=User, O=Stirling PDF Inc, C=US");
         BigInteger serialNumber = BigInteger.valueOf(System.currentTimeMillis());
         Date notBefore = new Date();
-        Date notAfter =
-                new Date(notBefore.getTime() + ((long) VALIDITY_DAYS * 24 * 60 * 60 * 1000));
+        Date notAfter = new Date(notBefore.getTime() + ((long) VALIDITY_DAYS * 24 * 60 * 60 * 1000));
 
         // Build certificate
-        JcaX509v3CertificateBuilder certBuilder =
-                new JcaX509v3CertificateBuilder(
-                        subject, serialNumber, notBefore, notAfter, subject, keyPair.getPublic());
+        JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(
+                subject, serialNumber, notBefore, notAfter, subject, keyPair.getPublic());
 
         // Add PDF-specific certificate extensions
         JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
@@ -100,33 +95,23 @@ public class UserServerCertificateService {
 
         // Key usage for PDF digital signatures
         certBuilder.addExtension(
-                Extension.keyUsage,
-                true,
-                new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation));
+                Extension.keyUsage, true, new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation));
 
         // Extended key usage for document signing
         certBuilder.addExtension(
-                Extension.extendedKeyUsage,
-                false,
-                new ExtendedKeyUsage(KeyPurposeId.id_kp_codeSigning));
+                Extension.extendedKeyUsage, false, new ExtendedKeyUsage(KeyPurposeId.id_kp_codeSigning));
 
         // Subject Key Identifier
         certBuilder.addExtension(
-                Extension.subjectKeyIdentifier,
-                false,
-                extUtils.createSubjectKeyIdentifier(keyPair.getPublic()));
+                Extension.subjectKeyIdentifier, false, extUtils.createSubjectKeyIdentifier(keyPair.getPublic()));
 
         // Authority Key Identifier for self-signed cert
         certBuilder.addExtension(
-                Extension.authorityKeyIdentifier,
-                false,
-                extUtils.createAuthorityKeyIdentifier(keyPair.getPublic()));
+                Extension.authorityKeyIdentifier, false, extUtils.createAuthorityKeyIdentifier(keyPair.getPublic()));
 
         // Sign certificate
         ContentSigner signer =
-                new JcaContentSignerBuilder("SHA256WithRSA")
-                        .setProvider("BC")
-                        .build(keyPair.getPrivate());
+                new JcaContentSignerBuilder("SHA256WithRSA").setProvider("BC").build(keyPair.getPrivate());
 
         X509CertificateHolder certHolder = certBuilder.build(signer);
         X509Certificate cert =
@@ -136,11 +121,7 @@ public class UserServerCertificateService {
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
         keyStore.load(null, null);
         String password = generateUserPassword(user.getId());
-        keyStore.setKeyEntry(
-                KEYSTORE_ALIAS,
-                keyPair.getPrivate(),
-                password.toCharArray(),
-                new Certificate[] {cert});
+        keyStore.setKeyEntry(KEYSTORE_ALIAS, keyPair.getPrivate(), password.toCharArray(), new Certificate[] {cert});
 
         // Store keystore bytes
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -155,18 +136,16 @@ public class UserServerCertificateService {
         entity.setCertificateType(CertificateType.AUTO_GENERATED);
         entity.setSubjectDn(cert.getSubjectX500Principal().getName());
         entity.setIssuerDn(cert.getIssuerX500Principal().getName());
-        entity.setValidFrom(
-                LocalDateTime.ofInstant(cert.getNotBefore().toInstant(), ZoneId.systemDefault()));
-        entity.setValidTo(
-                LocalDateTime.ofInstant(cert.getNotAfter().toInstant(), ZoneId.systemDefault()));
+        entity.setValidFrom(LocalDateTime.ofInstant(cert.getNotBefore().toInstant(), ZoneId.systemDefault()));
+        entity.setValidTo(LocalDateTime.ofInstant(cert.getNotAfter().toInstant(), ZoneId.systemDefault()));
 
         return certificateRepository.save(entity);
     }
 
     /** Upload user-provided certificate */
     @Transactional
-    public UserServerCertificateEntity uploadUserCertificate(
-            User user, InputStream p12Stream, String password) throws Exception {
+    public UserServerCertificateEntity uploadUserCertificate(User user, InputStream p12Stream, String password)
+            throws Exception {
         log.info("Uploading user certificate for user: {}", user.getUsername());
 
         // Validate keystore
@@ -188,9 +167,7 @@ public class UserServerCertificateService {
 
         // Create or update entity
         UserServerCertificateEntity entity =
-                certificateRepository
-                        .findByUserId(user.getId())
-                        .orElse(new UserServerCertificateEntity());
+                certificateRepository.findByUserId(user.getId()).orElse(new UserServerCertificateEntity());
 
         entity.setUser(user);
         entity.setKeystoreData(keystoreBytes);
@@ -198,10 +175,8 @@ public class UserServerCertificateService {
         entity.setCertificateType(CertificateType.USER_UPLOADED);
         entity.setSubjectDn(cert.getSubjectX500Principal().getName());
         entity.setIssuerDn(cert.getIssuerX500Principal().getName());
-        entity.setValidFrom(
-                LocalDateTime.ofInstant(cert.getNotBefore().toInstant(), ZoneId.systemDefault()));
-        entity.setValidTo(
-                LocalDateTime.ofInstant(cert.getNotAfter().toInstant(), ZoneId.systemDefault()));
+        entity.setValidFrom(LocalDateTime.ofInstant(cert.getNotBefore().toInstant(), ZoneId.systemDefault()));
+        entity.setValidTo(LocalDateTime.ofInstant(cert.getNotAfter().toInstant(), ZoneId.systemDefault()));
 
         return certificateRepository.save(entity);
     }
@@ -209,11 +184,9 @@ public class UserServerCertificateService {
     /** Get user's KeyStore for signing operations */
     @Transactional(readOnly = true)
     public KeyStore getUserKeyStore(Long userId) throws Exception {
-        UserServerCertificateEntity cert =
-                certificateRepository
-                        .findByUserId(userId)
-                        .orElseThrow(
-                                () -> new IllegalArgumentException("User certificate not found"));
+        UserServerCertificateEntity cert = certificateRepository
+                .findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User certificate not found"));
 
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
         keyStore.load(
@@ -225,11 +198,9 @@ public class UserServerCertificateService {
     /** Get user's keystore password */
     @Transactional(readOnly = true)
     public String getUserKeystorePassword(Long userId) {
-        UserServerCertificateEntity cert =
-                certificateRepository
-                        .findByUserId(userId)
-                        .orElseThrow(
-                                () -> new IllegalArgumentException("User certificate not found"));
+        UserServerCertificateEntity cert = certificateRepository
+                .findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User certificate not found"));
         return metadataEncryptionService.decrypt(cert.getKeystorePassword());
     }
 

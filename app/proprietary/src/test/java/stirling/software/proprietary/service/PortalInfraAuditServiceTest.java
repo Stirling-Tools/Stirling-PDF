@@ -25,13 +25,15 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class PortalInfraAuditServiceTest {
 
-    @Mock private PortalAuditReadService auditReadService;
+    @Mock
+    private PortalAuditReadService auditReadService;
 
     private PortalInfraAuditService service;
 
     @BeforeEach
     void setUp() {
-        service = new PortalInfraAuditService(auditReadService, JsonMapper.builder().build());
+        service = new PortalInfraAuditService(
+                auditReadService, JsonMapper.builder().build());
     }
 
     private static PortalAuditEventRow row(long id, String data) {
@@ -50,11 +52,10 @@ class PortalInfraAuditServiceTest {
 
     @Test
     void policyDispatchShowsPolicyNameAndTheToolsItRuns() {
-        String data =
-                "{\"path\":\"/api/v1/policies/run\",\"policyName\":\"Redaction\","
-                        + "\"policySteps\":[\"/api/v1/security/auto-redact\","
-                        + "\"/api/v1/misc/compress-pdf\"],\"statusCode\":202,"
-                        + "\"latencyMs\":5}";
+        String data = "{\"path\":\"/api/v1/policies/run\",\"policyName\":\"Redaction\","
+                + "\"policySteps\":[\"/api/v1/security/auto-redact\","
+                + "\"/api/v1/misc/compress-pdf\"],\"statusCode\":202,"
+                + "\"latencyMs\":5}";
         when(auditReadService.serverEvents()).thenReturn(List.of(row(1L, data)));
 
         var resp = service.serverAuditLog();
@@ -70,11 +71,9 @@ class PortalInfraAuditServiceTest {
 
     @Test
     void internalPipelineStepIsFlaggedAsAutomation() {
-        InfraAuditEventDto e =
-                onlyEvent(
-                        "{\"path\":\"/api/v1/security/auto-redact\",\"automation\":true,"
-                                + "\"files\":[{\"name\":\"mushroom life.pdf\"}],"
-                                + "\"statusCode\":200,\"latencyMs\":300}");
+        InfraAuditEventDto e = onlyEvent("{\"path\":\"/api/v1/security/auto-redact\",\"automation\":true,"
+                + "\"files\":[{\"name\":\"mushroom life.pdf\"}],"
+                + "\"statusCode\":200,\"latencyMs\":300}");
 
         // Was a bare "Auto Redact" indistinguishable from a direct user action.
         assertThat(e.getAction()).isEqualTo("Auto Redact (automation)");
@@ -84,11 +83,9 @@ class PortalInfraAuditServiceTest {
 
     @Test
     void internalStepCarryingItsPolicyNameLinksBackToThePolicy() {
-        InfraAuditEventDto e =
-                onlyEvent(
-                        "{\"path\":\"/api/v1/security/auto-redact\",\"automation\":true,"
-                                + "\"policyName\":\"Redaction demo\",\"files\":[{\"name\":"
-                                + "\"demo.pdf\"}],\"statusCode\":200}");
+        InfraAuditEventDto e = onlyEvent("{\"path\":\"/api/v1/security/auto-redact\",\"automation\":true,"
+                + "\"policyName\":\"Redaction demo\",\"files\":[{\"name\":"
+                + "\"demo.pdf\"}],\"statusCode\":200}");
 
         // The forwarded policy name makes the step's origin unmistakable.
         assertThat(e.getAction()).isEqualTo("Auto Redact (policy: Redaction demo)");
@@ -99,9 +96,7 @@ class PortalInfraAuditServiceTest {
     @Test
     void adHocRunWithoutNameStillReadsAsPolicyRun() {
         InfraAuditEventDto e =
-                onlyEvent(
-                        "{\"path\":\"/api/v1/policies/run/stream\",\"statusCode\":200,"
-                                + "\"latencyMs\":4}");
+                onlyEvent("{\"path\":\"/api/v1/policies/run/stream\",\"statusCode\":200," + "\"latencyMs\":4}");
 
         assertThat(e.getAction()).isEqualTo("Policy run");
         assertThat(e.getTarget()).isEqualTo("Pipeline");
@@ -109,11 +104,9 @@ class PortalInfraAuditServiceTest {
 
     @Test
     void directToolRunIsUnchanged() {
-        InfraAuditEventDto e =
-                onlyEvent(
-                        "{\"path\":\"/api/v1/misc/compress-pdf\","
-                                + "\"files\":[{\"name\":\"a.pdf\"}],\"statusCode\":200,"
-                                + "\"latencyMs\":100}");
+        InfraAuditEventDto e = onlyEvent("{\"path\":\"/api/v1/misc/compress-pdf\","
+                + "\"files\":[{\"name\":\"a.pdf\"}],\"statusCode\":200,"
+                + "\"latencyMs\":100}");
 
         assertThat(e.getAction()).isEqualTo("Compress PDF");
         assertThat(e.getCategory()).isEqualTo("processing");
@@ -129,13 +122,11 @@ class PortalInfraAuditServiceTest {
     @Test
     void forgedPolicyNameOnDirectCallCannotMaskTheRealAction() {
         when(auditReadService.serverEvents())
-                .thenReturn(
-                        List.of(
-                                row(
-                                        1L,
-                                        "{\"path\":\"/api/v1/security/remove-password\","
-                                                + "\"policyName\":\"Daily cleanup\",\"files\":"
-                                                + "[{\"name\":\"secret.pdf\"}],\"statusCode\":200}")));
+                .thenReturn(List.of(row(
+                        1L,
+                        "{\"path\":\"/api/v1/security/remove-password\","
+                                + "\"policyName\":\"Daily cleanup\",\"files\":"
+                                + "[{\"name\":\"secret.pdf\"}],\"statusCode\":200}")));
 
         var resp = service.serverAuditLog();
         InfraAuditEventDto e = resp.getEvents().get(0);

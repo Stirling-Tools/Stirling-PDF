@@ -26,13 +26,8 @@ public class ReplaceAndInvertColorService {
             String textColor)
             throws IOException {
 
-        ReplaceAndInvertColorStrategy replaceColorStrategy =
-                replaceAndInvertColorFactory.replaceAndInvert(
-                        file,
-                        replaceAndInvertOption,
-                        highContrastColorCombination,
-                        backGroundColor,
-                        textColor);
+        ReplaceAndInvertColorStrategy replaceColorStrategy = replaceAndInvertColorFactory.replaceAndInvert(
+                file, replaceAndInvertOption, highContrastColorCombination, backGroundColor, textColor);
 
         return replaceColorStrategy.replace();
     }

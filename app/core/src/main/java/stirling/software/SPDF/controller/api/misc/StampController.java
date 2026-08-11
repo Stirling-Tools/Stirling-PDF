@@ -66,8 +66,7 @@ public class StampController {
     private final TempFileManager tempFileManager;
 
     private static final int MAX_DATE_FORMAT_LENGTH = 50;
-    private static final Pattern SAFE_DATE_FORMAT_PATTERN =
-            Pattern.compile("^[yMdHhmsS/\\-:\\s.,'+EGuwWDFzZXa]+$");
+    private static final Pattern SAFE_DATE_FORMAT_PATTERN = Pattern.compile("^[yMdHhmsS/\\-:\\s.,'+EGuwWDFzZXa]+$");
     private static final Pattern CUSTOM_DATE_PATTERN = Pattern.compile("@date\\{([^}]{1,50})\\}");
     // Placeholder for escaped @ symbol (using Unicode private use area)
     private static final String ESCAPED_AT_PLACEHOLDER = "\uE000ESCAPED_AT\uE000";
@@ -79,14 +78,12 @@ public class StampController {
      */
     @InitBinder
     public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(
-                MultipartFile.class,
-                new PropertyEditorSupport() {
-                    @Override
-                    public void setAsText(String text) throws IllegalArgumentException {
-                        setValue(null);
-                    }
-                });
+        binder.registerCustomEditor(MultipartFile.class, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) throws IllegalArgumentException {
+                setValue(null);
+            }
+        });
     }
 
     @AutoJobPostMapping(
@@ -96,11 +93,9 @@ public class StampController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add stamp to a PDF file",
-            description =
-                    "This endpoint adds a stamp to a given PDF file. Users can specify the stamp"
-                            + " type (text or image), rotation, opacity, width spacer, and height spacer.")
-    public ResponseEntity<Resource> addStamp(@ModelAttribute AddStampRequest request)
-            throws IOException, Exception {
+            description = "This endpoint adds a stamp to a given PDF file. Users can specify the stamp"
+                    + " type (text or image), rotation, opacity, width spacer, and height spacer.")
+    public ResponseEntity<Resource> addStamp(@ModelAttribute AddStampRequest request) throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
         String pdfFileName = pdfFile.getOriginalFilename();
         if (pdfFileName.contains("..") || pdfFileName.startsWith("/")) {
@@ -114,18 +109,12 @@ public class StampController {
         if ("image".equalsIgnoreCase(stampType)) {
             if (stampImage == null) {
                 throw ExceptionUtils.createIllegalArgumentException(
-                        "error.stamp.image.required",
-                        "Stamp image file must be provided when stamp type is 'image'");
+                        "error.stamp.image.required", "Stamp image file must be provided when stamp type is 'image'");
             }
             String stampImageName = stampImage.getOriginalFilename();
-            if (stampImageName == null
-                    || stampImageName.contains("..")
-                    || stampImageName.startsWith("/")) {
+            if (stampImageName == null || stampImageName.contains("..") || stampImageName.startsWith("/")) {
                 throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat",
-                        "Invalid {0} format: {1}",
-                        "stamp image file path",
-                        stampImageName);
+                        "error.invalidFormat", "Invalid {0} format: {1}", "stamp image file path", stampImageName);
             }
         }
         String alphabet = request.getAlphabet();
@@ -159,12 +148,7 @@ public class StampController {
                     float margin = marginFactor * (pageSize.getWidth() + pageSize.getHeight()) / 2;
 
                     PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    document,
-                                    page,
-                                    PDPageContentStream.AppendMode.APPEND,
-                                    true,
-                                    true);
+                            new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
                     PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
                     graphicsState.setNonStrokingAlphaConstant(opacity);
@@ -229,16 +213,15 @@ public class StampController {
             throws IOException {
         String resourceDir;
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        resourceDir =
-                switch (alphabet) {
-                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
-                    case "japanese" -> "static/fonts/Meiryo.ttf";
-                    case "korean" -> "static/fonts/malgun.ttf";
-                    case "chinese" -> "static/fonts/SimSun.ttf";
-                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
-                    case "roman" -> "static/fonts/NotoSans-Regular.ttf";
-                    default -> "static/fonts/NotoSans-Regular.ttf";
-                };
+        resourceDir = switch (alphabet) {
+            case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
+            case "japanese" -> "static/fonts/Meiryo.ttf";
+            case "korean" -> "static/fonts/malgun.ttf";
+            case "chinese" -> "static/fonts/SimSun.ttf";
+            case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
+            case "roman" -> "static/fonts/NotoSans-Regular.ttf";
+            default -> "static/fonts/NotoSans-Regular.ttf";
+        };
 
         ClassPathResource classPathResource = new ClassPathResource(resourceDir);
         String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
@@ -267,14 +250,12 @@ public class StampController {
 
         int pageCount = document.getNumberOfPages();
 
-        String processedStampText =
-                processStampText(stampText, currentPageNumber, pageCount, filename, document);
+        String processedStampText = processStampText(stampText, currentPageNumber, pageCount, filename, document);
 
-        String normalizedText =
-                RegexPatternUtils.getInstance()
-                        .getEscapedNewlinePattern()
-                        .matcher(processedStampText)
-                        .replaceAll("\n");
+        String normalizedText = RegexPatternUtils.getInstance()
+                .getEscapedNewlinePattern()
+                .matcher(processedStampText)
+                .replaceAll("\n");
         String[] lines = NEWLINE_PATTERN.split(normalizedText);
 
         PDRectangle pageSize = page.getMediaBox();
@@ -313,8 +294,7 @@ public class StampController {
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
             // Set the text matrix for each line with rotation
-            contentStream.setTextMatrix(
-                    Matrix.getRotateInstance(Math.toRadians(rotation), x, y - (i * lineHeight)));
+            contentStream.setTextMatrix(Matrix.getRotateInstance(Math.toRadians(rotation), x, y - (i * lineHeight)));
             contentStream.showText(line);
         }
         contentStream.endText();
@@ -364,11 +344,7 @@ public class StampController {
      * </ul>
      */
     private String processStampText(
-            String stampText,
-            int currentPageNumber,
-            int totalPages,
-            String filename,
-            PDDocument document) {
+            String stampText, int currentPageNumber, int totalPages, String filename, PDDocument document) {
         if (stampText == null || stampText.isEmpty()) {
             return "";
         }
@@ -412,26 +388,22 @@ public class StampController {
         matcher.appendTail(sb);
         result = sb.toString();
 
-        result =
-                result.replace("@datetime", currentDateTime)
-                        .replace("@date", currentDate)
-                        .replace("@time", currentTime)
-                        .replace("@year", String.valueOf(now.getYear()))
-                        .replace("@month", String.format("%02d", now.getMonthValue()))
-                        .replace("@day", String.format("%02d", now.getDayOfMonth()))
-                        .replace("@page_number", String.valueOf(currentPageNumber))
-                        .replace(
-                                "@page_count", String.valueOf(totalPages)) // Must come before @page
-                        .replace("@total_pages", String.valueOf(totalPages))
-                        .replace(
-                                "@page",
-                                String.valueOf(currentPageNumber)) // Must come after @page_count
-                        .replace("@filename_full", filename != null ? filename : "")
-                        .replace("@filename", filenameWithoutExt)
-                        .replace("@author", author)
-                        .replace("@title", title)
-                        .replace("@subject", subject)
-                        .replace("@uuid", uuid);
+        result = result.replace("@datetime", currentDateTime)
+                .replace("@date", currentDate)
+                .replace("@time", currentTime)
+                .replace("@year", String.valueOf(now.getYear()))
+                .replace("@month", String.format("%02d", now.getMonthValue()))
+                .replace("@day", String.format("%02d", now.getDayOfMonth()))
+                .replace("@page_number", String.valueOf(currentPageNumber))
+                .replace("@page_count", String.valueOf(totalPages)) // Must come before @page
+                .replace("@total_pages", String.valueOf(totalPages))
+                .replace("@page", String.valueOf(currentPageNumber)) // Must come after @page_count
+                .replace("@filename_full", filename != null ? filename : "")
+                .replace("@filename", filenameWithoutExt)
+                .replace("@author", author)
+                .replace("@title", title)
+                .replace("@subject", subject)
+                .replace("@uuid", uuid);
 
         result = result.replace(ESCAPED_AT_PLACEHOLDER, "@");
 
@@ -511,8 +483,7 @@ public class StampController {
         contentStream.restoreGraphicsState();
     }
 
-    private float calculatePositionX(
-            PDRectangle pageSize, int position, float contentWidth, float margin) {
+    private float calculatePositionX(PDRectangle pageSize, int position, float contentWidth, float margin) {
         float llx = pageSize.getLowerLeftX();
         float urx = pageSize.getUpperRightX();
         return switch (position % 3) {
@@ -527,8 +498,7 @@ public class StampController {
         };
     }
 
-    private float calculateImagePositionY(
-            PDRectangle pageSize, int position, float imageHeight, float margin) {
+    private float calculateImagePositionY(PDRectangle pageSize, int position, float imageHeight, float margin) {
         float lly = pageSize.getLowerLeftY();
         float pageHeight = pageSize.getHeight();
         float ury = pageSize.getUpperRightY();
@@ -544,8 +514,7 @@ public class StampController {
         };
     }
 
-    private float calculatePositionY(
-            PDRectangle pageSize, int position, float height, float margin) {
+    private float calculatePositionY(PDRectangle pageSize, int position, float height, float margin) {
         return switch ((position - 1) / 3) {
             case 0: // Top - first line near the top
                 yield pageSize.getUpperRightY() - margin;

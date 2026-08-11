@@ -54,9 +54,7 @@ public enum FormFieldTypeSupport {
 
         @Override
         void applyNewFieldDefinition(
-                PDTerminalField field,
-                FormUtils.NewFormFieldDefinition definition,
-                List<String> options)
+                PDTerminalField field, FormUtils.NewFormFieldDefinition definition, List<String> options)
                 throws IOException {
             PDTextField textField = (PDTextField) field;
             String defaultValue = Optional.ofNullable(definition.defaultValue()).orElse("");
@@ -89,9 +87,7 @@ public enum FormFieldTypeSupport {
 
         @Override
         void applyNewFieldDefinition(
-                PDTerminalField field,
-                FormUtils.NewFormFieldDefinition definition,
-                List<String> options)
+                PDTerminalField field, FormUtils.NewFormFieldDefinition definition, List<String> options)
                 throws IOException {
             PDCheckBox checkBox = (PDCheckBox) field;
 
@@ -116,18 +112,14 @@ public enum FormFieldTypeSupport {
 
                 PDAnnotationWidget widget = checkBox.getWidgets().get(0);
 
-                PDAppearanceCharacteristicsDictionary appearanceChars =
-                        widget.getAppearanceCharacteristics();
+                PDAppearanceCharacteristicsDictionary appearanceChars = widget.getAppearanceCharacteristics();
                 if (appearanceChars == null) {
-                    appearanceChars =
-                            new PDAppearanceCharacteristicsDictionary(widget.getCOSObject());
+                    appearanceChars = new PDAppearanceCharacteristicsDictionary(widget.getCOSObject());
                     widget.setAppearanceCharacteristics(appearanceChars);
                 }
 
-                appearanceChars.setBorderColour(
-                        new PDColor(new float[] {0, 0, 0}, PDDeviceRGB.INSTANCE));
-                appearanceChars.setBackground(
-                        new PDColor(new float[] {1, 1, 1}, PDDeviceRGB.INSTANCE));
+                appearanceChars.setBorderColour(new PDColor(new float[] {0, 0, 0}, PDDeviceRGB.INSTANCE));
+                appearanceChars.setBackground(new PDColor(new float[] {1, 1, 1}, PDDeviceRGB.INSTANCE));
 
                 appearanceChars.setNormalCaption("4");
 
@@ -184,9 +176,7 @@ public enum FormFieldTypeSupport {
 
         @Override
         void applyNewFieldDefinition(
-                PDTerminalField field,
-                FormUtils.NewFormFieldDefinition definition,
-                List<String> options)
+                PDTerminalField field, FormUtils.NewFormFieldDefinition definition, List<String> options)
                 throws IOException {
             PDComboBox comboBox = (PDComboBox) field;
             if (!options.isEmpty()) {
@@ -194,13 +184,10 @@ public enum FormFieldTypeSupport {
             }
             List<String> allowedOptions = FormUtils.resolveOptions(comboBox);
             String comboName =
-                    Optional.ofNullable(comboBox.getFullyQualifiedName())
-                            .orElseGet(comboBox::getPartialName);
+                    Optional.ofNullable(comboBox.getFullyQualifiedName()).orElseGet(comboBox::getPartialName);
             String defaultValue = definition.defaultValue();
             if (defaultValue != null && !defaultValue.isBlank()) {
-                String filtered =
-                        FormUtils.filterSingleChoiceSelection(
-                                defaultValue, allowedOptions, comboName);
+                String filtered = FormUtils.filterSingleChoiceSelection(defaultValue, allowedOptions, comboName);
                 if (filtered != null) {
                     comboBox.setValue(filtered);
                 }
@@ -233,9 +220,7 @@ public enum FormFieldTypeSupport {
 
         @Override
         void applyNewFieldDefinition(
-                PDTerminalField field,
-                FormUtils.NewFormFieldDefinition definition,
-                List<String> options)
+                PDTerminalField field, FormUtils.NewFormFieldDefinition definition, List<String> options)
                 throws IOException {
             PDListBox listBox = (PDListBox) field;
             listBox.setMultiSelect(Boolean.TRUE.equals(definition.multiSelect()));
@@ -244,22 +229,17 @@ public enum FormFieldTypeSupport {
             }
             List<String> allowedOptions = FormUtils.collectChoiceAllowedValues(listBox);
             String listBoxName =
-                    Optional.ofNullable(listBox.getFullyQualifiedName())
-                            .orElseGet(listBox::getPartialName);
+                    Optional.ofNullable(listBox.getFullyQualifiedName()).orElseGet(listBox::getPartialName);
             String defaultValue = definition.defaultValue();
             if (defaultValue != null && !defaultValue.isBlank()) {
                 if (Boolean.TRUE.equals(definition.multiSelect())) {
                     List<String> selections = FormUtils.parseMultiChoiceSelections(defaultValue);
-                    List<String> filtered =
-                            FormUtils.filterChoiceSelections(
-                                    selections, allowedOptions, listBoxName);
+                    List<String> filtered = FormUtils.filterChoiceSelections(selections, allowedOptions, listBoxName);
                     if (!filtered.isEmpty()) {
                         listBox.setValue(filtered);
                     }
                 } else {
-                    String filtered =
-                            FormUtils.filterSingleChoiceSelection(
-                                    defaultValue, allowedOptions, listBoxName);
+                    String filtered = FormUtils.filterSingleChoiceSelection(defaultValue, allowedOptions, listBoxName);
                     if (filtered != null) {
                         listBox.setValue(filtered);
                     }
@@ -280,20 +260,14 @@ public enum FormFieldTypeSupport {
         }
     };
 
-    private static final Map<String, FormFieldTypeSupport> BY_TYPE =
-            Arrays.stream(values())
-                    .collect(
-                            Collectors.toUnmodifiableMap(
-                                    FormFieldTypeSupport::typeName, Function.identity()));
+    private static final Map<String, FormFieldTypeSupport> BY_TYPE = Arrays.stream(values())
+            .collect(Collectors.toUnmodifiableMap(FormFieldTypeSupport::typeName, Function.identity()));
 
     private final String typeName;
     private final String fallbackWidgetName;
     private final Class<? extends PDTerminalField> fieldClass;
 
-    FormFieldTypeSupport(
-            String typeName,
-            String fallbackWidgetName,
-            Class<? extends PDTerminalField> fieldClass) {
+    FormFieldTypeSupport(String typeName, String fallbackWidgetName, Class<? extends PDTerminalField> fieldClass) {
         this.typeName = typeName;
         this.fallbackWidgetName = fallbackWidgetName;
         this.fieldClass = fieldClass;
@@ -330,8 +304,7 @@ public enum FormFieldTypeSupport {
             // ignore and continue
         }
 
-        if (sourceField instanceof PDListBox sourceList
-                && targetField instanceof PDListBox targetList) {
+        if (sourceField instanceof PDListBox sourceList && targetField instanceof PDListBox targetList) {
             try {
                 targetList.setMultiSelect(sourceList.isMultiSelect());
             } catch (Exception ignored) {
@@ -359,9 +332,7 @@ public enum FormFieldTypeSupport {
     }
 
     void applyNewFieldDefinition(
-            PDTerminalField field,
-            FormUtils.NewFormFieldDefinition definition,
-            List<String> options)
+            PDTerminalField field, FormUtils.NewFormFieldDefinition definition, List<String> options)
             throws IOException {
         // default no-op
     }

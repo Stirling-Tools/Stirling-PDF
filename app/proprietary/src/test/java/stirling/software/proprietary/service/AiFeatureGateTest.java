@@ -37,8 +37,7 @@ class AiFeatureGateTest {
     void throws503WhenFeatureFlagOff() {
         props.getAiEngine().getFeatures().setClassify(false);
 
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> gate.requireClassify());
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> gate.requireClassify());
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
     }
 
@@ -47,8 +46,7 @@ class AiFeatureGateTest {
         props.getAiEngine().setEnabled(false); // feature flag still true
 
         ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class, () -> gate.requireConversationalWorkflow());
+                assertThrows(ResponseStatusException.class, () -> gate.requireConversationalWorkflow());
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
     }
 
@@ -70,8 +68,7 @@ class AiFeatureGateTest {
         props.getAiEngine().getFeatures().setDocumentQuestions(false);
 
         ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class, () -> gate.requireConversationalWorkflow());
+                assertThrows(ResponseStatusException.class, () -> gate.requireConversationalWorkflow());
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
     }
 }

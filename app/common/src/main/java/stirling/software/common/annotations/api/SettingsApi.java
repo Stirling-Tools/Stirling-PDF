@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/settings")
-@Tag(
-        name = "Settings",
-        description =
-                """
+@Tag(name = "Settings", description = """
                 User preferences and application customization for personalized workflow optimization.
 
                 This endpoint group provides preference management capabilities for users and

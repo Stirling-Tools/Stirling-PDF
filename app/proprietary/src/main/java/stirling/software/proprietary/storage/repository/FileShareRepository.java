@@ -16,11 +16,10 @@ public interface FileShareRepository extends JpaRepository<FileShare, Long> {
 
     Optional<FileShare> findByShareToken(String shareToken);
 
-    @Query(
-            "SELECT s FROM FileShare s "
-                    + "JOIN FETCH s.file f "
-                    + "LEFT JOIN FETCH f.owner "
-                    + "WHERE s.shareToken = :shareToken")
+    @Query("SELECT s FROM FileShare s "
+            + "JOIN FETCH s.file f "
+            + "LEFT JOIN FETCH f.owner "
+            + "WHERE s.shareToken = :shareToken")
     Optional<FileShare> findByShareTokenWithFile(@Param("shareToken") String shareToken);
 
     @Query("SELECT s FROM FileShare s WHERE s.file = :file AND s.shareToken IS NOT NULL")
@@ -30,10 +29,6 @@ public interface FileShareRepository extends JpaRepository<FileShare, Long> {
 
     List<FileShare> findByExpiresAtBeforeAndShareTokenNotNull(java.time.LocalDateTime now);
 
-    @Query(
-            "SELECT s FROM FileShare s "
-                    + "JOIN FETCH s.file f "
-                    + "WHERE s.sharedWithUser = :user AND f IN :files")
-    List<FileShare> findBySharedWithUserAndFileIn(
-            @Param("user") User user, @Param("files") List<StoredFile> files);
+    @Query("SELECT s FROM FileShare s " + "JOIN FETCH s.file f " + "WHERE s.sharedWithUser = :user AND f IN :files")
+    List<FileShare> findBySharedWithUserAndFileIn(@Param("user") User user, @Param("files") List<StoredFile> files);
 }

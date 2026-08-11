@@ -22,45 +22,32 @@ public final class InMemoryKeyRepo {
 
     public InMemoryKeyRepo() {
         mock = mock(FileEncryptionKeyRepository.class);
-        when(mock.saveAndFlush(any(FileEncryptionKey.class)))
-                .thenAnswer(
-                        inv -> {
-                            FileEncryptionKey row = inv.getArgument(0);
-                            rows.put(row.getKeyId(), row);
-                            return row;
-                        });
-        when(mock.save(any(FileEncryptionKey.class)))
-                .thenAnswer(
-                        inv -> {
-                            FileEncryptionKey row = inv.getArgument(0);
-                            rows.put(row.getKeyId(), row);
-                            return row;
-                        });
-        when(mock.findById(any(UUID.class)))
-                .thenAnswer(inv -> Optional.ofNullable(rows.get(inv.<UUID>getArgument(0))));
+        when(mock.saveAndFlush(any(FileEncryptionKey.class))).thenAnswer(inv -> {
+            FileEncryptionKey row = inv.getArgument(0);
+            rows.put(row.getKeyId(), row);
+            return row;
+        });
+        when(mock.save(any(FileEncryptionKey.class))).thenAnswer(inv -> {
+            FileEncryptionKey row = inv.getArgument(0);
+            rows.put(row.getKeyId(), row);
+            return row;
+        });
+        when(mock.findById(any(UUID.class))).thenAnswer(inv -> Optional.ofNullable(rows.get(inv.<UUID>getArgument(0))));
         when(mock.findFirstByScopeTypeAndScopeIdAndStatus(any(), anyLong(), any()))
-                .thenAnswer(
-                        inv ->
-                                rows.values().stream()
-                                        .filter(r -> r.getScopeType() == inv.getArgument(0))
-                                        .filter(r -> r.getScopeId() == inv.<Long>getArgument(1))
-                                        .filter(r -> r.getStatus() == inv.getArgument(2))
-                                        .findFirst());
+                .thenAnswer(inv -> rows.values().stream()
+                        .filter(r -> r.getScopeType() == inv.getArgument(0))
+                        .filter(r -> r.getScopeId() == inv.<Long>getArgument(1))
+                        .filter(r -> r.getStatus() == inv.getArgument(2))
+                        .findFirst());
         when(mock.findFirstByScopeTypeAndScopeIdOrderByKeyVersionDesc(any(), anyLong()))
-                .thenAnswer(
-                        inv ->
-                                rows.values().stream()
-                                        .filter(r -> r.getScopeType() == inv.getArgument(0))
-                                        .filter(r -> r.getScopeId() == inv.<Long>getArgument(1))
-                                        .max(
-                                                Comparator.comparingInt(
-                                                        FileEncryptionKey::getKeyVersion)));
+                .thenAnswer(inv -> rows.values().stream()
+                        .filter(r -> r.getScopeType() == inv.getArgument(0))
+                        .filter(r -> r.getScopeId() == inv.<Long>getArgument(1))
+                        .max(Comparator.comparingInt(FileEncryptionKey::getKeyVersion)));
         when(mock.findFirstByStatus(any()))
-                .thenAnswer(
-                        inv ->
-                                rows.values().stream()
-                                        .filter(r -> r.getStatus() == inv.getArgument(0))
-                                        .findFirst());
+                .thenAnswer(inv -> rows.values().stream()
+                        .filter(r -> r.getStatus() == inv.getArgument(0))
+                        .findFirst());
         when(mock.count()).thenAnswer(inv -> (long) rows.size());
     }
 }

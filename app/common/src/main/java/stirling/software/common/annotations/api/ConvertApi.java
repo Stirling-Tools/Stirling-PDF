@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/convert")
-@Tag(
-        name = "Convert",
-        description =
-                """
+@Tag(name = "Convert", description = """
                 Convert PDFs to and from other formats (Word, images, HTML, Markdown, PDF/A, CBZ/CBR, EML, etc.).
                 This group also powers the text-editor / jobId-based editing flow for incremental PDF edits.
 

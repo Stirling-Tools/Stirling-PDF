@@ -47,7 +47,6 @@ class SignatureValidationRequestTest {
     @Test
     @DisplayName("toString contains class name")
     void toStringContent() {
-        assertThat(new SignatureValidationRequest().toString())
-                .contains("SignatureValidationRequest");
+        assertThat(new SignatureValidationRequest().toString()).contains("SignatureValidationRequest");
     }
 }

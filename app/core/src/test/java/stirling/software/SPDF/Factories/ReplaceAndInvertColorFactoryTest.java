@@ -35,13 +35,11 @@ class ReplaceAndInvertColorFactoryTest {
         ReplaceAndInvert option = ReplaceAndInvert.CUSTOM_COLOR;
         HighContrastColorCombination combo = null; // not used for CUSTOM_COLOR
 
-        ReplaceAndInvertColorStrategy strategy =
-                factory.replaceAndInvert(file, option, combo, "#FFFFFF", "#000000");
+        ReplaceAndInvertColorStrategy strategy = factory.replaceAndInvert(file, option, combo, "#FFFFFF", "#000000");
 
         assertNotNull(strategy);
         assertTrue(
-                strategy instanceof CustomColorReplaceStrategy,
-                "Expected CustomColorReplaceStrategy for CUSTOM_COLOR");
+                strategy instanceof CustomColorReplaceStrategy, "Expected CustomColorReplaceStrategy for CUSTOM_COLOR");
     }
 
     @Test
@@ -49,8 +47,7 @@ class ReplaceAndInvertColorFactoryTest {
         ReplaceAndInvert option = ReplaceAndInvert.HIGH_CONTRAST_COLOR;
         HighContrastColorCombination combo = null;
 
-        ReplaceAndInvertColorStrategy strategy =
-                factory.replaceAndInvert(file, option, combo, "#FFFFFF", "#000000");
+        ReplaceAndInvertColorStrategy strategy = factory.replaceAndInvert(file, option, combo, "#FFFFFF", "#000000");
 
         assertNotNull(strategy);
         assertTrue(
@@ -62,21 +59,17 @@ class ReplaceAndInvertColorFactoryTest {
     void whenFullInversion_thenReturnsInvertFullColorStrategy() {
         ReplaceAndInvert option = ReplaceAndInvert.FULL_INVERSION;
 
-        ReplaceAndInvertColorStrategy strategy =
-                factory.replaceAndInvert(file, option, null, null, null);
+        ReplaceAndInvertColorStrategy strategy = factory.replaceAndInvert(file, option, null, null, null);
 
         assertNotNull(strategy);
-        assertTrue(
-                strategy instanceof InvertFullColorStrategy,
-                "Expected InvertFullColorStrategy for FULL_INVERSION");
+        assertTrue(strategy instanceof InvertFullColorStrategy, "Expected InvertFullColorStrategy for FULL_INVERSION");
     }
 
     @Test
     void whenColorSpaceConversion_thenReturnsColorSpaceConversionStrategy() {
         ReplaceAndInvert option = ReplaceAndInvert.COLOR_SPACE_CONVERSION;
 
-        ReplaceAndInvertColorStrategy strategy =
-                factory.replaceAndInvert(file, option, null, null, null);
+        ReplaceAndInvertColorStrategy strategy = factory.replaceAndInvert(file, option, null, null, null);
 
         assertNotNull(strategy);
         assertTrue(
@@ -86,8 +79,7 @@ class ReplaceAndInvertColorFactoryTest {
 
     @Test
     void whenNullOption_thenReturnsNull() {
-        ReplaceAndInvertColorStrategy strategy =
-                factory.replaceAndInvert(file, null, null, null, null);
+        ReplaceAndInvertColorStrategy strategy = factory.replaceAndInvert(file, null, null, null, null);
         assertNull(strategy, "Expected null for unsupported/unknown option");
     }
 }

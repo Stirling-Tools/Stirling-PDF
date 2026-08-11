@@ -62,9 +62,7 @@ public class KeyPairCleanupService {
         try {
             lock = distributedLock.tryAcquire(CLEANUP_LOCK, LOCK_LEASE);
         } catch (RuntimeException e) {
-            log.warn(
-                    "Could not acquire the JWT key-cleanup lock ({}); skipping this cycle",
-                    e.getMessage());
+            log.warn("Could not acquire the JWT key-cleanup lock ({}); skipping this cycle", e.getMessage());
             return;
         }
         // No lock means another node is already pruning; skip until the next tick.
@@ -78,11 +76,9 @@ public class KeyPairCleanupService {
     }
 
     private void runCleanup() {
-        LocalDateTime cutoffDate =
-                LocalDateTime.now().minusDays(jwtProperties.getKeyRetentionDays());
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(jwtProperties.getKeyRetentionDays());
 
-        List<JwtVerificationKey> eligibleKeys =
-                keyPersistenceService.getKeysEligibleForCleanup(cutoffDate);
+        List<JwtVerificationKey> eligibleKeys = keyPersistenceService.getKeysEligibleForCleanup(cutoffDate);
         if (eligibleKeys.isEmpty()) {
             return;
         }
@@ -92,15 +88,14 @@ public class KeyPairCleanupService {
     }
 
     private void removeKeys(List<JwtVerificationKey> keys) {
-        keys.forEach(
-                key -> {
-                    try {
-                        keyPersistenceService.removeKey(key.getKeyId());
-                        removePrivateKey(key.getKeyId());
-                    } catch (IOException e) {
-                        log.warn("Failed to remove key: {}", key.getKeyId(), e);
-                    }
-                });
+        keys.forEach(key -> {
+            try {
+                keyPersistenceService.removeKey(key.getKeyId());
+                removePrivateKey(key.getKeyId());
+            } catch (IOException e) {
+                log.warn("Failed to remove key: {}", key.getKeyId(), e);
+            }
+        });
     }
 
     private void removePrivateKey(String keyId) throws IOException {

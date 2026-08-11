@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/misc")
-@Tag(
-        name = "Misc",
-        description =
-                """
+@Tag(name = "Misc", description = """
                 Tools that don't fit neatly elsewhere: OCR, compress, repair, flatten, extract images, update metadata, add stamps/page numbers/images, and more.
                 These endpoints help fix problem PDFs and prepare them for sharing, storage, or further processing.
 

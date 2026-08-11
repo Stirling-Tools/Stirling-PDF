@@ -17,8 +17,7 @@ public class PolicyInputRequiredException extends RuntimeException {
     private final transient List<Resource> pendingFiles;
     private final int resumeStepIndex;
 
-    public PolicyInputRequiredException(
-            String reason, int resumeStepIndex, List<Resource> pendingFiles) {
+    public PolicyInputRequiredException(String reason, int resumeStepIndex, List<Resource> pendingFiles) {
         super(reason);
         this.resumeStepIndex = resumeStepIndex;
         this.pendingFiles = pendingFiles == null ? List.of() : pendingFiles;

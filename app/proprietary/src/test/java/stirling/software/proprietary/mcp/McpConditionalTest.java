@@ -49,9 +49,7 @@ class McpConditionalTest {
             StirlingAiTool.class
         };
         for (Class<?> t : tools) {
-            assertTrue(
-                    McpTool.class.isAssignableFrom(t),
-                    t.getSimpleName() + " must implement McpTool");
+            assertTrue(McpTool.class.isAssignableFrom(t), t.getSimpleName() + " must implement McpTool");
             assertNotNull(
                     t.getAnnotation(org.springframework.stereotype.Component.class),
                     t.getSimpleName() + " must be @Component");
@@ -79,8 +77,7 @@ class McpConditionalTest {
         for (Class<?> bean : beans) {
             assertNull(
                     bean.getAnnotation(Profile.class),
-                    bean.getSimpleName()
-                            + " must not be @Profile-restricted so MCP can run under saas");
+                    bean.getSimpleName() + " must not be @Profile-restricted so MCP can run under saas");
         }
     }
 
@@ -91,9 +88,6 @@ class McpConditionalTest {
                 Arrays.asList(conditional.name()).contains("mcp.enabled")
                         || Arrays.asList(conditional.value()).contains("mcp.enabled"),
                 beanClass.getSimpleName() + " must gate on mcp.enabled");
-        assertEquals(
-                "true",
-                conditional.havingValue(),
-                beanClass.getSimpleName() + " must require mcp.enabled=true");
+        assertEquals("true", conditional.havingValue(), beanClass.getSimpleName() + " must require mcp.enabled=true");
     }
 }

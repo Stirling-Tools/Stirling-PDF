@@ -47,9 +47,7 @@ import stirling.software.proprietary.storage.service.FileStorageService;
 @RequestMapping("/api/v1/storage")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(
-        name = "File Storage",
-        description = "Stored file management, sharing, and share link operations")
+@Tag(name = "File Storage", description = "Stored file management, sharing, and share link operations")
 public class FileStorageController {
 
     private static final Duration SIGNED_URL_TTL = Duration.ofMinutes(5);
@@ -96,13 +94,11 @@ public class FileStorageController {
 
     @GetMapping("/files/{fileId}/download")
     public ResponseEntity<org.springframework.core.io.Resource> downloadFile(
-            @PathVariable Long fileId,
-            @RequestParam(name = "inline", defaultValue = "false") boolean inline) {
+            @PathVariable Long fileId, @RequestParam(name = "inline", defaultValue = "false") boolean inline) {
         User user = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getAccessibleFile(user, fileId);
         fileStorageService.requireReadAccess(user, file);
-        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
-                tryRedirectToSignedUrl(file, inline);
+        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect = tryRedirectToSignedUrl(file, inline);
         return redirect.orElseGet(() -> buildFileResponse(file, inline));
     }
 
@@ -114,25 +110,20 @@ public class FileStorageController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping(
-            value = "/files/{fileId}/shares/users",
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public StoredFileResponse shareWithUser(
-            @PathVariable Long fileId, @RequestBody ShareWithUserRequest request) {
+    @PostMapping(value = "/files/{fileId}/shares/users", produces = MediaType.APPLICATION_JSON_VALUE)
+    public StoredFileResponse shareWithUser(@PathVariable Long fileId, @RequestBody ShareWithUserRequest request) {
         User owner = fileStorageService.requireAuthenticatedUser();
-        if (request == null || request.getUsername() == null || request.getUsername().isBlank()) {
+        if (request == null
+                || request.getUsername() == null
+                || request.getUsername().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
         }
         return fileStorageService.shareWithUserResponse(
-                owner,
-                fileId,
-                request.getUsername(),
-                fileStorageService.normalizeShareRole(request.getAccessRole()));
+                owner, fileId, request.getUsername(), fileStorageService.normalizeShareRole(request.getAccessRole()));
     }
 
     @DeleteMapping("/files/{fileId}/shares/users/{username}")
-    public ResponseEntity<Void> revokeUserShare(
-            @PathVariable Long fileId, @PathVariable String username) {
+    public ResponseEntity<Void> revokeUserShare(@PathVariable Long fileId, @PathVariable String username) {
         User owner = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
         fileStorageService.revokeUserShare(owner, file, username);
@@ -147,19 +138,12 @@ public class FileStorageController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping(
-            value = "/files/{fileId}/shares/links",
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ShareLinkResponse createShareLink(
-            @PathVariable Long fileId, @RequestBody CreateShareLinkRequest request) {
+    @PostMapping(value = "/files/{fileId}/shares/links", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ShareLinkResponse createShareLink(@PathVariable Long fileId, @RequestBody CreateShareLinkRequest request) {
         User owner = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
-        FileShare share =
-                fileStorageService.createShareLink(
-                        owner,
-                        file,
-                        fileStorageService.normalizeShareRole(
-                                request != null ? request.getAccessRole() : null));
+        FileShare share = fileStorageService.createShareLink(
+                owner, file, fileStorageService.normalizeShareRole(request != null ? request.getAccessRole() : null));
         return ShareLinkResponse.builder()
                 .token(share.getShareToken())
                 .accessRole(
@@ -172,8 +156,7 @@ public class FileStorageController {
     }
 
     @DeleteMapping("/files/{fileId}/shares/links/{token}")
-    public ResponseEntity<Void> revokeShareLink(
-            @PathVariable Long fileId, @PathVariable String token) {
+    public ResponseEntity<Void> revokeShareLink(@PathVariable Long fileId, @PathVariable String token) {
         User owner = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
         fileStorageService.revokeShareLink(owner, file, token);
@@ -188,46 +171,35 @@ public class FileStorageController {
         fileStorageService.ensureShareLinksEnabled();
         FileShare share = fileStorageService.getShareByToken(token);
         if (!fileStorageService.canAccessShareLink(share, authentication)) {
-            HttpStatus status =
-                    isAuthenticated(authentication)
-                            ? HttpStatus.FORBIDDEN
-                            : HttpStatus.UNAUTHORIZED;
-            String message =
-                    status == HttpStatus.FORBIDDEN
-                            ? "Access denied for this share link"
-                            : "Authentication required for this share link";
+            HttpStatus status = isAuthenticated(authentication) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            String message = status == HttpStatus.FORBIDDEN
+                    ? "Access denied for this share link"
+                    : "Authentication required for this share link";
             throw new ResponseStatusException(status, message);
         }
         fileStorageService.requireReadAccess(share);
         fileStorageService.recordShareAccess(share, authentication, inline);
         StoredFile file = share.getFile();
-        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
-                tryRedirectToSignedUrl(file, inline);
+        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect = tryRedirectToSignedUrl(file, inline);
         return redirect.orElseGet(() -> buildFileResponse(file, inline));
     }
 
     @GetMapping("/share-links/{token}/metadata")
-    public ShareLinkMetadataResponse getShareLinkMetadata(
-            @PathVariable String token, Authentication authentication) {
+    public ShareLinkMetadataResponse getShareLinkMetadata(@PathVariable String token, Authentication authentication) {
         fileStorageService.ensureShareLinksEnabled();
         FileShare share = fileStorageService.getShareByToken(token);
         if (!fileStorageService.canAccessShareLink(share, authentication)) {
-            HttpStatus status =
-                    isAuthenticated(authentication)
-                            ? HttpStatus.FORBIDDEN
-                            : HttpStatus.UNAUTHORIZED;
-            String message =
-                    status == HttpStatus.FORBIDDEN
-                            ? "Access denied for this share link"
-                            : "Authentication required for this share link";
+            HttpStatus status = isAuthenticated(authentication) ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
+            String message = status == HttpStatus.FORBIDDEN
+                    ? "Access denied for this share link"
+                    : "Authentication required for this share link";
             throw new ResponseStatusException(status, message);
         }
         StoredFile file = share.getFile();
         User currentUser = fileStorageService.requireAuthenticatedUser();
-        boolean ownedByCurrentUser =
-                currentUser != null
-                        && file.getOwner() != null
-                        && currentUser.getId().equals(file.getOwner().getId());
+        boolean ownedByCurrentUser = currentUser != null
+                && file.getOwner() != null
+                && currentUser.getId().equals(file.getOwner().getId());
         return ShareLinkMetadataResponse.builder()
                 .shareToken(share.getShareToken())
                 .fileId(file.getId())
@@ -251,25 +223,20 @@ public class FileStorageController {
     }
 
     @GetMapping("/files/{fileId}/shares/links/{token}/accesses")
-    public List<ShareLinkAccessResponse> listShareAccesses(
-            @PathVariable Long fileId, @PathVariable String token) {
+    public List<ShareLinkAccessResponse> listShareAccesses(@PathVariable Long fileId, @PathVariable String token) {
         fileStorageService.ensureShareLinksEnabled();
         User owner = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
         return fileStorageService.listShareAccessResponses(owner, file, token);
     }
 
-    private ResponseEntity<org.springframework.core.io.Resource> buildFileResponse(
-            StoredFile file, boolean inline) {
+    private ResponseEntity<org.springframework.core.io.Resource> buildFileResponse(StoredFile file, boolean inline) {
         org.springframework.core.io.Resource resource = fileStorageService.loadFile(file);
         String contentType =
-                file.getContentType() == null
-                        ? MediaType.APPLICATION_OCTET_STREAM_VALUE
-                        : file.getContentType();
-        ContentDisposition disposition =
-                ContentDisposition.builder(inline ? "inline" : "attachment")
-                        .filename(file.getOriginalFilename())
-                        .build();
+                file.getContentType() == null ? MediaType.APPLICATION_OCTET_STREAM_VALUE : file.getContentType();
+        ContentDisposition disposition = ContentDisposition.builder(inline ? "inline" : "attachment")
+                .filename(file.getOriginalFilename())
+                .build();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentDisposition(disposition);
         try {
@@ -293,12 +260,8 @@ public class FileStorageController {
             return Optional.empty();
         }
         try {
-            Optional<URI> signed =
-                    storageProvider.signedDownloadUrl(
-                            file.getStorageKey(),
-                            SIGNED_URL_TTL,
-                            inline,
-                            file.getOriginalFilename());
+            Optional<URI> signed = storageProvider.signedDownloadUrl(
+                    file.getStorageKey(), SIGNED_URL_TTL, inline, file.getOriginalFilename());
             if (signed.isEmpty()) {
                 return Optional.empty();
             }

@@ -38,7 +38,8 @@ class FileToPdfMoreTest {
     private TempFileManager tempFileManager;
     private CustomHtmlSanitizer sanitizer;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -49,8 +50,7 @@ class FileToPdfMoreTest {
 
         sanitizer = mock(CustomHtmlSanitizer.class);
         // Identity sanitize so content is preserved for assertions.
-        when(sanitizer.sanitize(Mockito.anyString()))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(sanitizer.sanitize(Mockito.anyString())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     /** Build a real ZIP byte[] from name->content pairs. */
@@ -83,22 +83,19 @@ class FileToPdfMoreTest {
         void htmlHappyPath() throws Exception {
             ProcessExecutor executor = mock(ProcessExecutor.class);
             ArgumentCaptor<List<String>> commandCaptor = ArgumentCaptor.forClass(List.class);
-            Mockito.doReturn(successResult())
-                    .when(executor)
-                    .runCommandWithOutputHandling(commandCaptor.capture());
+            Mockito.doReturn(successResult()).when(executor).runCommandWithOutputHandling(commandCaptor.capture());
 
             try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
                 mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT))
                         .thenReturn(executor);
 
-                byte[] result =
-                        FileToPdf.convertHtmlToPdf(
-                                "/usr/bin/weasyprint",
-                                new HTMLToPdfRequest(),
-                                "<html><body>hi</body></html>".getBytes(StandardCharsets.UTF_8),
-                                "page.html",
-                                tempFileManager,
-                                sanitizer);
+                byte[] result = FileToPdf.convertHtmlToPdf(
+                        "/usr/bin/weasyprint",
+                        new HTMLToPdfRequest(),
+                        "<html><body>hi</body></html>".getBytes(StandardCharsets.UTF_8),
+                        "page.html",
+                        tempFileManager,
+                        sanitizer);
 
                 assertThat(result).isNotNull();
                 List<String> command = commandCaptor.getValue();
@@ -111,9 +108,7 @@ class FileToPdfMoreTest {
         @DisplayName("the HTML body is passed through the sanitizer before writing")
         void htmlIsSanitized() throws Exception {
             ProcessExecutor executor = mock(ProcessExecutor.class);
-            Mockito.doReturn(successResult())
-                    .when(executor)
-                    .runCommandWithOutputHandling(anyList());
+            Mockito.doReturn(successResult()).when(executor).runCommandWithOutputHandling(anyList());
 
             try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
                 mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT))
@@ -140,27 +135,17 @@ class FileToPdfMoreTest {
         @DisplayName("html entries inside the ZIP are sanitized and repacked")
         void zipHtmlEntriesSanitized() throws Exception {
             byte[] zip =
-                    buildZip(
-                            new String[] {"index.html", "asset.css"},
-                            new String[] {"<p>body</p>", "p{color:red}"});
+                    buildZip(new String[] {"index.html", "asset.css"}, new String[] {"<p>body</p>", "p{color:red}"});
 
             ProcessExecutor executor = mock(ProcessExecutor.class);
-            Mockito.doReturn(successResult())
-                    .when(executor)
-                    .runCommandWithOutputHandling(anyList());
+            Mockito.doReturn(successResult()).when(executor).runCommandWithOutputHandling(anyList());
 
             try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
                 mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT))
                         .thenReturn(executor);
 
-                byte[] result =
-                        FileToPdf.convertHtmlToPdf(
-                                "weasyprint",
-                                new HTMLToPdfRequest(),
-                                zip,
-                                "bundle.zip",
-                                tempFileManager,
-                                sanitizer);
+                byte[] result = FileToPdf.convertHtmlToPdf(
+                        "weasyprint", new HTMLToPdfRequest(), zip, "bundle.zip", tempFileManager, sanitizer);
 
                 assertThat(result).isNotNull();
                 // Only the .html entry should be sanitized, not the .css.
@@ -175,9 +160,7 @@ class FileToPdfMoreTest {
             byte[] zip = buildZip(new String[] {"data.txt"}, new String[] {"plain text content"});
 
             ProcessExecutor executor = mock(ProcessExecutor.class);
-            Mockito.doReturn(successResult())
-                    .when(executor)
-                    .runCommandWithOutputHandling(anyList());
+            Mockito.doReturn(successResult()).when(executor).runCommandWithOutputHandling(anyList());
 
             try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
                 mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT))
@@ -186,14 +169,8 @@ class FileToPdfMoreTest {
                 // Drop the identity-stub invocation recorded during setUp.
                 Mockito.clearInvocations(sanitizer);
 
-                byte[] result =
-                        FileToPdf.convertHtmlToPdf(
-                                "weasyprint",
-                                new HTMLToPdfRequest(),
-                                zip,
-                                "bundle.zip",
-                                tempFileManager,
-                                sanitizer);
+                byte[] result = FileToPdf.convertHtmlToPdf(
+                        "weasyprint", new HTMLToPdfRequest(), zip, "bundle.zip", tempFileManager, sanitizer);
 
                 assertThat(result).isNotNull();
                 Mockito.verifyNoInteractions(sanitizer);
@@ -208,15 +185,13 @@ class FileToPdfMoreTest {
         @Test
         @DisplayName("an unsupported extension throws before any process is started")
         void unsupportedExtension() {
-            assertThatThrownBy(
-                            () ->
-                                    FileToPdf.convertHtmlToPdf(
-                                            "weasyprint",
-                                            new HTMLToPdfRequest(),
-                                            "data".getBytes(StandardCharsets.UTF_8),
-                                            "document.txt",
-                                            tempFileManager,
-                                            sanitizer))
+            assertThatThrownBy(() -> FileToPdf.convertHtmlToPdf(
+                            "weasyprint",
+                            new HTMLToPdfRequest(),
+                            "data".getBytes(StandardCharsets.UTF_8),
+                            "document.txt",
+                            tempFileManager,
+                            sanitizer))
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
@@ -252,20 +227,17 @@ class FileToPdfMoreTest {
             // still on disk (it is auto-deleted once convertHtmlToPdf returns).
             List<String> entryNames = new java.util.ArrayList<>();
             ProcessExecutor executor = mock(ProcessExecutor.class);
-            Mockito.doAnswer(
-                            invocation -> {
-                                List<String> command = invocation.getArgument(0);
-                                Path inputZip = Path.of(command.get(command.size() - 2));
-                                try (ZipInputStream zis =
-                                        new ZipInputStream(
-                                                java.nio.file.Files.newInputStream(inputZip))) {
-                                    ZipEntry entry;
-                                    while ((entry = zis.getNextEntry()) != null) {
-                                        entryNames.add(entry.getName());
-                                    }
-                                }
-                                return successResult();
-                            })
+            Mockito.doAnswer(invocation -> {
+                        List<String> command = invocation.getArgument(0);
+                        Path inputZip = Path.of(command.get(command.size() - 2));
+                        try (ZipInputStream zis = new ZipInputStream(java.nio.file.Files.newInputStream(inputZip))) {
+                            ZipEntry entry;
+                            while ((entry = zis.getNextEntry()) != null) {
+                                entryNames.add(entry.getName());
+                            }
+                        }
+                        return successResult();
+                    })
                     .when(executor)
                     .runCommandWithOutputHandling(anyList());
 
@@ -274,12 +246,7 @@ class FileToPdfMoreTest {
                         .thenReturn(executor);
 
                 FileToPdf.convertHtmlToPdf(
-                        "weasyprint",
-                        new HTMLToPdfRequest(),
-                        zip,
-                        "bundle.zip",
-                        tempFileManager,
-                        sanitizer);
+                        "weasyprint", new HTMLToPdfRequest(), zip, "bundle.zip", tempFileManager, sanitizer);
 
                 assertThat(entryNames).anyMatch(name -> name.endsWith("a.html"));
             }

@@ -63,11 +63,9 @@ public class SanitizeController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Sanitize a PDF file",
-            description =
-                    "This endpoint processes a PDF file and removes specific elements based on the"
-                            + " provided options.")
-    public ResponseEntity<Resource> sanitizePDF(@ModelAttribute SanitizePdfRequest request)
-            throws IOException {
+            description = "This endpoint processes a PDF file and removes specific elements based on the"
+                    + " provided options.")
+    public ResponseEntity<Resource> sanitizePDF(@ModelAttribute SanitizePdfRequest request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
         boolean removeJavaScript = Boolean.TRUE.equals(request.getRemoveJavaScript());
         boolean removeEmbeddedFiles = Boolean.TRUE.equals(request.getRemoveEmbeddedFiles());
@@ -103,8 +101,7 @@ public class SanitizeController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(
-                            inputFile.getOriginalFilename(), "_sanitized.pdf"),
+                    GeneralUtils.generateFilename(inputFile.getOriginalFilename(), "_sanitized.pdf"),
                     tempFileManager);
         }
     }
@@ -114,8 +111,7 @@ public class SanitizeController {
         PDDocumentCatalog catalog = document.getDocumentCatalog();
 
         // Get the Names dictionary
-        COSDictionary namesDict =
-                (COSDictionary) catalog.getCOSObject().getDictionaryObject(COSName.NAMES);
+        COSDictionary namesDict = (COSDictionary) catalog.getCOSObject().getDictionaryObject(COSName.NAMES);
 
         if (namesDict != null) {
             // Get the JavaScript dictionary
@@ -204,8 +200,7 @@ public class SanitizeController {
         for (PDPage page : document.getPages()) {
             List<PDAnnotation> annotations = page.getAnnotations();
             if (annotations != null && !annotations.isEmpty()) {
-                annotations.removeIf(
-                        annotation -> annotation instanceof PDAnnotationFileAttachment);
+                annotations.removeIf(annotation -> annotation instanceof PDAnnotationFileAttachment);
             }
         }
     }

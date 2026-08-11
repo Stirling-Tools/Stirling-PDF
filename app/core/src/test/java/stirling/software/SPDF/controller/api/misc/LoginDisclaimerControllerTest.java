@@ -17,9 +17,11 @@ import stirling.software.common.service.LoginAgreementService;
 @ExtendWith(MockitoExtension.class)
 class LoginDisclaimerControllerTest {
 
-    @Mock LoginAgreementService loginAgreementService;
+    @Mock
+    LoginAgreementService loginAgreementService;
 
-    @InjectMocks LoginDisclaimerController controller;
+    @InjectMocks
+    LoginDisclaimerController controller;
 
     @Test
     void disabledReturnsEmptyContent() {

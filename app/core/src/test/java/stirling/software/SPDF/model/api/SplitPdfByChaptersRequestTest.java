@@ -51,7 +51,6 @@ class SplitPdfByChaptersRequestTest {
     @Test
     @DisplayName("toString contains class name")
     void toStringContent() {
-        assertThat(new SplitPdfByChaptersRequest().toString())
-                .contains("SplitPdfByChaptersRequest");
+        assertThat(new SplitPdfByChaptersRequest().toString()).contains("SplitPdfByChaptersRequest");
     }
 }

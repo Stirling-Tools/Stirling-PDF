@@ -55,11 +55,9 @@ public class RearrangePagesPDFController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Remove pages from a PDF file",
-            description =
-                    "This endpoint removes specified pages from a given PDF file. Users can provide"
-                            + " a comma-separated list of page numbers or ranges to delete.")
-    public ResponseEntity<Resource> deletePages(@ModelAttribute PDFWithPageNums request)
-            throws IOException {
+            description = "This endpoint removes specified pages from a given PDF file. Users can provide"
+                    + " a comma-separated list of page numbers or ranges to delete.")
+    public ResponseEntity<Resource> deletePages(@ModelAttribute PDFWithPageNums request) throws IOException {
 
         MultipartFile pdfFile = request.getFileInput();
         String pagesToDelete = request.getPageNumbers();
@@ -69,8 +67,7 @@ public class RearrangePagesPDFController {
             // Split the page order string into an array of page numbers or range of numbers
             String[] pageOrderArr = pagesToDelete.split(",");
 
-            List<Integer> pagesToRemove =
-                    GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages(), false);
+            List<Integer> pagesToRemove = GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages(), false);
 
             Collections.sort(pagesToRemove);
 
@@ -81,8 +78,7 @@ public class RearrangePagesPDFController {
             FormUtils.pruneOrphanedFormFields(document);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(
-                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"),
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_removed_pages.pdf"),
                     tempFileManager);
         }
     }
@@ -172,10 +168,9 @@ public class RearrangePagesPDFController {
 
         try {
             // Parse the duplicate count from pageOrder
-            duplicateCount =
-                    pageOrder != null && !pageOrder.isEmpty()
-                            ? Integer.parseInt(pageOrder.trim())
-                            : 2; // Default to 2 if not specified
+            duplicateCount = pageOrder != null && !pageOrder.isEmpty()
+                    ? Integer.parseInt(pageOrder.trim())
+                    : 2; // Default to 2 if not specified
         } catch (NumberFormatException e) {
             log.error("Invalid duplicate count specified", e);
             duplicateCount = 2; // Default to 2 if invalid input
@@ -219,11 +214,8 @@ public class RearrangePagesPDFController {
                 case REMOVE_FIRST_AND_LAST -> removeFirstAndLast(totalPages);
                 case DUPLICATE -> duplicate(totalPages, pageOrder);
                 default ->
-                        throw ExceptionUtils.createIllegalArgumentException(
-                                "error.invalidFormat",
-                                "Invalid {0} format: {1}",
-                                "custom mode",
-                                "unsupported");
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat", "Invalid {0} format: {1}", "custom mode", "unsupported");
             };
         } catch (IllegalArgumentException e) {
             log.error("Unsupported custom mode", e);
@@ -239,12 +231,10 @@ public class RearrangePagesPDFController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Rearrange pages in a PDF file",
-            description =
-                    "This endpoint rearranges pages in a given PDF file based on the specified page"
-                            + " order or custom mode. Users can provide a page order as a comma-separated list"
-                            + " of page numbers or page ranges, or a custom mode.")
-    public ResponseEntity<Resource> rearrangePages(@ModelAttribute RearrangePagesRequest request)
-            throws IOException {
+            description = "This endpoint rearranges pages in a given PDF file based on the specified page"
+                    + " order or custom mode. Users can provide a page order as a comma-separated list"
+                    + " of page numbers or page ranges, or a custom mode.")
+    public ResponseEntity<Resource> rearrangePages(@ModelAttribute RearrangePagesRequest request) throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         String pageOrder = request.getPageNumbers();
         String sortType = request.getCustomMode();
@@ -256,9 +246,7 @@ public class RearrangePagesPDFController {
                 String[] pageOrderArr = pageOrder != null ? pageOrder.split(",") : new String[0];
                 int totalPages = document.getNumberOfPages();
                 List<Integer> newPageOrder;
-                if (sortType != null
-                        && !sortType.isEmpty()
-                        && !"custom".equals(sortType.toLowerCase(Locale.ROOT))) {
+                if (sortType != null && !sortType.isEmpty() && !"custom".equals(sortType.toLowerCase(Locale.ROOT))) {
                     newPageOrder = processSortTypes(sortType, totalPages, pageOrder);
                 } else {
                     newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
@@ -296,8 +284,7 @@ public class RearrangePagesPDFController {
 
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
-                        GeneralUtils.generateFilename(
-                                pdfFile.getOriginalFilename(), "_rearranged.pdf"),
+                        GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rearranged.pdf"),
                         tempFileManager);
             }
         } catch (IOException e) {

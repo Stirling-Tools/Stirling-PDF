@@ -59,24 +59,29 @@ class AutoSplitPdfControllerMoreTest {
 
     private static final String VALID_QR = "https://stirlingpdf.com";
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
     private ApplicationProperties applicationProperties;
     private AutoSplitPdfController controller;
 
-    @TempDir java.nio.file.Path tempDir;
+    @TempDir
+    java.nio.file.Path tempDir;
 
     @BeforeEach
     void setUp() throws Exception {
         applicationProperties = new ApplicationProperties();
         applicationProperties.getSystem().setMaxDPI(150);
-        controller =
-                new AutoSplitPdfController(
-                        pdfDocumentFactory, tempFileManager, applicationProperties);
+        controller = new AutoSplitPdfController(pdfDocumentFactory, tempFileManager, applicationProperties);
         when(tempFileManager.createTempFile(".zip"))
-                .thenAnswer(inv -> Files.createTempFile(tempDir, "split", ".zip").toFile());
+                .thenAnswer(
+                        inv -> Files.createTempFile(tempDir, "split", ".zip").toFile());
         when(pdfDocumentFactory.load(any(InputStream.class)))
-                .thenAnswer(inv -> Loader.loadPDF(inv.<InputStream>getArgument(0).readAllBytes()));
+                .thenAnswer(
+                        inv -> Loader.loadPDF(inv.<InputStream>getArgument(0).readAllBytes()));
     }
 
     private static BufferedImage qrImage(String text, int size) throws Exception {

@@ -19,10 +19,9 @@ public interface UsageCounterRepository extends JpaRepository<UsageCounter, Long
      */
     @Modifying
     @Transactional
-    @Query(
-            "UPDATE UsageCounter c SET c.cumulativeUnits = c.cumulativeUnits + :delta,"
-                    + " c.updatedAt = :now"
-                    + " WHERE c.periodStart = :periodStart AND c.category = :category")
+    @Query("UPDATE UsageCounter c SET c.cumulativeUnits = c.cumulativeUnits + :delta,"
+            + " c.updatedAt = :now"
+            + " WHERE c.periodStart = :periodStart AND c.category = :category")
     int increment(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("category") String category,
@@ -36,9 +35,8 @@ public interface UsageCounterRepository extends JpaRepository<UsageCounter, Long
      * Periods (oldest first) that still hold usage not yet accepted by SaaS. The sync reports each
      * so end-of-period usage isn't stranded when the billing period rolls over between syncs.
      */
-    @Query(
-            "SELECT DISTINCT c.periodStart FROM UsageCounter c"
-                    + " WHERE c.cumulativeUnits > c.lastSyncedUnits ORDER BY c.periodStart")
+    @Query("SELECT DISTINCT c.periodStart FROM UsageCounter c"
+            + " WHERE c.cumulativeUnits > c.lastSyncedUnits ORDER BY c.periodStart")
     List<LocalDateTime> findPeriodsWithUnsyncedUsage();
 
     /**
@@ -47,9 +45,8 @@ public interface UsageCounterRepository extends JpaRepository<UsageCounter, Long
      */
     @Modifying
     @Transactional
-    @Query(
-            "UPDATE UsageCounter c SET c.lastSyncedUnits = :syncedUnits"
-                    + " WHERE c.periodStart = :periodStart AND c.category = :category")
+    @Query("UPDATE UsageCounter c SET c.lastSyncedUnits = :syncedUnits"
+            + " WHERE c.periodStart = :periodStart AND c.category = :category")
     int markSynced(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("category") String category,

@@ -51,8 +51,7 @@ public enum AuditEventType {
         } catch (IllegalArgumentException e) {
             // If the exact enum name doesn't match, try finding a similar one
             for (AuditEventType eventType : values()) {
-                if (eventType.name().equalsIgnoreCase(type)
-                        || eventType.description.equalsIgnoreCase(type)) {
+                if (eventType.name().equalsIgnoreCase(type) || eventType.description.equalsIgnoreCase(type)) {
                     return eventType;
                 }
             }

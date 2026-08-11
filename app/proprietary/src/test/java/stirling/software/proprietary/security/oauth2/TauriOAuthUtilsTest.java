@@ -92,8 +92,7 @@ class TauriOAuthUtilsTest {
 
     @Test
     void defaultTauriCallbackPath_withContext() {
-        assertEquals(
-                "/myapp/auth/callback/tauri", TauriOAuthUtils.defaultTauriCallbackPath("/myapp"));
+        assertEquals("/myapp/auth/callback/tauri", TauriOAuthUtils.defaultTauriCallbackPath("/myapp"));
     }
 
     @Test
@@ -117,9 +116,7 @@ class TauriOAuthUtilsTest {
     @Test
     void extractRedirectPathFromCookie_withCookie() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setCookies(
-                new jakarta.servlet.http.Cookie(
-                        TauriOAuthUtils.SPA_REDIRECT_COOKIE, "/auth/callback"));
+        request.setCookies(new jakarta.servlet.http.Cookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "/auth/callback"));
 
         assertEquals("/auth/callback", TauriOAuthUtils.extractRedirectPathFromCookie(request));
     }
@@ -127,8 +124,7 @@ class TauriOAuthUtilsTest {
     @Test
     void extractRedirectPathFromCookie_emptyCookie() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setCookies(
-                new jakarta.servlet.http.Cookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE, ""));
+        request.setCookies(new jakarta.servlet.http.Cookie(TauriOAuthUtils.SPA_REDIRECT_COOKIE, ""));
 
         assertNull(TauriOAuthUtils.extractRedirectPathFromCookie(request));
     }

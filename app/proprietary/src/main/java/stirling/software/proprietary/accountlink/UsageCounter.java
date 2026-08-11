@@ -58,21 +58,14 @@ public class UsageCounter {
      * keeps the {@code ddl-auto=update} ADD COLUMN safe against a table an earlier build already
      * populated (NOT NULL with no default would fail the ALTER).
      */
-    @Column(
-            name = "last_synced_units",
-            nullable = false,
-            columnDefinition = "bigint not null default 0")
+    @Column(name = "last_synced_units", nullable = false, columnDefinition = "bigint not null default 0")
     private long lastSyncedUnits;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     /** Fresh-accrual row: nothing synced yet. */
-    public UsageCounter(
-            LocalDateTime periodStart,
-            String category,
-            long cumulativeUnits,
-            LocalDateTime updatedAt) {
+    public UsageCounter(LocalDateTime periodStart, String category, long cumulativeUnits, LocalDateTime updatedAt) {
         this(periodStart, category, cumulativeUnits, 0L, updatedAt);
     }
 

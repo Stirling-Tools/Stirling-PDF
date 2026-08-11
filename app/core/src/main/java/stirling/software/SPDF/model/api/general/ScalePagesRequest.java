@@ -15,8 +15,6 @@ public class ScalePagesRequest extends PDFWithPageSize {
             minimum = "0",
             defaultValue = "1",
             requiredMode = Schema.RequiredMode.REQUIRED,
-            description =
-                    "The scale of the content on the pages of the output PDF. Acceptable values are"
-                            + " floats.")
+            description = "The scale of the content on the pages of the output PDF. Acceptable values are" + " floats.")
     private float scaleFactor;
 }

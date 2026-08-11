@@ -59,7 +59,8 @@ class Type3LibraryStrategyTest {
         Type3FontLibrary lib = mock(Type3FontLibrary.class);
         ApplicationProperties props = mock(ApplicationProperties.class);
         Type3LibraryStrategy strategy = new Type3LibraryStrategy(lib, props);
-        Type3ConversionRequest request = Type3ConversionRequest.builder().font(null).build();
+        Type3ConversionRequest request =
+                Type3ConversionRequest.builder().font(null).build();
 
         PdfJsonFontConversionCandidate result = strategy.convert(request, null);
         assertEquals(PdfJsonFontConversionStatus.FAILURE, result.getStatus());
@@ -71,8 +72,11 @@ class Type3LibraryStrategyTest {
         ApplicationProperties props = mock(ApplicationProperties.class);
         Type3LibraryStrategy strategy = new Type3LibraryStrategy(lib, props);
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder().font(font).fontId("F1").fontUid("uid1").build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .fontUid("uid1")
+                .build();
 
         PdfJsonFontConversionCandidate result = strategy.convert(request, null);
         assertEquals(PdfJsonFontConversionStatus.SKIPPED, result.getStatus());
@@ -91,8 +95,11 @@ class Type3LibraryStrategyTest {
         invokePostConstruct(strategy);
 
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder().font(font).fontId("F1").fontUid("uid1").build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .fontUid("uid1")
+                .build();
 
         PdfJsonFontConversionCandidate result = strategy.convert(request, null);
         assertEquals(PdfJsonFontConversionStatus.UNSUPPORTED, result.getStatus());
@@ -101,20 +108,18 @@ class Type3LibraryStrategyTest {
     @Test
     void convert_matchWithPayload_returnsSuccess() throws Exception {
         Type3FontLibraryPayload payload = new Type3FontLibraryPayload("AQID", "ttf");
-        Type3FontLibraryEntry entry =
-                Type3FontLibraryEntry.builder()
-                        .id("entry1")
-                        .label("Test Entry")
-                        .program(payload)
-                        .glyphCode(65)
-                        .glyphCode(66)
-                        .build();
-        Type3FontLibraryMatch match =
-                Type3FontLibraryMatch.builder()
-                        .entry(entry)
-                        .matchType("signature")
-                        .signature("sha256:abc")
-                        .build();
+        Type3FontLibraryEntry entry = Type3FontLibraryEntry.builder()
+                .id("entry1")
+                .label("Test Entry")
+                .program(payload)
+                .glyphCode(65)
+                .glyphCode(66)
+                .build();
+        Type3FontLibraryMatch match = Type3FontLibraryMatch.builder()
+                .entry(entry)
+                .matchType("signature")
+                .signature("sha256:abc")
+                .build();
 
         Type3FontLibrary lib = mock(Type3FontLibrary.class);
         when(lib.isLoaded()).thenReturn(true);
@@ -125,8 +130,11 @@ class Type3LibraryStrategyTest {
         invokePostConstruct(strategy);
 
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder().font(font).fontId("F1").fontUid("uid1").build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .fontUid("uid1")
+                .build();
 
         PdfJsonFontConversionCandidate result = strategy.convert(request, null);
         assertEquals(PdfJsonFontConversionStatus.SUCCESS, result.getStatus());
@@ -141,12 +149,11 @@ class Type3LibraryStrategyTest {
     void convert_matchNoPayload_returnsFailure() throws Exception {
         Type3FontLibraryEntry entry =
                 Type3FontLibraryEntry.builder().id("entry1").label("No Payload").build();
-        Type3FontLibraryMatch match =
-                Type3FontLibraryMatch.builder()
-                        .entry(entry)
-                        .matchType("alias:test")
-                        .signature("sha256:def")
-                        .build();
+        Type3FontLibraryMatch match = Type3FontLibraryMatch.builder()
+                .entry(entry)
+                .matchType("alias:test")
+                .signature("sha256:def")
+                .build();
 
         Type3FontLibrary lib = mock(Type3FontLibrary.class);
         when(lib.isLoaded()).thenReturn(true);
@@ -157,8 +164,11 @@ class Type3LibraryStrategyTest {
         invokePostConstruct(strategy);
 
         PDType3Font font = mock(PDType3Font.class);
-        Type3ConversionRequest request =
-                Type3ConversionRequest.builder().font(font).fontId("F1").fontUid("uid1").build();
+        Type3ConversionRequest request = Type3ConversionRequest.builder()
+                .font(font)
+                .fontId("F1")
+                .fontUid("uid1")
+                .build();
 
         PdfJsonFontConversionCandidate result = strategy.convert(request, null);
         assertEquals(PdfJsonFontConversionStatus.FAILURE, result.getStatus());
@@ -168,8 +178,7 @@ class Type3LibraryStrategyTest {
     private ApplicationProperties mockEnabledProps() {
         ApplicationProperties props = mock(ApplicationProperties.class);
         ApplicationProperties.PdfEditor pdfEditor = mock(ApplicationProperties.PdfEditor.class);
-        ApplicationProperties.PdfEditor.Type3 type3 =
-                mock(ApplicationProperties.PdfEditor.Type3.class);
+        ApplicationProperties.PdfEditor.Type3 type3 = mock(ApplicationProperties.PdfEditor.Type3.class);
         ApplicationProperties.PdfEditor.Type3.Library library =
                 mock(ApplicationProperties.PdfEditor.Type3.Library.class);
         when(props.getPdfEditor()).thenReturn(pdfEditor);
@@ -180,8 +189,7 @@ class Type3LibraryStrategyTest {
     }
 
     private void invokePostConstruct(Type3LibraryStrategy strategy) throws Exception {
-        java.lang.reflect.Method method =
-                Type3LibraryStrategy.class.getDeclaredMethod("loadConfiguration");
+        java.lang.reflect.Method method = Type3LibraryStrategy.class.getDeclaredMethod("loadConfiguration");
         method.setAccessible(true);
         method.invoke(strategy);
     }

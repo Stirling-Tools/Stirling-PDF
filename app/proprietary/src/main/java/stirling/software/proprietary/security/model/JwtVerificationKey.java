@@ -17,13 +17,16 @@ import lombok.ToString;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class JwtVerificationKey implements Serializable {
 
-    @Serial private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
-    @ToString.Include private String keyId;
+    @ToString.Include
+    private String keyId;
 
     private String verifyingKey;
 
-    @ToString.Include private LocalDateTime createdAt;
+    @ToString.Include
+    private LocalDateTime createdAt;
 
     public JwtVerificationKey(String keyId, String verifyingKey) {
         this.keyId = keyId;

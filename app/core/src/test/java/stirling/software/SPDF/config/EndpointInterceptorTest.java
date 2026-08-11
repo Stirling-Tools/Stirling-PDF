@@ -15,9 +15,14 @@ import jakarta.servlet.http.HttpServletResponse;
 @ExtendWith(MockitoExtension.class)
 class EndpointInterceptorTest {
 
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private HttpServletResponse response;
 
     private EndpointInterceptor interceptor;
 

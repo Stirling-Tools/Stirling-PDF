@@ -68,8 +68,7 @@ class LibreOfficeListenerTest {
         @Test
         @DisplayName("always returns the same singleton instance")
         void singletonIsStable() {
-            assertThat(LibreOfficeListener.getInstance())
-                    .isSameAs(LibreOfficeListener.getInstance());
+            assertThat(LibreOfficeListener.getInstance()).isSameAs(LibreOfficeListener.getInstance());
         }
     }
 
@@ -113,10 +112,7 @@ class LibreOfficeListenerTest {
                 // A socket was constructed and connected exactly once on the first poll.
                 assertThat(socket.constructed()).hasSize(1);
                 Mockito.verify(socket.constructed().get(0)).connect(any(), eq(1000));
-                sys.verify(
-                        () ->
-                                SystemCommand.runCommand(
-                                        any(Runtime.class), eq("unoconv --listener")));
+                sys.verify(() -> SystemCommand.runCommand(any(Runtime.class), eq("unoconv --listener")));
             }
         }
 
@@ -127,16 +123,13 @@ class LibreOfficeListenerTest {
 
             // First socket fails to connect, second succeeds; start() should poll twice.
             try (MockedStatic<SystemCommand> sys = Mockito.mockStatic(SystemCommand.class);
-                    MockedConstruction<Socket> socket =
-                            Mockito.mockConstruction(
-                                    Socket.class,
-                                    (mock, ctx) -> {
-                                        if (ctx.getCount() == 1) {
-                                            Mockito.doThrow(new java.io.IOException("refused"))
-                                                    .when(mock)
-                                                    .connect(any(), eq(1000));
-                                        }
-                                    })) {
+                    MockedConstruction<Socket> socket = Mockito.mockConstruction(Socket.class, (mock, ctx) -> {
+                        if (ctx.getCount() == 1) {
+                            Mockito.doThrow(new java.io.IOException("refused"))
+                                    .when(mock)
+                                    .connect(any(), eq(1000));
+                        }
+                    })) {
 
                 sys.when(() -> SystemCommand.runCommand(any(Runtime.class), anyString()))
                         .thenReturn(spawned);

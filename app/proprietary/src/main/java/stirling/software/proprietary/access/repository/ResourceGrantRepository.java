@@ -16,15 +16,13 @@ import stirling.software.proprietary.security.model.User;
 @Repository
 public interface ResourceGrantRepository extends JpaRepository<ResourceGrant, Long> {
 
-    List<ResourceGrant> findByResourceTypeAndResourceId(
-            ResourceType resourceType, String resourceId);
+    List<ResourceGrant> findByResourceTypeAndResourceId(ResourceType resourceType, String resourceId);
 
     List<ResourceGrant> findByResourceTypeAndPrincipalTypeAndPrincipalId(
             ResourceType resourceType, PrincipalType principalType, Long principalId);
 
     /** All grants held by a principal, across resource types (for the manage-access view). */
-    List<ResourceGrant> findByPrincipalTypeAndPrincipalId(
-            PrincipalType principalType, Long principalId);
+    List<ResourceGrant> findByPrincipalTypeAndPrincipalId(PrincipalType principalType, Long principalId);
 
     void deleteByResourceTypeAndResourceId(ResourceType resourceType, String resourceId);
 
@@ -37,8 +35,5 @@ public interface ResourceGrantRepository extends JpaRepository<ResourceGrant, Lo
     void clearGrantedBy(@Param("user") User user);
 
     boolean existsByResourceTypeAndResourceIdAndPrincipalTypeAndPrincipalId(
-            ResourceType resourceType,
-            String resourceId,
-            PrincipalType principalType,
-            Long principalId);
+            ResourceType resourceType, String resourceId, PrincipalType principalType, Long principalId);
 }

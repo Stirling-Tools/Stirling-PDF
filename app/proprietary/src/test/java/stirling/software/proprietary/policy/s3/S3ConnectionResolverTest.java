@@ -32,9 +32,14 @@ import stirling.software.proprietary.security.service.UserService;
 @ExtendWith(MockitoExtension.class)
 class S3ConnectionResolverTest {
 
-    @Mock private IntegrationConfigRepository connections;
-    @Mock private OwnershipService ownership;
-    @Mock private UserService userService;
+    @Mock
+    private IntegrationConfigRepository connections;
+
+    @Mock
+    private OwnershipService ownership;
+
+    @Mock
+    private UserService userService;
 
     @AfterEach
     void clearSecurityContext() {
@@ -45,13 +50,11 @@ class S3ConnectionResolverTest {
     void resolvesAConnectionAndMergesPerUseOptions() {
         when(connections.findById(9L)).thenReturn(Optional.of(s3Connection(9L, true)));
 
-        S3Config config =
-                resolver()
-                        .resolve(
-                                Map.of(
-                                        "connectionId", 9L,
-                                        "prefix", "incoming/",
-                                        "mode", "snapshot"));
+        S3Config config = resolver()
+                .resolve(Map.of(
+                        "connectionId", 9L,
+                        "prefix", "incoming/",
+                        "mode", "snapshot"));
 
         assertEquals("inbox", config.bucket());
         assertEquals("AKIAEXAMPLE", config.accessKeyId());
@@ -68,13 +71,11 @@ class S3ConnectionResolverTest {
 
     @Test
     void fallsBackToLegacyEmbeddedCredentials() {
-        S3Config config =
-                resolver()
-                        .resolve(
-                                Map.of(
-                                        "bucket", "legacy",
-                                        "accessKeyId", "AKIAEXAMPLE",
-                                        "secretAccessKey", "shh"));
+        S3Config config = resolver()
+                .resolve(Map.of(
+                        "bucket", "legacy",
+                        "accessKeyId", "AKIAEXAMPLE",
+                        "secretAccessKey", "shh"));
 
         assertEquals("legacy", config.bucket());
     }
@@ -82,21 +83,15 @@ class S3ConnectionResolverTest {
     @Test
     void rejectsUnknownDisabledOrWrongTypeConnections() {
         when(connections.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> resolver().resolve(Map.of("connectionId", 1L)));
+        assertThrows(IllegalArgumentException.class, () -> resolver().resolve(Map.of("connectionId", 1L)));
 
         when(connections.findById(2L)).thenReturn(Optional.of(s3Connection(2L, false)));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> resolver().resolve(Map.of("connectionId", 2L)));
+        assertThrows(IllegalArgumentException.class, () -> resolver().resolve(Map.of("connectionId", 2L)));
 
         IntegrationConfig mcp = s3Connection(3L, true);
         mcp.setIntegrationType(IntegrationType.MCP);
         when(connections.findById(3L)).thenReturn(Optional.of(mcp));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> resolver().resolve(Map.of("connectionId", 3L)));
+        assertThrows(IllegalArgumentException.class, () -> resolver().resolve(Map.of("connectionId", 3L)));
     }
 
     @Test
@@ -105,21 +100,17 @@ class S3ConnectionResolverTest {
         User saver = new User();
         saver.setUsername("alice");
         SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(saver, null, java.util.List.of()));
+                .setAuthentication(new UsernamePasswordAuthenticationToken(saver, null, java.util.List.of()));
         when(ownership.canUse(any(), any(IntegrationConfig.class), eq(saver))).thenReturn(false);
 
         // Denied reads the same as unknown and never echoes the connection name, so ids can't be
         // enumerated by probing.
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> resolver().resolve(Map.of("connectionId", 9L)));
+        assertThrows(IllegalArgumentException.class, () -> resolver().resolve(Map.of("connectionId", 9L)));
         try {
             resolver().resolve(Map.of("connectionId", 9L));
         } catch (IllegalArgumentException e) {
             org.junit.jupiter.api.Assertions.assertFalse(
-                    e.getMessage().contains("Claims bucket"),
-                    "access-denied error must not leak the connection name");
+                    e.getMessage().contains("Claims bucket"), "access-denied error must not leak the connection name");
         }
     }
 
@@ -141,9 +132,7 @@ class S3ConnectionResolverTest {
         connection.setIntegrationType(IntegrationType.S3);
         connection.setName("Claims bucket");
         connection.setEnabled(enabled);
-        connection.setConfig(
-                "{\"bucket\":\"inbox\",\"accessKeyId\":\"AKIAEXAMPLE\","
-                        + "\"secretAccessKey\":\"shh\"}");
+        connection.setConfig("{\"bucket\":\"inbox\",\"accessKeyId\":\"AKIAEXAMPLE\"," + "\"secretAccessKey\":\"shh\"}");
         return connection;
     }
 }

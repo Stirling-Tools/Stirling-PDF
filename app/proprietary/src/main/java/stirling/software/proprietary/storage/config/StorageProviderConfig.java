@@ -55,7 +55,8 @@ public class StorageProviderConfig {
             @Value("${stirling.security.fileEncryptionKey:}") String configuredFileEncryptionKey,
             @Value("${cluster.enabled:false}") boolean clusterEnabled,
             PlatformTransactionManager transactionManager) {
-        boolean writeEnabled = applicationProperties.getStorage().getEncryption().isEnabled();
+        boolean writeEnabled =
+                applicationProperties.getStorage().getEncryption().isEnabled();
         if (writeEnabled) {
             licenseKeyChecker.requireProOrEnterprise("storage.encryption");
         }
@@ -63,13 +64,10 @@ public class StorageProviderConfig {
         // FileEncryptionKeyService#createActive).
         TransactionTemplate requiresNew = new TransactionTemplate(transactionManager);
         requiresNew.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-        StorageEncryptionState state =
-                new StorageEncryptionState(
-                        writeEnabled,
-                        () ->
-                                createKeyService(
-                                        configuredFileEncryptionKey, clusterEnabled, requiresNew),
-                        fileEncryptionKeyRepository);
+        StorageEncryptionState state = new StorageEncryptionState(
+                writeEnabled,
+                () -> createKeyService(configuredFileEncryptionKey, clusterEnabled, requiresNew),
+                fileEncryptionKeyRepository);
         // The registry table may not exist when storage is unused, so only probe if it is on.
         boolean probeForExistingKeys =
                 !writeEnabled && applicationProperties.getStorage().isEnabled();
@@ -84,8 +82,7 @@ public class StorageProviderConfig {
 
     private FileEncryptionKeyService createKeyService(
             String configuredKey, boolean clusterEnabled, TransactionOperations keyCreationTx) {
-        FileEncryptionMasterKey masterKey =
-                new FileEncryptionMasterKey(configuredKey, clusterEnabled);
+        FileEncryptionMasterKey masterKey = new FileEncryptionMasterKey(configuredKey, clusterEnabled);
         FileEncryptionKeyService keyService =
                 new FileEncryptionKeyService(fileEncryptionKeyRepository, masterKey, keyCreationTx);
         // Wrong key must fail fast, not silently start a second key hierarchy.
@@ -96,17 +93,16 @@ public class StorageProviderConfig {
     @Bean(destroyMethod = "close")
     public StorageProvider storageProvider(
             StorageEncryptionState encryptionState, Optional<TempFileManager> tempFileManager) {
-        return new EncryptingStorageProvider(
-                innerStorageProvider(), encryptionState, tempFileManager.orElse(null));
+        return new EncryptingStorageProvider(innerStorageProvider(), encryptionState, tempFileManager.orElse(null));
     }
 
     private StorageProvider innerStorageProvider() {
         boolean storageEnabled = applicationProperties.getStorage().isEnabled();
-        String providerName =
-                Optional.ofNullable(applicationProperties.getStorage().getProvider())
-                        .orElse("local")
-                        .trim()
-                        .toLowerCase(Locale.ROOT);
+        String providerName = Optional.ofNullable(
+                        applicationProperties.getStorage().getProvider())
+                .orElse("local")
+                .trim()
+                .toLowerCase(Locale.ROOT);
         if ("database".equals(providerName)) {
             licenseKeyChecker.requireProOrEnterprise("storage.provider=database");
             return new DatabaseStorageProvider(storedFileBlobRepository);
@@ -126,7 +122,8 @@ public class StorageProviderConfig {
             basePathValue = InstallationPathConfig.getPath() + "storage";
         }
         Path basePath = Path.of(basePathValue).toAbsolutePath().normalize();
-        Path installRoot = Path.of(InstallationPathConfig.getPath()).toAbsolutePath().normalize();
+        Path installRoot =
+                Path.of(InstallationPathConfig.getPath()).toAbsolutePath().normalize();
         if (!basePath.startsWith(installRoot)) {
             // Warn rather than hard-fail: admins may legitimately point storage at an external
             // volume, but an unexpected path could indicate a misconfiguration or traversal
@@ -141,8 +138,7 @@ public class StorageProviderConfig {
             try {
                 Files.createDirectories(basePath);
             } catch (IOException e) {
-                throw new IllegalStateException(
-                        "Unable to create storage base directory: " + basePath, e);
+                throw new IllegalStateException("Unable to create storage base directory: " + basePath, e);
             }
         }
         return new LocalStorageProvider(basePath);

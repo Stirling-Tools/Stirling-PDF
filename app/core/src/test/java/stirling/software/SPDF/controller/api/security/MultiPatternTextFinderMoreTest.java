@@ -25,8 +25,7 @@ import stirling.software.SPDF.model.PDFText;
  */
 class MultiPatternTextFinderMoreTest {
 
-    private static void writeLine(PDPageContentStream cs, String text, float x, float y)
-            throws IOException {
+    private static void writeLine(PDPageContentStream cs, String text, float x, float y) throws IOException {
         cs.beginText();
         cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
         cs.newLineAtOffset(x, y);
@@ -43,8 +42,7 @@ class MultiPatternTextFinderMoreTest {
         return page;
     }
 
-    private static Map<Integer, List<PDFText>> scan(PDDocument doc, List<Pattern> patterns)
-            throws IOException {
+    private static Map<Integer, List<PDFText>> scan(PDDocument doc, List<Pattern> patterns) throws IOException {
         MultiPatternTextFinder finder = new MultiPatternTextFinder(patterns);
         finder.setStartPage(1);
         finder.setEndPage(doc.getNumberOfPages());
@@ -102,8 +100,7 @@ class MultiPatternTextFinderMoreTest {
                 pageWith(doc, "hello world");
 
                 // the space between the words is a null TextPosition slot
-                Map<Integer, List<PDFText>> result =
-                        scan(doc, List.of(Pattern.compile("hello world")));
+                Map<Integer, List<PDFText>> result = scan(doc, List.of(Pattern.compile("hello world")));
 
                 assertThat(result.get(0)).hasSize(1);
                 PDFText hit = result.get(0).get(0);
@@ -166,8 +163,7 @@ class MultiPatternTextFinderMoreTest {
             try (PDDocument doc = new PDDocument()) {
                 doc.addPage(new PDPage(PDRectangle.A4));
 
-                Map<Integer, List<PDFText>> result =
-                        scan(doc, List.of(Pattern.compile("anything")));
+                Map<Integer, List<PDFText>> result = scan(doc, List.of(Pattern.compile("anything")));
 
                 assertThat(result).isEmpty();
             }

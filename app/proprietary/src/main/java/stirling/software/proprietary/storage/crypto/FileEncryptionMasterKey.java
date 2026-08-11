@@ -50,9 +50,7 @@ public class FileEncryptionMasterKey {
 
     public FileEncryptionMasterKey(String configuredKey, boolean clusterEnabled) {
         this.key = resolveKey(configuredKey, clusterEnabled);
-        log.info(
-                "Storage encryption master key initialised (AES-256-GCM, fingerprint {})",
-                fingerprint());
+        log.info("Storage encryption master key initialised (AES-256-GCM, fingerprint {})", fingerprint());
     }
 
     private static SecretKey resolveKey(String configuredKey, boolean clusterEnabled) {
@@ -66,11 +64,10 @@ public class FileEncryptionMasterKey {
             return decodeKey(configured, source);
         }
         if (clusterEnabled) {
-            throw new IllegalStateException(
-                    "cluster.enabled=true requires a shared file encryption key. Set"
-                            + " STIRLING_FILE_ENCRYPTION_KEY (or"
-                            + " stirling.security.fileEncryptionKey) to the same value on every"
-                            + " node.");
+            throw new IllegalStateException("cluster.enabled=true requires a shared file encryption key. Set"
+                    + " STIRLING_FILE_ENCRYPTION_KEY (or"
+                    + " stirling.security.fileEncryptionKey) to the same value on every"
+                    + " node.");
         }
         return loadOrCreateKeyFile();
     }
@@ -88,11 +85,10 @@ public class FileEncryptionMasterKey {
             throw new IllegalStateException(source + " is not valid base64", e);
         }
         if (bytes.length != 32) {
-            throw new IllegalStateException(
-                    source
-                            + " must decode to exactly 32 bytes (a 256-bit AES key), got "
-                            + bytes.length
-                            + " bytes. Generate one with: openssl rand -base64 32");
+            throw new IllegalStateException(source
+                    + " must decode to exactly 32 bytes (a 256-bit AES key), got "
+                    + bytes.length
+                    + " bytes. Generate one with: openssl rand -base64 32");
         }
         return new SecretKeySpec(bytes, ALGORITHM);
     }

@@ -54,9 +54,14 @@ class MathAuditorOrchestratorTest {
     private static final String EXAMINE_PATH = "/api/v1/ai/math-auditor-agent/examine";
     private static final String DELIBERATE_PREFIX = "/api/v1/ai/math-auditor-agent/deliberate";
 
-    @Mock private AiEngineClient aiEngineClient;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private UserServiceInterface userService;
+    @Mock
+    private AiEngineClient aiEngineClient;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private UserServiceInterface userService;
 
     private ObjectMapper objectMapper;
     private PdfContentExtractor pdfContentExtractor;
@@ -70,13 +75,8 @@ class MathAuditorOrchestratorTest {
                 org.mockito.Mockito.mock(stirling.software.SPDF.pdf.parser.TabulaTableParser.class);
         lenient().when(tabula.parse(any(PDDocument.class), anyInt())).thenReturn(List.of());
         pdfContentExtractor = new PdfContentExtractor(tabula);
-        orchestrator =
-                new MathAuditorOrchestrator(
-                        aiEngineClient,
-                        pdfDocumentFactory,
-                        pdfContentExtractor,
-                        objectMapper,
-                        userService);
+        orchestrator = new MathAuditorOrchestrator(
+                aiEngineClient, pdfDocumentFactory, pdfContentExtractor, objectMapper, userService);
     }
 
     // ------------------------------------------------------------------
@@ -98,8 +98,7 @@ class MathAuditorOrchestratorTest {
             }
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             doc.save(baos);
-            return new MockMultipartFile(
-                    "file", "ledger.pdf", "application/pdf", baos.toByteArray());
+            return new MockMultipartFile("file", "ledger.pdf", "application/pdf", baos.toByteArray());
         }
     }
 
@@ -124,16 +123,14 @@ class MathAuditorOrchestratorTest {
         return """
                 {"type":"requisition","needText":%s,"needTables":%s,"needOcr":%s,
                  "rationale":"check the totals"}
-                """
-                .formatted(needText, needTables, needOcr);
+                """.formatted(needText, needTables, needOcr);
     }
 
     private String verdictJson(boolean clean) {
         return """
                 {"type":"verdict","sessionId":"s","discrepancies":[],"pagesExamined":[0,1],
                  "roundsTaken":1,"summary":"all good","clean":%s,"unauditablePages":[]}
-                """
-                .formatted(clean);
+                """.formatted(clean);
     }
 
     @Nested
@@ -154,10 +151,8 @@ class MathAuditorOrchestratorTest {
             assertThat(verdict).isNotNull();
             assertThat(verdict.clean()).isTrue();
             assertThat(verdict.pagesExamined()).containsExactly(0, 1);
-            verify(aiEngineClient, times(1))
-                    .post(eq(EXAMINE_PATH), anyString(), nullable(String.class));
-            verify(aiEngineClient, times(1))
-                    .post(contains("deliberate"), anyString(), nullable(String.class));
+            verify(aiEngineClient, times(1)).post(eq(EXAMINE_PATH), anyString(), nullable(String.class));
+            verify(aiEngineClient, times(1)).post(contains("deliberate"), anyString(), nullable(String.class));
         }
 
         @Test
@@ -171,11 +166,7 @@ class MathAuditorOrchestratorTest {
 
             orchestrator.audit(pdfFile(), new BigDecimal("0.5"));
 
-            verify(aiEngineClient)
-                    .post(
-                            eq(DELIBERATE_PREFIX + "?tolerance=0.5"),
-                            anyString(),
-                            nullable(String.class));
+            verify(aiEngineClient).post(eq(DELIBERATE_PREFIX + "?tolerance=0.5"), anyString(), nullable(String.class));
         }
 
         @Test
@@ -192,8 +183,7 @@ class MathAuditorOrchestratorTest {
         }
 
         @Test
-        @DisplayName(
-                "OCR-only requisition marks the page unauditable and skips deliberation cleanly")
+        @DisplayName("OCR-only requisition marks the page unauditable and skips deliberation cleanly")
         void ocrRequisitionMarksUnauditable() throws IOException {
             when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(loadedDocument());
             when(aiEngineClient.post(eq(EXAMINE_PATH), anyString(), nullable(String.class)))
@@ -247,8 +237,7 @@ class MathAuditorOrchestratorTest {
             assertThatThrownBy(() -> orchestrator.audit(pdfFile(), new BigDecimal("0.01")))
                     .isInstanceOf(IOException.class)
                     .hasMessageContaining("engine down");
-            verify(aiEngineClient, never())
-                    .post(contains("deliberate"), anyString(), nullable(String.class));
+            verify(aiEngineClient, never()).post(contains("deliberate"), anyString(), nullable(String.class));
         }
     }
 
@@ -274,13 +263,8 @@ class MathAuditorOrchestratorTest {
         @Test
         @DisplayName("sends a null user id when no UserService bean is present")
         void nullUserServiceSendsNull() throws IOException {
-            MathAuditorOrchestrator noUser =
-                    new MathAuditorOrchestrator(
-                            aiEngineClient,
-                            pdfDocumentFactory,
-                            pdfContentExtractor,
-                            objectMapper,
-                            null);
+            MathAuditorOrchestrator noUser = new MathAuditorOrchestrator(
+                    aiEngineClient, pdfDocumentFactory, pdfContentExtractor, objectMapper, null);
             when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(loadedDocument());
             when(aiEngineClient.post(eq(EXAMINE_PATH), anyString(), nullable(String.class)))
                     .thenReturn(requisitionJson("[0]", "[]", "[]"));

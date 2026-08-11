@@ -39,7 +39,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @ExtendWith(MockitoExtension.class)
 class PdfUtilsGapTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
     // ---- helpers ------------------------------------------------------------
 
@@ -118,8 +119,7 @@ class PdfUtilsGapTest {
             when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(1));
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory, bytes, "png", ImageType.RGB, true, 72, "doc", true);
+                    PdfUtils.convertFromPdf(pdfDocumentFactory, bytes, "png", ImageType.RGB, true, 72, "doc", true);
 
             assertNotNull(out);
             assertTrue(out.length > 0);
@@ -137,15 +137,7 @@ class PdfUtilsGapTest {
             when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(2));
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "jpg",
-                            ImageType.RGB,
-                            true,
-                            72,
-                            "doc",
-                            false);
+                    PdfUtils.convertFromPdf(pdfDocumentFactory, bytes, "jpg", ImageType.RGB, true, 72, "doc", false);
 
             assertNotNull(out);
             assertTrue(out.length > 0);
@@ -161,15 +153,7 @@ class PdfUtilsGapTest {
             when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(2));
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "tiff",
-                            ImageType.RGB,
-                            true,
-                            72,
-                            "doc",
-                            true);
+                    PdfUtils.convertFromPdf(pdfDocumentFactory, bytes, "tiff", ImageType.RGB, true, 72, "doc", true);
 
             assertNotNull(out);
             assertTrue(out.length > 0);
@@ -182,15 +166,7 @@ class PdfUtilsGapTest {
             when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(2));
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "png",
-                            ImageType.RGB,
-                            false,
-                            72,
-                            "myfile",
-                            true);
+                    PdfUtils.convertFromPdf(pdfDocumentFactory, bytes, "png", ImageType.RGB, false, 72, "myfile", true);
 
             assertNotNull(out);
             assertTrue(out.length > 0);
@@ -206,16 +182,8 @@ class PdfUtilsGapTest {
             // The DPI check happens before the document is loaded.
             assertThrows(
                     IllegalArgumentException.class,
-                    () ->
-                            PdfUtils.convertFromPdf(
-                                    pdfDocumentFactory,
-                                    bytes,
-                                    "png",
-                                    ImageType.RGB,
-                                    true,
-                                    9999,
-                                    "doc",
-                                    true));
+                    () -> PdfUtils.convertFromPdf(
+                            pdfDocumentFactory, bytes, "png", ImageType.RGB, true, 9999, "doc", true));
         }
 
         @Test
@@ -225,15 +193,7 @@ class PdfUtilsGapTest {
             when(pdfDocumentFactory.load(bytes)).thenReturn(docWithPages(1));
 
             byte[] out =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            bytes,
-                            "png",
-                            ImageType.RGB,
-                            true,
-                            72,
-                            "doc",
-                            false);
+                    PdfUtils.convertFromPdf(pdfDocumentFactory, bytes, "png", ImageType.RGB, true, 72, "doc", false);
 
             assertNotNull(out);
             assertTrue(out.length > 0);
@@ -290,8 +250,7 @@ class PdfUtilsGapTest {
     @DisplayName("imageToPdf")
     class ImageToPdf {
 
-        private byte[] runImageToPdf(MultipartFile[] files, String fitOption, boolean autoRotate)
-                throws IOException {
+        private byte[] runImageToPdf(MultipartFile[] files, String fitOption, boolean autoRotate) throws IOException {
             when(pdfDocumentFactory.createNewDocument()).thenReturn(new PDDocument());
             return PdfUtils.imageToPdf(files, fitOption, autoRotate, "color", pdfDocumentFactory);
         }
@@ -300,11 +259,7 @@ class PdfUtilsGapTest {
         @DisplayName("single PNG image becomes a one-page PDF")
         void singlePngImage() throws IOException {
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "file",
-                            "image.png",
-                            MediaType.IMAGE_PNG_VALUE,
-                            imageBytes("png", Color.RED));
+                    new MockMultipartFile("file", "image.png", MediaType.IMAGE_PNG_VALUE, imageBytes("png", Color.RED));
 
             byte[] pdfOut = runImageToPdf(new MultipartFile[] {file}, "fillPage", false);
 
@@ -317,12 +272,8 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("JPEG image uses the lossy factory path and produces a PDF")
         void jpegImage() throws IOException {
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "file",
-                            "image.jpg",
-                            MediaType.IMAGE_JPEG_VALUE,
-                            imageBytes("jpg", Color.BLUE));
+            MockMultipartFile file = new MockMultipartFile(
+                    "file", "image.jpg", MediaType.IMAGE_JPEG_VALUE, imageBytes("jpg", Color.BLUE));
 
             byte[] pdfOut = runImageToPdf(new MultipartFile[] {file}, "maintainAspectRatio", false);
 
@@ -335,12 +286,8 @@ class PdfUtilsGapTest {
         @Test
         @DisplayName("fitDocumentToImage sizes the page to the image")
         void fitDocumentToImage() throws IOException {
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "file",
-                            "image.png",
-                            MediaType.IMAGE_PNG_VALUE,
-                            imageBytes("png", Color.GREEN));
+            MockMultipartFile file = new MockMultipartFile(
+                    "file", "image.png", MediaType.IMAGE_PNG_VALUE, imageBytes("png", Color.GREEN));
 
             byte[] pdfOut = runImageToPdf(new MultipartFile[] {file}, "fitDocumentToImage", false);
 
@@ -355,17 +302,9 @@ class PdfUtilsGapTest {
         @DisplayName("multiple images become multiple pages")
         void multipleImages() throws IOException {
             MockMultipartFile a =
-                    new MockMultipartFile(
-                            "file",
-                            "a.png",
-                            MediaType.IMAGE_PNG_VALUE,
-                            imageBytes("png", Color.RED));
+                    new MockMultipartFile("file", "a.png", MediaType.IMAGE_PNG_VALUE, imageBytes("png", Color.RED));
             MockMultipartFile b =
-                    new MockMultipartFile(
-                            "file",
-                            "b.png",
-                            MediaType.IMAGE_PNG_VALUE,
-                            imageBytes("png", Color.BLUE));
+                    new MockMultipartFile("file", "b.png", MediaType.IMAGE_PNG_VALUE, imageBytes("png", Color.BLUE));
 
             byte[] pdfOut = runImageToPdf(new MultipartFile[] {a, b}, "fillPage", true);
 
@@ -383,14 +322,12 @@ class PdfUtilsGapTest {
 
         private PDImageXObject portraitImage(PDDocument doc) throws IOException {
             BufferedImage img = new BufferedImage(40, 80, BufferedImage.TYPE_INT_RGB);
-            return org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory.createFromImage(
-                    doc, img);
+            return org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory.createFromImage(doc, img);
         }
 
         private PDImageXObject landscapeImage(PDDocument doc) throws IOException {
             BufferedImage img = new BufferedImage(80, 40, BufferedImage.TYPE_INT_RGB);
-            return org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory.createFromImage(
-                    doc, img);
+            return org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory.createFromImage(doc, img);
         }
 
         @Test
@@ -543,8 +480,7 @@ class PdfUtilsGapTest {
         void nonNumericThrows() throws IOException {
             try (PDDocument doc = new PDDocument()) {
                 doc.addPage(new PDPage(PDRectangle.A4));
-                assertThrows(
-                        NumberFormatException.class, () -> PdfUtils.pageSize(doc, "widthxheight"));
+                assertThrows(NumberFormatException.class, () -> PdfUtils.pageSize(doc, "widthxheight"));
             }
         }
     }

@@ -42,19 +42,14 @@ class ValkeyConnectionConfigurationTest {
         when(conn.ping()).thenThrow(new RedisSystemException("Error in execution", auth));
 
         long start = System.nanoTime();
-        IllegalStateException ex =
-                assertThrows(
-                        IllegalStateException.class,
-                        () ->
-                                ValkeyConnectionConfiguration.eagerHandshake(
-                                        factory, "valkey", 6379, false));
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> ValkeyConnectionConfiguration.eagerHandshake(factory, "valkey", 6379, false));
         long elapsedMs = (System.nanoTime() - start) / 1_000_000;
 
         verify(factory, times(1)).getConnection();
         verify(conn, times(1)).ping();
-        assertTrue(
-                elapsedMs < 1500,
-                "Auth failure must short-circuit retries; elapsed=" + elapsedMs + " ms");
+        assertTrue(elapsedMs < 1500, "Auth failure must short-circuit retries; elapsed=" + elapsedMs + " ms");
         assertTrue(
                 ex.getMessage().contains("authentication failed"),
                 "Error message must explain the auth failure; got: " + ex.getMessage());
@@ -68,11 +63,8 @@ class ValkeyConnectionConfigurationTest {
         RedisConnection conn = mock(RedisConnection.class);
         when(factory.getConnection()).thenReturn(conn);
         when(conn.ping())
-                .thenThrow(
-                        new RedisSystemException(
-                                "Error in execution",
-                                new RedisCommandExecutionException(
-                                        "NOAUTH Authentication required.")));
+                .thenThrow(new RedisSystemException(
+                        "Error in execution", new RedisCommandExecutionException("NOAUTH Authentication required.")));
 
         assertThrows(
                 IllegalStateException.class,
@@ -87,12 +79,10 @@ class ValkeyConnectionConfigurationTest {
         RedisConnection conn = mock(RedisConnection.class);
         when(factory.getConnection()).thenReturn(conn);
         when(conn.ping())
-                .thenThrow(
-                        new RedisSystemException(
-                                "Error in execution",
-                                new RedisCommandExecutionException(
-                                        "NOPERM this user has no permissions to run the 'ping'"
-                                                + " command")));
+                .thenThrow(new RedisSystemException(
+                        "Error in execution",
+                        new RedisCommandExecutionException(
+                                "NOPERM this user has no permissions to run the 'ping'" + " command")));
 
         assertThrows(
                 IllegalStateException.class,
@@ -103,54 +93,39 @@ class ValkeyConnectionConfigurationTest {
     @Test
     @DisplayName("isAuthFailure - direct RedisCommandExecutionException with auth prefix")
     void isAuthFailure_directRedisCommandExecutionException() {
-        assertTrue(
-                ValkeyConnectionConfiguration.isAuthFailure(
-                        new RedisCommandExecutionException("WRONGPASS bad password")));
-        assertTrue(
-                ValkeyConnectionConfiguration.isAuthFailure(
-                        new RedisCommandExecutionException("NOAUTH required")));
-        assertTrue(
-                ValkeyConnectionConfiguration.isAuthFailure(
-                        new RedisCommandExecutionException("NOPERM denied")));
+        assertTrue(ValkeyConnectionConfiguration.isAuthFailure(
+                new RedisCommandExecutionException("WRONGPASS bad password")));
+        assertTrue(ValkeyConnectionConfiguration.isAuthFailure(new RedisCommandExecutionException("NOAUTH required")));
+        assertTrue(ValkeyConnectionConfiguration.isAuthFailure(new RedisCommandExecutionException("NOPERM denied")));
     }
 
     @Test
     @DisplayName("isAuthFailure - wrapped inside RedisSystemException (production path)")
     void isAuthFailure_wrappedBySpring() {
-        assertTrue(
-                ValkeyConnectionConfiguration.isAuthFailure(
-                        new RedisSystemException(
-                                "Error in execution",
-                                new RedisCommandExecutionException("WRONGPASS bad password"))));
+        assertTrue(ValkeyConnectionConfiguration.isAuthFailure(new RedisSystemException(
+                "Error in execution", new RedisCommandExecutionException("WRONGPASS bad password"))));
     }
 
     @Test
     @DisplayName("isAuthFailure - connection errors do NOT count as auth failures")
     void isAuthFailure_connectionErrorReturnsFalse() {
-        assertFalse(
-                ValkeyConnectionConfiguration.isAuthFailure(
-                        new RedisSystemException(
-                                "Redis connection failed",
-                                new io.lettuce.core.RedisConnectionException(
-                                        "Connection refused"))));
-        assertFalse(
-                ValkeyConnectionConfiguration.isAuthFailure(
-                        new IllegalStateException("Valkey PING returned 'foo' (expected PONG)")));
+        assertFalse(ValkeyConnectionConfiguration.isAuthFailure(new RedisSystemException(
+                "Redis connection failed", new io.lettuce.core.RedisConnectionException("Connection refused"))));
+        assertFalse(ValkeyConnectionConfiguration.isAuthFailure(
+                new IllegalStateException("Valkey PING returned 'foo' (expected PONG)")));
     }
 
     @Test
     @DisplayName("bad PONG (protocol error) is not an auth failure")
     void unexpectedPong_isNotAuthFailure() {
-        assertFalse(
-                ValkeyConnectionConfiguration.isAuthFailure(
-                        new IllegalStateException("Valkey PING returned 'bar' (expected PONG)")));
+        assertFalse(ValkeyConnectionConfiguration.isAuthFailure(
+                new IllegalStateException("Valkey PING returned 'bar' (expected PONG)")));
     }
 
     @Test
     @DisplayName("TLS on, skipCertVerification=false → useSsl + verifyPeer=FULL (default)")
     void tls_defaultEnforcesFullPeerVerification() {
-        LettuceClientConfiguration cfg =
-                ValkeyConnectionConfiguration.buildClientConfiguration(true, false);
+        LettuceClientConfiguration cfg = ValkeyConnectionConfiguration.buildClientConfiguration(true, false);
         assertTrue(cfg.isUseSsl(), "TLS must be enabled");
         assertSame(SslVerifyMode.FULL, cfg.getVerifyMode());
         assertTrue(cfg.isVerifyPeer());
@@ -159,8 +134,7 @@ class ValkeyConnectionConfigurationTest {
     @Test
     @DisplayName("TLS on, skipCertVerification=true → verifyPeer=NONE (dev override)")
     void tls_skipCertVerificationOptOut() {
-        LettuceClientConfiguration cfg =
-                ValkeyConnectionConfiguration.buildClientConfiguration(true, true);
+        LettuceClientConfiguration cfg = ValkeyConnectionConfiguration.buildClientConfiguration(true, true);
         assertTrue(cfg.isUseSsl());
         assertSame(SslVerifyMode.NONE, cfg.getVerifyMode());
     }
@@ -168,8 +142,7 @@ class ValkeyConnectionConfigurationTest {
     @Test
     @DisplayName("TLS off → no SSL, verify flag default (skipCertVerification ignored)")
     void noTls_ignoresSkipFlag() {
-        LettuceClientConfiguration cfg =
-                ValkeyConnectionConfiguration.buildClientConfiguration(false, true);
+        LettuceClientConfiguration cfg = ValkeyConnectionConfiguration.buildClientConfiguration(false, true);
         assertFalse(cfg.isUseSsl());
     }
 
@@ -191,13 +164,15 @@ class ValkeyConnectionConfigurationTest {
         @Test
         @DisplayName("missing port defaults to 6379")
         void defaultPort() {
-            assertEquals(6379, ValkeyConnectionConfiguration.parseUrl("redis://host").port());
+            assertEquals(
+                    6379, ValkeyConnectionConfiguration.parseUrl("redis://host").port());
         }
 
         @Test
         @DisplayName("rediss:// scheme selects TLS")
         void redissSelectsTls() {
-            assertTrue(ValkeyConnectionConfiguration.parseUrl("rediss://host:6379").tls());
+            assertTrue(
+                    ValkeyConnectionConfiguration.parseUrl("rediss://host:6379").tls());
         }
 
         @Test
@@ -245,28 +220,22 @@ class ValkeyConnectionConfigurationTest {
         @DisplayName("blank url throws with a backplane-config message")
         void blankUrlThrows() {
             IllegalStateException ex =
-                    assertThrows(
-                            IllegalStateException.class,
-                            () -> ValkeyConnectionConfiguration.parseUrl("   "));
+                    assertThrows(IllegalStateException.class, () -> ValkeyConnectionConfiguration.parseUrl("   "));
             assertTrue(ex.getMessage().contains("cluster.valkey.url must be set"));
         }
 
         @Test
         @DisplayName("null url throws")
         void nullUrlThrows() {
-            assertThrows(
-                    IllegalStateException.class,
-                    () -> ValkeyConnectionConfiguration.parseUrl(null));
+            assertThrows(IllegalStateException.class, () -> ValkeyConnectionConfiguration.parseUrl(null));
         }
 
         @Test
         @DisplayName("url with no host throws a clear error (scheme-less host:port pitfall)")
         void noHostThrows() {
             // "localhost:6379" parses 'localhost' as the scheme, leaving no authority/host.
-            IllegalStateException ex =
-                    assertThrows(
-                            IllegalStateException.class,
-                            () -> ValkeyConnectionConfiguration.parseUrl("localhost:6379"));
+            IllegalStateException ex = assertThrows(
+                    IllegalStateException.class, () -> ValkeyConnectionConfiguration.parseUrl("localhost:6379"));
             assertTrue(
                     ex.getMessage().contains("has no host"),
                     "message must name the missing host; got: " + ex.getMessage());
@@ -277,20 +246,16 @@ class ValkeyConnectionConfigurationTest {
         void nonNumericPortHasNoHost() {
             // java.net.URI does not throw on a bad port; it falls back to registry authority and
             // reports host=null, so this must surface as the clear no-host error, not a NPE later.
-            IllegalStateException ex =
-                    assertThrows(
-                            IllegalStateException.class,
-                            () -> ValkeyConnectionConfiguration.parseUrl("redis://host:notaport"));
+            IllegalStateException ex = assertThrows(
+                    IllegalStateException.class, () -> ValkeyConnectionConfiguration.parseUrl("redis://host:notaport"));
             assertTrue(ex.getMessage().contains("has no host"));
         }
 
         @Test
         @DisplayName("syntactically invalid uri throws with the offending url")
         void invalidUriThrows() {
-            IllegalStateException ex =
-                    assertThrows(
-                            IllegalStateException.class,
-                            () -> ValkeyConnectionConfiguration.parseUrl("redis://ho st:6379"));
+            IllegalStateException ex = assertThrows(
+                    IllegalStateException.class, () -> ValkeyConnectionConfiguration.parseUrl("redis://ho st:6379"));
             assertTrue(ex.getMessage().contains("not a valid URI"));
             assertTrue(ex.getMessage().contains("redis://ho st:6379"));
         }

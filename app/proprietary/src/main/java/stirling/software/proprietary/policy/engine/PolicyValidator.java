@@ -55,13 +55,9 @@ public class PolicyValidator {
             throw new IllegalArgumentException("a policy supports at most one output");
         }
         for (PipelineInput input : policy.inputs()) {
-            Source source =
-                    sourceStore
-                            .get(input.sourceId())
-                            .orElseThrow(
-                                    () ->
-                                            new IllegalArgumentException(
-                                                    "unknown source: " + input.sourceId()));
+            Source source = sourceStore
+                    .get(input.sourceId())
+                    .orElseThrow(() -> new IllegalArgumentException("unknown source: " + input.sourceId()));
             if (input.trigger() != null) {
                 validateTrigger(policy, input, source);
             }
@@ -86,12 +82,11 @@ public class PolicyValidator {
         if (!ToolChainValidator.hasErrors(diagnostics)) {
             return;
         }
-        String reasons =
-                diagnostics.stream()
-                        .filter(d -> d.severity() == ToolDiagnostic.Severity.ERROR)
-                        .map(d -> "step " + (d.stepIndex() + 1) + ": " + d.message())
-                        .reduce((a, b) -> a + "; " + b)
-                        .orElse("");
+        String reasons = diagnostics.stream()
+                .filter(d -> d.severity() == ToolDiagnostic.Severity.ERROR)
+                .map(d -> "step " + (d.stepIndex() + 1) + ": " + d.message())
+                .reduce((a, b) -> a + "; " + b)
+                .orElse("");
         throw new IllegalArgumentException("pipeline steps cannot run in this order - " + reasons);
     }
 
@@ -102,13 +97,9 @@ public class PolicyValidator {
      * @param sourceFormat the format entering the first step, or null when unknown
      */
     public List<ToolDiagnostic> diagnoseChain(List<PipelineStep> steps, ToolFormat sourceFormat) {
-        List<ToolChainValidator.Step> chain =
-                steps.stream()
-                        .map(
-                                step ->
-                                        new ToolChainValidator.Step(
-                                                step.operation(), step.parameters()))
-                        .toList();
+        List<ToolChainValidator.Step> chain = steps.stream()
+                .map(step -> new ToolChainValidator.Step(step.operation(), step.parameters()))
+                .toList();
         return toolChainValidator.validate(chain, sourceFormat);
     }
 
@@ -138,11 +129,7 @@ public class PolicyValidator {
         if (!trigger.supportedSourceTypes().isEmpty()
                 && !trigger.supportedSourceTypes().contains(source.type())) {
             throw new IllegalArgumentException(
-                    "trigger '"
-                            + trigger.type()
-                            + "' is not compatible with source type '"
-                            + source.type()
-                            + "'");
+                    "trigger '" + trigger.type() + "' is not compatible with source type '" + source.type() + "'");
         }
         trigger.validate(policy, input);
     }
@@ -163,27 +150,20 @@ public class PolicyValidator {
         return triggers.stream()
                 .filter(trigger -> trigger.type().equals(config.type()))
                 .findFirst()
-                .orElseThrow(
-                        () ->
-                                new IllegalArgumentException(
-                                        "unknown trigger type: " + config.type()));
+                .orElseThrow(() -> new IllegalArgumentException("unknown trigger type: " + config.type()));
     }
 
     private InputSource inputSourceFor(InputSpec spec) {
         return inputSources.stream()
                 .filter(source -> source.supports(spec))
                 .findFirst()
-                .orElseThrow(
-                        () ->
-                                new IllegalArgumentException(
-                                        "unknown input source type: " + spec.type()));
+                .orElseThrow(() -> new IllegalArgumentException("unknown input source type: " + spec.type()));
     }
 
     private PolicyOutputSink outputSinkFor(OutputSpec spec) {
         return outputSinks.stream()
                 .filter(sink -> sink.supports(spec))
                 .findFirst()
-                .orElseThrow(
-                        () -> new IllegalArgumentException("unknown output type: " + spec.type()));
+                .orElseThrow(() -> new IllegalArgumentException("unknown output type: " + spec.type()));
     }
 }

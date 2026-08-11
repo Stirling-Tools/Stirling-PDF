@@ -25,10 +25,13 @@ public class PdfJsonDocumentMetadata {
     /** Indicates that images should be requested lazily via the page endpoint. */
     private Boolean lazyImages;
 
-    @Builder.Default private List<PdfJsonFont> fonts = new ArrayList<>();
+    @Builder.Default
+    private List<PdfJsonFont> fonts = new ArrayList<>();
 
-    @Builder.Default private List<PdfJsonPageDimension> pageDimensions = new ArrayList<>();
+    @Builder.Default
+    private List<PdfJsonPageDimension> pageDimensions = new ArrayList<>();
 
     /** Form fields (AcroForm) at document level */
-    @Builder.Default private List<PdfJsonFormField> formFields = new ArrayList<>();
+    @Builder.Default
+    private List<PdfJsonFormField> formFields = new ArrayList<>();
 }

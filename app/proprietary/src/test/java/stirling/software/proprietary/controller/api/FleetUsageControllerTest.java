@@ -28,9 +28,14 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 @ExtendWith(MockitoExtension.class)
 class FleetUsageControllerTest {
 
-    @Mock private PersistentAuditEventRepository auditRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private AuditConfigurationProperties auditConfig;
+    @Mock
+    private PersistentAuditEventRepository auditRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private AuditConfigurationProperties auditConfig;
 
     private FleetUsageController controller;
 
@@ -64,10 +69,8 @@ class FleetUsageControllerTest {
         assertThat(stats.activeThisMonth()).isNull();
         assertThat(stats.pdfsProcessed()).isNull();
         verify(auditRepository, never())
-                .countDistinctPrincipalsBySourceExcludingTypeAfter(
-                        any(), any(), any(Instant.class));
-        verify(auditRepository, never())
-                .countByTypeInAndSourceAndTimestampAfter(anyList(), any(), any(Instant.class));
+                .countDistinctPrincipalsBySourceExcludingTypeAfter(any(), any(), any(Instant.class));
+        verify(auditRepository, never()).countByTypeInAndSourceAndTimestampAfter(anyList(), any(), any(Instant.class));
     }
 
     @Test
@@ -78,8 +81,7 @@ class FleetUsageControllerTest {
         when(auditRepository.countDistinctPrincipalsBySourceExcludingTypeAfter(
                         eq("WEB"), eq("UI_DATA"), any(Instant.class)))
                 .thenReturn(4L);
-        when(auditRepository.countByTypeInAndSourceAndTimestampAfter(
-                        anyList(), eq("WEB"), any(Instant.class)))
+        when(auditRepository.countByTypeInAndSourceAndTimestampAfter(anyList(), eq("WEB"), any(Instant.class)))
                 .thenReturn(1234L);
 
         FleetUsageStats stats = controller.fleetStats();
@@ -97,8 +99,7 @@ class FleetUsageControllerTest {
         when(auditRepository.countDistinctPrincipalsBySourceExcludingTypeAfter(
                         eq("WEB"), eq("UI_DATA"), any(Instant.class)))
                 .thenReturn(9L);
-        when(auditRepository.countByTypeInAndSourceAndTimestampAfter(
-                        anyList(), eq("WEB"), any(Instant.class)))
+        when(auditRepository.countByTypeInAndSourceAndTimestampAfter(anyList(), eq("WEB"), any(Instant.class)))
                 .thenReturn(50L);
 
         FleetUsageStats stats = controller.fleetStats();

@@ -122,42 +122,35 @@ public class ConvertPDFToPDFA {
     private static final COSName COS_UF = COSName.getPDFName("UF");
     private static final String AF_RELATIONSHIP_UNSPECIFIED = "Unspecified";
 
-    private static final Map<String, String> MIME_TYPE_MAP =
-            Map.ofEntries(
-                    Map.entry(".xml", "application/xml"),
-                    Map.entry(".json", "application/json"),
-                    Map.entry(".txt", "text/plain"),
-                    Map.entry(".csv", "text/csv"),
-                    Map.entry(".pdf", "application/pdf"),
-                    Map.entry(".png", "image/png"),
-                    Map.entry(".jpg", "image/jpeg"),
-                    Map.entry(".jpeg", "image/jpeg"),
-                    Map.entry(".gif", "image/gif"),
-                    Map.entry(".html", "text/html"),
-                    Map.entry(".htm", "text/html"),
-                    Map.entry(".zip", "application/zip"),
-                    Map.entry(".doc", "application/msword"),
-                    Map.entry(
-                            ".docx",
-                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
-                    Map.entry(".xls", "application/vnd.ms-excel"),
-                    Map.entry(
-                            ".xlsx",
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-                    Map.entry(".ppt", "application/vnd.ms-powerpoint"),
-                    Map.entry(
-                            ".pptx",
-                            "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
-                    Map.entry(".svg", "image/svg+xml"),
-                    Map.entry(".webp", "image/webp"),
-                    Map.entry(".mp3", "audio/mpeg"),
-                    Map.entry(".mp4", "video/mp4"),
-                    Map.entry(".wav", "audio/wav"),
-                    Map.entry(".avi", "video/x-msvideo"),
-                    Map.entry(".tar", "application/x-tar"),
-                    Map.entry(".gz", "application/gzip"),
-                    Map.entry(".rar", "application/vnd.rar"),
-                    Map.entry(".7z", "application/x-7z-compressed"));
+    private static final Map<String, String> MIME_TYPE_MAP = Map.ofEntries(
+            Map.entry(".xml", "application/xml"),
+            Map.entry(".json", "application/json"),
+            Map.entry(".txt", "text/plain"),
+            Map.entry(".csv", "text/csv"),
+            Map.entry(".pdf", "application/pdf"),
+            Map.entry(".png", "image/png"),
+            Map.entry(".jpg", "image/jpeg"),
+            Map.entry(".jpeg", "image/jpeg"),
+            Map.entry(".gif", "image/gif"),
+            Map.entry(".html", "text/html"),
+            Map.entry(".htm", "text/html"),
+            Map.entry(".zip", "application/zip"),
+            Map.entry(".doc", "application/msword"),
+            Map.entry(".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+            Map.entry(".xls", "application/vnd.ms-excel"),
+            Map.entry(".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+            Map.entry(".ppt", "application/vnd.ms-powerpoint"),
+            Map.entry(".pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
+            Map.entry(".svg", "image/svg+xml"),
+            Map.entry(".webp", "image/webp"),
+            Map.entry(".mp3", "audio/mpeg"),
+            Map.entry(".mp4", "video/mp4"),
+            Map.entry(".wav", "audio/wav"),
+            Map.entry(".avi", "video/x-msvideo"),
+            Map.entry(".tar", "application/x-tar"),
+            Map.entry(".gz", "application/gzip"),
+            Map.entry(".rar", "application/vnd.rar"),
+            Map.entry(".7z", "application/x-7z-compressed"));
 
     private static final String DEFAULT_MIME_TYPE = "application/octet-stream";
 
@@ -184,8 +177,7 @@ public class ConvertPDFToPDFA {
                         // If CIDSet exists but may be invalid, remove it to avoid validation errors
                         // This is safer than trying to fix incomplete CIDSet streams
                         fontDict.removeItem(COSName.getPDFName("CIDSet"));
-                        log.debug(
-                                "Removed potentially invalid CIDSet from font {}", font.getName());
+                        log.debug("Removed potentially invalid CIDSet from font {}", font.getName());
                     }
                 } catch (Exception e) {
                     log.debug("Error processing CIDSet for font: {}", e.getMessage());
@@ -203,14 +195,10 @@ public class ConvertPDFToPDFA {
                 out.write(pdfBytes);
             }
 
-            ValidationResult validationResult =
-                    performComprehensivePdfAValidation(tempPdfPath, profile);
+            ValidationResult validationResult = performComprehensivePdfAValidation(tempPdfPath, profile);
 
             if (validationResult.isValid()) {
-                log.info(
-                        "PDF/A validation passed for {} using {}",
-                        profile.getDisplayName(),
-                        method);
+                log.info("PDF/A validation passed for {} using {}", profile.getDisplayName(), method);
             } else {
                 log.warn(
                         "PDF/A validation warning for {} using {}: {}",
@@ -219,11 +207,7 @@ public class ConvertPDFToPDFA {
                         buildComprehensiveValidationMessage(validationResult, profile));
             }
         } catch (Exception e) {
-            log.warn(
-                    "PDF/A validation warning for {} using {}: {}",
-                    profile.getDisplayName(),
-                    method,
-                    e.getMessage());
+            log.warn("PDF/A validation warning for {} using {}: {}", profile.getDisplayName(), method, e.getMessage());
         } finally {
             if (tempPdfPath != null) {
                 try {
@@ -235,8 +219,8 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private static ValidationResult performComprehensivePdfAValidation(
-            Path pdfPath, PdfaProfile profile) throws IOException {
+    private static ValidationResult performComprehensivePdfAValidation(Path pdfPath, PdfaProfile profile)
+            throws IOException {
         Optional<Format> format = profile.preflightFormat();
         if (format.isEmpty()) {
             // For profiles without preflight support, perform basic structure validation
@@ -248,8 +232,7 @@ public class ConvertPDFToPDFA {
 
             PreflightDocument document = parsePreflightDocument(parser, format.get(), profile);
             if (document == null) {
-                throw new IOException(
-                        "PDF/A preflight returned no document for " + profile.getDisplayName());
+                throw new IOException("PDF/A preflight returned no document for " + profile.getDisplayName());
             }
 
             try (PreflightDocument closeableDocument = document) {
@@ -258,56 +241,46 @@ public class ConvertPDFToPDFA {
         } catch (SyntaxValidationException e) {
             return e.getResult();
         } catch (ValidationException e) {
-            throw new IOException(
-                    "PDF/A preflight validation failed for " + profile.getDisplayName(), e);
+            throw new IOException("PDF/A preflight validation failed for " + profile.getDisplayName(), e);
         }
     }
 
-    private static ValidationResult performBasicPdfAValidation(Path pdfPath, PdfaProfile profile)
-            throws IOException {
+    private static ValidationResult performBasicPdfAValidation(Path pdfPath, PdfaProfile profile) throws IOException {
         try (PDDocument doc = Loader.loadPDF(pdfPath.toFile())) {
             ValidationResult result = new ValidationResult(true);
 
             float version = doc.getVersion();
             float expectedVersion = profile.getPart() == 1 ? 1.4f : 1.7f;
             if (version < expectedVersion) {
-                result.addError(
-                        new ValidationError(
-                                "PDF_VERSION",
-                                "PDF version "
-                                        + version
-                                        + " is below required "
-                                        + expectedVersion
-                                        + " for "
-                                        + profile.getDisplayName()));
+                result.addError(new ValidationError(
+                        "PDF_VERSION",
+                        "PDF version "
+                                + version
+                                + " is below required "
+                                + expectedVersion
+                                + " for "
+                                + profile.getDisplayName()));
             }
 
             PDDocumentCatalog catalog = doc.getDocumentCatalog();
             if (catalog.getMetadata() == null) {
                 result.addError(
-                        new ValidationError(
-                                "MISSING_XMP",
-                                "XMP metadata is required for " + profile.getDisplayName()));
+                        new ValidationError("MISSING_XMP", "XMP metadata is required for " + profile.getDisplayName()));
             }
 
             if (catalog.getOutputIntents().isEmpty()) {
-                result.addError(
-                        new ValidationError(
-                                "MISSING_OUTPUT_INTENT",
-                                "Output intent (ICC profile) is required for "
-                                        + profile.getDisplayName()));
+                result.addError(new ValidationError(
+                        "MISSING_OUTPUT_INTENT",
+                        "Output intent (ICC profile) is required for " + profile.getDisplayName()));
             }
 
             return result;
         }
     }
 
-    private static String buildComprehensiveValidationMessage(
-            ValidationResult result, PdfaProfile profile) {
+    private static String buildComprehensiveValidationMessage(ValidationResult result, PdfaProfile profile) {
         if (result == null) {
-            return "PDF/A validation failed for "
-                    + profile.getDisplayName()
-                    + ": no validation result available";
+            return "PDF/A validation failed for " + profile.getDisplayName() + ": no validation result available";
         }
 
         List<ValidationError> errors = result.getErrorsList();
@@ -322,18 +295,11 @@ public class ConvertPDFToPDFA {
 
         if (errors != null && !errors.isEmpty()) {
             message.append(" ERRORS: ");
-            message.append(
-                    errors.stream()
-                            .limit(5)
-                            .map(
-                                    error ->
-                                            (error.getErrorCode() != null
-                                                            ? error.getErrorCode()
-                                                            : "UNKNOWN")
-                                                    + (error.getDetails() != null
-                                                            ? ": " + error.getDetails()
-                                                            : ""))
-                            .collect(Collectors.joining("; ")));
+            message.append(errors.stream()
+                    .limit(5)
+                    .map(error -> (error.getErrorCode() != null ? error.getErrorCode() : "UNKNOWN")
+                            + (error.getDetails() != null ? ": " + error.getDetails() : ""))
+                    .collect(Collectors.joining("; ")));
         }
 
         return message.toString();
@@ -344,15 +310,13 @@ public class ConvertPDFToPDFA {
             return;
         }
         try (Stream<Path> stream = Files.walk(directory)) {
-            stream.sorted(Comparator.reverseOrder())
-                    .forEach(
-                            path -> {
-                                try {
-                                    Files.deleteIfExists(path);
-                                } catch (IOException e) {
-                                    log.warn("Failed to delete temporary file: {}", path, e);
-                                }
-                            });
+            stream.sorted(Comparator.reverseOrder()).forEach(path -> {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException e) {
+                    log.warn("Failed to delete temporary file: {}", path, e);
+                }
+            });
         } catch (IOException e) {
             log.warn("Failed to clean temporary directory: {}", directory, e);
         }
@@ -388,8 +352,7 @@ public class ConvertPDFToPDFA {
 
         // Font handling optimized for PDF/A CIDSet compliance
         command.add("-dEmbedAllFonts=true");
-        command.add(
-                "-dSubsetFonts=true"); // Enable subsetting to generate proper CIDSet streams for
+        command.add("-dSubsetFonts=true"); // Enable subsetting to generate proper CIDSet streams for
         // PDF/A-1
         command.add("-dCompressFonts=true");
         command.add("-dNOSUBSTFONTS=false"); // Allow font substitution for problematic fonts
@@ -404,13 +367,12 @@ public class ConvertPDFToPDFA {
         return command;
     }
 
-    private static PreflightDocument parsePreflightDocument(
-            PreflightParser parser, Format format, PdfaProfile profile) throws IOException {
+    private static PreflightDocument parsePreflightDocument(PreflightParser parser, Format format, PdfaProfile profile)
+            throws IOException {
         try {
             PreflightConfiguration config = PreflightConfiguration.createPdfA1BConfiguration();
             if (profile.getPart() != 1) {
-                log.debug(
-                        "Using PDF/A-1B configuration for PDF/A-{} validation", profile.getPart());
+                log.debug("Using PDF/A-1B configuration for PDF/A-{} validation", profile.getPart());
             }
 
             return (PreflightDocument) parser.parse(format, config);
@@ -418,9 +380,7 @@ public class ConvertPDFToPDFA {
             throw new IOException(buildComprehensiveValidationMessage(e.getResult(), profile), e);
         } catch (ClassCastException e) {
             throw new IOException(
-                    "PDF/A preflight did not produce a PreflightDocument for "
-                            + profile.getDisplayName(),
-                    e);
+                    "PDF/A preflight did not produce a PreflightDocument for " + profile.getDisplayName(), e);
         }
     }
 
@@ -430,15 +390,13 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private static Path createPdfaDefFile(
-            Path workingDir, ColorProfiles colorProfiles, PdfaProfile profile) throws IOException {
+    private static Path createPdfaDefFile(Path workingDir, ColorProfiles colorProfiles, PdfaProfile profile)
+            throws IOException {
         Path pdfaDefFile = workingDir.resolve("PDFA_def.ps");
 
         String title = "Converted to " + profile.getDisplayName();
         String rgbProfilePath = colorProfiles.rgb().toAbsolutePath().toString().replace("\\", "/");
-        String pdfaDefContent =
-                String.format(
-                        """
+        String pdfaDefContent = String.format("""
                 %% This is a sample prefix file for creating a PDF/A document.
                 %% Feel free to modify entries marked with "Customize".
 
@@ -464,19 +422,14 @@ public class ConvertPDFToPDFA {
                   /RegistryName (http://www.color.org)
                 >> /PUT pdfmark
                 [{Catalog} <</OutputIntents [ {OutputIntent_PDFA} ]>> /PUT pdfmark
-                """,
-                        title, rgbProfilePath);
+                """, title, rgbProfilePath);
 
         Files.writeString(pdfaDefFile, pdfaDefContent);
         return pdfaDefFile;
     }
 
     private static List<String> buildGhostscriptCommandX(
-            Path inputPdf,
-            Path outputPdf,
-            ColorProfiles colorProfiles,
-            Path workingDir,
-            PdfXProfile profile) {
+            Path inputPdf, Path outputPdf, ColorProfiles colorProfiles, Path workingDir, PdfXProfile profile) {
 
         List<String> command = new ArrayList<>(25);
         command.add("gs");
@@ -514,8 +467,8 @@ public class ConvertPDFToPDFA {
         return command;
     }
 
-    private static void embedMissingFonts(
-            PDDocument loDoc, PDDocument baseDoc, Set<String> missingFonts) throws IOException {
+    private static void embedMissingFonts(PDDocument loDoc, PDDocument baseDoc, Set<String> missingFonts)
+            throws IOException {
         List<PDPage> loPages = new ArrayList<>(loDoc.getNumberOfPages());
         loDoc.getPages().forEach(loPages::add);
         List<PDPage> basePages = new ArrayList<>(baseDoc.getNumberOfPages());
@@ -582,12 +535,10 @@ public class ConvertPDFToPDFA {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a PDF to a PDF/A or PDF/X",
-            description =
-                    "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript"
-                            + " (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for"
-                            + " long-term archiving, while PDF/X is optimized for print production.")
-    public ResponseEntity<Resource> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
-            throws Exception {
+            description = "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript"
+                    + " (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for"
+                    + " long-term archiving, while PDF/X is optimized for print production.")
+    public ResponseEntity<Resource> pdfToPdfA(@ModelAttribute PdfToPdfARequest request) throws Exception {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
 
@@ -603,8 +554,7 @@ public class ConvertPDFToPDFA {
         if (isPdfX) {
             return handlePdfXConversion(inputFile, outputFormat);
         } else {
-            return handlePdfAConversion(
-                    inputFile, outputFormat, request.getStrict() != null && request.getStrict());
+            return handlePdfAConversion(inputFile, outputFormat, request.getStrict() != null && request.getStrict());
         }
     }
 
@@ -622,18 +572,17 @@ public class ConvertPDFToPDFA {
         return missing;
     }
 
-    private ResponseEntity<Resource> handlePdfXConversion(
-            MultipartFile inputFile, String outputFormat) throws Exception {
+    private ResponseEntity<Resource> handlePdfXConversion(MultipartFile inputFile, String outputFormat)
+            throws Exception {
         PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
 
         String originalFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFileName == null || originalFileName.trim().isEmpty()) {
             originalFileName = "output.pdf";
         }
-        String baseFileName =
-                originalFileName.contains(".")
-                        ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
-                        : originalFileName;
+        String baseFileName = originalFileName.contains(".")
+                ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
+                : originalFileName;
 
         Path workingDir = Files.createTempDirectory("pdfx_conversion_");
         Path inputPath = workingDir.resolve("input.pdf");
@@ -672,9 +621,8 @@ public class ConvertPDFToPDFA {
 
     private boolean isGhostscriptAvailable() {
         try {
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(Arrays.asList("gs", "--version"));
+            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    .runCommandWithOutputHandling(Arrays.asList("gs", "--version"));
             return result.getRc() == 0;
         } catch (Exception e) {
             log.debug("Ghostscript availability check failed", e);
@@ -699,11 +647,9 @@ public class ConvertPDFToPDFA {
                     if (descriptor == null) continue;
 
                     // Check if this is a Type1 font
-                    boolean isType1 =
-                            isType1Font(font)
-                                    || descriptor.getFontFile() != null
-                                    || (descriptor.getFontFile2() == null
-                                            && descriptor.getFontFile3() == null);
+                    boolean isType1 = isType1Font(font)
+                            || descriptor.getFontFile() != null
+                            || (descriptor.getFontFile2() == null && descriptor.getFontFile3() == null);
 
                     if (isType1) {
                         COSDictionary descDict = descriptor.getCOSObject();
@@ -711,10 +657,9 @@ public class ConvertPDFToPDFA {
 
                         // Check if font is embedded and if CharSet might be invalid
                         boolean fontEmbedded = font.isEmbedded();
-                        boolean hasFontFile =
-                                descriptor.getFontFile() != null
-                                        || descriptor.getFontFile2() != null
-                                        || descriptor.getFontFile3() != null;
+                        boolean hasFontFile = descriptor.getFontFile() != null
+                                || descriptor.getFontFile2() != null
+                                || descriptor.getFontFile3() != null;
 
                         // For PDF/A compliance: if CharSet exists but font is subsetted or
                         // we can't verify it matches the font file, remove it to avoid validation
@@ -731,15 +676,12 @@ public class ConvertPDFToPDFA {
                             } else if (!hasFontFile && fontEmbedded) {
                                 // Font is embedded but we can't verify CharSet, remove it
                                 descDict.removeItem(COSName.CHAR_SET);
-                                log.debug(
-                                        "Removed unverifiable CharSet from embedded Type1 font: {}",
-                                        fontNameStr);
+                                log.debug("Removed unverifiable CharSet from embedded Type1 font: {}", fontNameStr);
                             }
-                        } else if (existingCharSet == null || existingCharSet.trim().isEmpty()) {
+                        } else if (existingCharSet == null
+                                || existingCharSet.trim().isEmpty()) {
                             // Only add CharSet if font is not subsetted and we can verify it
-                            if (!fontNameStr.contains("+")
-                                    && !fontNameStr.contains("Subset")
-                                    && hasFontFile) {
+                            if (!fontNameStr.contains("+") && !fontNameStr.contains("Subset") && hasFontFile) {
                                 String glyphSet = buildStandardType1GlyphSet();
                                 if (!glyphSet.isEmpty()) {
                                     descDict.setString(COSName.CHAR_SET, glyphSet);
@@ -752,16 +694,13 @@ public class ConvertPDFToPDFA {
                         }
                     }
                 } catch (Exception e) {
-                    log.warn(
-                            "Error processing font descriptor for page resource: {}",
-                            e.getMessage());
+                    log.warn("Error processing font descriptor for page resource: {}", e.getMessage());
                 }
             }
         }
     }
 
-    private static void importFlattenedImages(PDDocument loDoc, PDDocument baseDoc)
-            throws IOException {
+    private static void importFlattenedImages(PDDocument loDoc, PDDocument baseDoc) throws IOException {
         List<PDPage> loPages = new ArrayList<>(loDoc.getNumberOfPages());
         loDoc.getPages().forEach(loPages::add);
         List<PDPage> basePages = new ArrayList<>(baseDoc.getNumberOfPages());
@@ -837,11 +776,7 @@ public class ConvertPDFToPDFA {
      * @return the final PDF/A bytes
      */
     private byte[] convertToPdfA(
-            Path basePdfPath,
-            Path loPdfPath,
-            int pdfaPart,
-            Set<String> missingFonts,
-            boolean importImages)
+            Path basePdfPath, Path loPdfPath, int pdfaPart, Set<String> missingFonts, boolean importImages)
             throws Exception {
         try (PDDocument baseDoc = Loader.loadPDF(basePdfPath.toFile())) {
 
@@ -876,8 +811,7 @@ public class ConvertPDFToPDFA {
 
             if (pdfaPart == 1) {
                 COSBase group = dict.getDictionaryObject(COSName.GROUP);
-                if (group instanceof COSDictionary gDict
-                        && COSName.TRANSPARENCY.equals(gDict.getCOSName(COSName.S))) {
+                if (group instanceof COSDictionary gDict && COSName.TRANSPARENCY.equals(gDict.getCOSName(COSName.S))) {
                     dict.removeItem(COSName.GROUP);
                 }
 
@@ -886,8 +820,7 @@ public class ConvertPDFToPDFA {
                 dict.removeItem(COSName.getPDFName("ca"));
             }
 
-            if (dict.containsKey(COSName.INTERPOLATE)
-                    && dict.getBoolean(COSName.INTERPOLATE, true)) {
+            if (dict.containsKey(COSName.INTERPOLATE) && dict.getBoolean(COSName.INTERPOLATE, true)) {
                 dict.setBoolean(COSName.INTERPOLATE, false);
             }
 
@@ -1215,8 +1148,8 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private static void processEmbeddedFilesForAFRelationship(
-            PDEmbeddedFilesNameTreeNode embeddedFiles) throws IOException {
+    private static void processEmbeddedFilesForAFRelationship(PDEmbeddedFilesNameTreeNode embeddedFiles)
+            throws IOException {
         Map<String, PDComplexFileSpecification> fileSpecs = embeddedFiles.getNames();
         if (fileSpecs == null) return;
 
@@ -1230,8 +1163,7 @@ public class ConvertPDFToPDFA {
 
     private static boolean isTransparencyGroup(COSDictionary dict) {
         COSBase g = dict.getDictionaryObject(COSName.GROUP);
-        return g instanceof COSDictionary gd
-                && COSName.TRANSPARENCY.equals(gd.getCOSName(COSName.S));
+        return g instanceof COSDictionary gd && COSName.TRANSPARENCY.equals(gd.getCOSName(COSName.S));
     }
 
     private static boolean hasTransparentImages(PDDocument doc) {
@@ -1245,8 +1177,7 @@ public class ConvertPDFToPDFA {
                         COSDictionary dict = img.getCOSObject();
                         if (dict.containsKey(COSName.SMASK)) return true;
                         COSBase g = dict.getDictionaryObject(COSName.GROUP);
-                        if (g instanceof COSDictionary gd
-                                && COSName.TRANSPARENCY.equals(gd.getCOSName(COSName.S))) {
+                        if (g instanceof COSDictionary gd && COSName.TRANSPARENCY.equals(gd.getCOSName(COSName.S))) {
                             return true;
                         }
                         if (dict.getBoolean(COSName.INTERPOLATE, false)) return true;
@@ -1268,44 +1199,32 @@ public class ConvertPDFToPDFA {
                 for (PDAnnotation annot : annotations) {
                     if (ANNOTATION_HIGHLIGHT.equals(annot.getSubtype())
                             && annot instanceof PDAnnotationHighlight highlight) {
-                        float[] colorComponents =
-                                highlight.getColor() != null
-                                        ? highlight.getColor().getComponents()
-                                        : new float[] {1f, 1f, 0f};
-                        Color highlightColor =
-                                new Color(
-                                        colorComponents[0], colorComponents[1], colorComponents[2]);
+                        float[] colorComponents = highlight.getColor() != null
+                                ? highlight.getColor().getComponents()
+                                : new float[] {1f, 1f, 0f};
+                        Color highlightColor = new Color(colorComponents[0], colorComponents[1], colorComponents[2]);
 
                         float[] quadPoints = highlight.getQuadPoints();
                         if (quadPoints != null) {
-                            try (PDPageContentStream cs =
-                                    new PDPageContentStream(
-                                            document,
-                                            page,
-                                            PDPageContentStream.AppendMode.PREPEND,
-                                            true,
-                                            true)) {
+                            try (PDPageContentStream cs = new PDPageContentStream(
+                                    document, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
 
                                 cs.setStrokingColor(highlightColor);
                                 cs.setLineWidth(0.05f);
                                 float spacing = 2f;
                                 for (int i = 0; i < quadPoints.length; i += 8) {
-                                    float minX =
-                                            Math.min(
-                                                    Math.min(quadPoints[i], quadPoints[i + 2]),
-                                                    Math.min(quadPoints[i + 4], quadPoints[i + 6]));
-                                    float maxX =
-                                            Math.max(
-                                                    Math.max(quadPoints[i], quadPoints[i + 2]),
-                                                    Math.max(quadPoints[i + 4], quadPoints[i + 6]));
-                                    float minY =
-                                            Math.min(
-                                                    Math.min(quadPoints[i + 1], quadPoints[i + 3]),
-                                                    Math.min(quadPoints[i + 5], quadPoints[i + 7]));
-                                    float maxY =
-                                            Math.max(
-                                                    Math.max(quadPoints[i + 1], quadPoints[i + 3]),
-                                                    Math.max(quadPoints[i + 5], quadPoints[i + 7]));
+                                    float minX = Math.min(
+                                            Math.min(quadPoints[i], quadPoints[i + 2]),
+                                            Math.min(quadPoints[i + 4], quadPoints[i + 6]));
+                                    float maxX = Math.max(
+                                            Math.max(quadPoints[i], quadPoints[i + 2]),
+                                            Math.max(quadPoints[i + 4], quadPoints[i + 6]));
+                                    float minY = Math.min(
+                                            Math.min(quadPoints[i + 1], quadPoints[i + 3]),
+                                            Math.min(quadPoints[i + 5], quadPoints[i + 7]));
+                                    float maxY = Math.max(
+                                            Math.max(quadPoints[i + 1], quadPoints[i + 3]),
+                                            Math.max(quadPoints[i + 5], quadPoints[i + 7]));
 
                                     float width = maxX - minX;
                                     float height = maxY - minY;
@@ -1330,14 +1249,12 @@ public class ConvertPDFToPDFA {
                         COSDictionary pageDict = page.getCOSObject();
 
                         if (pageDict.containsKey(COSName.GROUP)) {
-                            COSDictionary groupDict =
-                                    (COSDictionary) pageDict.getDictionaryObject(COSName.GROUP);
+                            COSDictionary groupDict = (COSDictionary) pageDict.getDictionaryObject(COSName.GROUP);
 
                             if (groupDict != null
                                     && COSName.TRANSPARENCY
                                             .getName()
-                                            .equalsIgnoreCase(
-                                                    groupDict.getNameAsString(COSName.S))) {
+                                            .equalsIgnoreCase(groupDict.getNameAsString(COSName.S))) {
                                 pageDict.removeItem(COSName.GROUP);
                             }
                         }
@@ -1345,7 +1262,8 @@ public class ConvertPDFToPDFA {
                 }
             }
             // Save the modified document to a temporary file.
-            File preProcessedFile = Files.createTempFile("preprocessed_", ".pdf").toFile();
+            File preProcessedFile =
+                    Files.createTempFile("preprocessed_", ".pdf").toFile();
             document.save(preProcessedFile);
             return preProcessedFile;
         }
@@ -1376,8 +1294,7 @@ public class ConvertPDFToPDFA {
                                 || existingCharSet.trim().isEmpty()
                                 || "/.notdef".equals(existingCharSet)) {
                             descDict.removeItem(COSName.CHAR_SET);
-                            log.debug(
-                                    "Removed invalid CharSet from Type 1 font: {}", font.getName());
+                            log.debug("Removed invalid CharSet from Type 1 font: {}", font.getName());
                         }
                     }
                 }
@@ -1395,8 +1312,7 @@ public class ConvertPDFToPDFA {
 
         if (ocProps == null) return;
 
-        COSBase ocPropsBase =
-                catalog.getCOSObject().getDictionaryObject(COSName.getPDFName("OCProperties"));
+        COSBase ocPropsBase = catalog.getCOSObject().getDictionaryObject(COSName.getPDFName("OCProperties"));
         if (!(ocPropsBase instanceof COSDictionary ocPropsDict)) return;
         COSBase ocgs = ocPropsDict.getDictionaryObject(COSName.OCGS);
 
@@ -1462,8 +1378,7 @@ public class ConvertPDFToPDFA {
         }
         dcSchema.addCreator(originalCreator);
 
-        PDFAIdentificationSchema pdfaSchema =
-                (PDFAIdentificationSchema) xmp.getSchema(PDFAIdentificationSchema.class);
+        PDFAIdentificationSchema pdfaSchema = (PDFAIdentificationSchema) xmp.getSchema(PDFAIdentificationSchema.class);
         if (pdfaSchema == null) {
             pdfaSchema = xmp.createAndAddPDFAIdentificationSchema();
         }
@@ -1564,14 +1479,12 @@ public class ConvertPDFToPDFA {
 
         try {
             List<String> command =
-                    buildGhostscriptCommand(
-                            inputForGs, outputPdf, colorProfiles, workingDir, profile, pdfaDefFile);
+                    buildGhostscriptCommand(inputForGs, outputPdf, colorProfiles, workingDir, profile, pdfaDefFile);
 
             log.info("Running Ghostscript command: {}", String.join(" ", command));
 
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                            .runCommandWithOutputHandling(command);
+            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                    .runCommandWithOutputHandling(command);
 
             if (result.getRc() != 0) {
                 log.error("Ghostscript failed with output: {}", result.getMessages());
@@ -1614,30 +1527,26 @@ public class ConvertPDFToPDFA {
         Path tempOutputDir = Files.createTempDirectory("output_");
 
         // Determine PDF/A filter based on requested format
-        String pdfFilter =
-                pdfaPart == 2
-                        ? "pdf:writer_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"2\"}}"
-                        : "pdf:writer_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"1\"}}";
+        String pdfFilter = pdfaPart == 2
+                ? "pdf:writer_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"2\"}}"
+                : "pdf:writer_pdf_Export:{\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"1\"}}";
 
         Path libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
         try {
             // Prepare LibreOffice command
-            List<String> command =
-                    new ArrayList<>(
-                            Arrays.asList(
-                                    runtimePathConfig.getSOfficePath(),
-                                    "-env:UserInstallation=" + libreOfficeProfile.toUri(),
-                                    "--headless",
-                                    "--nologo",
-                                    "--convert-to",
-                                    pdfFilter,
-                                    "--outdir",
-                                    tempOutputDir.toString(),
-                                    tempInputFile.toString()));
+            List<String> command = new ArrayList<>(Arrays.asList(
+                    runtimePathConfig.getSOfficePath(),
+                    "-env:UserInstallation=" + libreOfficeProfile.toUri(),
+                    "--headless",
+                    "--nologo",
+                    "--convert-to",
+                    pdfFilter,
+                    "--outdir",
+                    tempOutputDir.toString(),
+                    tempInputFile.toString()));
 
-            ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                            .runCommandWithOutputHandling(command);
+            ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                    .runCommandWithOutputHandling(command);
 
             if (returnCode.getRc() != 0) {
                 log.error("PDF/A conversion failed with return code: {}", returnCode.getRc());
@@ -1657,29 +1566,26 @@ public class ConvertPDFToPDFA {
 
     private Path normalizePdfWithQpdf(Path inputPdf) {
         try {
-            ProcessExecutorResult checkResult =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                            .runCommandWithOutputHandling(Arrays.asList("qpdf", "--version"));
+            ProcessExecutorResult checkResult = ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                    .runCommandWithOutputHandling(Arrays.asList("qpdf", "--version"));
 
             if (checkResult.getRc() != 0) {
                 log.debug("QPDF not available");
                 return null;
             }
 
-            Path normalizedPdf =
-                    inputPdf.getParent().resolve("normalized_" + inputPdf.getFileName().toString());
+            Path normalizedPdf = inputPdf.getParent()
+                    .resolve("normalized_" + inputPdf.getFileName().toString());
 
-            List<String> command =
-                    Arrays.asList(
-                            "qpdf",
-                            "--normalize-content=y",
-                            "--object-streams=preserve",
-                            inputPdf.toAbsolutePath().toString(),
-                            normalizedPdf.toAbsolutePath().toString());
+            List<String> command = Arrays.asList(
+                    "qpdf",
+                    "--normalize-content=y",
+                    "--object-streams=preserve",
+                    inputPdf.toAbsolutePath().toString(),
+                    normalizedPdf.toAbsolutePath().toString());
 
             ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                            .runCommandWithOutputHandling(command);
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF).runCommandWithOutputHandling(command);
 
             if (result.getRc() == 0 && Files.exists(normalizedPdf)) {
                 log.info("PDF normalized with QPDF to fix font programs and CIDSet issues");
@@ -1695,32 +1601,28 @@ public class ConvertPDFToPDFA {
 
     private Path cleanCidSetWithQpdf(Path inputPdf) {
         try {
-            ProcessExecutorResult checkResult =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                            .runCommandWithOutputHandling(Arrays.asList("qpdf", "--version"));
+            ProcessExecutorResult checkResult = ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                    .runCommandWithOutputHandling(Arrays.asList("qpdf", "--version"));
 
             if (checkResult.getRc() != 0) {
                 log.debug("QPDF not available for CIDSet cleaning");
                 return null;
             }
 
-            Path cleanedPdf =
-                    inputPdf.getParent()
-                            .resolve("cidset_cleaned_" + inputPdf.getFileName().toString());
+            Path cleanedPdf = inputPdf.getParent()
+                    .resolve("cidset_cleaned_" + inputPdf.getFileName().toString());
 
             // Use QPDF to remove problematic CIDSet entries that may be incomplete
-            List<String> command =
-                    Arrays.asList(
-                            "qpdf",
-                            "--remove-unreferenced-resources=yes",
-                            "--normalize-content=y",
-                            "--object-streams=preserve",
-                            inputPdf.toAbsolutePath().toString(),
-                            cleanedPdf.toAbsolutePath().toString());
+            List<String> command = Arrays.asList(
+                    "qpdf",
+                    "--remove-unreferenced-resources=yes",
+                    "--normalize-content=y",
+                    "--object-streams=preserve",
+                    inputPdf.toAbsolutePath().toString(),
+                    cleanedPdf.toAbsolutePath().toString());
 
             ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                            .runCommandWithOutputHandling(command);
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF).runCommandWithOutputHandling(command);
 
             if (result.getRc() == 0 && Files.exists(cleanedPdf)) {
                 log.info("PDF CIDSet cleaned with QPDF");
@@ -1766,9 +1668,7 @@ public class ConvertPDFToPDFA {
                     loPdfPath = runLibreOfficeConversion(preProcessedFile.toPath(), pdfaPart);
                 }
             }
-            fileBytes =
-                    convertToPdfA(
-                            preProcessedFile.toPath(), loPdfPath, pdfaPart, missingFonts, needImgs);
+            fileBytes = convertToPdfA(preProcessedFile.toPath(), loPdfPath, pdfaPart, missingFonts, needImgs);
 
             return fileBytes;
 
@@ -1794,14 +1694,12 @@ public class ConvertPDFToPDFA {
         Path sanitizedInputPdf = sanitizePdfWithPdfBox(inputPdf, true);
         Path inputForGs = sanitizedInputPdf != null ? sanitizedInputPdf : inputPdf;
 
-        List<String> command =
-                buildGhostscriptCommandX(inputForGs, outputPdf, colorProfiles, workingDir, profile);
+        List<String> command = buildGhostscriptCommandX(inputForGs, outputPdf, colorProfiles, workingDir, profile);
 
         log.info("Running Ghostscript PDF/X command: {}", String.join(" ", command));
 
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                        .runCommandWithOutputHandling(command);
+        ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                .runCommandWithOutputHandling(command);
 
         if (result.getRc() != 0) {
             log.error("Ghostscript PDF/X failed with output: {}", result.getMessages());
@@ -1815,8 +1713,8 @@ public class ConvertPDFToPDFA {
         return Files.readAllBytes(outputPdf);
     }
 
-    private ResponseEntity<Resource> handlePdfAConversion(
-            MultipartFile inputFile, String outputFormat, boolean strict) throws Exception {
+    private ResponseEntity<Resource> handlePdfAConversion(MultipartFile inputFile, String outputFormat, boolean strict)
+            throws Exception {
         PdfaProfile profile = PdfaProfile.fromRequest(outputFormat);
 
         // Get the original filename without extension
@@ -1824,10 +1722,9 @@ public class ConvertPDFToPDFA {
         if (originalFileName == null || originalFileName.trim().isEmpty()) {
             originalFileName = "output.pdf";
         }
-        String baseFileName =
-                originalFileName.contains(".")
-                        ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
-                        : originalFileName;
+        String baseFileName = originalFileName.contains(".")
+                ? originalFileName.substring(0, originalFileName.lastIndexOf('.'))
+                : originalFileName;
 
         Path workingDir = Files.createTempDirectory("pdfa_conversion_");
         Path inputPath = workingDir.resolve("input.pdf");
@@ -1858,9 +1755,7 @@ public class ConvertPDFToPDFA {
                     }
                     return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
                 } catch (IOException | InterruptedException e) {
-                    log.warn(
-                            "Ghostscript conversion failed, falling back to PDFBox/LibreOffice method",
-                            e);
+                    log.warn("Ghostscript conversion failed, falling back to PDFBox/LibreOffice method", e);
                 }
             } else {
                 log.info("Ghostscript not available, using PDFBox/LibreOffice fallback method");
@@ -1895,14 +1790,12 @@ public class ConvertPDFToPDFA {
                     veraPDFService.validatePDF(is);
             boolean isCompliant = results.stream().anyMatch(result -> result.isCompliant());
             if (!isCompliant) {
-                String details =
-                        results.stream()
-                                .map(r -> r.getStandard() + ": " + r.getComplianceSummary())
-                                .collect(Collectors.joining("; "));
+                String details = results.stream()
+                        .map(r -> r.getStandard() + ": " + r.getComplianceSummary())
+                        .collect(Collectors.joining("; "));
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Strict PDF/A mode enabled: Conversion is not perfectly compliant. Details: "
-                                + details);
+                        "Strict PDF/A mode enabled: Conversion is not perfectly compliant. Details: " + details);
             }
         } catch (Exception e) {
             if (e instanceof ResponseStatusException) {
@@ -1916,23 +1809,20 @@ public class ConvertPDFToPDFA {
 
     private Path sanitizePdfWithPdfBox(Path inputPdf, boolean addWhiteBackground) {
         try {
-            Path sanitizedPath =
-                    inputPdf.getParent().resolve("sanitized_" + inputPdf.getFileName().toString());
+            Path sanitizedPath = inputPdf.getParent()
+                    .resolve("sanitized_" + inputPdf.getFileName().toString());
 
             sanitizeDocument(inputPdf, sanitizedPath, addWhiteBackground);
 
             log.info("PDF sanitized with PDFBox for better Ghostscript compatibility");
             return sanitizedPath;
         } catch (IOException e) {
-            log.warn(
-                    "PDF sanitization I/O error, proceeding with original file: {}",
-                    e.getMessage());
+            log.warn("PDF sanitization I/O error, proceeding with original file: {}", e.getMessage());
             return null;
         }
     }
 
-    private void sanitizeDocument(Path inputPath, Path outputPath, boolean addWhiteBackground)
-            throws IOException {
+    private void sanitizeDocument(Path inputPath, Path outputPath, boolean addWhiteBackground) throws IOException {
         try (PDDocument doc = Loader.loadPDF(inputPath.toFile())) {
             Map<String, DocumentSanitizer> sanitizers = new LinkedHashMap<>();
             sanitizers.put("Flatten highlight annotations", this::flattenHighlightsToContent);
@@ -1941,8 +1831,7 @@ public class ConvertPDFToPDFA {
             sanitizers.put("Remove forbidden actions", this::removeForbiddenActions);
             sanitizers.put("Ensure annotation appearances", this::ensureAnnotationAppearances);
             sanitizers.put("Ensure embedded file compliance", this::ensureEmbeddedFileCompliance);
-            sanitizers.put(
-                    "Fix optional content groups", ConvertPDFToPDFA::fixOptionalContentGroups);
+            sanitizers.put("Fix optional content groups", ConvertPDFToPDFA::fixOptionalContentGroups);
             sanitizers.put("Fix separation color spaces", this::fixSeparationColorSpaces);
 
             if (addWhiteBackground) {
@@ -1954,10 +1843,7 @@ public class ConvertPDFToPDFA {
                     entry.getValue().sanitize(doc);
                     log.debug("Sanitization step completed: {}", entry.getKey());
                 } catch (Exception e) {
-                    log.warn(
-                            "Sanitization step '{}' failed, continuing: {}",
-                            entry.getKey(),
-                            e.getMessage());
+                    log.warn("Sanitization step '{}' failed, continuing: {}", entry.getKey(), e.getMessage());
                 }
             }
 
@@ -1979,9 +1865,7 @@ public class ConvertPDFToPDFA {
         PDDocumentCatalog catalog = doc.getDocumentCatalog();
         if (catalog != null) {
             PDResources docResources =
-                    catalog.getAcroForm() != null
-                            ? catalog.getAcroForm().getDefaultResources()
-                            : null;
+                    catalog.getAcroForm() != null ? catalog.getAcroForm().getDefaultResources() : null;
             if (docResources != null) {
                 processResourcesForSeparation(docResources, knownTintTransforms, visitedResources);
             }
@@ -1996,9 +1880,7 @@ public class ConvertPDFToPDFA {
     }
 
     private void processResourcesForSeparation(
-            PDResources resources,
-            Map<String, COSBase> knownTintTransforms,
-            Set<COSBase> visitedResources) {
+            PDResources resources, Map<String, COSBase> knownTintTransforms, Set<COSBase> visitedResources) {
         if (resources == null) return;
 
         // Prevent infinite recursion if resources are shared or cyclic
@@ -2007,8 +1889,7 @@ public class ConvertPDFToPDFA {
         }
 
         // Check defined ColorSpaces
-        COSDictionary csDict =
-                (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.COLORSPACE);
+        COSDictionary csDict = (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.COLORSPACE);
         if (csDict != null) {
             for (COSName name : csDict.keySet()) {
                 COSBase csVal = csDict.getDictionaryObject(name);
@@ -2017,8 +1898,7 @@ public class ConvertPDFToPDFA {
         }
 
         // Recursively check XObjects (Forms)
-        COSDictionary xObjDict =
-                (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.XOBJECT);
+        COSDictionary xObjDict = (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.XOBJECT);
         if (xObjDict != null) {
             for (COSName name : xObjDict.keySet()) {
                 COSBase xObj = xObjDict.getDictionaryObject(name);
@@ -2028,9 +1908,7 @@ public class ConvertPDFToPDFA {
                         COSBase formRes = stream.getDictionaryObject(COSName.RESOURCES);
                         if (formRes instanceof COSDictionary formResDict) {
                             processResourcesForSeparation(
-                                    new PDResources(formResDict),
-                                    knownTintTransforms,
-                                    visitedResources);
+                                    new PDResources(formResDict), knownTintTransforms, visitedResources);
                         }
                     }
                 }
@@ -2065,9 +1943,7 @@ public class ConvertPDFToPDFA {
     }
 
     private void enforceSeparationConsistency(
-            PDResources resources,
-            Map<String, COSBase> knownTintTransforms,
-            Set<COSBase> visitedResources) {
+            PDResources resources, Map<String, COSBase> knownTintTransforms, Set<COSBase> visitedResources) {
         if (resources == null) return;
 
         // Prevent infinite recursion
@@ -2076,8 +1952,7 @@ public class ConvertPDFToPDFA {
         }
 
         // Check defined ColorSpaces
-        COSDictionary csDict =
-                (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.COLORSPACE);
+        COSDictionary csDict = (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.COLORSPACE);
         if (csDict != null) {
             for (COSName name : csDict.keySet()) {
                 COSBase csVal = csDict.getDictionaryObject(name);
@@ -2086,8 +1961,7 @@ public class ConvertPDFToPDFA {
         }
 
         // Recursively check XObjects (Forms)
-        COSDictionary xObjDict =
-                (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.XOBJECT);
+        COSDictionary xObjDict = (COSDictionary) resources.getCOSObject().getDictionaryObject(COSName.XOBJECT);
         if (xObjDict != null) {
             for (COSName name : xObjDict.keySet()) {
                 COSBase xObj = xObjDict.getDictionaryObject(name);
@@ -2097,9 +1971,7 @@ public class ConvertPDFToPDFA {
                         COSBase formRes = stream.getDictionaryObject(COSName.RESOURCES);
                         if (formRes instanceof COSDictionary formResDict) {
                             enforceSeparationConsistency(
-                                    new PDResources(formResDict),
-                                    knownTintTransforms,
-                                    visitedResources);
+                                    new PDResources(formResDict), knownTintTransforms, visitedResources);
                         }
                     }
                 }
@@ -2107,8 +1979,7 @@ public class ConvertPDFToPDFA {
         }
     }
 
-    private void enforceSeparationTintTransform(
-            COSBase cs, Map<String, COSBase> knownTintTransforms) {
+    private void enforceSeparationTintTransform(COSBase cs, Map<String, COSBase> knownTintTransforms) {
         if (cs instanceof COSArray arr && arr.size() >= 4) {
             COSBase type = arr.getObject(0);
             if (COSName.SEPARATION.equals(type)) {
@@ -2123,9 +1994,7 @@ public class ConvertPDFToPDFA {
                         COSBase known = knownTintTransforms.get(name);
                         if (known != tintTransform) {
                             arr.set(3, known);
-                            log.debug(
-                                    "Enforced consistent TintTransform for Separation color: {}",
-                                    name);
+                            log.debug("Enforced consistent TintTransform for Separation color: {}", name);
                         }
                     }
                 }
@@ -2137,14 +2006,10 @@ public class ConvertPDFToPDFA {
         for (PDPage page : doc.getPages()) {
             PDRectangle mediaBox = page.getMediaBox();
             try (PDPageContentStream cs =
-                    new PDPageContentStream(
-                            doc, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
+                    new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
                 cs.setNonStrokingColor(Color.WHITE);
                 cs.addRect(
-                        mediaBox.getLowerLeftX(),
-                        mediaBox.getLowerLeftY(),
-                        mediaBox.getWidth(),
-                        mediaBox.getHeight());
+                        mediaBox.getLowerLeftX(), mediaBox.getLowerLeftY(), mediaBox.getWidth(), mediaBox.getHeight());
                 cs.fill();
             }
         }
@@ -2156,8 +2021,7 @@ public class ConvertPDFToPDFA {
             List<PDAnnotation> toRemove = new ArrayList<>();
 
             try (PDPageContentStream cs =
-                    new PDPageContentStream(
-                            doc, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
+                    new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.PREPEND, true, true)) {
 
                 for (PDAnnotation annot : annotations) {
                     if (annot instanceof PDAnnotationHighlight highlight
@@ -2220,8 +2084,7 @@ public class ConvertPDFToPDFA {
 
         Set<String> keys = info.getMetadataKeys();
         if (keys != null) { // Add null check
-            for (String key :
-                    new HashSet<>(keys)) { // Copy to avoid ConcurrentModificationException
+            for (String key : new HashSet<>(keys)) { // Copy to avoid ConcurrentModificationException
                 String value = info.getCustomMetadataValue(key);
                 if (value != null) {
                     String clean = NON_PRINTABLE_ASCII.matcher(value).replaceAll("");
@@ -2353,9 +2216,7 @@ public class ConvertPDFToPDFA {
 
             if (afArrayModified) {
                 catalog.getCOSObject().setItem(COS_AF, afArray);
-                log.debug(
-                        "Updated Document Catalog 'AF' array with {} associated files",
-                        afArray.size());
+                log.debug("Updated Document Catalog 'AF' array with {} associated files", afArray.size());
             }
 
         } catch (IOException e) {
@@ -2393,8 +2254,7 @@ public class ConvertPDFToPDFA {
                 .orElse(DEFAULT_MIME_TYPE);
     }
 
-    public byte[] convertPDDocumentToPDFA(PDDocument document, String outputFormat)
-            throws IOException {
+    public byte[] convertPDDocumentToPDFA(PDDocument document, String outputFormat) throws IOException {
         PdfaProfile profile = PdfaProfile.fromRequest(outputFormat);
 
         Path workingDir = Files.createTempDirectory("pdfa_conversion_");
@@ -2410,9 +2270,7 @@ public class ConvertPDFToPDFA {
                     validateAndWarnPdfA(converted, profile, "Ghostscript");
                     return converted;
                 } catch (IOException | InterruptedException e) {
-                    log.warn(
-                            "Ghostscript conversion failed, falling back to PDFBox/LibreOffice method",
-                            e);
+                    log.warn("Ghostscript conversion failed, falling back to PDFBox/LibreOffice method", e);
                 }
             } else {
                 log.info("Ghostscript not available, using PDFBox/LibreOffice fallback method");
@@ -2489,10 +2347,9 @@ public class ConvertPDFToPDFA {
             this.suffix = suffix;
             this.compatibilityLevel = compatibilityLevel;
             this.preflightFormat = preflightFormat;
-            this.requestTokens =
-                    Arrays.stream(requestTokens)
-                            .map(token -> token.toLowerCase(Locale.ROOT))
-                            .toList();
+            this.requestTokens = Arrays.stream(requestTokens)
+                    .map(token -> token.toLowerCase(Locale.ROOT))
+                    .toList();
         }
 
         static PdfaProfile fromRequest(String requestToken) {
@@ -2500,10 +2357,9 @@ public class ConvertPDFToPDFA {
                 return PDF_A_2B;
             }
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
-            Optional<PdfaProfile> match =
-                    Arrays.stream(values())
-                            .filter(profile -> profile.requestTokens.contains(normalized))
-                            .findFirst();
+            Optional<PdfaProfile> match = Arrays.stream(values())
+                    .filter(profile -> profile.requestTokens.contains(normalized))
+                    .findFirst();
 
             return match.orElse(PDF_A_2B);
         }
@@ -2537,10 +2393,9 @@ public class ConvertPDFToPDFA {
             this.suffix = suffix;
             this.compatibilityLevel = compatibilityLevel;
             this.pdfxVersion = pdfxVersion;
-            this.requestTokens =
-                    Arrays.stream(requestTokens)
-                            .map(token -> token.toLowerCase(Locale.ROOT))
-                            .toList();
+            this.requestTokens = Arrays.stream(requestTokens)
+                    .map(token -> token.toLowerCase(Locale.ROOT))
+                    .toList();
         }
 
         static PdfXProfile fromRequest(String requestToken) {
@@ -2548,10 +2403,9 @@ public class ConvertPDFToPDFA {
                 return PDF_X;
             }
             String normalized = requestToken.trim().toLowerCase(Locale.ROOT);
-            Optional<PdfXProfile> match =
-                    Arrays.stream(values())
-                            .filter(profile -> profile.requestTokens.contains(normalized))
-                            .findFirst();
+            Optional<PdfXProfile> match = Arrays.stream(values())
+                    .filter(profile -> profile.requestTokens.contains(normalized))
+                    .findFirst();
 
             return match.orElse(PDF_X);
         }

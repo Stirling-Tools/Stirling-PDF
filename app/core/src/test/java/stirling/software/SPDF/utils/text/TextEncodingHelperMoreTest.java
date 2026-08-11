@@ -196,8 +196,7 @@ class TextEncodingHelperMoreTest {
             when(font.encode("ab")).thenReturn(new byte[] {1, 2});
             when(font.getStringWidth("ab")).thenReturn(100f);
             PDFontDescriptor descriptor = mock(PDFontDescriptor.class);
-            when(descriptor.getFontBoundingBox())
-                    .thenThrow(new IllegalArgumentException("no bbox"));
+            when(descriptor.getFontBoundingBox()).thenThrow(new IllegalArgumentException("no bbox"));
             when(font.getFontDescriptor()).thenReturn(descriptor);
 
             assertFalse(TextEncodingHelper.isTextFullyRemovable(font, "ab"));
@@ -236,8 +235,7 @@ class TextEncodingHelperMoreTest {
         @Test
         @DisplayName("simple font with null encoding -> not custom")
         void simpleFontNullEncoding_false() {
-            org.apache.pdfbox.pdmodel.font.PDSimpleFont font =
-                    mock(org.apache.pdfbox.pdmodel.font.PDSimpleFont.class);
+            org.apache.pdfbox.pdmodel.font.PDSimpleFont font = mock(org.apache.pdfbox.pdmodel.font.PDSimpleFont.class);
             when(font.getEncoding()).thenReturn(null);
             when(font.getName()).thenReturn("S");
             assertFalse(TextEncodingHelper.hasCustomEncoding(font));
@@ -285,8 +283,7 @@ class TextEncodingHelperMoreTest {
     class IsSimpleCharacter {
 
         private boolean isSimple(String text) throws Exception {
-            Method m =
-                    TextEncodingHelper.class.getDeclaredMethod("isSimpleCharacter", String.class);
+            Method m = TextEncodingHelper.class.getDeclaredMethod("isSimpleCharacter", String.class);
             m.setAccessible(true);
             return (boolean) m.invoke(null, text);
         }

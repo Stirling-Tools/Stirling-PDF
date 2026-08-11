@@ -67,8 +67,7 @@ public class UIDataController {
         data.setAnalyticsEnabled(applicationProperties.getSystem().getEnableAnalytics());
         data.setTermsAndConditions(applicationProperties.getLegal().getTermsAndConditions());
         data.setPrivacyPolicy(applicationProperties.getLegal().getPrivacyPolicy());
-        data.setAccessibilityStatement(
-                applicationProperties.getLegal().getAccessibilityStatement());
+        data.setAccessibilityStatement(applicationProperties.getLegal().getAccessibilityStatement());
         data.setCookiePolicy(applicationProperties.getLegal().getCookiePolicy());
         data.setImpressum(applicationProperties.getLegal().getImpressum());
 
@@ -94,8 +93,7 @@ public class UIDataController {
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
 
         try (InputStream is = resource.getInputStream()) {
-            Map<String, List<Dependency>> licenseData =
-                    objectMapper.readValue(is, new TypeReference<>() {});
+            Map<String, List<Dependency>> licenseData = objectMapper.readValue(is, new TypeReference<>() {});
             data.setDependencies(licenseData.get("dependencies"));
         } catch (IOException e) {
             log.error("Failed to load licenses data", e);
@@ -113,12 +111,10 @@ public class UIDataController {
         List<Map<String, String>> pipelineConfigsWithNames = new ArrayList<>();
 
         if (new java.io.File(runtimePathConfig.getPipelineDefaultWebUiConfigs()).exists()) {
-            try (Stream<Path> paths =
-                    Files.walk(Path.of(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
-                List<Path> jsonFiles =
-                        paths.filter(Files::isRegularFile)
-                                .filter(p -> p.toString().endsWith(".json"))
-                                .toList();
+            try (Stream<Path> paths = Files.walk(Path.of(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
+                List<Path> jsonFiles = paths.filter(Files::isRegularFile)
+                        .filter(p -> p.toString().endsWith(".json"))
+                        .toList();
 
                 for (Path jsonFile : jsonFiles) {
                     String content = Files.readString(jsonFile, StandardCharsets.UTF_8);
@@ -127,15 +123,13 @@ public class UIDataController {
 
                 for (String config : pipelineConfigs) {
                     Map<String, Object> jsonContent =
-                            objectMapper.readValue(
-                                    config, new TypeReference<Map<String, Object>>() {});
+                            objectMapper.readValue(config, new TypeReference<Map<String, Object>>() {});
                     String name = (String) jsonContent.get("name");
                     if (name == null || name.isEmpty()) {
-                        String filename =
-                                jsonFiles
-                                        .get(pipelineConfigs.indexOf(config))
-                                        .getFileName()
-                                        .toString();
+                        String filename = jsonFiles
+                                .get(pipelineConfigs.indexOf(config))
+                                .getFileName()
+                                .toString();
                         name = filename.substring(0, filename.lastIndexOf('.'));
                     }
                     Map<String, String> configWithName = new HashMap<>();
@@ -207,41 +201,32 @@ public class UIDataController {
     private List<FontResource> getFontNames() {
         List<FontResource> fontNames = new ArrayList<>();
         fontNames.addAll(getFontNamesFromLocation("classpath:static/fonts/*.woff2"));
-        fontNames.addAll(
-                getFontNamesFromLocation(
-                        "file:"
-                                + InstallationPathConfig.getStaticPath()
-                                + "fonts"
-                                + java.io.File.separator
-                                + "*"));
+        fontNames.addAll(getFontNamesFromLocation(
+                "file:" + InstallationPathConfig.getStaticPath() + "fonts" + java.io.File.separator + "*"));
         return fontNames;
     }
 
     private List<FontResource> getFontNamesFromLocation(String locationPattern) {
         try {
-            Resource[] resources =
-                    GeneralUtils.getResourcesFromLocationPattern(locationPattern, resourceLoader);
+            Resource[] resources = GeneralUtils.getResourcesFromLocationPattern(locationPattern, resourceLoader);
             return Arrays.stream(resources)
-                    .map(
-                            resource -> {
-                                try {
-                                    String filename = resource.getFilename();
-                                    if (filename != null) {
-                                        int lastDotIndex = filename.lastIndexOf('.');
-                                        if (lastDotIndex != -1) {
-                                            String name = filename.substring(0, lastDotIndex);
-                                            String extension = filename.substring(lastDotIndex + 1);
-                                            return new FontResource(name, extension);
-                                        }
-                                    }
-                                    return null;
-                                } catch (Exception e) {
-                                    throw ExceptionUtils.createRuntimeException(
-                                            "error.fontLoadingFailed",
-                                            "Error processing font file",
-                                            e);
+                    .map(resource -> {
+                        try {
+                            String filename = resource.getFilename();
+                            if (filename != null) {
+                                int lastDotIndex = filename.lastIndexOf('.');
+                                if (lastDotIndex != -1) {
+                                    String name = filename.substring(0, lastDotIndex);
+                                    String extension = filename.substring(lastDotIndex + 1);
+                                    return new FontResource(name, extension);
                                 }
-                            })
+                            }
+                            return null;
+                        } catch (Exception e) {
+                            throw ExceptionUtils.createRuntimeException(
+                                    "error.fontLoadingFailed", "Error processing font file", e);
+                        }
+                    })
                     .filter(Objects::nonNull)
                     .toList();
         } catch (Exception e) {

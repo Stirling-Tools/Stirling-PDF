@@ -66,13 +66,8 @@ class EncryptedFileFormatTest {
         // Changing the wrapped DEK must not change the AAD (it is authenticated separately).
         byte[] otherDek = new byte[EncryptedFileFormat.WRAPPED_DEK_LENGTH];
         otherDek[0] = 1;
-        EncryptedFileFormat.Header other =
-                new EncryptedFileFormat.Header(
-                        header.formatVersion(),
-                        header.cipherSuite(),
-                        header.keyId(),
-                        header.plaintextLength(),
-                        otherDek);
+        EncryptedFileFormat.Header other = new EncryptedFileFormat.Header(
+                header.formatVersion(), header.cipherSuite(), header.keyId(), header.plaintextLength(), otherDek);
         assertThat(other.associatedData()).isEqualTo(aad);
     }
 }

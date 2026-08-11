@@ -45,11 +45,7 @@ class InitialSetupTest {
                 initialSetup.initUUIDKey();
 
                 assertThat(autoGen.getUUID()).isNotBlank();
-                util.verify(
-                        () ->
-                                GeneralUtils.saveKeyToSettings(
-                                        eq("AutomaticallyGenerated.UUID"), any()),
-                        times(1));
+                util.verify(() -> GeneralUtils.saveKeyToSettings(eq("AutomaticallyGenerated.UUID"), any()), times(1));
             }
         }
 
@@ -82,11 +78,7 @@ class InitialSetupTest {
                 initialSetup.initSecretKey();
 
                 assertThat(autoGen.getKey()).isNotBlank();
-                util.verify(
-                        () ->
-                                GeneralUtils.saveKeyToSettings(
-                                        eq("AutomaticallyGenerated.key"), any()),
-                        times(1));
+                util.verify(() -> GeneralUtils.saveKeyToSettings(eq("AutomaticallyGenerated.key"), any()), times(1));
             }
         }
 
@@ -118,12 +110,8 @@ class InitialSetupTest {
 
                 assertThat(legal.getTermsAndConditions()).contains("stirlingpdf.com/terms");
                 assertThat(legal.getPrivacyPolicy()).contains("privacy-policy");
-                util.verify(
-                        () -> GeneralUtils.saveKeyToSettings(eq("legal.termsAndConditions"), any()),
-                        times(1));
-                util.verify(
-                        () -> GeneralUtils.saveKeyToSettings(eq("legal.privacyPolicy"), any()),
-                        times(1));
+                util.verify(() -> GeneralUtils.saveKeyToSettings(eq("legal.termsAndConditions"), any()), times(1));
+                util.verify(() -> GeneralUtils.saveKeyToSettings(eq("legal.privacyPolicy"), any()), times(1));
             }
         }
 

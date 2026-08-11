@@ -101,8 +101,10 @@ public class S3FileStore implements FileStore, AutoCloseable {
     @Override
     public InputStream retrieve(String fileId) throws IOException {
         validateFileId(fileId);
-        GetObjectRequest request =
-                GetObjectRequest.builder().bucket(bucket).key(resolveKey(fileId)).build();
+        GetObjectRequest request = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(resolveKey(fileId))
+                .build();
         try {
             ResponseInputStream<GetObjectResponse> stream = s3Client.getObject(request);
             return new BufferedInputStream(stream);
@@ -116,8 +118,10 @@ public class S3FileStore implements FileStore, AutoCloseable {
     @Override
     public byte[] retrieveBytes(String fileId) throws IOException {
         validateFileId(fileId);
-        GetObjectRequest request =
-                GetObjectRequest.builder().bucket(bucket).key(resolveKey(fileId)).build();
+        GetObjectRequest request = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(resolveKey(fileId))
+                .build();
         try (ResponseInputStream<GetObjectResponse> stream = s3Client.getObject(request)) {
             return stream.readAllBytes();
         } catch (NoSuchKeyException e) {
@@ -130,8 +134,10 @@ public class S3FileStore implements FileStore, AutoCloseable {
     @Override
     public long size(String fileId) throws IOException {
         validateFileId(fileId);
-        HeadObjectRequest request =
-                HeadObjectRequest.builder().bucket(bucket).key(resolveKey(fileId)).build();
+        HeadObjectRequest request = HeadObjectRequest.builder()
+                .bucket(bucket)
+                .key(resolveKey(fileId))
+                .build();
         try {
             HeadObjectResponse response = s3Client.headObject(request);
             return Optional.ofNullable(response.contentLength()).orElse(0L);
@@ -156,8 +162,10 @@ public class S3FileStore implements FileStore, AutoCloseable {
             return false;
         }
         try {
-            s3Client.deleteObject(
-                    DeleteObjectRequest.builder().bucket(bucket).key(resolveKey(fileId)).build());
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(resolveKey(fileId))
+                    .build());
             return true;
         } catch (SdkException e) {
             log.error("Error deleting file with ID: {}", fileId, e);
@@ -172,8 +180,10 @@ public class S3FileStore implements FileStore, AutoCloseable {
         } catch (IllegalArgumentException e) {
             return false;
         }
-        HeadObjectRequest request =
-                HeadObjectRequest.builder().bucket(bucket).key(resolveKey(fileId)).build();
+        HeadObjectRequest request = HeadObjectRequest.builder()
+                .bucket(bucket)
+                .key(resolveKey(fileId))
+                .build();
         try {
             s3Client.headObject(request);
             return true;
@@ -198,8 +208,10 @@ public class S3FileStore implements FileStore, AutoCloseable {
         } catch (IllegalArgumentException e) {
             return null;
         }
-        HeadObjectRequest request =
-                HeadObjectRequest.builder().bucket(bucket).key(resolveKey(fileId)).build();
+        HeadObjectRequest request = HeadObjectRequest.builder()
+                .bucket(bucket)
+                .key(resolveKey(fileId))
+                .build();
         try {
             HeadObjectResponse response = s3Client.headObject(request);
             Map<String, String> metadata =

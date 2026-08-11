@@ -77,13 +77,11 @@ public class PdfTextChunkExtractor {
         }
 
         @Override
-        protected void writeString(String text, List<TextPosition> textPositions)
-                throws IOException {
+        protected void writeString(String text, List<TextPosition> textPositions) throws IOException {
             if (chunks.size() >= MAX_CHUNKS_PER_DOC) {
                 if (!capWarningLogged) {
                     log.warn(
-                            "[pdf-comment-agent] chunk cap of {} reached; remaining text will not"
-                                    + " be extracted",
+                            "[pdf-comment-agent] chunk cap of {} reached; remaining text will not" + " be extracted",
                             MAX_CHUNKS_PER_DOC);
                     capWarningLogged = true;
                 }
@@ -142,8 +140,7 @@ public class PdfTextChunkExtractor {
                 storedText = storedText.substring(0, MAX_CHUNK_TEXT_LENGTH);
             }
 
-            chunks.add(
-                    new TextChunk(id, currentPageIdx, minX, bottomY, width, maxHeight, storedText));
+            chunks.add(new TextChunk(id, currentPageIdx, minX, bottomY, width, maxHeight, storedText));
         }
 
         @Override
@@ -155,19 +152,18 @@ public class PdfTextChunkExtractor {
         public String getText(PDDocument doc) throws IOException {
             // We don't actually need the concatenated text — just the side-effects. Return early
             // to avoid building a (potentially massive) StringBuilder of the whole document.
-            try (Writer discard =
-                    new Writer() {
-                        @Override
-                        public void write(char[] cbuf, int off, int len) {
-                            // discard
-                        }
+            try (Writer discard = new Writer() {
+                @Override
+                public void write(char[] cbuf, int off, int len) {
+                    // discard
+                }
 
-                        @Override
-                        public void flush() {}
+                @Override
+                public void flush() {}
 
-                        @Override
-                        public void close() {}
-                    }) {
+                @Override
+                public void close() {}
+            }) {
                 writeText(doc, discard);
             }
             return "";

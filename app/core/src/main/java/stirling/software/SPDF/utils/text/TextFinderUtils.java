@@ -21,15 +21,11 @@ public class TextFinderUtils {
         }
 
         if (font.isDamaged()) {
-            log.debug(
-                    "Font {} is marked as damaged - using TextEncodingHelper validation",
-                    font.getName());
+            log.debug("Font {} is marked as damaged - using TextEncodingHelper validation", font.getName());
         }
 
         if (TextEncodingHelper.canCalculateBasicWidths(font)) {
-            log.debug(
-                    "Font {} passed basic width calculations - considering reliable",
-                    font.getName());
+            log.debug("Font {} passed basic width calculations - considering reliable", font.getName());
             return true;
         }
 
@@ -72,8 +68,7 @@ public class TextFinderUtils {
                 }
 
                 // Use PatternFactory for better performance with cached compilation
-                Pattern pattern =
-                        RegexPatternUtils.getInstance().createSearchPattern(patternString, true);
+                Pattern pattern = RegexPatternUtils.getInstance().createSearchPattern(patternString, true);
                 patterns.add(pattern);
 
                 log.debug("Created search pattern: '{}' -> '{}'", term.trim(), patternString);

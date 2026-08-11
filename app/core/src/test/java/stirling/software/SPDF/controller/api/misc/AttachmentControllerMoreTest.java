@@ -58,10 +58,17 @@ import stirling.software.common.util.WebResponseUtils;
 @DisplayName("AttachmentController extract/list/rename/delete")
 class AttachmentControllerMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private AttachmentServiceInterface pdfAttachmentService;
-    @Mock private ConvertPDFToPDFA convertPDFToPDFA;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private AttachmentServiceInterface pdfAttachmentService;
+
+    @Mock
+    private ConvertPDFToPDFA convertPDFToPDFA;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private AttachmentController controller;
 
@@ -70,29 +77,21 @@ class AttachmentControllerMoreTest {
     @BeforeEach
     void setUp() throws Exception {
         controller =
-                new AttachmentController(
-                        pdfDocumentFactory,
-                        pdfAttachmentService,
-                        convertPDFToPDFA,
-                        tempFileManager);
+                new AttachmentController(pdfDocumentFactory, pdfAttachmentService, convertPDFToPDFA, tempFileManager);
         mockDocument = mock(PDDocument.class);
 
-        when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("att_test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f =
+                    Files.createTempFile("att_test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private static MockMultipartFile pdf() {
-        return new MockMultipartFile(
-                "fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, "pdf".getBytes());
+        return new MockMultipartFile("fileInput", "doc.pdf", MediaType.APPLICATION_PDF_VALUE, "pdf".getBytes());
     }
 
     @Nested
@@ -106,16 +105,11 @@ class AttachmentControllerMoreTest {
             request.setFileInput(pdf());
 
             when(pdfDocumentFactory.load(request, true)).thenReturn(mockDocument);
-            when(pdfAttachmentService.extractAttachments(mockDocument))
-                    .thenReturn(Optional.of("zip-bytes".getBytes()));
+            when(pdfAttachmentService.extractAttachments(mockDocument)).thenReturn(Optional.of("zip-bytes".getBytes()));
 
-            ResponseEntity<Resource> expected =
-                    ResponseEntity.ok(new ByteArrayResource("zip-bytes".getBytes()));
+            ResponseEntity<Resource> expected = ResponseEntity.ok(new ByteArrayResource("zip-bytes".getBytes()));
             try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
-                wr.when(
-                                () ->
-                                        WebResponseUtils.zipFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                wr.when(() -> WebResponseUtils.zipFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.extractAttachments(request);
@@ -132,11 +126,9 @@ class AttachmentControllerMoreTest {
             request.setFileInput(pdf());
 
             when(pdfDocumentFactory.load(request, true)).thenReturn(mockDocument);
-            when(pdfAttachmentService.extractAttachments(mockDocument))
-                    .thenReturn(Optional.empty());
+            when(pdfAttachmentService.extractAttachments(mockDocument)).thenReturn(Optional.empty());
 
-            assertThrows(
-                    IllegalArgumentException.class, () -> controller.extractAttachments(request));
+            assertThrows(IllegalArgumentException.class, () -> controller.extractAttachments(request));
         }
 
         @Test
@@ -146,16 +138,11 @@ class AttachmentControllerMoreTest {
             request.setFileId("server-file-id");
 
             when(pdfDocumentFactory.load(request, true)).thenReturn(mockDocument);
-            when(pdfAttachmentService.extractAttachments(mockDocument))
-                    .thenReturn(Optional.of("zip".getBytes()));
+            when(pdfAttachmentService.extractAttachments(mockDocument)).thenReturn(Optional.of("zip".getBytes()));
 
-            ResponseEntity<Resource> expected =
-                    ResponseEntity.ok(new ByteArrayResource("zip".getBytes()));
+            ResponseEntity<Resource> expected = ResponseEntity.ok(new ByteArrayResource("zip".getBytes()));
             try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
-                wr.when(
-                                () ->
-                                        WebResponseUtils.zipFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                wr.when(() -> WebResponseUtils.zipFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.extractAttachments(request);
@@ -217,15 +204,10 @@ class AttachmentControllerMoreTest {
             when(pdfAttachmentService.renameAttachment(mockDocument, "old.txt", "new.txt"))
                     .thenReturn(mockDocument);
 
-            ResponseEntity<Resource> expected =
-                    ResponseEntity.ok(new ByteArrayResource("pdf".getBytes()));
+            ResponseEntity<Resource> expected = ResponseEntity.ok(new ByteArrayResource("pdf".getBytes()));
             try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfDocToWebResponse(
-                                                any(PDDocument.class),
-                                                anyString(),
-                                                any(TempFileManager.class)))
+                wr.when(() -> WebResponseUtils.pdfDocToWebResponse(
+                                any(PDDocument.class), anyString(), any(TempFileManager.class)))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.renameAttachment(request);
@@ -243,8 +225,7 @@ class AttachmentControllerMoreTest {
             request.setAttachmentName("  ");
             request.setNewName("new.txt");
 
-            assertThrows(
-                    IllegalArgumentException.class, () -> controller.renameAttachment(request));
+            assertThrows(IllegalArgumentException.class, () -> controller.renameAttachment(request));
             verifyNoInteractions(pdfAttachmentService);
         }
 
@@ -256,8 +237,7 @@ class AttachmentControllerMoreTest {
             request.setAttachmentName("old.txt");
             request.setNewName(null);
 
-            assertThrows(
-                    IllegalArgumentException.class, () -> controller.renameAttachment(request));
+            assertThrows(IllegalArgumentException.class, () -> controller.renameAttachment(request));
         }
     }
 
@@ -276,15 +256,10 @@ class AttachmentControllerMoreTest {
             when(pdfAttachmentService.deleteAttachment(mockDocument, "file.txt"))
                     .thenReturn(mockDocument);
 
-            ResponseEntity<Resource> expected =
-                    ResponseEntity.ok(new ByteArrayResource("pdf".getBytes()));
+            ResponseEntity<Resource> expected = ResponseEntity.ok(new ByteArrayResource("pdf".getBytes()));
             try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfDocToWebResponse(
-                                                any(PDDocument.class),
-                                                anyString(),
-                                                any(TempFileManager.class)))
+                wr.when(() -> WebResponseUtils.pdfDocToWebResponse(
+                                any(PDDocument.class), anyString(), any(TempFileManager.class)))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.deleteAttachment(request);
@@ -301,8 +276,7 @@ class AttachmentControllerMoreTest {
             request.setFileInput(pdf());
             request.setAttachmentName(null);
 
-            assertThrows(
-                    IllegalArgumentException.class, () -> controller.deleteAttachment(request));
+            assertThrows(IllegalArgumentException.class, () -> controller.deleteAttachment(request));
             verifyNoInteractions(pdfAttachmentService);
         }
     }
@@ -336,8 +310,7 @@ class AttachmentControllerMoreTest {
         @Test
         @DisplayName("rejects an empty attachment entry")
         void emptyAttachmentEntryThrows() {
-            MultipartFile empty =
-                    new MockMultipartFile("attachment", "empty.txt", "text/plain", new byte[0]);
+            MultipartFile empty = new MockMultipartFile("attachment", "empty.txt", "text/plain", new byte[0]);
             stirling.software.SPDF.model.api.misc.AddAttachmentRequest request =
                     new stirling.software.SPDF.model.api.misc.AddAttachmentRequest();
             request.setFileInput(pdf());

@@ -30,10 +30,8 @@ import stirling.software.proprietary.security.service.UserService;
 @Slf4j
 public class McpApiKeyAuthFilter extends OncePerRequestFilter {
 
-    private static final List<GrantedAuthority> MCP_SCOPES =
-            List.of(
-                    new SimpleGrantedAuthority("SCOPE_mcp.tools.read"),
-                    new SimpleGrantedAuthority("SCOPE_mcp.tools.write"));
+    private static final List<GrantedAuthority> MCP_SCOPES = List.of(
+            new SimpleGrantedAuthority("SCOPE_mcp.tools.read"), new SimpleGrantedAuthority("SCOPE_mcp.tools.write"));
 
     private final UserService userService;
 
@@ -42,29 +40,24 @@ public class McpApiKeyAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         Authentication existing = SecurityContextHolder.getContext().getAuthentication();
         // Treat an anonymous token as not authenticated so the key is still processed.
         boolean unauthenticated =
-                existing == null
-                        || existing instanceof AnonymousAuthenticationToken
-                        || !existing.isAuthenticated();
+                existing == null || existing instanceof AnonymousAuthenticationToken || !existing.isAuthenticated();
         if (unauthenticated) {
             String apiKey = extractKey(request);
             if (apiKey != null && !apiKey.isBlank()) {
                 Optional<User> user = userService.getUserByApiKey(apiKey);
                 if (user.isPresent() && user.get().isEnabled()) {
                     UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(
-                                    user.get().getUsername(), null, MCP_SCOPES);
+                            new UsernamePasswordAuthenticationToken(user.get().getUsername(), null, MCP_SCOPES);
                     SecurityContext context = SecurityContextHolder.createEmptyContext();
                     context.setAuthentication(auth);
                     SecurityContextHolder.setContext(context);
                 } else {
-                    log.warn(
-                            "MCP access denied: presented API key did not match an active account");
+                    log.warn("MCP access denied: presented API key did not match an active account");
                 }
             }
         }

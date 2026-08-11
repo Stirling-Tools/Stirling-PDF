@@ -42,8 +42,7 @@ public class ScalePagesController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    private static PDRectangle getTargetSize(
-            String targetPDRectangle, String orientation, PDDocument sourceDocument) {
+    private static PDRectangle getTargetSize(String targetPDRectangle, String orientation, PDDocument sourceDocument) {
         if ("KEEP".equals(targetPDRectangle)) {
             if (sourceDocument.getNumberOfPages() == 0) {
                 throw ExceptionUtils.createInvalidPageSizeException("KEEP");
@@ -92,19 +91,16 @@ public class ScalePagesController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Change the size of a PDF page/document",
-            description =
-                    "This operation takes an input PDF file and the size to scale the pages to in"
-                            + " the output PDF file.")
-    public ResponseEntity<Resource> scalePages(@ModelAttribute ScalePagesRequest request)
-            throws IOException {
+            description = "This operation takes an input PDF file and the size to scale the pages to in"
+                    + " the output PDF file.")
+    public ResponseEntity<Resource> scalePages(@ModelAttribute ScalePagesRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         String targetPDRectangle = request.getPageSize();
         String orientation = request.getOrientation();
         float scaleFactor = request.getScaleFactor();
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file);
-                PDDocument outputDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+                PDDocument outputDocument = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
 
             PDRectangle targetSize = getTargetSize(targetPDRectangle, orientation, sourceDocument);
 
@@ -123,13 +119,8 @@ public class ScalePagesController {
                 PDPage newPage = new PDPage(targetSize);
                 outputDocument.addPage(newPage);
 
-                try (PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                outputDocument,
-                                newPage,
-                                PDPageContentStream.AppendMode.APPEND,
-                                true,
-                                true)) {
+                try (PDPageContentStream contentStream = new PDPageContentStream(
+                        outputDocument, newPage, PDPageContentStream.AppendMode.APPEND, true, true)) {
 
                     float x = (targetSize.getWidth() - sourceSize.getWidth() * scale) / 2;
                     float y = (targetSize.getHeight() - sourceSize.getHeight() * scale) / 2;

@@ -235,7 +235,8 @@ class ReactRoutingControllerTest {
 
         assertTrue(router.route(serverRequest("GET", "/api/v1/policies/run")).isEmpty());
         assertTrue(router.route(serverRequest("GET", "/branding/sub/logo.png")).isEmpty());
-        assertTrue(router.route(serverRequest("POST", "/processor/pipelines/new")).isEmpty());
+        assertTrue(
+                router.route(serverRequest("POST", "/processor/pipelines/new")).isEmpty());
     }
 
     @Test
@@ -246,15 +247,12 @@ class ReactRoutingControllerTest {
         // A catch-all denylist is only safe below every annotated controller; Spring's own
         // RouterFunctionMapping sits at -1, which would shadow /v1/api-docs, /error and friends.
         assertTrue(order > 0, "SPA fallback must run after annotated controllers");
-        assertTrue(
-                order < Ordered.LOWEST_PRECEDENCE - 1,
-                "SPA fallback must run before the static-resource chain");
+        assertTrue(order < Ordered.LOWEST_PRECEDENCE - 1, "SPA fallback must run before the static-resource chain");
     }
 
     private static RouterFunction<ServerResponse> routerOf(RouterFunctionMapping mapping) {
         @SuppressWarnings("unchecked")
-        RouterFunction<ServerResponse> router =
-                (RouterFunction<ServerResponse>) mapping.getRouterFunction();
+        RouterFunction<ServerResponse> router = (RouterFunction<ServerResponse>) mapping.getRouterFunction();
         return router;
     }
 

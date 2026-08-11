@@ -36,10 +36,17 @@ import stirling.software.proprietary.security.service.UserService;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class UserLicenseSettingsServiceMoreTest {
 
-    @Mock private UserLicenseSettingsRepository settingsRepository;
-    @Mock private UserService userService;
-    @Mock private LicenseKeyChecker licenseKeyChecker;
-    @Mock private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
+    @Mock
+    private UserLicenseSettingsRepository settingsRepository;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private LicenseKeyChecker licenseKeyChecker;
+
+    @Mock
+    private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
 
     private ApplicationProperties applicationProperties;
     private UserLicenseSettingsService service;
@@ -50,17 +57,12 @@ class UserLicenseSettingsServiceMoreTest {
         applicationProperties.getAutomaticallyGenerated().setKey("auto-key");
         applicationProperties.getAutomaticallyGenerated().setUUID("auto-uuid");
 
-        when(settingsRepository.save(any(UserLicenseSettings.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+        when(settingsRepository.save(any(UserLicenseSettings.class))).thenAnswer(inv -> inv.getArgument(0));
         when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(licenseKeyChecker);
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
 
-        service =
-                new UserLicenseSettingsService(
-                        settingsRepository,
-                        userService,
-                        applicationProperties,
-                        licenseKeyCheckerProvider);
+        service = new UserLicenseSettingsService(
+                settingsRepository, userService, applicationProperties, licenseKeyCheckerProvider);
     }
 
     // Saves a freshly initialized + locked settings row with a valid signature.

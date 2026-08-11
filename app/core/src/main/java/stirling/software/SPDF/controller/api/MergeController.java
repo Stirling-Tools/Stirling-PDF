@@ -84,12 +84,10 @@ public class MergeController {
         }
     }
 
-    private static MultipartFile[] reorderFilesByProvidedOrder(
-            MultipartFile[] files, String fileOrder) {
-        String[] desired =
-                stirling.software.common.util.RegexPatternUtils.getInstance()
-                        .getNewlineSplitPattern()
-                        .split(fileOrder);
+    private static MultipartFile[] reorderFilesByProvidedOrder(MultipartFile[] files, String fileOrder) {
+        String[] desired = stirling.software.common.util.RegexPatternUtils.getInstance()
+                .getNewlineSplitPattern()
+                .split(fileOrder);
 
         List<MultipartFile> remaining = new ArrayList<>(Arrays.asList(files));
         List<MultipartFile> ordered = new ArrayList<>(files.length);
@@ -115,50 +113,48 @@ public class MergeController {
     private Comparator<MultipartFile> getSortComparator(String sortType) {
         return switch (sortType) {
             case "byFileName" ->
-                    Comparator.comparing(
-                            (MultipartFile mf) -> {
-                                String name = mf.getOriginalFilename();
-                                return name == null ? "" : name;
-                            },
-                            String.CASE_INSENSITIVE_ORDER);
+                Comparator.comparing(
+                        (MultipartFile mf) -> {
+                            String name = mf.getOriginalFilename();
+                            return name == null ? "" : name;
+                        },
+                        String.CASE_INSENSITIVE_ORDER);
             case "byDateModified" ->
-                    (file1, file2) -> {
-                        long t1 = getPdfDateTimeSafe(file1);
-                        long t2 = getPdfDateTimeSafe(file2);
-                        return Long.compare(t2, t1);
-                    };
+                (file1, file2) -> {
+                    long t1 = getPdfDateTimeSafe(file1);
+                    long t2 = getPdfDateTimeSafe(file2);
+                    return Long.compare(t2, t1);
+                };
             case "byDateCreated" ->
-                    (file1, file2) -> {
-                        long t1 = getPdfDateTimeSafe(file1);
-                        long t2 = getPdfDateTimeSafe(file2);
-                        return Long.compare(t2, t1);
-                    };
+                (file1, file2) -> {
+                    long t1 = getPdfDateTimeSafe(file1);
+                    long t2 = getPdfDateTimeSafe(file2);
+                    return Long.compare(t2, t1);
+                };
             case "byPDFTitle" ->
-                    (file1, file2) -> {
-                        try (PDDocument doc1 = pdfDocumentFactory.load(file1);
-                                PDDocument doc2 = pdfDocumentFactory.load(file2)) {
-                            String title1 =
-                                    doc1.getDocumentInformation() != null
-                                            ? doc1.getDocumentInformation().getTitle()
-                                            : null;
-                            String title2 =
-                                    doc2.getDocumentInformation() != null
-                                            ? doc2.getDocumentInformation().getTitle()
-                                            : null;
-                            if (title1 == null && title2 == null) {
-                                return 0;
-                            }
-                            if (title1 == null) {
-                                return 1;
-                            }
-                            if (title2 == null) {
-                                return -1;
-                            }
-                            return title1.compareToIgnoreCase(title2);
-                        } catch (IOException e) {
+                (file1, file2) -> {
+                    try (PDDocument doc1 = pdfDocumentFactory.load(file1);
+                            PDDocument doc2 = pdfDocumentFactory.load(file2)) {
+                        String title1 = doc1.getDocumentInformation() != null
+                                ? doc1.getDocumentInformation().getTitle()
+                                : null;
+                        String title2 = doc2.getDocumentInformation() != null
+                                ? doc2.getDocumentInformation().getTitle()
+                                : null;
+                        if (title1 == null && title2 == null) {
                             return 0;
                         }
-                    };
+                        if (title1 == null) {
+                            return 1;
+                        }
+                        if (title2 == null) {
+                            return -1;
+                        }
+                        return title1.compareToIgnoreCase(title2);
+                    } catch (IOException e) {
+                        return 0;
+                    }
+                };
             case "orderProvided" -> (file1, file2) -> 0;
             default -> (file1, file2) -> 0;
         };
@@ -243,9 +239,7 @@ public class MergeController {
                             }
                         }
                     } catch (Exception e) {
-                        log.debug(
-                                "Unable to read XMP metadata dates from uploaded file: {}",
-                                e.getMessage());
+                        log.debug("Unable to read XMP metadata dates from uploaded file: {}", e.getMessage());
                     }
                 }
             }
@@ -271,10 +265,9 @@ public class MergeController {
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.MISO)
     @Operation(
             summary = "Merge multiple PDF files into one",
-            description =
-                    "This endpoint merges multiple PDF files into a single PDF file. The merged"
-                            + " file will contain all pages from the input files in the order they were"
-                            + " provided.")
+            description = "This endpoint merges multiple PDF files into a single PDF file. The merged"
+                    + " file will contain all pages from the input files in the order they were"
+                    + " provided.")
     public ResponseEntity<Resource> mergePdfs(
             @ModelAttribute MergePdfsRequest request,
             @RequestParam(value = "fileOrder", required = false) String fileOrder)
@@ -317,8 +310,8 @@ public class MergeController {
 
             int[] pageCounts;
             try {
-                pageCounts =
-                        mergeWithJpdfium(inputPaths, files, generateToc, mt.getFile().toPath());
+                pageCounts = mergeWithJpdfium(
+                        inputPaths, files, generateToc, mt.getFile().toPath());
             } catch (IOException e) {
                 ExceptionUtils.logException("PDF merge", e);
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
@@ -333,15 +326,13 @@ public class MergeController {
                     sigFlattenNeeded = !check.signatures().isEmpty();
                 } catch (Exception e) {
                     log.debug(
-                            "JPDFium signature pre-check failed; falling back to PDFBox flatten:"
-                                    + " {}",
+                            "JPDFium signature pre-check failed; falling back to PDFBox flatten:" + " {}",
                             e.getMessage());
                     sigFlattenNeeded = true;
                 }
                 if (!sigFlattenNeeded) {
-                    log.info(
-                            "removeCertSign requested but merged document has no signature"
-                                    + " fields; skipping PDFBox flatten pass");
+                    log.info("removeCertSign requested but merged document has no signature"
+                            + " fields; skipping PDFBox flatten pass");
                 }
             }
 
@@ -350,10 +341,9 @@ public class MergeController {
                     PDDocumentCatalog catalog = mergedDocument.getDocumentCatalog();
                     PDAcroForm acroForm = catalog.getAcroForm();
                     if (acroForm != null) {
-                        List<PDField> fieldsToRemove =
-                                acroForm.getFields().stream()
-                                        .filter(PDSignatureField.class::isInstance)
-                                        .toList();
+                        List<PDField> fieldsToRemove = acroForm.getFields().stream()
+                                .filter(PDSignatureField.class::isInstance)
+                                .toList();
                         if (!fieldsToRemove.isEmpty()) {
                             acroForm.flatten(fieldsToRemove, false);
                         }
@@ -397,14 +387,12 @@ public class MergeController {
         }
 
         String firstFilename = files.length > 0 ? files[0].getOriginalFilename() : null;
-        String mergedFileName =
-                GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
+        String mergedFileName = GeneralUtils.generateFilename(firstFilename, "_merged_unsigned.pdf");
 
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
     }
 
-    private int[] mergeWithJpdfium(
-            List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
+    private int[] mergeWithJpdfium(List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
             throws IOException {
         if (inputPaths.isEmpty()) {
             try (PdfDocument empty = PdfDocument.open(new byte[0])) {
@@ -431,8 +419,7 @@ public class MergeController {
                 runningOffset += pageCounts[i];
             }
 
-            BookmarkTree combinedTree =
-                    buildCombinedBookmarkTree(files, pageOffsets, sourceBookmarks, generateToc);
+            BookmarkTree combinedTree = buildCombinedBookmarkTree(files, pageOffsets, sourceBookmarks, generateToc);
 
             try (PdfDocument merged = PdfMerge.merge(docs)) {
                 if (combinedTree.entries().isEmpty()) {
@@ -455,10 +442,7 @@ public class MergeController {
     }
 
     private BookmarkTree buildCombinedBookmarkTree(
-            MultipartFile[] files,
-            int[] pageOffsets,
-            List<List<Bookmark>> sourceBookmarks,
-            boolean generateToc) {
+            MultipartFile[] files, int[] pageOffsets, List<List<Bookmark>> sourceBookmarks, boolean generateToc) {
         BookmarkTree.Builder builder = BookmarkTree.builder();
 
         if (generateToc) {
@@ -485,8 +469,7 @@ public class MergeController {
     private void addBookmarkFlat(BookmarkTree.Builder builder, Bookmark root, int offset) {
         final int maxNodes = 100_000;
         java.util.Deque<Bookmark> stack = new java.util.ArrayDeque<>();
-        java.util.Set<Bookmark> visited =
-                java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        java.util.Set<Bookmark> visited = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         stack.push(root);
         int processed = 0;
         while (!stack.isEmpty() && processed < maxNodes) {
@@ -506,9 +489,7 @@ public class MergeController {
             }
         }
         if (processed >= maxNodes) {
-            log.warn(
-                    "Source bookmark traversal hit {}-node cap; remaining bookmarks dropped",
-                    maxNodes);
+            log.warn("Source bookmark traversal hit {}-node cap; remaining bookmarks dropped", maxNodes);
         }
     }
 }

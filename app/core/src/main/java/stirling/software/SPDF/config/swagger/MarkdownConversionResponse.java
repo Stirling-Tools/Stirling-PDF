@@ -28,7 +28,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                             @Schema(
                                                     type = "string",
                                                     format = "binary",
-                                                    description =
-                                                            "Markdown file converted from PDF")))
+                                                    description = "Markdown file converted from PDF")))
         })
 public @interface MarkdownConversionResponse {}

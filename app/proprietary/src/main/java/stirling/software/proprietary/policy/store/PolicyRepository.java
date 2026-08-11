@@ -26,9 +26,8 @@ public interface PolicyRepository extends JpaRepository<PolicyEntity, String> {
      * (login-disabled / pre-team data), mirroring the in-memory team filter rather than the empty
      * result a plain {@code = null} would give.
      */
-    @Query(
-            "select p from PolicyEntity p where ((:teamId is null and p.teamId is null) or"
-                    + " p.teamId = :teamId) order by coalesce(p.sortOrder, 0) asc, p.id asc")
+    @Query("select p from PolicyEntity p where ((:teamId is null and p.teamId is null) or"
+            + " p.teamId = :teamId) order by coalesce(p.sortOrder, 0) asc, p.id asc")
     List<PolicyEntity> findByTeam(@Param("teamId") Long teamId);
 
     /** All policies in run order — used when team scoping is off (login-disabled). */
@@ -42,8 +41,6 @@ public interface PolicyRepository extends JpaRepository<PolicyEntity, String> {
      * inside a transaction.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query(
-            "select p from PolicyEntity p where (:teamId is null and p.teamId is null) or"
-                    + " p.teamId = :teamId")
+    @Query("select p from PolicyEntity p where (:teamId is null and p.teamId is null) or" + " p.teamId = :teamId")
     List<PolicyEntity> findByTeamForUpdate(@Param("teamId") Long teamId);
 }

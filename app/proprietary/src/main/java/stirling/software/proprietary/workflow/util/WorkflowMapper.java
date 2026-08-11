@@ -31,8 +31,7 @@ public class WorkflowMapper {
      * @return WorkflowSessionResponse with participants (and wet signatures if objectMapper
      *     provided)
      */
-    public static WorkflowSessionResponse toResponse(
-            WorkflowSession session, ObjectMapper objectMapper) {
+    public static WorkflowSessionResponse toResponse(WorkflowSession session, ObjectMapper objectMapper) {
         return toResponse(session, objectMapper, true);
     }
 
@@ -76,28 +75,20 @@ public class WorkflowMapper {
 
         // Convert participants (with wet signatures if objectMapper provided)
         if (objectMapper != null) {
-            response.setParticipants(
-                    session.getParticipants().stream()
-                            .map(p -> toParticipantResponse(p, objectMapper, includeShareTokens))
-                            .toList());
+            response.setParticipants(session.getParticipants().stream()
+                    .map(p -> toParticipantResponse(p, objectMapper, includeShareTokens))
+                    .toList());
         } else {
-            response.setParticipants(
-                    session.getParticipants().stream()
-                            .map(p -> toParticipantResponse(p, includeShareTokens))
-                            .toList());
+            response.setParticipants(session.getParticipants().stream()
+                    .map(p -> toParticipantResponse(p, includeShareTokens))
+                    .toList());
         }
 
         // Calculate participant counts
         response.setParticipantCount(session.getParticipants().size());
-        response.setSignedCount(
-                (int)
-                        session.getParticipants().stream()
-                                .filter(
-                                        p ->
-                                                p.getStatus()
-                                                        == stirling.software.proprietary.workflow
-                                                                .model.ParticipantStatus.SIGNED)
-                                .count());
+        response.setSignedCount((int) session.getParticipants().stream()
+                .filter(p -> p.getStatus() == stirling.software.proprietary.workflow.model.ParticipantStatus.SIGNED)
+                .count());
 
         return response;
     }
@@ -136,8 +127,7 @@ public class WorkflowMapper {
         response.setExpiresAt(participant.getExpiresAt());
         response.setLastUpdated(participant.getLastUpdated());
         response.setHasCompleted(participant.hasCompleted());
-        response.setExpired(
-                participant.isExpired()); // Lombok generates setExpired() for isExpired field
+        response.setExpired(participant.isExpired()); // Lombok generates setExpired() for isExpired field
 
         return response;
     }
@@ -193,8 +183,7 @@ public class WorkflowMapper {
                 var wetSigsNode = node.get("wetSignatures");
                 if (wetSigsNode.isArray()) {
                     for (var wetSigNode : wetSigsNode) {
-                        WetSignatureMetadata wetSig =
-                                objectMapper.treeToValue(wetSigNode, WetSignatureMetadata.class);
+                        WetSignatureMetadata wetSig = objectMapper.treeToValue(wetSigNode, WetSignatureMetadata.class);
                         signatures.add(wetSig);
                     }
                 }

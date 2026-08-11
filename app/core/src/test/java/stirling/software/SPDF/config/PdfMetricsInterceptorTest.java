@@ -72,10 +72,7 @@ class PdfMetricsInterceptorTest {
     @Test
     void editorRequestWithBrowserIdIsNotCounted() {
         interceptor.afterCompletion(
-                editRequest(1, "X-Browser-Id", "abc-123"),
-                response(200, "application/pdf"),
-                null,
-                null);
+                editRequest(1, "X-Browser-Id", "abc-123"), response(200, "application/pdf"), null, null);
         verify(service, never()).recordOperation(anyInt());
     }
 

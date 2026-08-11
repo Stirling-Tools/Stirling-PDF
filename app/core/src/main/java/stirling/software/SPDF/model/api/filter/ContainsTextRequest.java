@@ -11,9 +11,6 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 @EqualsAndHashCode(callSuper = true)
 public class ContainsTextRequest extends PDFWithPageNums {
 
-    @Schema(
-            description = "The text to check for",
-            defaultValue = "text",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "The text to check for", defaultValue = "text", requiredMode = Schema.RequiredMode.REQUIRED)
     private String text;
 }

@@ -32,12 +32,16 @@ public record Verdict(
     public long errorCount() {
         return discrepancies == null
                 ? 0
-                : discrepancies.stream().filter(d -> d.severity() == AuditSeverity.ERROR).count();
+                : discrepancies.stream()
+                        .filter(d -> d.severity() == AuditSeverity.ERROR)
+                        .count();
     }
 
     public long warningCount() {
         return discrepancies == null
                 ? 0
-                : discrepancies.stream().filter(d -> d.severity() == AuditSeverity.WARNING).count();
+                : discrepancies.stream()
+                        .filter(d -> d.severity() == AuditSeverity.WARNING)
+                        .count();
     }
 }

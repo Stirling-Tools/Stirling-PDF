@@ -41,9 +41,8 @@ public class MailConfig {
         // Only set username and password if they are provided
         String username = mailProperties.getUsername();
         String password = mailProperties.getPassword();
-        boolean hasCredentials =
-                (username != null && !username.trim().isEmpty())
-                        || (password != null && !password.trim().isEmpty());
+        boolean hasCredentials = (username != null && !username.trim().isEmpty())
+                || (password != null && !password.trim().isEmpty());
 
         if (username != null && !username.trim().isEmpty()) {
             mailSender.setUsername(username);
@@ -71,13 +70,13 @@ public class MailConfig {
             log.info("SMTP authentication disabled - no credentials provided");
         }
 
-        boolean startTlsEnabled =
-                mailProperties.getStartTlsEnable() == null || mailProperties.getStartTlsEnable();
+        boolean startTlsEnabled = mailProperties.getStartTlsEnable() == null || mailProperties.getStartTlsEnable();
         // Enables STARTTLS to encrypt the connection if supported by the SMTP server
         props.put("mail.smtp.starttls.enable", Boolean.toString(startTlsEnabled));
         if (mailProperties.getStartTlsRequired() != null) {
             props.put(
-                    "mail.smtp.starttls.required", mailProperties.getStartTlsRequired().toString());
+                    "mail.smtp.starttls.required",
+                    mailProperties.getStartTlsRequired().toString());
         }
 
         if (mailProperties.getSslEnable() != null) {

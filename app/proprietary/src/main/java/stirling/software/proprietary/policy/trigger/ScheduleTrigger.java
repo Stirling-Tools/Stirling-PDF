@@ -66,11 +66,9 @@ public class ScheduleTrigger implements PolicyTrigger {
             return;
         }
         long sweepSeconds = applicationProperties.getPolicies().getScheduleSweepSeconds();
-        scheduler =
-                Executors.newSingleThreadScheduledExecutor(
-                        Thread.ofVirtual().name("policy-schedule-", 0).factory());
-        scheduler.scheduleAtFixedRate(
-                this::safeSweep, sweepSeconds, sweepSeconds, TimeUnit.SECONDS);
+        scheduler = Executors.newSingleThreadScheduledExecutor(
+                Thread.ofVirtual().name("policy-schedule-", 0).factory());
+        scheduler.scheduleAtFixedRate(this::safeSweep, sweepSeconds, sweepSeconds, TimeUnit.SECONDS);
         log.info("Schedule trigger started (sweep every {}s)", sweepSeconds);
     }
 
@@ -99,11 +97,7 @@ public class ScheduleTrigger implements PolicyTrigger {
             try {
                 config = ScheduleConfig.from(objectMapper, input.trigger().options());
             } catch (IllegalArgumentException e) {
-                log.warn(
-                        "Scheduled input {}/{} is misconfigured: {}",
-                        policy.id(),
-                        input.sourceId(),
-                        e.getMessage());
+                log.warn("Scheduled input {}/{} is misconfigured: {}", policy.id(), input.sourceId(), e.getMessage());
                 continue;
             }
 
@@ -120,11 +114,7 @@ public class ScheduleTrigger implements PolicyTrigger {
                 later = config.schedule().nextAfter(later);
             }
             lastFiredByBinding.put(key, next.toInstant());
-            log.info(
-                    "Scheduled input {}/{} ({}) is due",
-                    policy.id(),
-                    input.sourceId(),
-                    policy.name());
+            log.info("Scheduled input {}/{} ({}) is due", policy.id(), input.sourceId(), policy.name());
             policyRunner.runInput(policy, input, SweepKind.FULL);
         }
     }

@@ -23,8 +23,7 @@ public interface InputSource {
     /** Throws {@link IllegalArgumentException} on bad config. Called on save to fail fast. */
     default void validate(InputSpec spec) {}
 
-    default Map<String, Object> prepareOptionsForSave(
-            Map<String, Object> options, boolean isCreate) {
+    default Map<String, Object> prepareOptionsForSave(Map<String, Object> options, boolean isCreate) {
         return options;
     }
 

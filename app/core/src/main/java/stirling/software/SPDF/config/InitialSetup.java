@@ -78,11 +78,9 @@ public class InitialSetup {
 
     public void initSetAppVersion() throws IOException {
         // Check if this is a new server before setting the version
-        String existingVersion = applicationProperties.getAutomaticallyGenerated().getAppVersion();
-        isNewServer =
-                existingVersion == null
-                        || existingVersion.isEmpty()
-                        || "0.0.0".equals(existingVersion);
+        String existingVersion =
+                applicationProperties.getAutomaticallyGenerated().getAppVersion();
+        isNewServer = existingVersion == null || existingVersion.isEmpty() || "0.0.0".equals(existingVersion);
 
         String appVersion = "0.0.0";
         Resource resource = new ClassPathResource("version.properties");

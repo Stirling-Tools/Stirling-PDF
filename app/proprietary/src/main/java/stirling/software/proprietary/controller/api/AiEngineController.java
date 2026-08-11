@@ -90,8 +90,7 @@ public class AiEngineController {
         this.endpointResolver = endpointResolver;
         this.aiFeatureGate = aiFeatureGate;
         this.userService = userService;
-        this.streamTimeoutMs =
-                applicationProperties.getAiEngine().getStreamTimeoutSeconds() * 1000L;
+        this.streamTimeoutMs = applicationProperties.getAiEngine().getStreamTimeoutSeconds() * 1000L;
     }
 
     private String currentUserId() {
@@ -110,12 +109,10 @@ public class AiEngineController {
     @PostMapping(value = "/orchestrate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Run an AI workflow against a PDF",
-            description =
-                    "Accepts PDF uploads and a user message and returns an AI workflow result."
-                            + " When the workflow produces files, they are registered with the job"
-                            + " system and downloadable via GET /api/v1/general/files/{fileId}.")
-    public AiWorkflowResponse orchestrate(@Valid @ModelAttribute AiWorkflowRequest request)
-            throws IOException {
+            description = "Accepts PDF uploads and a user message and returns an AI workflow result."
+                    + " When the workflow produces files, they are registered with the job"
+                    + " system and downloadable via GET /api/v1/general/files/{fileId}.")
+    public AiWorkflowResponse orchestrate(@Valid @ModelAttribute AiWorkflowRequest request) throws IOException {
         aiFeatureGate.requireConversationalWorkflow();
         AiWorkflowResponse result = aiWorkflowService.orchestrate(request);
         registerFileResultAsJob(result);
@@ -125,30 +122,22 @@ public class AiEngineController {
     @PostMapping(value = "/orchestrate/stream", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Run an AI workflow with streaming progress",
-            description =
-                    "Accepts a PDF upload and a user message, returns SSE events with progress"
-                            + " updates followed by the final AI workflow result")
+            description = "Accepts a PDF upload and a user message, returns SSE events with progress"
+                    + " updates followed by the final AI workflow result")
     public SseEmitter orchestrateStream(@Valid @ModelAttribute AiWorkflowRequest request) {
         aiFeatureGate.requireConversationalWorkflow();
         SseEmitter emitter = new SseEmitter(streamTimeoutMs);
 
-        emitter.onTimeout(
-                () -> {
-                    // Emit an explicit error frame so the frontend reports a timeout rather than
-                    // silently seeing the stream end without a result.
-                    log.warn(
-                            "SSE emitter timed out for AI orchestration stream after {} ms",
-                            streamTimeoutMs);
-                    sendEvent(
-                            emitter,
-                            "error",
-                            Map.of(
-                                    "message",
-                                    "AI workflow timed out after "
-                                            + (streamTimeoutMs / 1000)
-                                            + " seconds"));
-                    emitter.complete();
-                });
+        emitter.onTimeout(() -> {
+            // Emit an explicit error frame so the frontend reports a timeout rather than
+            // silently seeing the stream end without a result.
+            log.warn("SSE emitter timed out for AI orchestration stream after {} ms", streamTimeoutMs);
+            sendEvent(
+                    emitter,
+                    "error",
+                    Map.of("message", "AI workflow timed out after " + (streamTimeoutMs / 1000) + " seconds"));
+            emitter.complete();
+        });
         emitter.onError(e -> log.warn("SSE emitter error for AI orchestration stream", e));
 
         aiStreamExecutor.execute(() -> runOrchestrationStream(request, emitter));
@@ -157,22 +146,21 @@ public class AiEngineController {
     }
 
     private void runOrchestrationStream(AiWorkflowRequest request, SseEmitter emitter) {
-        AiWorkflowService.ProgressListener listener =
-                new AiWorkflowService.ProgressListener() {
-                    @Override
-                    public void onProgress(AiWorkflowProgressEvent event) {
-                        sendEvent(emitter, "progress", event);
-                    }
+        AiWorkflowService.ProgressListener listener = new AiWorkflowService.ProgressListener() {
+            @Override
+            public void onProgress(AiWorkflowProgressEvent event) {
+                sendEvent(emitter, "progress", event);
+            }
 
-                    @Override
-                    public void onHeartbeat() {
-                        // Forward upstream heartbeats so the SSE pipe stays visibly alive between
-                        // real progress events; if the frontend has gone away, sendEvent throws,
-                        // which propagates up through the stream consumer and closes our upstream
-                        // engine connection so the engine can cancel its in-flight workflow.
-                        sendEvent(emitter, "heartbeat", Map.of());
-                    }
-                };
+            @Override
+            public void onHeartbeat() {
+                // Forward upstream heartbeats so the SSE pipe stays visibly alive between
+                // real progress events; if the frontend has gone away, sendEvent throws,
+                // which propagates up through the stream consumer and closes our upstream
+                // engine connection so the engine can cancel its in-flight workflow.
+                sendEvent(emitter, "heartbeat", Map.of());
+            }
+        };
         try {
             AiWorkflowResponse result = aiWorkflowService.orchestrate(request, listener);
             registerFileResultAsJob(result);
@@ -207,19 +195,16 @@ public class AiEngineController {
         // Scope the job key to the current user so the download endpoint's ownership check
         // passes when security is enabled. NoOpJobOwnershipService returns the UUID unchanged
         // when security is off.
-        String jobKey =
-                jobOwnershipService.createScopedJobKey(java.util.UUID.randomUUID().toString());
+        String jobKey = jobOwnershipService.createScopedJobKey(
+                java.util.UUID.randomUUID().toString());
         taskManager.createTask(jobKey);
-        List<ResultFile> jobFiles =
-                files.stream()
-                        .map(
-                                f ->
-                                        ResultFile.builder()
-                                                .fileId(f.getFileId())
-                                                .fileName(f.getFileName())
-                                                .contentType(f.getContentType())
-                                                .build())
-                        .toList();
+        List<ResultFile> jobFiles = files.stream()
+                .map(f -> ResultFile.builder()
+                        .fileId(f.getFileId())
+                        .fileName(f.getFileName())
+                        .contentType(f.getContentType())
+                        .build())
+                .toList();
         taskManager.setMultipleFileResults(jobKey, jobFiles);
         taskManager.setComplete(jobKey);
     }
@@ -249,16 +234,14 @@ public class AiEngineController {
     @PostMapping(value = "/pdf/edit", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Generate a PDF edit plan",
-            description =
-                    "Sends a user message to the PDF edit agent which returns a structured plan"
-                            + " of tool operations to perform")
+            description = "Sends a user message to the PDF edit agent which returns a structured plan"
+                    + " of tool operations to perform")
     public ResponseEntity<String> pdfEdit(@RequestBody String requestBody) throws IOException {
         // Same gate as /orchestrate: edit agent is a model call on the same conversational surface.
         aiFeatureGate.requireConversationalWorkflow();
         JsonNode parsed = parseJson(requestBody);
         if (!parsed.isObject()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Request body must be a JSON object");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body must be a JSON object");
         }
         String forwardedBody = withEnabledEndpoints((ObjectNode) parsed);
         String response = aiEngineClient.post("/api/v1/pdf/edit", forwardedBody, currentUserId());
@@ -269,8 +252,7 @@ public class AiEngineController {
         try {
             return objectMapper.readValue(body, JsonNode.class);
         } catch (JacksonException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Request body is not valid JSON");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is not valid JSON");
         }
     }
 

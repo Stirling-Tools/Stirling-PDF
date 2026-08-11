@@ -50,27 +50,26 @@ class FormFillControllerTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private ObjectMapper realObjectMapper;
 
-    @InjectMocks private FormFillController controller;
+    @InjectMocks
+    private FormFillController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
         realObjectMapper = JsonMapper.builder().build();
         // Inject real ObjectMapper via reflection since @InjectMocks uses the mock
         var field = FormFillController.class.getDeclaredField("objectMapper");
@@ -120,17 +119,14 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws for null file")
         void nullFile() {
-            assertThatThrownBy(() -> controller.listFields(null))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.listFields(null)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         @DisplayName("throws for empty file")
         void emptyFile() {
-            MockMultipartFile empty =
-                    new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
-            assertThatThrownBy(() -> controller.listFields(empty))
-                    .isInstanceOf(IllegalArgumentException.class);
+            MockMultipartFile empty = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
+            assertThatThrownBy(() -> controller.listFields(empty)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -185,8 +181,7 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws for null file")
         void nullFile() {
-            assertThatThrownBy(() -> controller.extractCsv(null, null))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> controller.extractCsv(null, null)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -213,10 +208,8 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws for empty file")
         void emptyFile() {
-            MockMultipartFile empty =
-                    new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
-            assertThatThrownBy(() -> controller.extractXlsx(empty, null))
-                    .isInstanceOf(IllegalArgumentException.class);
+            MockMultipartFile empty = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
+            assertThatThrownBy(() -> controller.extractXlsx(empty, null)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -321,9 +314,8 @@ class FormFillControllerTest {
             PDDocument doc = createMinimalPdf();
             when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
 
-            String json =
-                    "[{\"targetName\":\"f1\",\"name\":null,\"label\":null,\"type\":null,"
-                            + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
+            String json = "[{\"targetName\":\"f1\",\"name\":null,\"label\":null,\"type\":null,"
+                    + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
             ResponseEntity<Resource> response = controller.modifyFields(file, json.getBytes());
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -339,15 +331,11 @@ class FormFillControllerTest {
         @Test
         @DisplayName("strips .pdf extension and appends suffix")
         void stripsExtension() throws Exception {
-            var method =
-                    FormFillController.class.getDeclaredMethod(
-                            "buildBaseName",
-                            org.springframework.web.multipart.MultipartFile.class,
-                            String.class);
+            var method = FormFillController.class.getDeclaredMethod(
+                    "buildBaseName", org.springframework.web.multipart.MultipartFile.class, String.class);
             method.setAccessible(true);
 
-            MockMultipartFile file =
-                    new MockMultipartFile("file", "report.pdf", "application/pdf", new byte[] {1});
+            MockMultipartFile file = new MockMultipartFile("file", "report.pdf", "application/pdf", new byte[] {1});
             String result = (String) method.invoke(null, file, "filled");
             assertThat(result).isEqualTo("report_filled");
         }
@@ -355,15 +343,11 @@ class FormFillControllerTest {
         @Test
         @DisplayName("handles file without .pdf extension")
         void noPdfExtension() throws Exception {
-            var method =
-                    FormFillController.class.getDeclaredMethod(
-                            "buildBaseName",
-                            org.springframework.web.multipart.MultipartFile.class,
-                            String.class);
+            var method = FormFillController.class.getDeclaredMethod(
+                    "buildBaseName", org.springframework.web.multipart.MultipartFile.class, String.class);
             method.setAccessible(true);
 
-            MockMultipartFile file =
-                    new MockMultipartFile("file", "report.docx", "application/pdf", new byte[] {1});
+            MockMultipartFile file = new MockMultipartFile("file", "report.docx", "application/pdf", new byte[] {1});
             String result = (String) method.invoke(null, file, "filled");
             assertThat(result).isEqualTo("report.docx_filled");
         }
@@ -371,15 +355,11 @@ class FormFillControllerTest {
         @Test
         @DisplayName("uses 'document' for null original filename")
         void nullFilename() throws Exception {
-            var method =
-                    FormFillController.class.getDeclaredMethod(
-                            "buildBaseName",
-                            org.springframework.web.multipart.MultipartFile.class,
-                            String.class);
+            var method = FormFillController.class.getDeclaredMethod(
+                    "buildBaseName", org.springframework.web.multipart.MultipartFile.class, String.class);
             method.setAccessible(true);
 
-            MockMultipartFile file =
-                    new MockMultipartFile("file", null, "application/pdf", new byte[] {1});
+            MockMultipartFile file = new MockMultipartFile("file", null, "application/pdf", new byte[] {1});
             String result = (String) method.invoke(null, file, "filled");
             assertThat(result).isEqualTo("document_filled");
         }

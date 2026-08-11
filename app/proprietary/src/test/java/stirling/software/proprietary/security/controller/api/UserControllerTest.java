@@ -47,14 +47,29 @@ class UserControllerTest {
 
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
-    @Mock private UserService userService;
-    @Mock private SessionPersistentRegistry sessionRegistry;
-    @Mock private TeamRepository teamRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private EmailService emailService;
-    @Mock private UserLicenseSettingsService licenseSettingsService;
-    @Mock private LoginAttemptService loginAttemptService;
-    @Mock private TeamMembershipService teamMembershipService;
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private SessionPersistentRegistry sessionRegistry;
+
+    @Mock
+    private TeamRepository teamRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private UserLicenseSettingsService licenseSettingsService;
+
+    @Mock
+    private LoginAttemptService loginAttemptService;
+
+    @Mock
+    private TeamMembershipService teamMembershipService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -65,17 +80,16 @@ class UserControllerTest {
         applicationProperties.getPremium().setMaxUsers(10);
         applicationProperties.getMail().setEnabled(true);
 
-        UserController controller =
-                new UserController(
-                        userService,
-                        sessionRegistry,
-                        applicationProperties,
-                        teamRepository,
-                        userRepository,
-                        Optional.of(emailService),
-                        licenseSettingsService,
-                        loginAttemptService,
-                        teamMembershipService);
+        UserController controller = new UserController(
+                userService,
+                sessionRegistry,
+                applicationProperties,
+                teamRepository,
+                userRepository,
+                Optional.of(emailService),
+                licenseSettingsService,
+                loginAttemptService,
+                teamMembershipService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -86,10 +100,9 @@ class UserControllerTest {
         payload.setPassword("pw");
         when(userService.usernameExistsIgnoreCase("existing@example.com")).thenReturn(true);
 
-        mockMvc.perform(
-                        post("/api/v1/user/register")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(payload)))
+        mockMvc.perform(post("/api/v1/user/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("User already exists"));
 
@@ -107,18 +120,16 @@ class UserControllerTest {
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
         when(userService.isUsernameValid("new@example.com")).thenReturn(true);
         when(licenseSettingsService.wouldExceedLimit(1)).thenReturn(false);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
-                .thenReturn(Optional.of(defaultTeam));
+        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME)).thenReturn(Optional.of(defaultTeam));
 
         User savedUser = new User();
         savedUser.setUsername("new@example.com");
         savedUser.setEnabled(false);
         when(userService.saveUserCore(any())).thenReturn(savedUser);
 
-        mockMvc.perform(
-                        post("/api/v1/user/register")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(payload)))
+        mockMvc.perform(post("/api/v1/user/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.user.username").value("new@example.com"));
     }
@@ -131,10 +142,9 @@ class UserControllerTest {
         when(userService.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(user));
         Authentication authentication = new UsernamePasswordAuthenticationToken("admin", "pw");
 
-        mockMvc.perform(
-                        post("/api/v1/user/admin/changeUserEnabled/admin")
-                                .param("enabled", "false")
-                                .principal(authentication))
+        mockMvc.perform(post("/api/v1/user/admin/changeUserEnabled/admin")
+                        .param("enabled", "false")
+                        .principal(authentication))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Cannot disable your own account."));
     }
@@ -187,10 +197,7 @@ class UserControllerTest {
         // Default "org" scope returns every enabled user via findAll(), no team lookup.
         Team alpha = team(1L, "alpha");
         when(userRepository.findAll())
-                .thenReturn(
-                        List.of(
-                                user(1L, "a@alpha.com", true, alpha),
-                                user(2L, "b@alpha.com", true, alpha)));
+                .thenReturn(List.of(user(1L, "a@alpha.com", true, alpha), user(2L, "b@alpha.com", true, alpha)));
 
         mockMvc.perform(get("/api/v1/user/users").principal(auth("a@alpha.com")))
                 .andExpect(status().isOk())
@@ -209,8 +216,7 @@ class UserControllerTest {
         anon.setAuthenticationType(AuthenticationType.ANONYMOUS);
         when(userService.findByUsernameIgnoreCase("anon_abc")).thenReturn(Optional.of(anon));
 
-        mockMvc.perform(get("/api/v1/user/users").principal(auth("anon_abc")))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/user/users").principal(auth("anon_abc"))).andExpect(status().isForbidden());
 
         verify(userRepository, never()).findAll();
         verify(userRepository, never()).findAllByTeamId(any());
@@ -220,10 +226,8 @@ class UserControllerTest {
     void listUsersOrgScopeFiltersDisabledUsers() throws Exception {
         Team alpha = team(1L, "alpha");
         when(userRepository.findAll())
-                .thenReturn(
-                        List.of(
-                                user(1L, "enabled@alpha.com", true, alpha),
-                                user(2L, "disabled@alpha.com", false, alpha)));
+                .thenReturn(List.of(
+                        user(1L, "enabled@alpha.com", true, alpha), user(2L, "disabled@alpha.com", false, alpha)));
 
         mockMvc.perform(get("/api/v1/user/users").principal(auth("enabled@alpha.com")))
                 .andExpect(status().isOk())
@@ -236,10 +240,8 @@ class UserControllerTest {
         applicationProperties.getStorage().getSigning().setUserListScope("team");
         Team alpha = team(7L, "alpha");
         User caller = user(1L, "caller@alpha.com", true, alpha);
-        when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
-                .thenReturn(Optional.of(caller));
-        when(userRepository.findAllByTeamId(7L))
-                .thenReturn(List.of(caller, user(2L, "mate@alpha.com", true, alpha)));
+        when(userService.findByUsernameIgnoreCase("caller@alpha.com")).thenReturn(Optional.of(caller));
+        when(userRepository.findAllByTeamId(7L)).thenReturn(List.of(caller, user(2L, "mate@alpha.com", true, alpha)));
 
         mockMvc.perform(get("/api/v1/user/users").principal(auth("caller@alpha.com")))
                 .andExpect(status().isOk())
@@ -267,8 +269,7 @@ class UserControllerTest {
     void listUsersTeamScopeWithNullTeamReturnsSelfOnly() throws Exception {
         applicationProperties.getStorage().getSigning().setUserListScope("team");
         User caller = user(1L, "solo@nowhere.com", true, null);
-        when(userService.findByUsernameIgnoreCase("solo@nowhere.com"))
-                .thenReturn(Optional.of(caller));
+        when(userService.findByUsernameIgnoreCase("solo@nowhere.com")).thenReturn(Optional.of(caller));
 
         mockMvc.perform(get("/api/v1/user/users").principal(auth("solo@nowhere.com")))
                 .andExpect(status().isOk())
@@ -319,8 +320,7 @@ class UserControllerTest {
         Team alpha = team(3L, "alpha");
         when(userService.findByUsernameIgnoreCase("caller@alpha.com"))
                 .thenReturn(Optional.of(user(1L, "caller@alpha.com", true, alpha)));
-        when(userRepository.findAllByTeamId(3L))
-                .thenReturn(List.of(user(1L, "caller@alpha.com", true, alpha)));
+        when(userRepository.findAllByTeamId(3L)).thenReturn(List.of(user(1L, "caller@alpha.com", true, alpha)));
 
         mockMvc.perform(get("/api/v1/user/users").principal(auth("caller@alpha.com")))
                 .andExpect(status().isOk());

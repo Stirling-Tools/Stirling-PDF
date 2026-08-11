@@ -28,8 +28,7 @@ class DocumentContextTest {
     private static final String TENANT = "cb46c030-1825-4e81-a295-151c039dbf02";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static byte[] pdfBytes(java.util.function.Consumer<PDDocument> customise)
-            throws IOException {
+    private static byte[] pdfBytes(java.util.function.Consumer<PDDocument> customise) throws IOException {
         try (PDDocument document = new PDDocument()) {
             document.addPage(new PDPage());
             document.addPage(new PDPage());
@@ -41,19 +40,16 @@ class DocumentContextTest {
     }
 
     private ObjectNode contextOf(byte[] content, String filename, String policyName, String runId) {
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", filename, "application/pdf", content);
+        MockMultipartFile file = new MockMultipartFile("fileInput", filename, "application/pdf", content);
         return DocumentContext.build(file, content, policyName, runId, objectMapper);
     }
 
     @Test
     void describesThePdfAndTheRun() throws IOException {
-        byte[] content =
-                pdfBytes(
-                        document -> {
-                            document.getDocumentInformation().setTitle("Q3 Invoice");
-                            document.getDocumentInformation().setAuthor("Anthony");
-                        });
+        byte[] content = pdfBytes(document -> {
+            document.getDocumentInformation().setTitle("Q3 Invoice");
+            document.getDocumentInformation().setAuthor("Anthony");
+        });
 
         ObjectNode context = contextOf(content, "invoice.pdf", "Outbound review", "run-42");
 
@@ -74,11 +70,14 @@ class DocumentContextTest {
     void hashesTheContentTheApiWillReceive() throws IOException {
         byte[] content = pdfBytes(document -> {});
 
-        String sha = contextOf(content, "a.pdf", null, null).at("/document/sha256").asString();
+        String sha =
+                contextOf(content, "a.pdf", null, null).at("/document/sha256").asString();
 
         assertThat(sha).hasSize(64).matches("[0-9a-f]{64}");
         // Same bytes, same hash: external systems key on this for dedupe and chain-of-custody.
-        assertThat(contextOf(content, "renamed.pdf", null, null).at("/document/sha256").asString())
+        assertThat(contextOf(content, "renamed.pdf", null, null)
+                        .at("/document/sha256")
+                        .asString())
                 .isEqualTo(sha);
     }
 
@@ -88,30 +87,29 @@ class DocumentContextTest {
         // placeholder is unknown and the whole step fails at resolution time.
         byte[] content = pdfBytes(document -> {});
 
-        String base64 = contextOf(content, "a.pdf", null, null).at("/document/base64").asString();
+        String base64 =
+                contextOf(content, "a.pdf", null, null).at("/document/base64").asString();
 
         assertThat(Base64.getDecoder().decode(base64)).isEqualTo(content);
     }
 
     @Test
     void surfacesAnExistingPurviewLabel() throws IOException {
-        byte[] content =
-                pdfBytes(
-                        document -> {
-                            try {
-                                PdfSensitivityLabels.apply(
-                                        document,
-                                        new SensitivityLabel(
-                                                "2096f6a2-d2f7-48be-b329-b73aaa526e5d",
-                                                "Confidential",
-                                                TENANT,
-                                                AssignmentMethod.PRIVILEGED,
-                                                null,
-                                                null));
-                            } catch (IOException e) {
-                                throw new java.io.UncheckedIOException(e);
-                            }
-                        });
+        byte[] content = pdfBytes(document -> {
+            try {
+                PdfSensitivityLabels.apply(
+                        document,
+                        new SensitivityLabel(
+                                "2096f6a2-d2f7-48be-b329-b73aaa526e5d",
+                                "Confidential",
+                                TENANT,
+                                AssignmentMethod.PRIVILEGED,
+                                null,
+                                null));
+            } catch (IOException e) {
+                throw new java.io.UncheckedIOException(e);
+            }
+        });
 
         ObjectNode context = contextOf(content, "secret.pdf", null, null);
 
@@ -123,13 +121,9 @@ class DocumentContextTest {
 
     @Test
     void surfacesTheClassifierVerdictAsJson() throws IOException {
-        byte[] content =
-                pdfBytes(
-                        document ->
-                                document.getDocumentInformation()
-                                        .setCustomMetadataValue(
-                                                PdfMetadataService.CLASSIFICATION_KEY,
-                                                "{\"label\":\"invoice\",\"confidence\":0.91}"));
+        byte[] content = pdfBytes(document -> document.getDocumentInformation()
+                .setCustomMetadataValue(
+                        PdfMetadataService.CLASSIFICATION_KEY, "{\"label\":\"invoice\",\"confidence\":0.91}"));
 
         ObjectNode context = contextOf(content, "a.pdf", null, null);
 
@@ -150,8 +144,7 @@ class DocumentContextTest {
     @Test
     void aNonPdfStillGetsTheBasics() {
         byte[] content = "just text".getBytes();
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "notes.txt", "text/plain", content);
+        MockMultipartFile file = new MockMultipartFile("fileInput", "notes.txt", "text/plain", content);
 
         ObjectNode context = DocumentContext.build(file, content, null, null, objectMapper);
 
@@ -166,8 +159,7 @@ class DocumentContextTest {
     @Test
     void unparseableBytesClaimingToBeAPdfDoNotFailTheStep() {
         byte[] content = "%PDF-1.7 but truncated".getBytes();
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "broken.pdf", "application/pdf", content);
+        MockMultipartFile file = new MockMultipartFile("fileInput", "broken.pdf", "application/pdf", content);
 
         ObjectNode context = DocumentContext.build(file, content, null, null, objectMapper);
 

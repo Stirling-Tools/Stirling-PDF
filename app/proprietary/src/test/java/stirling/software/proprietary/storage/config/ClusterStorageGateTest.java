@@ -127,8 +127,7 @@ class ClusterStorageGateTest {
         ClusterStorageGate gate = newGate(false, true, "database", "local", License.NORMAL);
         assertThatThrownBy(gate::validate)
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining(
-                        "storage.provider=database requires a Pro or Enterprise license");
+                .hasMessageContaining("storage.provider=database requires a Pro or Enterprise license");
     }
 
     @Test
@@ -154,8 +153,7 @@ class ClusterStorageGateTest {
         ClusterStorageGate gate = newGate(false, false, "local", "s3", License.NORMAL);
         assertThatThrownBy(gate::validate)
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining(
-                        "cluster.artifactStore=s3 requires a Pro or Enterprise license");
+                .hasMessageContaining("cluster.artifactStore=s3 requires a Pro or Enterprise license");
     }
 
     @Test
@@ -179,15 +177,11 @@ class ClusterStorageGateTest {
     }
 
     private static ClusterStorageGate newGate(
-            boolean clusterEnabled,
-            boolean storageEnabled,
-            String provider,
-            String clusterArtifactStore) {
+            boolean clusterEnabled, boolean storageEnabled, String provider, String clusterArtifactStore) {
         // Default to a SERVER license so existing tests (which assert clustering / artifact-store
         // rules independently of license) continue to pass. License-specific tests below build
         // gates with explicit license tiers.
-        return newGate(
-                clusterEnabled, storageEnabled, provider, clusterArtifactStore, License.SERVER);
+        return newGate(clusterEnabled, storageEnabled, provider, clusterArtifactStore, License.SERVER);
     }
 
     private static ClusterStorageGate newGate(
@@ -215,12 +209,9 @@ class ClusterStorageGateTest {
             doNothing().when(checker).requireProOrEnterprise(anyString());
         } else {
             // Mirror real LicenseKeyChecker.requireProOrEnterprise so message assertions match.
-            org.mockito.Mockito.doAnswer(
-                            inv -> {
-                                throw new IllegalStateException(
-                                        inv.getArgument(0)
-                                                + " requires a Pro or Enterprise license");
-                            })
+            org.mockito.Mockito.doAnswer(inv -> {
+                        throw new IllegalStateException(inv.getArgument(0) + " requires a Pro or Enterprise license");
+                    })
                     .when(checker)
                     .requireProOrEnterprise(anyString());
         }

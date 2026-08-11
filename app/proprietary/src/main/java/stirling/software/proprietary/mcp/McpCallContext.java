@@ -3,8 +3,7 @@ package stirling.software.proprietary.mcp;
 import java.util.Set;
 
 /** Per-call context: resolved Stirling identity and granted scopes for an {@link McpTool#call}. */
-public record McpCallContext(
-        String stirlingUserId, Set<String> grantedScopes, boolean scopesEnabled) {
+public record McpCallContext(String stirlingUserId, Set<String> grantedScopes, boolean scopesEnabled) {
 
     public boolean hasScope(String required) {
         if (!scopesEnabled) {

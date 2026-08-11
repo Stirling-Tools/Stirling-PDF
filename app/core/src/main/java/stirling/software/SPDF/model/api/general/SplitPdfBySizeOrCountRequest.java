@@ -12,15 +12,13 @@ import stirling.software.common.model.api.PDFFile;
 public class SplitPdfBySizeOrCountRequest extends PDFFile {
 
     @Schema(
-            description =
-                    "Determines the type of split: 0 for size, 1 for page count, 2 for document count",
+            description = "Determines the type of split: 0 for size, 1 for page count, 2 for document count",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "0")
     private int splitType;
 
     @Schema(
-            description =
-                    "Value for split: size in MB (e.g., '10MB') or number of pages (e.g., '5')",
+            description = "Value for split: size in MB (e.g., '10MB') or number of pages (e.g., '5')",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             defaultValue = "10MB")
     private String splitValue;

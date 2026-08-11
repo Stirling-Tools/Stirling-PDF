@@ -16,8 +16,6 @@ public class ConvertCbzToPdfRequest {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile fileInput;
 
-    @Schema(
-            description = "Optimize the output PDF for ebook reading using Ghostscript",
-            defaultValue = "false")
+    @Schema(description = "Optimize the output PDF for ebook reading using Ghostscript", defaultValue = "false")
     private boolean optimizeForEbook;
 }

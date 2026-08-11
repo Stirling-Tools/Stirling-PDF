@@ -93,16 +93,8 @@ public class PolicyInlineOutputMigration {
         if (existing != null) {
             return existing;
         }
-        Source created =
-                sourceStore.save(
-                        new Source(
-                                null,
-                                destinationName(spec),
-                                spec.type(),
-                                spec.options(),
-                                true,
-                                policy.owner(),
-                                policy.teamId()));
+        Source created = sourceStore.save(new Source(
+                null, destinationName(spec), spec.type(), spec.options(), true, policy.owner(), policy.teamId()));
         byAddress.put(key, created);
         return created;
     }

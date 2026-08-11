@@ -13,8 +13,7 @@ public final class TauriSamlUtils {
 
     public static boolean isTauriRelayState(HttpServletRequest request) {
         String relayState = request.getParameter("RelayState");
-        return relayState != null
-                && (relayState.equals("tauri") || relayState.startsWith(TAURI_RELAY_STATE_PREFIX));
+        return relayState != null && (relayState.equals("tauri") || relayState.startsWith(TAURI_RELAY_STATE_PREFIX));
     }
 
     public static String extractNonceFromRelayState(String relayState) {

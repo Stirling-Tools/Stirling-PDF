@@ -21,9 +21,7 @@ public class CertificateUtils {
 
     public static X509Certificate readCertificate(Resource certificateResource) throws Exception {
         try (PemReader pemReader =
-                new PemReader(
-                        new InputStreamReader(
-                                certificateResource.getInputStream(), StandardCharsets.UTF_8))) {
+                new PemReader(new InputStreamReader(certificateResource.getInputStream(), StandardCharsets.UTF_8))) {
             PemObject pemObject = pemReader.readPemObject();
             byte[] decodedCert = pemObject.getContent();
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -33,9 +31,7 @@ public class CertificateUtils {
 
     public static RSAPrivateKey readPrivateKey(Resource privateKeyResource) throws Exception {
         try (PEMParser pemParser =
-                new PEMParser(
-                        new InputStreamReader(
-                                privateKeyResource.getInputStream(), StandardCharsets.UTF_8))) {
+                new PEMParser(new InputStreamReader(privateKeyResource.getInputStream(), StandardCharsets.UTF_8))) {
 
             Object object = pemParser.readObject();
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
@@ -47,9 +43,8 @@ public class CertificateUtils {
                 // Handle PKCS#8 format
                 return (RSAPrivateKey) converter.getPrivateKey(keyInfo);
             } else {
-                throw new IllegalArgumentException(
-                        "Unsupported key format: "
-                                + (object != null ? object.getClass().getName() : "null"));
+                throw new IllegalArgumentException("Unsupported key format: "
+                        + (object != null ? object.getClass().getName() : "null"));
             }
         }
     }

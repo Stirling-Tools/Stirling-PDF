@@ -31,10 +31,10 @@ class JobQueueMoreTest {
 
     private JobQueue jobQueue;
 
-    @Mock private ResourceMonitor resourceMonitor;
+    @Mock
+    private ResourceMonitor resourceMonitor;
 
-    private final AtomicReference<ResourceStatus> statusRef =
-            new AtomicReference<>(ResourceStatus.OK);
+    private final AtomicReference<ResourceStatus> statusRef = new AtomicReference<>(ResourceStatus.OK);
 
     @BeforeEach
     void setUp() {
@@ -88,8 +88,7 @@ class JobQueueMoreTest {
         @Test
         @DisplayName("stop completes any still-pending futures exceptionally")
         void stopCompletesPendingFutures() {
-            CompletableFuture<ResponseEntity<?>> future =
-                    jobQueue.queueJob("pending", 50, () -> "x", 1000);
+            CompletableFuture<ResponseEntity<?>> future = jobQueue.queueJob("pending", 50, () -> "x", 1000);
             assertThat(future.isDone()).isFalse();
 
             // Drive shutdown without starting the scheduler so no processor races us to the job.
@@ -107,18 +106,16 @@ class JobQueueMoreTest {
         @DisplayName("rejects a job when the queue is full")
         void rejectsWhenFull() {
             // Capacity-1 queue whose timed offer rejects instantly (no 5s block) when full.
-            BlockingQueue<Object> instaReject =
-                    new LinkedBlockingQueue<>(1) {
-                        @Override
-                        public boolean offer(Object e, long timeout, TimeUnit unit) {
-                            return super.offer(e);
-                        }
-                    };
+            BlockingQueue<Object> instaReject = new LinkedBlockingQueue<>(1) {
+                @Override
+                public boolean offer(Object e, long timeout, TimeUnit unit) {
+                    return super.offer(e);
+                }
+            };
             ReflectionTestUtils.setField(jobQueue, "jobQueue", instaReject);
             jobQueue.queueJob("first", 50, () -> "a", 1000);
 
-            CompletableFuture<ResponseEntity<?>> rejected =
-                    jobQueue.queueJob("second", 50, () -> "b", 1000);
+            CompletableFuture<ResponseEntity<?>> rejected = jobQueue.queueJob("second", 50, () -> "b", 1000);
 
             assertThat(rejected).isCompletedExceptionally();
             assertThat(jobQueue.getRejectedJobs()).isEqualTo(1);
@@ -193,8 +190,7 @@ class JobQueueMoreTest {
         @DisplayName("executes a queued job and completes its future when resources are OK")
         void executesWhenOk() {
             statusRef.set(ResourceStatus.OK);
-            CompletableFuture<ResponseEntity<?>> future =
-                    jobQueue.queueJob("ok", 50, () -> "done", 5000);
+            CompletableFuture<ResponseEntity<?>> future = jobQueue.queueJob("ok", 50, () -> "done", 5000);
 
             invokeProcessQueue();
 
@@ -208,8 +204,7 @@ class JobQueueMoreTest {
         void overdueJobExecutesAndNotes() {
             statusRef.set(ResourceStatus.OK);
             ReflectionTestUtils.setField(jobQueue, "maxWaitTimeMs", 1L);
-            CompletableFuture<ResponseEntity<?>> future =
-                    jobQueue.queueJob("overdue", 50, () -> "late-done", 5000);
+            CompletableFuture<ResponseEntity<?>> future = jobQueue.queueJob("overdue", 50, () -> "late-done", 5000);
 
             // Backdate the queuedAt so wait-time exceeds maxWaitTimeMs.
             backdateQueuedAt("overdue");
@@ -222,9 +217,7 @@ class JobQueueMoreTest {
 
         @SuppressWarnings("unchecked")
         private void backdateQueuedAt(String jobId) {
-            var jobMap =
-                    (java.util.Map<String, Object>)
-                            ReflectionTestUtils.getField(jobQueue, "jobMap");
+            var jobMap = (java.util.Map<String, Object>) ReflectionTestUtils.getField(jobQueue, "jobMap");
             Object job = jobMap.get(jobId);
             ReflectionTestUtils.setField(job, "queuedAt", Instant.now().minusSeconds(60));
         }
@@ -238,22 +231,18 @@ class JobQueueMoreTest {
         @DisplayName("a cancelled job is skipped by executeJob without running its work")
         @SuppressWarnings("unchecked")
         void cancelledJobSkipped() throws Exception {
-            java.util.concurrent.atomic.AtomicBoolean ran =
-                    new java.util.concurrent.atomic.AtomicBoolean(false);
-            CompletableFuture<ResponseEntity<?>> future =
-                    jobQueue.queueJob(
-                            "cancelled",
-                            50,
-                            () -> {
-                                ran.set(true);
-                                return "should-not-run";
-                            },
-                            1000);
+            java.util.concurrent.atomic.AtomicBoolean ran = new java.util.concurrent.atomic.AtomicBoolean(false);
+            CompletableFuture<ResponseEntity<?>> future = jobQueue.queueJob(
+                    "cancelled",
+                    50,
+                    () -> {
+                        ran.set(true);
+                        return "should-not-run";
+                    },
+                    1000);
 
             // Grab the real QueuedJob instance, mark it cancelled, then drive executeJob directly.
-            var jobMap =
-                    (java.util.Map<String, Object>)
-                            ReflectionTestUtils.getField(jobQueue, "jobMap");
+            var jobMap = (java.util.Map<String, Object>) ReflectionTestUtils.getField(jobQueue, "jobMap");
             Object job = jobMap.get("cancelled");
             ReflectionTestUtils.setField(job, "cancelled", true);
 
@@ -270,8 +259,7 @@ class JobQueueMoreTest {
         @DisplayName("a non-ResponseEntity result is wrapped in ResponseEntity.ok")
         void nonResponseEntityWrapped() {
             statusRef.set(ResourceStatus.OK);
-            CompletableFuture<ResponseEntity<?>> future =
-                    jobQueue.queueJob("wrap", 50, () -> "plain", 5000);
+            CompletableFuture<ResponseEntity<?>> future = jobQueue.queueJob("wrap", 50, () -> "plain", 5000);
 
             invokeProcessQueue();
 
@@ -285,8 +273,7 @@ class JobQueueMoreTest {
         void responseEntityForwarded() {
             statusRef.set(ResourceStatus.OK);
             ResponseEntity<String> inner = ResponseEntity.ok("inner");
-            CompletableFuture<ResponseEntity<?>> future =
-                    jobQueue.queueJob("forward", 50, () -> inner, 5000);
+            CompletableFuture<ResponseEntity<?>> future = jobQueue.queueJob("forward", 50, () -> inner, 5000);
 
             invokeProcessQueue();
 
@@ -298,12 +285,10 @@ class JobQueueMoreTest {
         @DisplayName("a failing job completes its future exceptionally")
         void failingJobCompletesExceptionally() {
             statusRef.set(ResourceStatus.OK);
-            Supplier<Object> failing =
-                    () -> {
-                        throw new RuntimeException("exec-boom");
-                    };
-            CompletableFuture<ResponseEntity<?>> future =
-                    jobQueue.queueJob("fail", 50, failing, 5000);
+            Supplier<Object> failing = () -> {
+                throw new RuntimeException("exec-boom");
+            };
+            CompletableFuture<ResponseEntity<?>> future = jobQueue.queueJob("fail", 50, failing, 5000);
 
             invokeProcessQueue();
 
@@ -319,45 +304,35 @@ class JobQueueMoreTest {
         @Test
         @DisplayName("with no timeout it joins and returns the value")
         void noTimeoutJoins() {
-            Object result =
-                    ReflectionTestUtils.invokeMethod(
-                            jobQueue, "executeWithTimeout", (Supplier<Object>) () -> "joined", 0L);
+            Object result = ReflectionTestUtils.invokeMethod(
+                    jobQueue, "executeWithTimeout", (Supplier<Object>) () -> "joined", 0L);
             assertThat(result).isEqualTo("joined");
         }
 
         @Test
         @DisplayName("an execution failure is unwrapped to its cause")
         void executionFailureUnwrapped() {
-            Supplier<Object> failing =
-                    () -> {
-                        throw new IllegalStateException("inner-cause");
-                    };
-            Throwable thrown =
-                    org.junit.jupiter.api.Assertions.assertThrows(
-                            Throwable.class,
-                            () ->
-                                    ReflectionTestUtils.invokeMethod(
-                                            jobQueue, "executeWithTimeout", failing, 1000L));
+            Supplier<Object> failing = () -> {
+                throw new IllegalStateException("inner-cause");
+            };
+            Throwable thrown = org.junit.jupiter.api.Assertions.assertThrows(
+                    Throwable.class,
+                    () -> ReflectionTestUtils.invokeMethod(jobQueue, "executeWithTimeout", failing, 1000L));
             assertThat(messageChain(thrown)).contains("inner-cause");
         }
 
         @Test
         @DisplayName("a slow job exceeds the timeout and throws TimeoutException")
         void slowJobTimesOut() {
-            Supplier<Object> slow =
-                    () -> {
-                        long start = System.nanoTime();
-                        while (System.nanoTime() - start < 200_000_000L) {
-                            // busy wait beyond 1ms
-                        }
-                        return "late";
-                    };
-            Throwable thrown =
-                    org.junit.jupiter.api.Assertions.assertThrows(
-                            Throwable.class,
-                            () ->
-                                    ReflectionTestUtils.invokeMethod(
-                                            jobQueue, "executeWithTimeout", slow, 1L));
+            Supplier<Object> slow = () -> {
+                long start = System.nanoTime();
+                while (System.nanoTime() - start < 200_000_000L) {
+                    // busy wait beyond 1ms
+                }
+                return "late";
+            };
+            Throwable thrown = org.junit.jupiter.api.Assertions.assertThrows(
+                    Throwable.class, () -> ReflectionTestUtils.invokeMethod(jobQueue, "executeWithTimeout", slow, 1L));
             assertThat(messageChain(thrown)).contains("timed out");
         }
 
@@ -384,7 +359,8 @@ class JobQueueMoreTest {
             jobQueue.queueJob("keep", 50, () -> "a", 1000);
 
             // Force a new, smaller capacity on the next recalculation.
-            when(resourceMonitor.calculateDynamicQueueCapacity(anyInt(), anyInt())).thenReturn(4);
+            when(resourceMonitor.calculateDynamicQueueCapacity(anyInt(), anyInt()))
+                    .thenReturn(4);
 
             ReflectionTestUtils.invokeMethod(jobQueue, "updateQueueCapacity");
 

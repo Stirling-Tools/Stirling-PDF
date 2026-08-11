@@ -35,9 +35,14 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class InternalApiClientTest {
 
-    @Mock ServletContext servletContext;
-    @Mock UserServiceInterface userService;
-    @Mock TempFileManager tempFileManager;
+    @Mock
+    ServletContext servletContext;
+
+    @Mock
+    UserServiceInterface userService;
+
+    @Mock
+    TempFileManager tempFileManager;
 
     InternalApiClient client;
 
@@ -55,8 +60,7 @@ class InternalApiClientTest {
     private InternalApiClient newClient() {
         MockEnvironment environment = new MockEnvironment().withProperty("server.port", "8080");
         ApplicationProperties applicationProperties = new ApplicationProperties();
-        return new InternalApiClient(
-                servletContext, userService, tempFileManager, environment, applicationProperties);
+        return new InternalApiClient(servletContext, userService, tempFileManager, environment, applicationProperties);
     }
 
     @Test
@@ -78,20 +82,15 @@ class InternalApiClientTest {
 
         HttpHeaders[] captured = {null};
 
-        try (var ignored =
-                mockConstruction(
-                        RestTemplate.class,
-                        (rt, ctx) -> {
-                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
-                                    .thenAnswer(
-                                            inv -> {
-                                                HttpEntity<?> entity = inv.getArgument(0);
-                                                captured[0] = entity.getHeaders();
-                                                return (RequestCallback) req -> {};
-                                            });
-                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
-                                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
-                        })) {
+        try (var ignored = mockConstruction(RestTemplate.class, (rt, ctx) -> {
+            when(rt.httpEntityCallback(any(), eq(Resource.class))).thenAnswer(inv -> {
+                HttpEntity<?> entity = inv.getArgument(0);
+                captured[0] = entity.getHeaders();
+                return (RequestCallback) req -> {};
+            });
+            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
+        })) {
 
             InternalApiClient mockedClient = newClient();
             mockedClient.post("/api/v1/general/merge-pdfs", body);
@@ -119,26 +118,20 @@ class InternalApiClientTest {
 
         HttpHeaders[] captured = {null};
 
-        try (var ignored =
-                mockConstruction(
-                        RestTemplate.class,
-                        (rt, ctx) -> {
-                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
-                                    .thenAnswer(
-                                            inv -> {
-                                                HttpEntity<?> entity = inv.getArgument(0);
-                                                captured[0] = entity.getHeaders();
-                                                return (RequestCallback) req -> {};
-                                            });
+        try (var ignored = mockConstruction(RestTemplate.class, (rt, ctx) -> {
+            when(rt.httpEntityCallback(any(), eq(Resource.class))).thenAnswer(inv -> {
+                HttpEntity<?> entity = inv.getArgument(0);
+                captured[0] = entity.getHeaders();
+                return (RequestCallback) req -> {};
+            });
 
-                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
-                                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
-                        })) {
+            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
+        })) {
 
             // Reconstruct the client so its cached RestTemplate is the mocked one.
             InternalApiClient mockedClient = newClient();
-            ResponseEntity<Resource> response =
-                    mockedClient.post("/api/v1/general/merge-pdfs", body);
+            ResponseEntity<Resource> response = mockedClient.post("/api/v1/general/merge-pdfs", body);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -159,25 +152,17 @@ class InternalApiClientTest {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("fileInput", namedResource("input.pdf", "data"));
 
-        try (var ignored =
-                mockConstruction(
-                        RestTemplate.class,
-                        (rt, ctx) -> {
-                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
-                                    .thenAnswer(inv -> (RequestCallback) req -> {});
-                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
-                                    .thenThrow(
-                                            new ResourceAccessException(
-                                                    "I/O error on POST request: Read timed out",
-                                                    new java.net.SocketTimeoutException(
-                                                            "Read timed out")));
-                        })) {
+        try (var ignored = mockConstruction(RestTemplate.class, (rt, ctx) -> {
+            when(rt.httpEntityCallback(any(), eq(Resource.class))).thenAnswer(inv -> (RequestCallback) req -> {});
+            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                    .thenThrow(new ResourceAccessException(
+                            "I/O error on POST request: Read timed out",
+                            new java.net.SocketTimeoutException("Read timed out")));
+        })) {
 
             InternalApiClient mockedClient = newClient();
-            InternalApiTimeoutException thrown =
-                    assertThrows(
-                            InternalApiTimeoutException.class,
-                            () -> mockedClient.post("/api/v1/general/merge-pdfs", body));
+            InternalApiTimeoutException thrown = assertThrows(
+                    InternalApiTimeoutException.class, () -> mockedClient.post("/api/v1/general/merge-pdfs", body));
 
             assertEquals("/api/v1/general/merge-pdfs", thrown.getEndpointPath());
             assertNotNull(thrown.getReadTimeout());
@@ -194,24 +179,16 @@ class InternalApiClientTest {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("fileInput", namedResource("input.pdf", "data"));
 
-        try (var ignored =
-                mockConstruction(
-                        RestTemplate.class,
-                        (rt, ctx) -> {
-                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
-                                    .thenAnswer(inv -> (RequestCallback) req -> {});
-                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
-                                    .thenThrow(
-                                            new ResourceAccessException(
-                                                    "I/O error on POST request: Connection refused",
-                                                    new java.net.ConnectException(
-                                                            "Connection refused")));
-                        })) {
+        try (var ignored = mockConstruction(RestTemplate.class, (rt, ctx) -> {
+            when(rt.httpEntityCallback(any(), eq(Resource.class))).thenAnswer(inv -> (RequestCallback) req -> {});
+            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                    .thenThrow(new ResourceAccessException(
+                            "I/O error on POST request: Connection refused",
+                            new java.net.ConnectException("Connection refused")));
+        })) {
 
             InternalApiClient mockedClient = newClient();
-            assertThrows(
-                    ResourceAccessException.class,
-                    () -> mockedClient.post("/api/v1/general/merge-pdfs", body));
+            assertThrows(ResourceAccessException.class, () -> mockedClient.post("/api/v1/general/merge-pdfs", body));
         }
     }
 
@@ -244,20 +221,15 @@ class InternalApiClientTest {
         when(tempFile.getFile()).thenReturn(tempPath.toFile());
         when(tempFileManager.createManagedTempFile("internal-api")).thenReturn(tempFile);
 
-        try (var ignored =
-                mockConstruction(
-                        RestTemplate.class,
-                        (rt, ctx) -> {
-                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
-                                    .thenReturn((RequestCallback) req -> {});
-                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
-                                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
-                        })) {
+        try (var ignored = mockConstruction(RestTemplate.class, (rt, ctx) -> {
+            when(rt.httpEntityCallback(any(), eq(Resource.class))).thenReturn((RequestCallback) req -> {});
+            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
+        })) {
 
             // Reconstruct the client so its cached RestTemplate is the mocked one.
             InternalApiClient mockedClient = newClient();
-            ResponseEntity<Resource> response =
-                    mockedClient.post("/api/v1/ai/tools/pdf-comment-agent", body);
+            ResponseEntity<Resource> response = mockedClient.post("/api/v1/ai/tools/pdf-comment-agent", body);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -269,24 +241,19 @@ class InternalApiClientTest {
     @Test
     void postRejectsPathTraversal() {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        assertThrows(
-                SecurityException.class,
-                () -> client.post("/api/v1/misc/../../actuator/env", body));
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc/../../actuator/env", body));
     }
 
     @Test
     void postRejectsUrlEncodedCharacters() {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        assertThrows(
-                SecurityException.class, () -> client.post("/api/v1/misc/%2e%2e/actuator", body));
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc/%2e%2e/actuator", body));
     }
 
     @Test
     void postRejectsQueryString() {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        assertThrows(
-                SecurityException.class,
-                () -> client.post("/api/v1/misc/compress-pdf?redirect=evil", body));
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/misc/compress-pdf?redirect=evil", body));
     }
 
     @Test
@@ -322,8 +289,7 @@ class InternalApiClientTest {
     private static ResponseEntity<Resource> fakeOkResponse(Object extractorArg) throws Exception {
         var extractor = (ResponseExtractor<ResponseEntity<Resource>>) extractorArg;
         ClientHttpResponse response = mock(ClientHttpResponse.class);
-        when(response.getBody())
-                .thenReturn(new ByteArrayInputStream("ok".getBytes(StandardCharsets.UTF_8)));
+        when(response.getBody()).thenReturn(new ByteArrayInputStream("ok".getBytes(StandardCharsets.UTF_8)));
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"out.pdf\"");
         when(response.getHeaders()).thenReturn(headers);

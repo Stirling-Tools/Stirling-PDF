@@ -66,12 +66,10 @@ public class ExtractImageScansController {
     @ToolIO(produces = ToolFormat.IMAGE, arity = ToolArity.SIMO)
     @Operation(
             summary = "Extract image scans from an input file",
-            description =
-                    "This endpoint extracts image scans from a given file based on certain"
-                            + " parameters. Users can specify angle threshold, tolerance, minimum area,"
-                            + " minimum contour area, and border size.")
-    public ResponseEntity<Resource> extractImageScans(
-            @ModelAttribute ExtractImageScansRequest request)
+            description = "This endpoint extracts image scans from a given file based on certain"
+                    + " parameters. Users can specify angle threshold, tolerance, minimum area,"
+                    + " minimum contour area, and border size.")
+    public ResponseEntity<Resource> extractImageScans(@ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
 
@@ -85,8 +83,7 @@ public class ExtractImageScansController {
         List<Path> tempDirs = new ArrayList<>();
 
         if (!CheckProgramInstall.isPythonAvailable()) {
-            throw ExceptionUtils.createIOException(
-                    "error.toolNotInstalled", "{0} is not installed", null, "Python");
+            throw ExceptionUtils.createIOException("error.toolNotInstalled", "{0} is not installed", null, "Python");
         }
 
         String pythonVersion = CheckProgramInstall.getAvailablePythonCommand();
@@ -122,11 +119,8 @@ public class ExtractImageScansController {
                         final int dpi = renderDpi;
                         final int pageIndex = i;
 
-                        image =
-                                ExceptionUtils.handleOomRendering(
-                                        pageIndex + 1,
-                                        dpi,
-                                        () -> pdfRenderer.renderImageWithDPI(pageIndex, dpi));
+                        image = ExceptionUtils.handleOomRendering(
+                                pageIndex + 1, dpi, () -> pdfRenderer.renderImageWithDPI(pageIndex, dpi));
                         ImageIO.write(image, "png", tempImage.getFile());
 
                         // Add temp file path to images list
@@ -147,28 +141,25 @@ public class ExtractImageScansController {
 
                 Path tempDir = Files.createTempDirectory("openCV_output");
                 tempDirs.add(tempDir);
-                List<String> command =
-                        new ArrayList<>(
-                                Arrays.asList(
-                                        pythonVersion,
-                                        splitPhotosScript.toAbsolutePath().toString(),
-                                        images.get(i),
-                                        tempDir.toString(),
-                                        "--angle_threshold",
-                                        String.valueOf(request.getAngleThreshold()),
-                                        "--tolerance",
-                                        String.valueOf(request.getTolerance()),
-                                        "--min_area",
-                                        String.valueOf(request.getMinArea()),
-                                        "--min_contour_area",
-                                        String.valueOf(request.getMinContourArea()),
-                                        "--border_size",
-                                        String.valueOf(request.getBorderSize())));
+                List<String> command = new ArrayList<>(Arrays.asList(
+                        pythonVersion,
+                        splitPhotosScript.toAbsolutePath().toString(),
+                        images.get(i),
+                        tempDir.toString(),
+                        "--angle_threshold",
+                        String.valueOf(request.getAngleThreshold()),
+                        "--tolerance",
+                        String.valueOf(request.getTolerance()),
+                        "--min_area",
+                        String.valueOf(request.getMinArea()),
+                        "--min_contour_area",
+                        String.valueOf(request.getMinContourArea()),
+                        "--border_size",
+                        String.valueOf(request.getBorderSize())));
 
                 // Run CLI command
-                ProcessExecutorResult returnCode =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                                .runCommandWithOutputHandling(command);
+                ProcessExecutorResult returnCode = ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
+                        .runCommandWithOutputHandling(command);
 
                 // Read the output photos in temp directory
                 List<Path> tempOutputFiles;
@@ -185,18 +176,14 @@ public class ExtractImageScansController {
 
             // Create zip file if multiple images
             if (processedImageBytes.size() > 1) {
-                String outputZipFilename =
-                        GeneralUtils.generateFilename(fileName, "_processed.zip");
+                String outputZipFilename = GeneralUtils.generateFilename(fileName, "_processed.zip");
                 finalOutput = tempFileManager.createManagedTempFile(".zip");
 
-                try (ZipOutputStream zipOut =
-                        new ZipOutputStream(Files.newOutputStream(finalOutput.getPath()))) {
+                try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(finalOutput.getPath()))) {
                     // Add processed images to the zip
                     for (int i = 0; i < processedImageBytes.size(); i++) {
                         ZipEntry entry =
-                                new ZipEntry(
-                                        GeneralUtils.generateFilename(
-                                                fileName, "_processed_" + (i + 1) + ".png"));
+                                new ZipEntry(GeneralUtils.generateFilename(fileName, "_processed_" + (i + 1) + ".png"));
                         zipOut.putNextEntry(entry);
                         zipOut.write(processedImageBytes.get(i));
                         zipOut.closeEntry();
@@ -209,8 +196,7 @@ public class ExtractImageScansController {
                 return response;
             }
             if (processedImageBytes.isEmpty()) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.noContent", "No {0} detected", "images");
+                throw ExceptionUtils.createIllegalArgumentException("error.noContent", "No {0} detected", "images");
             } else {
 
                 // Return the processed image as a response
@@ -220,11 +206,8 @@ public class ExtractImageScansController {
                     out.write(imageBytes);
                 }
 
-                ResponseEntity<Resource> response =
-                        WebResponseUtils.fileToWebResponse(
-                                finalOutput,
-                                GeneralUtils.generateFilename(fileName, ".png"),
-                                MediaType.IMAGE_PNG);
+                ResponseEntity<Resource> response = WebResponseUtils.fileToWebResponse(
+                        finalOutput, GeneralUtils.generateFilename(fileName, ".png"), MediaType.IMAGE_PNG);
                 finalOutputOwnershipTransferred = true;
                 return response;
             }
@@ -239,14 +222,13 @@ public class ExtractImageScansController {
                 tempInputFile.close();
             }
 
-            tempDirs.forEach(
-                    dir -> {
-                        try {
-                            FileUtils.deleteDirectory(dir.toFile());
-                        } catch (IOException e) {
-                            log.error("Failed to delete temporary directory: {}", dir, e);
-                        }
-                    });
+            tempDirs.forEach(dir -> {
+                try {
+                    FileUtils.deleteDirectory(dir.toFile());
+                } catch (IOException e) {
+                    log.error("Failed to delete temporary directory: {}", dir, e);
+                }
+            });
         }
     }
 }

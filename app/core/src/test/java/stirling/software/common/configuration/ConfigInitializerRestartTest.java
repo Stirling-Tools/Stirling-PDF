@@ -32,8 +32,7 @@ class ConfigInitializerRestartTest {
         Path settings = tmp.resolve("settings.yml");
         Path custom = tmp.resolve("custom_settings.yml");
 
-        try (MockedStatic<InstallationPathConfig> paths =
-                mockStatic(InstallationPathConfig.class)) {
+        try (MockedStatic<InstallationPathConfig> paths = mockStatic(InstallationPathConfig.class)) {
             paths.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
             paths.when(InstallationPathConfig::getCustomSettingsPath).thenReturn(custom.toString());
 
@@ -52,19 +51,16 @@ class ConfigInitializerRestartTest {
             init.ensureConfigExists();
 
             assertEquals("true", read(settings, "premium", "proFeatures", "ssoAutoLogin"));
-            assertEquals(
-                    "acme", read(settings, "premium", "proFeatures", "customMetadata", "author"));
+            assertEquals("acme", read(settings, "premium", "proFeatures", "customMetadata", "author"));
         }
     }
 
     @Test
-    void legacyPascalCaseConfig_isMigratedAndPreservedOnRestart(@TempDir Path tmp)
-            throws Exception {
+    void legacyPascalCaseConfig_isMigratedAndPreservedOnRestart(@TempDir Path tmp) throws Exception {
         Path settings = tmp.resolve("settings.yml");
         Path custom = tmp.resolve("custom_settings.yml");
 
-        try (MockedStatic<InstallationPathConfig> paths =
-                mockStatic(InstallationPathConfig.class)) {
+        try (MockedStatic<InstallationPathConfig> paths = mockStatic(InstallationPathConfig.class)) {
             paths.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
             paths.when(InstallationPathConfig::getCustomSettingsPath).thenReturn(custom.toString());
 
@@ -74,10 +70,9 @@ class ConfigInitializerRestartTest {
             // with
             // SSO auto-login enabled.
             init.ensureConfigExists();
-            String legacy =
-                    Files.readString(settings)
-                            .replace("ssoAutoLogin: false", "SSOAutoLogin: true")
-                            .replace("customMetadata:", "CustomMetadata:");
+            String legacy = Files.readString(settings)
+                    .replace("ssoAutoLogin: false", "SSOAutoLogin: true")
+                    .replace("customMetadata:", "CustomMetadata:");
             Files.writeString(settings, legacy);
 
             // Upgrade restart.
@@ -85,9 +80,7 @@ class ConfigInitializerRestartTest {
 
             // Value carried forward onto the new camelCase key; the legacy PascalCase key is gone.
             assertEquals("true", read(settings, "premium", "proFeatures", "ssoAutoLogin"));
-            assertNull(
-                    new YamlHelper(settings)
-                            .getValueByExactKeyPath("premium", "proFeatures", "SSOAutoLogin"));
+            assertNull(new YamlHelper(settings).getValueByExactKeyPath("premium", "proFeatures", "SSOAutoLogin"));
         }
     }
 }

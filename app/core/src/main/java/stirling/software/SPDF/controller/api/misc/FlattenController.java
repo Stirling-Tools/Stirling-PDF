@@ -54,10 +54,8 @@ public class FlattenController {
     @Operation(
             summary = "Flatten PDF form fields or full page",
             description =
-                    "Flattening just PDF form fields or converting each page to images to make text"
-                            + " unselectable.")
-    public ResponseEntity<Resource> flatten(@ModelAttribute FlattenRequest request)
-            throws Exception {
+                    "Flattening just PDF form fields or converting each page to images to make text" + " unselectable.")
+    public ResponseEntity<Resource> flatten(@ModelAttribute FlattenRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {
@@ -69,31 +67,24 @@ public class FlattenController {
                     acroForm.flatten();
                 }
                 return WebResponseUtils.pdfDocToWebResponse(
-                        document,
-                        Filenames.toSimpleFileName(file.getOriginalFilename()),
-                        tempFileManager);
+                        document, Filenames.toSimpleFileName(file.getOriginalFilename()), tempFileManager);
             } else {
                 // flatten whole page aka convert each page to image and re-add it (making text
                 // unselectable)
                 PDFRenderer pdfRenderer = new PDFRenderer(document);
-                pdfRenderer.setSubsamplingAllowed(
-                        true); // Enable subsampling to reduce memory usage
+                pdfRenderer.setSubsamplingAllowed(true); // Enable subsampling to reduce memory usage
 
-                try (PDDocument newDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
+                try (PDDocument newDocument = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
 
                     int defaultRenderDpi = 100; // Default fallback
-                    ApplicationProperties properties =
-                            ApplicationContextProvider.getBean(ApplicationProperties.class);
+                    ApplicationProperties properties = ApplicationContextProvider.getBean(ApplicationProperties.class);
                     Integer configuredMaxDpi = null;
                     if (properties != null && properties.getSystem() != null) {
                         configuredMaxDpi = properties.getSystem().getMaxDPI();
                     }
 
                     int maxDpi =
-                            (configuredMaxDpi != null && configuredMaxDpi > 0)
-                                    ? configuredMaxDpi
-                                    : defaultRenderDpi;
+                            (configuredMaxDpi != null && configuredMaxDpi > 0) ? configuredMaxDpi : defaultRenderDpi;
 
                     Integer requestedDpi = request.getRenderDpi();
                     int renderDpiTemp = maxDpi;
@@ -114,27 +105,18 @@ public class FlattenController {
 
                             // Wrap entire rendering operation to catch OutOfMemoryError from any
                             // depth
-                            image =
-                                    ExceptionUtils.handleOomRendering(
-                                            pageIndex + 1,
-                                            renderDpi,
-                                            () ->
-                                                    pdfRenderer.renderImageWithDPI(
-                                                            pageIndex, renderDpi, ImageType.RGB));
+                            image = ExceptionUtils.handleOomRendering(
+                                    pageIndex + 1,
+                                    renderDpi,
+                                    () -> pdfRenderer.renderImageWithDPI(pageIndex, renderDpi, ImageType.RGB));
 
                             PDPage page = new PDPage();
                             page.setMediaBox(document.getPage(i).getMediaBox());
                             newDocument.addPage(page);
                             // resetContext=true: Ensure clean graphics state when overwriting.
-                            try (PDPageContentStream contentStream =
-                                    new PDPageContentStream(
-                                            newDocument,
-                                            page,
-                                            PDPageContentStream.AppendMode.OVERWRITE,
-                                            true,
-                                            true)) {
-                                PDImageXObject pdImage =
-                                        JPEGFactory.createFromImage(newDocument, image);
+                            try (PDPageContentStream contentStream = new PDPageContentStream(
+                                    newDocument, page, PDPageContentStream.AppendMode.OVERWRITE, true, true)) {
+                                PDImageXObject pdImage = JPEGFactory.createFromImage(newDocument, image);
                                 float pageWidth = page.getMediaBox().getWidth();
                                 float pageHeight = page.getMediaBox().getHeight();
 
@@ -156,9 +138,7 @@ public class FlattenController {
                         }
                     }
                     return WebResponseUtils.pdfDocToWebResponse(
-                            newDocument,
-                            Filenames.toSimpleFileName(file.getOriginalFilename()),
-                            tempFileManager);
+                            newDocument, Filenames.toSimpleFileName(file.getOriginalFilename()), tempFileManager);
                 }
             }
         }

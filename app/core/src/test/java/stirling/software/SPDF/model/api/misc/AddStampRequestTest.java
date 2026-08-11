@@ -42,8 +42,7 @@ class AddStampRequestTest {
         @DisplayName("all fields round-trip")
         void allFieldsRoundTrip() {
             AddStampRequest req = new AddStampRequest();
-            MultipartFile image =
-                    new MockMultipartFile("stampImage", "s.png", "image/png", new byte[] {9});
+            MultipartFile image = new MockMultipartFile("stampImage", "s.png", "image/png", new byte[] {9});
             req.setStampType("image");
             req.setStampText("Confidential");
             req.setStampImage(image);

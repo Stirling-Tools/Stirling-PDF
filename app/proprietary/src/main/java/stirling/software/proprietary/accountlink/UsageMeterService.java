@@ -25,9 +25,7 @@ import stirling.software.proprietary.billing.BillingCategory;
 @Slf4j
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(
-        name = "stirling.billing.account-link.metering.enabled",
-        havingValue = "true")
+@ConditionalOnProperty(name = "stirling.billing.account-link.metering.enabled", havingValue = "true")
 public class UsageMeterService {
 
     private final UsageCounterRepository repo;
@@ -48,12 +46,8 @@ public class UsageMeterService {
      * use), unless {@code opSignature} was already metered this period. No-ops for non-billable
      * categories, non-positive units, or a missing period.
      */
-    public void accrue(
-            LocalDateTime periodStart, BillingCategory category, long units, String opSignature) {
-        if (periodStart == null
-                || category == null
-                || category == BillingCategory.BYPASSED
-                || units <= 0) {
+    public void accrue(LocalDateTime periodStart, BillingCategory category, long units, String opSignature) {
+        if (periodStart == null || category == null || category == BillingCategory.BYPASSED || units <= 0) {
             return;
         }
         if (opSignature != null && !shouldCharge(periodStart, opSignature)) {
@@ -69,12 +63,12 @@ public class UsageMeterService {
      */
     private boolean shouldCharge(LocalDateTime periodStart, String opSignature) {
         LocalDateTime now = LocalDateTime.now();
-        MeteredInputSignature seen =
-                signatureRepo.findByPeriodStartAndSignature(periodStart, opSignature).orElse(null);
+        MeteredInputSignature seen = signatureRepo
+                .findByPeriodStartAndSignature(periodStart, opSignature)
+                .orElse(null);
         if (seen == null) {
             try {
-                signatureRepo.saveAndFlush(
-                        new MeteredInputSignature(periodStart, opSignature, now));
+                signatureRepo.saveAndFlush(new MeteredInputSignature(periodStart, opSignature, now));
                 return true; // first sighting this period
             } catch (DataIntegrityViolationException raced) {
                 return false; // a concurrent op just claimed it — within window → chaining

@@ -74,8 +74,7 @@ public class SharedSignatureService {
         return signatures;
     }
 
-    private List<SignatureFile> getSignaturesFromFolder(Path folder, String category)
-            throws IOException {
+    private List<SignatureFile> getSignaturesFromFolder(Path folder, String category) throws IOException {
         try (Stream<Path> stream = Files.list(folder)) {
             return stream.filter(this::isImageFile)
                     .map(path -> new SignatureFile(path.getFileName().toString(), category))
@@ -120,8 +119,7 @@ public class SharedSignatureService {
         throw new IllegalArgumentException("Unsupported image extension: " + extension);
     }
 
-    private void verifyPathWithinDirectory(Path resolvedPath, Path targetDirectory)
-            throws IOException {
+    private void verifyPathWithinDirectory(Path resolvedPath, Path targetDirectory) throws IOException {
         Path canonicalTarget = targetDirectory.toAbsolutePath().normalize();
         Path canonicalResolved = resolvedPath.toAbsolutePath().normalize();
         if (!canonicalResolved.startsWith(canonicalTarget)) {
@@ -130,8 +128,7 @@ public class SharedSignatureService {
     }
 
     /** Save a signature as image file */
-    public SavedSignatureResponse saveSignature(String username, SavedSignatureRequest request)
-            throws IOException {
+    public SavedSignatureResponse saveSignature(String username, SavedSignatureRequest request) throws IOException {
         validateFileName(request.getId());
 
         // Determine folder based on scope
@@ -173,11 +170,7 @@ public class SharedSignatureService {
             // Verify path is within target directory
             verifyPathWithinDirectory(imagePath, targetFolder);
 
-            Files.write(
-                    imagePath,
-                    imageBytes,
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(imagePath, imageBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             // Store reference to image file
             response.setDataUrl("/api/v1/general/signatures/" + imageFileName);
@@ -195,30 +188,25 @@ public class SharedSignatureService {
         Path personalFolder = Path.of(SIGNATURE_BASE_PATH, username);
         if (Files.exists(personalFolder)) {
             try (Stream<Path> stream = Files.list(personalFolder)) {
-                stream.filter(this::isImageFile)
-                        .forEach(
-                                path -> {
-                                    try {
-                                        String fileName = path.getFileName().toString();
-                                        String id =
-                                                fileName.substring(0, fileName.lastIndexOf('.'));
+                stream.filter(this::isImageFile).forEach(path -> {
+                    try {
+                        String fileName = path.getFileName().toString();
+                        String id = fileName.substring(0, fileName.lastIndexOf('.'));
 
-                                        SavedSignatureResponse sig = new SavedSignatureResponse();
-                                        sig.setId(id);
-                                        sig.setLabel(id); // Use ID as label
-                                        sig.setType("image"); // Default type
-                                        sig.setScope("personal");
-                                        sig.setDataUrl("/api/v1/general/signatures/" + fileName);
-                                        sig.setCreatedAt(
-                                                Files.getLastModifiedTime(path).toMillis());
-                                        sig.setUpdatedAt(
-                                                Files.getLastModifiedTime(path).toMillis());
+                        SavedSignatureResponse sig = new SavedSignatureResponse();
+                        sig.setId(id);
+                        sig.setLabel(id); // Use ID as label
+                        sig.setType("image"); // Default type
+                        sig.setScope("personal");
+                        sig.setDataUrl("/api/v1/general/signatures/" + fileName);
+                        sig.setCreatedAt(Files.getLastModifiedTime(path).toMillis());
+                        sig.setUpdatedAt(Files.getLastModifiedTime(path).toMillis());
 
-                                        signatures.add(sig);
-                                    } catch (IOException e) {
-                                        log.error("Error reading signature file: " + path, e);
-                                    }
-                                });
+                        signatures.add(sig);
+                    } catch (IOException e) {
+                        log.error("Error reading signature file: " + path, e);
+                    }
+                });
             }
         }
 
@@ -226,30 +214,25 @@ public class SharedSignatureService {
         Path sharedFolder = Path.of(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
         if (Files.exists(sharedFolder)) {
             try (Stream<Path> stream = Files.list(sharedFolder)) {
-                stream.filter(this::isImageFile)
-                        .forEach(
-                                path -> {
-                                    try {
-                                        String fileName = path.getFileName().toString();
-                                        String id =
-                                                fileName.substring(0, fileName.lastIndexOf('.'));
+                stream.filter(this::isImageFile).forEach(path -> {
+                    try {
+                        String fileName = path.getFileName().toString();
+                        String id = fileName.substring(0, fileName.lastIndexOf('.'));
 
-                                        SavedSignatureResponse sig = new SavedSignatureResponse();
-                                        sig.setId(id);
-                                        sig.setLabel(id); // Use ID as label
-                                        sig.setType("image"); // Default type
-                                        sig.setScope("shared");
-                                        sig.setDataUrl("/api/v1/general/signatures/" + fileName);
-                                        sig.setCreatedAt(
-                                                Files.getLastModifiedTime(path).toMillis());
-                                        sig.setUpdatedAt(
-                                                Files.getLastModifiedTime(path).toMillis());
+                        SavedSignatureResponse sig = new SavedSignatureResponse();
+                        sig.setId(id);
+                        sig.setLabel(id); // Use ID as label
+                        sig.setType("image"); // Default type
+                        sig.setScope("shared");
+                        sig.setDataUrl("/api/v1/general/signatures/" + fileName);
+                        sig.setCreatedAt(Files.getLastModifiedTime(path).toMillis());
+                        sig.setUpdatedAt(Files.getLastModifiedTime(path).toMillis());
 
-                                        signatures.add(sig);
-                                    } catch (IOException e) {
-                                        log.error("Error reading signature file: " + path, e);
-                                    }
-                                });
+                        signatures.add(sig);
+                    } catch (IOException e) {
+                        log.error("Error reading signature file: " + path, e);
+                    }
+                });
             }
         }
 
@@ -266,13 +249,9 @@ public class SharedSignatureService {
 
         if (Files.exists(personalFolder)) {
             try (Stream<Path> stream = Files.list(personalFolder)) {
-                List<Path> matchingFiles =
-                        stream.filter(
-                                        path ->
-                                                path.getFileName()
-                                                        .toString()
-                                                        .startsWith(signatureId + "."))
-                                .toList();
+                List<Path> matchingFiles = stream.filter(
+                                path -> path.getFileName().toString().startsWith(signatureId + "."))
+                        .toList();
                 for (Path file : matchingFiles) {
                     Files.delete(file);
                     deleted = true;
@@ -285,13 +264,9 @@ public class SharedSignatureService {
             Path sharedFolder = Path.of(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
             if (Files.exists(sharedFolder)) {
                 try (Stream<Path> stream = Files.list(sharedFolder)) {
-                    List<Path> matchingFiles =
-                            stream.filter(
-                                            path ->
-                                                    path.getFileName()
-                                                            .toString()
-                                                            .startsWith(signatureId + "."))
-                                    .toList();
+                    List<Path> matchingFiles = stream.filter(
+                                    path -> path.getFileName().toString().startsWith(signatureId + "."))
+                            .toList();
                     for (Path file : matchingFiles) {
                         Files.delete(file);
                         deleted = true;

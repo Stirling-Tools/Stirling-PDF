@@ -14,8 +14,7 @@ class DefaultPrincipalResolverTest {
 
     @Test
     void userWithoutTeamProjectsUser() {
-        assertThat(resolver.principalsOf(user(5, null)))
-                .containsExactlyInAnyOrder(PrincipalRef.user(5L));
+        assertThat(resolver.principalsOf(user(5, null))).containsExactlyInAnyOrder(PrincipalRef.user(5L));
     }
 
     @Test
@@ -32,8 +31,7 @@ class DefaultPrincipalResolverTest {
 
     @Test
     void tokensUseTheCanonicalWireForm() {
-        assertThat(resolver.principalTokens(user(5, 7L)))
-                .containsExactlyInAnyOrder("user:5", "team:7");
+        assertThat(resolver.principalTokens(user(5, 7L))).containsExactlyInAnyOrder("user:5", "team:7");
     }
 
     @Test

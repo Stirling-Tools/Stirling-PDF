@@ -74,9 +74,14 @@ class RedactControllerTest {
 
     private static final Logger log = LoggerFactory.getLogger(RedactControllerTest.class);
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private RedactExecuteService redactExecuteService;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private RedactExecuteService redactExecuteService;
 
     private TextRedactionService textRedactionService;
     private ManualRedactionService manualRedactionService;
@@ -133,24 +138,15 @@ class RedactControllerTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
-        mockPdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        createSimplePdfContent());
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
+        mockPdfFile = new MockMultipartFile(
+                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, createSimplePdfContent());
 
         // Mock PDF document and related objects
         mockDocument = mock(PDDocument.class);
@@ -169,7 +165,8 @@ class RedactControllerTest {
         // Setup page tree
         when(mockPages.getCount()).thenReturn(1);
         when(mockPages.get(0)).thenReturn(mockPage);
-        when(mockPages.iterator()).thenReturn(Collections.singletonList(mockPage).iterator());
+        when(mockPages.iterator())
+                .thenReturn(Collections.singletonList(mockPage).iterator());
 
         PDRectangle pageRect = new PDRectangle(0, 0, 612, 792);
         when(mockPage.getCropBox()).thenReturn(pageRect);
@@ -182,8 +179,7 @@ class RedactControllerTest {
 
         when(mockPage.hasContents()).thenReturn(true);
 
-        org.apache.pdfbox.cos.COSDocument mockCOSDocument =
-                mock(org.apache.pdfbox.cos.COSDocument.class);
+        org.apache.pdfbox.cos.COSDocument mockCOSDocument = mock(org.apache.pdfbox.cos.COSDocument.class);
         org.apache.pdfbox.cos.COSStream mockCOSStream = mock(org.apache.pdfbox.cos.COSStream.class);
         when(mockDocument.getDocument()).thenReturn(mockCOSDocument);
         when(mockCOSDocument.createCOSStream()).thenReturn(mockCOSStream);
@@ -193,12 +189,11 @@ class RedactControllerTest {
         when(mockCOSStream.createOutputStream(any())).thenReturn(mockOutputStream);
 
         lenient()
-                .doAnswer(
-                        inv -> {
-                            File f = inv.getArgument(0);
-                            java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
-                            return null;
-                        })
+                .doAnswer(inv -> {
+                    File f = inv.getArgument(0);
+                    java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
+                    return null;
+                })
                 .when(mockDocument)
                 .save(any(File.class));
         doNothing().when(mockDocument).close();
@@ -206,13 +201,12 @@ class RedactControllerTest {
         // Build real service instances so tests exercise actual logic
         textRedactionService = new TextRedactionService();
         manualRedactionService = new ManualRedactionService(tempFileManager);
-        redactController =
-                new RedactController(
-                        pdfDocumentFactory,
-                        tempFileManager,
-                        manualRedactionService,
-                        textRedactionService,
-                        redactExecuteService);
+        redactController = new RedactController(
+                pdfDocumentFactory,
+                tempFileManager,
+                manualRedactionService,
+                textRedactionService,
+                redactExecuteService);
 
         setupRealDocument();
     }
@@ -264,14 +258,7 @@ class RedactControllerTest {
         @Test
         @DisplayName("Should redact multiple search terms")
         void redactMultipleSearchTerms() throws Exception {
-            testAutoRedaction(
-                    "confidential\nsecret\nprivate\nclassified",
-                    false,
-                    true,
-                    "#FF0000",
-                    2.0f,
-                    false,
-                    true);
+            testAutoRedaction("confidential\nsecret\nprivate\nclassified", false, true, "#FF0000", 2.0f, false, true);
         }
 
         @Test
@@ -299,12 +286,8 @@ class RedactControllerTest {
                 when(page.getBBox()).thenReturn(pageRect);
                 when(page.hasContents()).thenReturn(true);
 
-                InputStream mockInputStream =
-                        new ByteArrayInputStream(
-                                ("BT /F1 12 Tf 100 200 Td (page "
-                                                + i
-                                                + " content with confidential info) Tj ET")
-                                        .getBytes());
+                InputStream mockInputStream = new ByteArrayInputStream(
+                        ("BT /F1 12 Tf 100 200 Td (page " + i + " content with confidential info) Tj ET").getBytes());
                 when(page.getContents()).thenReturn(mockInputStream);
 
                 pageList.add(page);
@@ -321,7 +304,8 @@ class RedactControllerTest {
             reset(mockPages);
             when(mockPages.getCount()).thenReturn(1);
             when(mockPages.get(0)).thenReturn(mockPage);
-            when(mockPages.iterator()).thenReturn(Collections.singletonList(mockPage).iterator());
+            when(mockPages.iterator())
+                    .thenReturn(Collections.singletonList(mockPage).iterator());
             when(mockDocument.getNumberOfPages()).thenReturn(1);
         }
 
@@ -366,15 +350,13 @@ class RedactControllerTest {
         @DisplayName("Should handle email pattern redaction")
         void handleEmailPatternRedaction() throws Exception {
             testAutoRedaction(
-                    "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
-                    true, false, "#0000FF", 1.5f, false, true);
+                    "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}", true, false, "#0000FF", 1.5f, false, true);
         }
 
         @Test
         @DisplayName("Should handle phone number patterns")
         void handlePhoneNumberPatterns() throws Exception {
-            testAutoRedaction(
-                    "\\(\\d{3}\\)\\s*\\d{3}-\\d{4}", true, false, "#FF0000", 1.0f, false, true);
+            testAutoRedaction("\\(\\d{3}\\)\\s*\\d{3}-\\d{4}", true, false, "#FF0000", 1.0f, false, true);
         }
 
         @ParameterizedTest
@@ -578,9 +560,7 @@ class RedactControllerTest {
                 when(page.hasContents()).thenReturn(true);
 
                 InputStream mockInputStream =
-                        new ByteArrayInputStream(
-                                ("BT /F1 12 Tf 100 200 Td (page " + i + " content) Tj ET")
-                                        .getBytes());
+                        new ByteArrayInputStream(("BT /F1 12 Tf 100 200 Td (page " + i + " content) Tj ET").getBytes());
                 when(page.getContents()).thenReturn(mockInputStream);
 
                 pageList.add(page);
@@ -608,7 +588,8 @@ class RedactControllerTest {
             reset(mockPages);
             when(mockPages.getCount()).thenReturn(1);
             when(mockPages.get(0)).thenReturn(mockPage);
-            when(mockPages.iterator()).thenReturn(Collections.singletonList(mockPage).iterator());
+            when(mockPages.iterator())
+                    .thenReturn(Collections.singletonList(mockPage).iterator());
             when(mockDocument.getNumberOfPages()).thenReturn(1);
         }
     }
@@ -790,8 +771,7 @@ class RedactControllerTest {
 
         // Set up basic page resources
         PDResources resources = new PDResources();
-        resources.put(
-                COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+        resources.put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
         realPage.setResources(resources);
     }
 
@@ -803,8 +783,7 @@ class RedactControllerTest {
         }
         realDocument.addPage(realPage);
         realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+        realPage.getResources().put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
 
         try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
             contentStream.beginText();
@@ -822,8 +801,7 @@ class RedactControllerTest {
         }
         realDocument.addPage(realPage);
         realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+        realPage.getResources().put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
 
         try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
             contentStream.beginText();
@@ -846,8 +824,7 @@ class RedactControllerTest {
         }
         realDocument.addPage(realPage);
         realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+        realPage.getResources().put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
 
         try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
             contentStream.setLineWidth(2);
@@ -874,8 +851,7 @@ class RedactControllerTest {
         }
         realDocument.addPage(realPage);
         realPage.setResources(new PDResources());
-        realPage.getResources()
-                .put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+        realPage.getResources().put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
 
         try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
             contentStream.beginText();
@@ -901,38 +877,32 @@ class RedactControllerTest {
             request.setFileInput(null);
             request.setListOfText("test");
 
-            assertDoesNotThrow(
-                    () -> {
-                        try {
-                            redactController.redactPdf(request);
-                        } catch (Exception e) {
-                            assertNotNull(e);
-                        }
-                    });
+            assertDoesNotThrow(() -> {
+                try {
+                    redactController.redactPdf(request);
+                } catch (Exception e) {
+                    assertNotNull(e);
+                }
+            });
         }
 
         @Test
         @DisplayName("Should handle malformed PDF gracefully")
         void handleMalformedPdfGracefully() {
-            MockMultipartFile malformedFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "malformed.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "Not a real PDF content".getBytes());
+            MockMultipartFile malformedFile = new MockMultipartFile(
+                    "fileInput", "malformed.pdf", MediaType.APPLICATION_PDF_VALUE, "Not a real PDF content".getBytes());
 
             RedactPdfRequest request = new RedactPdfRequest();
             request.setFileInput(malformedFile);
             request.setListOfText("test");
 
-            assertDoesNotThrow(
-                    () -> {
-                        try {
-                            redactController.redactPdf(request);
-                        } catch (Exception e) {
-                            assertNotNull(e);
-                        }
-                    });
+            assertDoesNotThrow(() -> {
+                try {
+                    redactController.redactPdf(request);
+                } catch (Exception e) {
+                    assertNotNull(e);
+                }
+            });
         }
 
         @Test
@@ -1009,8 +979,7 @@ class RedactControllerTest {
         // Create a new page to avoid side effects from other tests
         PDPage pageForTokenExtraction = new PDPage(PDRectangle.A4);
         pageForTokenExtraction.setResources(realPage.getResources());
-        try (PDPageContentStream contentStream =
-                new PDPageContentStream(realDocument, pageForTokenExtraction)) {
+        try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, pageForTokenExtraction)) {
             contentStream.beginText();
             contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
             contentStream.newLineAtOffset(50, 750);
@@ -1054,24 +1023,14 @@ class RedactControllerTest {
         }
 
         @ParameterizedTest
-        @ValueSource(
-                strings = {
-                    "#FF0000", "#00FF00", "#0000FF", "#FFFFFF", "#000000", "FF0000", "00FF00",
-                    "0000FF"
-                })
+        @ValueSource(strings = {"#FF0000", "#00FF00", "#0000FF", "#FFFFFF", "#000000", "FF0000", "00FF00", "0000FF"})
         @DisplayName("Should handle various valid color formats")
         void handleVariousValidColorFormats(String colorInput) {
             Color result = ManualRedactionService.decodeOrDefault(colorInput);
             assertNotNull(result);
-            assertTrue(
-                    result.getRed() >= 0 && result.getRed() <= 255,
-                    "Red component should be in valid range");
-            assertTrue(
-                    result.getGreen() >= 0 && result.getGreen() <= 255,
-                    "Green component should be in valid range");
-            assertTrue(
-                    result.getBlue() >= 0 && result.getBlue() <= 255,
-                    "Blue component should be in valid range");
+            assertTrue(result.getRed() >= 0 && result.getRed() <= 255, "Red component should be in valid range");
+            assertTrue(result.getGreen() >= 0 && result.getGreen() <= 255, "Green component should be in valid range");
+            assertTrue(result.getBlue() >= 0 && result.getBlue() <= 255, "Blue component should be in valid range");
         }
 
         @Test
@@ -1105,17 +1064,14 @@ class RedactControllerTest {
 
             Set<String> targetWords = Set.of("confidential");
 
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
+            List<Object> tokens = textRedactionService.createTokensWithoutTargetText(
+                    realDocument, realPage, targetWords, false, false);
 
             assertNotNull(tokens);
             assertFalse(tokens.isEmpty());
 
             String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(
-                    reconstructedText.contains("confidential"),
-                    "Target text should be replaced with placeholder");
+            assertFalse(reconstructedText.contains("confidential"), "Target text should be replaced with placeholder");
             assertTrue(reconstructedText.contains("document"), "Non-target text should remain");
         }
 
@@ -1126,9 +1082,8 @@ class RedactControllerTest {
 
             Set<String> targetWords = Set.of("secret");
 
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
+            List<Object> tokens = textRedactionService.createTokensWithoutTargetText(
+                    realDocument, realPage, targetWords, false, false);
 
             assertNotNull(tokens);
 
@@ -1139,9 +1094,7 @@ class RedactControllerTest {
                         if (array.getObject(i) instanceof COSString cosString) {
                             String text = cosString.getString();
                             if (text.contains("secret")) {
-                                fail(
-                                        "Target text 'secret' should have been redacted from TJ"
-                                                + " array");
+                                fail("Target text 'secret' should have been redacted from TJ" + " array");
                             }
                             foundModifiedTJArray = true;
                         }
@@ -1159,27 +1112,18 @@ class RedactControllerTest {
             Set<String> targetWords = Set.of("redact");
 
             List<Object> originalTokens = getOriginalTokens();
-            List<Object> filteredTokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
+            List<Object> filteredTokens = textRedactionService.createTokensWithoutTargetText(
+                    realDocument, realPage, targetWords, false, false);
 
-            long originalNonTextCount =
-                    originalTokens.stream()
-                            .filter(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && !textRedactionService.isTextShowingOperator(
-                                                            op.getName()))
-                            .count();
+            long originalNonTextCount = originalTokens.stream()
+                    .filter(token ->
+                            token instanceof Operator op && !textRedactionService.isTextShowingOperator(op.getName()))
+                    .count();
 
-            long filteredNonTextCount =
-                    filteredTokens.stream()
-                            .filter(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && !textRedactionService.isTextShowingOperator(
-                                                            op.getName()))
-                            .count();
+            long filteredNonTextCount = filteredTokens.stream()
+                    .filter(token ->
+                            token instanceof Operator op && !textRedactionService.isTextShowingOperator(op.getName()))
+                    .count();
 
             assertTrue(filteredNonTextCount > 0, "Non-text operators should be preserved");
 
@@ -1195,9 +1139,8 @@ class RedactControllerTest {
 
             Set<String> targetWords = Set.of("\\d{3}-\\d{2}-\\d{4}"); // SSN pattern
 
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, true, false);
+            List<Object> tokens = textRedactionService.createTokensWithoutTargetText(
+                    realDocument, realPage, targetWords, true, false);
 
             String reconstructedText = extractTextFromTokens(tokens);
             assertFalse(reconstructedText.contains("111-22-3333"), "SSN should be redacted");
@@ -1211,9 +1154,8 @@ class RedactControllerTest {
 
             Set<String> targetWords = Set.of("test");
 
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, true);
+            List<Object> tokens = textRedactionService.createTokensWithoutTargetText(
+                    realDocument, realPage, targetWords, false, true);
 
             String reconstructedText = extractTextFromTokens(tokens);
             assertTrue(reconstructedText.contains("testing"), "Partial matches should remain");
@@ -1228,14 +1170,11 @@ class RedactControllerTest {
 
             Set<String> targetWords = Set.of("sensitive");
 
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
+            List<Object> tokens = textRedactionService.createTokensWithoutTargetText(
+                    realDocument, realPage, targetWords, false, false);
 
             String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(
-                    reconstructedText.contains("sensitive"),
-                    "Text should be redacted regardless of operator type");
+            assertFalse(reconstructedText.contains("sensitive"), "Text should be redacted regardless of operator type");
         }
 
         @Test
@@ -1260,9 +1199,7 @@ class RedactControllerTest {
             List<Object> emptyTokens = Collections.emptyList();
 
             assertDoesNotThrow(
-                    () ->
-                            textRedactionService.writeFilteredContentStream(
-                                    realDocument, realPage, emptyTokens));
+                    () -> textRedactionService.writeFilteredContentStream(realDocument, realPage, emptyTokens));
 
             assertNotNull(realPage.getContents(), "Page should still have content stream");
         }
@@ -1284,9 +1221,8 @@ class RedactControllerTest {
         @DisplayName("Placeholder creation should maintain text width")
         void shouldCreateWidthMatchingPlaceholder() {
             String originalText = "confidential";
-            String placeholder =
-                    textRedactionService.createPlaceholderWithFont(
-                            originalText, new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            String placeholder = textRedactionService.createPlaceholderWithFont(
+                    originalText, new PDType1Font(Standard14Fonts.FontName.HELVETICA));
 
             assertEquals(
                     originalText.length(),
@@ -1298,13 +1234,11 @@ class RedactControllerTest {
         @DisplayName("Placeholder should handle special characters")
         void shouldHandleSpecialCharactersInPlaceholder() {
             String originalText = "café naïve";
-            String placeholder =
-                    textRedactionService.createPlaceholderWithFont(
-                            originalText, new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            String placeholder = textRedactionService.createPlaceholderWithFont(
+                    originalText, new PDType1Font(Standard14Fonts.FontName.HELVETICA));
 
             assertEquals(originalText.length(), placeholder.length());
-            assertFalse(
-                    placeholder.contains("café"), "Placeholder should not contain original text");
+            assertFalse(placeholder.contains("café"), "Placeholder should not contain original text");
         }
 
         @Test
@@ -1314,9 +1248,8 @@ class RedactControllerTest {
 
             Set<String> targetWords = Set.of("secret");
 
-            List<Object> filteredTokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
+            List<Object> filteredTokens = textRedactionService.createTokensWithoutTargetText(
+                    realDocument, realPage, targetWords, false, false);
 
             textRedactionService.writeFilteredContentStream(realDocument, realPage, filteredTokens);
             assertNotNull(realPage.getContents());
@@ -1333,19 +1266,13 @@ class RedactControllerTest {
 
             Set<String> targetWords = Set.of("confidential");
 
-            List<Object> filteredTokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
+            List<Object> filteredTokens = textRedactionService.createTokensWithoutTargetText(
+                    realDocument, realPage, targetWords, false, false);
 
-            long filteredPositioning =
-                    filteredTokens.stream()
-                            .filter(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && ("Td".equals(op.getName())
-                                                            || "TD".equals(op.getName())
-                                                            || "Tm".equals(op.getName())))
-                            .count();
+            long filteredPositioning = filteredTokens.stream()
+                    .filter(token -> token instanceof Operator op
+                            && ("Td".equals(op.getName()) || "TD".equals(op.getName()) || "Tm".equals(op.getName())))
+                    .count();
 
             assertTrue(filteredPositioning > 0, "Positioning operators should be preserved");
         }
@@ -1359,21 +1286,16 @@ class RedactControllerTest {
             }
             realDocument.addPage(realPage);
             realPage.setResources(new PDResources());
-            realPage.getResources()
-                    .put(
-                            COSName.getPDFName("F1"),
-                            new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            realPage.getResources().put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
 
-            try (PDPageContentStream contentStream =
-                    new PDPageContentStream(realDocument, realPage)) {
+            try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
                 contentStream.setLineWidth(2);
                 contentStream.moveTo(100, 100);
                 contentStream.lineTo(200, 200);
                 contentStream.stroke();
 
                 contentStream.beginText();
-                contentStream.setFont(
-                        realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
+                contentStream.setFont(realPage.getResources().getFont(COSName.getPDFName("F1")), 12);
                 contentStream.newLineAtOffset(50, 750);
                 contentStream.showText("This is a complex document with ");
                 contentStream.setTextRise(5);
@@ -1388,27 +1310,22 @@ class RedactControllerTest {
 
             Set<String> targetWords = Set.of("confidential");
 
-            List<Object> tokens =
-                    textRedactionService.createTokensWithoutTargetText(
-                            realDocument, realPage, targetWords, false, false);
+            List<Object> tokens = textRedactionService.createTokensWithoutTargetText(
+                    realDocument, realPage, targetWords, false, false);
 
             assertNotNull(tokens);
             assertFalse(tokens.isEmpty());
 
             String reconstructedText = extractTextFromTokens(tokens);
-            assertFalse(
-                    reconstructedText.contains("confidential"), "Target text should be redacted");
+            assertFalse(reconstructedText.contains("confidential"), "Target text should be redacted");
 
-            boolean hasGraphicsOperators =
-                    tokens.stream()
-                            .anyMatch(
-                                    token ->
-                                            token instanceof Operator op
-                                                    && ("re".equals(op.getName())
-                                                            || "f".equals(op.getName())
-                                                            || "m".equals(op.getName())
-                                                            || "l".equals(op.getName())
-                                                            || "S".equals(op.getName())));
+            boolean hasGraphicsOperators = tokens.stream()
+                    .anyMatch(token -> token instanceof Operator op
+                            && ("re".equals(op.getName())
+                                    || "f".equals(op.getName())
+                                    || "m".equals(op.getName())
+                                    || "l".equals(op.getName())
+                                    || "S".equals(op.getName())));
 
             assertTrue(hasGraphicsOperators, "Graphics operators should be preserved");
         }
@@ -1423,12 +1340,10 @@ class RedactControllerTest {
             realDocument.addPage(realPage);
 
             PDResources resources = new PDResources();
-            resources.put(
-                    COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            resources.put(COSName.getPDFName("F1"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
             realPage.setResources(resources);
 
-            try (PDPageContentStream contentStream =
-                    new PDPageContentStream(realDocument, realPage)) {
+            try (PDPageContentStream contentStream = new PDPageContentStream(realDocument, realPage)) {
                 contentStream.beginText();
                 contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
                 contentStream.newLineAtOffset(50, 750);

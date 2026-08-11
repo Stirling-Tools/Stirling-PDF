@@ -37,7 +37,8 @@ class FolderOutputSinkTest {
     private static final OutputDelivery AD_HOC = new OutputDelivery("run-1", null);
     private static final OutputDelivery POLICY_RUN = new OutputDelivery("run-1", "p1");
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private FolderOutputSink sink;
     private InProcessProcessedLedger ledger;
@@ -47,14 +48,13 @@ class FolderOutputSinkTest {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
         ledger = new InProcessProcessedLedger();
-        sink =
-                new FolderOutputSink(
-                        new FolderAccessGuard(
-                                properties,
-                                new RuntimePathConfig(properties),
-                                new StandardEnvironment(),
-                                new InProcessSourceStore()),
-                        ledger);
+        sink = new FolderOutputSink(
+                new FolderAccessGuard(
+                        properties,
+                        new RuntimePathConfig(properties),
+                        new StandardEnvironment(),
+                        new InProcessSourceStore()),
+                ledger);
     }
 
     @Test
@@ -94,18 +94,13 @@ class FolderOutputSinkTest {
 
         // A hash-verifying reader matches on content even when the stat moved.
         Path delivered = FolderIdentities.canonicalDir(out).resolve("a.pdf");
-        assertFalse(
-                ledger.claim(
-                        "p1",
-                        delivered.toString(),
-                        "999:12345",
-                        () -> {
-                            try {
-                                return FolderIdentities.contentHash(delivered);
-                            } catch (IOException e) {
-                                throw new java.io.UncheckedIOException(e);
-                            }
-                        }));
+        assertFalse(ledger.claim("p1", delivered.toString(), "999:12345", () -> {
+            try {
+                return FolderIdentities.contentHash(delivered);
+            } catch (IOException e) {
+                throw new java.io.UncheckedIOException(e);
+            }
+        }));
     }
 
     @Test
@@ -114,17 +109,15 @@ class FolderOutputSinkTest {
         VisibilityAssertingLedger orderedLedger = new VisibilityAssertingLedger();
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        FolderOutputSink orderedSink =
-                new FolderOutputSink(
-                        new FolderAccessGuard(
-                                properties,
-                                new RuntimePathConfig(properties),
-                                new StandardEnvironment(),
-                                new InProcessSourceStore()),
-                        orderedLedger);
+        FolderOutputSink orderedSink = new FolderOutputSink(
+                new FolderAccessGuard(
+                        properties,
+                        new RuntimePathConfig(properties),
+                        new StandardEnvironment(),
+                        new InProcessSourceStore()),
+                orderedLedger);
 
-        orderedSink.deliver(
-                POLICY_RUN, List.of(named("a.pdf", "aaa")), OutputSpec.folder(out.toString()));
+        orderedSink.deliver(POLICY_RUN, List.of(named("a.pdf", "aaa")), OutputSpec.folder(out.toString()));
 
         assertTrue(orderedLedger.recorded);
         assertTrue(Files.exists(out.resolve("a.pdf")));
@@ -156,25 +149,21 @@ class FolderOutputSinkTest {
     void missingDirectoryOptionIsRejected() {
         OutputSpec noDir = new OutputSpec("folder", Map.of());
         assertThrows(IllegalArgumentException.class, () -> sink.validate(noDir));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> sink.deliver(AD_HOC, List.of(named("a.pdf", "x")), noDir));
+        assertThrows(IllegalArgumentException.class, () -> sink.deliver(AD_HOC, List.of(named("a.pdf", "x")), noDir));
     }
 
     @Test
     void aDirectoryOutsideTheAllowedRootsIsRejected() {
-        OutputSpec outside = OutputSpec.folder(tempDir.resolveSibling("not-allowed").toString());
+        OutputSpec outside =
+                OutputSpec.folder(tempDir.resolveSibling("not-allowed").toString());
         assertThrows(IllegalArgumentException.class, () -> sink.validate(outside));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> sink.deliver(AD_HOC, List.of(named("a.pdf", "x")), outside));
+        assertThrows(IllegalArgumentException.class, () -> sink.deliver(AD_HOC, List.of(named("a.pdf", "x")), outside));
     }
 
     @Test
     void filenamesWithPathTraversalAreConfinedToTheDirectory() throws IOException {
         Path out = tempDir.resolve("out");
-        List<Resource> outputs =
-                List.of(named("../escape.pdf", "x"), named("nested/deep.pdf", "y"));
+        List<Resource> outputs = List.of(named("../escape.pdf", "x"), named("nested/deep.pdf", "y"));
 
         sink.deliver(AD_HOC, outputs, OutputSpec.folder(out.toString()));
 
@@ -199,11 +188,9 @@ class FolderOutputSinkTest {
         private boolean recorded;
 
         @Override
-        public synchronized void recordOutput(
-                String policyId, String identity, String gate, String contentHash) {
+        public synchronized void recordOutput(String policyId, String identity, String gate, String contentHash) {
             assertFalse(
-                    Files.exists(Path.of(identity)),
-                    "output must be recorded before it is visible at its final path");
+                    Files.exists(Path.of(identity)), "output must be recorded before it is visible at its final path");
             recorded = true;
             super.recordOutput(policyId, identity, gate, contentHash);
         }

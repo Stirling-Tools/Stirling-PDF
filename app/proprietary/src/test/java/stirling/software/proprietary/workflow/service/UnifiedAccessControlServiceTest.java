@@ -27,10 +27,14 @@ import stirling.software.proprietary.workflow.service.UnifiedAccessControlServic
 @ExtendWith(MockitoExtension.class)
 class UnifiedAccessControlServiceTest {
 
-    @Mock private FileShareRepository fileShareRepository;
-    @Mock private WorkflowParticipantRepository workflowParticipantRepository;
+    @Mock
+    private FileShareRepository fileShareRepository;
 
-    @InjectMocks private UnifiedAccessControlService service;
+    @Mock
+    private WorkflowParticipantRepository workflowParticipantRepository;
+
+    @InjectMocks
+    private UnifiedAccessControlService service;
 
     // -------------------------------------------------------------------------
     // Helpers
@@ -145,9 +149,8 @@ class UnifiedAccessControlServiceTest {
     @Test
     void validateToken_participantToken_expired_denied() {
         User u = user(1L);
-        WorkflowParticipant p =
-                participant(
-                        u, ParticipantStatus.PENDING, true, LocalDateTime.now().minusSeconds(1));
+        WorkflowParticipant p = participant(
+                u, ParticipantStatus.PENDING, true, LocalDateTime.now().minusSeconds(1));
         when(fileShareRepository.findByShareTokenWithFile("tok")).thenReturn(Optional.empty());
         when(workflowParticipantRepository.findByShareToken("tok")).thenReturn(Optional.of(p));
 
@@ -251,8 +254,7 @@ class UnifiedAccessControlServiceTest {
         file.setOwner(owner);
 
         FileShare s = share(file, requester, null);
-        when(fileShareRepository.findByFileAndSharedWithUser(file, requester))
-                .thenReturn(Optional.of(s));
+        when(fileShareRepository.findByFileAndSharedWithUser(file, requester)).thenReturn(Optional.of(s));
 
         assertThat(service.canAccessFile(requester, file)).isTrue();
     }
@@ -265,8 +267,7 @@ class UnifiedAccessControlServiceTest {
         file.setOwner(owner);
 
         FileShare s = share(file, requester, LocalDateTime.now().minusSeconds(1));
-        when(fileShareRepository.findByFileAndSharedWithUser(file, requester))
-                .thenReturn(Optional.of(s));
+        when(fileShareRepository.findByFileAndSharedWithUser(file, requester)).thenReturn(Optional.of(s));
 
         assertThat(service.canAccessFile(requester, file)).isFalse();
     }
@@ -278,8 +279,7 @@ class UnifiedAccessControlServiceTest {
         StoredFile file = new StoredFile();
         file.setOwner(owner);
 
-        when(fileShareRepository.findByFileAndSharedWithUser(file, requester))
-                .thenReturn(Optional.empty());
+        when(fileShareRepository.findByFileAndSharedWithUser(file, requester)).thenReturn(Optional.empty());
 
         assertThat(service.canAccessFile(requester, file)).isFalse();
     }
@@ -299,8 +299,7 @@ class UnifiedAccessControlServiceTest {
 
         WorkflowParticipant p = participant(requester, ParticipantStatus.PENDING, true, null);
 
-        when(fileShareRepository.findByFileAndSharedWithUser(file, requester))
-                .thenReturn(Optional.empty());
+        when(fileShareRepository.findByFileAndSharedWithUser(file, requester)).thenReturn(Optional.empty());
         when(workflowParticipantRepository.findByWorkflowSessionAndUser(session, requester))
                 .thenReturn(Optional.of(p));
 
@@ -320,15 +319,10 @@ class UnifiedAccessControlServiceTest {
         file.setOwner(owner);
         file.setWorkflowSession(session);
 
-        WorkflowParticipant p =
-                participant(
-                        requester,
-                        ParticipantStatus.PENDING,
-                        true,
-                        LocalDateTime.now().minusSeconds(1));
+        WorkflowParticipant p = participant(
+                requester, ParticipantStatus.PENDING, true, LocalDateTime.now().minusSeconds(1));
 
-        when(fileShareRepository.findByFileAndSharedWithUser(file, requester))
-                .thenReturn(Optional.empty());
+        when(fileShareRepository.findByFileAndSharedWithUser(file, requester)).thenReturn(Optional.empty());
         when(workflowParticipantRepository.findByWorkflowSessionAndUser(session, requester))
                 .thenReturn(Optional.of(p));
 

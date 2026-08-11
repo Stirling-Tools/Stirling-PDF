@@ -24,20 +24,17 @@ public class InProcessPolicyStore implements PolicyStore {
     @Override
     public Policy save(Policy policy) {
         String id =
-                policy.id() == null || policy.id().isBlank()
-                        ? UUID.randomUUID().toString()
-                        : policy.id();
-        Policy stored =
-                new Policy(
-                        id,
-                        policy.name(),
-                        policy.owner(),
-                        policy.enabled(),
-                        policy.inputs(),
-                        policy.steps(),
-                        policy.output(),
-                        policy.outputIds(),
-                        policy.teamId());
+                policy.id() == null || policy.id().isBlank() ? UUID.randomUUID().toString() : policy.id();
+        Policy stored = new Policy(
+                id,
+                policy.name(),
+                policy.owner(),
+                policy.enabled(),
+                policy.inputs(),
+                policy.steps(),
+                policy.output(),
+                policy.outputIds(),
+                policy.teamId());
         policies.put(id, stored);
         // Existing policy keeps its position; a new one appends to the end of its team's queue.
         sortOrders.computeIfAbsent(id, key -> nextSortOrder(stored.teamId()));
@@ -78,7 +75,8 @@ public class InProcessPolicyStore implements PolicyStore {
 
     @Override
     public List<PolicyBinding> findBindingsByTriggerType(String triggerType) {
-        List<Policy> enabled = policies.values().stream().filter(Policy::enabled).toList();
+        List<Policy> enabled =
+                policies.values().stream().filter(Policy::enabled).toList();
         return PolicyBinding.matching(enabled, triggerType);
     }
 

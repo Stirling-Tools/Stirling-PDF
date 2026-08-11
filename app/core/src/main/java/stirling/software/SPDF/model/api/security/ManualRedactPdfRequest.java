@@ -13,9 +13,7 @@ import stirling.software.common.model.api.security.RedactionArea;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ManualRedactPdfRequest extends PDFWithPageNums {
-    @Schema(
-            description = "A list of areas that should be redacted",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "A list of areas that should be redacted", requiredMode = Schema.RequiredMode.REQUIRED)
     private List<RedactionArea> redactions;
 
     @Schema(

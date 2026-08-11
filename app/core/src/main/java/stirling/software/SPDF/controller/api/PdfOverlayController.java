@@ -52,11 +52,9 @@ public class PdfOverlayController {
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.MISO)
     @Operation(
             summary = "Overlay PDF files in various modes",
-            description =
-                    "Overlay PDF files onto a base PDF with different modes: Sequential,"
-                            + " Interleaved, or Fixed Repeat.")
-    public ResponseEntity<Resource> overlayPdfs(@ModelAttribute OverlayPdfsRequest request)
-            throws IOException {
+            description = "Overlay PDF files onto a base PDF with different modes: Sequential,"
+                    + " Interleaved, or Fixed Repeat.")
+    public ResponseEntity<Resource> overlayPdfs(@ModelAttribute OverlayPdfsRequest request) throws IOException {
         MultipartFile baseFile = request.getFileInput();
         int overlayPos = request.getOverlayPosition();
 
@@ -77,12 +75,7 @@ public class PdfOverlayController {
             try (PDDocument basePdf = pdfDocumentFactory.load(baseFile);
                     Overlay overlay = new Overlay()) {
                 Map<Integer, String> overlayGuide =
-                        prepareOverlayGuide(
-                                basePdf.getNumberOfPages(),
-                                overlayPdfFiles,
-                                mode,
-                                counts,
-                                tempFiles);
+                        prepareOverlayGuide(basePdf.getNumberOfPages(), overlayPdfFiles, mode, counts, tempFiles);
 
                 overlay.setInputPDF(basePdf);
                 if (overlayPos == 0) {
@@ -93,9 +86,7 @@ public class PdfOverlayController {
 
                 tempOut = tempFileManager.createManagedTempFile(".pdf");
                 overlay.overlay(overlayGuide).save(tempOut.getFile());
-                String outputFilename =
-                        GeneralUtils.generateFilename(
-                                baseFile.getOriginalFilename(), "_overlayed.pdf");
+                String outputFilename = GeneralUtils.generateFilename(baseFile.getOriginalFilename(), "_overlayed.pdf");
 
                 TempFile out = tempOut;
                 tempOut = null; // ownership transferred to response Resource
@@ -142,18 +133,14 @@ public class PdfOverlayController {
     }
 
     private void sequentialOverlay(
-            Map<Integer, String> overlayGuide,
-            File[] overlayFiles,
-            int basePageCount,
-            List<File> tempFiles)
+            Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount, List<File> tempFiles)
             throws IOException {
         int overlayFileIndex = 0;
         int pageCountInCurrentOverlay = 0;
 
         for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
             if (pageCountInCurrentOverlay == 0
-                    || pageCountInCurrentOverlay
-                            >= getNumberOfPages(overlayFiles[overlayFileIndex])) {
+                    || pageCountInCurrentOverlay >= getNumberOfPages(overlayFiles[overlayFileIndex])) {
                 pageCountInCurrentOverlay = 0;
                 overlayFileIndex = (overlayFileIndex + 1) % overlayFiles.length;
             }
@@ -181,8 +168,7 @@ public class PdfOverlayController {
         }
     }
 
-    private void interleavedOverlay(
-            Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount)
+    private void interleavedOverlay(Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount)
             throws IOException {
         for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
             File overlayFile = overlayFiles[(basePageIndex - 1) % overlayFiles.length];

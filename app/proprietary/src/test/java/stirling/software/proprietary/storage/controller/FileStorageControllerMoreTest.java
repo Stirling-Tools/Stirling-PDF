@@ -46,8 +46,11 @@ import stirling.software.proprietary.storage.service.FileStorageService;
 @ExtendWith(MockitoExtension.class)
 class FileStorageControllerMoreTest {
 
-    @Mock private FileStorageService fileStorageService;
-    @Mock private StorageProvider storageProvider;
+    @Mock
+    private FileStorageService fileStorageService;
+
+    @Mock
+    private StorageProvider storageProvider;
 
     private FileStorageController controller;
 
@@ -141,8 +144,7 @@ class FileStorageControllerMoreTest {
         Resource resource = new ByteArrayResource(new byte[] {1, 2, 3});
         when(fileStorageService.requireAuthenticatedUser()).thenReturn(u);
         when(fileStorageService.getAccessibleFile(u, 77L)).thenReturn(f);
-        when(storageProvider.signedDownloadUrl(
-                        eq("11/abc-doc.pdf"), any(Duration.class), anyBoolean(), anyString()))
+        when(storageProvider.signedDownloadUrl(eq("11/abc-doc.pdf"), any(Duration.class), anyBoolean(), anyString()))
                 .thenReturn(Optional.empty());
         when(fileStorageService.loadFile(f)).thenReturn(resource);
 
@@ -185,7 +187,8 @@ class FileStorageControllerMoreTest {
 
             assertThatThrownBy(() -> controller.shareWithUser(77L, null))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(400);
         }
 
@@ -197,7 +200,8 @@ class FileStorageControllerMoreTest {
 
             assertThatThrownBy(() -> controller.shareWithUser(77L, req))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(400);
         }
 
@@ -209,8 +213,7 @@ class FileStorageControllerMoreTest {
             req.setAccessRole("viewer");
             StoredFileResponse resp = StoredFileResponse.builder().id(77L).build();
             when(fileStorageService.requireAuthenticatedUser()).thenReturn(u);
-            when(fileStorageService.normalizeShareRole("viewer"))
-                    .thenReturn(ShareAccessRole.VIEWER);
+            when(fileStorageService.normalizeShareRole("viewer")).thenReturn(ShareAccessRole.VIEWER);
             when(fileStorageService.shareWithUserResponse(u, 77L, "bob", ShareAccessRole.VIEWER))
                     .thenReturn(resp);
 
@@ -307,7 +310,8 @@ class FileStorageControllerMoreTest {
 
             assertThatThrownBy(() -> controller.downloadShareLink("tok", authentication, false))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(403);
         }
 
@@ -320,7 +324,8 @@ class FileStorageControllerMoreTest {
 
             assertThatThrownBy(() -> controller.downloadShareLink("tok", null, false))
                     .isInstanceOf(ResponseStatusException.class)
-                    .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                    .extracting(
+                            e -> ((ResponseStatusException) e).getStatusCode().value())
                     .isEqualTo(401);
         }
 
@@ -338,8 +343,7 @@ class FileStorageControllerMoreTest {
                     .thenReturn(Optional.empty());
             when(fileStorageService.loadFile(f)).thenReturn(resource);
 
-            ResponseEntity<Resource> response =
-                    controller.downloadShareLink("tok", authentication, false);
+            ResponseEntity<Resource> response = controller.downloadShareLink("tok", authentication, false);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(fileStorageService).recordShareAccess(share, authentication, false);

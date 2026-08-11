@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/user")
-@Tag(
-        name = "User",
-        description =
-                """
+@Tag(name = "User", description = """
                 User management and authentication services for multi-user and enterprise environments.
 
                 This endpoint group provides user lifecycle management capabilities for organizations

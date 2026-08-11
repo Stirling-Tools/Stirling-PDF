@@ -60,11 +60,9 @@ public class UIDataTessdataController {
     @PostMapping("/tessdata/download")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Download selected tessdata languages from the official repository")
-    public ResponseEntity<Map<String, Object>> downloadTessdataLanguages(
-            @RequestBody TessdataDownloadRequest request) {
+    public ResponseEntity<Map<String, Object>> downloadTessdataLanguages(@RequestBody TessdataDownloadRequest request) {
         if (request.getLanguages() == null || request.getLanguages().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "No languages provided for download"));
+            return ResponseEntity.badRequest().body(Map.of("message", "No languages provided for download"));
         }
 
         Path tessdataDir = Path.of(runtimePathConfig.getTessDataPath());
@@ -72,21 +70,18 @@ public class UIDataTessdataController {
             Files.createDirectories(tessdataDir);
         } catch (IOException e) {
             log.error("Failed to create tessdata directory {}", tessdataDir, e);
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("message", "Failed to prepare tessdata directory"));
+            return ResponseEntity.internalServerError().body(Map.of("message", "Failed to prepare tessdata directory"));
         }
 
         if (!isWritableDirectory(tessdataDir)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("message", tessdataDir.toString()));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", tessdataDir.toString()));
         }
 
         List<String> downloaded = new ArrayList<>();
         List<String> failed = new ArrayList<>();
 
         List<String> remoteLanguages = getRemoteTessdataLanguages();
-        Set<String> remoteSet =
-                remoteLanguages == null ? Collections.emptySet() : new HashSet<>(remoteLanguages);
+        Set<String> remoteSet = remoteLanguages == null ? Collections.emptySet() : new HashSet<>(remoteLanguages);
 
         for (String language : request.getLanguages()) {
             if (language == null || language.isBlank()) {
@@ -106,9 +101,7 @@ public class UIDataTessdataController {
             }
 
             String downloadUrl =
-                    "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/"
-                            + safeLang
-                            + ".traineddata";
+                    "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/" + safeLang + ".traineddata";
             Path baseRealPath;
             try {
                 baseRealPath = tessdataDir.toRealPath();
@@ -132,11 +125,10 @@ public class UIDataTessdataController {
             }
         }
 
-        Map<String, Object> response =
-                Map.of(
-                        "downloaded", downloaded,
-                        "failed", failed,
-                        "tessdataDir", tessdataDir.toString());
+        Map<String, Object> response = Map.of(
+                "downloaded", downloaded,
+                "failed", failed,
+                "tessdataDir", tessdataDir.toString());
 
         if (!downloaded.isEmpty() && failed.isEmpty()) {
             return ResponseEntity.ok(response);
@@ -161,11 +153,7 @@ public class UIDataTessdataController {
 
             int status = connection.getResponseCode();
             if (status != HttpURLConnection.HTTP_OK) {
-                log.warn(
-                        "Tessdata language {} not downloadable. HTTP {} from {}",
-                        safeLang,
-                        status,
-                        downloadUrl);
+                log.warn("Tessdata language {} not downloadable. HTTP {} from {}", safeLang, status, downloadUrl);
                 return false;
             }
 
@@ -220,29 +208,24 @@ public class UIDataTessdataController {
                 } else {
                     log.warn("GitHub tessdata listing returned HTTP {}", status);
                 }
-                return cachedRemoteTessdata != null
-                        ? cachedRemoteTessdata
-                        : Collections.emptyList();
+                return cachedRemoteTessdata != null ? cachedRemoteTessdata : Collections.emptyList();
             }
 
             try (InputStream is = connection.getInputStream()) {
                 List<Map<String, Object>> items =
-                        objectMapper.readValue(
-                                is, new TypeReference<List<Map<String, Object>>>() {});
-                List<String> languages =
-                        items.stream()
-                                .map(item -> (String) item.get("name"))
-                                .filter(Objects::nonNull)
-                                .filter(name -> name.endsWith(".traineddata"))
-                                .map(name -> name.replace(".traineddata", ""))
-                                .filter(lang -> !"osd".equalsIgnoreCase(lang))
-                                .sorted()
-                                .toList();
+                        objectMapper.readValue(is, new TypeReference<List<Map<String, Object>>>() {});
+                List<String> languages = items.stream()
+                        .map(item -> (String) item.get("name"))
+                        .filter(Objects::nonNull)
+                        .filter(name -> name.endsWith(".traineddata"))
+                        .map(name -> name.replace(".traineddata", ""))
+                        .filter(lang -> !"osd".equalsIgnoreCase(lang))
+                        .sorted()
+                        .toList();
 
                 synchronized (UIDataTessdataController.class) {
                     cachedRemoteTessdata = languages;
-                    cachedRemoteTessdataExpiry =
-                            System.currentTimeMillis() + REMOTE_TESSDATA_TTL_MS;
+                    cachedRemoteTessdataExpiry = System.currentTimeMillis() + REMOTE_TESSDATA_TTL_MS;
                 }
                 return languages;
             }

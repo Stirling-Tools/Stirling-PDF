@@ -31,8 +31,7 @@ public class UnoServerPoolTest {
 
     @Test
     void testSingleEndpointAcquireRelease() throws InterruptedException {
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
-                createEndpoints(1);
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = createEndpoints(1);
         UnoServerPool pool = new UnoServerPool(endpoints);
         assertFalse(pool.isEmpty(), "Pool should not be empty");
 
@@ -46,8 +45,7 @@ public class UnoServerPoolTest {
 
     @Test
     void testMultipleEndpointsDistribution() throws InterruptedException {
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
-                createEndpoints(3);
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = createEndpoints(3);
         UnoServerPool pool = new UnoServerPool(endpoints);
 
         List<Integer> portsUsed = new ArrayList<>();
@@ -71,8 +69,7 @@ public class UnoServerPoolTest {
     void testConcurrentAccess() throws InterruptedException {
         int endpointCount = 3;
         int threadCount = 10;
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
-                createEndpoints(endpointCount);
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = createEndpoints(endpointCount);
         UnoServerPool pool = new UnoServerPool(endpoints);
 
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
@@ -81,21 +78,20 @@ public class UnoServerPoolTest {
         AtomicInteger successCount = new AtomicInteger(0);
 
         for (int i = 0; i < threadCount; i++) {
-            executor.submit(
-                    () -> {
-                        try {
-                            startLatch.await(); // Wait for all threads to be ready
-                            UnoServerPool.UnoServerLease lease = pool.acquireEndpoint();
-                            assertNotNull(lease, "Should acquire endpoint");
-                            Thread.sleep(10); // Simulate work
-                            lease.close();
-                            successCount.incrementAndGet();
-                        } catch (Exception e) {
-                            fail("Thread failed: " + e.getMessage());
-                        } finally {
-                            doneLatch.countDown();
-                        }
-                    });
+            executor.submit(() -> {
+                try {
+                    startLatch.await(); // Wait for all threads to be ready
+                    UnoServerPool.UnoServerLease lease = pool.acquireEndpoint();
+                    assertNotNull(lease, "Should acquire endpoint");
+                    Thread.sleep(10); // Simulate work
+                    lease.close();
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    fail("Thread failed: " + e.getMessage());
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
         }
 
         startLatch.countDown(); // Start all threads
@@ -103,14 +99,12 @@ public class UnoServerPoolTest {
         executor.shutdown();
 
         assertTrue(finished, "All threads should complete within timeout");
-        assertEquals(
-                threadCount, successCount.get(), "All threads should successfully acquire/release");
+        assertEquals(threadCount, successCount.get(), "All threads should successfully acquire/release");
     }
 
     @Test
     void testBlockingBehavior() throws InterruptedException {
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
-                createEndpoints(2);
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = createEndpoints(2);
         UnoServerPool pool = new UnoServerPool(endpoints);
 
         // Acquire both endpoints
@@ -121,20 +115,16 @@ public class UnoServerPoolTest {
         CountDownLatch acquireLatch = new CountDownLatch(1);
 
         // Try to acquire a third endpoint in separate thread (should block)
-        Thread blockingThread =
-                Thread.ofVirtual()
-                        .unstarted(
-                                () -> {
-                                    try {
-                                        acquireLatch.countDown(); // Signal we're about to block
-                                        UnoServerPool.UnoServerLease lease3 =
-                                                pool.acquireEndpoint();
-                                        acquired.incrementAndGet();
-                                        lease3.close();
-                                    } catch (InterruptedException e) {
-                                        Thread.currentThread().interrupt();
-                                    }
-                                });
+        Thread blockingThread = Thread.ofVirtual().unstarted(() -> {
+            try {
+                acquireLatch.countDown(); // Signal we're about to block
+                UnoServerPool.UnoServerLease lease3 = pool.acquireEndpoint();
+                acquired.incrementAndGet();
+                lease3.close();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
 
         blockingThread.start();
         acquireLatch.await(); // Wait for thread to start
@@ -157,8 +147,7 @@ public class UnoServerPoolTest {
 
     @Test
     void testEndpointReuse() throws InterruptedException {
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
-                createEndpoints(1);
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = createEndpoints(1);
         UnoServerPool pool = new UnoServerPool(endpoints);
 
         int port1, port2;
@@ -176,8 +165,7 @@ public class UnoServerPoolTest {
 
     @Test
     void testAcquireWithTimeoutFailsFast() throws InterruptedException {
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
-                createEndpoints(1);
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = createEndpoints(1);
         UnoServerPool pool = new UnoServerPool(endpoints);
 
         UnoServerPool.UnoServerLease held = pool.acquireEndpoint();
@@ -197,10 +185,8 @@ public class UnoServerPoolTest {
     }
 
     @Test
-    void testAcquireWithTimeoutSucceedsWhenAvailable()
-            throws InterruptedException, TimeoutException {
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
-                createEndpoints(1);
+    void testAcquireWithTimeoutSucceedsWhenAvailable() throws InterruptedException, TimeoutException {
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = createEndpoints(1);
         UnoServerPool pool = new UnoServerPool(endpoints);
 
         try (UnoServerPool.UnoServerLease lease = pool.acquireEndpoint(1, TimeUnit.SECONDS)) {
@@ -211,25 +197,20 @@ public class UnoServerPoolTest {
 
     @Test
     void testAcquireWithZeroTimeoutBlocksUnbounded() throws InterruptedException {
-        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints =
-                createEndpoints(1);
+        List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = createEndpoints(1);
         UnoServerPool pool = new UnoServerPool(endpoints);
         UnoServerPool.UnoServerLease held = pool.acquireEndpoint();
 
         AtomicInteger acquired = new AtomicInteger(0);
-        Thread t =
-                Thread.ofVirtual()
-                        .start(
-                                () -> {
-                                    try {
-                                        UnoServerPool.UnoServerLease lease =
-                                                pool.acquireEndpoint(0, TimeUnit.MILLISECONDS);
-                                        acquired.incrementAndGet();
-                                        lease.close();
-                                    } catch (Exception e) {
-                                        fail("unexpected: " + e);
-                                    }
-                                });
+        Thread t = Thread.ofVirtual().start(() -> {
+            try {
+                UnoServerPool.UnoServerLease lease = pool.acquireEndpoint(0, TimeUnit.MILLISECONDS);
+                acquired.incrementAndGet();
+                lease.close();
+            } catch (Exception e) {
+                fail("unexpected: " + e);
+            }
+        });
 
         Thread.sleep(150);
         assertEquals(0, acquired.get(), "Should still be blocked");
@@ -259,8 +240,7 @@ public class UnoServerPoolTest {
         }
     }
 
-    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> createEndpoints(
-            int count) {
+    private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> createEndpoints(int count) {
         List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             ApplicationProperties.ProcessExecutor.UnoServerEndpoint endpoint =

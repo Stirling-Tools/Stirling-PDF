@@ -11,8 +11,13 @@ import lombok.Value;
 public class Type3FontLibraryEntry {
     String id;
     String label;
-    @Singular List<String> signatures;
-    @Singular List<String> aliases;
+
+    @Singular
+    List<String> signatures;
+
+    @Singular
+    List<String> aliases;
+
     Type3FontLibraryPayload program;
     Type3FontLibraryPayload webProgram;
     Type3FontLibraryPayload pdfProgram;

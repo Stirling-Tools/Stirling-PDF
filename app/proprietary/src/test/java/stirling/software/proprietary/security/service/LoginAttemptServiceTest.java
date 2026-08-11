@@ -32,18 +32,15 @@ class LoginAttemptServiceTest {
 
     private static Object constructLoginAttemptService() {
         try {
-            Class<?> clazz =
-                    Class.forName(
-                            "stirling.software.proprietary.security.service.LoginAttemptService");
+            Class<?> clazz = Class.forName("stirling.software.proprietary.security.service.LoginAttemptService");
             // Prefer a no-arg constructor if present; otherwise use the first and mock parameters.
             Constructor<?>[] ctors = clazz.getDeclaredConstructors();
             Arrays.stream(ctors).forEach(c -> c.setAccessible(true));
 
-            Constructor<?> target =
-                    Arrays.stream(ctors)
-                            .filter(c -> c.getParameterCount() == 0)
-                            .findFirst()
-                            .orElse(ctors[0]);
+            Constructor<?> target = Arrays.stream(ctors)
+                    .filter(c -> c.getParameterCount() == 0)
+                    .findFirst()
+                    .orElse(ctors[0]);
 
             Object[] args = new Object[target.getParameterCount()];
             Class<?>[] paramTypes = target.getParameterTypes();
@@ -105,10 +102,9 @@ class LoginAttemptServiceTest {
 
     private static int getPrivateInt(Object targetOrClassInstance, String fieldName) {
         try {
-            Class<?> clazz =
-                    targetOrClassInstance instanceof Class
-                            ? (Class<?>) targetOrClassInstance
-                            : targetOrClassInstance.getClass();
+            Class<?> clazz = targetOrClassInstance instanceof Class
+                    ? (Class<?>) targetOrClassInstance
+                    : targetOrClassInstance.getClass();
             Field f = clazz.getDeclaredField(fieldName);
             f.setAccessible(true);
             if (Modifier.isStatic(f.getModifiers())) {
@@ -139,10 +135,7 @@ class LoginAttemptServiceTest {
 
         // Case 1: disabled -> always MAX_VALUE regardless of key
         int disabledVal = (Integer) method.invoke(svc, "someUser");
-        assertEquals(
-                Integer.MAX_VALUE,
-                disabledVal,
-                "Disabled tracking should return Integer.MAX_VALUE");
+        assertEquals(Integer.MAX_VALUE, disabledVal, "Disabled tracking should return Integer.MAX_VALUE");
 
         // Enable and verify blank/whitespace/null handling
         setPrivateBoolean(svc, "isBlockedEnabled", true);
@@ -150,14 +143,8 @@ class LoginAttemptServiceTest {
         int nullKeyVal = (Integer) method.invoke(svc, (Object) null);
         int blankKeyVal = (Integer) method.invoke(svc, "   ");
 
-        assertEquals(
-                Integer.MAX_VALUE,
-                nullKeyVal,
-                "Null key should return Integer.MAX_VALUE per current contract");
-        assertEquals(
-                Integer.MAX_VALUE,
-                blankKeyVal,
-                "Blank key should return Integer.MAX_VALUE per current contract");
+        assertEquals(Integer.MAX_VALUE, nullKeyVal, "Null key should return Integer.MAX_VALUE per current contract");
+        assertEquals(Integer.MAX_VALUE, blankKeyVal, "Blank key should return Integer.MAX_VALUE per current contract");
     }
 
     @Test
@@ -172,15 +159,10 @@ class LoginAttemptServiceTest {
         var method = svc.getClass().getMethod("getRemainingAttempts", String.class);
 
         int v1 = (Integer) method.invoke(svc, "UserA");
-        int v2 =
-                (Integer)
-                        method.invoke(svc, "uSeRa"); // case-insensitive by service (normalization)
+        int v2 = (Integer) method.invoke(svc, "uSeRa"); // case-insensitive by service (normalization)
 
         assertEquals(maxAttempt, v1, "Unknown user should start with MAX_ATTEMPT remaining");
-        assertEquals(
-                maxAttempt,
-                v2,
-                "Case-insensitivity should not create separate entries if none exists yet");
+        assertEquals(maxAttempt, v2, "Case-insensitivity should not create separate entries if none exists yet");
     }
 
     @Test
@@ -210,9 +192,8 @@ class LoginAttemptServiceTest {
     }
 
     @Test
-    @DisplayName(
-            "getRemainingAttempts(): can become negative when attemptCount > MAX_ATTEMPT (document"
-                    + " current behavior)")
+    @DisplayName("getRemainingAttempts(): can become negative when attemptCount > MAX_ATTEMPT (document"
+            + " current behavior)")
     void getRemainingAttempts_shouldBecomeNegativeWhenOverLimit_CurrentBehavior() throws Exception {
         Object svc = constructLoginAttemptService();
         setPrivateBoolean(svc, "isBlockedEnabled", true);
@@ -312,9 +293,7 @@ class LoginAttemptServiceTest {
         @SuppressWarnings("unchecked")
         List<String> result = (List<String>) method.invoke(svc);
 
-        assertTrue(
-                result.isEmpty(),
-                "getAllBlockedUsers should return empty list when blocking is disabled");
+        assertTrue(result.isEmpty(), "getAllBlockedUsers should return empty list when blocking is disabled");
     }
 
     @Test

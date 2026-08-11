@@ -52,8 +52,7 @@ public class StirlingUploadTool implements McpTool {
         schema.put("additionalProperties", false);
         ObjectNode props = schema.putObject("properties");
         McpToolSupport.stringProperty(props, "file", "Base64-encoded file content.");
-        McpToolSupport.stringProperty(
-                props, "fileName", "Optional original filename (with extension).");
+        McpToolSupport.stringProperty(props, "fileName", "Optional original filename (with extension).");
         schema.putArray("required").add("file");
         return schema;
     }
@@ -61,13 +60,11 @@ public class StirlingUploadTool implements McpTool {
     @Override
     public ObjectNode call(JsonNode arguments, McpCallContext context) {
         if (!context.hasScope("mcp.tools.write")) {
-            return McpResponses.error(
-                    mapper, "Insufficient scope: stirling_upload requires 'mcp.tools.write'.");
+            return McpResponses.error(mapper, "Insufficient scope: stirling_upload requires 'mcp.tools.write'.");
         }
         String base64 = McpToolSupport.textArg(arguments, "file");
         if (base64 == null) {
-            return McpResponses.error(
-                    mapper, "Missing required argument: file (base64-encoded content).");
+            return McpResponses.error(mapper, "Missing required argument: file (base64-encoded content).");
         }
         byte[] bytes = McpToolSupport.decodeBase64OrNull(base64);
         if (bytes == null) {

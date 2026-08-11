@@ -19,10 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/proprietary/ui-data")
-@Tag(
-        name = "Proprietary UI Data",
-        description =
-                """
+@Tag(name = "Proprietary UI Data", description = """
                 Enterprise user interface data services for commercial deployments and advanced business features.
 
                 This endpoint group provides enhanced data services for commercial and enterprise features,

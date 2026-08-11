@@ -113,8 +113,7 @@ class RequestUriUtilsTest {
         // backend auth filter. Regression test for direct-nav/refresh on
         // the file manager returning a 401 JSON.
         assertTrue(RequestUriUtils.isFrontendRoute("", "/files"));
-        assertTrue(
-                RequestUriUtils.isFrontendRoute("", "/files/3331910a-4155-4f71-8111-e38c896bc458"));
+        assertTrue(RequestUriUtils.isFrontendRoute("", "/files/3331910a-4155-4f71-8111-e38c896bc458"));
     }
 
     @Test
@@ -192,9 +191,7 @@ class RequestUriUtilsTest {
 
     @Test
     void testIsPublicAuthEndpoint_shareLinkToken() {
-        assertTrue(
-                RequestUriUtils.isPublicAuthEndpoint(
-                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
     }
 
     @Test
@@ -225,8 +222,6 @@ class RequestUriUtilsTest {
     void testIsPublicAuthEndpoint_shareApiStillProtected() {
         // Share-link data APIs must NOT be public - they enforce auth + access checks
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/abc123", ""));
-        assertFalse(
-                RequestUriUtils.isPublicAuthEndpoint(
-                        "/api/v1/storage/share-links/abc123/metadata", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/abc123/metadata", ""));
     }
 }

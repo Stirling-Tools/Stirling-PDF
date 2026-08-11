@@ -21,9 +21,14 @@ import stirling.software.common.util.misc.ReplaceAndInvertColorStrategy;
 @ExtendWith(MockitoExtension.class)
 class ReplaceAndInvertColorServiceExtendedTest {
 
-    @Mock private ReplaceAndInvertColorFactory replaceAndInvertColorFactory;
-    @Mock private MultipartFile file;
-    @InjectMocks private ReplaceAndInvertColorService service;
+    @Mock
+    private ReplaceAndInvertColorFactory replaceAndInvertColorFactory;
+
+    @Mock
+    private MultipartFile file;
+
+    @InjectMocks
+    private ReplaceAndInvertColorService service;
 
     @Test
     void replaceAndInvertColor_delegatesToFactoryAndStrategy() throws IOException {
@@ -36,8 +41,7 @@ class ReplaceAndInvertColorServiceExtendedTest {
                 .thenReturn(strategy);
         when(strategy.replace()).thenReturn(expected);
 
-        InputStreamResource result =
-                service.replaceAndInvertColor(file, option, combo, "#FFF", "#000");
+        InputStreamResource result = service.replaceAndInvertColor(file, option, combo, "#FFF", "#000");
 
         assertSame(expected, result);
         verify(replaceAndInvertColorFactory).replaceAndInvert(file, option, combo, "#FFF", "#000");
@@ -68,8 +72,7 @@ class ReplaceAndInvertColorServiceExtendedTest {
                 .thenReturn(null);
 
         assertThrows(
-                NullPointerException.class,
-                () -> service.replaceAndInvertColor(file, option, combo, "#FFF", "#000"));
+                NullPointerException.class, () -> service.replaceAndInvertColor(file, option, combo, "#FFF", "#000"));
     }
 
     @Test
@@ -82,9 +85,7 @@ class ReplaceAndInvertColorServiceExtendedTest {
                 .thenReturn(strategy);
         when(strategy.replace()).thenThrow(new IOException("Strategy error"));
 
-        assertThrows(
-                IOException.class,
-                () -> service.replaceAndInvertColor(file, option, combo, "#FFF", "#000"));
+        assertThrows(IOException.class, () -> service.replaceAndInvertColor(file, option, combo, "#FFF", "#000"));
     }
 
     @Test
@@ -94,13 +95,11 @@ class ReplaceAndInvertColorServiceExtendedTest {
         ReplaceAndInvertColorStrategy strategy = mock(ReplaceAndInvertColorStrategy.class);
         InputStreamResource expected = mock(InputStreamResource.class);
 
-        when(replaceAndInvertColorFactory.replaceAndInvert(
-                        file, option, combo, "#123456", "#ABCDEF"))
+        when(replaceAndInvertColorFactory.replaceAndInvert(file, option, combo, "#123456", "#ABCDEF"))
                 .thenReturn(strategy);
         when(strategy.replace()).thenReturn(expected);
 
-        InputStreamResource result =
-                service.replaceAndInvertColor(file, option, combo, "#123456", "#ABCDEF");
+        InputStreamResource result = service.replaceAndInvertColor(file, option, combo, "#123456", "#ABCDEF");
         assertSame(expected, result);
     }
 
@@ -129,8 +128,7 @@ class ReplaceAndInvertColorServiceExtendedTest {
                 .thenReturn(strategy);
         when(strategy.replace()).thenReturn(expected);
 
-        InputStreamResource result =
-                service.replaceAndInvertColor(file, null, combo, "#FFF", "#000");
+        InputStreamResource result = service.replaceAndInvertColor(file, null, combo, "#FFF", "#000");
         assertSame(expected, result);
     }
 
@@ -144,8 +142,7 @@ class ReplaceAndInvertColorServiceExtendedTest {
                 .thenReturn(strategy);
         when(strategy.replace()).thenReturn(expected);
 
-        InputStreamResource result =
-                service.replaceAndInvertColor(file, option, null, "#FFF", "#000");
+        InputStreamResource result = service.replaceAndInvertColor(file, option, null, "#FFF", "#000");
         assertSame(expected, result);
     }
 }

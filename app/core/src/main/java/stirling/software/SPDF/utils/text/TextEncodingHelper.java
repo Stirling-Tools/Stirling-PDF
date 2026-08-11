@@ -25,8 +25,7 @@ public class TextEncodingHelper {
             byte[] encoded = font.encode(text);
             if (encoded.length > 0) {
                 log.debug(
-                        "Text '{}' has good full-string encoding for font {} - permissively"
-                                + " allowing",
+                        "Text '{}' has good full-string encoding for font {} - permissively" + " allowing",
                         text,
                         font.getName() != null ? font.getName() : "Unknown");
                 return true;
@@ -76,32 +75,20 @@ public class TextEncodingHelper {
                         successfulCodePoints++;
                         log.debug("Code point '{}' (U+{}) encoded successfully", charStr, hex);
                     } else {
-                        log.debug(
-                                "Code point '{}' (U+{}) has invalid width: {}",
-                                charStr,
-                                hex,
-                                charWidth);
+                        log.debug("Code point '{}' (U+{}) has invalid width: {}", charStr, hex, charWidth);
                     }
                 } else {
-                    log.debug(
-                            "Code point '{}' (U+{}) encoding failed - empty result", charStr, hex);
+                    log.debug("Code point '{}' (U+{}) encoding failed - empty result", charStr, hex);
                 }
             } catch (IOException | IllegalArgumentException e) {
-                log.debug(
-                        "Code point '{}' (U+{}) validation failed: {}",
-                        charStr,
-                        hex,
-                        e.getMessage());
+                log.debug("Code point '{}' (U+{}) validation failed: {}", charStr, hex, e.getMessage());
             }
 
             i += Character.charCount(codePoint); // Handle surrogates properly
         }
 
-        double successRate =
-                totalCodePoints > 0 ? (double) successfulCodePoints / totalCodePoints : 0.0;
-        String pct =
-                String.format(
-                        Locale.ROOT, "%.1f%%", successRate * 100); // Pre-formatting percentage!
+        double successRate = totalCodePoints > 0 ? (double) successfulCodePoints / totalCodePoints : 0.0;
+        String pct = String.format(Locale.ROOT, "%.1f%%", successRate * 100); // Pre-formatting percentage!
 
         boolean isAcceptable = successRate >= 0.95;
 
@@ -131,9 +118,7 @@ public class TextEncodingHelper {
             try {
                 font.encode(text);
                 font.getStringWidth(text);
-                log.debug(
-                        "Text '{}' is a simple character and passed validation - allowing removal",
-                        text);
+                log.debug("Text '{}' is a simple character and passed validation - allowing removal", text);
                 return true;
             } catch (Exception e) {
                 log.debug(
@@ -177,9 +162,7 @@ public class TextEncodingHelper {
 
             // Check 3: Verify font descriptor completeness for redaction area calculation
             if (font.getFontDescriptor() == null) {
-                log.debug(
-                        "Missing font descriptor for font {}",
-                        font.getName() != null ? font.getName() : "Unknown");
+                log.debug("Missing font descriptor for font {}", font.getName() != null ? font.getName() : "Unknown");
                 return false;
             }
 
@@ -258,20 +241,13 @@ public class TextEncodingHelper {
                         }
 
                         String encodingName = encoding.getClass().getSimpleName();
-                        if (encodingName.contains("Custom")
-                                || encodingName.contains("Dictionary")) {
-                            log.debug(
-                                    "Font {} uses custom encoding: {}",
-                                    font.getName(),
-                                    encodingName);
+                        if (encodingName.contains("Custom") || encodingName.contains("Dictionary")) {
+                            log.debug("Font {} uses custom encoding: {}", font.getName(), encodingName);
                             return true;
                         }
                     }
                 } catch (Exception e) {
-                    log.debug(
-                            "Encoding detection failed for font {}: {}",
-                            font.getName(),
-                            e.getMessage());
+                    log.debug("Encoding detection failed for font {}: {}", font.getName(), e.getMessage());
                     return true; // Assume custom if detection fails
                 }
             }
@@ -326,7 +302,10 @@ public class TextEncodingHelper {
         if (fontName == null) {
             return false;
         }
-        return RegexPatternUtils.getInstance().getFontNamePattern().matcher(fontName).matches();
+        return RegexPatternUtils.getInstance()
+                .getFontNamePattern()
+                .matcher(fontName)
+                .matches();
     }
 
     public static boolean canCalculateBasicWidths(PDFont font) {

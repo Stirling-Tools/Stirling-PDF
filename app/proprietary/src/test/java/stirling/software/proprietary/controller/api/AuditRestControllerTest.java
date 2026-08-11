@@ -39,7 +39,8 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class AuditRestControllerTest {
 
-    @Mock private PersistentAuditEventRepository auditRepository;
+    @Mock
+    private PersistentAuditEventRepository auditRepository;
 
     private ObjectMapper objectMapper;
     private AuditRestController controller;
@@ -74,8 +75,7 @@ class AuditRestControllerTest {
             when(auditRepository.findAll(any(Pageable.class)))
                     .thenReturn(page(List.of(event(1L, "admin", "USER_LOGIN", "{\"x\":1}"))));
 
-            ResponseEntity<AuditEventsResponse> resp =
-                    controller.getAuditEvents(0, 30, null, null, null, null);
+            ResponseEntity<AuditEventsResponse> resp = controller.getAuditEvents(0, 30, null, null, null, null);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
             AuditEventsResponse body = resp.getBody();
@@ -98,8 +98,7 @@ class AuditRestControllerTest {
         @Test
         @DisplayName("eventType only routes to findByTypeIn")
         void eventTypeOnly() {
-            when(auditRepository.findByTypeIn(anyList(), any(Pageable.class)))
-                    .thenReturn(page(List.of()));
+            when(auditRepository.findByTypeIn(anyList(), any(Pageable.class))).thenReturn(page(List.of()));
 
             controller.getAuditEvents(0, 30, new String[] {"USER_LOGIN"}, null, null, null);
 
@@ -120,30 +119,23 @@ class AuditRestControllerTest {
         @Test
         @DisplayName("type and username routes to findByTypeInAndPrincipalIn")
         void typeAndUsername() {
-            when(auditRepository.findByTypeInAndPrincipalIn(
-                            anyList(), anyList(), any(Pageable.class)))
+            when(auditRepository.findByTypeInAndPrincipalIn(anyList(), anyList(), any(Pageable.class)))
                     .thenReturn(page(List.of()));
 
-            controller.getAuditEvents(
-                    0, 30, new String[] {"USER_LOGIN"}, new String[] {"admin"}, null, null);
+            controller.getAuditEvents(0, 30, new String[] {"USER_LOGIN"}, new String[] {"admin"}, null, null);
 
-            verify(auditRepository)
-                    .findByTypeInAndPrincipalIn(anyList(), anyList(), any(Pageable.class));
+            verify(auditRepository).findByTypeInAndPrincipalIn(anyList(), anyList(), any(Pageable.class));
         }
 
         @Test
         @DisplayName("date range only routes to findByTimestampBetween")
         void dateRangeOnly() {
-            when(auditRepository.findByTimestampBetween(
-                            any(Instant.class), any(Instant.class), any(Pageable.class)))
+            when(auditRepository.findByTimestampBetween(any(Instant.class), any(Instant.class), any(Pageable.class)))
                     .thenReturn(page(List.of()));
 
-            controller.getAuditEvents(
-                    0, 30, null, null, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
+            controller.getAuditEvents(0, 30, null, null, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
 
-            verify(auditRepository)
-                    .findByTimestampBetween(
-                            any(Instant.class), any(Instant.class), any(Pageable.class));
+            verify(auditRepository).findByTimestampBetween(any(Instant.class), any(Instant.class), any(Pageable.class));
         }
 
         @Test
@@ -154,12 +146,7 @@ class AuditRestControllerTest {
                     .thenReturn(page(List.of()));
 
             controller.getAuditEvents(
-                    0,
-                    30,
-                    new String[] {"PDF_PROCESS"},
-                    null,
-                    LocalDate.of(2025, 1, 1),
-                    LocalDate.of(2025, 1, 31));
+                    0, 30, new String[] {"PDF_PROCESS"}, null, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
 
             verify(auditRepository)
                     .findByTypeInAndTimestampBetween(
@@ -174,12 +161,7 @@ class AuditRestControllerTest {
                     .thenReturn(page(List.of()));
 
             controller.getAuditEvents(
-                    0,
-                    30,
-                    null,
-                    new String[] {"admin"},
-                    LocalDate.of(2025, 1, 1),
-                    LocalDate.of(2025, 1, 31));
+                    0, 30, null, new String[] {"admin"}, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31));
 
             verify(auditRepository)
                     .findByPrincipalInAndTimestampBetween(
@@ -190,11 +172,7 @@ class AuditRestControllerTest {
         @DisplayName("all filters route to combined query")
         void allFilters() {
             when(auditRepository.findByTypeInAndPrincipalInAndTimestampBetween(
-                            anyList(),
-                            anyList(),
-                            any(Instant.class),
-                            any(Instant.class),
-                            any(Pageable.class)))
+                            anyList(), anyList(), any(Instant.class), any(Instant.class), any(Pageable.class)))
                     .thenReturn(page(List.of()));
 
             controller.getAuditEvents(
@@ -207,11 +185,7 @@ class AuditRestControllerTest {
 
             verify(auditRepository)
                     .findByTypeInAndPrincipalInAndTimestampBetween(
-                            anyList(),
-                            anyList(),
-                            any(Instant.class),
-                            any(Instant.class),
-                            any(Pageable.class));
+                            anyList(), anyList(), any(Instant.class), any(Instant.class), any(Pageable.class));
         }
 
         @Test
@@ -220,8 +194,7 @@ class AuditRestControllerTest {
             when(auditRepository.findAll(any(Pageable.class)))
                     .thenReturn(page(List.of(event(1L, "admin", "USER_LOGIN", "not-json"))));
 
-            ResponseEntity<AuditEventsResponse> resp =
-                    controller.getAuditEvents(0, 30, null, null, null, null);
+            ResponseEntity<AuditEventsResponse> resp = controller.getAuditEvents(0, 30, null, null, null, null);
 
             var details = resp.getBody().getEvents().get(0).getDetails();
             assertThat(details).containsEntry("rawData", "not-json");
@@ -231,17 +204,9 @@ class AuditRestControllerTest {
         @DisplayName("clientIp is extracted into dto ipAddress")
         void clientIpExtracted() {
             when(auditRepository.findAll(any(Pageable.class)))
-                    .thenReturn(
-                            page(
-                                    List.of(
-                                            event(
-                                                    1L,
-                                                    "admin",
-                                                    "USER_LOGIN",
-                                                    "{\"clientIp\":\"10.0.0.5\"}"))));
+                    .thenReturn(page(List.of(event(1L, "admin", "USER_LOGIN", "{\"clientIp\":\"10.0.0.5\"}"))));
 
-            ResponseEntity<AuditEventsResponse> resp =
-                    controller.getAuditEvents(0, 30, null, null, null, null);
+            ResponseEntity<AuditEventsResponse> resp = controller.getAuditEvents(0, 30, null, null, null, null);
 
             assertThat(resp.getBody().getEvents().get(0).getIpAddress()).isEqualTo("10.0.0.5");
         }
@@ -250,17 +215,9 @@ class AuditRestControllerTest {
         @DisplayName("__ipAddress fallback is used when clientIp missing")
         void ipAddressFallback() {
             when(auditRepository.findAll(any(Pageable.class)))
-                    .thenReturn(
-                            page(
-                                    List.of(
-                                            event(
-                                                    1L,
-                                                    "admin",
-                                                    "USER_LOGIN",
-                                                    "{\"__ipAddress\":\"192.168.1.1\"}"))));
+                    .thenReturn(page(List.of(event(1L, "admin", "USER_LOGIN", "{\"__ipAddress\":\"192.168.1.1\"}"))));
 
-            ResponseEntity<AuditEventsResponse> resp =
-                    controller.getAuditEvents(0, 30, null, null, null, null);
+            ResponseEntity<AuditEventsResponse> resp = controller.getAuditEvents(0, 30, null, null, null, null);
 
             assertThat(resp.getBody().getEvents().get(0).getIpAddress()).isEqualTo("192.168.1.1");
         }
@@ -274,11 +231,10 @@ class AuditRestControllerTest {
         @DisplayName("groups events by type, user and day")
         void buildsChartData() {
             when(auditRepository.findByTimestampAfter(any(Instant.class)))
-                    .thenReturn(
-                            List.of(
-                                    event(1L, "admin", "USER_LOGIN", null),
-                                    event(2L, "admin", "USER_LOGIN", null),
-                                    event(3L, "bob", "PDF_PROCESS", null)));
+                    .thenReturn(List.of(
+                            event(1L, "admin", "USER_LOGIN", null),
+                            event(2L, "admin", "USER_LOGIN", null),
+                            event(3L, "bob", "PDF_PROCESS", null)));
 
             ResponseEntity<AuditChartsData> resp = controller.getAuditCharts("week");
 
@@ -295,8 +251,7 @@ class AuditRestControllerTest {
 
             assertThat(controller.getAuditCharts("day").getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(controller.getAuditCharts("month").getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(controller.getAuditCharts("unknown").getStatusCode())
-                    .isEqualTo(HttpStatus.OK);
+            assertThat(controller.getAuditCharts("unknown").getStatusCode()).isEqualTo(HttpStatus.OK);
         }
     }
 
@@ -335,22 +290,20 @@ class AuditRestControllerTest {
         @Test
         @DisplayName("computes success rate, latency, error count and top items")
         void computesMetrics() {
-            List<PersistentAuditEvent> current =
-                    List.of(
-                            event(
-                                    1L,
-                                    "admin",
-                                    "PDF_PROCESS",
-                                    "{\"status\":\"success\",\"latencyMs\":100,\"path\":\"/api/v1/merge\"}"),
-                            event(
-                                    2L,
-                                    "admin",
-                                    "PDF_PROCESS",
-                                    "{\"status\":\"failure\",\"latencyMs\":200,\"path\":\"/api/v1/merge\"}"),
-                            event(3L, "bob", "USER_LOGIN", "{\"statusCode\":500}"));
+            List<PersistentAuditEvent> current = List.of(
+                    event(
+                            1L,
+                            "admin",
+                            "PDF_PROCESS",
+                            "{\"status\":\"success\",\"latencyMs\":100,\"path\":\"/api/v1/merge\"}"),
+                    event(
+                            2L,
+                            "admin",
+                            "PDF_PROCESS",
+                            "{\"status\":\"failure\",\"latencyMs\":200,\"path\":\"/api/v1/merge\"}"),
+                    event(3L, "bob", "USER_LOGIN", "{\"statusCode\":500}"));
             when(auditRepository.findByTimestampAfter(any(Instant.class))).thenReturn(current);
-            when(auditRepository.findAllByTimestampBetweenForExport(
-                            any(Instant.class), any(Instant.class)))
+            when(auditRepository.findAllByTimestampBetweenForExport(any(Instant.class), any(Instant.class)))
                     .thenReturn(List.of());
             when(auditRepository.histogramByHourBetween(any(Instant.class), any(Instant.class)))
                     .thenReturn(List.<Object[]>of(new Object[] {10, 2L}));
@@ -376,15 +329,9 @@ class AuditRestControllerTest {
         @DisplayName("string latency and statusCode values are parsed safely")
         void stringNumericValues() {
             when(auditRepository.findByTimestampAfter(any(Instant.class)))
-                    .thenReturn(
-                            List.of(
-                                    event(
-                                            1L,
-                                            "admin",
-                                            "PDF_PROCESS",
-                                            "{\"latencyMs\":\"300\",\"statusCode\":\"404\"}")));
-            when(auditRepository.findAllByTimestampBetweenForExport(
-                            any(Instant.class), any(Instant.class)))
+                    .thenReturn(List.of(
+                            event(1L, "admin", "PDF_PROCESS", "{\"latencyMs\":\"300\",\"statusCode\":\"404\"}")));
+            when(auditRepository.findAllByTimestampBetweenForExport(any(Instant.class), any(Instant.class)))
                     .thenReturn(List.of());
             when(auditRepository.histogramByHourBetween(any(Instant.class), any(Instant.class)))
                     .thenReturn(List.of());
@@ -399,15 +346,8 @@ class AuditRestControllerTest {
         @DisplayName("legacy outcome key counts toward success rate")
         void legacyOutcomeKey() {
             when(auditRepository.findByTimestampAfter(any(Instant.class)))
-                    .thenReturn(
-                            List.of(
-                                    event(
-                                            1L,
-                                            "admin",
-                                            "PDF_PROCESS",
-                                            "{\"outcome\":\"success\"}")));
-            when(auditRepository.findAllByTimestampBetweenForExport(
-                            any(Instant.class), any(Instant.class)))
+                    .thenReturn(List.of(event(1L, "admin", "PDF_PROCESS", "{\"outcome\":\"success\"}")));
+            when(auditRepository.findAllByTimestampBetweenForExport(any(Instant.class), any(Instant.class)))
                     .thenReturn(List.of());
             when(auditRepository.histogramByHourBetween(any(Instant.class), any(Instant.class)))
                     .thenReturn(List.of());
@@ -421,8 +361,7 @@ class AuditRestControllerTest {
         @DisplayName("empty period yields default metrics")
         void emptyMetrics() {
             when(auditRepository.findByTimestampAfter(any(Instant.class))).thenReturn(List.of());
-            when(auditRepository.findAllByTimestampBetweenForExport(
-                            any(Instant.class), any(Instant.class)))
+            when(auditRepository.findAllByTimestampBetweenForExport(any(Instant.class), any(Instant.class)))
                     .thenReturn(List.of());
             when(auditRepository.histogramByHourBetween(any(Instant.class), any(Instant.class)))
                     .thenReturn(List.of());
@@ -442,36 +381,30 @@ class AuditRestControllerTest {
         @Test
         @DisplayName("default CSV (no fields) uses technical header")
         void defaultCsv() {
-            when(auditRepository.findAll())
-                    .thenReturn(List.of(event(1L, "admin", "USER_LOGIN", "{\"a\":1}")));
+            when(auditRepository.findAll()).thenReturn(List.of(event(1L, "admin", "USER_LOGIN", "{\"a\":1}")));
 
-            ResponseEntity<byte[]> resp =
-                    controller.exportAuditData("csv", null, null, null, null, null);
+            ResponseEntity<byte[]> resp = controller.exportAuditData("csv", null, null, null, null, null);
 
             String csv = new String(resp.getBody(), StandardCharsets.UTF_8);
             assertThat(csv).startsWith("ID,Principal,Type,Timestamp,Data");
-            assertThat(resp.getHeaders().getContentDisposition().getFilename())
-                    .isEqualTo("audit_export.csv");
+            assertThat(resp.getHeaders().getContentDisposition().getFilename()).isEqualTo("audit_export.csv");
         }
 
         @Test
         @DisplayName("field-selected CSV builds custom header and extracts nested data")
         void fieldSelectedCsv() {
-            String data =
-                    "{\"path\":\"/api/v1/merge\",\"outcome\":\"success\","
-                            + "\"clientIp\":\"1.2.3.4\",\"result\":\"ok\","
-                            + "\"files\":[{\"name\":\"a.pdf\",\"pdfAuthor\":\"jo\",\"fileHash\":\"abc\"}]}";
-            when(auditRepository.findAll())
-                    .thenReturn(List.of(event(1L, "admin", "USER_LOGIN", data)));
+            String data = "{\"path\":\"/api/v1/merge\",\"outcome\":\"success\","
+                    + "\"clientIp\":\"1.2.3.4\",\"result\":\"ok\","
+                    + "\"files\":[{\"name\":\"a.pdf\",\"pdfAuthor\":\"jo\",\"fileHash\":\"abc\"}]}";
+            when(auditRepository.findAll()).thenReturn(List.of(event(1L, "admin", "USER_LOGIN", data)));
 
-            ResponseEntity<byte[]> resp =
-                    controller.exportAuditData(
-                            "csv",
-                            "date,username,ipaddress,tool,documentname,outcome,author,filehash,operationresults,eventtype",
-                            null,
-                            null,
-                            null,
-                            null);
+            ResponseEntity<byte[]> resp = controller.exportAuditData(
+                    "csv",
+                    "date,username,ipaddress,tool,documentname,outcome,author,filehash,operationresults,eventtype",
+                    null,
+                    null,
+                    null,
+                    null);
 
             String csv = new String(resp.getBody(), StandardCharsets.UTF_8);
             assertThat(csv).contains("Date,Username,IP Address,Tool,Document Name");
@@ -480,23 +413,19 @@ class AuditRestControllerTest {
             assertThat(csv).contains("jo");
             assertThat(csv).contains("abc");
             assertThat(csv).contains("1.2.3.4");
-            assertThat(resp.getHeaders().getContentDisposition().getFilename())
-                    .startsWith("audit_export_");
+            assertThat(resp.getHeaders().getContentDisposition().getFilename()).startsWith("audit_export_");
         }
 
         @Test
         @DisplayName("json format returns json bytes")
         void jsonExport() {
-            when(auditRepository.findAll())
-                    .thenReturn(List.of(event(1L, "admin", "USER_LOGIN", null)));
+            when(auditRepository.findAll()).thenReturn(List.of(event(1L, "admin", "USER_LOGIN", null)));
 
-            ResponseEntity<byte[]> resp =
-                    controller.exportAuditData("json", null, null, null, null, null);
+            ResponseEntity<byte[]> resp = controller.exportAuditData("json", null, null, null, null, null);
 
             String json = new String(resp.getBody(), StandardCharsets.UTF_8);
             assertThat(json).contains("\"principal\":\"admin\"");
-            assertThat(resp.getHeaders().getContentDisposition().getFilename())
-                    .isEqualTo("audit_export.json");
+            assertThat(resp.getHeaders().getContentDisposition().getFilename()).isEqualTo("audit_export.json");
         }
 
         @Test

@@ -27,12 +27,7 @@ public class FileInfoTest {
     })
     void testGetFormattedFileSize(long fileSize, String expectedFormattedSize) {
         FileInfo fileInfo =
-                new FileInfo(
-                        "example.txt",
-                        "/path/to/example.txt",
-                        FIXED_NOW,
-                        fileSize,
-                        FIXED_NOW.minusDays(1));
+                new FileInfo("example.txt", "/path/to/example.txt", FIXED_NOW, fileSize, FIXED_NOW.minusDays(1));
 
         assertEquals(expectedFormattedSize, fileInfo.getFormattedFileSize());
     }
@@ -43,22 +38,13 @@ public class FileInfoTest {
         @Test
         @DisplayName("Should convert filePath string into a Path instance")
         void shouldConvertStringToPath() {
-            FileInfo fi =
-                    new FileInfo(
-                            "example.txt",
-                            "/path/to/example.txt",
-                            FIXED_NOW,
-                            123,
-                            FIXED_NOW.minusDays(1));
+            FileInfo fi = new FileInfo("example.txt", "/path/to/example.txt", FIXED_NOW, 123, FIXED_NOW.minusDays(1));
 
             Path path = fi.getFilePathAsPath();
 
             // Basic sanity checks
             assertNotNull(path, "Path should not be null");
-            assertEquals(
-                    Path.of("/path/to/example.txt"),
-                    path,
-                    "Converted Path should match input string");
+            assertEquals(Path.of("/path/to/example.txt"), path, "Converted Path should match input string");
         }
     }
 
@@ -70,12 +56,7 @@ public class FileInfoTest {
         void shouldFormatModificationDate() {
             LocalDateTime mod = LocalDateTime.of(2025, 8, 10, 15, 30, 45);
             FileInfo fi =
-                    new FileInfo(
-                            "example.txt",
-                            "/path/to/example.txt",
-                            mod,
-                            1,
-                            LocalDateTime.of(2024, 1, 1, 0, 0, 0));
+                    new FileInfo("example.txt", "/path/to/example.txt", mod, 1, LocalDateTime.of(2024, 1, 1, 0, 0, 0));
 
             assertEquals("2025-08-10 15:30:45", fi.getFormattedModificationDate());
         }
@@ -84,13 +65,8 @@ public class FileInfoTest {
         @DisplayName("Should format creationDate as 'yyyy-MM-dd HH:mm:ss'")
         void shouldFormatCreationDate() {
             LocalDateTime created = LocalDateTime.of(2024, 12, 31, 23, 59, 59);
-            FileInfo fi =
-                    new FileInfo(
-                            "example.txt",
-                            "/path/to/example.txt",
-                            LocalDateTime.of(2025, 1, 1, 0, 0, 0),
-                            1,
-                            created);
+            FileInfo fi = new FileInfo(
+                    "example.txt", "/path/to/example.txt", LocalDateTime.of(2025, 1, 1, 0, 0, 0), 1, created);
 
             assertEquals("2024-12-31 23:59:59", fi.getFormattedCreationDate());
         }
@@ -99,32 +75,24 @@ public class FileInfoTest {
         @DisplayName("Should throw NPE when modificationDate is null (current behavior)")
         void shouldThrowWhenModificationDateNull() {
             // Assumption: Current implementation does not guard null -> NPE is expected.
-            FileInfo fi =
-                    new FileInfo(
-                            "example.txt",
-                            "/path/to/example.txt",
-                            null, // modificationDate null
-                            1,
-                            FIXED_NOW);
+            FileInfo fi = new FileInfo(
+                    "example.txt",
+                    "/path/to/example.txt",
+                    null, // modificationDate null
+                    1,
+                    FIXED_NOW);
 
             assertThrows(
                     NullPointerException.class,
                     fi::getFormattedModificationDate,
-                    "Formatting a null modificationDate should throw NPE with current"
-                            + " implementation");
+                    "Formatting a null modificationDate should throw NPE with current" + " implementation");
         }
 
         @Test
         @DisplayName("Should throw NPE when creationDate is null (current behavior)")
         void shouldThrowWhenCreationDateNull() {
             // Assumption: Current implementation does not guard null -> NPE is expected.
-            FileInfo fi =
-                    new FileInfo(
-                            "example.txt",
-                            "/path/to/example.txt",
-                            FIXED_NOW,
-                            1,
-                            null); // creationDate null
+            FileInfo fi = new FileInfo("example.txt", "/path/to/example.txt", FIXED_NOW, 1, null); // creationDate null
 
             assertThrows(
                     NullPointerException.class,
@@ -140,13 +108,12 @@ public class FileInfoTest {
         @Test
         @DisplayName("Should round to two decimals for KB (e.g., 1536 B -> 1.50 KB)")
         void shouldRoundKbToTwoDecimals() {
-            FileInfo fi =
-                    new FileInfo(
-                            "example.txt",
-                            "/path/to/example.txt",
-                            FIXED_NOW,
-                            1536, // 1.5 KB
-                            FIXED_NOW.minusDays(1));
+            FileInfo fi = new FileInfo(
+                    "example.txt",
+                    "/path/to/example.txt",
+                    FIXED_NOW,
+                    1536, // 1.5 KB
+                    FIXED_NOW.minusDays(1));
 
             assertEquals("1.50 KB", fi.getFormattedFileSize());
         }
@@ -156,13 +123,7 @@ public class FileInfoTest {
         void shouldRepresentTerabytesInGb() {
             // 2 TB = 2 * 1024 GB -> 2 * 1024 * 1024^3 bytes
             long twoTB = 2L * 1024 * 1024 * 1024 * 1024; // 2 * 2^40
-            FileInfo fi =
-                    new FileInfo(
-                            "example.txt",
-                            "/path/to/example.txt",
-                            FIXED_NOW,
-                            twoTB,
-                            FIXED_NOW.minusDays(1));
+            FileInfo fi = new FileInfo("example.txt", "/path/to/example.txt", FIXED_NOW, twoTB, FIXED_NOW.minusDays(1));
 
             // 2 TB equals 2048.00 GB with current implementation
             assertEquals(

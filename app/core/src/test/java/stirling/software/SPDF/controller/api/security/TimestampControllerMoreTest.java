@@ -55,8 +55,11 @@ import okhttp3.mockwebserver.RecordedRequest;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class TimestampControllerMoreTest {
 
-    @org.mockito.Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @org.mockito.Mock private ApplicationProperties applicationProperties;
+    @org.mockito.Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @org.mockito.Mock
+    private ApplicationProperties applicationProperties;
 
     private TempFileManager tempFileManager;
     private TimestampController controller;
@@ -75,22 +78,16 @@ class TimestampControllerMoreTest {
         when(applicationProperties.getSecurity()).thenReturn(security);
 
         tempFileManager = mock(TempFileManager.class);
-        lenient()
-                .when(tempFileManager.createManagedTempFile(any()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("ts-out", inv.<String>getArgument(0))
-                                            .toFile();
-                            createdTempFiles.add(f.toPath());
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(any())).thenAnswer(inv -> {
+            File f = Files.createTempFile("ts-out", inv.<String>getArgument(0)).toFile();
+            createdTempFiles.add(f.toPath());
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
 
-        controller =
-                new TimestampController(pdfDocumentFactory, applicationProperties, tempFileManager);
+        controller = new TimestampController(pdfDocumentFactory, applicationProperties, tempFileManager);
 
         server = new MockWebServer();
         server.start();
@@ -124,12 +121,8 @@ class TimestampControllerMoreTest {
         // Allow the loopback mock-server URL through the SSRF allowlist.
         tsConfig.setCustomTsaUrls(new ArrayList<>(List.of(url)));
 
-        MockMultipartFile pdf =
-                new MockMultipartFile(
-                        "fileInput",
-                        "input.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        new byte[] {0x25, 0x50, 0x44, 0x46});
+        MockMultipartFile pdf = new MockMultipartFile(
+                "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {0x25, 0x50, 0x44, 0x46});
 
         when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(realPdfDocument());
 
@@ -147,11 +140,10 @@ class TimestampControllerMoreTest {
         @DisplayName("POSTs an RFC 3161 timestamp-query to the TSA endpoint")
         void postsTimestampQuery() throws Exception {
             // Canned non-token body -> validation fails after the POST, but the POST still happens.
-            server.enqueue(
-                    new MockResponse()
-                            .setResponseCode(200)
-                            .addHeader("Content-Type", "application/timestamp-reply")
-                            .setBody("not-a-real-token"));
+            server.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .addHeader("Content-Type", "application/timestamp-reply")
+                    .setBody("not-a-real-token"));
 
             TimestampPdfRequest request = requestForServerUrl("/tsr");
 
@@ -159,13 +151,11 @@ class TimestampControllerMoreTest {
             assertThrows(Exception.class, () -> controller.timestampPdf(request));
 
             RecordedRequest recorded = server.takeRequest(5, TimeUnit.SECONDS);
-            assertNotNull(
-                    recorded, "the controller should have POSTed a timestamp query to the TSA");
+            assertNotNull(recorded, "the controller should have POSTed a timestamp query to the TSA");
             assertEquals("POST", recorded.getMethod());
             assertEquals("/tsr", recorded.getPath());
             assertEquals("application/timestamp-query", recorded.getHeader("Content-Type"));
-            assertTrue(
-                    recorded.getBodySize() > 0, "request body (the TS query) should be non-empty");
+            assertTrue(recorded.getBodySize() > 0, "request body (the TS query) should be non-empty");
         }
     }
 
@@ -214,10 +204,7 @@ class TimestampControllerMoreTest {
         @Test
         @DisplayName("garbage 200 body fails to parse as a TimeStampResponse")
         void garbageBodyFailsToParse() throws Exception {
-            server.enqueue(
-                    new MockResponse()
-                            .setResponseCode(200)
-                            .setBody("this is definitely not ASN.1 DER"));
+            server.enqueue(new MockResponse().setResponseCode(200).setBody("this is definitely not ASN.1 DER"));
 
             TimestampPdfRequest request = requestForServerUrl("/tsr");
 
@@ -233,19 +220,14 @@ class TimestampControllerMoreTest {
         @DisplayName("URL not in the allowlist is rejected before any HTTP call")
         void rejectsNonAllowlistedUrl() {
             // No custom URL configured -> arbitrary URL must be rejected.
-            MockMultipartFile pdf =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "input.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            new byte[] {0x25, 0x50, 0x44, 0x46});
+            MockMultipartFile pdf = new MockMultipartFile(
+                    "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {0x25, 0x50, 0x44, 0x46});
             TimestampPdfRequest request = new TimestampPdfRequest();
             request.setFileInput(pdf);
             request.setTsaUrl("http://attacker.example.com/tsr");
 
             IllegalArgumentException ex =
-                    assertThrows(
-                            IllegalArgumentException.class, () -> controller.timestampPdf(request));
+                    assertThrows(IllegalArgumentException.class, () -> controller.timestampPdf(request));
             assertTrue(ex.getMessage().contains("not in the allowed list"));
             assertEquals(0, server.getRequestCount(), "no HTTP call should be made when rejected");
         }

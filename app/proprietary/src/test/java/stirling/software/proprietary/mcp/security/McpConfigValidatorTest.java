@@ -18,10 +18,8 @@ class McpConfigValidatorTest {
 
     private static boolean hasWarn(List<McpConfigValidator.Finding> findings, String needle) {
         return findings.stream()
-                .anyMatch(
-                        f ->
-                                f.severity() == McpConfigValidator.Severity.WARN
-                                        && f.message().contains(needle));
+                .anyMatch(f -> f.severity() == McpConfigValidator.Severity.WARN
+                        && f.message().contains(needle));
     }
 
     @Test

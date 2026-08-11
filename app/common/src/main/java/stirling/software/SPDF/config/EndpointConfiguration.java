@@ -44,7 +44,10 @@ public class EndpointConfiguration {
 
     private static final String REMOVE_BLANKS = "remove-blanks";
     private final ApplicationProperties applicationProperties;
-    @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
+
+    @Getter
+    private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
+
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
     private Set<String> disabledGroups = new HashSet<>();
     private Map<String, DisableReason> endpointDisableReasons = new ConcurrentHashMap<>();
@@ -53,8 +56,7 @@ public class EndpointConfiguration {
     private final boolean runningProOrHigher;
 
     public EndpointConfiguration(
-            ApplicationProperties applicationProperties,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
+            ApplicationProperties applicationProperties, @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
         this.applicationProperties = applicationProperties;
         this.runningProOrHigher = runningProOrHigher;
         init();
@@ -138,10 +140,7 @@ public class EndpointConfiguration {
             if (disabledGroups.contains(group) && entry.getValue().contains(endpoint)) {
                 // Skip tool groups (qpdf, OCRmyPDF, Ghostscript, LibreOffice, etc.)
                 if (!isToolGroup(group)) {
-                    log.debug(
-                            "isEndpointEnabled('{}') -> false (functional group '{}' disabled)",
-                            original,
-                            group);
+                    log.debug("isEndpointEnabled('{}') -> false (functional group '{}' disabled)", original, group);
                     return false;
                 }
             }
@@ -151,12 +150,8 @@ public class EndpointConfiguration {
         Set<String> alternatives = endpointAlternatives.get(endpoint);
         if (alternatives != null && !alternatives.isEmpty()) {
             boolean hasEnabledToolGroup =
-                    alternatives.stream()
-                            .anyMatch(toolGroup -> !disabledGroups.contains(toolGroup));
-            log.debug(
-                    "isEndpointEnabled('{}') -> {} (tool groups check)",
-                    original,
-                    hasEnabledToolGroup);
+                    alternatives.stream().anyMatch(toolGroup -> !disabledGroups.contains(toolGroup));
+            log.debug("isEndpointEnabled('{}') -> {} (tool groups check)", original, hasEnabledToolGroup);
             return hasEnabledToolGroup;
         }
 
@@ -204,8 +199,7 @@ public class EndpointConfiguration {
         // For functional groups, check each endpoint individually
         for (String endpoint : endpoints) {
             if (!isEndpointEnabledDirectly(endpoint)) {
-                log.debug(
-                        "isGroupEnabled('{}') -> false (endpoint '{}' disabled)", group, endpoint);
+                log.debug("isGroupEnabled('{}') -> false (endpoint '{}' disabled)", group, endpoint);
                 return false;
             }
         }
@@ -229,13 +223,9 @@ public class EndpointConfiguration {
     public void disableGroup(String group, DisableReason reason) {
         if (disabledGroups.add(group)) {
             if (isToolGroup(group)) {
-                log.debug(
-                        "Disabling tool group: {} (endpoints with alternatives remain available)",
-                        group);
+                log.debug("Disabling tool group: {} (endpoints with alternatives remain available)", group);
             } else {
-                log.debug(
-                        "Disabling functional group: {} (will disable all endpoints in group)",
-                        group);
+                log.debug("Disabling functional group: {} (will disable all endpoints in group)", group);
             }
         }
         groupDisableReasons.put(group, reason);
@@ -292,23 +282,22 @@ public class EndpointConfiguration {
     public void logDisabledEndpointsSummary() {
         // Get all unique endpoints across all groups
         Set<String> allEndpoints =
-                endpointGroups.values().stream()
-                        .flatMap(Set::stream)
-                        .collect(java.util.stream.Collectors.toSet());
+                endpointGroups.values().stream().flatMap(Set::stream).collect(java.util.stream.Collectors.toSet());
 
         // Check which endpoints are actually disabled (functionally unavailable)
-        List<String> functionallyDisabledEndpoints =
-                allEndpoints.stream()
-                        .filter(endpoint -> !isEndpointEnabled(endpoint))
-                        .sorted()
-                        .toList();
+        List<String> functionallyDisabledEndpoints = allEndpoints.stream()
+                .filter(endpoint -> !isEndpointEnabled(endpoint))
+                .sorted()
+                .toList();
 
         // Separate tool groups from functional groups
         List<String> disabledToolGroups =
                 disabledGroups.stream().filter(this::isToolGroup).sorted().toList();
 
-        List<String> disabledFunctionalGroups =
-                disabledGroups.stream().filter(group -> !isToolGroup(group)).sorted().toList();
+        List<String> disabledFunctionalGroups = disabledGroups.stream()
+                .filter(group -> !isToolGroup(group))
+                .sorted()
+                .toList();
 
         if (!disabledToolGroups.isEmpty()) {
             log.info(
@@ -326,8 +315,7 @@ public class EndpointConfiguration {
                     functionallyDisabledEndpoints.size(),
                     String.join(", ", functionallyDisabledEndpoints));
         } else if (!disabledToolGroups.isEmpty()) {
-            log.info(
-                    "No endpoints disabled despite missing tools - fallback implementations available");
+            log.info("No endpoints disabled despite missing tools - fallback implementations available");
         }
     }
 
@@ -611,7 +599,8 @@ public class EndpointConfiguration {
 
     private void processEnvironmentConfigs() {
         if (applicationProperties != null && applicationProperties.getEndpoints() != null) {
-            List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
+            List<String> endpointsToRemove =
+                    applicationProperties.getEndpoints().getToRemove();
             List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
 
             if (endpointsToRemove != null) {
@@ -640,9 +629,7 @@ public class EndpointConfiguration {
     }
 
     public Set<String> getAllEndpoints() {
-        return endpointGroups.values().stream()
-                .flatMap(Set::stream)
-                .collect(java.util.stream.Collectors.toSet());
+        return endpointGroups.values().stream().flatMap(Set::stream).collect(java.util.stream.Collectors.toSet());
     }
 
     private boolean isToolGroup(String group) {

@@ -30,8 +30,12 @@ import stirling.software.common.service.UserServiceInterface;
 @ExtendWith(MockitoExtension.class)
 class PdfMetadataServiceTest {
 
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private UserServiceInterface userService;
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private UserServiceInterface userService;
+
     private PdfMetadataService pdfMetadataService;
     private static final String STIRLING_PDF_LABEL = "Stirling PDF";
 
@@ -49,12 +53,11 @@ class PdfMetadataServiceTest {
         lenient().when(proFeatures.getCustomMetadata()).thenReturn(customMetadata);
 
         // Set up the service under test
-        pdfMetadataService =
-                new PdfMetadataService(
-                        applicationProperties,
-                        STIRLING_PDF_LABEL,
-                        false, // not running Pro or higher
-                        userService);
+        pdfMetadataService = new PdfMetadataService(
+                applicationProperties,
+                STIRLING_PDF_LABEL,
+                false, // not running Pro or higher
+                userService);
     }
 
     @Test
@@ -87,8 +90,7 @@ class PdfMetadataServiceTest {
         PdfMetadata metadata = pdfMetadataService.extractMetadataFromPdf(testDocument);
 
         // Convert Calendar to ZonedDateTime for comparison
-        ZonedDateTime expectedCreationDate =
-                ZonedDateTime.ofInstant(creationDate.toInstant(), ZoneId.systemDefault());
+        ZonedDateTime expectedCreationDate = ZonedDateTime.ofInstant(creationDate.toInstant(), ZoneId.systemDefault());
         ZonedDateTime expectedModificationDate =
                 ZonedDateTime.ofInstant(modificationDate.toInstant(), ZoneId.systemDefault());
 
@@ -99,12 +101,8 @@ class PdfMetadataServiceTest {
         assertEquals(testCreator, metadata.getCreator(), "Creator should match");
         assertEquals(testSubject, metadata.getSubject(), "Subject should match");
         assertEquals(testKeywords, metadata.getKeywords(), "Keywords should match");
-        assertEquals(
-                expectedCreationDate, metadata.getCreationDate(), "Creation date should match");
-        assertEquals(
-                expectedModificationDate,
-                metadata.getModificationDate(),
-                "Modification date should match");
+        assertEquals(expectedCreationDate, metadata.getCreationDate(), "Creation date should match");
+        assertEquals(expectedModificationDate, metadata.getModificationDate(), "Modification date should match");
     }
 
     @Test
@@ -134,13 +132,12 @@ class PdfMetadataServiceTest {
         when(testDocument.getDocumentInformation()).thenReturn(testInfo);
 
         // Prepare test metadata
-        PdfMetadata testMetadata =
-                PdfMetadata.builder()
-                        .author("Test Author")
-                        .title("Test Title")
-                        .subject("Test Subject")
-                        .keywords("Test Keywords")
-                        .build();
+        PdfMetadata testMetadata = PdfMetadata.builder()
+                .author("Test Author")
+                .title("Test Title")
+                .subject("Test Subject")
+                .keywords("Test Keywords")
+                .build();
 
         // Act
         pdfMetadataService.setMetadataToPdf(testDocument, testMetadata, true);
@@ -164,15 +161,16 @@ class PdfMetadataServiceTest {
         when(testDocument.getDocumentInformation()).thenReturn(testInfo);
 
         // Create a special service instance for Pro version
-        PdfMetadataService proService =
-                new PdfMetadataService(
-                        applicationProperties,
-                        STIRLING_PDF_LABEL,
-                        true, // running Pro version
-                        userService);
+        PdfMetadataService proService = new PdfMetadataService(
+                applicationProperties,
+                STIRLING_PDF_LABEL,
+                true, // running Pro version
+                userService);
 
-        PdfMetadata testMetadata =
-                PdfMetadata.builder().author("Original Author").title("Test Title").build();
+        PdfMetadata testMetadata = PdfMetadata.builder()
+                .author("Original Author")
+                .title("Test Title")
+                .build();
 
         // Configure pro features
         CustomMetadata customMetadata =
@@ -204,14 +202,13 @@ class PdfMetadataServiceTest {
         ZonedDateTime existingCreationDateZdt =
                 ZonedDateTime.ofInstant(existingCreationDate.toInstant(), ZoneId.systemDefault());
 
-        PdfMetadata testMetadata =
-                PdfMetadata.builder()
-                        .author("Test Author")
-                        .title("Test Title")
-                        .subject("Test Subject")
-                        .keywords("Test Keywords")
-                        .creationDate(existingCreationDateZdt)
-                        .build();
+        PdfMetadata testMetadata = PdfMetadata.builder()
+                .author("Test Author")
+                .title("Test Title")
+                .subject("Test Subject")
+                .keywords("Test Keywords")
+                .creationDate(existingCreationDateZdt)
+                .build();
 
         // Act
         pdfMetadataService.setMetadataToPdf(testDocument, testMetadata, false);
@@ -233,12 +230,11 @@ class PdfMetadataServiceTest {
         when(testDocument.getDocumentInformation()).thenReturn(testInfo);
 
         // Prepare test metadata with null creation date
-        PdfMetadata testMetadata =
-                PdfMetadata.builder()
-                        .author("Test Author")
-                        .title("Test Title")
-                        .creationDate(null) // Explicitly null creation date
-                        .build();
+        PdfMetadata testMetadata = PdfMetadata.builder()
+                .author("Test Author")
+                .title("Test Title")
+                .creationDate(null) // Explicitly null creation date
+                .build();
 
         // Act
         pdfMetadataService.setMetadataToPdf(testDocument, testMetadata, false);

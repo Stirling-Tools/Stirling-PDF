@@ -41,17 +41,38 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class ProprietaryUIDataControllerTest {
 
-    @Mock private SessionPersistentRegistry sessionPersistentRegistry;
-    @Mock private UserRepository userRepository;
-    @Mock private TeamRepository teamRepository;
-    @Mock private TeamMembershipRepository teamMembershipRepository;
-    @Mock private SessionRepository sessionRepository;
-    @Mock private DatabaseService databaseService;
-    @Mock private UserLicenseSettingsService licenseSettingsService;
-    @Mock private PersistentAuditEventRepository auditRepository;
-    @Mock private MfaService mfaService;
-    @Mock private LoginAttemptService loginAttemptService;
-    @Mock private ResourceAccessService resourceAccessService;
+    @Mock
+    private SessionPersistentRegistry sessionPersistentRegistry;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private TeamRepository teamRepository;
+
+    @Mock
+    private TeamMembershipRepository teamMembershipRepository;
+
+    @Mock
+    private SessionRepository sessionRepository;
+
+    @Mock
+    private DatabaseService databaseService;
+
+    @Mock
+    private UserLicenseSettingsService licenseSettingsService;
+
+    @Mock
+    private PersistentAuditEventRepository auditRepository;
+
+    @Mock
+    private MfaService mfaService;
+
+    @Mock
+    private LoginAttemptService loginAttemptService;
+
+    @Mock
+    private ResourceAccessService resourceAccessService;
 
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
@@ -71,28 +92,28 @@ class ProprietaryUIDataControllerTest {
         auditConfig = new AuditConfigurationProperties(applicationProperties);
         objectMapper = JsonMapper.builder().build();
 
-        controller =
-                new ProprietaryUIDataController(
-                        applicationProperties,
-                        auditConfig,
-                        sessionPersistentRegistry,
-                        userRepository,
-                        teamRepository,
-                        teamMembershipRepository,
-                        sessionRepository,
-                        databaseService,
-                        objectMapper,
-                        false,
-                        licenseSettingsService,
-                        auditRepository,
-                        mfaService,
-                        loginAttemptService,
-                        resourceAccessService);
+        controller = new ProprietaryUIDataController(
+                applicationProperties,
+                auditConfig,
+                sessionPersistentRegistry,
+                userRepository,
+                teamRepository,
+                teamMembershipRepository,
+                sessionRepository,
+                databaseService,
+                objectMapper,
+                false,
+                licenseSettingsService,
+                auditRepository,
+                mfaService,
+                loginAttemptService,
+                resourceAccessService);
     }
 
     @Test
     void loginDataFlagsFirstTimeSetupWhenNoUsers() {
-        when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId())).thenReturn(0L);
+        when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId()))
+                .thenReturn(0L);
 
         ResponseEntity<LoginData> response = controller.getLoginData();
 

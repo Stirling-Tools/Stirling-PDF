@@ -31,40 +31,34 @@ class ScannerEffectRequestTest {
         ScannerEffectRequest req = new ScannerEffectRequest();
 
         Set<ConstraintViolation<ScannerEffectRequest>> violations = validator.validate(req);
-        boolean hasFileInputViolation =
-                violations.stream()
-                        .anyMatch(v -> "fileInput".contentEquals(v.getPropertyPath().toString()));
+        boolean hasFileInputViolation = violations.stream()
+                .anyMatch(v -> "fileInput".contentEquals(v.getPropertyPath().toString()));
 
         assertTrue(
                 hasFileInputViolation,
-                () ->
-                        "Expected a validation violation on 'fileInput', but got: "
-                                + violations.stream()
-                                        .map(v -> v.getPropertyPath() + " -> " + v.getMessage())
-                                        .collect(Collectors.joining(", ")));
+                () -> "Expected a validation violation on 'fileInput', but got: "
+                        + violations.stream()
+                                .map(v -> v.getPropertyPath() + " -> " + v.getMessage())
+                                .collect(Collectors.joining(", ")));
     }
 
     @Test
     @DisplayName("fileInput present -> no violation for fileInput")
     void fileInput_present_noViolationForThatField() {
         ScannerEffectRequest req = new ScannerEffectRequest();
-        req.setFileInput(
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", "application/pdf", new byte[] {1, 2, 3}));
+        req.setFileInput(new MockMultipartFile("fileInput", "test.pdf", "application/pdf", new byte[] {1, 2, 3}));
 
         Set<ConstraintViolation<ScannerEffectRequest>> violations = validator.validate(req);
 
-        boolean hasFileInputViolation =
-                violations.stream()
-                        .anyMatch(v -> "fileInput".contentEquals(v.getPropertyPath().toString()));
+        boolean hasFileInputViolation = violations.stream()
+                .anyMatch(v -> "fileInput".contentEquals(v.getPropertyPath().toString()));
 
         assertFalse(
                 hasFileInputViolation,
-                () ->
-                        "Did not expect a validation violation on 'fileInput', but got: "
-                                + violations.stream()
-                                        .map(v -> v.getPropertyPath() + " -> " + v.getMessage())
-                                        .collect(Collectors.joining(", ")));
+                () -> "Did not expect a validation violation on 'fileInput', but got: "
+                        + violations.stream()
+                                .map(v -> v.getPropertyPath() + " -> " + v.getMessage())
+                                .collect(Collectors.joining(", ")));
     }
 
     @Test

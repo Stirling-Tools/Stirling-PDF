@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/filter")
-@Tag(
-        name = "Filter",
-        description =
-                """
+@Tag(name = "Filter", description = """
                 Check basic properties of PDFs before you process them: page count, file size, page size/rotation, and whether they contain text or images.
                 Use these endpoints as a "pre-check" step to decide what to do with a file next.
 

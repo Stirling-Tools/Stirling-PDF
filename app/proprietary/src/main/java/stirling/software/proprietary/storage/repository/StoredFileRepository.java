@@ -16,42 +16,36 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     Optional<StoredFile> findByIdAndOwner(Long id, User owner);
 
-    @Query(
-            "SELECT DISTINCT f FROM StoredFile f "
-                    + "LEFT JOIN FETCH f.owner "
-                    + "LEFT JOIN FETCH f.shares s "
-                    + "LEFT JOIN FETCH s.sharedWithUser "
-                    + "WHERE f.id = :id AND f.owner = :owner")
-    Optional<StoredFile> findByIdAndOwnerWithShares(
-            @Param("id") Long id, @Param("owner") User owner);
+    @Query("SELECT DISTINCT f FROM StoredFile f "
+            + "LEFT JOIN FETCH f.owner "
+            + "LEFT JOIN FETCH f.shares s "
+            + "LEFT JOIN FETCH s.sharedWithUser "
+            + "WHERE f.id = :id AND f.owner = :owner")
+    Optional<StoredFile> findByIdAndOwnerWithShares(@Param("id") Long id, @Param("owner") User owner);
 
-    @Query(
-            "SELECT DISTINCT f FROM StoredFile f "
-                    + "LEFT JOIN FETCH f.owner "
-                    + "LEFT JOIN FETCH f.shares s "
-                    + "LEFT JOIN FETCH s.sharedWithUser "
-                    + "WHERE f.id = :id")
+    @Query("SELECT DISTINCT f FROM StoredFile f "
+            + "LEFT JOIN FETCH f.owner "
+            + "LEFT JOIN FETCH f.shares s "
+            + "LEFT JOIN FETCH s.sharedWithUser "
+            + "WHERE f.id = :id")
     Optional<StoredFile> findByIdWithShares(@Param("id") Long id);
 
-    @Query(
-            "SELECT DISTINCT f FROM StoredFile f "
-                    + "LEFT JOIN FETCH f.owner "
-                    + "LEFT JOIN FETCH f.shares s "
-                    + "LEFT JOIN FETCH s.sharedWithUser "
-                    + "WHERE f.owner = :user "
-                    + "OR s.sharedWithUser = :user")
+    @Query("SELECT DISTINCT f FROM StoredFile f "
+            + "LEFT JOIN FETCH f.owner "
+            + "LEFT JOIN FETCH f.shares s "
+            + "LEFT JOIN FETCH s.sharedWithUser "
+            + "WHERE f.owner = :user "
+            + "OR s.sharedWithUser = :user")
     List<StoredFile> findAccessibleFiles(@Param("user") User user);
 
-    @Query(
-            "SELECT COALESCE(SUM(f.sizeBytes + COALESCE(f.historySizeBytes, 0) "
-                    + "+ COALESCE(f.auditLogSizeBytes, 0)), 0) "
-                    + "FROM StoredFile f WHERE f.owner = :owner")
+    @Query("SELECT COALESCE(SUM(f.sizeBytes + COALESCE(f.historySizeBytes, 0) "
+            + "+ COALESCE(f.auditLogSizeBytes, 0)), 0) "
+            + "FROM StoredFile f WHERE f.owner = :owner")
     long sumStorageBytesByOwner(@Param("owner") User owner);
 
-    @Query(
-            "SELECT COALESCE(SUM(f.sizeBytes + COALESCE(f.historySizeBytes, 0) "
-                    + "+ COALESCE(f.auditLogSizeBytes, 0)), 0) "
-                    + "FROM StoredFile f")
+    @Query("SELECT COALESCE(SUM(f.sizeBytes + COALESCE(f.historySizeBytes, 0) "
+            + "+ COALESCE(f.auditLogSizeBytes, 0)), 0) "
+            + "FROM StoredFile f")
     long sumStorageBytesTotal();
 
     /** Finds all files associated with a workflow session. */
@@ -68,9 +62,8 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
 
     @Modifying
     @Transactional
-    @Query(
-            "UPDATE StoredFile sf SET sf.workflowSession = null "
-                    + "WHERE sf.workflowSession IN "
-                    + "(SELECT ws FROM WorkflowSession ws WHERE ws.owner = :user)")
+    @Query("UPDATE StoredFile sf SET sf.workflowSession = null "
+            + "WHERE sf.workflowSession IN "
+            + "(SELECT ws FROM WorkflowSession ws WHERE ws.owner = :user)")
     void clearWorkflowSessionReferencesByOwner(@Param("user") User user);
 }

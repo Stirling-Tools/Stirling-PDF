@@ -74,20 +74,15 @@ class RedactExecuteServiceMoreTest {
     void setUp() throws Exception {
         factory = mock(CustomPDFDocumentFactory.class);
         TempFileManager tempFileManager = mock(TempFileManager.class);
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile(
-                                                    "redact-exec-test", inv.<String>getArgument(0))
-                                            .toFile();
-                            createdTempFiles.add(f);
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("redact-exec-test", inv.<String>getArgument(0))
+                    .toFile();
+            createdTempFiles.add(f);
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
 
         manualRedactionService = new ManualRedactionService(tempFileManager);
         textRedactionService = new TextRedactionService();
@@ -111,16 +106,13 @@ class RedactExecuteServiceMoreTest {
      * fresh document each time is essential.
      */
     private void factoryReturns(byte[] pdfBytes) throws IOException {
-        lenient()
-                .when(factory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
+        lenient().when(factory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(pdfBytes));
     }
 
     private RedactExecuteRequest requestFor(byte[] pdfBytes) {
         RedactExecuteRequest req = new RedactExecuteRequest();
         req.setFileInput(
-                new org.springframework.mock.web.MockMultipartFile(
-                        "fileInput", "in.pdf", "application/pdf", pdfBytes));
+                new org.springframework.mock.web.MockMultipartFile("fileInput", "in.pdf", "application/pdf", pdfBytes));
         return req;
     }
 
@@ -168,8 +160,7 @@ class RedactExecuteServiceMoreTest {
             doc.addPage(page);
             // 4x4 solid red image so PageImageLocator records exactly one image box.
             java.awt.image.BufferedImage img =
-                    new java.awt.image.BufferedImage(
-                            4, 4, java.awt.image.BufferedImage.TYPE_INT_RGB);
+                    new java.awt.image.BufferedImage(4, 4, java.awt.image.BufferedImage.TYPE_INT_RGB);
             java.awt.Graphics2D g = img.createGraphics();
             g.setColor(java.awt.Color.RED);
             g.fillRect(0, 0, 4, 4);
@@ -219,11 +210,9 @@ class RedactExecuteServiceMoreTest {
         void noTargetsThrows() {
             RedactExecuteRequest req = new RedactExecuteRequest();
             // Provide a non-null file so we get past that guard and hit the no-targets guard first.
-            req.setFileInput(
-                    new org.springframework.mock.web.MockMultipartFile(
-                            "fileInput", "x.pdf", "application/pdf", new byte[] {1}));
-            assertThatThrownBy(() -> service.execute(req))
-                    .isInstanceOf(IllegalArgumentException.class);
+            req.setFileInput(new org.springframework.mock.web.MockMultipartFile(
+                    "fileInput", "x.pdf", "application/pdf", new byte[] {1}));
+            assertThatThrownBy(() -> service.execute(req)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -239,9 +228,7 @@ class RedactExecuteServiceMoreTest {
         @Test
         @DisplayName("factory load failure is wrapped in a RuntimeException")
         void loadFailureWrapped() throws IOException {
-            lenient()
-                    .when(factory.load(any(MultipartFile.class)))
-                    .thenThrow(new IOException("boom"));
+            lenient().when(factory.load(any(MultipartFile.class))).thenThrow(new IOException("boom"));
             RedactExecuteRequest req = requestFor(new byte[] {0x25, 0x50, 0x44, 0x46}); // "%PDF"
             req.setTextValues(List.of("SECRET"));
             assertThatThrownBy(() -> service.execute(req))
@@ -531,9 +518,7 @@ class RedactExecuteServiceMoreTest {
         @Test
         @DisplayName("range redaction between two anchors produces a saved document")
         void rangeRedaction() throws IOException {
-            byte[] pdf =
-                    singlePageTextPdf(
-                            "START anchor line", "middle one", "middle two", "END anchor line");
+            byte[] pdf = singlePageTextPdf("START anchor line", "middle one", "middle two", "END anchor line");
             factoryReturns(pdf);
 
             RedactExecuteRequest req = requestFor(pdf);
@@ -577,8 +562,7 @@ class RedactExecuteServiceMoreTest {
         @Test
         @DisplayName("multiple operations combine in one execute call")
         void combinedOperations() throws IOException {
-            byte[] pdf =
-                    singlePageTextPdf("SECRET top", "box me here", "normal tail line here too");
+            byte[] pdf = singlePageTextPdf("SECRET top", "box me here", "normal tail line here too");
             factoryReturns(pdf);
 
             RedactExecuteRequest req = requestFor(pdf);
@@ -684,8 +668,7 @@ class RedactExecuteServiceMoreTest {
             byte[] pdf = singlePageTextPdf("ALPHA marker", "filler");
             try (PDDocument doc = Loader.loadPDF(pdf)) {
                 Map<Integer, PageColumnLayout> cache = new HashMap<>();
-                List<PDFText> blocks =
-                        service.collectRangeBlocks(doc, "ALPHA marker", "OMEGA-MISSING", cache);
+                List<PDFText> blocks = service.collectRangeBlocks(doc, "ALPHA marker", "OMEGA-MISSING", cache);
                 assertThat(blocks).isEmpty();
             }
         }
@@ -700,12 +683,9 @@ class RedactExecuteServiceMoreTest {
         @Test
         @DisplayName("collapseLetterSpacing rejoins single spaced letters into words")
         void collapseLetterSpacing() throws Exception {
-            Method m =
-                    RedactExecuteService.class.getDeclaredMethod(
-                            "collapseLetterSpacing", String.class);
+            Method m = RedactExecuteService.class.getDeclaredMethod("collapseLetterSpacing", String.class);
             m.setAccessible(true);
-            assertThat(m.invoke(null, "T a b l e of c o n t e n t s"))
-                    .isEqualTo("Table of contents");
+            assertThat(m.invoke(null, "T a b l e of c o n t e n t s")).isEqualTo("Table of contents");
             // A normal sentence with multi-letter tokens is preserved.
             assertThat(m.invoke(null, "already normal text")).isEqualTo("already normal text");
         }
@@ -713,9 +693,7 @@ class RedactExecuteServiceMoreTest {
         @Test
         @DisplayName("punctuationTolerantRegex joins tokens with \\\\W* and quotes them")
         void punctuationTolerantRegex() throws Exception {
-            Method m =
-                    RedactExecuteService.class.getDeclaredMethod(
-                            "punctuationTolerantRegex", String.class);
+            Method m = RedactExecuteService.class.getDeclaredMethod("punctuationTolerantRegex", String.class);
             m.setAccessible(true);
             Object multi = m.invoke(null, "foo: bar");
             assertThat(multi).asString().contains("\\W*");
@@ -727,8 +705,7 @@ class RedactExecuteServiceMoreTest {
         @DisplayName("toZeroBasedIndices drops nulls and non-positive page numbers")
         @SuppressWarnings("unchecked")
         void toZeroBasedIndices() throws Exception {
-            Method m =
-                    RedactExecuteService.class.getDeclaredMethod("toZeroBasedIndices", List.class);
+            Method m = RedactExecuteService.class.getDeclaredMethod("toZeroBasedIndices", List.class);
             m.setAccessible(true);
             List<Integer> in = new ArrayList<>();
             in.add(1);

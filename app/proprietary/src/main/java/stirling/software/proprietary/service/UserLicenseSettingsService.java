@@ -58,20 +58,17 @@ public class UserLicenseSettingsService {
      */
     @Transactional
     public UserLicenseSettings getOrCreateSettings() {
-        return settingsRepository
-                .findSettings()
-                .orElseGet(
-                        () -> {
-                            log.info("Initializing user license settings");
-                            UserLicenseSettings settings = new UserLicenseSettings();
-                            settings.setId(UserLicenseSettings.SINGLETON_ID);
-                            settings.setGrandfatheredUserCount(0);
-                            settings.setLicenseMaxUsers(0);
-                            settings.setGrandfatheringLocked(false);
-                            settings.setIntegritySalt(UUID.randomUUID().toString());
-                            settings.setGrandfatheredUserSignature("");
-                            return settingsRepository.save(settings);
-                        });
+        return settingsRepository.findSettings().orElseGet(() -> {
+            log.info("Initializing user license settings");
+            UserLicenseSettings settings = new UserLicenseSettings();
+            settings.setId(UserLicenseSettings.SINGLETON_ID);
+            settings.setGrandfatheredUserCount(0);
+            settings.setLicenseMaxUsers(0);
+            settings.setGrandfatheringLocked(false);
+            settings.setIntegritySalt(UUID.randomUUID().toString());
+            settings.setGrandfatheredUserSignature("");
+            return settingsRepository.save(settings);
+        });
     }
 
     /**
@@ -109,8 +106,7 @@ public class UserLicenseSettingsService {
                 settingsRepository.save(settings);
             }
             log.debug(
-                    "Grandfathering is locked. Current grandfathered count: {}",
-                    settings.getGrandfatheredUserCount());
+                    "Grandfathering is locked. Current grandfathered count: {}", settings.getGrandfatheredUserCount());
             return;
         }
 
@@ -123,17 +119,14 @@ public class UserLicenseSettingsService {
             // Existing installation (v2.0+ or has users) - grandfather current user count
             grandfatheredCount = Math.max(DEFAULT_USER_LIMIT, (int) currentUserCount);
             log.info(
-                    "Existing installation detected. Grandfathering {} users (current: {}, minimum:"
-                            + " {})",
+                    "Existing installation detected. Grandfathering {} users (current: {}, minimum:" + " {})",
                     grandfatheredCount,
                     currentUserCount,
                     DEFAULT_USER_LIMIT);
         } else {
             // Fresh installation - set to default
             grandfatheredCount = DEFAULT_USER_LIMIT;
-            log.info(
-                    "Fresh installation detected. Setting default grandfathered limit: {}",
-                    grandfatheredCount);
+            log.info("Fresh installation detected. Setting default grandfathered limit: {}", grandfatheredCount);
         }
 
         // Set and LOCK the grandfathering permanently
@@ -142,9 +135,7 @@ public class UserLicenseSettingsService {
         settings.setGrandfatheredUserSignature(generateSignature(grandfatheredCount, settings));
         settingsRepository.save(settings);
 
-        log.warn(
-                "GRANDFATHERING LOCKED: {} users. This value can never be changed.",
-                grandfatheredCount);
+        log.warn("GRANDFATHERING LOCKED: {} users. This value can never be changed.", grandfatheredCount);
     }
 
     /**
@@ -226,26 +217,16 @@ public class UserLicenseSettingsService {
         boolean changed = ensureIntegritySalt(settings);
 
         Optional<Integer> signedCountOpt = extractSignedCount(settings);
-        boolean signatureValid =
-                signedCountOpt.isPresent()
-                        && signatureMatches(
-                                signedCountOpt.get(),
-                                settings.getGrandfatheredUserSignature(),
-                                settings);
+        boolean signatureValid = signedCountOpt.isPresent()
+                && signatureMatches(signedCountOpt.get(), settings.getGrandfatheredUserSignature(), settings);
 
         int targetCount = settings.getGrandfatheredUserCount();
         String targetSignature = settings.getGrandfatheredUserSignature();
 
         if (!signatureValid) {
-            int restoredCount =
-                    signedCountOpt.orElseGet(
-                            () ->
-                                    Math.max(
-                                            DEFAULT_USER_LIMIT,
-                                            (int) userService.getTotalUsersCount()));
-            log.error(
-                    "Grandfathered user signature invalid or missing. Restoring locked count to {}.",
-                    restoredCount);
+            int restoredCount = signedCountOpt.orElseGet(
+                    () -> Math.max(DEFAULT_USER_LIMIT, (int) userService.getTotalUsersCount()));
+            log.error("Grandfathered user signature invalid or missing. Restoring locked count to {}.", restoredCount);
             targetCount = restoredCount;
             targetSignature = generateSignature(targetCount, settings);
             changed = true;
@@ -281,8 +262,7 @@ public class UserLicenseSettingsService {
 
         if (changed
                 || settings.getGrandfatheredUserCount() != targetCount
-                || (targetSignature != null
-                        && !targetSignature.equals(settings.getGrandfatheredUserSignature()))) {
+                || (targetSignature != null && !targetSignature.equals(settings.getGrandfatheredUserSignature()))) {
             settings.setGrandfatheredUserCount(targetCount);
             settings.setGrandfatheredUserSignature(targetSignature);
             settingsRepository.save(settings);
@@ -331,10 +311,7 @@ public class UserLicenseSettingsService {
         }
 
         // ENTERPRISE license (maxUsers>0): license seats only (replaces grandfathering)
-        log.debug(
-                "ENTERPRISE license: {} seats (grandfathered {} not added)",
-                licenseMaxUsers,
-                grandfatheredLimit);
+        log.debug("ENTERPRISE license: {} seats (grandfathered {} not added)", licenseMaxUsers, grandfatheredLimit);
         return licenseMaxUsers;
     }
 
@@ -399,16 +376,12 @@ public class UserLicenseSettingsService {
 
         // No license - check if grandfathered (fallback for V1 users)
         if (user != null && user.isOauthGrandfathered()) {
-            log.info(
-                    "User {} eligible for SAML2 via grandfathering (no ENTERPRISE license)",
-                    username);
+            log.info("User {} eligible for SAML2 via grandfathering (no ENTERPRISE license)", username);
             return true;
         }
 
         // Not grandfathered and no license
-        log.info(
-                "User {} NOT eligible for SAML2: no ENTERPRISE license and not grandfathered",
-                username);
+        log.info("User {} NOT eligible for SAML2: no ENTERPRISE license and not grandfathered", username);
         return false;
     }
 
@@ -511,8 +484,10 @@ public class UserLicenseSettingsService {
 
     private String deriveIntegritySecret() {
         StringBuilder builder = new StringBuilder();
-        appendIfPresent(builder, applicationProperties.getAutomaticallyGenerated().getKey());
-        appendIfPresent(builder, applicationProperties.getAutomaticallyGenerated().getUUID());
+        appendIfPresent(
+                builder, applicationProperties.getAutomaticallyGenerated().getKey());
+        appendIfPresent(
+                builder, applicationProperties.getAutomaticallyGenerated().getUUID());
         appendIfPresent(builder, applicationProperties.getPremium().getKey());
 
         if (builder.isEmpty()) {
@@ -534,8 +509,7 @@ public class UserLicenseSettingsService {
     private String computeHmac(String payload, String secret) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
-            SecretKeySpec keySpec =
-                    new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
             mac.init(keySpec);
             byte[] digest = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
@@ -578,9 +552,7 @@ public class UserLicenseSettingsService {
                 (license == License.ENTERPRISE));
 
         if (license != License.ENTERPRISE) {
-            log.warn(
-                    "SAML2 requires ENTERPRISE license but found: {}. SAML2 login will be blocked.",
-                    license);
+            log.warn("SAML2 requires ENTERPRISE license but found: {}. SAML2 login will be blocked.", license);
         }
 
         return license == License.ENTERPRISE;

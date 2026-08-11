@@ -63,8 +63,7 @@ public class ApiKeyAuthenticationService {
                 return Optional.empty();
             }
             usageRecorder.record(key.getId());
-            return Optional.of(
-                    new ApiKeyAuthentication(owner, auditLabel(key), owner.getAuthorities()));
+            return Optional.of(new ApiKeyAuthentication(owner, auditLabel(key), owner.getAuthorities()));
         }
 
         // Legacy single per-user key: keep working, always a personal key for its user.
@@ -91,12 +90,11 @@ public class ApiKeyAuthenticationService {
         apiKeyRepository
                 .findByKeyHash(ApiKeyHasher.hash(rawKey))
                 .filter(ApiKey::isActive)
-                .ifPresent(
-                        k -> {
-                            k.setEnabled(false);
-                            k.setRevokedAt(Instant.now());
-                            apiKeyRepository.save(k);
-                        });
+                .ifPresent(k -> {
+                    k.setEnabled(false);
+                    k.setRevokedAt(Instant.now());
+                    apiKeyRepository.save(k);
+                });
     }
 
     /**

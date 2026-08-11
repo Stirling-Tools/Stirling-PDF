@@ -38,8 +38,7 @@ class AuditWebFilterTest {
         boolean called = false;
 
         @Override
-        public void doFilter(ServletRequest req, ServletResponse res)
-                throws IOException, ServletException {
+        public void doFilter(ServletRequest req, ServletResponse res) throws IOException, ServletException {
             called = true;
             // Snapshot of the MDC keys set by the filter (before the finally-clear)
             captured.put("userAgent", MDC.get("userAgent"));
@@ -54,8 +53,7 @@ class AuditWebFilterTest {
     /** Variant that intentionally throws an exception after capturing. */
     static class ThrowingAfterCaptureChain extends CapturingFilterChain {
         @Override
-        public void doFilter(ServletRequest req, ServletResponse res)
-                throws IOException, ServletException {
+        public void doFilter(ServletRequest req, ServletResponse res) throws IOException, ServletException {
             super.doFilter(req, res);
             throw new IOException("Test Exception");
         }
@@ -130,31 +128,26 @@ class AuditWebFilterTest {
             CapturingFilterChain chain = new CapturingFilterChain();
             filter.doFilterInternal(request, response, chain);
 
-            assertNull(
-                    chain.captured.get("queryParams"),
-                    "With an empty map, queryParams must not be set");
+            assertNull(chain.captured.get("queryParams"), "With an empty map, queryParams must not be set");
         }
 
         // New: parameterMap == null (branch: parameterMap != null -> false)
         @Test
         @DisplayName("Should handle getParameterMap() returning null safely")
         void shouldHandleNullParameterMapSafely() throws ServletException, IOException {
-            MockHttpServletRequest reqWithNullParamMap =
-                    new MockHttpServletRequest() {
-                        @Override
-                        public Map<String, String[]> getParameterMap() {
-                            // Assumption: defensive branch in the filter; simulate a broken/unusual
-                            // implementation
-                            return null;
-                        }
-                    };
+            MockHttpServletRequest reqWithNullParamMap = new MockHttpServletRequest() {
+                @Override
+                public Map<String, String[]> getParameterMap() {
+                    // Assumption: defensive branch in the filter; simulate a broken/unusual
+                    // implementation
+                    return null;
+                }
+            };
 
             CapturingFilterChain chain = new CapturingFilterChain();
             filter.doFilterInternal(reqWithNullParamMap, response, chain);
 
-            assertNull(
-                    chain.captured.get("queryParams"),
-                    "With a null parameter map, queryParams must not be set");
+            assertNull(chain.captured.get("queryParams"), "With a null parameter map, queryParams must not be set");
         }
     }
 
@@ -166,12 +159,8 @@ class AuditWebFilterTest {
         @DisplayName("Should store roles of the authenticated user")
         void shouldStoreUserRolesInMdc() throws ServletException, IOException {
             SecurityContextHolder.getContext()
-                    .setAuthentication(
-                            new UsernamePasswordAuthenticationToken(
-                                    "user",
-                                    "pass",
-                                    Collections.singletonList(
-                                            new SimpleGrantedAuthority("ROLE_ADMIN"))));
+                    .setAuthentication(new UsernamePasswordAuthenticationToken(
+                            "user", "pass", Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))));
 
             CapturingFilterChain chain = new CapturingFilterChain();
             filter.doFilterInternal(request, response, chain);
@@ -184,13 +173,12 @@ class AuditWebFilterTest {
         @DisplayName("Should store multiple roles comma-separated")
         void shouldStoreMultipleRolesCommaSeparated() throws ServletException, IOException {
             SecurityContextHolder.getContext()
-                    .setAuthentication(
-                            new UsernamePasswordAuthenticationToken(
-                                    "user",
-                                    "pass",
-                                    List.of(
-                                            new SimpleGrantedAuthority("ROLE_USER"),
-                                            new SimpleGrantedAuthority("ROLE_ADMIN"))));
+                    .setAuthentication(new UsernamePasswordAuthenticationToken(
+                            "user",
+                            "pass",
+                            List.of(
+                                    new SimpleGrantedAuthority("ROLE_USER"),
+                                    new SimpleGrantedAuthority("ROLE_ADMIN"))));
 
             CapturingFilterChain chain = new CapturingFilterChain();
             filter.doFilterInternal(request, response, chain);
@@ -217,50 +205,46 @@ class AuditWebFilterTest {
         @Test
         @DisplayName("Should not set userRoles when authorities are null")
         void shouldNotStoreUserRolesWhenAuthoritiesIsNull() throws ServletException, IOException {
-            Authentication authWithNullAuthorities =
-                    new Authentication() {
-                        @Override
-                        public Collection<? extends GrantedAuthority> getAuthorities() {
-                            return null; // important
-                        }
+            Authentication authWithNullAuthorities = new Authentication() {
+                @Override
+                public Collection<? extends GrantedAuthority> getAuthorities() {
+                    return null; // important
+                }
 
-                        @Override
-                        public Object getCredentials() {
-                            return "cred";
-                        }
+                @Override
+                public Object getCredentials() {
+                    return "cred";
+                }
 
-                        @Override
-                        public Object getDetails() {
-                            return null;
-                        }
+                @Override
+                public Object getDetails() {
+                    return null;
+                }
 
-                        @Override
-                        public Object getPrincipal() {
-                            return "user";
-                        }
+                @Override
+                public Object getPrincipal() {
+                    return "user";
+                }
 
-                        @Override
-                        public boolean isAuthenticated() {
-                            return true;
-                        }
+                @Override
+                public boolean isAuthenticated() {
+                    return true;
+                }
 
-                        @Override
-                        public void setAuthenticated(boolean isAuthenticated)
-                                throws IllegalArgumentException {}
+                @Override
+                public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {}
 
-                        @Override
-                        public String getName() {
-                            return "user";
-                        }
-                    };
+                @Override
+                public String getName() {
+                    return "user";
+                }
+            };
             SecurityContextHolder.getContext().setAuthentication(authWithNullAuthorities);
 
             CapturingFilterChain chain = new CapturingFilterChain();
             filter.doFilterInternal(request, response, chain);
 
-            assertNull(
-                    chain.captured.get("userRoles"),
-                    "With null authorities, userRoles must not be set");
+            assertNull(chain.captured.get("userRoles"), "With null authorities, userRoles must not be set");
         }
 
         // New: empty authorities list -> reduce(...).orElse("") → empty string is set
@@ -269,16 +253,13 @@ class AuditWebFilterTest {
         void shouldStoreEmptyStringWhenAuthoritiesEmpty() throws ServletException, IOException {
             SecurityContextHolder.getContext()
                     .setAuthentication(
-                            new UsernamePasswordAuthenticationToken(
-                                    "user", "pass", Collections.emptyList()));
+                            new UsernamePasswordAuthenticationToken("user", "pass", Collections.emptyList()));
 
             CapturingFilterChain chain = new CapturingFilterChain();
             filter.doFilterInternal(request, response, chain);
 
             assertEquals(
-                    "",
-                    chain.captured.get("userRoles"),
-                    "With an empty roles list, an empty string should be set");
+                    "", chain.captured.get("userRoles"), "With an empty roles list, an empty string should be set");
         }
     }
 
@@ -305,9 +286,7 @@ class AuditWebFilterTest {
             ThrowingAfterCaptureChain chain = new ThrowingAfterCaptureChain();
 
             IOException thrown =
-                    assertThrows(
-                            IOException.class,
-                            () -> filter.doFilterInternal(request, response, chain));
+                    assertThrows(IOException.class, () -> filter.doFilterInternal(request, response, chain));
 
             assertEquals("Test Exception", thrown.getMessage());
             assertEquals("JUnit-Test-Agent", chain.captured.get("userAgent"));

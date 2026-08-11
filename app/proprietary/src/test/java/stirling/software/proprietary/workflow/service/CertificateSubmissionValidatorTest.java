@@ -39,7 +39,8 @@ import stirling.software.proprietary.workflow.dto.CertificateInfo;
 @ExtendWith(MockitoExtension.class)
 class CertificateSubmissionValidatorTest {
 
-    @Mock private PdfSigningService pdfSigningService;
+    @Mock
+    private PdfSigningService pdfSigningService;
 
     private CertificateSubmissionValidator validator;
 
@@ -50,25 +51,23 @@ class CertificateSubmissionValidatorTest {
 
     // ---- helper: build a PKCS12 keystore with a self-signed cert ----
 
-    private static byte[] buildP12Keystore(
-            String alias, String password, Date notBefore, Date notAfter) throws Exception {
+    private static byte[] buildP12Keystore(String alias, String password, Date notBefore, Date notAfter)
+            throws Exception {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(2048);
         KeyPair kp = kpg.generateKeyPair();
 
         X500Name subject = new X500Name("CN=Test Signer,O=Test Org,C=GB");
         ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(kp.getPrivate());
-        X509Certificate cert =
-                new JcaX509CertificateConverter()
-                        .getCertificate(
-                                new JcaX509v3CertificateBuilder(
-                                                subject,
-                                                BigInteger.valueOf(System.currentTimeMillis()),
-                                                notBefore,
-                                                notAfter,
-                                                subject,
-                                                kp.getPublic())
-                                        .build(signer));
+        X509Certificate cert = new JcaX509CertificateConverter()
+                .getCertificate(new JcaX509v3CertificateBuilder(
+                                subject,
+                                BigInteger.valueOf(System.currentTimeMillis()),
+                                notBefore,
+                                notAfter,
+                                subject,
+                                kp.getPublic())
+                        .build(signer));
 
         KeyStore ks = KeyStore.getInstance("PKCS12");
         ks.load(null, null);
@@ -105,16 +104,7 @@ class CertificateSubmissionValidatorTest {
 
         assertThat(result).isNull();
         verify(pdfSigningService, never())
-                .signWithKeystore(
-                        any(),
-                        any(),
-                        any(),
-                        anyBoolean(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        anyBoolean());
+                .signWithKeystore(any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean());
     }
 
     @Test
@@ -123,16 +113,7 @@ class CertificateSubmissionValidatorTest {
 
         assertThat(result).isNull();
         verify(pdfSigningService, never())
-                .signWithKeystore(
-                        any(),
-                        any(),
-                        any(),
-                        anyBoolean(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        anyBoolean());
+                .signWithKeystore(any(), any(), any(), anyBoolean(), any(), any(), any(), any(), anyBoolean());
     }
 
     // ---- Valid P12 certificate ----
@@ -141,15 +122,7 @@ class CertificateSubmissionValidatorTest {
     void validP12Certificate_returnsInfo() throws Exception {
         byte[] p12 = validP12("password");
         when(pdfSigningService.signWithKeystore(
-                        any(),
-                        any(),
-                        any(),
-                        anyBoolean(),
-                        isNull(),
-                        anyString(),
-                        isNull(),
-                        isNull(),
-                        anyBoolean()))
+                        any(), any(), any(), anyBoolean(), isNull(), anyString(), isNull(), isNull(), anyBoolean()))
                 .thenReturn(new byte[0]);
 
         CertificateInfo info = validator.validateAndExtractInfo(p12, "P12", "password");
@@ -164,15 +137,7 @@ class CertificateSubmissionValidatorTest {
     void validPkcs12Alias_acceptedAsCertType() throws Exception {
         byte[] p12 = validP12("password");
         when(pdfSigningService.signWithKeystore(
-                        any(),
-                        any(),
-                        any(),
-                        anyBoolean(),
-                        isNull(),
-                        anyString(),
-                        isNull(),
-                        isNull(),
-                        anyBoolean()))
+                        any(), any(), any(), anyBoolean(), isNull(), anyString(), isNull(), isNull(), anyBoolean()))
                 .thenReturn(new byte[0]);
 
         CertificateInfo info = validator.validateAndExtractInfo(p12, "PKCS12", "password");
@@ -184,15 +149,7 @@ class CertificateSubmissionValidatorTest {
     void validPfxAlias_acceptedAsCertType() throws Exception {
         byte[] p12 = validP12("password");
         when(pdfSigningService.signWithKeystore(
-                        any(),
-                        any(),
-                        any(),
-                        anyBoolean(),
-                        isNull(),
-                        anyString(),
-                        isNull(),
-                        isNull(),
-                        anyBoolean()))
+                        any(), any(), any(), anyBoolean(), isNull(), anyString(), isNull(), isNull(), anyBoolean()))
                 .thenReturn(new byte[0]);
 
         CertificateInfo info = validator.validateAndExtractInfo(p12, "PFX", "password");
@@ -213,10 +170,8 @@ class CertificateSubmissionValidatorTest {
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(p12, "P12", "wrong-password"))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        ex ->
-                                assertThat(((ResponseStatusException) ex).getStatusCode())
-                                        .isEqualTo(HttpStatus.BAD_REQUEST));
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
+                        .isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
     // ---- Corrupt keystore bytes ----
@@ -227,10 +182,8 @@ class CertificateSubmissionValidatorTest {
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(garbage, "P12", "password"))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        ex ->
-                                assertThat(((ResponseStatusException) ex).getStatusCode())
-                                        .isEqualTo(HttpStatus.BAD_REQUEST));
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getStatusCode())
+                        .isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
     // ---- Expired certificate ----
@@ -246,12 +199,11 @@ class CertificateSubmissionValidatorTest {
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(p12, "P12", "password"))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        ex -> {
-                            ResponseStatusException rse = (ResponseStatusException) ex;
-                            assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-                            assertThat(rse.getReason()).contains("expired");
-                        });
+                .satisfies(ex -> {
+                    ResponseStatusException rse = (ResponseStatusException) ex;
+                    assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(rse.getReason()).contains("expired");
+                });
     }
 
     // ---- Not-yet-valid certificate ----
@@ -267,12 +219,11 @@ class CertificateSubmissionValidatorTest {
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(p12, "P12", "password"))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        ex -> {
-                            ResponseStatusException rse = (ResponseStatusException) ex;
-                            assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-                            assertThat(rse.getReason()).contains("not yet valid");
-                        });
+                .satisfies(ex -> {
+                    ResponseStatusException rse = (ResponseStatusException) ex;
+                    assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(rse.getReason()).contains("not yet valid");
+                });
     }
 
     // ---- Test-sign failure ----
@@ -283,24 +234,15 @@ class CertificateSubmissionValidatorTest {
         doThrow(new RuntimeException("algorithm not supported"))
                 .when(pdfSigningService)
                 .signWithKeystore(
-                        any(),
-                        any(),
-                        any(),
-                        anyBoolean(),
-                        isNull(),
-                        anyString(),
-                        isNull(),
-                        isNull(),
-                        anyBoolean());
+                        any(), any(), any(), anyBoolean(), isNull(), anyString(), isNull(), isNull(), anyBoolean());
 
         assertThatThrownBy(() -> validator.validateAndExtractInfo(p12, "P12", "password"))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(
-                        ex -> {
-                            ResponseStatusException rse = (ResponseStatusException) ex;
-                            assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-                            assertThat(rse.getReason()).contains("compatible");
-                        });
+                .satisfies(ex -> {
+                    ResponseStatusException rse = (ResponseStatusException) ex;
+                    assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(rse.getReason()).contains("compatible");
+                });
     }
 
     // ---- JKS keystore ----
@@ -316,37 +258,26 @@ class CertificateSubmissionValidatorTest {
         Date now = new Date();
         Date future = new Date(now.getTime() + 365L * 24 * 60 * 60 * 1000);
         ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(kp.getPrivate());
-        X509Certificate cert =
-                new JcaX509CertificateConverter()
-                        .getCertificate(
-                                new JcaX509v3CertificateBuilder(
-                                                subject,
-                                                BigInteger.valueOf(System.currentTimeMillis()),
-                                                now,
-                                                future,
-                                                subject,
-                                                kp.getPublic())
-                                        .build(signer));
+        X509Certificate cert = new JcaX509CertificateConverter()
+                .getCertificate(new JcaX509v3CertificateBuilder(
+                                subject,
+                                BigInteger.valueOf(System.currentTimeMillis()),
+                                now,
+                                future,
+                                subject,
+                                kp.getPublic())
+                        .build(signer));
 
         KeyStore jks = KeyStore.getInstance("JKS");
         jks.load(null, null);
-        jks.setKeyEntry(
-                "jks-test", kp.getPrivate(), "jkspass".toCharArray(), new Certificate[] {cert});
+        jks.setKeyEntry("jks-test", kp.getPrivate(), "jkspass".toCharArray(), new Certificate[] {cert});
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         jks.store(bos, "jkspass".toCharArray());
         byte[] jksBytes = bos.toByteArray();
 
         when(pdfSigningService.signWithKeystore(
-                        any(),
-                        any(),
-                        any(),
-                        anyBoolean(),
-                        isNull(),
-                        anyString(),
-                        isNull(),
-                        isNull(),
-                        anyBoolean()))
+                        any(), any(), any(), anyBoolean(), isNull(), anyString(), isNull(), isNull(), anyBoolean()))
                 .thenReturn(new byte[0]);
 
         CertificateInfo info = validator.validateAndExtractInfo(jksBytes, "JKS", "jkspass");

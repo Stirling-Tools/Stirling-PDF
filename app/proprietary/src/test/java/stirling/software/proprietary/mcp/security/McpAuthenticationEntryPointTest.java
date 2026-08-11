@@ -70,12 +70,10 @@ class McpAuthenticationEntryPointTest {
         when(req.getHeader("Authorization")).thenReturn("Bearer bad.token");
         HttpServletResponse resp = mock(HttpServletResponse.class);
 
-        OAuth2Error error =
-                new OAuth2Error(
-                        "invalid_token",
-                        "Token audience does not include this server's resource id"
-                                + " (https://mcp.example.com/mcp).",
-                        null);
+        OAuth2Error error = new OAuth2Error(
+                "invalid_token",
+                "Token audience does not include this server's resource id" + " (https://mcp.example.com/mcp).",
+                null);
 
         entryPoint.commence(req, resp, new OAuth2AuthenticationException(error));
 

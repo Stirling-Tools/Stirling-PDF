@@ -20,23 +20,18 @@ class FileStorageOwnershipTest {
 
     private FileStorage newStorageWithoutSecurity(Path tempDir) {
         return new FileStorage(
-                mock(FileOrUploadService.class),
-                new LocalDiskFileStore(tempDir.toString()),
-                Optional.empty());
+                mock(FileOrUploadService.class), new LocalDiskFileStore(tempDir.toString()), Optional.empty());
     }
 
     private FileStorage newStorageWithCurrentUser(Path tempDir, AtomicReference<String> userRef) {
         JobOwnershipService svc = mock(JobOwnershipService.class);
         when(svc.getCurrentUserId()).thenAnswer(invocation -> Optional.ofNullable(userRef.get()));
         return new FileStorage(
-                mock(FileOrUploadService.class),
-                new LocalDiskFileStore(tempDir.toString()),
-                Optional.of(svc));
+                mock(FileOrUploadService.class), new LocalDiskFileStore(tempDir.toString()), Optional.of(svc));
     }
 
     @Test
-    void desktopMode_noOwnershipService_storesAndRetrievesWithoutChecks(@TempDir Path tempDir)
-            throws IOException {
+    void desktopMode_noOwnershipService_storesAndRetrievesWithoutChecks(@TempDir Path tempDir) throws IOException {
         FileStorage fs = newStorageWithoutSecurity(tempDir);
         byte[] payload = "desktop".getBytes();
         String id = fs.storeBytes(payload, "x.bin");
@@ -66,8 +61,7 @@ class FileStorageOwnershipTest {
     }
 
     @Test
-    void anonymousRetrieveOfOwnedFile_allowed_noCurrentUserMeansNoCompare(@TempDir Path tempDir)
-            throws IOException {
+    void anonymousRetrieveOfOwnedFile_allowed_noCurrentUserMeansNoCompare(@TempDir Path tempDir) throws IOException {
         AtomicReference<String> user = new AtomicReference<>("alice");
         FileStorage fs = newStorageWithCurrentUser(tempDir, user);
         byte[] payload = "alice's file".getBytes();
@@ -77,8 +71,7 @@ class FileStorageOwnershipTest {
     }
 
     @Test
-    void authedRetrieveOfAnonymousFile_allowed_noOwnerOnFile(@TempDir Path tempDir)
-            throws IOException {
+    void authedRetrieveOfAnonymousFile_allowed_noOwnerOnFile(@TempDir Path tempDir) throws IOException {
         AtomicReference<String> user = new AtomicReference<>(null);
         FileStorage fs = newStorageWithCurrentUser(tempDir, user);
         byte[] payload = "no-owner".getBytes();

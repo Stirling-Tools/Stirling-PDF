@@ -64,8 +64,7 @@ class PdfToCbrUtilsMoreTest {
         return new MockMultipartFile("file", "comic.pdf", "application/pdf", bytes);
     }
 
-    private static CustomPDFDocumentFactory factoryReturning(PDDocument document)
-            throws IOException {
+    private static CustomPDFDocumentFactory factoryReturning(PDDocument document) throws IOException {
         CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
         when(factory.load(any(MultipartFile.class))).thenReturn(document);
         return factory;
@@ -87,16 +86,10 @@ class PdfToCbrUtilsMoreTest {
             Mockito.doReturn(result).when(executor).runCommandWithOutputHandling(anyList(), any());
 
             try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.INSTALL_APP))
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.INSTALL_APP))
                         .thenReturn(executor);
 
-                assertThatThrownBy(
-                                () ->
-                                        PdfToCbrUtils.convertPdfToCbr(
-                                                pdfMultipart(onePageImagePdf()), 72, factory))
+                assertThatThrownBy(() -> PdfToCbrUtils.convertPdfToCbr(pdfMultipart(onePageImagePdf()), 72, factory))
                         .isInstanceOf(IOException.class);
             }
             doc.close();
@@ -115,16 +108,10 @@ class PdfToCbrUtilsMoreTest {
             Mockito.doReturn(result).when(executor).runCommandWithOutputHandling(anyList(), any());
 
             try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.INSTALL_APP))
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.INSTALL_APP))
                         .thenReturn(executor);
 
-                assertThatThrownBy(
-                                () ->
-                                        PdfToCbrUtils.convertPdfToCbr(
-                                                pdfMultipart(onePageImagePdf()), 72, factory))
+                assertThatThrownBy(() -> PdfToCbrUtils.convertPdfToCbr(pdfMultipart(onePageImagePdf()), 72, factory))
                         .isInstanceOf(IOException.class)
                         .hasMessageContaining("RAR");
             }
@@ -143,16 +130,10 @@ class PdfToCbrUtilsMoreTest {
                     .runCommandWithOutputHandling(anyList(), any());
 
             try (MockedStatic<ProcessExecutor> mocked = Mockito.mockStatic(ProcessExecutor.class)) {
-                mocked.when(
-                                () ->
-                                        ProcessExecutor.getInstance(
-                                                ProcessExecutor.Processes.INSTALL_APP))
+                mocked.when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.INSTALL_APP))
                         .thenReturn(executor);
 
-                assertThatThrownBy(
-                                () ->
-                                        PdfToCbrUtils.convertPdfToCbr(
-                                                pdfMultipart(onePageImagePdf()), 72, factory))
+                assertThatThrownBy(() -> PdfToCbrUtils.convertPdfToCbr(pdfMultipart(onePageImagePdf()), 72, factory))
                         .isInstanceOf(Exception.class);
             } finally {
                 // Clear the interrupt flag set by the handler so it doesn't leak into later tests.
@@ -171,10 +152,7 @@ class PdfToCbrUtilsMoreTest {
         void zeroPageDocument() throws Exception {
             try (PDDocument empty = new PDDocument()) {
                 CustomPDFDocumentFactory factory = factoryReturning(empty);
-                assertThatThrownBy(
-                                () ->
-                                        PdfToCbrUtils.convertPdfToCbr(
-                                                pdfMultipart(onePageImagePdf()), 72, factory))
+                assertThatThrownBy(() -> PdfToCbrUtils.convertPdfToCbr(pdfMultipart(onePageImagePdf()), 72, factory))
                         .isInstanceOf(Exception.class);
             }
         }

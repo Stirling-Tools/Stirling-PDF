@@ -18,16 +18,15 @@ public final class ExternalApiHeaders {
      * that bypasses the auth validation; the rest are framing headers owned by the HTTP client,
      * where a caller-set value would contradict the body actually sent.
      */
-    private static final Set<String> RESERVED =
-            Set.of(
-                    "authorization",
-                    "proxy-authorization",
-                    "host",
-                    "content-length",
-                    "transfer-encoding",
-                    "connection",
-                    "upgrade",
-                    "expect");
+    private static final Set<String> RESERVED = Set.of(
+            "authorization",
+            "proxy-authorization",
+            "host",
+            "content-length",
+            "transfer-encoding",
+            "connection",
+            "upgrade",
+            "expect");
 
     private ExternalApiHeaders() {}
 

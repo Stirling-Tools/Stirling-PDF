@@ -53,8 +53,7 @@ class AccountLinkClientTest {
     void registerRelaysJwtAndParsesCredential() throws Exception {
         // Build the stub response first: nesting response() inside when() trips Mockito's
         // unfinished-stubbing check (inner when() runs mid outer when()).
-        HttpResponse<String> resp =
-                response(201, "{\"deviceId\":\"dev-1\",\"deviceSecret\":\"sec-1\",\"teamId\":42}");
+        HttpResponse<String> resp = response(201, "{\"deviceId\":\"dev-1\",\"deviceSecret\":\"sec-1\",\"teamId\":42}");
         ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
         when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(resp);
@@ -66,9 +65,11 @@ class AccountLinkClientTest {
         assertEquals(42L, result.teamId());
 
         HttpRequest sent = captor.getValue();
-        assertEquals("Bearer jwt-token", sent.headers().firstValue("Authorization").orElse(null));
         assertEquals(
-                "https://saas.example.com/api/v1/account-link/register", sent.uri().toString());
+                "Bearer jwt-token", sent.headers().firstValue("Authorization").orElse(null));
+        assertEquals(
+                "https://saas.example.com/api/v1/account-link/register",
+                sent.uri().toString());
     }
 
     @Test
@@ -77,19 +78,16 @@ class AccountLinkClientTest {
         HttpResponse<String> resp = response(401, "{\"error\":\"unauthorized\"}");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
         AccountLinkClient.UpstreamException ex =
-                assertThrows(
-                        AccountLinkClient.UpstreamException.class,
-                        () -> client.register("jwt", null));
+                assertThrows(AccountLinkClient.UpstreamException.class, () -> client.register("jwt", null));
         assertEquals(401, ex.status());
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void fetchEntitlementParsesSnapshotAndSendsDeviceHeaders() throws Exception {
-        HttpResponse<String> resp =
-                response(
-                        200,
-                        "{\"subscribed\":true,\"freeRemainingUnits\":0,\"periodSpendUnits\":10,\"periodCapUnits\":100,\"state\":\"OK\"}");
+        HttpResponse<String> resp = response(
+                200,
+                "{\"subscribed\":true,\"freeRemainingUnits\":0,\"periodSpendUnits\":10,\"periodCapUnits\":100,\"state\":\"OK\"}");
         ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
         when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(resp);
@@ -112,10 +110,9 @@ class AccountLinkClientTest {
     void fetchEntitlementMapsOverLimitState() throws Exception {
         // Pins the consume side of the wire contract: InstanceController emits "OVER_LIMIT" (for a
         // DEGRADED team) and the client must map it to the gate-blocking state.
-        HttpResponse<String> resp =
-                response(
-                        200,
-                        "{\"subscribed\":true,\"freeRemainingUnits\":0,\"periodSpendUnits\":1300,\"periodCapUnits\":1250,\"state\":\"OVER_LIMIT\"}");
+        HttpResponse<String> resp = response(
+                200,
+                "{\"subscribed\":true,\"freeRemainingUnits\":0,\"periodSpendUnits\":1300,\"periodCapUnits\":1250,\"state\":\"OVER_LIMIT\"}");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
 
         InstanceEntitlement e = client.fetchEntitlement("dev-1", "sec-1");
@@ -127,8 +124,7 @@ class AccountLinkClientTest {
     @Test
     @SuppressWarnings("unchecked")
     void fetchEntitlementReturnsNullWhenUnreachable() throws Exception {
-        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
-                .thenThrow(new ConnectException("refused"));
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(new ConnectException("refused"));
         // Null = unknown → the cache/gate fail open.
         assertNull(client.fetchEntitlement("dev-1", "sec-1"));
     }
@@ -150,10 +146,8 @@ class AccountLinkClientTest {
         for (int status : new int[] {401, 403}) {
             HttpResponse<String> resp = response(status, "{}");
             when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
-            AccountLinkClient.RevokedException ex =
-                    assertThrows(
-                            AccountLinkClient.RevokedException.class,
-                            () -> client.fetchEntitlement("dev-1", "sec-1"));
+            AccountLinkClient.RevokedException ex = assertThrows(
+                    AccountLinkClient.RevokedException.class, () -> client.fetchEntitlement("dev-1", "sec-1"));
             assertEquals(status, ex.status());
         }
     }
@@ -169,7 +163,9 @@ class AccountLinkClientTest {
         assertEquals(true, client.revokeSelf("dev-1", "sec-1"));
 
         HttpRequest sent = captor.getValue();
-        assertEquals("https://saas.example.com/api/v1/instance/revoke-self", sent.uri().toString());
+        assertEquals(
+                "https://saas.example.com/api/v1/instance/revoke-self",
+                sent.uri().toString());
         assertEquals("dev-1", sent.headers().firstValue("X-Device-Id").orElse(null));
         assertEquals("sec-1", sent.headers().firstValue("X-Device-Secret").orElse(null));
         assertEquals("POST", sent.method());
@@ -186,25 +182,21 @@ class AccountLinkClientTest {
     @Test
     @SuppressWarnings("unchecked")
     void revokeSelfReturnsFalseWhenUnreachable() throws Exception {
-        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
-                .thenThrow(new ConnectException("refused"));
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(new ConnectException("refused"));
         assertEquals(false, client.revokeSelf("dev-1", "sec-1"));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void reportUsagePostsToSyncWithDeviceHeadersAndParsesFreshEntitlement() throws Exception {
-        HttpResponse<String> resp =
-                response(
-                        200,
-                        "{\"subscribed\":true,\"freeRemainingUnits\":0,\"periodSpendUnits\":42,\"periodCapUnits\":100,\"state\":\"OK\"}");
+        HttpResponse<String> resp = response(
+                200,
+                "{\"subscribed\":true,\"freeRemainingUnits\":0,\"periodSpendUnits\":42,\"periodCapUnits\":100,\"state\":\"OK\"}");
         ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
         when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(resp);
 
-        InstanceEntitlement e =
-                client.reportUsage(
-                        "dev-1", "sec-1", 7L, LocalDateTime.of(2026, 6, 1, 0, 0), 12, 4, 8);
+        InstanceEntitlement e = client.reportUsage("dev-1", "sec-1", 7L, LocalDateTime.of(2026, 6, 1, 0, 0), 12, 4, 8);
 
         assertNotNull(e);
         assertEquals(42, e.periodSpendUnits());
@@ -223,18 +215,9 @@ class AccountLinkClientTest {
         for (int status : new int[] {401, 403}) {
             HttpResponse<String> resp = response(status, "{}");
             when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
-            AccountLinkClient.RevokedException ex =
-                    assertThrows(
-                            AccountLinkClient.RevokedException.class,
-                            () ->
-                                    client.reportUsage(
-                                            "dev-1",
-                                            "sec-1",
-                                            1L,
-                                            LocalDateTime.of(2026, 6, 1, 0, 0),
-                                            1,
-                                            0,
-                                            0));
+            AccountLinkClient.RevokedException ex = assertThrows(
+                    AccountLinkClient.RevokedException.class,
+                    () -> client.reportUsage("dev-1", "sec-1", 1L, LocalDateTime.of(2026, 6, 1, 0, 0), 1, 0, 0));
             assertEquals(status, ex.status());
         }
     }
@@ -242,12 +225,9 @@ class AccountLinkClientTest {
     @Test
     @SuppressWarnings("unchecked")
     void reportUsageReturnsNullWhenUnreachable() throws Exception {
-        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
-                .thenThrow(new ConnectException("refused"));
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenThrow(new ConnectException("refused"));
         // Null = don't advance synced markers; the usage retries on the next sync.
-        assertNull(
-                client.reportUsage(
-                        "dev-1", "sec-1", 1L, LocalDateTime.of(2026, 6, 1, 0, 0), 1, 0, 0));
+        assertNull(client.reportUsage("dev-1", "sec-1", 1L, LocalDateTime.of(2026, 6, 1, 0, 0), 1, 0, 0));
     }
 
     @Test
@@ -255,8 +235,6 @@ class AccountLinkClientTest {
     void reportUsageReturnsNullOnServerError() throws Exception {
         HttpResponse<String> resp = response(503, "{}");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
-        assertNull(
-                client.reportUsage(
-                        "dev-1", "sec-1", 1L, LocalDateTime.of(2026, 6, 1, 0, 0), 1, 0, 0));
+        assertNull(client.reportUsage("dev-1", "sec-1", 1L, LocalDateTime.of(2026, 6, 1, 0, 0), 1, 0, 0));
     }
 }

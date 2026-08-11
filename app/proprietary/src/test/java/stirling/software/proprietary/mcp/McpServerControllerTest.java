@@ -42,14 +42,13 @@ class McpServerControllerTest {
         ObjectProvider<McpToolCatalog> emptyCatalog = emptyProvider();
         ObjectProvider<AiEngineClient> emptyEngine = emptyProvider();
         ObjectProvider<McpOperationExecutor> emptyExecutor = emptyProvider();
-        List<McpTool> tools =
-                List.of(
-                        new DescribeOperationTool(mapper, emptyCatalog),
-                        new StirlingConvertTool(mapper, emptyCatalog, emptyExecutor),
-                        new StirlingPagesTool(mapper, emptyCatalog, emptyExecutor),
-                        new StirlingMiscTool(mapper, emptyCatalog, emptyExecutor),
-                        new StirlingSecurityTool(mapper, emptyCatalog, emptyExecutor),
-                        new StirlingAiTool(mapper, emptyCatalog, emptyEngine));
+        List<McpTool> tools = List.of(
+                new DescribeOperationTool(mapper, emptyCatalog),
+                new StirlingConvertTool(mapper, emptyCatalog, emptyExecutor),
+                new StirlingPagesTool(mapper, emptyCatalog, emptyExecutor),
+                new StirlingMiscTool(mapper, emptyCatalog, emptyExecutor),
+                new StirlingSecurityTool(mapper, emptyCatalog, emptyExecutor),
+                new StirlingAiTool(mapper, emptyCatalog, emptyEngine));
         return new McpServerController(mapper, props, tools);
     }
 
@@ -100,14 +99,13 @@ class McpServerControllerTest {
         JsonNode tools = mapper.valueToTree(response.getBody()).get("result").get("tools");
         assertEquals(6, tools.size(), "tools/list must return exactly 6 tools");
 
-        Set<String> names =
-                Set.of(
-                        "stirling_describe_operation",
-                        "stirling_convert",
-                        "stirling_pages",
-                        "stirling_misc",
-                        "stirling_security",
-                        "stirling_ai");
+        Set<String> names = Set.of(
+                "stirling_describe_operation",
+                "stirling_convert",
+                "stirling_pages",
+                "stirling_misc",
+                "stirling_security",
+                "stirling_ai");
         Set<String> seen = new java.util.HashSet<>();
         tools.forEach(t -> seen.add(t.get("name").asText()));
         assertEquals(names, seen);
@@ -146,8 +144,7 @@ class McpServerControllerTest {
     @Test
     void notification_returnsNoContentWithEmptyBody() throws Exception {
         // No id field: a JSON-RPC notification gets no response object.
-        JsonNode body =
-                mapper.readTree("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
 
         ResponseEntity<?> response = controller.handle(body);
 
@@ -157,8 +154,7 @@ class McpServerControllerTest {
 
     @Test
     void unknownMethod_returnsMethodNotFoundError() throws Exception {
-        JsonNode body =
-                mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"does/not/exist\"}");
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"does/not/exist\"}");
 
         ResponseEntity<?> response = controller.handle(body);
 
@@ -169,10 +165,8 @@ class McpServerControllerTest {
 
     @Test
     void toolsCall_unknownTool_returnsInvalidParams() throws Exception {
-        JsonNode body =
-                mapper.readTree(
-                        "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\","
-                                + "\"params\":{\"name\":\"stirling_does_not_exist\",\"arguments\":{}}}");
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\","
+                + "\"params\":{\"name\":\"stirling_does_not_exist\",\"arguments\":{}}}");
 
         ResponseEntity<?> response = controller.handle(body);
 
@@ -183,11 +177,9 @@ class McpServerControllerTest {
     @Test
     void toolsCall_describeOperation_withoutCatalog_returnsErrorContent() throws Exception {
         // Null catalog: describe must surface an isError content block, not crash.
-        JsonNode body =
-                mapper.readTree(
-                        "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\","
-                                + "\"params\":{\"name\":\"stirling_describe_operation\","
-                                + "\"arguments\":{\"operation\":\"compress-pdf\"}}}");
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\","
+                + "\"params\":{\"name\":\"stirling_describe_operation\","
+                + "\"arguments\":{\"operation\":\"compress-pdf\"}}}");
 
         ResponseEntity<?> response = controller.handle(body);
 
@@ -212,10 +204,8 @@ class McpServerControllerTest {
     @Test
     void initialize_echoesSupportedClientProtocolVersion() throws Exception {
         // Older but supported revision -> server echoes it.
-        JsonNode body =
-                mapper.readTree(
-                        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
-                                + "\"params\":{\"protocolVersion\":\"2025-03-26\"}}");
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
+                + "\"params\":{\"protocolVersion\":\"2025-03-26\"}}");
 
         ResponseEntity<?> response = controller.handle(body);
 
@@ -225,10 +215,8 @@ class McpServerControllerTest {
 
     @Test
     void initialize_unknownClientProtocolVersion_fallsBackToPreferred() throws Exception {
-        JsonNode body =
-                mapper.readTree(
-                        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
-                                + "\"params\":{\"protocolVersion\":\"1999-01-01\"}}");
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
+                + "\"params\":{\"protocolVersion\":\"1999-01-01\"}}");
 
         ResponseEntity<?> response = controller.handle(body);
 

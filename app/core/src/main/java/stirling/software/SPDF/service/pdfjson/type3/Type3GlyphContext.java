@@ -21,12 +21,8 @@ class Type3GlyphContext {
     public List<Type3GlyphOutline> getGlyphs() throws IOException {
         List<Type3GlyphOutline> cached = glyphs.get();
         if (cached == null) {
-            cached =
-                    extractor.extractGlyphs(
-                            request.getDocument(),
-                            request.getFont(),
-                            request.getFontId(),
-                            request.getPageNumber());
+            cached = extractor.extractGlyphs(
+                    request.getDocument(), request.getFont(), request.getFontId(), request.getPageNumber());
             glyphs.compareAndSet(null, cached);
         }
         return cached;

@@ -34,32 +34,30 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToExcelControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertPDFToExcelController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private ConvertPDFToExcelController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     @Test
     void pdfToExcel_noTablesReturnsNoContent() throws Exception {
         MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "data.pdf", "application/pdf", "pdf-content".getBytes());
+                new MockMultipartFile("fileInput", "data.pdf", "application/pdf", "pdf-content".getBytes());
 
         PDFWithPageNums request = new PDFWithPageNums();
         request.setFileInput(pdfFile);
@@ -73,12 +71,7 @@ class ConvertPDFToExcelControllerTest {
 
         try (MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class)) {
             guMock.when(() -> GeneralUtils.removeExtension("data.pdf")).thenReturn("data");
-            guMock.when(
-                            () ->
-                                    GeneralUtils.parsePageList(
-                                            Mockito.anyString(),
-                                            Mockito.anyInt(),
-                                            Mockito.eq(true)))
+            guMock.when(() -> GeneralUtils.parsePageList(Mockito.anyString(), Mockito.anyInt(), Mockito.eq(true)))
                     .thenReturn(List.of(1));
 
             ResponseEntity<Resource> response = controller.pdfToExcel(request);
@@ -86,9 +79,7 @@ class ConvertPDFToExcelControllerTest {
             // tabula may or may not find tables in an empty page
             assertNotNull(response);
             // Either NO_CONTENT (no tables) or OK (empty tables found)
-            assertTrue(
-                    response.getStatusCode() == HttpStatus.NO_CONTENT
-                            || response.getStatusCode() == HttpStatus.OK);
+            assertTrue(response.getStatusCode() == HttpStatus.NO_CONTENT || response.getStatusCode() == HttpStatus.OK);
         }
     }
 

@@ -22,11 +22,10 @@ public class CheckProgramInstall {
      */
     public static String getAvailablePythonCommand() {
         if (!pythonAvailableChecked) {
-            availablePythonCommand =
-                    PYTHON_COMMANDS.stream()
-                            .filter(CheckProgramInstall::checkPythonVersion)
-                            .findFirst()
-                            .orElse(null);
+            availablePythonCommand = PYTHON_COMMANDS.stream()
+                    .filter(CheckProgramInstall::checkPythonVersion)
+                    .findFirst()
+                    .orElse(null);
             pythonAvailableChecked = true;
         }
         return availablePythonCommand;
@@ -40,10 +39,8 @@ public class CheckProgramInstall {
      */
     private static boolean checkPythonVersion(String pythonCommand) {
         try {
-            ProcessExecutorResult result =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                            .runCommandWithOutputHandling(
-                                    Arrays.asList(pythonCommand, "--version"));
+            ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
+                    .runCommandWithOutputHandling(Arrays.asList(pythonCommand, "--version"));
             return true; // Command succeeded, Python is available
         } catch (IOException | InterruptedException e) {
             return false; // Command failed, Python is not available
@@ -67,9 +64,8 @@ public class CheckProgramInstall {
     public static boolean isFfmpegAvailable() {
         if (!ffmpegAvailableChecked) {
             try {
-                ProcessExecutorResult result =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.FFMPEG)
-                                .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
+                ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.FFMPEG)
+                        .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
                 ffmpegAvailable = true;
             } catch (IOException | InterruptedException e) {
                 ffmpegAvailable = false;

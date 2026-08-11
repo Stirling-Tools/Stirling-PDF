@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/admin/settings")
-@Tag(
-        name = "Admin Settings",
-        description =
-                """
+@Tag(name = "Admin Settings", description = """
                 System administration and configuration management for enterprise deployments.
 
                 This endpoint group provides administrative control for organizations deploying

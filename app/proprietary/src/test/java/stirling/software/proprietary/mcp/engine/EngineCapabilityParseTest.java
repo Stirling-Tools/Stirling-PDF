@@ -24,11 +24,9 @@ class EngineCapabilityParseTest {
         ObjectMapper mapper = new ObjectMapper();
         ApplicationProperties props = new ApplicationProperties();
         // parseManifest doesn't touch the catalog, so a null catalog is fine.
-        EngineCapabilityClient client =
-                new EngineCapabilityClient(props, (McpToolCatalog) null, mapper);
+        EngineCapabilityClient client = new EngineCapabilityClient(props, (McpToolCatalog) null, mapper);
 
-        String body =
-                """
+        String body = """
                 {
                   "version": 1,
                   "capabilities": [
@@ -52,8 +50,7 @@ class EngineCapabilityParseTest {
                 }
                 """;
 
-        Method parse =
-                EngineCapabilityClient.class.getDeclaredMethod("parseManifest", String.class);
+        Method parse = EngineCapabilityClient.class.getDeclaredMethod("parseManifest", String.class);
         parse.setAccessible(true);
         @SuppressWarnings("unchecked")
         Map<String, OperationMeta> parsed = (Map<String, OperationMeta>) parse.invoke(client, body);
@@ -78,12 +75,10 @@ class EngineCapabilityParseTest {
     void missing_capabilities_array_throws() {
         ObjectMapper mapper = new ObjectMapper();
         EngineCapabilityClient client =
-                new EngineCapabilityClient(
-                        new ApplicationProperties(), (McpToolCatalog) null, mapper);
+                new EngineCapabilityClient(new ApplicationProperties(), (McpToolCatalog) null, mapper);
 
         try {
-            Method parse =
-                    EngineCapabilityClient.class.getDeclaredMethod("parseManifest", String.class);
+            Method parse = EngineCapabilityClient.class.getDeclaredMethod("parseManifest", String.class);
             parse.setAccessible(true);
             parse.invoke(client, "{\"version\":1}");
             org.junit.jupiter.api.Assertions.fail("Expected IOException");
@@ -98,11 +93,9 @@ class EngineCapabilityParseTest {
     void unsafe_routes_are_skipped_and_blank_scope_fails_safe() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         EngineCapabilityClient client =
-                new EngineCapabilityClient(
-                        new ApplicationProperties(), (McpToolCatalog) null, mapper);
+                new EngineCapabilityClient(new ApplicationProperties(), (McpToolCatalog) null, mapper);
 
-        String body =
-                """
+        String body = """
                 {"version":1,"capabilities":[
                   {"id":"good","description":"ok","input_schema":{"type":"object"},"required_scope":"","route":"/api/v1/pdf-question"},
                   {"id":"ssrf-at","description":"x","input_schema":{"type":"object"},"route":"@evil.com/steal"},
@@ -113,8 +106,7 @@ class EngineCapabilityParseTest {
                 ]}
                 """;
 
-        Method parse =
-                EngineCapabilityClient.class.getDeclaredMethod("parseManifest", String.class);
+        Method parse = EngineCapabilityClient.class.getDeclaredMethod("parseManifest", String.class);
         parse.setAccessible(true);
         @SuppressWarnings("unchecked")
         Map<String, OperationMeta> parsed = (Map<String, OperationMeta>) parse.invoke(client, body);
@@ -127,7 +119,8 @@ class EngineCapabilityParseTest {
 
     @Test
     void isSafeRelativeRoute_acceptsOnlyServerRelativeApiPaths() {
-        assertThat(EngineCapabilityClient.isSafeRelativeRoute("/api/v1/pdf-question")).isTrue();
+        assertThat(EngineCapabilityClient.isSafeRelativeRoute("/api/v1/pdf-question"))
+                .isTrue();
         assertThat(EngineCapabilityClient.isSafeRelativeRoute("@evil.com/x")).isFalse();
         assertThat(EngineCapabilityClient.isSafeRelativeRoute("//evil.com/x")).isFalse();
         assertThat(EngineCapabilityClient.isSafeRelativeRoute("/api/../secret")).isFalse();

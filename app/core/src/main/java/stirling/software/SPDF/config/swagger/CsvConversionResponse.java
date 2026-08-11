@@ -28,8 +28,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                         @Schema(
                                                 type = "string",
                                                 format = "binary",
-                                                description =
-                                                        "CSV file containing extracted table data")),
+                                                description = "CSV file containing extracted table data")),
                         @Content(
                                 mediaType = "application/zip",
                                 schema =

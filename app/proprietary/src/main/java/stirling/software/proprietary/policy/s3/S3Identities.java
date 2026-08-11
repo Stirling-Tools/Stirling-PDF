@@ -21,8 +21,6 @@ public final class S3Identities {
         if (eTag != null && !eTag.isBlank()) {
             return eTag.replace("\"", "");
         }
-        return (size == null ? -1 : size)
-                + ":"
-                + (lastModified == null ? 0 : lastModified.toEpochMilli());
+        return (size == null ? -1 : size) + ":" + (lastModified == null ? 0 : lastModified.toEpochMilli());
     }
 }

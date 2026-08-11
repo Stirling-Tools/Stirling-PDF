@@ -41,8 +41,7 @@ public class TeamController {
     @PostMapping("/create")
     public ResponseEntity<?> createTeam(@RequestParam("name") String name) {
         if (teamRepository.existsByNameIgnoreCase(name)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Team name already exists."));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Team name already exists."));
         }
         Team team = new Team();
         team.setName(name);
@@ -52,23 +51,19 @@ public class TeamController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/rename")
-    public ResponseEntity<?> renameTeam(
-            @RequestParam("teamId") Long teamId, @RequestParam("newName") String newName) {
+    public ResponseEntity<?> renameTeam(@RequestParam("teamId") Long teamId, @RequestParam("newName") String newName) {
         Optional<Team> existing = teamRepository.findById(teamId);
         if (existing.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Team not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Team not found."));
         }
         if (teamRepository.existsByNameIgnoreCase(newName)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Team name already exists."));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Team name already exists."));
         }
         Team team = existing.get();
 
         // Prevent renaming the Internal team
         if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Cannot rename Internal team."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Cannot rename Internal team."));
         }
 
         team.setName(newName);
@@ -82,33 +77,26 @@ public class TeamController {
     public ResponseEntity<?> deleteTeam(@RequestParam("teamId") Long teamId) {
         Optional<Team> teamOpt = teamRepository.findById(teamId);
         if (teamOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Team not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Team not found."));
         }
 
         Team team = teamOpt.get();
 
         // Prevent deleting the Internal team
         if (team.getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Cannot delete Internal team."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Cannot delete Internal team."));
         }
 
         long memberCount = userRepository.countByTeam(team);
         if (memberCount > 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "Team must be empty before deletion. Please remove all members first."));
+                    .body(Map.of("error", "Team must be empty before deletion. Please remove all members first."));
         }
 
         if (integrationConfigRepository.existsByOwnerTeam_Id(teamId)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "Team still owns integration configurations. Delete or reassign them first."));
+                    .body(Map.of(
+                            "error", "Team still owns integration configurations. Delete or reassign them first."));
         }
 
         // Team grants and membership rows would dangle once the team row is gone
@@ -121,24 +109,21 @@ public class TeamController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/setOwner")
     @Transactional
-    public ResponseEntity<?> setTeamOwner(
-            @RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
+    public ResponseEntity<?> setTeamOwner(@RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
         return mutateOwner(teamId, userId, true);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/removeOwner")
     @Transactional
-    public ResponseEntity<?> removeTeamOwner(
-            @RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
+    public ResponseEntity<?> removeTeamOwner(@RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
         return mutateOwner(teamId, userId, false);
     }
 
     private ResponseEntity<?> mutateOwner(Long teamId, Long userId, boolean owner) {
         Optional<Team> teamOpt = teamRepository.findById(teamId);
         if (teamOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Team not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Team not found."));
         }
         Team team = teamOpt.get();
 
@@ -151,8 +136,7 @@ public class TeamController {
 
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
         }
         User user = userOpt.get();
 
@@ -172,14 +156,12 @@ public class TeamController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/addUser")
     @Transactional
-    public ResponseEntity<?> addUserToTeam(
-            @RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
+    public ResponseEntity<?> addUserToTeam(@RequestParam("teamId") Long teamId, @RequestParam("userId") Long userId) {
 
         // Find the team
         Optional<Team> teamOpt = teamRepository.findById(teamId);
         if (teamOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Team not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Team not found."));
         }
         Team team = teamOpt.get();
 
@@ -192,14 +174,12 @@ public class TeamController {
         // Find the user
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
         }
         User user = userOpt.get();
 
         // Check if user is in the Internal team - prevent moving them
-        if (user.getTeam() != null
-                && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
+        if (user.getTeam() != null && user.getTeam().getName().equals(TeamService.INTERNAL_TEAM_NAME)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Cannot move users from Internal team."));
         }

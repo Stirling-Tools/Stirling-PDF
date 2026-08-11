@@ -38,17 +38,14 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
     private final String usernameClaim;
     private final boolean requireExistingAccount;
 
-    public McpUserBindingFilter(
-            UserService userService, String usernameClaim, boolean requireExistingAccount) {
+    public McpUserBindingFilter(UserService userService, String usernameClaim, boolean requireExistingAccount) {
         this.userService = userService;
-        this.usernameClaim =
-                (usernameClaim == null || usernameClaim.isBlank()) ? "sub" : usernameClaim;
+        this.usernameClaim = (usernameClaim == null || usernameClaim.isBlank()) ? "sub" : usernameClaim;
         this.requireExistingAccount = requireExistingAccount;
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         Authentication current = SecurityContextHolder.getContext().getAuthentication();
 
@@ -60,10 +57,7 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
             if (username == null || username.isBlank()) {
                 reject(
                         response,
-                        "Token is missing the '"
-                                + usernameClaim
-                                + "' claim used to map to a"
-                                + " Stirling user.");
+                        "Token is missing the '" + usernameClaim + "' claim used to map to a" + " Stirling user.");
                 return;
             }
 
@@ -78,8 +72,7 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
                             sanitizeForLog(username));
                     reject(
                             response,
-                            "MCP access requires a provisioned, enabled Stirling account for this"
-                                    + " subject.");
+                            "MCP access requires a provisioned, enabled Stirling account for this" + " subject.");
                     return;
                 }
                 boundUsername = account.get().getUsername();
@@ -87,8 +80,7 @@ public class McpUserBindingFilter extends OncePerRequestFilter {
 
             // Rebind to the Stirling username, carrying only the OAuth scope authorities.
             UsernamePasswordAuthenticationToken bound =
-                    new UsernamePasswordAuthenticationToken(
-                            boundUsername, null, jwtAuth.getAuthorities());
+                    new UsernamePasswordAuthenticationToken(boundUsername, null, jwtAuth.getAuthorities());
             bound.setDetails(jwtAuth.getDetails());
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(bound);

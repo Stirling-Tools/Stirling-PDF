@@ -16,8 +16,7 @@ class AppUpdateService {
     private final ShowAdminInterface showAdmin;
 
     public AppUpdateService(
-            ApplicationProperties applicationProperties,
-            @Autowired(required = false) ShowAdminInterface showAdmin) {
+            ApplicationProperties applicationProperties, @Autowired(required = false) ShowAdminInterface showAdmin) {
         this.applicationProperties = applicationProperties;
         this.showAdmin = showAdmin;
     }

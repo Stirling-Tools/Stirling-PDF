@@ -17,12 +17,7 @@ public class ReplaceAndInvertColorRequest extends PDFFile {
             description = "Replace and Invert color options of a pdf.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "HIGH_CONTRAST_COLOR",
-            allowableValues = {
-                "HIGH_CONTRAST_COLOR",
-                "CUSTOM_COLOR",
-                "FULL_INVERSION",
-                "COLOR_SPACE_CONVERSION"
-            })
+            allowableValues = {"HIGH_CONTRAST_COLOR", "CUSTOM_COLOR", "FULL_INVERSION", "COLOR_SPACE_CONVERSION"})
     private ReplaceAndInvert replaceAndInvertOption;
 
     @Schema(
@@ -39,14 +34,12 @@ public class ReplaceAndInvertColorRequest extends PDFFile {
     private HighContrastColorCombination highContrastColorCombination;
 
     @Schema(
-            description =
-                    "If CUSTOM_COLOR option selected, then pick the custom color for background. "
-                            + "Expected color value should be 24bit decimal value of a color")
+            description = "If CUSTOM_COLOR option selected, then pick the custom color for background. "
+                    + "Expected color value should be 24bit decimal value of a color")
     private String backGroundColor;
 
     @Schema(
-            description =
-                    "If CUSTOM_COLOR option selected, then pick the custom color for text. "
-                            + "Expected color value should be 24bit decimal value of a color")
+            description = "If CUSTOM_COLOR option selected, then pick the custom color for text. "
+                    + "Expected color value should be 24bit decimal value of a color")
     private String textColor;
 }

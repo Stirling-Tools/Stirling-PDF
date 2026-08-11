@@ -34,14 +34,7 @@ class JobOwnershipCacheTest {
 
     private static JobStoreEntry entry(String jobId) {
         return new JobStoreEntry(
-                jobId,
-                JobState.COMPLETE,
-                "node-1",
-                Instant.now(),
-                Instant.now(),
-                null,
-                List.of("file-1"),
-                Map.of());
+                jobId, JobState.COMPLETE, "node-1", Instant.now(), Instant.now(), null, List.of("file-1"), Map.of());
     }
 
     @SuppressWarnings("unchecked")

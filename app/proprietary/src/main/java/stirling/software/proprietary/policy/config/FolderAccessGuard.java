@@ -57,8 +57,7 @@ public class FolderAccessGuard {
             Environment environment,
             SourceStore sourceStore) {
         this.saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
-        this.allowedRoots =
-                normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
+        this.allowedRoots = normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
         this.impliedRoots = impliedRoots(applicationProperties.getStorage(), runtimePathConfig);
         this.protectedRoots = List.of(normalize(Path.of(InstallationPathConfig.getConfigPath())));
         this.sourceStore = sourceStore;
@@ -67,14 +66,12 @@ public class FolderAccessGuard {
     /** Returns the normalised absolute path; throws if not permitted. */
     public Path requirePermitted(Path dir) {
         if (saasActive) {
-            throw new IllegalArgumentException(
-                    "folder sources and outputs are not available in SaaS mode");
+            throw new IllegalArgumentException("folder sources and outputs are not available in SaaS mode");
         }
         Path normalized = normalize(dir);
         for (Path protectedRoot : protectedRoots) {
             if (normalized.startsWith(protectedRoot)) {
-                throw new IllegalArgumentException(
-                        "folder may not point inside a protected Stirling directory");
+                throw new IllegalArgumentException("folder may not point inside a protected Stirling directory");
             }
         }
         // Stirling-owned implied roots are always permitted, even with no configured roots, so
@@ -88,8 +85,7 @@ public class FolderAccessGuard {
         }
         boolean within = allowedRoots.stream().anyMatch(normalized::startsWith);
         if (!within) {
-            throw new FolderAccessDeniedException(
-                    "folder '" + normalized + "' is outside the allowed folder roots");
+            throw new FolderAccessDeniedException("folder '" + normalized + "' is outside the allowed folder roots");
         }
         return normalized;
     }
@@ -101,11 +97,10 @@ public class FolderAccessGuard {
 
     /** Whether this policy touches a folder source/sink, and so is subject to these rules. */
     public boolean usesFolderAccess(Policy policy) {
-        boolean readsFolder =
-                policy.sourceIds().stream()
-                        .map(sourceStore::get)
-                        .flatMap(Optional::stream)
-                        .anyMatch(source -> FOLDER_TYPE.equals(source.type()));
+        boolean readsFolder = policy.sourceIds().stream()
+                .map(sourceStore::get)
+                .flatMap(Optional::stream)
+                .anyMatch(source -> FOLDER_TYPE.equals(source.type()));
         boolean writesFolder =
                 policy.output() != null && FOLDER_TYPE.equals(policy.output().type());
         return readsFolder || writesFolder;

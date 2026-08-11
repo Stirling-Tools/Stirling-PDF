@@ -39,8 +39,7 @@ public final class DocumentUnitCalculator {
     public static int unitsForFile(int pages, long bytes, UnitCalcPolicy policy) {
         long raw = rawUnits(pages, bytes, policy);
         // toIntExact: fail loud on overflow rather than silently wrapping a billing number.
-        return Math.toIntExact(
-                Math.max(MIN_UNITS_PER_NONEMPTY_FILE, Math.min(policy.fileUnitCap(), raw)));
+        return Math.toIntExact(Math.max(MIN_UNITS_PER_NONEMPTY_FILE, Math.min(policy.fileUnitCap(), raw)));
     }
 
     /**
@@ -55,8 +54,7 @@ public final class DocumentUnitCalculator {
             rawSum = saturatedAdd(rawSum, rawUnits(f.pages(), f.bytes(), policy));
         }
         long groupCap = (long) policy.fileUnitCap() * files.size();
-        return Math.toIntExact(
-                Math.max((long) MIN_UNITS_PER_NONEMPTY_FILE, Math.min(groupCap, rawSum)));
+        return Math.toIntExact(Math.max((long) MIN_UNITS_PER_NONEMPTY_FILE, Math.min(groupCap, rawSum)));
     }
 
     private static long ceilDiv(long numerator, long divisor) {

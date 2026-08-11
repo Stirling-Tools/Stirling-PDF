@@ -83,8 +83,7 @@ public class ApplicationProperties {
     private Policies policies = new Policies();
 
     @Bean
-    public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
-            throws IOException {
+    public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment) throws IOException {
         String configPath = InstallationPathConfig.getSettingsPath();
         log.debug("Attempting to load settings from: {}", configPath);
 
@@ -99,8 +98,7 @@ public class ApplicationProperties {
         }
 
         EncodedResource encodedResource = new EncodedResource(resource);
-        PropertySource<?> propertySource =
-                new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
+        PropertySource<?> propertySource = new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
 
         boolean saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
         if (saasActive) {
@@ -139,18 +137,12 @@ public class ApplicationProperties {
                         long sizeInMB = Long.parseLong(systemMaxFileSize.trim());
                         if (sizeInMB > 0 && sizeInMB <= 999) {
                             fileUploadLimit = sizeInMB + "MB";
-                            log.info(
-                                    "Setting fileUploadLimit from SYSTEM_MAXFILESIZE: {}MB",
-                                    sizeInMB);
+                            log.info("Setting fileUploadLimit from SYSTEM_MAXFILESIZE: {}MB", sizeInMB);
                         } else {
-                            log.warn(
-                                    "SYSTEM_MAXFILESIZE value {} is out of valid range (1-999), ignoring",
-                                    sizeInMB);
+                            log.warn("SYSTEM_MAXFILESIZE value {} is out of valid range (1-999), ignoring", sizeInMB);
                         }
                     } catch (NumberFormatException e) {
-                        log.warn(
-                                "SYSTEM_MAXFILESIZE value '{}' is not a valid number, ignoring",
-                                systemMaxFileSize);
+                        log.warn("SYSTEM_MAXFILESIZE value '{}' is not a valid number, ignoring", systemMaxFileSize);
                     }
                 }
             }
@@ -724,7 +716,9 @@ public class ApplicationProperties {
         @Data
         public static class InitialLogin {
             private String username;
-            @ToString.Exclude private String password;
+
+            @ToString.Exclude
+            private String password;
         }
 
         @Getter
@@ -759,8 +753,7 @@ public class ApplicationProperties {
             @JsonIgnore
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
-                    return new ClassPathResource(idpMetadataUri.substring("classpath:".length()))
-                            .getInputStream();
+                    return new ClassPathResource(idpMetadataUri.substring("classpath:".length())).getInputStream();
                 }
                 try {
                     URI uri = new URI(idpMetadataUri);
@@ -809,7 +802,10 @@ public class ApplicationProperties {
             private Boolean enabled = false;
             private String issuer;
             private String clientId;
-            @ToString.Exclude private String clientSecret;
+
+            @ToString.Exclude
+            private String clientSecret;
+
             private Boolean autoCreateUser = true;
             private Boolean blockRegistration = false;
             private String useAsUsername;
@@ -861,11 +857,10 @@ public class ApplicationProperties {
                         case "github" -> getGithub();
                         case "keycloak" -> getKeycloak();
                         default ->
-                                throw new UnsupportedProviderException(
-                                        "Logout from the provider "
-                                                + registrationId
-                                                + " is not supported. Report it at"
-                                                + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
+                            throw new UnsupportedProviderException("Logout from the provider "
+                                    + registrationId
+                                    + " is not supported. Report it at"
+                                    + " https://github.com/Stirling-Tools/Stirling-PDF/issues");
                     };
                 }
             }
@@ -1059,12 +1054,10 @@ public class ApplicationProperties {
 
         @Data
         public static class ServerCertificate {
-            private boolean enabled =
-                    true; // Enable server-side "Sign with Stirling-PDF" certificate
+            private boolean enabled = true; // Enable server-side "Sign with Stirling-PDF" certificate
             private String organizationName = "Stirling PDF Inc";
             private int validity = 365; // Certificate validity in days
-            private boolean regenerateOnStartup =
-                    false; // Generate a new certificate on each startup
+            private boolean regenerateOnStartup = false; // Generate a new certificate on each startup
         }
 
         public boolean isAnalyticsEnabled() {
@@ -1259,8 +1252,7 @@ public class ApplicationProperties {
             private SsrfProtectionLevel level = SsrfProtectionLevel.MEDIUM; // MAX, MEDIUM, OFF
             private List<String> allowedDomains = new ArrayList<>();
             private List<String> blockedDomains = new ArrayList<>();
-            private List<String> internalTlds =
-                    Arrays.asList(".local", ".internal", ".corp", ".home");
+            private List<String> internalTlds = Arrays.asList(".local", ".internal", ".corp", ".home");
             private boolean blockPrivateNetworks = true;
             private boolean blockLocalhost = true;
             private boolean blockLinkLocal = true;
@@ -1277,7 +1269,9 @@ public class ApplicationProperties {
         private Integer port;
         private String name;
         private String username;
-        @ToString.Exclude private String password;
+
+        @ToString.Exclude
+        private String password;
     }
 
     public enum Driver {
@@ -1298,8 +1292,7 @@ public class ApplicationProperties {
             Driver {
               driverName='%s'
             }
-            """
-                    .formatted(driverName);
+            """.formatted(driverName);
         }
     }
 
@@ -1344,7 +1337,9 @@ public class ApplicationProperties {
 
     @Data
     public static class AutomaticallyGenerated {
-        @ToString.Exclude private String key;
+        @ToString.Exclude
+        private String key;
+
         private String UUID;
         private String appVersion;
         private Boolean isNewServer;
@@ -1355,7 +1350,10 @@ public class ApplicationProperties {
     @Deprecated(since = "0.45.0")
     public static class EnterpriseEdition {
         private boolean enabled;
-        @ToString.Exclude private String key;
+
+        @ToString.Exclude
+        private String key;
+
         private int maxUsers;
         private boolean ssoAutoLogin;
         private CustomMetadata customMetadata = new CustomMetadata();
@@ -1393,7 +1391,10 @@ public class ApplicationProperties {
         private String host;
         private int port = 587;
         private String username;
-        @ToString.Exclude private String password;
+
+        @ToString.Exclude
+        private String password;
+
         private String from;
         // STARTTLS upgrades a plain SMTP connection to TLS after connecting (RFC 3207)
         private Boolean startTlsEnable = true;
@@ -1415,7 +1416,10 @@ public class ApplicationProperties {
     @Data
     public static class Telegram {
         private Boolean enabled = false;
-        @ToString.Exclude private String botToken;
+
+        @ToString.Exclude
+        private String botToken;
+
         private String botUsername;
         private String pipelineInboxFolder = "telegram";
         private Boolean customFolderSuffix = true;
@@ -1506,7 +1510,10 @@ public class ApplicationProperties {
     @Data
     public static class Premium {
         private boolean enabled;
-        @ToString.Exclude private String key;
+
+        @ToString.Exclude
+        private String key;
+
         private int maxUsers;
         private ProFeatures proFeatures = new ProFeatures();
         private EnterpriseFeatures enterpriseFeatures = new EnterpriseFeatures();
@@ -1538,9 +1545,7 @@ public class ApplicationProperties {
                 }
 
                 public String getProducer() {
-                    return producer == null || producer.trim().isEmpty()
-                            ? "Stirling-PDF"
-                            : producer;
+                    return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
                 }
             }
         }
@@ -1574,10 +1579,8 @@ public class ApplicationProperties {
                 private boolean enabled = true;
                 private int level = 2; // 0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE
                 private int retentionDays = 90;
-                private boolean captureFileHash =
-                        false; // Capture SHA-256 hash of files (increases processing time)
-                private boolean capturePdfAuthor =
-                        false; // Capture PDF author metadata (increases processing time)
+                private boolean captureFileHash = false; // Capture SHA-256 hash of files (increases processing time)
+                private boolean capturePdfAuthor = false; // Capture PDF author metadata (increases processing time)
                 private boolean captureOperationResults =
                         false; // Capture operation return values (not recommended, high volume)
             }

@@ -47,8 +47,7 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
 
     private final LicenseKeyChecker licenseKeyChecker;
 
-    public ServerCertificateService(
-            LicenseKeyChecker licenseKeyChecker, ApplicationProperties applicationProperties) {
+    public ServerCertificateService(LicenseKeyChecker licenseKeyChecker, ApplicationProperties applicationProperties) {
         this.licenseKeyChecker = licenseKeyChecker;
         ApplicationProperties.System.ServerCertificate config =
                 applicationProperties.getSystem().getServerCertificate();
@@ -106,8 +105,7 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
 
     public KeyStore getServerKeyStore() throws Exception {
         if (!hasProOrEnterpriseAccess()) {
-            throw new IllegalStateException(
-                    "Server certificate feature requires Pro or Enterprise license");
+            throw new IllegalStateException("Server certificate feature requires Pro or Enterprise license");
         }
 
         if (!enabled || !hasServerCertificate()) {
@@ -137,8 +135,7 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
 
     public void uploadServerCertificate(InputStream p12Stream, String password) throws Exception {
         if (!hasProOrEnterpriseAccess()) {
-            throw new IllegalStateException(
-                    "Server certificate feature requires Pro or Enterprise license");
+            throw new IllegalStateException("Server certificate feature requires Pro or Enterprise license");
         }
 
         // Validate the uploaded certificate
@@ -202,8 +199,7 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
 
     private void generateServerCertificate() throws Exception {
         if (!hasProOrEnterpriseAccess()) {
-            throw new IllegalStateException(
-                    "Server certificate feature requires Pro or Enterprise license");
+            throw new IllegalStateException("Server certificate feature requires Pro or Enterprise license");
         }
 
         // Generate key pair
@@ -212,17 +208,14 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
         // Certificate details
-        X500Name subject =
-                new X500Name(
-                        "CN=" + organizationName + " Server, O=" + organizationName + ", C=US");
+        X500Name subject = new X500Name("CN=" + organizationName + " Server, O=" + organizationName + ", C=US");
         BigInteger serialNumber = BigInteger.valueOf(System.currentTimeMillis());
         Date notBefore = new Date();
         Date notAfter = new Date(notBefore.getTime() + ((long) validityDays * 24 * 60 * 60 * 1000));
 
         // Build certificate
-        JcaX509v3CertificateBuilder certBuilder =
-                new JcaX509v3CertificateBuilder(
-                        subject, serialNumber, notBefore, notAfter, subject, keyPair.getPublic());
+        JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(
+                subject, serialNumber, notBefore, notAfter, subject, keyPair.getPublic());
 
         // Add PDF-specific certificate extensions for optimal PDF signing compatibility
         JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
@@ -232,33 +225,23 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
 
         // 2) Key usage for PDF digital signatures (critical)
         certBuilder.addExtension(
-                Extension.keyUsage,
-                true,
-                new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation));
+                Extension.keyUsage, true, new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation));
 
         // 3) Extended key usage for document signing (non-critical, widely accepted)
         certBuilder.addExtension(
-                Extension.extendedKeyUsage,
-                false,
-                new ExtendedKeyUsage(KeyPurposeId.id_kp_codeSigning));
+                Extension.extendedKeyUsage, false, new ExtendedKeyUsage(KeyPurposeId.id_kp_codeSigning));
 
         // 4) Subject Key Identifier for chain building (non-critical)
         certBuilder.addExtension(
-                Extension.subjectKeyIdentifier,
-                false,
-                extUtils.createSubjectKeyIdentifier(keyPair.getPublic()));
+                Extension.subjectKeyIdentifier, false, extUtils.createSubjectKeyIdentifier(keyPair.getPublic()));
 
         // 5) Authority Key Identifier for self-signed cert (non-critical)
         certBuilder.addExtension(
-                Extension.authorityKeyIdentifier,
-                false,
-                extUtils.createAuthorityKeyIdentifier(keyPair.getPublic()));
+                Extension.authorityKeyIdentifier, false, extUtils.createAuthorityKeyIdentifier(keyPair.getPublic()));
 
         // Sign certificate
         ContentSigner signer =
-                new JcaContentSignerBuilder("SHA256WithRSA")
-                        .setProvider("BC")
-                        .build(keyPair.getPrivate());
+                new JcaContentSignerBuilder("SHA256WithRSA").setProvider("BC").build(keyPair.getPrivate());
 
         X509CertificateHolder certHolder = certBuilder.build(signer);
         X509Certificate cert =
@@ -268,10 +251,7 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
         keyStore.load(null, null);
         keyStore.setKeyEntry(
-                KEYSTORE_ALIAS,
-                keyPair.getPrivate(),
-                DEFAULT_PASSWORD.toCharArray(),
-                new Certificate[] {cert});
+                KEYSTORE_ALIAS, keyPair.getPrivate(), DEFAULT_PASSWORD.toCharArray(), new Certificate[] {cert});
 
         // Save keystore
         Path keystorePath = getKeystorePath();

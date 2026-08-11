@@ -46,8 +46,7 @@ public class CustomPDFDocumentFactory {
 
     /** Primary constructor used by Spring. Both collaborators are required in production. */
     @Autowired
-    public CustomPDFDocumentFactory(
-            PdfMetadataService pdfMetadataService, TempFileManager tempFileManager) {
+    public CustomPDFDocumentFactory(PdfMetadataService pdfMetadataService, TempFileManager tempFileManager) {
         this.pdfMetadataService = pdfMetadataService;
         this.tempFileManager = tempFileManager;
     }
@@ -195,8 +194,7 @@ public class CustomPDFDocumentFactory {
         return load(input, password, false);
     }
 
-    public PDDocument load(InputStream input, String password, boolean readOnly)
-            throws IOException {
+    public PDDocument load(InputStream input, String password, boolean readOnly) throws IOException {
         if (input == null) throw ExceptionUtils.createNullArgumentException("InputStream");
         return streamToTemp(input, password, readOnly);
     }
@@ -238,8 +236,7 @@ public class CustomPDFDocumentFactory {
         return load(fileInput, password, false);
     }
 
-    public PDDocument load(MultipartFile fileInput, String password, boolean readOnly)
-            throws IOException {
+    public PDDocument load(MultipartFile fileInput, String password, boolean readOnly) throws IOException {
         return streamToTemp(fileInput.getInputStream(), password, readOnly);
     }
 
@@ -258,8 +255,7 @@ public class CustomPDFDocumentFactory {
      * single snapshot for both cache selection and resource-cache decisions. Overridable so that
      * test spies ({@code SpyPDFDocumentFactory}) can intercept.
      */
-    protected StreamCacheCreateFunction getStreamCacheFunction(
-            long contentSize, MemorySnapshot mem) {
+    protected StreamCacheCreateFunction getStreamCacheFunction(long contentSize, MemorySnapshot mem) {
         return selectCacheFunction(contentSize, mem);
     }
 
@@ -319,12 +315,10 @@ public class CustomPDFDocumentFactory {
         }
     }
 
-    public PDDocument createNewDocumentBasedOnOldDocument(PDDocument oldDocument)
-            throws IOException {
+    public PDDocument createNewDocumentBasedOnOldDocument(PDDocument oldDocument) throws IOException {
         PDDocument document = createNewDocument();
         try {
-            pdfMetadataService.setMetadataToPdf(
-                    document, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
+            pdfMetadataService.setMetadataToPdf(document, pdfMetadataService.extractMetadataFromPdf(oldDocument), true);
             return document;
         } catch (RuntimeException ex) {
             document.close();
@@ -360,19 +354,16 @@ public class CustomPDFDocumentFactory {
      * @throws InterruptedException if the calling thread is interrupted while waiting
      */
     public List<PDDocument> loadAll(List<File> files) throws IOException, InterruptedException {
-        List<Callable<PDDocument>> tasks =
-                files.stream()
-                        .<Callable<PDDocument>>map(
-                                f ->
-                                        () -> {
-                                            CONCURRENT_GATE.acquire();
-                                            try {
-                                                return load(f);
-                                            } finally {
-                                                CONCURRENT_GATE.release();
-                                            }
-                                        })
-                        .toList();
+        List<Callable<PDDocument>> tasks = files.stream()
+                .<Callable<PDDocument>>map(f -> () -> {
+                    CONCURRENT_GATE.acquire();
+                    try {
+                        return load(f);
+                    } finally {
+                        CONCURRENT_GATE.release();
+                    }
+                })
+                .toList();
         return runConcurrently(tasks, CustomPDFDocumentFactory::closeQuietly);
     }
 
@@ -385,21 +376,17 @@ public class CustomPDFDocumentFactory {
      * @param files ordered list of uploads; the returned list preserves insertion order
      * @throws InterruptedException if the calling thread is interrupted while waiting
      */
-    public List<PDDocument> loadAllMultipart(List<MultipartFile> files)
-            throws IOException, InterruptedException {
-        List<Callable<PDDocument>> tasks =
-                files.stream()
-                        .<Callable<PDDocument>>map(
-                                f ->
-                                        () -> {
-                                            CONCURRENT_GATE.acquire();
-                                            try {
-                                                return load(f);
-                                            } finally {
-                                                CONCURRENT_GATE.release();
-                                            }
-                                        })
-                        .toList();
+    public List<PDDocument> loadAllMultipart(List<MultipartFile> files) throws IOException, InterruptedException {
+        List<Callable<PDDocument>> tasks = files.stream()
+                .<Callable<PDDocument>>map(f -> () -> {
+                    CONCURRENT_GATE.acquire();
+                    try {
+                        return load(f);
+                    } finally {
+                        CONCURRENT_GATE.release();
+                    }
+                })
+                .toList();
         return runConcurrently(tasks, CustomPDFDocumentFactory::closeQuietly);
     }
 
@@ -411,21 +398,17 @@ public class CustomPDFDocumentFactory {
      *
      * @throws InterruptedException if the calling thread is interrupted while waiting
      */
-    public List<byte[]> saveAllToBytes(List<PDDocument> documents)
-            throws IOException, InterruptedException {
-        List<Callable<byte[]>> tasks =
-                documents.stream()
-                        .<Callable<byte[]>>map(
-                                doc ->
-                                        () -> {
-                                            CONCURRENT_GATE.acquire();
-                                            try {
-                                                return saveToBytes(doc);
-                                            } finally {
-                                                CONCURRENT_GATE.release();
-                                            }
-                                        })
-                        .toList();
+    public List<byte[]> saveAllToBytes(List<PDDocument> documents) throws IOException, InterruptedException {
+        List<Callable<byte[]>> tasks = documents.stream()
+                .<Callable<byte[]>>map(doc -> () -> {
+                    CONCURRENT_GATE.acquire();
+                    try {
+                        return saveToBytes(doc);
+                    } finally {
+                        CONCURRENT_GATE.release();
+                    }
+                })
+                .toList();
         return runConcurrently(tasks, null);
     }
 
@@ -437,8 +420,7 @@ public class CustomPDFDocumentFactory {
      *
      * @param onFailureCleanup may be {@code null} when no result-level cleanup is needed
      */
-    private static <T> List<T> runConcurrently(
-            List<Callable<T>> tasks, Consumer<T> onFailureCleanup)
+    private static <T> List<T> runConcurrently(List<Callable<T>> tasks, Consumer<T> onFailureCleanup)
             throws IOException, InterruptedException {
         try (ExecutorService vte = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Future<T>> futures = tasks.stream().map(vte::submit).toList();
@@ -468,8 +450,7 @@ public class CustomPDFDocumentFactory {
     }
 
     /** Cleans up results from concurrent execution on failure. */
-    private static <T> void cleanupFutureResults(
-            List<Future<T>> futures, Consumer<T> onFailureCleanup) {
+    private static <T> void cleanupFutureResults(List<Future<T>> futures, Consumer<T> onFailureCleanup) {
         if (onFailureCleanup == null) return;
         for (Future<T> f : futures) {
             if (f.isDone() && !f.isCancelled()) {
@@ -498,8 +479,7 @@ public class CustomPDFDocumentFactory {
      *
      * @param password {@code null} for unencrypted (or to-be-decrypted-later) documents
      */
-    private PDDocument loadAdaptively(Object source, long contentSize, String password)
-            throws IOException {
+    private PDDocument loadAdaptively(Object source, long contentSize, String password) throws IOException {
         Object sourceObj = source;
         // Capture a single snapshot for both cache selection and resource-cache decision.
         MemorySnapshot mem = MemorySnapshot.capture();
@@ -517,18 +497,16 @@ public class CustomPDFDocumentFactory {
         PDDocument document =
                 switch (sourceObj) {
                     case File f ->
-                            password != null
-                                    ? loadFromFileWithPassword(f, cacheFunction, password)
-                                    : loadFromFile(f, cacheFunction);
+                        password != null
+                                ? loadFromFileWithPassword(f, cacheFunction, password)
+                                : loadFromFile(f, cacheFunction);
                     case byte[] b ->
-                            password != null
-                                    ? loadFromBytesWithPassword(
-                                            b, contentSize, cacheFunction, password)
-                                    : loadFromBytes(b, contentSize, cacheFunction);
+                        password != null
+                                ? loadFromBytesWithPassword(b, contentSize, cacheFunction, password)
+                                : loadFromBytes(b, contentSize, cacheFunction);
                     default ->
-                            throw new IllegalArgumentException(
-                                    "Unsupported source type: "
-                                            + sourceObj.getClass().getSimpleName());
+                        throw new IllegalArgumentException("Unsupported source type: "
+                                + sourceObj.getClass().getSimpleName());
                 };
 
         // Use the same snapshot captured above for consistent resource-cache decision.
@@ -539,8 +517,7 @@ public class CustomPDFDocumentFactory {
     }
 
     /** Buffers an {@link InputStream} to a managed temp file then delegates to the core loader. */
-    private PDDocument streamToTemp(InputStream input, String password, boolean readOnly)
-            throws IOException {
+    private PDDocument streamToTemp(InputStream input, String password, boolean readOnly) throws IOException {
         Path tempFile = createTempFilePath("pdf-stream-");
         boolean success = false;
         try {
@@ -568,8 +545,7 @@ public class CustomPDFDocumentFactory {
      * Internal helper that reuses an already-captured {@link MemorySnapshot}, avoiding a second
      * {@code Runtime.getRuntime()} call from within the same load operation.
      */
-    private static StreamCacheCreateFunction selectCacheFunction(
-            long contentSize, MemorySnapshot mem) {
+    private static StreamCacheCreateFunction selectCacheFunction(long contentSize, MemorySnapshot mem) {
         if (mem.isLow()) {
             log.debug(
                     "Heap pressure ({}% free, {} MB free), forcing file-backed cache",
@@ -588,8 +564,7 @@ public class CustomPDFDocumentFactory {
         return scratchCache(MemoryUsageSetting.setupTempFileOnly());
     }
 
-    private static PDDocument loadFromFile(File file, StreamCacheCreateFunction cache)
-            throws IOException {
+    private static PDDocument loadFromFile(File file, StreamCacheCreateFunction cache) throws IOException {
         DeletingRandomAccessFile raf = new DeletingRandomAccessFile(file);
         try {
             // Empty string password: PDFBox convention for unencrypted documents.
@@ -609,8 +584,8 @@ public class CustomPDFDocumentFactory {
      * Loads a password-protected PDF from a file. The {@link DeletingRandomAccessFile} is
      * explicitly closed if {@link Loader#loadPDF} throws to prevent file descriptor leaks.
      */
-    private static PDDocument loadFromFileWithPassword(
-            File file, StreamCacheCreateFunction cache, String password) throws IOException {
+    private static PDDocument loadFromFileWithPassword(File file, StreamCacheCreateFunction cache, String password)
+            throws IOException {
         DeletingRandomAccessFile raf = new DeletingRandomAccessFile(file);
         try {
             return Loader.loadPDF(raf, password, null, null, cache);
@@ -630,8 +605,7 @@ public class CustomPDFDocumentFactory {
      * when the caller passes a large byte[] directly through the public API), the bytes are first
      * written to a temp file to limit simultaneous heap pressure.
      */
-    private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache)
-            throws IOException {
+    private PDDocument loadFromBytes(byte[] bytes, long size, StreamCacheCreateFunction cache) throws IOException {
         if (size >= SMALL_FILE_THRESHOLD) {
             log.debug("Spilling {} MB byte[] to temp file before loading", size >> 20);
             Path tmp = createTempFilePath("pdf-bytes-");
@@ -659,8 +633,7 @@ public class CustomPDFDocumentFactory {
      * descriptor leaks on Windows.
      */
     private PDDocument loadFromBytesWithPassword(
-            byte[] bytes, long size, StreamCacheCreateFunction cache, String password)
-            throws IOException {
+            byte[] bytes, long size, StreamCacheCreateFunction cache, String password) throws IOException {
         if (size >= SMALL_FILE_THRESHOLD) {
             Path tmp = createTempFilePath("pdf-bytes-");
             boolean success = false;

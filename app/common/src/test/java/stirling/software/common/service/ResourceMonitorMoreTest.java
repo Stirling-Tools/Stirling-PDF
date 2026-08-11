@@ -29,15 +29,20 @@ class ResourceMonitorMoreTest {
 
     private ResourceMonitor resourceMonitor;
 
-    @Mock private OperatingSystemMXBean osMXBean;
-    @Mock private MemoryMXBean memoryMXBean;
-    @Mock private MemoryUsage heapUsage;
-    @Mock private MemoryUsage nonHeapUsage;
+    @Mock
+    private OperatingSystemMXBean osMXBean;
 
-    private final AtomicReference<ResourceStatus> currentStatus =
-            new AtomicReference<>(ResourceStatus.OK);
-    private final AtomicReference<ResourceMetrics> latestMetrics =
-            new AtomicReference<>(new ResourceMetrics());
+    @Mock
+    private MemoryMXBean memoryMXBean;
+
+    @Mock
+    private MemoryUsage heapUsage;
+
+    @Mock
+    private MemoryUsage nonHeapUsage;
+
+    private final AtomicReference<ResourceStatus> currentStatus = new AtomicReference<>(ResourceStatus.OK);
+    private final AtomicReference<ResourceMetrics> latestMetrics = new AtomicReference<>(new ResourceMetrics());
 
     @BeforeEach
     void setUp() {
@@ -123,8 +128,7 @@ class ResourceMonitorMoreTest {
         void samplingExceptionSwallowed() {
             when(osMXBean.getSystemLoadAverage()).thenReturn(0.1);
             when(osMXBean.getAvailableProcessors()).thenReturn(2);
-            when(memoryMXBean.getHeapMemoryUsage())
-                    .thenThrow(new RuntimeException("jmx unavailable"));
+            when(memoryMXBean.getHeapMemoryUsage()).thenThrow(new RuntimeException("jmx unavailable"));
             currentStatus.set(ResourceStatus.OK);
 
             // Must not propagate; the catch in updateResourceMetrics handles it.
@@ -145,20 +149,14 @@ class ResourceMonitorMoreTest {
             OperatingSystemMXBean withCpuLoad = new OsBeanWithProcessCpuLoad(0.42);
             ReflectionTestUtils.setField(resourceMonitor, "osMXBean", withCpuLoad);
 
-            double load =
-                    (double)
-                            ReflectionTestUtils.invokeMethod(
-                                    resourceMonitor, "getAlternativeCpuLoad");
+            double load = (double) ReflectionTestUtils.invokeMethod(resourceMonitor, "getAlternativeCpuLoad");
             assertThat(load).isEqualTo(0.42);
         }
 
         @Test
         @DisplayName("defaults to 0.5 when no CPU-load method is available")
         void defaultsWhenUnavailable() {
-            double load =
-                    (double)
-                            ReflectionTestUtils.invokeMethod(
-                                    resourceMonitor, "getAlternativeCpuLoad");
+            double load = (double) ReflectionTestUtils.invokeMethod(resourceMonitor, "getAlternativeCpuLoad");
             assertThat(load).isEqualTo(0.5);
         }
     }

@@ -64,8 +64,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
     }
 
     /** Save a signature with storage limits enforced. */
-    public SavedSignatureResponse saveSignature(String username, SavedSignatureRequest request)
-            throws IOException {
+    public SavedSignatureResponse saveSignature(String username, SavedSignatureRequest request) throws IOException {
         validateFileName(request.getId());
 
         // Determine folder based on scope
@@ -108,9 +107,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
             // Validate dataUrl size before decoding
             if (dataUrl.length() > MAX_SIGNATURE_SIZE_BYTES * 2) {
                 throw new IllegalArgumentException(
-                        "Signature data too large (max "
-                                + (MAX_SIGNATURE_SIZE_BYTES / 1024)
-                                + "KB)");
+                        "Signature data too large (max " + (MAX_SIGNATURE_SIZE_BYTES / 1024) + "KB)");
             }
 
             // Extract base64 data
@@ -120,9 +117,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
             // Validate decoded size
             if (imageBytes.length > MAX_SIGNATURE_SIZE_BYTES) {
                 throw new IllegalArgumentException(
-                        "Signature image too large (max "
-                                + (MAX_SIGNATURE_SIZE_BYTES / 1024)
-                                + "KB)");
+                        "Signature image too large (max " + (MAX_SIGNATURE_SIZE_BYTES / 1024) + "KB)");
             }
 
             // Determine and validate file extension from data URL
@@ -137,11 +132,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
             // Verify path is within target directory
             verifyPathWithinDirectory(imagePath, targetFolder);
 
-            Files.write(
-                    imagePath,
-                    imageBytes,
-                    StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(imagePath, imageBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             // Store reference to image file (unified endpoint for all signatures)
             response.setDataUrl("/api/v1/general/signatures/" + imageFileName);
@@ -193,13 +184,9 @@ public class SignatureService implements PersonalSignatureServiceInterface {
 
         if (Files.exists(personalFolder)) {
             try (Stream<Path> stream = Files.list(personalFolder)) {
-                List<Path> matchingFiles =
-                        stream.filter(
-                                        path ->
-                                                path.getFileName()
-                                                        .toString()
-                                                        .startsWith(signatureId + "."))
-                                .toList();
+                List<Path> matchingFiles = stream.filter(
+                                path -> path.getFileName().toString().startsWith(signatureId + "."))
+                        .toList();
                 for (Path file : matchingFiles) {
                     Files.delete(file);
                     deleted = true;
@@ -221,8 +208,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
     }
 
     /** Update a signature label. */
-    public void updateSignatureLabel(String username, String signatureId, String newLabel)
-            throws IOException {
+    public void updateSignatureLabel(String username, String signatureId, String newLabel) throws IOException {
         validateFileName(signatureId);
 
         // Try personal folder first
@@ -256,8 +242,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
 
     private void updateMetadataLabel(Path metadataPath, String newLabel) throws IOException {
         String metadataJson = Files.readString(metadataPath, StandardCharsets.UTF_8);
-        SavedSignatureResponse sig =
-                objectMapper.readValue(metadataJson, SavedSignatureResponse.class);
+        SavedSignatureResponse sig = objectMapper.readValue(metadataJson, SavedSignatureResponse.class);
         sig.setLabel(newLabel);
         sig.setUpdatedAt(System.currentTimeMillis());
 
@@ -286,24 +271,21 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         }
 
         if (signatureCount >= MAX_SIGNATURES_PER_USER) {
-            throw new IllegalArgumentException(
-                    "Maximum signatures limit reached (" + MAX_SIGNATURES_PER_USER + ")");
+            throw new IllegalArgumentException("Maximum signatures limit reached (" + MAX_SIGNATURES_PER_USER + ")");
         }
 
         // Calculate total storage used
         long totalSize = 0;
         try (Stream<Path> stream = Files.list(userFolder)) {
-            totalSize =
-                    stream.filter(this::isImageFile)
-                            .mapToLong(
-                                    path -> {
-                                        try {
-                                            return Files.size(path);
-                                        } catch (IOException e) {
-                                            return 0;
-                                        }
-                                    })
-                            .sum();
+            totalSize = stream.filter(this::isImageFile)
+                    .mapToLong(path -> {
+                        try {
+                            return Files.size(path);
+                        } catch (IOException e) {
+                            return 0;
+                        }
+                    })
+                    .sum();
         }
 
         // Estimate new signature size (base64 decodes to ~75% of original)
@@ -311,55 +293,45 @@ public class SignatureService implements PersonalSignatureServiceInterface {
 
         if (totalSize + estimatedNewSize > MAX_TOTAL_USER_STORAGE_BYTES) {
             throw new IllegalArgumentException(
-                    "Storage quota exceeded (max "
-                            + (MAX_TOTAL_USER_STORAGE_BYTES / 1_000_000)
-                            + "MB)");
+                    "Storage quota exceeded (max " + (MAX_TOTAL_USER_STORAGE_BYTES / 1_000_000) + "MB)");
         }
     }
 
-    private List<SavedSignatureResponse> loadSignaturesFromFolder(
-            Path folder, String scope, boolean isPersonal) throws IOException {
+    private List<SavedSignatureResponse> loadSignaturesFromFolder(Path folder, String scope, boolean isPersonal)
+            throws IOException {
         List<SavedSignatureResponse> signatures = new ArrayList<>();
 
         try (Stream<Path> stream = Files.list(folder)) {
-            stream.filter(this::isImageFile)
-                    .forEach(
-                            path -> {
-                                try {
-                                    String fileName = path.getFileName().toString();
-                                    String id = fileName.substring(0, fileName.lastIndexOf('.'));
+            stream.filter(this::isImageFile).forEach(path -> {
+                try {
+                    String fileName = path.getFileName().toString();
+                    String id = fileName.substring(0, fileName.lastIndexOf('.'));
 
-                                    // Try to load metadata from JSON file
-                                    Path metadataPath = folder.resolve(id + ".json");
-                                    SavedSignatureResponse sig;
+                    // Try to load metadata from JSON file
+                    Path metadataPath = folder.resolve(id + ".json");
+                    SavedSignatureResponse sig;
 
-                                    if (Files.exists(metadataPath)) {
-                                        // Load from metadata file
-                                        String metadataJson =
-                                                Files.readString(
-                                                        metadataPath, StandardCharsets.UTF_8);
-                                        sig =
-                                                objectMapper.readValue(
-                                                        metadataJson, SavedSignatureResponse.class);
-                                    } else {
-                                        // Fallback for old signatures without metadata
-                                        sig = new SavedSignatureResponse();
-                                        sig.setId(id);
-                                        sig.setLabel(id);
-                                        sig.setType("image");
-                                        sig.setScope(scope);
-                                        sig.setCreatedAt(
-                                                Files.getLastModifiedTime(path).toMillis());
-                                        sig.setUpdatedAt(
-                                                Files.getLastModifiedTime(path).toMillis());
-                                        sig.setDataUrl("/api/v1/general/signatures/" + fileName);
-                                    }
+                    if (Files.exists(metadataPath)) {
+                        // Load from metadata file
+                        String metadataJson = Files.readString(metadataPath, StandardCharsets.UTF_8);
+                        sig = objectMapper.readValue(metadataJson, SavedSignatureResponse.class);
+                    } else {
+                        // Fallback for old signatures without metadata
+                        sig = new SavedSignatureResponse();
+                        sig.setId(id);
+                        sig.setLabel(id);
+                        sig.setType("image");
+                        sig.setScope(scope);
+                        sig.setCreatedAt(Files.getLastModifiedTime(path).toMillis());
+                        sig.setUpdatedAt(Files.getLastModifiedTime(path).toMillis());
+                        sig.setDataUrl("/api/v1/general/signatures/" + fileName);
+                    }
 
-                                    signatures.add(sig);
-                                } catch (IOException e) {
-                                    log.error("Error reading signature file: " + path, e);
-                                }
-                            });
+                    signatures.add(sig);
+                } catch (IOException e) {
+                    log.error("Error reading signature file: " + path, e);
+                }
+            });
         }
 
         return signatures;
@@ -387,8 +359,7 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         throw new IllegalArgumentException("Unsupported image extension: " + extension);
     }
 
-    private void verifyPathWithinDirectory(Path resolvedPath, Path targetDirectory)
-            throws IOException {
+    private void verifyPathWithinDirectory(Path resolvedPath, Path targetDirectory) throws IOException {
         Path canonicalTarget = targetDirectory.toAbsolutePath().normalize();
         Path canonicalResolved = resolvedPath.toAbsolutePath().normalize();
         if (!canonicalResolved.startsWith(canonicalTarget)) {

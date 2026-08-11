@@ -129,11 +129,8 @@ class RedactExecuteRequestTest {
         void constants() {
             assertThat(RedactionStrategy.values())
                     .containsExactly(
-                            RedactionStrategy.AUTO,
-                            RedactionStrategy.OVERLAY_ONLY,
-                            RedactionStrategy.IMAGE_FINALIZE);
-            assertThat(RedactionStrategy.valueOf("OVERLAY_ONLY"))
-                    .isSameAs(RedactionStrategy.OVERLAY_ONLY);
+                            RedactionStrategy.AUTO, RedactionStrategy.OVERLAY_ONLY, RedactionStrategy.IMAGE_FINALIZE);
+            assertThat(RedactionStrategy.valueOf("OVERLAY_ONLY")).isSameAs(RedactionStrategy.OVERLAY_ONLY);
         }
     }
 }

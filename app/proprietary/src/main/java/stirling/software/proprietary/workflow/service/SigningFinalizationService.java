@@ -99,18 +99,14 @@ public class SigningFinalizationService {
         // Step 1.5: Add summary page BEFORE digital signing (if enabled)
         // CRITICAL: Must be done before signing to avoid invalidating signatures
         if (Boolean.TRUE.equals(settings.includeSummaryPage())) {
-            log.info(
-                    "Adding summary page before digital signing for session {}",
-                    session.getSessionId());
+            log.info("Adding summary page before digital signing for session {}", session.getSessionId());
             pdf = appendSignatureSummaryPage(pdf, session);
         }
 
         // Suppress digital certificate visual block when summary page is enabled
         // (wet signatures already applied in Step 1 and will still appear)
         Boolean showVisualSignature =
-                Boolean.TRUE.equals(settings.includeSummaryPage())
-                        ? false
-                        : settings.showSignature();
+                Boolean.TRUE.equals(settings.includeSummaryPage()) ? false : settings.showSignature();
 
         log.info(
                 "Finalization settings: includeSummaryPage={}, showVisualSignature={}",
@@ -120,34 +116,23 @@ public class SigningFinalizationService {
         // Step 2: Apply digital certificates per SIGNED participant
         for (WorkflowParticipant participant : session.getParticipants()) {
             if (participant.getStatus() != ParticipantStatus.SIGNED) {
-                log.debug(
-                        "Skipping participant {} - status is {}",
-                        participant.getEmail(),
-                        participant.getStatus());
+                log.debug("Skipping participant {} - status is {}", participant.getEmail(), participant.getStatus());
                 continue;
             }
 
             // Reload from DB to get fresh metadata
-            WorkflowParticipant fresh =
-                    participantRepository
-                            .findById(participant.getId())
-                            .orElseThrow(
-                                    () ->
-                                            new ResponseStatusException(
-                                                    HttpStatus.INTERNAL_SERVER_ERROR,
-                                                    "Participant not found: "
-                                                            + participant.getId()));
+            WorkflowParticipant fresh = participantRepository
+                    .findById(participant.getId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR, "Participant not found: " + participant.getId()));
 
             CertificateSubmission submission = extractCertificateSubmission(fresh);
             if (submission == null) {
-                log.warn(
-                        "No certificate submission found for participant {}, skipping",
-                        fresh.getEmail());
+                log.warn("No certificate submission found for participant {}, skipping", fresh.getEmail());
                 continue;
             }
 
-            ParticipantSignatureMetadata sigMeta =
-                    extractParticipantSignatureMetadata(fresh, submission);
+            ParticipantSignatureMetadata sigMeta = extractParticipantSignatureMetadata(fresh, submission);
 
             log.info(
                     "Applying signature for {} with reason='{}', location='{}'",
@@ -155,16 +140,15 @@ public class SigningFinalizationService {
                     sigMeta.reason(),
                     sigMeta.location());
 
-            pdf =
-                    applyDigitalSignature(
-                            pdf,
-                            fresh,
-                            submission,
-                            showVisualSignature,
-                            settings.pageNumber(),
-                            sigMeta.reason(),
-                            sigMeta.location(),
-                            settings.showLogo());
+            pdf = applyDigitalSignature(
+                    pdf,
+                    fresh,
+                    submission,
+                    showVisualSignature,
+                    settings.pageNumber(),
+                    sigMeta.reason(),
+                    sigMeta.location(),
+                    settings.showLogo());
         }
 
         return pdf;
@@ -212,10 +196,7 @@ public class SigningFinalizationService {
             return pdfBytes;
         }
 
-        log.info(
-                "Applying {} wet signature(s) to session {}",
-                wetSignatures.size(),
-                session.getSessionId());
+        log.info("Applying {} wet signature(s) to session {}", wetSignatures.size(), session.getSessionId());
 
         PDDocument document = pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes));
         try {
@@ -230,8 +211,7 @@ public class SigningFinalizationService {
         }
     }
 
-    private void applyWetSignatureToPage(PDDocument document, WetSignatureMetadata wetSig)
-            throws Exception {
+    private void applyWetSignatureToPage(PDDocument document, WetSignatureMetadata wetSig) throws Exception {
         int pageIndex = wetSig.getPage();
         if (pageIndex >= document.getNumberOfPages()) {
             log.warn(
@@ -243,21 +223,18 @@ public class SigningFinalizationService {
 
         PDPage page = document.getPage(pageIndex);
         PDPageContentStream contentStream =
-                new PDPageContentStream(
-                        document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+                new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
         try {
             // Use WetSignatureMetadata.extractBase64Data() to strip data URL prefix
             String base64Data = wetSig.extractBase64Data();
             if (base64Data == null || base64Data.isBlank()) {
                 throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Wet signature image data is missing or empty for participant");
+                        HttpStatus.BAD_REQUEST, "Wet signature image data is missing or empty for participant");
             }
             byte[] imageBytes = java.util.Base64.getDecoder().decode(base64Data);
 
-            PDImageXObject image =
-                    PDImageXObject.createFromByteArray(document, imageBytes, "signature");
+            PDImageXObject image = PDImageXObject.createFromByteArray(document, imageBytes, "signature");
 
             // Coordinates are stored as fractions (0–1) of the page dimensions.
             // Multiply by page size to get absolute PDF points, then convert Y from
@@ -286,8 +263,7 @@ public class SigningFinalizationService {
 
     // ===== SUMMARY PAGE =====
 
-    private byte[] appendSignatureSummaryPage(byte[] pdfBytes, WorkflowSession session)
-            throws Exception {
+    private byte[] appendSignatureSummaryPage(byte[] pdfBytes, WorkflowSession session) throws Exception {
         log.info("Appending signature summary page to session {}", session.getSessionId());
 
         // ---- Color palette — monochrome except badge accents and logo ----
@@ -334,12 +310,7 @@ public class SigningFinalizationService {
             document.addPage(summaryPage);
 
             PDPageContentStream cs =
-                    new PDPageContentStream(
-                            document,
-                            summaryPage,
-                            PDPageContentStream.AppendMode.APPEND,
-                            true,
-                            true);
+                    new PDPageContentStream(document, summaryPage, PDPageContentStream.AppendMode.APPEND, true, true);
 
             try {
                 float yPos = PAGE_H;
@@ -356,21 +327,17 @@ public class SigningFinalizationService {
                 final float logoX = MARGIN;
                 final float logoY = PAGE_H - HEADER_H + (HEADER_H - LOGO_H) / 2f;
                 try {
-                    ClassPathResource logoRes =
-                            new ClassPathResource("static/images/stirling-logo-white.png");
+                    ClassPathResource logoRes = new ClassPathResource("static/images/stirling-logo-white.png");
                     try (InputStream logoIn = logoRes.getInputStream()) {
                         BufferedImage logoImg = ImageIO.read(logoIn);
                         if (logoImg != null) {
-                            PDImageXObject pdLogo =
-                                    LosslessFactory.createFromImage(document, logoImg);
+                            PDImageXObject pdLogo = LosslessFactory.createFromImage(document, logoImg);
                             cs.drawImage(pdLogo, logoX, logoY, LOGO_W, LOGO_H);
                         }
                     }
                 } catch (Exception e) {
                     // Fallback: just draw the name as text
-                    log.debug(
-                            "Could not load Stirling-PDF logo for summary page: {}",
-                            e.getMessage());
+                    log.debug("Could not load Stirling-PDF logo for summary page: {}", e.getMessage());
                     cs.setNonStrokingColor(Color.WHITE);
                     cs.beginText();
                     cs.setFont(fontBold, 13);
@@ -390,8 +357,7 @@ public class SigningFinalizationService {
                 // Document name (right-aligned, muted)
                 String docName = session.getDocumentName() != null ? session.getDocumentName() : "";
                 float maxDocW = CONTENT_W * 0.45f;
-                while (docName.length() > 4
-                        && fontReg.getStringWidth(docName) / 1000f * 9 > maxDocW) {
+                while (docName.length() > 4 && fontReg.getStringWidth(docName) / 1000f * 9 > maxDocW) {
                     docName = docName.substring(0, docName.length() - 4) + "...";
                 }
                 float docNameW = fontReg.getStringWidth(docName) / 1000f * 9;
@@ -427,10 +393,9 @@ public class SigningFinalizationService {
                 cs.showText("Session Owner:  " + session.getOwner().getUsername());
                 cs.endText();
 
-                long signedCount =
-                        session.getParticipants().stream()
-                                .filter(p -> p.getStatus() == ParticipantStatus.SIGNED)
-                                .count();
+                long signedCount = session.getParticipants().stream()
+                        .filter(p -> p.getStatus() == ParticipantStatus.SIGNED)
+                        .count();
                 long totalCount = session.getParticipants().size();
                 String countStr = signedCount + " of " + totalCount + " participant(s) signed";
                 float countW = fontReg.getStringWidth(countStr) / 1000f * 9;
@@ -472,8 +437,7 @@ public class SigningFinalizationService {
                     String statusLabel = isSigned ? "SIGNED" : "DECLINED";
 
                     // Gather data before measuring card height
-                    CertificateSubmission submission =
-                            isSigned ? extractCertificateSubmission(participant) : null;
+                    CertificateSubmission submission = isSigned ? extractCertificateSubmission(participant) : null;
                     ParticipantSignatureMetadata meta = null;
                     CertificateInfo certInfo = null;
                     if (isSigned && submission != null) {
@@ -483,13 +447,11 @@ public class SigningFinalizationService {
 
                     // Dynamic card height:
                     //   header row (28) + inner divider (10) + body + top/bottom padding
-                    boolean hasLocation =
-                            meta != null && meta.location != null && !meta.location.isEmpty();
-                    boolean hasReason =
-                            meta != null
-                                    && meta.reason != null
-                                    && !meta.reason.isEmpty()
-                                    && !"Document Signing".equals(meta.reason);
+                    boolean hasLocation = meta != null && meta.location != null && !meta.location.isEmpty();
+                    boolean hasReason = meta != null
+                            && meta.reason != null
+                            && !meta.reason.isEmpty()
+                            && !"Document Signing".equals(meta.reason);
                     // left col: column label row + data rows
                     int leftDataRows = 0;
                     if (isSigned) leftDataRows++; // timestamp
@@ -499,8 +461,7 @@ public class SigningFinalizationService {
                     // right col: 6 data rows (subjectCN, issuerCN, serial, validFrom, validUntil,
                     // algorithm)
                     int rightDataRows = certInfo != null ? 6 : 0;
-                    int bodyRows =
-                            1 + Math.max(leftDataRows, rightDataRows); // +1 for column label row
+                    int bodyRows = 1 + Math.max(leftDataRows, rightDataRows); // +1 for column label row
                     float cardBodyH = bodyRows * LINE_H + CARD_PADDING;
                     float cardH = 28 + 10 + cardBodyH + CARD_PADDING;
 
@@ -509,13 +470,8 @@ public class SigningFinalizationService {
                         cs.close();
                         summaryPage = new PDPage(PDRectangle.A4);
                         document.addPage(summaryPage);
-                        cs =
-                                new PDPageContentStream(
-                                        document,
-                                        summaryPage,
-                                        PDPageContentStream.AppendMode.APPEND,
-                                        true,
-                                        true);
+                        cs = new PDPageContentStream(
+                                document, summaryPage, PDPageContentStream.AppendMode.APPEND, true, true);
                         yPos = PAGE_H - MARGIN;
                     }
 
@@ -540,8 +496,7 @@ public class SigningFinalizationService {
 
                     // Card header: Name
                     float headerY = cardTop - CARD_PADDING - 14;
-                    String nameStr =
-                            participant.getName() != null ? participant.getName() : "Unknown";
+                    String nameStr = participant.getName() != null ? participant.getName() : "Unknown";
                     cs.setNonStrokingColor(textDark);
                     cs.beginText();
                     cs.setFont(fontBold, 11);
@@ -551,10 +506,7 @@ public class SigningFinalizationService {
 
                     // Email (muted, same line)
                     float nameW = fontBold.getStringWidth(nameStr) / 1000f * 11;
-                    String emailStr =
-                            participant.getEmail() != null
-                                    ? "<" + participant.getEmail() + ">"
-                                    : "";
+                    String emailStr = participant.getEmail() != null ? "<" + participant.getEmail() + ">" : "";
                     cs.setNonStrokingColor(textMuted);
                     cs.beginText();
                     cs.setFont(fontReg, 9);
@@ -627,28 +579,12 @@ public class SigningFinalizationService {
 
                     if (hasReason) {
                         drawLabelValue(
-                                cs,
-                                fontBold,
-                                fontReg,
-                                leftColX,
-                                rowY,
-                                textDark,
-                                textMuted,
-                                "Reason:",
-                                meta.reason);
+                                cs, fontBold, fontReg, leftColX, rowY, textDark, textMuted, "Reason:", meta.reason);
                         rowY -= LINE_H;
                     }
                     if (hasLocation) {
                         drawLabelValue(
-                                cs,
-                                fontBold,
-                                fontReg,
-                                leftColX,
-                                rowY,
-                                textDark,
-                                textMuted,
-                                "Location:",
-                                meta.location);
+                                cs, fontBold, fontReg, leftColX, rowY, textDark, textMuted, "Location:", meta.location);
                         rowY -= LINE_H;
                     }
                     if (submission != null && submission.getCertType() != null) {
@@ -797,17 +733,16 @@ public class SigningFinalizationService {
         validateCertificateNotExpired(keystore, participant.getEmail());
         String password = getKeystorePassword(submission, participant);
 
-        byte[] signed =
-                pdfSigningService.signWithKeystore(
-                        pdfBytes,
-                        keystore,
-                        password != null ? password.toCharArray() : new char[0],
-                        showSignature != null ? showSignature : false,
-                        pageNumber != null ? pageNumber - 1 : null,
-                        participant.getName() != null ? participant.getName() : "Shared Signing",
-                        location != null ? location : "",
-                        reason != null ? reason : "Document Signing",
-                        showLogo != null ? showLogo : false);
+        byte[] signed = pdfSigningService.signWithKeystore(
+                pdfBytes,
+                keystore,
+                password != null ? password.toCharArray() : new char[0],
+                showSignature != null ? showSignature : false,
+                pageNumber != null ? pageNumber - 1 : null,
+                participant.getName() != null ? participant.getName() : "Shared Signing",
+                location != null ? location : "",
+                reason != null ? reason : "Document Signing",
+                showLogo != null ? showLogo : false);
 
         log.info(
                 "Digital signature applied for {} using cert type {}",
@@ -817,8 +752,7 @@ public class SigningFinalizationService {
         return signed;
     }
 
-    private KeyStore buildKeystore(
-            CertificateSubmission submission, WorkflowParticipant participant) throws Exception {
+    private KeyStore buildKeystore(CertificateSubmission submission, WorkflowParticipant participant) throws Exception {
         String certType = submission.getCertType();
         String password = submission.getPassword();
 
@@ -827,8 +761,7 @@ public class SigningFinalizationService {
             case "PKCS12":
             case "PFX":
                 if (submission.getP12Keystore() == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "P12 keystore data is required");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "P12 keystore data is required");
                 }
                 try {
                     KeyStore p12Store = KeyStore.getInstance("PKCS12");
@@ -844,8 +777,7 @@ public class SigningFinalizationService {
 
             case "JKS":
                 if (submission.getJksKeystore() == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "JKS keystore data is required");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "JKS keystore data is required");
                 }
                 try {
                     KeyStore jksStore = KeyStore.getInstance("JKS");
@@ -864,8 +796,7 @@ public class SigningFinalizationService {
                         || !serverCertificateService.isEnabled()
                         || !serverCertificateService.hasServerCertificate()) {
                     throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Server certificate is not available or not configured");
+                            HttpStatus.BAD_REQUEST, "Server certificate is not available or not configured");
                 }
                 return serverCertificateService.getServerKeyStore();
 
@@ -894,13 +825,11 @@ public class SigningFinalizationService {
                 }
 
             default:
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Invalid certificate type: " + certType);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid certificate type: " + certType);
         }
     }
 
-    private void validateCertificateNotExpired(KeyStore keystore, String participantEmail)
-            throws Exception {
+    private void validateCertificateNotExpired(KeyStore keystore, String participantEmail) throws Exception {
         Enumeration<String> aliases = keystore.aliases();
         while (aliases.hasMoreElements()) {
             String alias = aliases.nextElement();
@@ -917,16 +846,13 @@ public class SigningFinalizationService {
                 } catch (java.security.cert.CertificateNotYetValidException e) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST,
-                            "Certificate for participant '"
-                                    + participantEmail
-                                    + "' is not yet valid.");
+                            "Certificate for participant '" + participantEmail + "' is not yet valid.");
                 }
             }
         }
     }
 
-    private String getKeystorePassword(
-            CertificateSubmission submission, WorkflowParticipant participant) {
+    private String getKeystorePassword(CertificateSubmission submission, WorkflowParticipant participant) {
         String certType = submission.getCertType();
 
         if ("SERVER".equalsIgnoreCase(certType) && serverCertificateService != null) {
@@ -959,26 +885,19 @@ public class SigningFinalizationService {
         Boolean includeSummaryPage = false;
 
         if (workflowMetadata != null && !workflowMetadata.isEmpty()) {
-            showSignature =
-                    workflowMetadata.containsKey("showSignature")
-                            ? (Boolean) workflowMetadata.get("showSignature")
-                            : false;
-            pageNumber =
-                    workflowMetadata.containsKey("pageNumber")
-                            ? ((Number) workflowMetadata.get("pageNumber")).intValue()
-                            : null;
-            showLogo =
-                    workflowMetadata.containsKey("showLogo")
-                            ? (Boolean) workflowMetadata.get("showLogo")
-                            : false;
-            includeSummaryPage =
-                    workflowMetadata.containsKey("includeSummaryPage")
-                            ? (Boolean) workflowMetadata.get("includeSummaryPage")
-                            : false;
+            showSignature = workflowMetadata.containsKey("showSignature")
+                    ? (Boolean) workflowMetadata.get("showSignature")
+                    : false;
+            pageNumber = workflowMetadata.containsKey("pageNumber")
+                    ? ((Number) workflowMetadata.get("pageNumber")).intValue()
+                    : null;
+            showLogo = workflowMetadata.containsKey("showLogo") ? (Boolean) workflowMetadata.get("showLogo") : false;
+            includeSummaryPage = workflowMetadata.containsKey("includeSummaryPage")
+                    ? (Boolean) workflowMetadata.get("includeSummaryPage")
+                    : false;
         }
 
-        return new SessionSignatureSettings(
-                showSignature, pageNumber, showLogo, includeSummaryPage);
+        return new SessionSignatureSettings(showSignature, pageNumber, showLogo, includeSummaryPage);
     }
 
     /**
@@ -1001,10 +920,7 @@ public class SigningFinalizationService {
             }
         }
 
-        String location =
-                (submission != null && submission.getLocation() != null)
-                        ? submission.getLocation()
-                        : "";
+        String location = (submission != null && submission.getLocation() != null) ? submission.getLocation() : "";
 
         return new ParticipantSignatureMetadata(reason, location);
     }
@@ -1020,9 +936,7 @@ public class SigningFinalizationService {
             return null;
         }
         if (!metadata.containsKey("certificateSubmission")) {
-            log.info(
-                    "certificateSubmission key not found for participant {}",
-                    participant.getEmail());
+            log.info("certificateSubmission key not found for participant {}", participant.getEmail());
             return null;
         }
 
@@ -1030,27 +944,23 @@ public class SigningFinalizationService {
             var node = objectMapper.valueToTree(metadata);
             if (node.has("certificateSubmission")) {
                 CertificateSubmission submission =
-                        objectMapper.treeToValue(
-                                node.get("certificateSubmission"), CertificateSubmission.class);
+                        objectMapper.treeToValue(node.get("certificateSubmission"), CertificateSubmission.class);
 
                 // Decrypt password (supports both legacy plaintext and encrypted values)
                 if (submission.getPassword() != null) {
-                    submission.setPassword(
-                            metadataEncryptionService.decrypt(submission.getPassword()));
+                    submission.setPassword(metadataEncryptionService.decrypt(submission.getPassword()));
                 }
 
                 // Decrypt + decode keystore bytes (supports both legacy plaintext base64 and
                 // encrypted values).
                 var certNode = node.get("certificateSubmission");
                 if (certNode.has("p12Keystore")) {
-                    submission.setP12Keystore(
-                            metadataEncryptionService.decryptBytes(
-                                    certNode.get("p12Keystore").asString()));
+                    submission.setP12Keystore(metadataEncryptionService.decryptBytes(
+                            certNode.get("p12Keystore").asString()));
                 }
                 if (certNode.has("jksKeystore")) {
-                    submission.setJksKeystore(
-                            metadataEncryptionService.decryptBytes(
-                                    certNode.get("jksKeystore").asString()));
+                    submission.setJksKeystore(metadataEncryptionService.decryptBytes(
+                            certNode.get("jksKeystore").asString()));
                 }
                 return submission;
             }
@@ -1068,8 +978,7 @@ public class SigningFinalizationService {
      * Extracts X509 certificate fields from a participant's keystore for display on the summary
      * page. Returns null gracefully if the certificate cannot be loaded (e.g. missing data).
      */
-    private CertificateInfo extractCertificateInfo(
-            CertificateSubmission submission, WorkflowParticipant participant) {
+    private CertificateInfo extractCertificateInfo(CertificateSubmission submission, WorkflowParticipant participant) {
         try {
             KeyStore keystore = buildKeystore(submission, participant);
             Enumeration<String> aliases = keystore.aliases();
@@ -1085,31 +994,27 @@ public class SigningFinalizationService {
             String subjectCN = extractCN(x509.getSubjectX500Principal().getName());
             String issuerCN = extractCN(x509.getIssuerX500Principal().getName());
 
-            java.time.format.DateTimeFormatter dtf =
-                    java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy");
-            String validFrom =
-                    x509.getNotBefore()
-                            .toInstant()
-                            .atZone(ZoneOffset.UTC)
-                            .toLocalDate()
-                            .format(dtf);
-            String validUntil =
-                    x509.getNotAfter().toInstant().atZone(ZoneOffset.UTC).toLocalDate().format(dtf);
+            java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy");
+            String validFrom = x509.getNotBefore()
+                    .toInstant()
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate()
+                    .format(dtf);
+            String validUntil = x509.getNotAfter()
+                    .toInstant()
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate()
+                    .format(dtf);
 
             String serial = x509.getSerialNumber().toString(16).toUpperCase();
             if (serial.length() > 20) {
                 serial = serial.substring(0, 17) + "...";
             }
 
-            return new CertificateInfo(
-                    subjectCN, issuerCN, serial, validFrom, validUntil, x509.getSigAlgName());
+            return new CertificateInfo(subjectCN, issuerCN, serial, validFrom, validUntil, x509.getSigAlgName());
 
         } catch (Exception e) {
-            log.warn(
-                    "Could not extract certificate info for {}: {}",
-                    participant.getEmail(),
-                    e.getMessage(),
-                    e);
+            log.warn("Could not extract certificate info for {}: {}", participant.getEmail(), e.getMessage(), e);
             return null;
         }
     }
@@ -1176,19 +1081,11 @@ public class SigningFinalizationService {
             // Reload from DB for fresh metadata
             WorkflowParticipant fresh;
             try {
-                fresh =
-                        participantRepository
-                                .findById(participant.getId())
-                                .orElseThrow(
-                                        () ->
-                                                new RuntimeException(
-                                                        "Participant not found: "
-                                                                + participant.getId()));
+                fresh = participantRepository
+                        .findById(participant.getId())
+                        .orElseThrow(() -> new RuntimeException("Participant not found: " + participant.getId()));
             } catch (Exception e) {
-                log.error(
-                        "Failed to reload participant {}: {}",
-                        participant.getEmail(),
-                        e.getMessage());
+                log.error("Failed to reload participant {}: {}", participant.getEmail(), e.getMessage());
                 continue;
             }
 
@@ -1208,10 +1105,7 @@ public class SigningFinalizationService {
                 }
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> wetSigsList = (List<Map<String, Object>>) wetSigsRaw;
-                log.info(
-                        "Found {} wet signature(s) for participant {}",
-                        wetSigsList.size(),
-                        fresh.getEmail());
+                log.info("Found {} wet signature(s) for participant {}", wetSigsList.size(), fresh.getEmail());
                 for (Map<String, Object> sigMap : wetSigsList) {
                     WetSignatureMetadata wetSig = mapToWetSignature(sigMap);
                     if (wetSig != null) {
@@ -1259,10 +1153,7 @@ public class SigningFinalizationService {
     // ===== PRIVATE INNER TYPES =====
 
     private record SessionSignatureSettings(
-            Boolean showSignature,
-            Integer pageNumber,
-            Boolean showLogo,
-            Boolean includeSummaryPage) {}
+            Boolean showSignature, Integer pageNumber, Boolean showLogo, Boolean includeSummaryPage) {}
 
     private record ParticipantSignatureMetadata(String reason, String location) {}
 

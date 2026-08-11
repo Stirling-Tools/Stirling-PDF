@@ -45,8 +45,9 @@ public class AiEngineEndpointResolver {
     @EventListener(ContextRefreshedEvent.class)
     public void discoverApiUrls() {
         Set<String> discovered = new TreeSet<>();
-        for (RequestMappingHandlerMapping mapping :
-                applicationContext.getBeansOfType(RequestMappingHandlerMapping.class).values()) {
+        for (RequestMappingHandlerMapping mapping : applicationContext
+                .getBeansOfType(RequestMappingHandlerMapping.class)
+                .values()) {
             for (RequestMappingInfo info : mapping.getHandlerMethods().keySet()) {
                 for (String pattern : extractPatterns(info)) {
                     if (pattern.startsWith(API_PREFIX)) {

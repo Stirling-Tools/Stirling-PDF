@@ -29,11 +29,17 @@ class OwnershipServiceTest {
 
     private static final ResourceType TYPE = ResourceType.INTEGRATION_CONFIG;
 
-    @Mock private ResourceAccessService accessService;
-    @Mock private TeamLeadLookup teamLeadLookup;
-    @Mock private TeamRepository teamRepository;
+    @Mock
+    private ResourceAccessService accessService;
 
-    @InjectMocks private OwnershipService ownership;
+    @Mock
+    private TeamLeadLookup teamLeadLookup;
+
+    @Mock
+    private TeamRepository teamRepository;
+
+    @InjectMocks
+    private OwnershipService ownership;
 
     /** Minimal concrete OwnedResource for exercising the base behaviour. */
     static class TestResource extends OwnedResource {
@@ -65,9 +71,7 @@ class OwnershipServiceTest {
     @Test
     void userScopeBlockedByLockedServerOverride() {
         assertForbidden(
-                () ->
-                        ownership.assignOwnership(
-                                new TestResource(1L), OwnerScope.USER, null, user(7), () -> true));
+                () -> ownership.assignOwnership(new TestResource(1L), OwnerScope.USER, null, user(7), () -> true));
     }
 
     @Test
@@ -80,13 +84,7 @@ class OwnershipServiceTest {
     @Test
     void nonAdminCannotCreateServerScope() {
         assertForbidden(
-                () ->
-                        ownership.assignOwnership(
-                                new TestResource(1L),
-                                OwnerScope.SERVER,
-                                null,
-                                user(7),
-                                () -> false));
+                () -> ownership.assignOwnership(new TestResource(1L), OwnerScope.SERVER, null, user(7), () -> false));
     }
 
     @Test
@@ -110,9 +108,7 @@ class OwnershipServiceTest {
         when(teamRepository.findById(5L)).thenReturn(Optional.of(team));
 
         assertForbidden(
-                () ->
-                        ownership.assignOwnership(
-                                new TestResource(1L), OwnerScope.TEAM, 5L, user(7), () -> false));
+                () -> ownership.assignOwnership(new TestResource(1L), OwnerScope.TEAM, 5L, user(7), () -> false));
     }
 
     // ---- use / manage ----

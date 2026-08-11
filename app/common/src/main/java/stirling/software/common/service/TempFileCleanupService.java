@@ -48,43 +48,37 @@ public class TempFileCleanupService {
     private static final int MAX_RECURSION_DEPTH = 5;
 
     // File patterns that identify our temp files
-    private static final Predicate<String> IS_OUR_TEMP_FILE =
-            fileName ->
-                    fileName.startsWith("stirling-pdf-")
-                            || fileName.startsWith("output_")
-                            || fileName.startsWith("compressedPDF")
-                            || fileName.startsWith("pdf-save-")
-                            || fileName.startsWith("pdf-stream-")
-                            || fileName.startsWith("PDFBox")
-                            || fileName.startsWith("input_")
-                            || fileName.startsWith("overlay-");
+    private static final Predicate<String> IS_OUR_TEMP_FILE = fileName -> fileName.startsWith("stirling-pdf-")
+            || fileName.startsWith("output_")
+            || fileName.startsWith("compressedPDF")
+            || fileName.startsWith("pdf-save-")
+            || fileName.startsWith("pdf-stream-")
+            || fileName.startsWith("PDFBox")
+            || fileName.startsWith("input_")
+            || fileName.startsWith("overlay-");
 
     // File patterns that identify common system temp files
-    private static final Predicate<String> IS_SYSTEM_TEMP_FILE =
-            fileName ->
-                    RegexPatternUtils.getInstance()
-                                    .getSystemTempFile1Pattern()
-                                    .matcher(fileName)
-                                    .matches()
-                            || RegexPatternUtils.getInstance()
-                                    .getSystemTempFile2Pattern()
-                                    .matcher(fileName)
-                                    .matches()
-                            || (fileName.startsWith("tmp") && !fileName.contains("jetty"))
-                            || fileName.startsWith("OSL_PIPE_")
-                            || (fileName.endsWith(".tmp") && !fileName.contains("jetty"));
+    private static final Predicate<String> IS_SYSTEM_TEMP_FILE = fileName -> RegexPatternUtils.getInstance()
+                    .getSystemTempFile1Pattern()
+                    .matcher(fileName)
+                    .matches()
+            || RegexPatternUtils.getInstance()
+                    .getSystemTempFile2Pattern()
+                    .matcher(fileName)
+                    .matches()
+            || (fileName.startsWith("tmp") && !fileName.contains("jetty"))
+            || fileName.startsWith("OSL_PIPE_")
+            || (fileName.endsWith(".tmp") && !fileName.contains("jetty"));
 
     // File patterns that should be excluded from cleanup
-    private static final Predicate<String> SHOULD_SKIP =
-            fileName ->
-                    fileName.contains("jetty")
-                            || fileName.startsWith("jetty-")
-                            || "proc".equals(fileName)
-                            || "sys".equals(fileName)
-                            || "dev".equals(fileName)
-                            || "hsperfdata_stirlingpdfuser".equals(fileName)
-                            || fileName.startsWith("hsperfdata_")
-                            || ".pdfbox.cache".equals(fileName);
+    private static final Predicate<String> SHOULD_SKIP = fileName -> fileName.contains("jetty")
+            || fileName.startsWith("jetty-")
+            || "proc".equals(fileName)
+            || "sys".equals(fileName)
+            || "dev".equals(fileName)
+            || "hsperfdata_stirlingpdfuser".equals(fileName)
+            || fileName.startsWith("hsperfdata_")
+            || ".pdfbox.cache".equals(fileName);
 
     @PostConstruct
     public void init() {
@@ -129,8 +123,7 @@ public class TempFileCleanupService {
 
     /** Scheduled task to clean up old temporary files. Runs at the configured interval. */
     @Scheduled(
-            fixedDelayString =
-                    "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
+            fixedDelayString = "#{applicationProperties.system.tempFileManagement.cleanupIntervalMinutes}",
             timeUnit = TimeUnit.MINUTES)
     public void scheduledCleanup() {
         log.info("Running scheduled temporary file cleanup");
@@ -144,8 +137,7 @@ public class TempFileCleanupService {
         int directoriesDeletedCount = 0;
         for (Path directory : registry.getTempDirectories()) {
             try {
-                if (Files.exists(directory)
-                        && shouldDeleteRegisteredDirectory(directory, maxAgeMillis)) {
+                if (Files.exists(directory) && shouldDeleteRegisteredDirectory(directory, maxAgeMillis)) {
                     GeneralUtils.deleteDirectory(directory);
                     registry.unregisterDirectory(directory);
                     directoriesDeletedCount++;
@@ -163,9 +155,7 @@ public class TempFileCleanupService {
         boolean containerMode = isContainerMode();
         int unregisteredDeletedCount = cleanupUnregisteredFiles(containerMode, true, maxAgeMillis);
 
-        if (registeredDeletedCount > 0
-                || unregisteredDeletedCount > 0
-                || directoriesDeletedCount > 0) {
+        if (registeredDeletedCount > 0 || unregisteredDeletedCount > 0 || directoriesDeletedCount > 0) {
             log.info(
                     "Scheduled cleanup complete. Deleted {} registered files, {} unregistered files, {} directories",
                     registeredDeletedCount,
@@ -190,9 +180,7 @@ public class TempFileCleanupService {
         long maxAgeMillis = containerMode ? 0 : 24 * 60 * 60 * 1000; // 0 or 24 hours
 
         int totalDeletedCount = cleanupUnregisteredFiles(containerMode, false, maxAgeMillis);
-        log.info(
-                "Startup cleanup complete. Deleted {} temporary files/directories",
-                totalDeletedCount);
+        log.info("Startup cleanup complete. Deleted {} temporary files/directories", totalDeletedCount);
     }
 
     /**
@@ -203,8 +191,7 @@ public class TempFileCleanupService {
      * @param maxAgeMillis Maximum age of files to clean in milliseconds
      * @return Number of files deleted
      */
-    private int cleanupUnregisteredFiles(
-            boolean containerMode, boolean isScheduled, long maxAgeMillis) {
+    private int cleanupUnregisteredFiles(boolean containerMode, boolean isScheduled, long maxAgeMillis) {
         AtomicInteger totalDeletedCount = new AtomicInteger(0);
 
         try {
@@ -215,61 +202,36 @@ public class TempFileCleanupService {
                     && tempFiles.getSystemTempDir() != null
                     && !tempFiles.getSystemTempDir().isEmpty()) {
                 Path systemTempPath = getSystemTempPath();
-                dirsToScan =
-                        new Path[] {
-                            systemTempPath,
-                            Path.of(tempFiles.getBaseTmpDir()),
-                            Path.of(tempFiles.getLibreofficeDir())
-                        };
+                dirsToScan = new Path[] {
+                    systemTempPath, Path.of(tempFiles.getBaseTmpDir()), Path.of(tempFiles.getLibreofficeDir())
+                };
             } else {
-                dirsToScan =
-                        new Path[] {
-                            Path.of(tempFiles.getBaseTmpDir()),
-                            Path.of(tempFiles.getLibreofficeDir())
-                        };
+                dirsToScan = new Path[] {Path.of(tempFiles.getBaseTmpDir()), Path.of(tempFiles.getLibreofficeDir())};
             }
 
             // Process each directory
-            Arrays.stream(dirsToScan)
-                    .filter(Files::exists)
-                    .forEach(
-                            tempDir -> {
-                                try {
-                                    String phase = isScheduled ? "scheduled" : "startup";
-                                    log.debug(
-                                            "Scanning directory for {} cleanup: {}",
-                                            phase,
-                                            tempDir);
+            Arrays.stream(dirsToScan).filter(Files::exists).forEach(tempDir -> {
+                try {
+                    String phase = isScheduled ? "scheduled" : "startup";
+                    log.debug("Scanning directory for {} cleanup: {}", phase, tempDir);
 
-                                    AtomicInteger dirDeletedCount = new AtomicInteger(0);
-                                    cleanupDirectoryStreaming(
-                                            tempDir,
-                                            containerMode,
-                                            0,
-                                            maxAgeMillis,
-                                            isScheduled,
-                                            path -> {
-                                                dirDeletedCount.incrementAndGet();
-                                                if (log.isDebugEnabled()) {
-                                                    log.debug(
-                                                            "Deleted temp file during {} cleanup: {}",
-                                                            phase,
-                                                            path);
-                                                }
-                                            });
+                    AtomicInteger dirDeletedCount = new AtomicInteger(0);
+                    cleanupDirectoryStreaming(tempDir, containerMode, 0, maxAgeMillis, isScheduled, path -> {
+                        dirDeletedCount.incrementAndGet();
+                        if (log.isDebugEnabled()) {
+                            log.debug("Deleted temp file during {} cleanup: {}", phase, path);
+                        }
+                    });
 
-                                    int count = dirDeletedCount.get();
-                                    totalDeletedCount.addAndGet(count);
-                                    if (count > 0) {
-                                        log.info(
-                                                "Cleaned up {} files/directories in {}",
-                                                count,
-                                                tempDir);
-                                    }
-                                } catch (IOException e) {
-                                    log.error("Error during cleanup of directory: {}", tempDir, e);
-                                }
-                            });
+                    int count = dirDeletedCount.get();
+                    totalDeletedCount.addAndGet(count);
+                    if (count > 0) {
+                        log.info("Cleaned up {} files/directories in {}", count, tempDir);
+                    }
+                } catch (IOException e) {
+                    log.error("Error during cleanup of directory: {}", tempDir, e);
+                }
+            });
         } catch (Exception e) {
             log.error("Error during cleanup of unregistered files", e);
         }
@@ -336,53 +298,45 @@ public class TempFileCleanupService {
         java.util.List<Path> subdirectories = new java.util.ArrayList<>();
 
         try (Stream<Path> pathStream = Files.list(directory)) {
-            pathStream.forEach(
-                    path -> {
+            pathStream.forEach(path -> {
+                try {
+                    String fileName = path.getFileName().toString();
+
+                    if (SHOULD_SKIP.test(fileName)) {
+                        return;
+                    }
+
+                    if (Files.isDirectory(path)) {
+                        subdirectories.add(path);
+                        return;
+                    }
+
+                    if (registry.contains(path.toFile())) {
+                        return;
+                    }
+
+                    if (shouldDeleteFile(path, fileName, containerMode, maxAgeMillis)) {
                         try {
-                            String fileName = path.getFileName().toString();
-
-                            if (SHOULD_SKIP.test(fileName)) {
-                                return;
+                            Files.deleteIfExists(path);
+                            onDeleteCallback.accept(path);
+                        } catch (IOException e) {
+                            if (e.getMessage() != null && e.getMessage().contains("being used by another process")) {
+                                log.debug("File locked, skipping delete: {}", path);
+                            } else {
+                                log.warn("Failed to delete temp file: {}", path, e);
                             }
-
-                            if (Files.isDirectory(path)) {
-                                subdirectories.add(path);
-                                return;
-                            }
-
-                            if (registry.contains(path.toFile())) {
-                                return;
-                            }
-
-                            if (shouldDeleteFile(path, fileName, containerMode, maxAgeMillis)) {
-                                try {
-                                    Files.deleteIfExists(path);
-                                    onDeleteCallback.accept(path);
-                                } catch (IOException e) {
-                                    if (e.getMessage() != null
-                                            && e.getMessage()
-                                                    .contains("being used by another process")) {
-                                        log.debug("File locked, skipping delete: {}", path);
-                                    } else {
-                                        log.warn("Failed to delete temp file: {}", path, e);
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            log.warn("Error processing path: {}", path, e);
                         }
-                    });
+                    }
+                } catch (Exception e) {
+                    log.warn("Error processing path: {}", path, e);
+                }
+            });
         }
 
         for (Path subdirectory : subdirectories) {
             try {
                 cleanupDirectoryStreaming(
-                        subdirectory,
-                        containerMode,
-                        depth + 1,
-                        maxAgeMillis,
-                        isScheduled,
-                        onDeleteCallback);
+                        subdirectory, containerMode, depth + 1, maxAgeMillis, isScheduled, onDeleteCallback);
             } catch (IOException e) {
                 log.warn("Error processing subdirectory: {}", subdirectory, e);
             }
@@ -390,8 +344,7 @@ public class TempFileCleanupService {
     }
 
     /** Determine if a file should be deleted based on its name, age, and other criteria. */
-    private boolean shouldDeleteFile(
-            Path path, String fileName, boolean containerMode, long maxAgeMillis) {
+    private boolean shouldDeleteFile(Path path, String fileName, boolean containerMode, long maxAgeMillis) {
         // First check if it matches our known temp file patterns
         boolean isOurTempFile = IS_OUR_TEMP_FILE.test(fileName);
         boolean isSystemTempFile = IS_SYSTEM_TEMP_FILE.test(fileName);

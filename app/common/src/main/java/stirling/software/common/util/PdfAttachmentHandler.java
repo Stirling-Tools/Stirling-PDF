@@ -58,9 +58,7 @@ public class PdfAttachmentHandler {
     private static final float ANNOTATION_Y_OFFSET = 10f;
 
     public static byte[] attachFilesToPdf(
-            byte[] pdfBytes,
-            List<EmlParser.EmailAttachment> attachments,
-            CustomPDFDocumentFactory pdfDocumentFactory)
+            byte[] pdfBytes, List<EmlParser.EmailAttachment> attachments, CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
 
         if (attachments == null || attachments.isEmpty()) {
@@ -75,9 +73,7 @@ public class PdfAttachmentHandler {
                 EmlParser.EmailAttachment attachment = attachments.get(i);
                 if (attachment.getData() != null && attachment.getData().length > 0) {
                     String embeddedFilename =
-                            attachment.getFilename() != null
-                                    ? attachment.getFilename()
-                                    : ("attachment_" + i);
+                            attachment.getFilename() != null ? attachment.getFilename() : ("attachment_" + i);
                     attachment.setEmbeddedFilename(embeddedFilename);
                     multipartAttachments.add(createMultipartFile(attachment));
                 }
@@ -85,18 +81,15 @@ public class PdfAttachmentHandler {
 
             if (!multipartAttachments.isEmpty()) {
                 Map<Integer, String> indexToFilenameMap =
-                        addAttachmentsToDocumentWithMapping(
-                                document, multipartAttachments, attachments);
+                        addAttachmentsToDocumentWithMapping(document, multipartAttachments, attachments);
                 setCatalogViewerPreferences(document, PageMode.USE_ATTACHMENTS);
-                addAttachmentAnnotationsToDocumentWithMapping(
-                        document, attachments, indexToFilenameMap);
+                addAttachmentAnnotationsToDocumentWithMapping(document, attachments, indexToFilenameMap);
             }
 
             document.save(outputStream);
             return outputStream.toByteArray();
         } catch (RuntimeException e) {
-            throw new IOException(
-                    "Invalid PDF structure or processing error: " + e.getMessage(), e);
+            throw new IOException("Invalid PDF structure or processing error: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new IOException("Error attaching files to PDF: " + e.getMessage(), e);
         }
@@ -181,8 +174,7 @@ public class PdfAttachmentHandler {
         return uniqueName;
     }
 
-    private static @NotNull PDRectangle calculateAnnotationRectangle(
-            PDPage page, float x, float y) {
+    private static @NotNull PDRectangle calculateAnnotationRectangle(PDPage page, float x, float y) {
         PDRectangle cropBox = page.getCropBox();
 
         // ISO 32000-1:2008 Section 8.3: PDF coordinate system transforms
@@ -212,12 +204,11 @@ public class PdfAttachmentHandler {
         float paddingX = 2.0f;
         float paddingY = 2.0f;
 
-        PDRectangle rect =
-                new PDRectangle(
-                        pdfX + ANNOTATION_X_OFFSET + paddingX,
-                        pdfY - iconHeight + ANNOTATION_Y_OFFSET + paddingY,
-                        ATTACHMENT_ICON_WIDTH,
-                        iconHeight);
+        PDRectangle rect = new PDRectangle(
+                pdfX + ANNOTATION_X_OFFSET + paddingX,
+                pdfY - iconHeight + ANNOTATION_Y_OFFSET + paddingY,
+                ATTACHMENT_ICON_WIDTH,
+                iconHeight);
 
         PDRectangle mediaBox = page.getMediaBox();
         if (rect.getLowerLeftX() < mediaBox.getLowerLeftX()
@@ -225,33 +216,24 @@ public class PdfAttachmentHandler {
                 || rect.getUpperRightX() > mediaBox.getUpperRightX()
                 || rect.getUpperRightY() > mediaBox.getUpperRightY()) {
 
-            float adjustedX =
-                    Math.max(
-                            mediaBox.getLowerLeftX(),
-                            Math.min(
-                                    rect.getLowerLeftX(),
-                                    mediaBox.getUpperRightX() - rect.getWidth()));
-            float adjustedY =
-                    Math.max(
-                            mediaBox.getLowerLeftY(),
-                            Math.min(
-                                    rect.getLowerLeftY(),
-                                    mediaBox.getUpperRightY() - rect.getHeight()));
+            float adjustedX = Math.max(
+                    mediaBox.getLowerLeftX(),
+                    Math.min(rect.getLowerLeftX(), mediaBox.getUpperRightX() - rect.getWidth()));
+            float adjustedY = Math.max(
+                    mediaBox.getLowerLeftY(),
+                    Math.min(rect.getLowerLeftY(), mediaBox.getUpperRightY() - rect.getHeight()));
             rect = new PDRectangle(adjustedX, adjustedY, rect.getWidth(), rect.getHeight());
         }
 
         return rect;
     }
 
-    public static String processInlineImages(
-            String htmlContent, EmlParser.EmailContent emailContent) {
+    public static String processInlineImages(String htmlContent, EmlParser.EmailContent emailContent) {
         if (htmlContent == null || emailContent == null) return htmlContent;
 
         Map<String, EmlParser.EmailAttachment> contentIdMap = new HashMap<>();
         for (EmlParser.EmailAttachment attachment : emailContent.getAttachments()) {
-            if (attachment.isEmbedded()
-                    && attachment.getContentId() != null
-                    && attachment.getData() != null) {
+            if (attachment.isEmbedded() && attachment.getContentId() != null && attachment.getData() != null) {
                 contentIdMap.put(attachment.getContentId(), attachment);
             }
         }
@@ -268,14 +250,12 @@ public class PdfAttachmentHandler {
 
             if (attachment != null && attachment.getData() != null) {
                 String mimeType =
-                        EmlProcessingUtils.detectMimeType(
-                                attachment.getFilename(), attachment.getContentType());
+                        EmlProcessingUtils.detectMimeType(attachment.getFilename(), attachment.getContentType());
 
                 String base64Data = Base64.getEncoder().encodeToString(attachment.getData());
                 String dataUri = "data:" + mimeType + ";base64," + base64Data;
 
-                String replacement =
-                        matcher.group(0).replaceFirst("cid:" + Pattern.quote(contentId), dataUri);
+                String replacement = matcher.group(0).replaceFirst("cid:" + Pattern.quote(contentId), dataUri);
                 matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
             } else {
                 matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(0)));
@@ -294,8 +274,7 @@ public class PdfAttachmentHandler {
     public static String formatEmailDate(ZonedDateTime dateTime) {
         if (dateTime == null) return "";
 
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("EEE, MMM d, yyyy 'at' h:mm a z", Locale.ENGLISH);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, MMM d, yyyy 'at' h:mm a z", Locale.ENGLISH);
         return dateTime.withZoneSameInstant(ZoneId.of("UTC")).format(formatter);
     }
 
@@ -319,23 +298,19 @@ public class PdfAttachmentHandler {
     private static String normalizeFilename(String filename) {
         if (filename == null) return "";
         String normalized = filename.toLowerCase(Locale.ROOT).trim();
-        normalized =
-                RegexPatternUtils.getInstance()
-                        .getWhitespacePattern()
-                        .matcher(normalized)
-                        .replaceAll(" ");
-        normalized =
-                RegexPatternUtils.getInstance()
-                        .getPattern("[^a-zA-Z0-9._-]")
-                        .matcher(normalized)
-                        .replaceAll("");
+        normalized = RegexPatternUtils.getInstance()
+                .getWhitespacePattern()
+                .matcher(normalized)
+                .replaceAll(" ");
+        normalized = RegexPatternUtils.getInstance()
+                .getPattern("[^a-zA-Z0-9._-]")
+                .matcher(normalized)
+                .replaceAll("");
         return normalized;
     }
 
     private static Map<Integer, String> addAttachmentsToDocumentWithMapping(
-            PDDocument document,
-            List<MultipartFile> attachments,
-            List<EmlParser.EmailAttachment> originalAttachments)
+            PDDocument document, List<MultipartFile> attachments, List<EmlParser.EmailAttachment> originalAttachments)
             throws IOException {
 
         PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -370,13 +345,10 @@ public class PdfAttachmentHandler {
                 filename = "attachment_" + i;
             }
 
-            String normalizedFilename =
-                    isAscii(filename)
-                            ? filename
-                            : java.text.Normalizer.normalize(
-                                    filename, java.text.Normalizer.Form.NFC);
-            String uniqueFilename =
-                    ensureUniqueFilename(normalizedFilename, existingNames.keySet());
+            String normalizedFilename = isAscii(filename)
+                    ? filename
+                    : java.text.Normalizer.normalize(filename, java.text.Normalizer.Form.NFC);
+            String uniqueFilename = ensureUniqueFilename(normalizedFilename, existingNames.keySet());
 
             indexToFilenameMap.put(i, uniqueFilename);
 
@@ -409,9 +381,7 @@ public class PdfAttachmentHandler {
     }
 
     private static void addAttachmentAnnotationsToDocumentWithMapping(
-            PDDocument document,
-            List<EmlParser.EmailAttachment> attachments,
-            Map<Integer, String> indexToFilenameMap)
+            PDDocument document, List<EmlParser.EmailAttachment> attachments, Map<Integer, String> indexToFilenameMap)
             throws IOException {
 
         if (document.getNumberOfPages() == 0 || attachments == null || attachments.isEmpty()) {
@@ -430,23 +400,15 @@ public class PdfAttachmentHandler {
 
             String filenameNearMarker = position.getFilename();
 
-            EmlParser.EmailAttachment matchingAttachment =
-                    findAttachmentByFilename(attachments, filenameNearMarker);
+            EmlParser.EmailAttachment matchingAttachment = findAttachmentByFilename(attachments, filenameNearMarker);
 
             if (matchingAttachment != null) {
-                String embeddedFilename =
-                        findEmbeddedFilenameForAttachment(matchingAttachment, indexToFilenameMap);
+                String embeddedFilename = findEmbeddedFilenameForAttachment(matchingAttachment, indexToFilenameMap);
 
                 if (embeddedFilename != null) {
                     PDPage page = document.getPage(position.getPageIndex());
                     addAttachmentAnnotationToPageWithMapping(
-                            document,
-                            page,
-                            matchingAttachment,
-                            embeddedFilename,
-                            position.getX(),
-                            position.getY(),
-                            i);
+                            document, page, matchingAttachment, embeddedFilename, position.getX(), position.getY(), i);
                 } else {
                     // No embedded filename found for attachment
                 }
@@ -514,7 +476,10 @@ public class PdfAttachmentHandler {
                 RegexPatternUtils.getInstance().getAttachmentSectionPattern();
         private static final Pattern FILENAME_PATTERN =
                 RegexPatternUtils.getInstance().getAttachmentFilenamePattern();
-        @Getter private final List<MarkerPosition> positions = new ArrayList<>();
+
+        @Getter
+        private final List<MarkerPosition> positions = new ArrayList<>();
+
         private final StringBuilder currentText = new StringBuilder();
         protected boolean sortByPosition;
         private int currentPageIndex;
@@ -534,13 +499,11 @@ public class PdfAttachmentHandler {
             super.getText(document);
 
             if (sortByPosition) {
-                positions.sort(
-                        (a, b) -> {
-                            int pageCompare = Integer.compare(a.getPageIndex(), b.getPageIndex());
-                            if (pageCompare != 0) return pageCompare;
-                            return Float.compare(
-                                    b.getY(), a.getY()); // Descending Y per PDF coordinate system
-                        });
+                positions.sort((a, b) -> {
+                    int pageCompare = Integer.compare(a.getPageIndex(), b.getPageIndex());
+                    if (pageCompare != 0) return pageCompare;
+                    return Float.compare(b.getY(), a.getY()); // Descending Y per PDF coordinate system
+                });
             }
 
             return ""; // Return empty string as we only need positions
@@ -558,8 +521,7 @@ public class PdfAttachmentHandler {
         }
 
         @Override
-        protected void writeString(String string, List<TextPosition> textPositions)
-                throws IOException {
+        protected void writeString(String string, List<TextPosition> textPositions) throws IOException {
             String lowerString = string.toLowerCase(Locale.ROOT);
 
             if (ATTACHMENT_SECTION_PATTERN.matcher(lowerString).find()) {
@@ -570,9 +532,7 @@ public class PdfAttachmentHandler {
             if (isInAttachmentSection
                     && (lowerString.contains("</body>")
                             || lowerString.contains("</html>")
-                            || (attachmentSectionFound
-                                    && lowerString.trim().isEmpty()
-                                    && string.length() > 50))) {
+                            || (attachmentSectionFound && lowerString.trim().isEmpty() && string.length() > 50))) {
                 isInAttachmentSection = false;
             }
 
@@ -585,13 +545,12 @@ public class PdfAttachmentHandler {
 
                         String filename = extractFilenameAfterMarker(string, i);
 
-                        MarkerPosition position =
-                                new MarkerPosition(
-                                        currentPageIndex,
-                                        textPosition.getXDirAdj(),
-                                        textPosition.getYDirAdj(),
-                                        ATTACHMENT_MARKER,
-                                        filename);
+                        MarkerPosition position = new MarkerPosition(
+                                currentPageIndex,
+                                textPosition.getXDirAdj(),
+                                textPosition.getYDirAdj(),
+                                ATTACHMENT_MARKER,
+                                filename);
                         positions.add(position);
                     }
                 }
@@ -612,10 +571,9 @@ public class PdfAttachmentHandler {
                 return matcher.group(1);
             }
 
-            String[] parts =
-                    RegexPatternUtils.getInstance()
-                            .getWhitespaceParenthesesSplitPattern()
-                            .split(afterMarker);
+            String[] parts = RegexPatternUtils.getInstance()
+                    .getWhitespaceParenthesesSplitPattern()
+                    .split(afterMarker);
             for (String part : parts) {
                 part = part.trim();
                 if (part.length() > 3 && part.contains(".")) {
@@ -672,10 +630,8 @@ public class PdfAttachmentHandler {
             }
         }
 
-        fileAnnotation.setContents(
-                "Attachment " + (attachmentIndex + 1) + ": " + attachment.getFilename());
-        fileAnnotation.setAnnotationName(
-                "EmbeddedFile_" + attachmentIndex + "_" + embeddedFilename);
+        fileAnnotation.setContents("Attachment " + (attachmentIndex + 1) + ": " + attachment.getFilename());
+        fileAnnotation.setAnnotationName("EmbeddedFile_" + attachmentIndex + "_" + embeddedFilename);
 
         page.getAnnotations().add(fileAnnotation);
     }

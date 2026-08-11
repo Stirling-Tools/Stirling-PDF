@@ -33,10 +33,17 @@ import tools.jackson.databind.ObjectMapper;
 @ExtendWith(MockitoExtension.class)
 class WorkflowParticipantValidateCertificateTest {
 
-    @Mock private WorkflowSessionService workflowSessionService;
-    @Mock private WorkflowParticipantRepository participantRepository;
-    @Mock private MetadataEncryptionService metadataEncryptionService;
-    @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
+    @Mock
+    private WorkflowSessionService workflowSessionService;
+
+    @Mock
+    private WorkflowParticipantRepository participantRepository;
+
+    @Mock
+    private MetadataEncryptionService metadataEncryptionService;
+
+    @Mock
+    private CertificateSubmissionValidator certificateSubmissionValidator;
 
     private MockMvc mockMvc;
 
@@ -45,13 +52,12 @@ class WorkflowParticipantValidateCertificateTest {
 
     @BeforeEach
     void setUp() {
-        WorkflowParticipantController controller =
-                new WorkflowParticipantController(
-                        workflowSessionService,
-                        participantRepository,
-                        new ObjectMapper(),
-                        metadataEncryptionService,
-                        certificateSubmissionValidator);
+        WorkflowParticipantController controller = new WorkflowParticipantController(
+                workflowSessionService,
+                participantRepository,
+                new ObjectMapper(),
+                metadataEncryptionService,
+                certificateSubmissionValidator);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -65,29 +71,25 @@ class WorkflowParticipantValidateCertificateTest {
 
     @Test
     void validCertificate_returns200WithValidTrue() throws Exception {
-        when(participantRepository.findByShareToken(VALID_TOKEN))
-                .thenReturn(Optional.of(activeParticipant()));
+        when(participantRepository.findByShareToken(VALID_TOKEN)).thenReturn(Optional.of(activeParticipant()));
 
-        CertificateInfo info =
-                new CertificateInfo(
-                        "Test Signer",
-                        "Test CA",
-                        new Date(),
-                        new Date(System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000),
-                        true);
+        CertificateInfo info = new CertificateInfo(
+                "Test Signer",
+                "Test CA",
+                new Date(),
+                new Date(System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000),
+                true);
         when(certificateSubmissionValidator.validateAndExtractInfo(any(), eq("P12"), eq("secret")))
                 .thenReturn(info);
 
         MockMultipartFile certFile =
-                new MockMultipartFile(
-                        "p12File", "cert.p12", "application/octet-stream", DUMMY_CERT);
+                new MockMultipartFile("p12File", "cert.p12", "application/octet-stream", DUMMY_CERT);
 
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(certFile)
-                                .param("participantToken", VALID_TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "secret"))
+        mockMvc.perform(multipart("/api/v1/workflow/participant/validate-certificate")
+                        .file(certFile)
+                        .param("participantToken", VALID_TOKEN)
+                        .param("certType", "P12")
+                        .param("password", "secret"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true))
                 .andExpect(jsonPath("$.subjectName").value("Test Signer"));
@@ -97,44 +99,35 @@ class WorkflowParticipantValidateCertificateTest {
 
     @Test
     void invalidCertificate_returns200WithValidFalseAndErrorMessage() throws Exception {
-        when(participantRepository.findByShareToken(VALID_TOKEN))
-                .thenReturn(Optional.of(activeParticipant()));
+        when(participantRepository.findByShareToken(VALID_TOKEN)).thenReturn(Optional.of(activeParticipant()));
 
         when(certificateSubmissionValidator.validateAndExtractInfo(any(), any(), any()))
-                .thenThrow(
-                        new ResponseStatusException(
-                                HttpStatus.BAD_REQUEST,
-                                "Invalid certificate password or corrupt keystore file"));
+                .thenThrow(new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Invalid certificate password or corrupt keystore file"));
 
         MockMultipartFile certFile =
-                new MockMultipartFile(
-                        "p12File", "cert.p12", "application/octet-stream", DUMMY_CERT);
+                new MockMultipartFile("p12File", "cert.p12", "application/octet-stream", DUMMY_CERT);
 
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(certFile)
-                                .param("participantToken", VALID_TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "wrong"))
+        mockMvc.perform(multipart("/api/v1/workflow/participant/validate-certificate")
+                        .file(certFile)
+                        .param("participantToken", VALID_TOKEN)
+                        .param("certType", "P12")
+                        .param("password", "wrong"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(false))
-                .andExpect(
-                        jsonPath("$.error")
-                                .value("Invalid certificate password or corrupt keystore file"));
+                .andExpect(jsonPath("$.error").value("Invalid certificate password or corrupt keystore file"));
     }
 
     // ---- No file → 400 bad request ----
 
     @Test
     void missingCertFile_returns400() throws Exception {
-        when(participantRepository.findByShareToken(VALID_TOKEN))
-                .thenReturn(Optional.of(activeParticipant()));
+        when(participantRepository.findByShareToken(VALID_TOKEN)).thenReturn(Optional.of(activeParticipant()));
 
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .param("participantToken", VALID_TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "pass"))
+        mockMvc.perform(multipart("/api/v1/workflow/participant/validate-certificate")
+                        .param("participantToken", VALID_TOKEN)
+                        .param("certType", "P12")
+                        .param("password", "pass"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -145,15 +138,13 @@ class WorkflowParticipantValidateCertificateTest {
         when(participantRepository.findByShareToken("bad-token")).thenReturn(Optional.empty());
 
         MockMultipartFile certFile =
-                new MockMultipartFile(
-                        "p12File", "cert.p12", "application/octet-stream", DUMMY_CERT);
+                new MockMultipartFile("p12File", "cert.p12", "application/octet-stream", DUMMY_CERT);
 
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(certFile)
-                                .param("participantToken", "bad-token")
-                                .param("certType", "P12")
-                                .param("password", "pass"))
+        mockMvc.perform(multipart("/api/v1/workflow/participant/validate-certificate")
+                        .file(certFile)
+                        .param("participantToken", "bad-token")
+                        .param("certType", "P12")
+                        .param("password", "pass"))
                 .andExpect(status().isForbidden());
     }
 }

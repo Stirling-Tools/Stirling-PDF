@@ -38,9 +38,7 @@ import stirling.software.proprietary.service.SignatureService;
 @RestController
 @RequestMapping("/api/v1/proprietary/signatures")
 @RequiredArgsConstructor
-@Tag(
-        name = "Saved Signatures",
-        description = "Manage saved signature templates for authenticated users")
+@Tag(name = "Saved Signatures", description = "Manage saved signature templates for authenticated users")
 public class SignatureController {
 
     private final SignatureService signatureService;
@@ -53,15 +51,12 @@ public class SignatureController {
      */
     @PostMapping
     @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
-    public ResponseEntity<SavedSignatureResponse> saveSignature(
-            @RequestBody SavedSignatureRequest request) {
+    public ResponseEntity<SavedSignatureResponse> saveSignature(@RequestBody SavedSignatureRequest request) {
         try {
             String username = userService.getCurrentUsername();
 
             if ("shared".equals(request.getScope()) && !userService.isCurrentUserAdmin()) {
-                log.warn(
-                        "User {} attempted to create shared signature without admin role",
-                        username);
+                log.warn("User {} attempted to create shared signature without admin role", username);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -119,10 +114,7 @@ public class SignatureController {
             }
 
             if (signatureService.isSharedSignature(signatureId) && !isAdmin) {
-                log.warn(
-                        "User {} attempted to update shared signature {} without admin role",
-                        username,
-                        signatureId);
+                log.warn("User {} attempted to update shared signature {} without admin role", username, signatureId);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -147,9 +139,7 @@ public class SignatureController {
             boolean isAdmin = userService.isCurrentUserAdmin();
 
             // Validate filename to prevent path traversal
-            if (signatureId.contains("..")
-                    || signatureId.contains("/")
-                    || signatureId.contains("\\")) {
+            if (signatureId.contains("..") || signatureId.contains("/") || signatureId.contains("\\")) {
                 log.warn("Invalid signature ID: {}", signatureId);
                 return ResponseEntity.badRequest().build();
             }
@@ -187,13 +177,9 @@ public class SignatureController {
 
         if (Files.exists(sharedFolder)) {
             try (Stream<Path> stream = Files.list(sharedFolder)) {
-                List<Path> matchingFiles =
-                        stream.filter(
-                                        path ->
-                                                path.getFileName()
-                                                        .toString()
-                                                        .startsWith(signatureId + "."))
-                                .toList();
+                List<Path> matchingFiles = stream.filter(
+                                path -> path.getFileName().toString().startsWith(signatureId + "."))
+                        .toList();
                 for (Path file : matchingFiles) {
                     Files.delete(file);
                     deleted = true;

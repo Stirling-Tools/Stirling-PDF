@@ -58,23 +58,17 @@ public class PdfVectorExportController {
     @ToolIO(accepts = ToolFormat.POSTSCRIPT, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert PostScript formats to PDF",
-            description =
-                    "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript.")
-    public ResponseEntity<Resource> convertGhostscriptInputsToPdf(
-            @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
+            description = "Converts PostScript vector inputs (PS, EPS, EPSF) to PDF using Ghostscript.")
+    public ResponseEntity<Resource> convertGhostscriptInputsToPdf(@Valid @ModelAttribute PdfVectorExportRequest request)
+            throws Exception {
 
         String originalName =
-                request.getFileInput() != null
-                        ? request.getFileInput().getOriginalFilename()
-                        : null;
+                request.getFileInput() != null ? request.getFileInput().getOriginalFilename() : null;
         String extension =
-                originalName != null
-                        ? FilenameUtils.getExtension(originalName).toLowerCase(Locale.ROOT)
-                        : "";
+                originalName != null ? FilenameUtils.getExtension(originalName).toLowerCase(Locale.ROOT) : "";
 
         TempFile outputTemp = tempFileManager.createManagedTempFile(".pdf");
-        try (TempFile inputTemp =
-                new TempFile(tempFileManager, extension.isEmpty() ? "" : "." + extension)) {
+        try (TempFile inputTemp = new TempFile(tempFileManager, extension.isEmpty() ? "" : "." + extension)) {
 
             request.getFileInput().transferTo(inputTemp.getFile());
 
@@ -82,15 +76,10 @@ public class PdfVectorExportController {
                 boolean prepress = request.getPrepress() != null && request.getPrepress();
                 runGhostscriptToPdf(inputTemp.getPath(), outputTemp.getPath(), prepress);
             } else if ("pdf".equals(extension)) {
-                Files.copy(
-                        inputTemp.getPath(),
-                        outputTemp.getPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(inputTemp.getPath(), outputTemp.getPath(), StandardCopyOption.REPLACE_EXISTING);
             } else {
                 throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat",
-                        "Unsupported Ghostscript input format {0}",
-                        extension);
+                        "error.invalidFormat", "Unsupported Ghostscript input format {0}", extension);
             }
         } catch (Exception e) {
             outputTemp.close();
@@ -125,13 +114,11 @@ public class PdfVectorExportController {
     @Operation(
             summary = "Convert PDF to vector format",
             description = "Converts PDF to Ghostscript vector formats (EPS, PS, PCL, or XPS).")
-    public ResponseEntity<Resource> convertPdfToVector(
-            @Valid @ModelAttribute PdfVectorExportRequest request) throws Exception {
+    public ResponseEntity<Resource> convertPdfToVector(@Valid @ModelAttribute PdfVectorExportRequest request)
+            throws Exception {
 
         String originalName =
-                request.getFileInput() != null
-                        ? request.getFileInput().getOriginalFilename()
-                        : null;
+                request.getFileInput() != null ? request.getFileInput().getOriginalFilename() : null;
 
         String outputFormat = request.getOutputFormat();
         if (outputFormat == null || outputFormat.isEmpty()) {
@@ -150,8 +137,7 @@ public class PdfVectorExportController {
             throw e;
         }
 
-        String outputName =
-                GeneralUtils.generateFilename(originalName, "_converted." + outputFormat);
+        String outputName = GeneralUtils.generateFilename(originalName, "_converted." + outputFormat);
 
         MediaType mediaType;
         switch (outputFormat.toLowerCase(Locale.ROOT)) {
@@ -189,10 +175,8 @@ public class PdfVectorExportController {
                     case "pcl" -> "pxlcolor"; // PCL XL color
                     case "xps" -> "xpswrite";
                     default ->
-                            throw ExceptionUtils.createIllegalArgumentException(
-                                    "error.invalidFormat",
-                                    "Unsupported output format: {0}",
-                                    outputFormat);
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.invalidFormat", "Unsupported output format: {0}", outputFormat);
                 };
 
         command.add("-sDEVICE=" + device);
@@ -204,9 +188,8 @@ public class PdfVectorExportController {
 
         log.debug("Executing Ghostscript command: {}", String.join(" ", command));
 
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                        .runCommandWithOutputHandling(command);
+        ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                .runCommandWithOutputHandling(command);
 
         ExceptionUtils.GhostscriptException criticalError =
                 ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());
@@ -253,9 +236,8 @@ public class PdfVectorExportController {
 
         log.debug("Executing Ghostscript PostScript-to-PDF command: {}", String.join(" ", command));
 
-        ProcessExecutorResult result =
-                ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
-                        .runCommandWithOutputHandling(command);
+        ProcessExecutorResult result = ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                .runCommandWithOutputHandling(command);
 
         ExceptionUtils.GhostscriptException criticalError =
                 ExceptionUtils.detectGhostscriptCriticalError(result.getMessages());

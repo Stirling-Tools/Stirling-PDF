@@ -16,10 +16,14 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToHtmlTest {
 
-    @Mock private TempFileManager tempFileManager;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private TempFileManager tempFileManager;
 
-    @InjectMocks private ConvertPDFToHtml controller;
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @InjectMocks
+    private ConvertPDFToHtml controller;
 
     @Test
     void controllerIsConstructed() {
@@ -30,8 +34,7 @@ class ConvertPDFToHtmlTest {
     void processPdfToHTML_requestContainsFile() {
         PDFFile file = new PDFFile();
         MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "doc.pdf", "application/pdf", "content".getBytes());
+                new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "content".getBytes());
         file.setFileInput(pdfFile);
 
         assertNotNull(file.getFileInput());

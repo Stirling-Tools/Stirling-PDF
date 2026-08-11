@@ -54,11 +54,17 @@ import stirling.software.common.util.TempFileManager;
 @DisplayName("ConvertPdfJsonController additional branch coverage")
 class ConvertPdfJsonControllerMoreTest {
 
-    @Mock private PdfJsonConversionService pdfJsonConversionService;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private JobOwnershipService jobOwnershipService;
+    @Mock
+    private PdfJsonConversionService pdfJsonConversionService;
 
-    @InjectMocks private ConvertPdfJsonController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private JobOwnershipService jobOwnershipService;
+
+    @InjectMocks
+    private ConvertPdfJsonController controller;
 
     private final java.util.List<TempFile> createdTempFiles = new java.util.ArrayList<>();
 
@@ -68,18 +74,15 @@ class ConvertPdfJsonControllerMoreTest {
         // auto-injected; wire the JobOwnershipService mock in by reflection.
         setJobOwnershipService(jobOwnershipService);
 
-        when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("more-test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            createdTempFiles.add(tf);
-                            return tf;
-                        });
+        when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("more-test", inv.<String>getArgument(0))
+                    .toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            createdTempFiles.add(tf);
+            return tf;
+        });
     }
 
     private void setJobOwnershipService(JobOwnershipService service) throws Exception {
@@ -122,8 +125,7 @@ class ConvertPdfJsonControllerMoreTest {
         @Test
         @DisplayName("Null original filename falls back to document.json")
         void nullOriginalFilename() throws Exception {
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile("fileInput", null, "application/pdf", "x".getBytes());
+            MockMultipartFile pdfFile = new MockMultipartFile("fileInput", null, "application/pdf", "x".getBytes());
             PDFFile request = new PDFFile();
             request.setFileInput(pdfFile);
 
@@ -141,8 +143,7 @@ class ConvertPdfJsonControllerMoreTest {
         @Test
         @DisplayName("Blank original filename falls back to document.json")
         void blankOriginalFilename() throws Exception {
-            MockMultipartFile pdfFile =
-                    new MockMultipartFile("fileInput", "   ", "application/pdf", "x".getBytes());
+            MockMultipartFile pdfFile = new MockMultipartFile("fileInput", "   ", "application/pdf", "x".getBytes());
             PDFFile request = new PDFFile();
             request.setFileInput(pdfFile);
 
@@ -152,16 +153,14 @@ class ConvertPdfJsonControllerMoreTest {
 
             ResponseEntity<Resource> response = controller.convertPdfToJson(request, false);
 
-            assertThat(response.getHeaders().getFirst("Content-Disposition"))
-                    .contains("document.json");
+            assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("document.json");
         }
 
         @Test
         @DisplayName("Named file strips extension and appends .json")
         void namedFileStripsExtension() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", "report.final.pdf", "application/pdf", "x".getBytes());
+                    new MockMultipartFile("fileInput", "report.final.pdf", "application/pdf", "x".getBytes());
             PDFFile request = new PDFFile();
             request.setFileInput(pdfFile);
 
@@ -171,16 +170,14 @@ class ConvertPdfJsonControllerMoreTest {
 
             ResponseEntity<Resource> response = controller.convertPdfToJson(request, false);
 
-            assertThat(response.getHeaders().getFirst("Content-Disposition"))
-                    .contains("report.final.json");
+            assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("report.final.json");
         }
 
         @Test
         @DisplayName("Service exception closes temp file and propagates")
         void serviceExceptionClosesTempFile() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", "doc.pdf", "application/pdf", "x".getBytes());
+                    new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "x".getBytes());
             PDFFile request = new PDFFile();
             request.setFileInput(pdfFile);
 
@@ -188,8 +185,7 @@ class ConvertPdfJsonControllerMoreTest {
                     .when(pdfJsonConversionService)
                     .convertPdfToJson(eq(pdfFile), eq(false), any(OutputStream.class));
 
-            assertThrows(
-                    IllegalStateException.class, () -> controller.convertPdfToJson(request, false));
+            assertThrows(IllegalStateException.class, () -> controller.convertPdfToJson(request, false));
             verify(createdTempFiles.get(0)).close();
         }
     }
@@ -201,8 +197,7 @@ class ConvertPdfJsonControllerMoreTest {
         @Test
         @DisplayName("Null original filename falls back to document.pdf")
         void nullOriginalFilename() throws Exception {
-            MockMultipartFile jsonFile =
-                    new MockMultipartFile("fileInput", null, "application/json", "{}".getBytes());
+            MockMultipartFile jsonFile = new MockMultipartFile("fileInput", null, "application/json", "{}".getBytes());
             GeneralFile request = new GeneralFile();
             request.setFileInput(jsonFile);
 
@@ -212,8 +207,7 @@ class ConvertPdfJsonControllerMoreTest {
 
             ResponseEntity<Resource> response = controller.convertJsonToPdf(request);
 
-            assertThat(response.getHeaders().getFirst("Content-Disposition"))
-                    .contains("document.pdf");
+            assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("document.pdf");
         }
 
         @Test
@@ -222,8 +216,7 @@ class ConvertPdfJsonControllerMoreTest {
             // toSimpleFileName keeps base name; extension pattern strips the trailing .pdf,
             // so a base name that itself ends in .pdf exercises the endsWith branch.
             MockMultipartFile jsonFile =
-                    new MockMultipartFile(
-                            "fileInput", "weird.pdf.json", "application/json", "{}".getBytes());
+                    new MockMultipartFile("fileInput", "weird.pdf.json", "application/json", "{}".getBytes());
             GeneralFile request = new GeneralFile();
             request.setFileInput(jsonFile);
 
@@ -240,8 +233,7 @@ class ConvertPdfJsonControllerMoreTest {
         @DisplayName("Service exception closes temp file and propagates")
         void serviceExceptionClosesTempFile() throws Exception {
             MockMultipartFile jsonFile =
-                    new MockMultipartFile(
-                            "fileInput", "doc.json", "application/json", "{}".getBytes());
+                    new MockMultipartFile("fileInput", "doc.json", "application/json", "{}".getBytes());
             GeneralFile request = new GeneralFile();
             request.setFileInput(jsonFile);
 
@@ -263,15 +255,13 @@ class ConvertPdfJsonControllerMoreTest {
         void usesScopedKey() throws Exception {
             when(jobOwnershipService.createScopedJobKey(anyString())).thenReturn("user:scoped-id");
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", "doc.pdf", "application/pdf", "x".getBytes());
+                    new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "x".getBytes());
             PDFFile request = new PDFFile();
             request.setFileInput(pdfFile);
 
             doAnswer(writeBytes(2, "{}".getBytes()))
                     .when(pdfJsonConversionService)
-                    .extractDocumentMetadata(
-                            eq(pdfFile), eq("user:scoped-id"), any(OutputStream.class));
+                    .extractDocumentMetadata(eq(pdfFile), eq("user:scoped-id"), any(OutputStream.class));
 
             ResponseEntity<Resource> response = controller.extractPdfMetadata(request);
 
@@ -284,8 +274,7 @@ class ConvertPdfJsonControllerMoreTest {
         void usesRawKeyWhenNoService() throws Exception {
             clearJobOwnershipService();
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", "doc.pdf", "application/pdf", "x".getBytes());
+                    new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "x".getBytes());
             PDFFile request = new PDFFile();
             request.setFileInput(pdfFile);
 
@@ -303,8 +292,7 @@ class ConvertPdfJsonControllerMoreTest {
         void serviceExceptionClosesTempFile() throws Exception {
             when(jobOwnershipService.createScopedJobKey(anyString())).thenReturn("k");
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput", "doc.pdf", "application/pdf", "x".getBytes());
+                    new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "x".getBytes());
             PDFFile request = new PDFFile();
             request.setFileInput(pdfFile);
 
@@ -324,8 +312,7 @@ class ConvertPdfJsonControllerMoreTest {
         @Test
         @DisplayName("Null document throws")
         void nullDocumentThrows() {
-            assertThrows(
-                    Exception.class, () -> controller.exportPartialPdf("job", null, "out.pdf"));
+            assertThrows(Exception.class, () -> controller.exportPartialPdf("job", null, "out.pdf"));
         }
 
         @Test
@@ -339,11 +326,9 @@ class ConvertPdfJsonControllerMoreTest {
                     .when(pdfJsonConversionService)
                     .exportUpdatedPages(eq("job"), eq(doc), any(OutputStream.class));
 
-            ResponseEntity<Resource> response =
-                    controller.exportPartialPdf("job", doc, "custom.pdf");
+            ResponseEntity<Resource> response = controller.exportPartialPdf("job", doc, "custom.pdf");
 
-            assertThat(response.getHeaders().getFirst("Content-Disposition"))
-                    .contains("custom.pdf");
+            assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("custom.pdf");
         }
 
         @Test
@@ -359,8 +344,7 @@ class ConvertPdfJsonControllerMoreTest {
 
             ResponseEntity<Resource> response = controller.exportPartialPdf("job", doc, "   ");
 
-            assertThat(response.getHeaders().getFirst("Content-Disposition"))
-                    .contains("MyTitle.pdf");
+            assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("MyTitle.pdf");
         }
 
         @Test
@@ -376,8 +360,7 @@ class ConvertPdfJsonControllerMoreTest {
 
             ResponseEntity<Resource> response = controller.exportPartialPdf("job", doc, null);
 
-            assertThat(response.getHeaders().getFirst("Content-Disposition"))
-                    .contains("document.pdf");
+            assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("document.pdf");
         }
 
         @Test
@@ -393,8 +376,7 @@ class ConvertPdfJsonControllerMoreTest {
 
             ResponseEntity<Resource> response = controller.exportPartialPdf("job", doc, null);
 
-            assertThat(response.getHeaders().getFirst("Content-Disposition"))
-                    .contains("document.pdf");
+            assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("document.pdf");
         }
 
         @Test
@@ -405,12 +387,9 @@ class ConvertPdfJsonControllerMoreTest {
 
             doThrow(new IllegalStateException("boom"))
                     .when(pdfJsonConversionService)
-                    .exportUpdatedPages(
-                            anyString(), any(PdfJsonDocument.class), any(OutputStream.class));
+                    .exportUpdatedPages(anyString(), any(PdfJsonDocument.class), any(OutputStream.class));
 
-            assertThrows(
-                    IllegalStateException.class,
-                    () -> controller.exportPartialPdf("job", doc, "out.pdf"));
+            assertThrows(IllegalStateException.class, () -> controller.exportPartialPdf("job", doc, "out.pdf"));
             verify(createdTempFiles.get(0)).close();
         }
     }
@@ -453,8 +432,7 @@ class ConvertPdfJsonControllerMoreTest {
 
             ResponseEntity<Resource> response = controller.extractSinglePage("job", 7);
 
-            assertThat(response.getHeaders().getFirst("Content-Disposition"))
-                    .contains("page_7.json");
+            assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("page_7.json");
         }
     }
 
@@ -489,9 +467,7 @@ class ConvertPdfJsonControllerMoreTest {
         @Test
         @DisplayName("validateJobAccess propagates SecurityException from service")
         void validateThrows() {
-            doThrow(new SecurityException("denied"))
-                    .when(jobOwnershipService)
-                    .validateJobAccess("bad");
+            doThrow(new SecurityException("denied")).when(jobOwnershipService).validateJobAccess("bad");
 
             assertThrows(SecurityException.class, () -> controller.clearCache("bad"));
             verify(pdfJsonConversionService, never()).clearCachedDocument(anyString());
@@ -512,8 +488,7 @@ class ConvertPdfJsonControllerMoreTest {
             System.setProperty("java.io.tmpdir", dumpDir.toString());
             try {
                 MockMultipartFile pdfFile =
-                        new MockMultipartFile(
-                                "fileInput", "doc.pdf", "application/pdf", "x".getBytes());
+                        new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "x".getBytes());
                 PDFFile request = new PDFFile();
                 request.setFileInput(pdfFile);
 
@@ -542,15 +517,13 @@ class ConvertPdfJsonControllerMoreTest {
             System.setProperty("spdf.pdfjson.repeatScan", "true");
             try {
                 MockMultipartFile pdfFile =
-                        new MockMultipartFile(
-                                "fileInput", "doc.pdf", "application/pdf", "x".getBytes());
+                        new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "x".getBytes());
                 PDFFile request = new PDFFile();
                 request.setFileInput(pdfFile);
 
                 // Two repeated >=12 char strings plus a long base64-like one to exercise filters.
-                String json =
-                        "{\"a\":\"repeated-string-value\",\"b\":\"repeated-string-value\","
-                                + "\"c\":\"QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIzNDU2Nzg5\"}";
+                String json = "{\"a\":\"repeated-string-value\",\"b\":\"repeated-string-value\","
+                        + "\"c\":\"QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVowMTIzNDU2Nzg5\"}";
                 doAnswer(writeBytes(2, json.getBytes()))
                         .when(pdfJsonConversionService)
                         .convertPdfToJson(eq(pdfFile), eq(false), any(OutputStream.class));
@@ -570,8 +543,7 @@ class ConvertPdfJsonControllerMoreTest {
             System.setProperty("spdf.pdfjson.repeatScan", "true");
             try {
                 MockMultipartFile pdfFile =
-                        new MockMultipartFile(
-                                "fileInput", "doc.pdf", "application/pdf", "x".getBytes());
+                        new MockMultipartFile("fileInput", "doc.pdf", "application/pdf", "x".getBytes());
                 PDFFile request = new PDFFile();
                 request.setFileInput(pdfFile);
 

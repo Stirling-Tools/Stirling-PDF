@@ -25,17 +25,13 @@ class NetworkHostGuardTest {
 
     @Test
     void rejectsLoopbackByDefault() {
-        assertThrows(
-                IllegalArgumentException.class, () -> guard(false).requirePermitted("127.0.0.1"));
+        assertThrows(IllegalArgumentException.class, () -> guard(false).requirePermitted("127.0.0.1"));
     }
 
     @Test
     void rejectsPrivateRangesByDefault() {
-        assertThrows(
-                IllegalArgumentException.class, () -> guard(false).requirePermitted("10.0.0.1"));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> guard(false).requirePermitted("192.168.1.10"));
+        assertThrows(IllegalArgumentException.class, () -> guard(false).requirePermitted("10.0.0.1"));
+        assertThrows(IllegalArgumentException.class, () -> guard(false).requirePermitted("192.168.1.10"));
     }
 
     @Test

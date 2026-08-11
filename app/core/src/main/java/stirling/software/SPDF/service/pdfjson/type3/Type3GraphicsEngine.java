@@ -24,12 +24,24 @@ class Type3GraphicsEngine extends PDFGraphicsStreamEngine {
     private final GeneralPath linePath = new GeneralPath();
     private final Point2D.Float currentPoint = new Point2D.Float();
     private boolean hasCurrentPoint;
-    @Getter private boolean sawStroke;
-    @Getter private boolean sawFill;
-    @Getter private boolean sawImage;
-    @Getter private boolean sawText;
-    @Getter private boolean sawShading;
-    @Getter private String warnings;
+
+    @Getter
+    private boolean sawStroke;
+
+    @Getter
+    private boolean sawFill;
+
+    @Getter
+    private boolean sawImage;
+
+    @Getter
+    private boolean sawText;
+
+    @Getter
+    private boolean sawShading;
+
+    @Getter
+    private String warnings;
 
     protected Type3GraphicsEngine(PDPage page) {
         super(page);
@@ -81,8 +93,7 @@ class Type3GraphicsEngine extends PDFGraphicsStreamEngine {
 
     @Override
     public void fillPath(int windingRule) throws IOException {
-        linePath.setWindingRule(
-                windingRule == 0 ? GeneralPath.WIND_EVEN_ODD : GeneralPath.WIND_NON_ZERO);
+        linePath.setWindingRule(windingRule == 0 ? GeneralPath.WIND_EVEN_ODD : GeneralPath.WIND_NON_ZERO);
         accumulatedPath.append(linePath, false);
         linePath.reset();
         sawFill = true;
@@ -114,8 +125,7 @@ class Type3GraphicsEngine extends PDFGraphicsStreamEngine {
     }
 
     @Override
-    public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
-            throws IOException {
+    public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) throws IOException {
         linePath.curveTo(x1, y1, x2, y2, x3, y3);
         currentPoint.setLocation(x3, y3);
         hasCurrentPoint = true;
@@ -144,20 +154,17 @@ class Type3GraphicsEngine extends PDFGraphicsStreamEngine {
     }
 
     @Override
-    protected void showFontGlyph(
-            Matrix textRenderingMatrix, PDFont font, int code, Vector displacement)
+    protected void showFontGlyph(Matrix textRenderingMatrix, PDFont font, int code, Vector displacement)
             throws IOException {
         sawText = true;
         super.showFontGlyph(textRenderingMatrix, font, code, displacement);
     }
 
     @Override
-    protected void processOperator(
-            Operator operator, java.util.List<org.apache.pdfbox.cos.COSBase> operands)
+    protected void processOperator(Operator operator, java.util.List<org.apache.pdfbox.cos.COSBase> operands)
             throws IOException {
         if ("cm".equals(operator.getName())) {
-            warnings =
-                    warnings == null ? "Encountered CTM concatenation" : warnings + "; CTM concat";
+            warnings = warnings == null ? "Encountered CTM concatenation" : warnings + "; CTM concat";
         }
         super.processOperator(operator, operands);
     }

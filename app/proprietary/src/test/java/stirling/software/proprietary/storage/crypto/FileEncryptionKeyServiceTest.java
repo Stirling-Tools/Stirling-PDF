@@ -19,20 +19,14 @@ import stirling.software.proprietary.storage.model.FileEncryptionKey;
 
 class FileEncryptionKeyServiceTest {
 
-    private static final String MASTER_A =
-            Base64.getEncoder()
-                    .encodeToString(
-                            new byte[] {
-                                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-                                20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
-                            });
-    private static final String MASTER_B =
-            Base64.getEncoder()
-                    .encodeToString(
-                            new byte[] {
-                                32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16,
-                                15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
-                            });
+    private static final String MASTER_A = Base64.getEncoder().encodeToString(new byte[] {
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+        31, 32
+    });
+    private static final String MASTER_B = Base64.getEncoder().encodeToString(new byte[] {
+        32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3,
+        2, 1
+    });
 
     private InMemoryKeyRepo repo;
     private FileEncryptionKeyService service;
@@ -40,9 +34,7 @@ class FileEncryptionKeyServiceTest {
     @BeforeEach
     void setUp() {
         repo = new InMemoryKeyRepo();
-        service =
-                new FileEncryptionKeyService(
-                        repo.mock, new FileEncryptionMasterKey(MASTER_A, false));
+        service = new FileEncryptionKeyService(repo.mock, new FileEncryptionMasterKey(MASTER_A, false));
     }
 
     private static User teamUser(long teamId) {
@@ -82,8 +74,7 @@ class FileEncryptionKeyServiceTest {
         FileEncryptionKeyService.ScopeKek created = service.activeKekForOwner(teamUser(1));
         // A fresh service (empty cache) must unwrap the same key material from the DB row.
         FileEncryptionKeyService fresh =
-                new FileEncryptionKeyService(
-                        repo.mock, new FileEncryptionMasterKey(MASTER_A, false));
+                new FileEncryptionKeyService(repo.mock, new FileEncryptionMasterKey(MASTER_A, false));
         assertThat(fresh.kekForDecrypt(created.keyId())).isEqualTo(created.key());
     }
 
@@ -92,8 +83,7 @@ class FileEncryptionKeyServiceTest {
         FileEncryptionKeyService.ScopeKek created = service.activeKekForOwner(teamUser(1));
         repo.rows.get(created.keyId()).setStatus(FileEncryptionKey.Status.DISABLED);
         FileEncryptionKeyService fresh =
-                new FileEncryptionKeyService(
-                        repo.mock, new FileEncryptionMasterKey(MASTER_A, false));
+                new FileEncryptionKeyService(repo.mock, new FileEncryptionMasterKey(MASTER_A, false));
         assertThatThrownBy(() -> fresh.kekForDecrypt(created.keyId()))
                 .isInstanceOf(StorageKeyRevokedException.class)
                 .hasMessageContaining("disabled");
@@ -110,8 +100,7 @@ class FileEncryptionKeyServiceTest {
     void verifyMasterKey_wrongKey_refusesStartup() throws Exception {
         service.activeKekForOwner(teamUser(1));
         FileEncryptionKeyService wrongKey =
-                new FileEncryptionKeyService(
-                        repo.mock, new FileEncryptionMasterKey(MASTER_B, false));
+                new FileEncryptionKeyService(repo.mock, new FileEncryptionMasterKey(MASTER_B, false));
         assertThatThrownBy(wrongKey::verifyMasterKey)
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("cannot unwrap");
@@ -130,15 +119,10 @@ class FileEncryptionKeyServiceTest {
         repo.rows.get(created.keyId()).setStatus(FileEncryptionKey.Status.RETIRED);
 
         // A retired-only registry must still prove the key (RETIRED rows decrypt old blobs)...
-        new FileEncryptionKeyService(repo.mock, new FileEncryptionMasterKey(MASTER_A, false))
-                .verifyMasterKey();
+        new FileEncryptionKeyService(repo.mock, new FileEncryptionMasterKey(MASTER_A, false)).verifyMasterKey();
         // ...and still refuse a mismatched master key.
-        assertThatThrownBy(
-                        () ->
-                                new FileEncryptionKeyService(
-                                                repo.mock,
-                                                new FileEncryptionMasterKey(MASTER_B, false))
-                                        .verifyMasterKey())
+        assertThatThrownBy(() -> new FileEncryptionKeyService(repo.mock, new FileEncryptionMasterKey(MASTER_B, false))
+                        .verifyMasterKey())
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("cannot unwrap");
     }
@@ -155,28 +139,19 @@ class FileEncryptionKeyServiceTest {
         winner.setMasterKeyVersion(1);
         FileEncryptionMasterKey master = new FileEncryptionMasterKey(MASTER_A, false);
         byte[] winnerKek = new byte[32];
-        winner.setWrappedKey(
-                Base64.getEncoder()
-                        .encodeToString(
-                                master.wrap(
-                                        winnerKek,
-                                        winner.getKeyId()
-                                                .toString()
-                                                .getBytes(
-                                                        java.nio.charset.StandardCharsets
-                                                                .US_ASCII))));
+        winner.setWrappedKey(Base64.getEncoder()
+                .encodeToString(master.wrap(
+                        winnerKek, winner.getKeyId().toString().getBytes(java.nio.charset.StandardCharsets.US_ASCII))));
 
-        doAnswer(
-                        inv -> {
-                            repo.rows.put(winner.getKeyId(), winner);
-                            throw new DataIntegrityViolationException("duplicate key");
-                        })
-                .doAnswer(
-                        inv -> {
-                            FileEncryptionKey row = inv.getArgument(0);
-                            repo.rows.put(row.getKeyId(), row);
-                            return row;
-                        })
+        doAnswer(inv -> {
+                    repo.rows.put(winner.getKeyId(), winner);
+                    throw new DataIntegrityViolationException("duplicate key");
+                })
+                .doAnswer(inv -> {
+                    FileEncryptionKey row = inv.getArgument(0);
+                    repo.rows.put(row.getKeyId(), row);
+                    return row;
+                })
                 .when(repo.mock)
                 .saveAndFlush(any(FileEncryptionKey.class));
 

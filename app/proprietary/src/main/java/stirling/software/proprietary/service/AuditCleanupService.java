@@ -49,10 +49,7 @@ public class AuditCleanupService {
         try {
             Instant cutoffDate = Instant.now().minus(retentionDays, ChronoUnit.DAYS);
             int totalDeleted = batchDeleteEvents(cutoffDate);
-            log.info(
-                    "Successfully cleaned up {} audit events older than {}",
-                    totalDeleted,
-                    cutoffDate);
+            log.info("Successfully cleaned up {} audit events older than {}", totalDeleted, cutoffDate);
         } catch (Exception e) {
             log.error("Error cleaning up old audit events", e);
         }

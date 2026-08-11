@@ -42,15 +42,32 @@ import stirling.software.common.service.UserServiceInterface;
 @DisplayName("ConfigController extra coverage")
 class ConfigControllerMoreTest {
 
-    @Mock private ApplicationContext applicationContext;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private ServerCertificateServiceInterface serverCertificateService;
-    @Mock private UserServiceInterface userService;
-    @Mock private ShowAdminInterface showAdmin;
-    @Mock private LicenseServiceInterface licenseService;
-    @Mock private ExternalAppDepConfig externalAppDepConfig;
-    @Mock private AppConfig appConfig;
-    @Mock private Environment environment;
+    @Mock
+    private ApplicationContext applicationContext;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private ServerCertificateServiceInterface serverCertificateService;
+
+    @Mock
+    private UserServiceInterface userService;
+
+    @Mock
+    private ShowAdminInterface showAdmin;
+
+    @Mock
+    private LicenseServiceInterface licenseService;
+
+    @Mock
+    private ExternalAppDepConfig externalAppDepConfig;
+
+    @Mock
+    private AppConfig appConfig;
+
+    @Mock
+    private Environment environment;
 
     private ApplicationProperties applicationProperties;
 
@@ -136,7 +153,8 @@ class ConfigControllerMoreTest {
         void licenseFallsBackToContextBeans() {
             licenseService = null;
             when(applicationContext.containsBean("runningProOrHigher")).thenReturn(true);
-            when(applicationContext.getBean("runningProOrHigher", Boolean.class)).thenReturn(true);
+            when(applicationContext.getBean("runningProOrHigher", Boolean.class))
+                    .thenReturn(true);
             when(applicationContext.containsBean("runningEE")).thenReturn(true);
             when(applicationContext.getBean("runningEE", Boolean.class)).thenReturn(true);
             when(applicationContext.containsBean("license")).thenReturn(true);
@@ -210,8 +228,7 @@ class ConfigControllerMoreTest {
         @Test
         @DisplayName("returns basic config with error key when AppConfig bean lookup fails")
         void returnsErrorConfigOnException() {
-            when(applicationContext.getBean(AppConfig.class))
-                    .thenThrow(new RuntimeException("no bean"));
+            when(applicationContext.getBean(AppConfig.class)).thenThrow(new RuntimeException("no bean"));
 
             HttpServletRequest request = mock(HttpServletRequest.class);
             ResponseEntity<Map<String, Object>> resp = newController().getAppConfig(request);

@@ -29,9 +29,8 @@ public class FolderAccessSettingsController {
     @GetMapping("/policies/implied-folder-roots")
     @Operation(
             summary = "Implied folder roots",
-            description =
-                    "Stirling-managed directories always permitted for folder automations"
-                            + " regardless of policies.allowedFolderRoots. Read-only.")
+            description = "Stirling-managed directories always permitted for folder automations"
+                    + " regardless of policies.allowedFolderRoots. Read-only.")
     public List<ImpliedFolderRoot> impliedFolderRoots() {
         return folderAccessGuard.impliedRoots().stream()
                 .map(root -> new ImpliedFolderRoot(root.path().toString(), root.reason()))

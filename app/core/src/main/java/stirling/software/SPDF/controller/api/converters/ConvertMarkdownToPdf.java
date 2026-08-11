@@ -55,11 +55,9 @@ public class ConvertMarkdownToPdf {
             produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a Markdown file to PDF",
-            description =
-                    "This endpoint takes a Markdown file or ZIP (containing Markdown + images)"
-                            + " input, converts it to HTML, and then to PDF format.")
-    public ResponseEntity<Resource> markdownToPdf(@ModelAttribute GeneralFile generalFile)
-            throws Exception {
+            description = "This endpoint takes a Markdown file or ZIP (containing Markdown + images)"
+                    + " input, converts it to HTML, and then to PDF format.")
+    public ResponseEntity<Resource> markdownToPdf(@ModelAttribute GeneralFile generalFile) throws Exception {
         MultipartFile fileInput = generalFile.getFileInput();
 
         if (fileInput == null) {
@@ -90,8 +88,7 @@ public class ConvertMarkdownToPdf {
                 // Extract ZIP to temp directory
                 java.nio.file.Path tempDirPath = tempDir.getPath();
                 try (java.util.zip.ZipInputStream zipIn =
-                        io.github.pixee.security.ZipSecurity.createHardenedInputStream(
-                                fileInput.getInputStream())) {
+                        io.github.pixee.security.ZipSecurity.createHardenedInputStream(fileInput.getInputStream())) {
                     java.util.zip.ZipEntry entry;
                     while ((entry = zipIn.getNextEntry()) != null) {
                         if (!entry.isDirectory()) {
@@ -99,8 +96,7 @@ public class ConvertMarkdownToPdf {
                                     tempDirPath.resolve(entry.getName()).normalize();
                             if (!filePath.startsWith(tempDirPath)) {
                                 throw new java.io.IOException(
-                                        "ZIP entry is outside of target directory: "
-                                                + entry.getName());
+                                        "ZIP entry is outside of target directory: " + entry.getName());
                             }
                             java.nio.file.Files.createDirectories(filePath.getParent());
                             java.nio.file.Files.copy(zipIn, filePath);
@@ -113,9 +109,7 @@ public class ConvertMarkdownToPdf {
                 java.io.File markdownFile = findMarkdownFile(tempDirPath.toFile());
                 if (markdownFile == null) {
                     throw ExceptionUtils.createIllegalArgumentException(
-                            "error.fileFormatRequired",
-                            "ZIP must contain at least one {0} file",
-                            ".md");
+                            "error.fileFormatRequired", "ZIP must contain at least one {0} file", ".md");
                 }
 
                 // Read and convert markdown to HTML
@@ -123,30 +117,26 @@ public class ConvertMarkdownToPdf {
                 List<Extension> extensions = List.of(TablesExtension.create());
                 Parser parser = Parser.builder().extensions(extensions).build();
                 Node document = parser.parse(markdownContent);
-                HtmlRenderer renderer =
-                        HtmlRenderer.builder()
-                                .attributeProviderFactory(context -> new TableAttributeProvider())
-                                .extensions(extensions)
-                                .build();
+                HtmlRenderer renderer = HtmlRenderer.builder()
+                        .attributeProviderFactory(context -> new TableAttributeProvider())
+                        .extensions(extensions)
+                        .build();
                 String htmlContent = renderer.render(document);
 
                 // Create a new ZIP with HTML + images for WeasyPrint
                 byte[] htmlZipBytes = createHtmlZip(htmlContent, tempDirPath.toFile());
 
                 // Use FileToPdf which already supports ZIP files with images
-                pdfBytes =
-                        FileToPdf.convertHtmlToPdf(
-                                runtimePathConfig.getWeasyPrintPath(),
-                                null,
-                                htmlZipBytes,
-                                "package.zip",
-                                tempFileManager,
-                                customHtmlSanitizer);
+                pdfBytes = FileToPdf.convertHtmlToPdf(
+                        runtimePathConfig.getWeasyPrintPath(),
+                        null,
+                        htmlZipBytes,
+                        "package.zip",
+                        tempFileManager,
+                        customHtmlSanitizer);
 
-                outputFilename =
-                        GeneralUtils.generateFilename(
-                                originalFilename.substring(0, originalFilename.lastIndexOf('.')),
-                                ".pdf");
+                outputFilename = GeneralUtils.generateFilename(
+                        originalFilename.substring(0, originalFilename.lastIndexOf('.')), ".pdf");
             }
         } else {
             // Handle plain markdown file (no images)
@@ -154,22 +144,20 @@ public class ConvertMarkdownToPdf {
             Parser parser = Parser.builder().extensions(extensions).build();
 
             Node document = parser.parse(new String(fileInput.getBytes(), StandardCharsets.UTF_8));
-            HtmlRenderer renderer =
-                    HtmlRenderer.builder()
-                            .attributeProviderFactory(context -> new TableAttributeProvider())
-                            .extensions(extensions)
-                            .build();
+            HtmlRenderer renderer = HtmlRenderer.builder()
+                    .attributeProviderFactory(context -> new TableAttributeProvider())
+                    .extensions(extensions)
+                    .build();
 
             String htmlContent = renderer.render(document);
 
-            pdfBytes =
-                    FileToPdf.convertHtmlToPdf(
-                            runtimePathConfig.getWeasyPrintPath(),
-                            null,
-                            htmlContent.getBytes(StandardCharsets.UTF_8),
-                            "converted.html",
-                            tempFileManager,
-                            customHtmlSanitizer);
+            pdfBytes = FileToPdf.convertHtmlToPdf(
+                    runtimePathConfig.getWeasyPrintPath(),
+                    null,
+                    htmlContent.getBytes(StandardCharsets.UTF_8),
+                    "converted.html",
+                    tempFileManager,
+                    customHtmlSanitizer);
 
             outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
         }
@@ -197,8 +185,7 @@ public class ConvertMarkdownToPdf {
         }
 
         // Search for any .md file
-        try (java.util.stream.Stream<java.nio.file.Path> paths =
-                java.nio.file.Files.walk(directory.toPath())) {
+        try (java.util.stream.Stream<java.nio.file.Path> paths = java.nio.file.Files.walk(directory.toPath())) {
             return paths.filter(p -> p.toString().toLowerCase().endsWith(".md"))
                     .findFirst()
                     .map(java.nio.file.Path::toFile)
@@ -210,8 +197,7 @@ public class ConvertMarkdownToPdf {
      * Creates a ZIP file containing the HTML content and all other files (images) from the
      * directory.
      */
-    private byte[] createHtmlZip(String htmlContent, java.io.File sourceDir)
-            throws java.io.IOException {
+    private byte[] createHtmlZip(String htmlContent, java.io.File sourceDir) throws java.io.IOException {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
 
         try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos)) {
@@ -230,12 +216,9 @@ public class ConvertMarkdownToPdf {
 
     /** Recursively adds files from a directory to a ZIP, excluding .md files. */
     private void addDirectoryToZip(
-            java.util.zip.ZipOutputStream zos,
-            java.nio.file.Path sourceDir,
-            java.nio.file.Path rootDir)
+            java.util.zip.ZipOutputStream zos, java.nio.file.Path sourceDir, java.nio.file.Path rootDir)
             throws java.io.IOException {
-        try (java.util.stream.Stream<java.nio.file.Path> paths =
-                java.nio.file.Files.walk(sourceDir, 1)) {
+        try (java.util.stream.Stream<java.nio.file.Path> paths = java.nio.file.Files.walk(sourceDir, 1)) {
             for (java.nio.file.Path path : paths.toList()) {
                 if (java.nio.file.Files.isDirectory(path)) {
                     if (!path.equals(sourceDir)) {
@@ -244,8 +227,7 @@ public class ConvertMarkdownToPdf {
                 } else if (!path.toString().toLowerCase().endsWith(".md")) {
                     // Add file to ZIP, maintaining relative path structure
                     java.nio.file.Path relativePath = rootDir.relativize(path);
-                    java.util.zip.ZipEntry entry =
-                            new java.util.zip.ZipEntry(relativePath.toString());
+                    java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(relativePath.toString());
                     zos.putNextEntry(entry);
                     java.nio.file.Files.copy(path, zos);
                     zos.closeEntry();

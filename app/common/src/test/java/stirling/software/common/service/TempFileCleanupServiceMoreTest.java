@@ -34,15 +34,26 @@ import stirling.software.common.util.TempFileRegistry;
 /** Additional coverage for TempFileCleanupService branches not exercised by the base test. */
 class TempFileCleanupServiceMoreTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock private TempFileRegistry registry;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private ApplicationProperties.System system;
-    @Mock private ApplicationProperties.TempFileManagement tempFileManagement;
+    @Mock
+    private TempFileRegistry registry;
 
-    @InjectMocks private TempFileCleanupService cleanupService;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private ApplicationProperties.System system;
+
+    @Mock
+    private ApplicationProperties.TempFileManagement tempFileManagement;
+
+    @InjectMocks
+    private TempFileCleanupService cleanupService;
 
     private Path systemTempDir;
     private Path customTempDir;
@@ -64,9 +75,7 @@ class TempFileCleanupServiceMoreTest {
         lenient().when(applicationProperties.getSystem()).thenReturn(system);
         lenient().when(system.getTempFileManagement()).thenReturn(tempFileManagement);
         lenient().when(tempFileManagement.getBaseTmpDir()).thenReturn(customTempDir.toString());
-        lenient()
-                .when(tempFileManagement.getLibreofficeDir())
-                .thenReturn(libreOfficeTempDir.toString());
+        lenient().when(tempFileManagement.getLibreofficeDir()).thenReturn(libreOfficeTempDir.toString());
         lenient().when(tempFileManagement.getSystemTempDir()).thenReturn(systemTempDir.toString());
         lenient().when(tempFileManagement.isStartupCleanup()).thenReturn(false);
         lenient().when(tempFileManagement.isCleanupSystemTemp()).thenReturn(false);
@@ -81,8 +90,7 @@ class TempFileCleanupServiceMoreTest {
     }
 
     private static void backdate(Path file, long millisAgo) throws IOException {
-        Files.setLastModifiedTime(
-                file, FileTime.fromMillis(System.currentTimeMillis() - millisAgo));
+        Files.setLastModifiedTime(file, FileTime.fromMillis(System.currentTimeMillis() - millisAgo));
     }
 
     @Nested
@@ -93,22 +101,13 @@ class TempFileCleanupServiceMoreTest {
         @DisplayName("Docker and Kubernetes are container modes; others are not")
         void detectsContainerMachineTypes() {
             ReflectionTestUtils.setField(cleanupService, "machineType", "Docker");
-            assertThat(
-                            (Boolean)
-                                    ReflectionTestUtils.invokeMethod(
-                                            cleanupService, "isContainerMode"))
+            assertThat((Boolean) ReflectionTestUtils.invokeMethod(cleanupService, "isContainerMode"))
                     .isTrue();
             ReflectionTestUtils.setField(cleanupService, "machineType", "Kubernetes");
-            assertThat(
-                            (Boolean)
-                                    ReflectionTestUtils.invokeMethod(
-                                            cleanupService, "isContainerMode"))
+            assertThat((Boolean) ReflectionTestUtils.invokeMethod(cleanupService, "isContainerMode"))
                     .isTrue();
             ReflectionTestUtils.setField(cleanupService, "machineType", "Standard");
-            assertThat(
-                            (Boolean)
-                                    ReflectionTestUtils.invokeMethod(
-                                            cleanupService, "isContainerMode"))
+            assertThat((Boolean) ReflectionTestUtils.invokeMethod(cleanupService, "isContainerMode"))
                     .isFalse();
         }
     }
@@ -121,8 +120,7 @@ class TempFileCleanupServiceMoreTest {
         @DisplayName("uses the configured system temp dir when set")
         void usesConfiguredDir() {
             when(tempFileManagement.getSystemTempDir()).thenReturn(systemTempDir.toString());
-            Path path =
-                    (Path) ReflectionTestUtils.invokeMethod(cleanupService, "getSystemTempPath");
+            Path path = (Path) ReflectionTestUtils.invokeMethod(cleanupService, "getSystemTempPath");
             assertThat(path).isEqualTo(systemTempDir);
         }
 
@@ -130,8 +128,7 @@ class TempFileCleanupServiceMoreTest {
         @DisplayName("falls back to java.io.tmpdir when unset")
         void fallsBackToJavaTmpDir() {
             when(tempFileManagement.getSystemTempDir()).thenReturn("");
-            Path path =
-                    (Path) ReflectionTestUtils.invokeMethod(cleanupService, "getSystemTempPath");
+            Path path = (Path) ReflectionTestUtils.invokeMethod(cleanupService, "getSystemTempPath");
             assertThat(path).isEqualTo(Path.of(System.getProperty("java.io.tmpdir")));
         }
     }
@@ -181,8 +178,7 @@ class TempFileCleanupServiceMoreTest {
             when(tempFileManager.cleanupOldTempFiles(anyLong())).thenReturn(2);
             Path regDir = Files.createDirectories(tempDir.resolve("registeredDir"));
             Files.createFile(regDir.resolve("inside.txt"));
-            Files.setLastModifiedTime(
-                    regDir, FileTime.fromMillis(System.currentTimeMillis() - 2L * 60 * 60 * 1000));
+            Files.setLastModifiedTime(regDir, FileTime.fromMillis(System.currentTimeMillis() - 2L * 60 * 60 * 1000));
             Set<Path> dirs = new HashSet<>();
             dirs.add(regDir);
             when(registry.getTempDirectories()).thenReturn(dirs);
@@ -241,14 +237,8 @@ class TempFileCleanupServiceMoreTest {
             Path stale = Files.createFile(systemTempDir.resolve("stirling-pdf-sys.tmp"));
             backdate(stale, 2L * 60 * 60 * 1000); // 2h old
 
-            int deleted =
-                    (int)
-                            ReflectionTestUtils.invokeMethod(
-                                    cleanupService,
-                                    "cleanupUnregisteredFiles",
-                                    true,
-                                    true,
-                                    3600000L);
+            int deleted = (int)
+                    ReflectionTestUtils.invokeMethod(cleanupService, "cleanupUnregisteredFiles", true, true, 3600000L);
 
             assertThat(deleted).isGreaterThanOrEqualTo(1);
             assertThat(Files.exists(stale)).isFalse();
@@ -374,22 +364,19 @@ class TempFileCleanupServiceMoreTest {
         }
     }
 
-    private void invokeCleanupDirectoryStreaming(
-            Path directory, int depth, boolean containerMode, long maxAgeMillis) {
+    private void invokeCleanupDirectoryStreaming(Path directory, int depth, boolean containerMode, long maxAgeMillis) {
         try {
             Consumer<Path> noop = p -> {};
-            var method =
-                    TempFileCleanupService.class.getDeclaredMethod(
-                            "cleanupDirectoryStreaming",
-                            Path.class,
-                            boolean.class,
-                            int.class,
-                            long.class,
-                            boolean.class,
-                            Consumer.class);
+            var method = TempFileCleanupService.class.getDeclaredMethod(
+                    "cleanupDirectoryStreaming",
+                    Path.class,
+                    boolean.class,
+                    int.class,
+                    long.class,
+                    boolean.class,
+                    Consumer.class);
             method.setAccessible(true);
-            method.invoke(
-                    cleanupService, directory, containerMode, depth, maxAgeMillis, false, noop);
+            method.invoke(cleanupService, directory, containerMode, depth, maxAgeMillis, false, noop);
         } catch (Exception e) {
             throw new RuntimeException("Error invoking cleanupDirectoryStreaming", e);
         }

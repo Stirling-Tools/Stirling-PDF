@@ -21,8 +21,7 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         if (!runningProOrHigher && isPrometheusEndpointRequest(request)) {
@@ -32,16 +31,13 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
             // Strip the context path
             String contextPath = request.getContextPath();
             String trimmedUri =
-                    (contextPath != null && uri.startsWith(contextPath))
-                            ? uri.substring(contextPath.length())
-                            : uri;
+                    (contextPath != null && uri.startsWith(contextPath)) ? uri.substring(contextPath.length()) : uri;
 
-            boolean isHealthCheck =
-                    trimmedUri.startsWith("/actuator/health")
-                            || "/health".equals(trimmedUri)
-                            || "/healthz".equals(trimmedUri)
-                            || "/liveness".equals(trimmedUri)
-                            || "/readiness".equals(trimmedUri);
+            boolean isHealthCheck = trimmedUri.startsWith("/actuator/health")
+                    || "/health".equals(trimmedUri)
+                    || "/healthz".equals(trimmedUri)
+                    || "/liveness".equals(trimmedUri)
+                    || "/readiness".equals(trimmedUri);
 
             if (!isHealthCheck) {
                 response.setStatus(HttpStatus.NOT_FOUND.value());

@@ -60,11 +60,7 @@ public class PolicyTriggerManager implements SmartLifecycle {
             try {
                 trigger.onPoliciesChanged();
             } catch (RuntimeException e) {
-                log.error(
-                        "Failed to refresh trigger '{}' after policy change: {}",
-                        trigger.type(),
-                        e.getMessage(),
-                        e);
+                log.error("Failed to refresh trigger '{}' after policy change: {}", trigger.type(), e.getMessage(), e);
             }
         }
     }

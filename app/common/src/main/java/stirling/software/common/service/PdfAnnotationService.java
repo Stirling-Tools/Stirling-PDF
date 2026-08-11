@@ -120,11 +120,7 @@ public class PdfAnnotationService {
         }
         int page = loc.pageIndex();
         if (page < 0 || page >= totalPages) {
-            log.warn(
-                    "Skipping sticky-note[{}]: pageIndex={} out of range [0, {}).",
-                    index,
-                    page,
-                    totalPages);
+            log.warn("Skipping sticky-note[{}]: pageIndex={} out of range [0, {}).", index, page, totalPages);
             return false;
         }
         return true;
@@ -146,8 +142,7 @@ public class PdfAnnotationService {
         try {
             doc.getPage(loc.pageIndex()).getAnnotations().add(annot);
         } catch (java.io.IOException e) {
-            log.warn(
-                    "Failed to attach sticky note to page {}: {}", loc.pageIndex(), e.getMessage());
+            log.warn("Failed to attach sticky note to page {}: {}", loc.pageIndex(), e.getMessage());
         }
     }
 

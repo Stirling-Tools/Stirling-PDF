@@ -11,8 +11,7 @@ import java.util.Map;
  * primary {@code fileInput} stream) to an asset key in the run's supporting-file store, keeping
  * supporting inputs out of the document stream that flows step to step.
  */
-public record PipelineStep(
-        String operation, Map<String, Object> parameters, Map<String, String> fileParameters) {
+public record PipelineStep(String operation, Map<String, Object> parameters, Map<String, String> fileParameters) {
 
     public PipelineStep {
         parameters = parameters == null ? Map.of() : parameters;

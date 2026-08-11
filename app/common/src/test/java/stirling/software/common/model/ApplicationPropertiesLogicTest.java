@@ -50,11 +50,10 @@ class ApplicationPropertiesLogicTest {
     @Test
     void tempFileManagement_defaults_and_overrides() {
         Function<String, String> normalize = s -> Path.of(s).normalize().toString();
-        ApplicationProperties.TempFileManagement tfm =
-                new ApplicationProperties.TempFileManagement();
+        ApplicationProperties.TempFileManagement tfm = new ApplicationProperties.TempFileManagement();
 
-        String expectedBase =
-                Path.of(java.lang.System.getProperty("java.io.tmpdir"), "stirling-pdf").toString();
+        String expectedBase = Path.of(java.lang.System.getProperty("java.io.tmpdir"), "stirling-pdf")
+                .toString();
         assertEquals(expectedBase, tfm.getBaseTmpDir());
 
         String expectedLibre = Path.of(expectedBase, "libreoffice").toString();
@@ -122,8 +121,7 @@ class ApplicationPropertiesLogicTest {
         assertNotNull(client.get("github"));
         assertNotNull(client.get("keycloak"));
 
-        UnsupportedProviderException ex =
-                assertThrows(UnsupportedProviderException.class, () -> client.get("unknown"));
+        UnsupportedProviderException ex = assertThrows(UnsupportedProviderException.class, () -> client.get("unknown"));
         assertTrue(ex.getMessage().toLowerCase().contains("not supported"));
     }
 

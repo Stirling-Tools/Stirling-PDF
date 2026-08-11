@@ -60,8 +60,7 @@ public class JobExecutorService {
 
         long sessionTimeoutMs = parseSessionTimeout(sessionTimeout);
         this.effectiveTimeoutMs = Math.min(asyncRequestTimeoutMs, sessionTimeoutMs);
-        log.debug(
-                "Job executor configured with effective timeout of {} ms", this.effectiveTimeoutMs);
+        log.debug("Job executor configured with effective timeout of {} ms", this.effectiveTimeoutMs);
     }
 
     /** Stop the service-owned executor when the application context is closed or restarted. */
@@ -83,17 +82,12 @@ public class JobExecutorService {
         return runJobGeneric(async, work, -1);
     }
 
-    public ResponseEntity<?> runJobGeneric(
-            boolean async, Supplier<Object> work, long customTimeoutMs) {
+    public ResponseEntity<?> runJobGeneric(boolean async, Supplier<Object> work, long customTimeoutMs) {
         return runJobGeneric(async, work, customTimeoutMs, false, 50);
     }
 
     public ResponseEntity<?> runJobGeneric(
-            boolean async,
-            Supplier<Object> work,
-            long customTimeoutMs,
-            boolean queueable,
-            int resourceWeight) {
+            boolean async, Supplier<Object> work, long customTimeoutMs, boolean queueable, int resourceWeight) {
         String baseJobId = UUID.randomUUID().toString();
         String scopedJobKey = getScopedJobKey(baseJobId);
 
@@ -105,10 +99,9 @@ public class JobExecutorService {
 
         String jobId = scopedJobKey;
 
-        final String jobOwner =
-                jobOwnershipService != null
-                        ? jobOwnershipService.getCurrentUserId().orElse(null)
-                        : null;
+        final String jobOwner = jobOwnershipService != null
+                ? jobOwnershipService.getCurrentUserId().orElse(null)
+                : null;
 
         long timeoutToUse = customTimeoutMs > 0 ? customTimeoutMs : effectiveTimeoutMs;
 
@@ -120,42 +113,32 @@ public class JobExecutorService {
                 queueable,
                 resourceWeight);
 
-        boolean shouldQueue =
-                queueable
-                        && async
-                        && // Only async jobs can be queued
-                        resourceMonitor.shouldQueueJob(resourceWeight);
+        boolean shouldQueue = queueable
+                && async
+                && // Only async jobs can be queued
+                resourceMonitor.shouldQueueJob(resourceWeight);
 
         if (shouldQueue) {
-            log.debug(
-                    "Queueing job {} due to resource constraints (weight: {})",
-                    jobId,
-                    resourceWeight);
+            log.debug("Queueing job {} due to resource constraints (weight: {})", jobId, resourceWeight);
 
             taskManager.createTask(jobId);
 
             final String capturedJobIdForQueue = jobId;
-            Supplier<Object> wrappedWork =
-                    () -> {
-                        try {
-                            stirling.software.common.util.JobContext.setJobId(
-                                    capturedJobIdForQueue);
-                            stirling.software.common.util.JobContext.setOwner(jobOwner);
-                            Object result = work.get();
-                            processJobResult(capturedJobIdForQueue, result);
-                            return result;
-                        } catch (Exception e) {
-                            log.error(
-                                    "Error executing queued job {}: {}",
-                                    capturedJobIdForQueue,
-                                    e.getMessage(),
-                                    e);
-                            taskManager.setError(capturedJobIdForQueue, e.getMessage());
-                            throw e;
-                        } finally {
-                            stirling.software.common.util.JobContext.clear();
-                        }
-                    };
+            Supplier<Object> wrappedWork = () -> {
+                try {
+                    stirling.software.common.util.JobContext.setJobId(capturedJobIdForQueue);
+                    stirling.software.common.util.JobContext.setOwner(jobOwner);
+                    Object result = work.get();
+                    processJobResult(capturedJobIdForQueue, result);
+                    return result;
+                } catch (Exception e) {
+                    log.error("Error executing queued job {}: {}", capturedJobIdForQueue, e.getMessage(), e);
+                    taskManager.setError(capturedJobIdForQueue, e.getMessage());
+                    throw e;
+                } finally {
+                    stirling.software.common.util.JobContext.clear();
+                }
+            };
 
             CompletableFuture<ResponseEntity<?>> future =
                     jobQueue.queueJob(jobId, resourceWeight, wrappedWork, timeoutToUse);
@@ -166,28 +149,24 @@ public class JobExecutorService {
 
             final String capturedJobId = jobId;
 
-            executor.execute(
-                    () -> {
-                        try {
-                            log.debug(
-                                    "Running async job {} with timeout {} ms",
-                                    capturedJobId,
-                                    timeoutToUse);
+            executor.execute(() -> {
+                try {
+                    log.debug("Running async job {} with timeout {} ms", capturedJobId, timeoutToUse);
 
-                            stirling.software.common.util.JobContext.setJobId(capturedJobId);
-                            stirling.software.common.util.JobContext.setOwner(jobOwner);
-                            Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
-                            processJobResult(capturedJobId, result);
-                        } catch (TimeoutException te) {
-                            log.error("Job {} timed out after {} ms", jobId, timeoutToUse);
-                            taskManager.setError(jobId, "Job timed out");
-                        } catch (Exception e) {
-                            log.error("Error executing job {}: {}", jobId, e.getMessage(), e);
-                            taskManager.setError(jobId, e.getMessage());
-                        } finally {
-                            stirling.software.common.util.JobContext.clear();
-                        }
-                    });
+                    stirling.software.common.util.JobContext.setJobId(capturedJobId);
+                    stirling.software.common.util.JobContext.setOwner(jobOwner);
+                    Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
+                    processJobResult(capturedJobId, result);
+                } catch (TimeoutException te) {
+                    log.error("Job {} timed out after {} ms", jobId, timeoutToUse);
+                    taskManager.setError(jobId, "Job timed out");
+                } catch (Exception e) {
+                    log.error("Error executing job {}: {}", jobId, e.getMessage(), e);
+                    taskManager.setError(jobId, e.getMessage());
+                } finally {
+                    stirling.software.common.util.JobContext.clear();
+                }
+            });
 
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else {
@@ -209,22 +188,15 @@ public class JobExecutorService {
             } catch (RuntimeException e) {
                 Throwable cause = e.getCause();
                 if (e instanceof IllegalArgumentException
-                        || cause
-                                instanceof
-                                stirling.software.common.util.ExceptionUtils.BaseAppException
-                        || cause
-                                instanceof
-                                stirling.software.common.util.ExceptionUtils
-                                        .BaseValidationException) {
+                        || cause instanceof stirling.software.common.util.ExceptionUtils.BaseAppException
+                        || cause instanceof stirling.software.common.util.ExceptionUtils.BaseValidationException) {
                     throw e;
                 }
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
-                return ResponseEntity.internalServerError()
-                        .body(Map.of("error", "Job failed: " + e.getMessage()));
+                return ResponseEntity.internalServerError().body(Map.of("error", "Job failed: " + e.getMessage()));
             } catch (Exception e) {
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
-                return ResponseEntity.internalServerError()
-                        .body(Map.of("error", "Job failed: " + e.getMessage()));
+                return ResponseEntity.internalServerError().body(Map.of("error", "Job failed: " + e.getMessage()));
             } finally {
                 stirling.software.common.util.JobContext.clear();
             }
@@ -235,8 +207,7 @@ public class JobExecutorService {
         try {
             if (result instanceof byte[]) {
                 String fileId = fileStorage.storeBytes((byte[]) result, "result.pdf");
-                taskManager.setFileResult(
-                        jobId, fileId, "result.pdf", MediaType.APPLICATION_PDF_VALUE);
+                taskManager.setFileResult(jobId, fileId, "result.pdf", MediaType.APPLICATION_PDF_VALUE);
                 log.debug("Stored byte[] result with fileId: {}", fileId);
             } else if (result instanceof ResponseEntity) {
                 ResponseEntity<?> response = (ResponseEntity<?>) result;
@@ -255,9 +226,7 @@ public class JobExecutorService {
 
                     String fileId = fileStorage.storeFromStreamingBody(streamingBody, filename);
                     taskManager.setFileResult(jobId, fileId, filename, contentType);
-                    log.debug(
-                            "Stored ResponseEntity<StreamingResponseBody> result with fileId: {}",
-                            fileId);
+                    log.debug("Stored ResponseEntity<StreamingResponseBody> result with fileId: {}", fileId);
                 } else if (body instanceof Resource resource) {
                     String filename = extractResponseFilename(response);
                     String contentType = extractResponseContentType(response);
@@ -268,8 +237,7 @@ public class JobExecutorService {
                 } else {
                     if (body != null && body.toString().contains("fileId")) {
                         try {
-                            java.lang.reflect.Method getFileId =
-                                    body.getClass().getMethod("getFileId");
+                            java.lang.reflect.Method getFileId = body.getClass().getMethod("getFileId");
                             String fileId = (String) getFileId.invoke(body);
 
                             if (fileId != null && !fileId.isEmpty()) {
@@ -284,8 +252,7 @@ public class JobExecutorService {
                                         filename = origName;
                                     }
                                 } catch (Exception e) {
-                                    log.debug(
-                                            "Could not get original filename: {}", e.getMessage());
+                                    log.debug("Could not get original filename: {}", e.getMessage());
                                 }
 
                                 try {
@@ -306,9 +273,7 @@ public class JobExecutorService {
                                 return;
                             }
                         } catch (Exception e) {
-                            log.debug(
-                                    "Failed to extract fileId from response body: {}",
-                                    e.getMessage());
+                            log.debug("Failed to extract fileId from response body: {}", e.getMessage());
                         }
                     }
 
@@ -316,14 +281,12 @@ public class JobExecutorService {
                 }
             } else if (result instanceof MultipartFile file) {
                 String fileId = fileStorage.storeFile(file);
-                taskManager.setFileResult(
-                        jobId, fileId, file.getOriginalFilename(), file.getContentType());
+                taskManager.setFileResult(jobId, fileId, file.getOriginalFilename(), file.getContentType());
                 log.debug("Stored MultipartFile result with fileId: {}", fileId);
             } else {
                 if (result != null) {
                     try {
-                        java.lang.reflect.Method getFileId =
-                                result.getClass().getMethod("getFileId");
+                        java.lang.reflect.Method getFileId = result.getClass().getMethod("getFileId");
                         String fileId = (String) getFileId.invoke(result);
 
                         if (fileId != null && !fileId.isEmpty()) {
@@ -359,8 +322,7 @@ public class JobExecutorService {
                             return;
                         }
                     } catch (Exception e) {
-                        log.debug(
-                                "Failed to extract fileId from result object: {}", e.getMessage());
+                        log.debug("Failed to extract fileId from result object: {}", e.getMessage());
                     }
                 }
 
@@ -378,18 +340,14 @@ public class JobExecutorService {
         if (result instanceof byte[]) {
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
-                    .header(
-                            HttpHeaders.CONTENT_DISPOSITION,
-                            "form-data; name=\"attachment\"; filename=\"result.pdf\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "form-data; name=\"attachment\"; filename=\"result.pdf\"")
                     .body(result);
         } else if (result instanceof MultipartFile file) {
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(file.getContentType()))
                     .header(
                             HttpHeaders.CONTENT_DISPOSITION,
-                            "form-data; name=\"attachment\"; filename=\""
-                                    + file.getOriginalFilename()
-                                    + "\"")
+                            "form-data; name=\"attachment\"; filename=\"" + file.getOriginalFilename() + "\"")
                     .body(file.getBytes());
         } else {
             return ResponseEntity.ok(result);
@@ -417,16 +375,14 @@ public class JobExecutorService {
         }
 
         try {
-            String value =
-                    RegexPatternUtils.getInstance()
-                            .getNonDigitDotPattern()
-                            .matcher(timeout)
-                            .replaceAll("");
-            String unit =
-                    RegexPatternUtils.getInstance()
-                            .getDigitDotPattern()
-                            .matcher(timeout)
-                            .replaceAll("");
+            String value = RegexPatternUtils.getInstance()
+                    .getNonDigitDotPattern()
+                    .matcher(timeout)
+                    .replaceAll("");
+            String unit = RegexPatternUtils.getInstance()
+                    .getDigitDotPattern()
+                    .matcher(timeout)
+                    .replaceAll("");
 
             double numericValue = Double.parseDouble(value);
 
@@ -443,25 +399,23 @@ public class JobExecutorService {
         }
     }
 
-    private <T> T executeWithTimeout(Supplier<T> supplier, long timeoutMs)
-            throws TimeoutException, Exception {
+    private <T> T executeWithTimeout(Supplier<T> supplier, long timeoutMs) throws TimeoutException, Exception {
         String currentJobId = stirling.software.common.util.JobContext.getJobId();
 
-        java.util.concurrent.CompletableFuture<T> future =
-                java.util.concurrent.CompletableFuture.supplyAsync(
-                        () -> {
-                            if (currentJobId != null) {
-                                stirling.software.common.util.JobContext.setJobId(currentJobId);
-                            }
-                            try {
-                                return supplier.get();
-                            } finally {
-                                if (currentJobId != null) {
-                                    stirling.software.common.util.JobContext.clear();
-                                }
-                            }
-                        },
-                        executor);
+        java.util.concurrent.CompletableFuture<T> future = java.util.concurrent.CompletableFuture.supplyAsync(
+                () -> {
+                    if (currentJobId != null) {
+                        stirling.software.common.util.JobContext.setJobId(currentJobId);
+                    }
+                    try {
+                        return supplier.get();
+                    } finally {
+                        if (currentJobId != null) {
+                            stirling.software.common.util.JobContext.clear();
+                        }
+                    }
+                },
+                executor);
 
         try {
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);

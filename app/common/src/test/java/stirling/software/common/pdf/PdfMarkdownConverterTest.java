@@ -39,7 +39,8 @@ class PdfMarkdownConverterTest {
     /** Accuracy threshold: output must share at least this fraction of content with the golden. */
     private static final double THRESHOLD = 0.95;
 
-    @TempDir Path tmp;
+    @TempDir
+    Path tmp;
 
     /** Fixtures that meet the accuracy threshold today and therefore gate CI. */
     static Stream<Arguments> gatedFixtures() {
@@ -51,10 +52,7 @@ class PdfMarkdownConverterTest {
 
     /** Fixtures still below the threshold; tracked here, enable locally to iterate. */
     static Stream<Arguments> wipFixtures() {
-        return Stream.of(
-                Arguments.of(
-                        "wrapped-cell-test_expense-report.pdf",
-                        "wrapped-cell-test_expense-report.md"));
+        return Stream.of(Arguments.of("wrapped-cell-test_expense-report.pdf", "wrapped-cell-test_expense-report.md"));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -90,17 +88,13 @@ class PdfMarkdownConverterTest {
             rows.add(new TextLine(List.of(near, far), 50f, y, 2_499_999_980f, 10f));
         }
 
-        List<float[]> columns =
-                assertDoesNotThrow(() -> PdfMarkdownConverter.findColumnRangesFromLines(rows));
-        assertTrue(
-                columns.isEmpty(),
-                "implausible page span should disable column detection, not allocate from it");
+        List<float[]> columns = assertDoesNotThrow(() -> PdfMarkdownConverter.findColumnRangesFromLines(rows));
+        assertTrue(columns.isEmpty(), "implausible page span should disable column detection, not allocate from it");
     }
 
     private void assertConversionMatchesGolden(String pdfName, String mdName) throws IOException {
         Path pdfPath = tmp.resolve(pdfName);
-        try (InputStream in =
-                getClass().getResourceAsStream("/pdf-ingestion-fixtures/" + pdfName)) {
+        try (InputStream in = getClass().getResourceAsStream("/pdf-ingestion-fixtures/" + pdfName)) {
             if (in == null) {
                 fail("Fixture not found on classpath: /pdf-ingestion-fixtures/" + pdfName);
             }
@@ -128,13 +122,9 @@ class PdfMarkdownConverterTest {
 
         double similarity = similarity(expected, actual);
         if (similarity < THRESHOLD) {
-            fail(
-                    String.format(
-                            "Markdown output differs from golden file '%s' by %.1f%% (threshold %.0f%%):%n%s",
-                            mdName,
-                            (1.0 - similarity) * 100,
-                            (1.0 - THRESHOLD) * 100,
-                            unifiedDiff(expected, actual)));
+            fail(String.format(
+                    "Markdown output differs from golden file '%s' by %.1f%% (threshold %.0f%%):%n%s",
+                    mdName, (1.0 - similarity) * 100, (1.0 - THRESHOLD) * 100, unifiedDiff(expected, actual)));
         }
     }
 

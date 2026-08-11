@@ -33,10 +33,9 @@ class SecretMaskerTest {
         @Test
         @DisplayName("should mask simple sensitive keys at root level")
         void shouldMaskSimpleSensitiveKeys() {
-            Map<String, Object> input =
-                    Map.of(
-                            "password", "mySecret",
-                            "username", "john");
+            Map<String, Object> input = Map.of(
+                    "password", "mySecret",
+                    "username", "john");
 
             Map<String, Object> result = SecretMasker.mask(input);
 
@@ -47,11 +46,10 @@ class SecretMaskerTest {
         @Test
         @DisplayName("should mask keys case-insensitively and with special characters")
         void shouldMaskKeysCaseInsensitive() {
-            Map<String, Object> input =
-                    Map.of(
-                            "Api-Key", "12345",
-                            "TOKEN", "abcde",
-                            "normal", "keepme");
+            Map<String, Object> input = Map.of(
+                    "Api-Key", "12345",
+                    "TOKEN", "abcde",
+                    "normal", "keepme");
 
             Map<String, Object> result = SecretMasker.mask(input);
 
@@ -63,13 +61,11 @@ class SecretMaskerTest {
         @Test
         @DisplayName("restoreRedacted swaps sentinels for stored values, leaves the rest")
         void restoreRedactedRoundTripsAnEdit() {
-            Map<String, Object> stored =
-                    Map.of("secretAccessKey", "shh", "accessKeyId", "AKIAEXAMPLE");
-            Map<String, Object> incoming =
-                    Map.of(
-                            "secretAccessKey", SecretMasker.REDACTED,
-                            "accessKeyId", "AKIA-NEW",
-                            "bucket", "inbox");
+            Map<String, Object> stored = Map.of("secretAccessKey", "shh", "accessKeyId", "AKIAEXAMPLE");
+            Map<String, Object> incoming = Map.of(
+                    "secretAccessKey", SecretMasker.REDACTED,
+                    "accessKeyId", "AKIA-NEW",
+                    "bucket", "inbox");
 
             Map<String, Object> merged = SecretMasker.restoreRedacted(incoming, stored);
 
@@ -82,8 +78,7 @@ class SecretMaskerTest {
         @DisplayName("restoreRedacted leaves a sentinel with no stored counterpart in place")
         void restoreRedactedWithoutStoredValueStaysSentinel() {
             Map<String, Object> merged =
-                    SecretMasker.restoreRedacted(
-                            Map.of("secretAccessKey", SecretMasker.REDACTED), Map.of());
+                    SecretMasker.restoreRedacted(Map.of("secretAccessKey", SecretMasker.REDACTED), Map.of());
 
             assertEquals(SecretMasker.REDACTED, merged.get("secretAccessKey"));
         }
@@ -91,10 +86,9 @@ class SecretMaskerTest {
         @Test
         @DisplayName("should mask camelCase secretAccessKey despite no word boundary")
         void shouldMaskCamelCaseSecretAccessKey() {
-            Map<String, Object> input =
-                    Map.of(
-                            "secretAccessKey", "shh",
-                            "accessKeyId", "AKIAEXAMPLE");
+            Map<String, Object> input = Map.of(
+                    "secretAccessKey", "shh",
+                    "accessKeyId", "AKIAEXAMPLE");
 
             Map<String, Object> result = SecretMasker.mask(input);
 
@@ -117,16 +111,15 @@ class SecretMaskerTest {
         @Test
         @DisplayName("should mask nested map sensitive keys")
         void shouldMaskNestedMapSensitiveKeys() {
-            Map<String, Object> input =
+            Map<String, Object> input = Map.of(
+                    "outer",
                     Map.of(
-                            "outer",
+                            "jwt",
+                            "tokenValue",
+                            "inner",
                             Map.of(
-                                    "jwt",
-                                    "tokenValue",
-                                    "inner",
-                                    Map.of(
-                                            "secret", "deepValue",
-                                            "other", "ok")));
+                                    "secret", "deepValue",
+                                    "other", "ok")));
 
             Map<String, Object> result = SecretMasker.mask(input);
 
@@ -141,12 +134,7 @@ class SecretMaskerTest {
         @DisplayName("should mask sensitive keys inside lists")
         void shouldMaskSensitiveKeysInsideLists() {
             Map<String, Object> input =
-                    Map.of(
-                            "list",
-                            List.of(
-                                    Map.of("token", "abc123"),
-                                    Map.of("username", "john"),
-                                    "stringValue"));
+                    Map.of("list", List.of(Map.of("token", "abc123"), Map.of("username", "john"), "stringValue"));
 
             Map<String, Object> result = SecretMasker.mask(input);
 
@@ -224,8 +212,7 @@ class SecretMaskerTest {
             Map<String, Object> outer = (Map<String, Object>) result.get("outer");
             assertTrue(outer.containsKey(null), "Null key should be preserved");
             assertEquals("plainText", outer.get(null), "Value for null key must not be masked");
-            assertEquals(
-                    SecretMasker.REDACTED, outer.get("password"), "Sensitive keys must be masked");
+            assertEquals(SecretMasker.REDACTED, outer.get("password"), "Sensitive keys must be masked");
         }
     }
 }

@@ -52,26 +52,22 @@ class PolicyOverviewServiceTest {
     @Test
     void eachPolicyAppearsWithResolvedSourcesStepsAndSummary() {
         Source claims = source("Claims intake", "/claims");
-        policyStore.save(
-                new Policy(
-                        null,
-                        "Redaction",
-                        "owner",
-                        true,
-                        List.of(
-                                new PipelineInput(
-                                        claims.id(), new TriggerConfig("schedule", Map.of()))),
-                        List.of(new PipelineStep("/api/v1/security/auto-redact", Map.of())),
-                        OutputSpec.inline()));
-        policyStore.save(
-                new Policy(
-                        null,
-                        "Archive (paused)",
-                        "owner",
-                        false,
-                        List.of(),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        OutputSpec.inline()));
+        policyStore.save(new Policy(
+                null,
+                "Redaction",
+                "owner",
+                true,
+                List.of(new PipelineInput(claims.id(), new TriggerConfig("schedule", Map.of()))),
+                List.of(new PipelineStep("/api/v1/security/auto-redact", Map.of())),
+                OutputSpec.inline()));
+        policyStore.save(new Policy(
+                null,
+                "Archive (paused)",
+                "owner",
+                false,
+                List.of(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline()));
 
         PoliciesOverviewResponse response = service.overview();
 
@@ -92,20 +88,21 @@ class PolicyOverviewServiceTest {
         assertEquals("Claims intake", redaction.sources().get(0).name());
 
         // KPI strip: total, active, paused.
-        assertEquals(List.of(2L, 1L, 1L), response.kpis().stream().map(PolicyKpi::value).toList());
+        assertEquals(
+                List.of(2L, 1L, 1L),
+                response.kpis().stream().map(PolicyKpi::value).toList());
     }
 
     @Test
     void anUnresolvedSourceFallsBackToItsId() {
-        policyStore.save(
-                new Policy(
-                        null,
-                        "Orphan",
-                        "owner",
-                        true,
-                        List.of(PipelineInput.manual("src-missing")),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        OutputSpec.inline()));
+        policyStore.save(new Policy(
+                null,
+                "Orphan",
+                "owner",
+                true,
+                List.of(PipelineInput.manual("src-missing")),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline()));
 
         PolicyView view = find(service.overview(), "Orphan");
         assertEquals(1, view.sources().size());
@@ -122,8 +119,7 @@ class PolicyOverviewServiceTest {
         when(authority.currentUserTeamId()).thenReturn(1L);
         SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
-        PolicyOverviewService scoped =
-                new PolicyOverviewService(policyStore, sourceStore, policyGuard, sourceGuard);
+        PolicyOverviewService scoped = new PolicyOverviewService(policyStore, sourceStore, policyGuard, sourceGuard);
 
         Source ours = teamSource("Ours", "/ours", 1L);
         teamPolicy("Our policy", 1L, ours.id());
@@ -135,45 +131,39 @@ class PolicyOverviewServiceTest {
         PolicyView view = response.pipelines().get(0);
         assertEquals("Our policy", view.name());
         assertEquals("Ours", view.sources().get(0).name());
-        assertEquals(List.of(1L, 1L, 0L), response.kpis().stream().map(PolicyKpi::value).toList());
+        assertEquals(
+                List.of(1L, 1L, 0L),
+                response.kpis().stream().map(PolicyKpi::value).toList());
     }
 
     @Test
     void emptyStoreReportsZeroKpis() {
         PoliciesOverviewResponse response = service.overview();
         assertTrue(response.pipelines().isEmpty());
-        assertEquals(List.of(0L, 0L, 0L), response.kpis().stream().map(PolicyKpi::value).toList());
+        assertEquals(
+                List.of(0L, 0L, 0L),
+                response.kpis().stream().map(PolicyKpi::value).toList());
     }
 
     private Source source(String name, String directory) {
-        return sourceStore.save(
-                new Source(
-                        null, name, "folder", Map.of("directory", directory), true, "owner", null));
+        return sourceStore.save(new Source(null, name, "folder", Map.of("directory", directory), true, "owner", null));
     }
 
     private Source teamSource(String name, String directory, Long teamId) {
         return sourceStore.save(
-                new Source(
-                        null,
-                        name,
-                        "folder",
-                        Map.of("directory", directory),
-                        true,
-                        "owner",
-                        teamId));
+                new Source(null, name, "folder", Map.of("directory", directory), true, "owner", teamId));
     }
 
     private void teamPolicy(String name, Long teamId, String... sourceIds) {
-        policyStore.save(
-                new Policy(
-                        null,
-                        name,
-                        "owner",
-                        true,
-                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
-                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
-                        OutputSpec.inline(),
-                        teamId));
+        policyStore.save(new Policy(
+                null,
+                name,
+                "owner",
+                true,
+                List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
+                List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                OutputSpec.inline(),
+                teamId));
     }
 
     private static PolicyView find(PoliciesOverviewResponse response, String name) {

@@ -40,15 +40,13 @@ import stirling.software.proprietary.security.util.DesktopClientUtils;
 
 @Slf4j
 @RequiredArgsConstructor
-public class CustomOAuth2AuthenticationSuccessHandler
-        extends SavedRequestAwareAuthenticationSuccessHandler {
+public class CustomOAuth2AuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final LoginAttemptService loginAttemptService;
     private final ApplicationProperties.Security.OAUTH2 oauth2Properties;
     private final UserService userService;
     private final JwtServiceInterface jwtService;
-    private final stirling.software.proprietary.service.UserLicenseSettingsService
-            licenseSettingsService;
+    private final stirling.software.proprietary.service.UserLicenseSettingsService licenseSettingsService;
     private final ApplicationProperties applicationProperties;
 
     @Override
@@ -78,8 +76,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 log.warn(
                         "OAuth login blocked for existing user '{}' - not eligible (not grandfathered and no paid license)",
                         username);
-                response.sendRedirect(
-                        request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
+                response.sendRedirect(request.getContextPath() + "/logout?oAuth2RequiresLicense=true");
                 return;
             }
         } else if (!licenseSettingsService.isOAuthEligible(null)) {
@@ -95,12 +92,9 @@ public class CustomOAuth2AuthenticationSuccessHandler
         HttpSession session = request.getSession(false);
         String contextPath = request.getContextPath();
         SavedRequest savedRequest =
-                (session != null)
-                        ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST")
-                        : null;
+                (session != null) ? (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST") : null;
 
-        if (savedRequest != null
-                && !RequestUriUtils.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {
+        if (savedRequest != null && !RequestUriUtils.isStaticResource(contextPath, savedRequest.getRedirectUrl())) {
             // Redirect to the original destination
             super.onAuthenticationSuccess(request, response, authentication);
         } else {
@@ -108,26 +102,20 @@ public class CustomOAuth2AuthenticationSuccessHandler
                 if (session != null) {
                     session.removeAttribute("SPRING_SECURITY_SAVED_REQUEST");
                 }
-                throw new LockedException(
-                        "Your account has been locked due to too many failed login attempts.");
+                throw new LockedException("Your account has been locked due to too many failed login attempts.");
             }
             if (userService.isUserDisabled(username)) {
-                getRedirectStrategy()
-                        .sendRedirect(request, response, "/logout?userIsDisabled=true");
+                getRedirectStrategy().sendRedirect(request, response, "/logout?userIsDisabled=true");
                 return;
             }
             boolean isSsoUser = userService.isSsoAuthenticationTypeByUsername(username);
-            if (userExists
-                    && userService.hasPassword(username)
-                    && !isSsoUser
-                    && oauth2Properties.getAutoCreateUser()) {
+            if (userExists && userService.hasPassword(username) && !isSsoUser && oauth2Properties.getAutoCreateUser()) {
                 response.sendRedirect(contextPath + "/logout?oAuth2AuthenticationErrorWeb=true");
                 return;
             }
 
             try {
-                if (oauth2Properties.getBlockRegistration()
-                        && !userService.usernameExistsIgnoreCase(username)) {
+                if (oauth2Properties.getBlockRegistration() && !userService.usernameExistsIgnoreCase(username)) {
                     response.sendRedirect(contextPath + "/logout?oAuth2AdminBlockedUser=true");
                     return;
                 }
@@ -143,11 +131,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     String ssoProvider = extractProviderFromAuthentication(authentication);
 
                     userService.processSSOPostLogin(
-                            username,
-                            ssoProviderId,
-                            ssoProvider,
-                            oauth2Properties.getAutoCreateUser(),
-                            OAUTH2);
+                            username, ssoProviderId, ssoProvider, oauth2Properties.getAutoCreateUser(), OAUTH2);
                 }
 
                 // Generate JWT if v2 is enabled
@@ -160,8 +144,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     if (isDesktopClient) {
                         // Desktop: Use configured desktop token expiry (default 30 days)
                         int desktopExpiryMinutes =
-                                DesktopClientUtils.getDesktopTokenExpiryMinutes(
-                                        applicationProperties);
+                                DesktopClientUtils.getDesktopTokenExpiryMinutes(applicationProperties);
                         jwt = jwtService.generateToken(username, claims, desktopExpiryMinutes);
                         log.info(
                                 "Issued DESKTOP OAuth2 token for user '{}': expiry={}min ({}d)",
@@ -175,8 +158,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
                     }
 
                     // Build context-aware redirect URL based on the original request
-                    String redirectUrl =
-                            buildContextAwareRedirectUrl(request, response, contextPath, jwt);
+                    String redirectUrl = buildContextAwareRedirectUrl(request, response, contextPath, jwt);
 
                     response.sendRedirect(redirectUrl);
                 } else {
@@ -212,27 +194,17 @@ public class CustomOAuth2AuthenticationSuccessHandler
      * @return The appropriate redirect URL
      */
     private String buildContextAwareRedirectUrl(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            String contextPath,
-            String jwt) {
+            HttpServletRequest request, HttpServletResponse response, String contextPath, String jwt) {
         String redirectPath = resolveRedirectPath(request, contextPath);
-        String origin =
-                resolveForwardedOrigin(request)
-                        .orElseGet(
-                                () ->
-                                        resolveOriginFromReferer(request)
-                                                .orElseGet(() -> buildOriginFromRequest(request)));
+        String origin = resolveForwardedOrigin(request)
+                .orElseGet(() -> resolveOriginFromReferer(request).orElseGet(() -> buildOriginFromRequest(request)));
         clearRedirectCookie(response);
 
         // Extract nonce from state for CSRF validation in callback
         String nonce = TauriOAuthUtils.extractNonceFromRequest(request);
         String url = origin + redirectPath + "#access_token=" + jwt;
         if (nonce != null) {
-            url +=
-                    "&nonce="
-                            + java.net.URLEncoder.encode(
-                                    nonce, java.nio.charset.StandardCharsets.UTF_8);
+            url += "&nonce=" + java.net.URLEncoder.encode(nonce, java.nio.charset.StandardCharsets.UTF_8);
         }
         return url;
     }
@@ -259,16 +231,13 @@ public class CustomOAuth2AuthenticationSuccessHandler
         }
 
         String forwardedProtoHeader = request.getHeader("X-Forwarded-Proto");
-        String proto =
-                (forwardedProtoHeader == null || forwardedProtoHeader.isBlank())
-                        ? request.getScheme()
-                        : forwardedProtoHeader.split(",")[0].trim();
+        String proto = (forwardedProtoHeader == null || forwardedProtoHeader.isBlank())
+                ? request.getScheme()
+                : forwardedProtoHeader.split(",")[0].trim();
 
         if (!host.contains(":")) {
             String forwardedPort = request.getHeader("X-Forwarded-Port");
-            if (forwardedPort != null
-                    && !forwardedPort.isBlank()
-                    && !isDefaultPort(proto, forwardedPort.trim())) {
+            if (forwardedPort != null && !forwardedPort.isBlank() && !isDefaultPort(proto, forwardedPort.trim())) {
                 host = host + ":" + forwardedPort.trim();
             }
         }
@@ -332,12 +301,11 @@ public class CustomOAuth2AuthenticationSuccessHandler
     }
 
     private void clearRedirectCookie(HttpServletResponse response) {
-        ResponseCookie cookie =
-                ResponseCookie.from(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "")
-                        .path("/")
-                        .sameSite("Lax")
-                        .maxAge(0)
-                        .build();
+        ResponseCookie cookie = ResponseCookie.from(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "")
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(0)
+                .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 

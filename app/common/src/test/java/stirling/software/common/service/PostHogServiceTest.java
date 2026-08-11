@@ -29,8 +29,11 @@ class PostHogServiceTest {
     private static final String UUID = "test-uuid-1234";
     private static final String APP_VERSION = "9.9.9";
 
-    @Mock PostHog postHog;
-    @Mock UserServiceInterface userService;
+    @Mock
+    PostHog postHog;
+
+    @Mock
+    UserServiceInterface userService;
 
     /** Build an ApplicationProperties with analytics/posthog toggled. */
     private ApplicationProperties props(boolean analyticsEnabled) {
@@ -41,12 +44,8 @@ class PostHogServiceTest {
 
     /** Construct the service under test. */
     private PostHogService newService(
-            ApplicationProperties appProps,
-            UserServiceInterface user,
-            boolean configDirMounted,
-            MockEnvironment env) {
-        return new PostHogService(
-                postHog, UUID, configDirMounted, APP_VERSION, appProps, user, env);
+            ApplicationProperties appProps, UserServiceInterface user, boolean configDirMounted, MockEnvironment env) {
+        return new PostHogService(postHog, UUID, configDirMounted, APP_VERSION, appProps, user, env);
     }
 
     private MockEnvironment env() {
@@ -92,9 +91,7 @@ class PostHogServiceTest {
         @DisplayName("constructor swallows exceptions thrown by postHog.capture")
         void constructorSwallowsCaptureException() {
             ApplicationProperties appProps = props(true);
-            doThrow(new RuntimeException("boom"))
-                    .when(postHog)
-                    .capture(anyString(), anyString(), anyMap());
+            doThrow(new RuntimeException("boom")).when(postHog).capture(anyString(), anyString(), anyMap());
 
             // Must not propagate; constructor wraps capture in try/catch.
             assertDoesNotThrow(() -> newService(appProps, userService, false, env()));

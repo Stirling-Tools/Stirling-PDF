@@ -28,8 +28,11 @@ import stirling.software.proprietary.security.model.User;
 @ExtendWith(MockitoExtension.class)
 class ResourceAccessPortalBulkParityTest {
 
-    @Mock private ResourceGrantRepository grantRepository;
-    @Mock private TeamLeadLookup teamLeadLookup;
+    @Mock
+    private ResourceGrantRepository grantRepository;
+
+    @Mock
+    private TeamLeadLookup teamLeadLookup;
 
     private ResourceAccessService service;
 
@@ -42,9 +45,7 @@ class ResourceAccessPortalBulkParityTest {
     private Set<Long> leaderUserIds;
 
     void setUp(DefaultAccessPolicy policy) {
-        service =
-                new ResourceAccessService(
-                        grantRepository, teamLeadLookup, new DefaultPrincipalResolver());
+        service = new ResourceAccessService(grantRepository, teamLeadLookup, new DefaultPrincipalResolver());
         ReflectionTestUtils.setField(service, "portalDefaultPolicy", policy);
 
         admin = user(1L, null, Role.ADMIN.getRoleId());
@@ -57,10 +58,9 @@ class ResourceAccessPortalBulkParityTest {
         // Grants: a USER grant to #3 and a TEAM grant to team 20 (which #4 belongs to).
         lenient()
                 .when(grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, ""))
-                .thenReturn(
-                        List.of(
-                                grant(PrincipalType.USER, 3L, AccessPermission.USE),
-                                grant(PrincipalType.TEAM, 20L, AccessPermission.USE)));
+                .thenReturn(List.of(
+                        grant(PrincipalType.USER, 3L, AccessPermission.USE),
+                        grant(PrincipalType.TEAM, 20L, AccessPermission.USE)));
 
         // Only #2 leads their active team; leaderUserIds is what the controller passes to the
         // bulk method (the active-team-leader set).
@@ -87,14 +87,13 @@ class ResourceAccessPortalBulkParityTest {
     @Test
     void orgAllDoesNotLeakDeploymentWideWhenResolverForbidsIt() {
         DefaultPrincipalResolver base = new DefaultPrincipalResolver();
-        PrincipalResolver saasLikeResolver =
-                new PrincipalResolver() {
-                    @Override
-                    public Set<PrincipalRef> principalsOf(User user) {
-                        return base.principalsOf(user);
-                    }
-                    // allowsDeploymentWideAccess() inherits the interface default (false) = SaaS.
-                };
+        PrincipalResolver saasLikeResolver = new PrincipalResolver() {
+            @Override
+            public Set<PrincipalRef> principalsOf(User user) {
+                return base.principalsOf(user);
+            }
+            // allowsDeploymentWideAccess() inherits the interface default (false) = SaaS.
+        };
         service = new ResourceAccessService(grantRepository, teamLeadLookup, saasLikeResolver);
         ReflectionTestUtils.setField(service, "portalDefaultPolicy", DefaultAccessPolicy.ORG_ALL);
         lenient()
@@ -119,9 +118,7 @@ class ResourceAccessPortalBulkParityTest {
         for (User user : everyone) {
             boolean authoritative = service.canAccessPortal(user);
             assertThat(bulk.contains(user.getId()))
-                    .as(
-                            "policy=%s user=%d bulk should equal canAccessPortal(%s)",
-                            policy, user.getId(), authoritative)
+                    .as("policy=%s user=%d bulk should equal canAccessPortal(%s)", policy, user.getId(), authoritative)
                     .isEqualTo(authoritative);
         }
     }

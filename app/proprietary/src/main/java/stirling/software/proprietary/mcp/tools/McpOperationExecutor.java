@@ -64,18 +64,12 @@ public class McpOperationExecutor {
             try {
                 if (!fileStorage.fileExists(fileId)) {
                     return McpResponses.error(
-                            mapper,
-                            "Unknown or inaccessible fileId '"
-                                    + fileId
-                                    + "'. Re-upload with stirling_upload.");
+                            mapper, "Unknown or inaccessible fileId '" + fileId + "'. Re-upload with stirling_upload.");
                 }
                 inputBytes = fileStorage.retrieveBytes(fileId);
             } catch (SecurityException e) {
                 return McpResponses.error(
-                        mapper,
-                        "Unknown or inaccessible fileId '"
-                                + fileId
-                                + "'. Re-upload with stirling_upload.");
+                        mapper, "Unknown or inaccessible fileId '" + fileId + "'. Re-upload with stirling_upload.");
             } catch (IOException e) {
                 return McpResponses.error(mapper, "Could not read fileId '" + fileId + "'.");
             }
@@ -118,12 +112,10 @@ public class McpOperationExecutor {
             return McpResponses.error(
                     mapper, meta.id() + " failed: HTTP " + e.getStatusCode().value() + ".");
         } catch (SecurityException e) {
-            return McpResponses.error(
-                    mapper, meta.id() + " endpoint is not permitted for MCP dispatch.");
+            return McpResponses.error(mapper, meta.id() + " endpoint is not permitted for MCP dispatch.");
         } catch (RuntimeException e) {
             log.warn("MCP execution of {} failed", meta.id(), e);
-            return McpResponses.error(
-                    mapper, meta.id() + " failed unexpectedly. See server logs for details.");
+            return McpResponses.error(mapper, meta.id() + " failed unexpectedly. See server logs for details.");
         }
         return buildResult(meta, response);
     }
@@ -138,21 +130,14 @@ public class McpOperationExecutor {
         // A JSON body is a structured report (e.g. get-info), not a file.
         if (contentType != null && MediaType.APPLICATION_JSON.isCompatibleWith(contentType)) {
             try (InputStream is = body.getInputStream()) {
-                return McpResponses.text(
-                        mapper, new String(is.readAllBytes(), StandardCharsets.UTF_8));
+                return McpResponses.text(mapper, new String(is.readAllBytes(), StandardCharsets.UTF_8));
             } catch (IOException e) {
                 return McpResponses.error(mapper, "Failed to read " + meta.id() + " result.");
             }
         }
 
-        String filename =
-                body.getFilename() == null || body.getFilename().isBlank()
-                        ? meta.id()
-                        : body.getFilename();
-        String mimeType =
-                contentType != null
-                        ? contentType.toString()
-                        : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        String filename = body.getFilename() == null || body.getFilename().isBlank() ? meta.id() : body.getFilename();
+        String mimeType = contentType != null ? contentType.toString() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
         long maxInline = applicationProperties.getMcp().getMaxInlineResponseBytes();
         try {
             long size = body.contentLength();
@@ -162,25 +147,14 @@ public class McpOperationExecutor {
                     inline = is.readAllBytes();
                 }
             }
-            String fileId =
-                    inline != null
-                            ? fileStorage.storeBytes(inline, filename)
-                            : storeStreamed(body, filename);
+            String fileId = inline != null ? fileStorage.storeBytes(inline, filename) : storeStreamed(body, filename);
             String summary =
-                    meta.id()
-                            + " succeeded. Result: "
-                            + filename
-                            + " ("
-                            + size
-                            + " bytes), fileId="
-                            + fileId
-                            + ". ";
+                    meta.id() + " succeeded. Result: " + filename + " (" + size + " bytes), fileId=" + fileId + ". ";
             if (inline != null) {
                 return McpResponses.result(
                         mapper,
                         false,
-                        McpResponses.textBlock(
-                                mapper, summary + "The file is included inline below."),
+                        McpResponses.textBlock(mapper, summary + "The file is included inline below."),
                         McpResponses.resourceBlock(
                                 mapper,
                                 "stirling://file/" + fileId,
@@ -211,8 +185,7 @@ public class McpOperationExecutor {
         if (params == null || !params.isObject()) {
             return;
         }
-        Map<String, Object> map =
-                mapper.convertValue(params, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> map = mapper.convertValue(params, new TypeReference<Map<String, Object>>() {});
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             Object value = entry.getValue();
             if (value == null) {

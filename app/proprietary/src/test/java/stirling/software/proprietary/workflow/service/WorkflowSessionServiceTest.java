@@ -47,23 +47,38 @@ import tools.jackson.databind.ObjectMapper;
 @ExtendWith(MockitoExtension.class)
 class WorkflowSessionServiceTest {
 
-    @Mock private WorkflowSessionRepository workflowSessionRepository;
-    @Mock private WorkflowParticipantRepository workflowParticipantRepository;
-    @Mock private StoredFileRepository storedFileRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private StorageProvider storageProvider;
-    @Mock private ObjectMapper objectMapper;
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private MetadataEncryptionService metadataEncryptionService;
+    @Mock
+    private WorkflowSessionRepository workflowSessionRepository;
 
-    @InjectMocks private WorkflowSessionService service;
+    @Mock
+    private WorkflowParticipantRepository workflowParticipantRepository;
+
+    @Mock
+    private StoredFileRepository storedFileRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private StorageProvider storageProvider;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private MetadataEncryptionService metadataEncryptionService;
+
+    @InjectMocks
+    private WorkflowSessionService service;
 
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
-    private WorkflowSession sessionWithParticipant(
-            String sessionId, WorkflowParticipant participant) {
+    private WorkflowSession sessionWithParticipant(String sessionId, WorkflowParticipant participant) {
         WorkflowSession session = new WorkflowSession();
         session.setSessionId(sessionId);
         List<WorkflowParticipant> participants = new ArrayList<>();
@@ -104,8 +119,7 @@ class WorkflowSessionServiceTest {
 
         service.signDocument("s1", user, req);
 
-        ArgumentCaptor<WorkflowParticipant> captor =
-                ArgumentCaptor.forClass(WorkflowParticipant.class);
+        ArgumentCaptor<WorkflowParticipant> captor = ArgumentCaptor.forClass(WorkflowParticipant.class);
         verify(workflowParticipantRepository).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(ParticipantStatus.SIGNED);
     }
@@ -129,8 +143,7 @@ class WorkflowSessionServiceTest {
 
         service.signDocument("s2", user, req);
 
-        ArgumentCaptor<WorkflowParticipant> captor =
-                ArgumentCaptor.forClass(WorkflowParticipant.class);
+        ArgumentCaptor<WorkflowParticipant> captor = ArgumentCaptor.forClass(WorkflowParticipant.class);
         verify(workflowParticipantRepository).save(captor.capture());
 
         Map<String, Object> meta = captor.getValue().getParticipantMetadata();
@@ -148,8 +161,7 @@ class WorkflowSessionServiceTest {
     void signDocument_encryptsUploadedKeystoreBytesAtRest() throws Exception {
         // Use a REAL encryption service (not a mock) so we verify the persisted keystore is
         // genuinely AES-256-GCM encrypted, not merely base64-encoded.
-        ApplicationProperties.AutomaticallyGenerated generated =
-                new ApplicationProperties.AutomaticallyGenerated();
+        ApplicationProperties.AutomaticallyGenerated generated = new ApplicationProperties.AutomaticallyGenerated();
         generated.setKey("test-encryption-key-for-unit-tests-only");
         ApplicationProperties realProps = new ApplicationProperties();
         realProps.setAutomaticallyGenerated(generated);
@@ -158,17 +170,16 @@ class WorkflowSessionServiceTest {
         // Validator is exercised by the real flow but its result is irrelevant here, so stub it.
         CertificateSubmissionValidator validator = mock(CertificateSubmissionValidator.class);
 
-        WorkflowSessionService svc =
-                new WorkflowSessionService(
-                        workflowSessionRepository,
-                        workflowParticipantRepository,
-                        storedFileRepository,
-                        userRepository,
-                        storageProvider,
-                        objectMapper,
-                        applicationProperties,
-                        realEncryption,
-                        validator);
+        WorkflowSessionService svc = new WorkflowSessionService(
+                workflowSessionRepository,
+                workflowParticipantRepository,
+                storedFileRepository,
+                userRepository,
+                storageProvider,
+                objectMapper,
+                applicationProperties,
+                realEncryption,
+                validator);
 
         User user = user("dave");
         WorkflowParticipant participant = pendingParticipant(user);
@@ -184,20 +195,16 @@ class WorkflowSessionServiceTest {
         SignDocumentRequest req = new SignDocumentRequest();
         req.setCertType("PKCS12");
         req.setPassword("changeit");
-        req.setP12File(
-                new MockMultipartFile(
-                        "p12File", "valid-test.p12", "application/x-pkcs12", p12Bytes));
+        req.setP12File(new MockMultipartFile("p12File", "valid-test.p12", "application/x-pkcs12", p12Bytes));
 
         svc.signDocument("s7", user, req);
 
-        ArgumentCaptor<WorkflowParticipant> captor =
-                ArgumentCaptor.forClass(WorkflowParticipant.class);
+        ArgumentCaptor<WorkflowParticipant> captor = ArgumentCaptor.forClass(WorkflowParticipant.class);
         verify(workflowParticipantRepository).save(captor.capture());
 
         @SuppressWarnings("unchecked")
         Map<String, Object> cert =
-                (Map<String, Object>)
-                        captor.getValue().getParticipantMetadata().get("certificateSubmission");
+                (Map<String, Object>) captor.getValue().getParticipantMetadata().get("certificateSubmission");
         String storedKeystore = (String) cert.get("p12Keystore");
 
         // 1. Stored keystore is encrypted (enc: prefix), not plaintext base64.
@@ -207,8 +214,7 @@ class WorkflowSessionServiceTest {
                 .isNotEqualTo(java.util.Base64.getEncoder().encodeToString(p12Bytes));
 
         // 2. The raw keystore bytes must not appear anywhere in the stored value.
-        assertThat(storedKeystore)
-                .doesNotContain(java.util.Base64.getEncoder().encodeToString(p12Bytes));
+        assertThat(storedKeystore).doesNotContain(java.util.Base64.getEncoder().encodeToString(p12Bytes));
 
         // 3. It round-trips back to the exact original keystore bytes.
         assertThat(realEncryption.decryptBytes(storedKeystore)).isEqualTo(p12Bytes);
@@ -232,8 +238,7 @@ class WorkflowSessionServiceTest {
 
         service.signDocument("s3", user, req);
 
-        ArgumentCaptor<WorkflowParticipant> captor =
-                ArgumentCaptor.forClass(WorkflowParticipant.class);
+        ArgumentCaptor<WorkflowParticipant> captor = ArgumentCaptor.forClass(WorkflowParticipant.class);
         verify(workflowParticipantRepository).save(captor.capture());
 
         Map<String, Object> meta = captor.getValue().getParticipantMetadata();
@@ -329,8 +334,7 @@ class WorkflowSessionServiceTest {
 
     @Test
     void createSession_emptyFile_throwsBadRequest() {
-        MockMultipartFile empty =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
+        MockMultipartFile empty = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
 
@@ -342,8 +346,7 @@ class WorkflowSessionServiceTest {
 
     @Test
     void createSession_nullWorkflowType_throwsBadRequest() {
-        MockMultipartFile file =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(null);
 
@@ -356,19 +359,17 @@ class WorkflowSessionServiceTest {
     @Test
     void createSession_validRequest_sessionSavedWithOwnerAndInProgressStatus() throws IOException {
         User owner = user("alice");
-        MockMultipartFile file =
-                new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[] {1, 2});
+        MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", new byte[] {1, 2});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
         request.setDocumentName("My Doc");
 
-        StoredObject storedObject =
-                StoredObject.builder()
-                        .storageKey("key-1")
-                        .originalFilename("doc.pdf")
-                        .contentType("application/pdf")
-                        .sizeBytes(2L)
-                        .build();
+        StoredObject storedObject = StoredObject.builder()
+                .storageKey("key-1")
+                .originalFilename("doc.pdf")
+                .contentType("application/pdf")
+                .sizeBytes(2L)
+                .build();
         when(storageProvider.store(any(), any())).thenReturn(storedObject);
 
         StoredFile savedFile = new StoredFile();
@@ -391,20 +392,18 @@ class WorkflowSessionServiceTest {
     @Test
     void createSession_documentNameFromRequest() throws IOException {
         User owner = user("alice");
-        MockMultipartFile file =
-                new MockMultipartFile("file", "original.pdf", "application/pdf", new byte[] {1});
+        MockMultipartFile file = new MockMultipartFile("file", "original.pdf", "application/pdf", new byte[] {1});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
         request.setDocumentName("Custom Name");
 
         when(storageProvider.store(any(), any()))
-                .thenReturn(
-                        StoredObject.builder()
-                                .storageKey("k")
-                                .originalFilename("original.pdf")
-                                .contentType("application/pdf")
-                                .sizeBytes(1L)
-                                .build());
+                .thenReturn(StoredObject.builder()
+                        .storageKey("k")
+                        .originalFilename("original.pdf")
+                        .contentType("application/pdf")
+                        .sizeBytes(1L)
+                        .build());
         when(storedFileRepository.save(any())).thenReturn(new StoredFile());
 
         WorkflowSession savedSession = new WorkflowSession();
@@ -422,20 +421,18 @@ class WorkflowSessionServiceTest {
     @Test
     void createSession_documentNameFallsBackToOriginalFilename() throws IOException {
         User owner = user("alice");
-        MockMultipartFile file =
-                new MockMultipartFile("file", "uploaded.pdf", "application/pdf", new byte[] {1});
+        MockMultipartFile file = new MockMultipartFile("file", "uploaded.pdf", "application/pdf", new byte[] {1});
         WorkflowCreationRequest request = new WorkflowCreationRequest();
         request.setWorkflowType(WorkflowType.SIGNING);
         request.setDocumentName(null);
 
         when(storageProvider.store(any(), any()))
-                .thenReturn(
-                        StoredObject.builder()
-                                .storageKey("k")
-                                .originalFilename("uploaded.pdf")
-                                .contentType("application/pdf")
-                                .sizeBytes(1L)
-                                .build());
+                .thenReturn(StoredObject.builder()
+                        .storageKey("k")
+                        .originalFilename("uploaded.pdf")
+                        .contentType("application/pdf")
+                        .sizeBytes(1L)
+                        .build());
         when(storedFileRepository.save(any())).thenReturn(new StoredFile());
 
         WorkflowSession savedSession = new WorkflowSession();
@@ -623,8 +620,7 @@ class WorkflowSessionServiceTest {
         User owner = user("alice");
         WorkflowSession s1 = new WorkflowSession();
         WorkflowSession s2 = new WorkflowSession();
-        when(workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(owner))
-                .thenReturn(List.of(s1, s2));
+        when(workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(owner)).thenReturn(List.of(s1, s2));
 
         List<WorkflowSession> result = service.listUserSessions(owner);
 
@@ -634,8 +630,7 @@ class WorkflowSessionServiceTest {
     @Test
     void listUserSessions_noSessions_returnsEmptyList() {
         User owner = user("alice");
-        when(workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(owner))
-                .thenReturn(List.of());
+        when(workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(owner)).thenReturn(List.of());
 
         assertThat(service.listUserSessions(owner)).isEmpty();
     }

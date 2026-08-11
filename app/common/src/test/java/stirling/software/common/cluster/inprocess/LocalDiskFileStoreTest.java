@@ -45,8 +45,7 @@ class LocalDiskFileStoreTest {
     @Test
     void ownerSidecarCannotBeReadAsFileId(@TempDir Path dir) throws IOException {
         LocalDiskFileStore store = new LocalDiskFileStore(dir.toString());
-        FileStore.Stored stored =
-                store.store(new ByteArrayInputStream("hi".getBytes()), "f.bin", "alice");
+        FileStore.Stored stored = store.store(new ByteArrayInputStream("hi".getBytes()), "f.bin", "alice");
         String sidecarId = stored.fileId() + ".owner";
         assertThrows(IllegalArgumentException.class, () -> store.resolve(sidecarId));
         assertThrows(IllegalArgumentException.class, () -> store.retrieveBytes(sidecarId));
@@ -55,16 +54,14 @@ class LocalDiskFileStoreTest {
     @Test
     void ownerIsPersistedAndReturnedByGetOwner(@TempDir Path dir) throws IOException {
         LocalDiskFileStore store = new LocalDiskFileStore(dir.toString());
-        FileStore.Stored stored =
-                store.store(new ByteArrayInputStream("hi".getBytes()), "f.bin", "alice");
+        FileStore.Stored stored = store.store(new ByteArrayInputStream("hi".getBytes()), "f.bin", "alice");
         assertEquals("alice", store.getOwner(stored.fileId()));
     }
 
     @Test
     void getOwnerReturnsNullWhenNoOwnerWasRecorded(@TempDir Path dir) throws IOException {
         LocalDiskFileStore store = new LocalDiskFileStore(dir.toString());
-        FileStore.Stored stored =
-                store.store(new ByteArrayInputStream("hi".getBytes()), "f.bin", null);
+        FileStore.Stored stored = store.store(new ByteArrayInputStream("hi".getBytes()), "f.bin", null);
         assertNull(store.getOwner(stored.fileId()));
     }
 
@@ -77,8 +74,7 @@ class LocalDiskFileStoreTest {
     @Test
     void deleteRemovesOwnerSidecar(@TempDir Path dir) throws IOException {
         LocalDiskFileStore store = new LocalDiskFileStore(dir.toString());
-        FileStore.Stored stored =
-                store.store(new ByteArrayInputStream("hi".getBytes()), "f.bin", "alice");
+        FileStore.Stored stored = store.store(new ByteArrayInputStream("hi".getBytes()), "f.bin", "alice");
         assertTrue(store.delete(stored.fileId()));
         assertFalse(Files.exists(dir.resolve(stored.fileId() + ".owner")));
         assertNull(store.getOwner(stored.fileId()));

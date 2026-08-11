@@ -31,28 +31,40 @@ import stirling.software.common.service.UserServiceInterface;
 @ExtendWith(MockitoExtension.class)
 class ConfigControllerTest {
 
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private ApplicationContext applicationContext;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private ServerCertificateServiceInterface serverCertificateService;
-    @Mock private UserServiceInterface userService;
-    @Mock private ShowAdminInterface showAdmin;
-    @Mock private LicenseServiceInterface licenseService;
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private ApplicationContext applicationContext;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private ServerCertificateServiceInterface serverCertificateService;
+
+    @Mock
+    private UserServiceInterface userService;
+
+    @Mock
+    private ShowAdminInterface showAdmin;
+
+    @Mock
+    private LicenseServiceInterface licenseService;
 
     private ConfigController configController;
 
     @BeforeEach
     void setUp() {
-        configController =
-                new ConfigController(
-                        applicationProperties,
-                        applicationContext,
-                        endpointConfiguration,
-                        serverCertificateService,
-                        userService,
-                        showAdmin,
-                        licenseService,
-                        mock(stirling.software.SPDF.config.ExternalAppDepConfig.class));
+        configController = new ConfigController(
+                applicationProperties,
+                applicationContext,
+                endpointConfiguration,
+                serverCertificateService,
+                userService,
+                showAdmin,
+                licenseService,
+                mock(stirling.software.SPDF.config.ExternalAppDepConfig.class));
     }
 
     @Test
@@ -80,8 +92,7 @@ class ConfigControllerTest {
         when(endpointConfiguration.isEndpointEnabled("flatten")).thenReturn(true);
         when(endpointConfiguration.isEndpointEnabled("compress")).thenReturn(false);
 
-        ResponseEntity<Map<String, Boolean>> response =
-                configController.areEndpointsEnabled("flatten,compress");
+        ResponseEntity<Map<String, Boolean>> response = configController.areEndpointsEnabled("flatten,compress");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, Boolean> body = response.getBody();
@@ -145,8 +156,7 @@ class ConfigControllerTest {
         EndpointAvailability available = new EndpointAvailability(true, DisableReason.UNKNOWN);
         when(endpointConfiguration.getEndpointAvailability("flatten")).thenReturn(available);
 
-        ResponseEntity<Map<String, EndpointAvailability>> response =
-                configController.getEndpointAvailability(null);
+        ResponseEntity<Map<String, EndpointAvailability>> response = configController.getEndpointAvailability(null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -158,8 +168,7 @@ class ConfigControllerTest {
         when(endpointConfiguration.isEndpointEnabled("flatten")).thenReturn(true);
         when(endpointConfiguration.isEndpointEnabled("compress")).thenReturn(true);
 
-        ResponseEntity<Map<String, Boolean>> response =
-                configController.areEndpointsEnabled("flatten, compress");
+        ResponseEntity<Map<String, Boolean>> response = configController.areEndpointsEnabled("flatten, compress");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, Boolean> body = response.getBody();
@@ -191,8 +200,7 @@ class ConfigControllerTest {
         HttpServletRequest req = mock(HttpServletRequest.class);
         AppConfig appConfig = mock(AppConfig.class);
 
-        assertEquals(
-                "https://pdf.example.com", configController.resolveFrontendUrl(req, appConfig));
+        assertEquals("https://pdf.example.com", configController.resolveFrontendUrl(req, appConfig));
     }
 
     @Test
@@ -206,9 +214,7 @@ class ConfigControllerTest {
         when(req.getScheme()).thenReturn("http");
         when(req.getServerPort()).thenReturn(8080);
 
-        assertEquals(
-                "http://192.168.1.100:8080",
-                configController.resolveFrontendUrl(req, mock(AppConfig.class)));
+        assertEquals("http://192.168.1.100:8080", configController.resolveFrontendUrl(req, mock(AppConfig.class)));
     }
 
     @Test
@@ -222,9 +228,7 @@ class ConfigControllerTest {
         when(req.getScheme()).thenReturn("https");
         when(req.getServerPort()).thenReturn(443);
 
-        assertEquals(
-                "https://pdf.example.com",
-                configController.resolveFrontendUrl(req, mock(AppConfig.class)));
+        assertEquals("https://pdf.example.com", configController.resolveFrontendUrl(req, mock(AppConfig.class)));
     }
 
     @Test
@@ -263,8 +267,7 @@ class ConfigControllerTest {
         when(appConfig.getBackendUrl()).thenReturn("http://localhost");
         when(appConfig.getServerPort()).thenReturn("0");
 
-        org.springframework.core.env.Environment environment =
-                mock(org.springframework.core.env.Environment.class);
+        org.springframework.core.env.Environment environment = mock(org.springframework.core.env.Environment.class);
         when(applicationContext.getEnvironment()).thenReturn(environment);
         when(environment.getProperty("local.server.port")).thenReturn("54321");
 
@@ -279,8 +282,7 @@ class ConfigControllerTest {
         AppConfig appConfig = mock(AppConfig.class);
         when(appConfig.getServerPort()).thenReturn("0");
 
-        org.springframework.core.env.Environment environment =
-                mock(org.springframework.core.env.Environment.class);
+        org.springframework.core.env.Environment environment = mock(org.springframework.core.env.Environment.class);
         when(applicationContext.getEnvironment()).thenReturn(environment);
         when(environment.getProperty("local.server.port")).thenReturn("54321");
 

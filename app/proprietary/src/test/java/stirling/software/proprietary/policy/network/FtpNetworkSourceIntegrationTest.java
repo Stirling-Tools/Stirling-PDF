@@ -44,9 +44,8 @@ import stirling.software.proprietary.security.service.UserService;
 @EnabledIfEnvironmentVariable(
         named = "RUN_NETWORK_INTEGRATION_TESTS",
         matches = "true",
-        disabledReason =
-                "Spins up SFTP/FTP/SMB containers; opt-in to keep several heavy containers off the"
-                        + " standard CI runner. Run with RUN_NETWORK_INTEGRATION_TESTS=true.")
+        disabledReason = "Spins up SFTP/FTP/SMB containers; opt-in to keep several heavy containers off the"
+                + " standard CI runner. Run with RUN_NETWORK_INTEGRATION_TESTS=true.")
 class FtpNetworkSourceIntegrationTest {
 
     private static final String POLICY = "p1";
@@ -69,15 +68,14 @@ class FtpNetworkSourceIntegrationTest {
     }
 
     @org.testcontainers.junit.jupiter.Container
-    static GenericContainer<?> ftp =
-            new FixedHostPortGenericContainer<>("delfer/alpine-ftp-server:latest")
-                    .withFixedExposedPort(CONTROL_PORT, 21)
-                    .withFixedExposedPort(PASSIVE_PORT, PASSIVE_PORT)
-                    .withEnv("USERS", USER + "|" + PASS + "|" + HOME + "|1000")
-                    .withEnv("ADDRESS", "127.0.0.1")
-                    .withEnv("MIN_PORT", String.valueOf(PASSIVE_PORT))
-                    .withEnv("MAX_PORT", String.valueOf(PASSIVE_PORT))
-                    .waitingFor(Wait.forListeningPort());
+    static GenericContainer<?> ftp = new FixedHostPortGenericContainer<>("delfer/alpine-ftp-server:latest")
+            .withFixedExposedPort(CONTROL_PORT, 21)
+            .withFixedExposedPort(PASSIVE_PORT, PASSIVE_PORT)
+            .withEnv("USERS", USER + "|" + PASS + "|" + HOME + "|1000")
+            .withEnv("ADDRESS", "127.0.0.1")
+            .withEnv("MIN_PORT", String.valueOf(PASSIVE_PORT))
+            .withEnv("MAX_PORT", String.valueOf(PASSIVE_PORT))
+            .waitingFor(Wait.forListeningPort());
 
     private NetworkInputSource source;
     private InProcessProcessedLedger ledger;
@@ -87,13 +85,9 @@ class FtpNetworkSourceIntegrationTest {
     void setUp() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowPrivateNetworkSources(true);
-        RemoteFileClientFactory factory =
-                new RemoteFileClientFactory(new NetworkHostGuard(properties));
-        NetworkConnectionResolver resolver =
-                new NetworkConnectionResolver(
-                        mock(IntegrationConfigRepository.class),
-                        mock(OwnershipService.class),
-                        mock(UserService.class));
+        RemoteFileClientFactory factory = new RemoteFileClientFactory(new NetworkHostGuard(properties));
+        NetworkConnectionResolver resolver = new NetworkConnectionResolver(
+                mock(IntegrationConfigRepository.class), mock(OwnershipService.class), mock(UserService.class));
         source = new NetworkInputSource(resolver, factory);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
@@ -181,8 +175,7 @@ class FtpNetworkSourceIntegrationTest {
         }
 
         @Override
-        public void settle(
-                String identity, String finalGate, String finalContentHash, boolean success) {
+        public void settle(String identity, String finalGate, String finalContentHash, boolean success) {
             ledger.settle(POLICY, identity, finalGate, finalContentHash, success);
         }
 

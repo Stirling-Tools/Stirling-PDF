@@ -29,8 +29,9 @@ public class AiDocumentHtmlRenderer {
     private final String template;
 
     public AiDocumentHtmlRenderer() {
-        JinjavaConfig config =
-                JinjavaConfig.newBuilder().withNestedInterpretationEnabled(false).build();
+        JinjavaConfig config = JinjavaConfig.newBuilder()
+                .withNestedInterpretationEnabled(false)
+                .build();
         this.jinjava = new Jinjava(config);
         this.template = loadTemplate();
     }

@@ -15,7 +15,8 @@ class TempFileTest {
 
     private TempFileManager manager;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {

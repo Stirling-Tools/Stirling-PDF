@@ -41,14 +41,13 @@ public class NetworkHostGuard {
         }
         for (InetAddress address : addresses) {
             if (isPrivateOrLocal(address)) {
-                throw new IllegalArgumentException(
-                        "network host '"
-                                + host
-                                + "' resolves to a private or local address ("
-                                + address.getHostAddress()
-                                + "); add it to policies.allowedPrivateNetworkHosts or set"
-                                + " policies.allowPrivateNetworkSources=true to allow an"
-                                + " on-network server");
+                throw new IllegalArgumentException("network host '"
+                        + host
+                        + "' resolves to a private or local address ("
+                        + address.getHostAddress()
+                        + "); add it to policies.allowedPrivateNetworkHosts or set"
+                        + " policies.allowPrivateNetworkSources=true to allow an"
+                        + " on-network server");
             }
         }
     }

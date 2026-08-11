@@ -30,60 +30,50 @@ public class MetricsAggregatorService {
     public void aggregateAndSendMetrics() {
         Map<String, Object> metrics = new HashMap<>();
 
-        final boolean validateGetEndpoints = !endpointInspector.getValidGetEndpoints().isEmpty();
-        Search.in(meterRegistry)
-                .name("http.requests")
-                .counters()
-                .forEach(
-                        counter -> {
-                            String method = counter.getId().getTag("method");
-                            String uri = counter.getId().getTag("uri");
-                            // Skip if either method or uri is null
-                            if (method == null || uri == null) {
-                                return;
-                            }
+        final boolean validateGetEndpoints =
+                !endpointInspector.getValidGetEndpoints().isEmpty();
+        Search.in(meterRegistry).name("http.requests").counters().forEach(counter -> {
+            String method = counter.getId().getTag("method");
+            String uri = counter.getId().getTag("uri");
+            // Skip if either method or uri is null
+            if (method == null || uri == null) {
+                return;
+            }
 
-                            // Skip URIs that are 2 characters or shorter
-                            if (uri.length() <= 2) {
-                                return;
-                            }
+            // Skip URIs that are 2 characters or shorter
+            if (uri.length() <= 2) {
+                return;
+            }
 
-                            // Skip non-GET and non-POST requests
-                            if (!"GET".equals(method) && !"POST".equals(method)) {
-                                return;
-                            }
+            // Skip non-GET and non-POST requests
+            if (!"GET".equals(method) && !"POST".equals(method)) {
+                return;
+            }
 
-                            // For POST requests, only include if they start with /api/v1
-                            if ("POST".equals(method) && !uri.contains("api/v1")) {
-                                return;
-                            }
+            // For POST requests, only include if they start with /api/v1
+            if ("POST".equals(method) && !uri.contains("api/v1")) {
+                return;
+            }
 
-                            if (uri.contains(".txt")) {
-                                return;
-                            }
-                            // For GET requests, validate if we have a list of valid endpoints
-                            if ("GET".equals(method)
-                                    && validateGetEndpoints
-                                    && !endpointInspector.isValidGetEndpoint(uri)) {
-                                log.debug("Skipping invalid GET endpoint: {}", uri);
-                                return;
-                            }
+            if (uri.contains(".txt")) {
+                return;
+            }
+            // For GET requests, validate if we have a list of valid endpoints
+            if ("GET".equals(method) && validateGetEndpoints && !endpointInspector.isValidGetEndpoint(uri)) {
+                log.debug("Skipping invalid GET endpoint: {}", uri);
+                return;
+            }
 
-                            String key =
-                                    String.format(
-                                            Locale.ROOT,
-                                            "http_requests_%s_%s",
-                                            method,
-                                            uri.replace("/", "_"));
-                            double currentCount = counter.count();
-                            double lastCount = lastSentMetrics.getOrDefault(key, 0.0);
-                            double difference = currentCount - lastCount;
-                            if (difference > 0) {
-                                log.debug("{}, {}", key, difference);
-                                metrics.put(key, difference);
-                                lastSentMetrics.put(key, currentCount);
-                            }
-                        });
+            String key = String.format(Locale.ROOT, "http_requests_%s_%s", method, uri.replace("/", "_"));
+            double currentCount = counter.count();
+            double lastCount = lastSentMetrics.getOrDefault(key, 0.0);
+            double difference = currentCount - lastCount;
+            if (difference > 0) {
+                log.debug("{}, {}", key, difference);
+                metrics.put(key, difference);
+                lastSentMetrics.put(key, currentCount);
+            }
+        });
         // Send aggregated metrics to PostHog
         if (!metrics.isEmpty()) {
 

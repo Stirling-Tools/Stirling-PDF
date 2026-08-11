@@ -60,8 +60,7 @@ public class TeamMembershipService {
         if (isSaas()) {
             return;
         }
-        Optional<TeamMembership> existing =
-                membershipRepository.findByTeamIdAndUserId(team.getId(), user.getId());
+        Optional<TeamMembership> existing = membershipRepository.findByTeamIdAndUserId(team.getId(), user.getId());
         if (existing.isPresent()) {
             existing.get().setRole(TeamRole.LEADER);
             membershipRepository.save(existing.get());
@@ -76,13 +75,10 @@ public class TeamMembershipService {
         if (isSaas()) {
             return;
         }
-        membershipRepository
-                .findByTeamIdAndUserId(team.getId(), user.getId())
-                .ifPresent(
-                        row -> {
-                            row.setRole(TeamRole.MEMBER);
-                            membershipRepository.save(row);
-                        });
+        membershipRepository.findByTeamIdAndUserId(team.getId(), user.getId()).ifPresent(row -> {
+            row.setRole(TeamRole.MEMBER);
+            membershipRepository.save(row);
+        });
     }
 
     /** Owner user ids for a team. */

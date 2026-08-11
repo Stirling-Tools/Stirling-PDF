@@ -12,8 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 class ConvertCbrToPdfRequestTest {
 
     private static MultipartFile file() {
-        return new MockMultipartFile(
-                "fileInput", "comic.cbr", "application/x-cbr", new byte[] {1, 2, 3});
+        return new MockMultipartFile("fileInput", "comic.cbr", "application/x-cbr", new byte[] {1, 2, 3});
     }
 
     @Nested

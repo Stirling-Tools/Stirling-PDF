@@ -98,8 +98,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             return;
         }
         try {
-            Optional<JwtSigningKeyEntity> newestOpt =
-                    keyRepository.findFirstByOrderByCreatedAtDesc();
+            Optional<JwtSigningKeyEntity> newestOpt = keyRepository.findFirstByOrderByCreatedAtDesc();
             if (newestOpt.isEmpty()) {
                 return;
             }
@@ -108,13 +107,10 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             if (current != null && newest.getKeyId().equals(current.getKeyId())) {
                 return;
             }
-            JwtVerificationKey adopted =
-                    new JwtVerificationKey(newest.getKeyId(), newest.getVerifyingKey());
+            JwtVerificationKey adopted = new JwtVerificationKey(newest.getKeyId(), newest.getVerifyingKey());
             verifyingKeyCache.put(newest.getKeyId(), adopted);
             activeKey = adopted;
-            log.info(
-                    "Adopted newest JWT signing key {} from the shared DB as active",
-                    newest.getKeyId());
+            log.info("Adopted newest JWT signing key {} from the shared DB as active", newest.getKeyId());
         } catch (Exception e) {
             log.warn("Could not reload active JWT key from the shared DB: {}", e.getMessage());
         }
@@ -129,8 +125,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             return;
         }
         for (JwtSigningKeyEntity key : keys) {
-            verifyingKeyCache.put(
-                    key.getKeyId(), new JwtVerificationKey(key.getKeyId(), key.getVerifyingKey()));
+            verifyingKeyCache.put(key.getKeyId(), new JwtVerificationKey(key.getKeyId(), key.getVerifyingKey()));
         }
         activeKey = new JwtVerificationKey(keys.get(0).getKeyId(), keys.get(0).getVerifyingKey());
         log.info("Loaded {} JWT key(s) from DB, active key: {}", keys.size(), activeKey.getKeyId());
@@ -184,9 +179,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         JwtSigningKeyEntity entity = entityOpt.get();
         try {
             KeyPair keyPair =
-                    new KeyPair(
-                            decodePublicKey(entity.getVerifyingKey()),
-                            decodePrivateKey(entity.getSigningKey()));
+                    new KeyPair(decodePublicKey(entity.getVerifyingKey()), decodePrivateKey(entity.getSigningKey()));
             keyPairCache.put(keyId, keyPair);
             verifyingKeyCache.put(keyId, new JwtVerificationKey(keyId, entity.getVerifyingKey()));
             return Optional.of(keyPair);
@@ -284,8 +277,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     private PrivateKey loadPrivateKey(String keyId)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        Path keyFile =
-                Path.of(InstallationPathConfig.getPrivateKeyPath()).resolve(keyId + KEY_SUFFIX);
+        Path keyFile = Path.of(InstallationPathConfig.getPrivateKeyPath()).resolve(keyId + KEY_SUFFIX);
         if (!Files.exists(keyFile)) {
             throw new IOException("Private key not found: " + keyFile);
         }
@@ -293,16 +285,14 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     }
 
     private String loadPublicKey(String keyId) throws IOException {
-        Path publicKeyFile =
-                Path.of(InstallationPathConfig.getPrivateKeyPath()).resolve(keyId + PUB_KEY_SUFFIX);
+        Path publicKeyFile = Path.of(InstallationPathConfig.getPrivateKeyPath()).resolve(keyId + PUB_KEY_SUFFIX);
         if (!Files.exists(publicKeyFile)) {
             throw new IOException("Public key not found: " + publicKeyFile);
         }
         return Files.readString(publicKeyFile).trim();
     }
 
-    private KeyPair reconstructKeyPair(PrivateKey privateKey)
-            throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private KeyPair reconstructKeyPair(PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         RSAPrivateCrtKey rsaPrivateKey = (RSAPrivateCrtKey) privateKey;
         RSAPublicKeySpec publicKeySpec =
@@ -315,14 +305,12 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     }
 
     @Override
-    public PublicKey decodePublicKey(String encodedKey)
-            throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public PublicKey decodePublicKey(String encodedKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(encodedKey));
         return KeyFactory.getInstance("RSA").generatePublic(keySpec);
     }
 
-    private PrivateKey decodePrivateKey(String encodedKey)
-            throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private PrivateKey decodePrivateKey(String encodedKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
         PKCS8EncodedKeySpec keySpec =
                 new PKCS8EncodedKeySpec(Base64.getDecoder().decode(encodedKey));
         return KeyFactory.getInstance("RSA").generatePrivate(keySpec);

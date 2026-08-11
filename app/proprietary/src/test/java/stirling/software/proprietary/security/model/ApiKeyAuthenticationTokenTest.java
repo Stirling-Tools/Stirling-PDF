@@ -27,8 +27,7 @@ class ApiKeyAuthenticationTokenTest {
         Object principal = new Object();
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_API"));
 
-        ApiKeyAuthenticationToken token =
-                new ApiKeyAuthenticationToken(principal, apiKey, authorities);
+        ApiKeyAuthenticationToken token = new ApiKeyAuthenticationToken(principal, apiKey, authorities);
 
         assertTrue(token.isAuthenticated(), "should be authenticated");
         assertSame(principal, token.getPrincipal(), "principal should be set");
@@ -42,8 +41,7 @@ class ApiKeyAuthenticationTokenTest {
     void setAuthenticated_true_throwsIllegalArgumentException() {
         ApiKeyAuthenticationToken token = new ApiKeyAuthenticationToken("k");
 
-        IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> token.setAuthenticated(true));
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> token.setAuthenticated(true));
         assertTrue(
                 ex.getMessage().toLowerCase().contains("trusted"),
                 "message should explain to use the constructor with authorities");
@@ -53,8 +51,7 @@ class ApiKeyAuthenticationTokenTest {
     void setAuthenticated_false_isAllowed_andUnsetsFlag() {
         Object principal = new Object();
         ApiKeyAuthenticationToken token =
-                new ApiKeyAuthenticationToken(
-                        principal, "k", List.of(new SimpleGrantedAuthority("ROLE_API")));
+                new ApiKeyAuthenticationToken(principal, "k", List.of(new SimpleGrantedAuthority("ROLE_API")));
 
         assertTrue(token.isAuthenticated());
 
@@ -70,8 +67,7 @@ class ApiKeyAuthenticationTokenTest {
     void eraseCredentials_setsCredentialsNull_butKeepsPrincipal() {
         Object principal = new Object();
         ApiKeyAuthenticationToken token =
-                new ApiKeyAuthenticationToken(
-                        principal, "top-secret", List.of(new SimpleGrantedAuthority("ROLE_API")));
+                new ApiKeyAuthenticationToken(principal, "top-secret", List.of(new SimpleGrantedAuthority("ROLE_API")));
 
         assertEquals("top-secret", token.getCredentials());
         assertSame(principal, token.getPrincipal());

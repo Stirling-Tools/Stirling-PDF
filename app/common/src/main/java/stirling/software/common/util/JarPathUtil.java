@@ -18,14 +18,12 @@ public class JarPathUtil {
      */
     public static Path currentJar() {
         try {
-            Path jar =
-                    Path.of(
-                                    JarPathUtil.class
-                                            .getProtectionDomain()
-                                            .getCodeSource()
-                                            .getLocation()
-                                            .toURI())
-                            .toAbsolutePath();
+            Path jar = Path.of(JarPathUtil.class
+                            .getProtectionDomain()
+                            .getCodeSource()
+                            .getLocation()
+                            .toURI())
+                    .toAbsolutePath();
 
             // Check if we're actually running from a JAR (not from IDE/classes directory)
             if (jar.toString().endsWith(".jar")) {

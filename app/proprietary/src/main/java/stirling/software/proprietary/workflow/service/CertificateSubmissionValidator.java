@@ -60,11 +60,8 @@ public class CertificateSubmissionValidator {
      * @return {@link CertificateInfo} with subject, issuer, and validity dates on success
      * @throws ResponseStatusException HTTP 400 with a user-friendly message on any failure
      */
-    public CertificateInfo validateAndExtractInfo(
-            byte[] keystoreBytes, String certType, String password) {
-        if (certType == null
-                || "SERVER".equalsIgnoreCase(certType)
-                || "USER_CERT".equalsIgnoreCase(certType)) {
+    public CertificateInfo validateAndExtractInfo(byte[] keystoreBytes, String certType, String password) {
+        if (certType == null || "SERVER".equalsIgnoreCase(certType) || "USER_CERT".equalsIgnoreCase(certType)) {
             // Server-managed or pre-configured user certificate — no file uploaded, nothing to
             // validate
             return null;
@@ -83,8 +80,7 @@ public class CertificateSubmissionValidator {
 
         testSign(keystore, passwordChars, subjectName);
 
-        return new CertificateInfo(
-                subjectName, issuerName, cert.getNotBefore(), cert.getNotAfter(), selfSigned);
+        return new CertificateInfo(subjectName, issuerName, cert.getNotBefore(), cert.getNotAfter(), selfSigned);
     }
 
     // ---- private helpers ----
@@ -100,13 +96,11 @@ public class CertificateSubmissionValidator {
             // JKS: wrong password produces IOException wrapping UnrecoverableKeyException
             log.debug("Failed to load {} keystore: {}", keystoreType, e.getMessage());
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Invalid certificate password or corrupt keystore file");
+                    HttpStatus.BAD_REQUEST, "Invalid certificate password or corrupt keystore file");
         } catch (Exception e) {
             log.debug("Failed to instantiate {} keystore: {}", keystoreType, e.getMessage());
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Invalid certificate password or corrupt keystore file");
+                    HttpStatus.BAD_REQUEST, "Invalid certificate password or corrupt keystore file");
         }
     }
 
@@ -120,8 +114,7 @@ public class CertificateSubmissionValidator {
                     key = (PrivateKey) keystore.getKey(alias, password);
                 } catch (UnrecoverableKeyException | java.security.NoSuchAlgorithmException e) {
                     throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Invalid certificate password or corrupt keystore file");
+                            HttpStatus.BAD_REQUEST, "Invalid certificate password or corrupt keystore file");
                 }
                 if (key == null) continue;
 
@@ -135,8 +128,7 @@ public class CertificateSubmissionValidator {
         } catch (KeyStoreException e) {
             log.debug("KeyStore alias enumeration failed: {}", e.getMessage());
         }
-        throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST, "No private key found in the provided keystore");
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No private key found in the provided keystore");
     }
 
     private void validateCertValidity(X509Certificate cert) {

@@ -73,8 +73,7 @@ public class SsrfProtectionService {
         }
     }
 
-    private boolean isMaxSecurityAllowed(
-            String url, ApplicationProperties.Html.UrlSecurity config) {
+    private boolean isMaxSecurityAllowed(String url, ApplicationProperties.Html.UrlSecurity config) {
         // MAX security: only allow explicitly whitelisted domains
         try {
             URI uri = new URI(url);
@@ -92,8 +91,7 @@ public class SsrfProtectionService {
         }
     }
 
-    private boolean isMediumSecurityAllowed(
-            String url, ApplicationProperties.Html.UrlSecurity config) {
+    private boolean isMediumSecurityAllowed(String url, ApplicationProperties.Html.UrlSecurity config) {
         try {
             URI uri = new URI(url);
             String host = uri.getHost();
@@ -120,15 +118,9 @@ public class SsrfProtectionService {
 
             // If allowedDomains is specified, only allow those
             if (!config.getAllowedDomains().isEmpty()) {
-                boolean isAllowed =
-                        config.getAllowedDomains().stream()
-                                .anyMatch(
-                                        domain ->
-                                                hostLower.equals(domain.toLowerCase(Locale.ROOT))
-                                                        || hostLower.endsWith(
-                                                                "."
-                                                                        + domain.toLowerCase(
-                                                                                Locale.ROOT)));
+                boolean isAllowed = config.getAllowedDomains().stream()
+                        .anyMatch(domain -> hostLower.equals(domain.toLowerCase(Locale.ROOT))
+                                || hostLower.endsWith("." + domain.toLowerCase(Locale.ROOT)));
 
                 if (!isAllowed) {
                     log.debug("URL not in allowed domains list: {}", url);
@@ -155,8 +147,7 @@ public class SsrfProtectionService {
                     return false;
                 }
 
-                if (config.isBlockCloudMetadata()
-                        && isCloudMetadataAddress(address.getHostAddress())) {
+                if (config.isBlockCloudMetadata() && isCloudMetadataAddress(address.getHostAddress())) {
                     log.debug("URL blocked - cloud metadata endpoint: {}", url);
                     return false;
                 }
@@ -190,14 +181,13 @@ public class SsrfProtectionService {
 
             byte[] bytes = addr6.getAddress();
             if (isIpv4MappedAddress(bytes)) {
-                String ipv4 =
-                        (bytes[12] & 0xff)
-                                + "."
-                                + (bytes[13] & 0xff)
-                                + "."
-                                + (bytes[14] & 0xff)
-                                + "."
-                                + (bytes[15] & 0xff);
+                String ipv4 = (bytes[12] & 0xff)
+                        + "."
+                        + (bytes[13] & 0xff)
+                        + "."
+                        + (bytes[14] & 0xff)
+                        + "."
+                        + (bytes[15] & 0xff);
                 return isPrivateIPv4Range(ipv4);
             }
 

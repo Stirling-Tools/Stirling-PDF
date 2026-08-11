@@ -28,8 +28,11 @@ import stirling.software.proprietary.security.service.TeamService;
 @ExtendWith(MockitoExtension.class)
 class DefaultClassificationPolicySeederTest {
 
-    @Mock private PolicyStore policyStore;
-    @Mock private TeamRepository teamRepository;
+    @Mock
+    private PolicyStore policyStore;
+
+    @Mock
+    private TeamRepository teamRepository;
 
     private DefaultClassificationPolicySeeder seeder() {
         return new DefaultClassificationPolicySeeder(policyStore, teamRepository);
@@ -64,8 +67,7 @@ class DefaultClassificationPolicySeederTest {
         assertThat(policy.output().options().get("mode")).isEqualTo("new_version");
         assertThat(policy.output().options().get("sources")).isEqualTo(List.of("editor"));
         assertThat(policy.steps()).hasSize(1);
-        assertThat(policy.steps().get(0).operation())
-                .isEqualTo("/api/v1/ai/tools/classify-and-label");
+        assertThat(policy.steps().get(0).operation()).isEqualTo("/api/v1/ai/tools/classify-and-label");
     }
 
     @Test
@@ -97,8 +99,7 @@ class DefaultClassificationPolicySeederTest {
         Team defaultTeam = new Team();
         defaultTeam.setId(1L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
-                .thenReturn(Optional.of(defaultTeam));
+        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME)).thenReturn(Optional.of(defaultTeam));
         when(policyStore.findByTeam(1L)).thenReturn(List.of());
 
         seeder().seedDefaultTeamOnStartup();

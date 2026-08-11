@@ -62,14 +62,13 @@ public class DatabaseNotificationService implements DatabaseNotificationServiceI
     }
 
     private void sendMail(String subject, String message) {
-        emailService.ifPresent(
-                service -> {
-                    try {
-                        String to = props.getMail().getFrom();
-                        service.sendSimpleMail(to, subject, message);
-                    } catch (MessagingException e) {
-                        log.error("Error sending notification email: {}", e.getMessage(), e);
-                    }
-                });
+        emailService.ifPresent(service -> {
+            try {
+                String to = props.getMail().getFrom();
+                service.sendSimpleMail(to, subject, message);
+            } catch (MessagingException e) {
+                log.error("Error sending notification email: {}", e.getMessage(), e);
+            }
+        });
     }
 }

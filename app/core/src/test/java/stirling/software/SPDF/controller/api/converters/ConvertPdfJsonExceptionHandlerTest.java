@@ -29,15 +29,13 @@ class ConvertPdfJsonExceptionHandlerTest {
         @Test
         @DisplayName("serializes a 410 GONE JSON body with the error details")
         void serializesGoneResponse() {
-            ConvertPdfJsonExceptionHandler handler =
-                    new ConvertPdfJsonExceptionHandler(new ObjectMapper());
+            ConvertPdfJsonExceptionHandler handler = new ConvertPdfJsonExceptionHandler(new ObjectMapper());
 
             ResponseEntity<byte[]> response =
                     handler.handleCacheUnavailable(new CacheUnavailableException("cache is gone"));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.GONE);
-            assertThat(response.getHeaders().getContentType())
-                    .isEqualTo(MediaType.APPLICATION_JSON);
+            assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
             String json = new String(response.getBody());
             assertThat(json).contains("cache_unavailable");
             assertThat(json).contains("reupload");
@@ -47,11 +45,9 @@ class ConvertPdfJsonExceptionHandlerTest {
         @Test
         @DisplayName("tolerates a null exception message")
         void toleratesNullMessage() {
-            ConvertPdfJsonExceptionHandler handler =
-                    new ConvertPdfJsonExceptionHandler(new ObjectMapper());
+            ConvertPdfJsonExceptionHandler handler = new ConvertPdfJsonExceptionHandler(new ObjectMapper());
 
-            ResponseEntity<byte[]> response =
-                    handler.handleCacheUnavailable(new CacheUnavailableException(null));
+            ResponseEntity<byte[]> response = handler.handleCacheUnavailable(new CacheUnavailableException(null));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.GONE);
             assertThat(response.getBody()).isNotEmpty();
@@ -70,12 +66,10 @@ class ConvertPdfJsonExceptionHandlerTest {
             Mockito.when(mapper.writeValueAsBytes(any())).thenThrow(new RuntimeException("boom"));
             ConvertPdfJsonExceptionHandler handler = new ConvertPdfJsonExceptionHandler(mapper);
 
-            ResponseEntity<byte[]> response =
-                    handler.handleCacheUnavailable(new CacheUnavailableException("nope"));
+            ResponseEntity<byte[]> response = handler.handleCacheUnavailable(new CacheUnavailableException("nope"));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.GONE);
-            assertThat(response.getHeaders().getContentType())
-                    .isEqualTo(MediaType.APPLICATION_JSON);
+            assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
             // Last-ditch hand-written JSON literal.
             String json = new String(response.getBody());
             assertThat(json).contains("cache_unavailable");
@@ -93,8 +87,7 @@ class ConvertPdfJsonExceptionHandlerTest {
                     .thenReturn(fallbackJson);
             ConvertPdfJsonExceptionHandler handler = new ConvertPdfJsonExceptionHandler(mapper);
 
-            ResponseEntity<byte[]> response =
-                    handler.handleCacheUnavailable(new CacheUnavailableException("retry"));
+            ResponseEntity<byte[]> response = handler.handleCacheUnavailable(new CacheUnavailableException("retry"));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.GONE);
             assertThat(response.getBody()).isEqualTo(fallbackJson);

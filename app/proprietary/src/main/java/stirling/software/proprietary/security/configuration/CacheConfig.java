@@ -31,11 +31,10 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         int keyRetentionDays = applicationProperties.getSecurity().getJwt().getKeyRetentionDays();
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-        cacheManager.setCaffeine(
-                Caffeine.newBuilder()
-                        .maximumSize(1000) // Make configurable?
-                        .expireAfterWrite(Duration.ofDays(keyRetentionDays))
-                        .recordStats());
+        cacheManager.setCaffeine(Caffeine.newBuilder()
+                .maximumSize(1000) // Make configurable?
+                .expireAfterWrite(Duration.ofDays(keyRetentionDays))
+                .recordStats());
         // 30s TTL keeps audit views near-live without re-scanning the DB; one entry per scope.
         cacheManager.registerCustomCache(
                 PORTAL_AUDIT_EVENTS_CACHE,

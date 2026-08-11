@@ -40,14 +40,6 @@ public record InstanceEntitlement(
             long periodSpendUnits,
             Long periodCapUnits,
             EntitlementState state) {
-        this(
-                subscribed,
-                freeRemainingUnits,
-                periodSpendUnits,
-                periodCapUnits,
-                state,
-                null,
-                null,
-                null);
+        this(subscribed, freeRemainingUnits, periodSpendUnits, periodCapUnits, state, null, null, null);
     }
 }

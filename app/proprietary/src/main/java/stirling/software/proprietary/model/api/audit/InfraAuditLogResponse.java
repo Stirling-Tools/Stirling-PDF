@@ -23,8 +23,7 @@ public class InfraAuditLogResponse {
     private List<InfraAuditEventDto> events;
 
     @Schema(
-            description =
-                    "True when this is the whole-server (admin) view. Team-scoped views are false; "
-                            + "drives whether the admin-only, whole-server CSV export is offered.")
+            description = "True when this is the whole-server (admin) view. Team-scoped views are false; "
+                    + "drives whether the admin-only, whole-server CSV export is offered.")
     private boolean fullServer;
 }

@@ -54,7 +54,8 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ManualRedactionServiceTest {
 
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private TempFileManager tempFileManager;
 
     private ManualRedactionService service;
 
@@ -67,19 +68,15 @@ class ManualRedactionServiceTest {
 
         // createManagedTempFile returns a TempFile backed by a real on-disk file so
         // document.save() works and length() can be inspected.
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("redact-test", inv.<String>getArgument(0))
-                                            .toFile();
-                            createdTempFiles.add(f);
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("redact-test", inv.<String>getArgument(0))
+                    .toFile();
+            createdTempFiles.add(f);
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     @AfterEach
@@ -118,8 +115,7 @@ class ManualRedactionServiceTest {
         return doc;
     }
 
-    private static RedactionArea area(
-            Integer page, double x, double y, double width, double height, String color) {
+    private static RedactionArea area(Integer page, double x, double y, double width, double height, String color) {
         RedactionArea a = new RedactionArea();
         a.setPage(page);
         a.setX(x);
@@ -388,8 +384,7 @@ class ManualRedactionServiceTest {
         @DisplayName("blocks on out-of-range pages are skipped")
         void outOfRangePageIndexSkipped() throws Exception {
             try (PDDocument doc = newDocument(1)) {
-                List<PDFText> blocks =
-                        Arrays.asList(text(0, 72, 690, 300, 710), text(9, 10, 10, 50, 50));
+                List<PDFText> blocks = Arrays.asList(text(0, 72, 690, 300, 710), text(9, 10, 10, 50, 50));
                 service.redactFoundText(doc, blocks, 0.0f, Color.BLACK, false);
                 assertEquals(1, doc.getNumberOfPages());
             }
@@ -567,8 +562,7 @@ class ManualRedactionServiceTest {
                 Map<Integer, List<PDFText>> byPage = new HashMap<>();
                 byPage.put(0, new ArrayList<>(Arrays.asList(text(0, 72, 690, 300, 710))));
 
-                TempFile result =
-                        service.finalizeRedaction(doc, byPage, "#000000", 1.0f, false, false);
+                TempFile result = service.finalizeRedaction(doc, byPage, "#000000", 1.0f, false, false);
 
                 assertNotNull(result);
                 assertNotNull(result.getFile());
@@ -589,8 +583,7 @@ class ManualRedactionServiceTest {
             try (PDDocument doc = newDocument(2)) {
                 Map<Integer, List<PDFText>> byPage = new HashMap<>();
 
-                TempFile result =
-                        service.finalizeRedaction(doc, byPage, "#000000", 0.0f, false, false);
+                TempFile result = service.finalizeRedaction(doc, byPage, "#000000", 0.0f, false, false);
 
                 assertNotNull(result);
                 assertTrue(result.getFile().exists());
@@ -609,8 +602,7 @@ class ManualRedactionServiceTest {
             try (PDDocument doc = newDocument(1)) {
                 Map<Integer, List<PDFText>> byPage = new HashMap<>();
 
-                TempFile result =
-                        service.finalizeRedaction(doc, byPage, "#000000", 0.0f, null, false);
+                TempFile result = service.finalizeRedaction(doc, byPage, "#000000", 0.0f, null, false);
 
                 assertNotNull(result);
                 assertTrue(result.getFile().exists());
@@ -629,8 +621,7 @@ class ManualRedactionServiceTest {
                 Map<Integer, List<PDFText>> byPage = new HashMap<>();
                 byPage.put(0, new ArrayList<>(Arrays.asList(text(0, 72, 690, 300, 710))));
 
-                TempFile result =
-                        service.finalizeRedaction(doc, byPage, "#FF0000", 2.0f, false, true);
+                TempFile result = service.finalizeRedaction(doc, byPage, "#FF0000", 2.0f, false, true);
 
                 assertNotNull(result);
                 try (PDDocument reloaded = Loader.loadPDF(result.getFile())) {
@@ -655,10 +646,7 @@ class ManualRedactionServiceTest {
 
             try {
                 assertThrows(
-                        IOException.class,
-                        () ->
-                                service.finalizeRedaction(
-                                        doc, byPage, "#000000", 0.0f, false, false));
+                        IOException.class, () -> service.finalizeRedaction(doc, byPage, "#000000", 0.0f, false, false));
                 // The failing temp file is closed on the error path.
                 verify(failing).close();
             } finally {

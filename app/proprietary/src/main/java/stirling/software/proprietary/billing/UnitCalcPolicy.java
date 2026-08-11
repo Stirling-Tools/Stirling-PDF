@@ -10,8 +10,7 @@ package stirling.software.proprietary.billing;
  * receives these values in the daily entitlement sync. {@code minChargeUnits} is carried here for
  * the charge layer; {@link DocumentUnitCalculator} itself does not apply it (see its docs).
  */
-public record UnitCalcPolicy(
-        int docPagesPerUnit, long docBytesPerUnit, int minChargeUnits, int fileUnitCap) {
+public record UnitCalcPolicy(int docPagesPerUnit, long docBytesPerUnit, int minChargeUnits, int fileUnitCap) {
 
     public UnitCalcPolicy {
         if (docPagesPerUnit <= 0) {

@@ -59,19 +59,26 @@ import stirling.software.common.util.TempFileManager;
 @DisplayName("SplitPdfByChaptersController additional branch tests")
 class SplitPdfByChaptersControllerMoreTest {
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private PdfMetadataService pdfMetadataService;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private SplitPdfByChaptersController controller;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private PdfMetadataService pdfMetadataService;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private SplitPdfByChaptersController controller;
 
     @BeforeEach
     void setUp() throws IOException {
         when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        inv ->
-                                Files.createTempFile(tempDir, "ch", inv.<String>getArgument(0))
-                                        .toFile());
+                .thenAnswer(inv -> Files.createTempFile(tempDir, "ch", inv.<String>getArgument(0))
+                        .toFile());
         lenient()
                 .when(pdfDocumentFactory.load(any(File.class)))
                 .thenAnswer(inv -> Loader.loadPDF((File) inv.getArgument(0)));
@@ -90,8 +97,7 @@ class SplitPdfByChaptersControllerMoreTest {
     }
 
     private MockMultipartFile asFile(byte[] bytes) {
-        return new MockMultipartFile(
-                "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, bytes);
+        return new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, bytes);
     }
 
     private SplitPdfByChaptersRequest request(byte[] bytes, int level, boolean dupes) {
@@ -105,8 +111,7 @@ class SplitPdfByChaptersControllerMoreTest {
 
     private List<byte[]> unzip(Resource zip) throws IOException {
         List<byte[]> out = new ArrayList<>();
-        try (ZipInputStream zis =
-                new ZipInputStream(new ByteArrayInputStream(zip.getContentAsByteArray()))) {
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zip.getContentAsByteArray()))) {
             ZipEntry e;
             while ((e = zis.getNextEntry()) != null) {
                 out.add(zis.readAllBytes());
@@ -168,8 +173,9 @@ class SplitPdfByChaptersControllerMoreTest {
         @Test
         @DisplayName("a deeper level descends into child bookmarks")
         void deeperLevelIncludesChildren() throws Exception {
-            int topLevelCount =
-                    unzip(controller.splitPdf(request(nestedDoc(), 0, true)).getBody()).size();
+            int topLevelCount = unzip(
+                            controller.splitPdf(request(nestedDoc(), 0, true)).getBody())
+                    .size();
 
             ResponseEntity<Resource> response = controller.splitPdf(request(nestedDoc(), 2, true));
 
@@ -248,8 +254,7 @@ class SplitPdfByChaptersControllerMoreTest {
         @Test
         @DisplayName("a PDF with an AcroForm still splits into the expected chapters")
         void formPdfSplits() throws Exception {
-            ResponseEntity<Resource> response =
-                    controller.splitPdf(request(formDocWithBookmarks(), 0, true));
+            ResponseEntity<Resource> response = controller.splitPdf(request(formDocWithBookmarks(), 0, true));
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             List<byte[]> outputs = unzip(response.getBody());

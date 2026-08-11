@@ -11,5 +11,4 @@ package stirling.software.common.model.api.comments;
  * @param author optional author label shown in the popup; {@code null} → service default.
  * @param subject optional subject line shown in the popup; {@code null} → service default.
  */
-public record StickyNoteSpec(
-        AnnotationLocation location, String text, String author, String subject) {}
+public record StickyNoteSpec(AnnotationLocation location, String text, String author, String subject) {}

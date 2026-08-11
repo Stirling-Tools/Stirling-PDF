@@ -40,24 +40,30 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 @ExtendWith(MockitoExtension.class)
 class PolicyValidatorTest {
 
-    @Mock private PolicyTrigger trigger;
-    @Mock private InputSource inputSource;
-    @Mock private PolicyOutputSink outputSink;
-    @Mock private PipelineStepValidator stepValidator;
+    @Mock
+    private PolicyTrigger trigger;
+
+    @Mock
+    private InputSource inputSource;
+
+    @Mock
+    private PolicyOutputSink outputSink;
+
+    @Mock
+    private PipelineStepValidator stepValidator;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
     private PolicyValidator validator;
 
     @BeforeEach
     void setUp() {
-        validator =
-                new PolicyValidator(
-                        List.of(trigger),
-                        List.of(inputSource),
-                        List.of(outputSink),
-                        List.of(stepValidator),
-                        sourceStore,
-                        new ToolChainValidator(path -> java.util.Optional.empty()));
+        validator = new PolicyValidator(
+                List.of(trigger),
+                List.of(inputSource),
+                List.of(outputSink),
+                List.of(stepValidator),
+                sourceStore,
+                new ToolChainValidator(path -> java.util.Optional.empty()));
     }
 
     @Test
@@ -87,14 +93,10 @@ class PolicyValidatorTest {
     @Test
     void surfacesAnInvalidConfigFromAHandler() {
         when(trigger.type()).thenReturn("schedule");
-        doThrow(new IllegalArgumentException("invalid schedule"))
-                .when(trigger)
-                .validate(any(), any());
+        doThrow(new IllegalArgumentException("invalid schedule")).when(trigger).validate(any(), any());
 
         IllegalArgumentException ex =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> validator.validate(policy("schedule")));
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy("schedule")));
         assertTrue(ex.getMessage().contains("schedule"));
     }
 
@@ -125,9 +127,7 @@ class PolicyValidatorTest {
         when(trigger.type()).thenReturn("schedule");
 
         IllegalArgumentException ex =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> validator.validate(policy("mystery")));
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy("mystery")));
         assertTrue(ex.getMessage().contains("unknown trigger type"));
     }
 
@@ -140,9 +140,7 @@ class PolicyValidatorTest {
         PolicyValidator strict = validatorWith(IMAGE_THEN_PDF);
 
         IllegalArgumentException ex =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> strict.validate(withSteps(EXTRACT_IMAGES, ROTATE)));
+                assertThrows(IllegalArgumentException.class, () -> strict.validate(withSteps(EXTRACT_IMAGES, ROTATE)));
 
         assertTrue(ex.getMessage().contains("cannot run in this order"), ex.getMessage());
     }
@@ -161,21 +159,11 @@ class PolicyValidatorTest {
     private static final String EXTRACT_IMAGES = "/api/v1/misc/extract-images";
     private static final String ROTATE = "/api/v1/general/rotate-pdf";
 
-    private static final ToolIOSource IMAGE_THEN_PDF =
-            ToolIOSource.of(
-                    Map.of(
-                            EXTRACT_IMAGES,
-                            new ToolIOSpec(
-                                    Set.of(ToolFormat.PDF),
-                                    ToolFormat.IMAGE,
-                                    ToolArity.SIMO,
-                                    List.of()),
-                            ROTATE,
-                            new ToolIOSpec(
-                                    Set.of(ToolFormat.PDF),
-                                    ToolFormat.PDF,
-                                    ToolArity.SISO,
-                                    List.of())));
+    private static final ToolIOSource IMAGE_THEN_PDF = ToolIOSource.of(Map.of(
+            EXTRACT_IMAGES,
+            new ToolIOSpec(Set.of(ToolFormat.PDF), ToolFormat.IMAGE, ToolArity.SIMO, List.of()),
+            ROTATE,
+            new ToolIOSpec(Set.of(ToolFormat.PDF), ToolFormat.PDF, ToolArity.SISO, List.of())));
 
     private PolicyValidator validatorWith(ToolIOSource toolIO) {
         return new PolicyValidator(
@@ -205,20 +193,16 @@ class PolicyValidatorTest {
 
     @Test
     void rejectsMoreThanOneInput() {
-        Policy twoInputs =
-                new Policy(
-                        "p1",
-                        "p",
-                        "owner",
-                        true,
-                        List.of(
-                                PipelineInput.manual(folderSourceId()),
-                                PipelineInput.manual(folderSourceId())),
-                        List.of(),
-                        OutputSpec.inline());
+        Policy twoInputs = new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                List.of(PipelineInput.manual(folderSourceId()), PipelineInput.manual(folderSourceId())),
+                List.of(),
+                OutputSpec.inline());
 
-        IllegalArgumentException ex =
-                assertThrows(IllegalArgumentException.class, () -> validator.validate(twoInputs));
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> validator.validate(twoInputs));
         assertTrue(ex.getMessage().contains("at most one input"));
     }
 
@@ -234,8 +218,7 @@ class PolicyValidatorTest {
     @Test
     void allowsZeroInputsAndZeroOutputs() {
         when(outputSink.supports(any())).thenReturn(true);
-        Policy bare =
-                new Policy("p1", "p", "owner", true, List.of(), List.of(), OutputSpec.inline());
+        Policy bare = new Policy("p1", "p", "owner", true, List.of(), List.of(), OutputSpec.inline());
 
         validator.validate(bare);
     }
@@ -246,9 +229,7 @@ class PolicyValidatorTest {
                 "p",
                 "owner",
                 true,
-                List.of(
-                        new PipelineInput(
-                                folderSourceId(), new TriggerConfig(triggerType, Map.of()))),
+                List.of(new PipelineInput(folderSourceId(), new TriggerConfig(triggerType, Map.of()))),
                 List.of(),
                 OutputSpec.inline());
     }

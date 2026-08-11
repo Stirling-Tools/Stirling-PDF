@@ -173,9 +173,7 @@ public class RequestUriUtils {
     public static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
         // Remove context path from URI to normalize path matching
         String trimmedUri =
-                requestURI.startsWith(contextPath)
-                        ? requestURI.substring(contextPath.length())
-                        : requestURI;
+                requestURI.startsWith(contextPath) ? requestURI.substring(contextPath.length()) : requestURI;
 
         // Public auth endpoints that don't require authentication
         return trimmedUri.startsWith("/login")
@@ -187,11 +185,9 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/api/v1/auth/login")
                 || trimmedUri.startsWith("/api/v1/auth/refresh")
                 || trimmedUri.startsWith("/api/v1/auth/logout")
-                || trimmedUri.startsWith(
-                        "/api/v1/proprietary/ui-data/login") // Login page config (SSO providers +
+                || trimmedUri.startsWith("/api/v1/proprietary/ui-data/login") // Login page config (SSO providers +
                 // enableLogin)
-                || trimmedUri.startsWith(
-                        "/api/v1/ui-data/footer-info") // Public footer configuration
+                || trimmedUri.startsWith("/api/v1/ui-data/footer-info") // Public footer configuration
                 || trimmedUri.startsWith("/api/v1/invite/validate")
                 || trimmedUri.startsWith("/api/v1/invite/accept")
                 // Health Endpoints
@@ -200,8 +196,7 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/healthz")
                 || trimmedUri.startsWith("/liveness")
                 || trimmedUri.startsWith("/readiness")
-                || trimmedUri.startsWith(
-                        "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
+                || trimmedUri.startsWith("/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
                 || trimmedUri.startsWith("/api/v1/webhooks/")
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login

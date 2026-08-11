@@ -40,26 +40,29 @@ import stirling.software.proprietary.billing.UnitCalcPolicy;
 @ExtendWith(MockitoExtension.class)
 class InstanceEntitlementInterceptorTest {
 
-    @Mock private InstanceEntitlementGate gate;
-    @Mock private EntitlementCache entitlementCache;
-    @Mock private ObjectProvider<UsageMeterService> meterProvider;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private InstanceEntitlementGate gate;
+
+    @Mock
+    private EntitlementCache entitlementCache;
+
+    @Mock
+    private ObjectProvider<UsageMeterService> meterProvider;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private InstanceEntitlementInterceptor interceptor() {
-        return new InstanceEntitlementInterceptor(
-                gate, entitlementCache, meterProvider, tempFileManager);
+        return new InstanceEntitlementInterceptor(gate, entitlementCache, meterProvider, tempFileManager);
     }
 
     private boolean preHandle(MockHttpServletResponse response) throws Exception {
-        return interceptor()
-                .preHandle(
-                        new MockHttpServletRequest("GET", "/api/v1/ai/x"), response, new Object());
+        return interceptor().preHandle(new MockHttpServletRequest("GET", "/api/v1/ai/x"), response, new Object());
     }
 
     @Test
     void allowsWhenGateAllows() throws Exception {
-        when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         assertTrue(preHandle(response));
@@ -68,8 +71,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void blocksWith402AndLinkSignalWhenGateBlocks() throws Exception {
-        when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.block(GateDecision.Reason.NOT_LINKED));
+        when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.block(GateDecision.Reason.NOT_LINKED));
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         assertFalse(preHandle(response));
@@ -82,8 +84,7 @@ class InstanceEntitlementInterceptorTest {
     @Test
     void failsOpenWhenGateThrows() throws Exception {
         // A DB / SaaS blip while resolving entitlement must never hard-block billable work.
-        when(gate.evaluate(anyBoolean()))
-                .thenThrow(new RuntimeException("entitlement source down"));
+        when(gate.evaluate(anyBoolean())).thenThrow(new RuntimeException("entitlement source down"));
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         assertTrue(preHandle(response));
@@ -92,8 +93,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void metersSuccessfulBillableOp() throws Exception {
-        when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
         UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
@@ -112,8 +112,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void metersPdfByPageCountNotJustBytes(@TempDir Path tmp) throws Exception {
-        when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
         // docPagesPerUnit=1, docBytesPerUnit=1MB → a tiny 5-page PDF costs 5 on the page axis but
@@ -141,8 +140,7 @@ class InstanceEntitlementInterceptorTest {
 
     @Test
     void doesNotMeterWhenMeteringSwitchOff() throws Exception {
-        when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         when(meterProvider.getIfAvailable()).thenReturn(null); // metering.enabled = false
 
         InstanceEntitlementInterceptor interceptor = interceptor();
@@ -159,12 +157,10 @@ class InstanceEntitlementInterceptorTest {
     void gatesPolicyRunUpFrontEvenWithoutAutomationHeader() throws Exception {
         // The policy /run call carries no automation header, but must be blocked up front (not
         // after its first tool) when the instance is unlinked.
-        when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.block(GateDecision.Reason.NOT_LINKED));
+        when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.block(GateDecision.Reason.NOT_LINKED));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req =
-                new MockHttpServletRequest("POST", "/api/v1/policies/pol-1/run");
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/policies/pol-1/run");
         MockHttpServletResponse resp = new MockHttpServletResponse();
 
         assertFalse(interceptor.preHandle(req, resp, new Object()));
@@ -177,14 +173,12 @@ class InstanceEntitlementInterceptorTest {
     void doesNotMeterThePolicyRunEndpointItself() throws Exception {
         // Gated up front, but metered only via its dispatched tool sub-steps (category BYPASSED
         // here), so the /run request itself never accrues usage.
-        when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req =
-                new MockHttpServletRequest("POST", "/api/v1/policies/pol-1/run");
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/policies/pol-1/run");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
         interceptor.afterCompletion(req, resp, new Object(), null);
@@ -193,8 +187,7 @@ class InstanceEntitlementInterceptorTest {
     }
 
     private static InstanceEntitlement entitled(UnitCalcPolicy policy, LocalDateTime period) {
-        return new InstanceEntitlement(
-                true, 0, 0, 100L, EntitlementState.OK, policy, period, period.plusMonths(1));
+        return new InstanceEntitlement(true, 0, 0, 100L, EntitlementState.OK, policy, period, period.plusMonths(1));
     }
 
     private static byte[] fivePagePdf() throws Exception {

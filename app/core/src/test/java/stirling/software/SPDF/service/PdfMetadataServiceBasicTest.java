@@ -43,12 +43,11 @@ class PdfMetadataServiceBasicTest {
         when(proFeatures.getCustomMetadata()).thenReturn(customMetadata);
 
         // Set up the service under test
-        pdfMetadataService =
-                new PdfMetadataService(
-                        applicationProperties,
-                        STIRLING_PDF_LABEL,
-                        false, // not running Pro or higher
-                        userService);
+        pdfMetadataService = new PdfMetadataService(
+                applicationProperties,
+                STIRLING_PDF_LABEL,
+                false, // not running Pro or higher
+                userService);
     }
 
     @Test
@@ -82,8 +81,7 @@ class PdfMetadataServiceBasicTest {
         PdfMetadata metadata = pdfMetadataService.extractMetadataFromPdf(testDocument);
 
         // Convert Calendar to ZonedDateTime for comparison
-        ZonedDateTime expectedCreationDate =
-                ZonedDateTime.ofInstant(creationDate.toInstant(), ZoneId.systemDefault());
+        ZonedDateTime expectedCreationDate = ZonedDateTime.ofInstant(creationDate.toInstant(), ZoneId.systemDefault());
         ZonedDateTime expectedModificationDate =
                 ZonedDateTime.ofInstant(modificationDate.toInstant(), ZoneId.systemDefault());
 
@@ -94,12 +92,8 @@ class PdfMetadataServiceBasicTest {
         assertEquals(testCreator, metadata.getCreator(), "Creator should match");
         assertEquals(testSubject, metadata.getSubject(), "Subject should match");
         assertEquals(testKeywords, metadata.getKeywords(), "Keywords should match");
-        assertEquals(
-                expectedCreationDate, metadata.getCreationDate(), "Creation date should match");
-        assertEquals(
-                expectedModificationDate,
-                metadata.getModificationDate(),
-                "Modification date should match");
+        assertEquals(expectedCreationDate, metadata.getCreationDate(), "Creation date should match");
+        assertEquals(expectedModificationDate, metadata.getModificationDate(), "Modification date should match");
     }
 
     @Test

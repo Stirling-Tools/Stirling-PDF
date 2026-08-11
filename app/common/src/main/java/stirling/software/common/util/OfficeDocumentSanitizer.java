@@ -42,25 +42,20 @@ import stirling.software.common.service.SsrfProtectionService;
 @Slf4j
 public class OfficeDocumentSanitizer {
 
-    private static final Set<String> OOXML_EXTENSIONS =
-            Set.of(
-                    "docx", "docm", "dotx", "dotm", "xlsx", "xlsm", "xltx", "xltm", "pptx", "pptm",
-                    "potx", "potm", "ppsx", "ppsm");
+    private static final Set<String> OOXML_EXTENSIONS = Set.of(
+            "docx", "docm", "dotx", "dotm", "xlsx", "xlsm", "xltx", "xltm", "pptx", "pptm", "potx", "potm", "ppsx",
+            "ppsm");
 
     private static final Set<String> ODF_EXTENSIONS =
-            Set.of(
-                    "odt", "ott", "ods", "ots", "odp", "otp", "odg", "otg", "odf", "odc", "odi",
-                    "odm");
+            Set.of("odt", "ott", "ods", "ots", "odp", "otp", "odg", "otg", "odf", "odc", "odi", "odm");
 
-    private static final Set<String> ODF_XML_PARTS =
-            Set.of("content.xml", "styles.xml", "meta.xml", "settings.xml");
+    private static final Set<String> ODF_XML_PARTS = Set.of("content.xml", "styles.xml", "meta.xml", "settings.xml");
 
     private final SsrfProtectionService ssrfProtectionService;
     private final ApplicationProperties applicationProperties;
 
     public OfficeDocumentSanitizer(
-            SsrfProtectionService ssrfProtectionService,
-            ApplicationProperties applicationProperties) {
+            SsrfProtectionService ssrfProtectionService, ApplicationProperties applicationProperties) {
         this.ssrfProtectionService = ssrfProtectionService;
         this.applicationProperties = applicationProperties;
     }
@@ -86,9 +81,7 @@ public class OfficeDocumentSanitizer {
         }
 
         ByteArrayOutputStream out = new ByteArrayOutputStream(documentBytes.length);
-        try (ZipInputStream zipIn =
-                        ZipSecurity.createHardenedInputStream(
-                                new ByteArrayInputStream(documentBytes));
+        try (ZipInputStream zipIn = ZipSecurity.createHardenedInputStream(new ByteArrayInputStream(documentBytes));
                 ZipOutputStream zipOut = new ZipOutputStream(out)) {
 
             ZipEntry entry;
@@ -126,14 +119,8 @@ public class OfficeDocumentSanitizer {
             if (isOdfXmlPart(lower)) {
                 return sanitizeOdfXml(entryBytes);
             }
-        } catch (ParserConfigurationException
-                | SAXException
-                | IOException
-                | TransformerException e) {
-            log.warn(
-                    "Failed to parse XML part '{}' for sanitization, leaving as-is: {}",
-                    entryName,
-                    e.getMessage());
+        } catch (ParserConfigurationException | SAXException | IOException | TransformerException e) {
+            log.warn("Failed to parse XML part '{}' for sanitization, leaving as-is: {}", entryName, e.getMessage());
         }
         return entryBytes;
     }
@@ -168,9 +155,7 @@ public class OfficeDocumentSanitizer {
             if (isAdminAllowed(targetValue)) {
                 continue;
             }
-            log.warn(
-                    "Stripping OOXML external relationship target: {}",
-                    truncateForLog(targetValue));
+            log.warn("Stripping OOXML external relationship target: {}", truncateForLog(targetValue));
             toRemove.add(node);
         }
         if (toRemove.isEmpty()) {
@@ -208,9 +193,7 @@ public class OfficeDocumentSanitizer {
                     continue;
                 }
                 String lower = name.toLowerCase(Locale.ROOT);
-                if (!(lower.equals("xlink:href")
-                        || lower.endsWith(":href")
-                        || lower.equals("href"))) {
+                if (!(lower.equals("xlink:href") || lower.endsWith(":href") || lower.equals("href"))) {
                     continue;
                 }
                 String value = attr.getNodeValue();
@@ -220,10 +203,7 @@ public class OfficeDocumentSanitizer {
                 if (isAdminAllowed(value)) {
                     continue;
                 }
-                log.warn(
-                        "Stripping ODF external href attribute ({}): {}",
-                        name,
-                        truncateForLog(value));
+                log.warn("Stripping ODF external href attribute ({}): {}", name, truncateForLog(value));
                 hrefAttrsToRemove.add(name);
             }
             Element element = (Element) node;
@@ -274,8 +254,7 @@ public class OfficeDocumentSanitizer {
         return ssrfProtectionService.isUrlAllowed(url);
     }
 
-    private Document parseSecurely(byte[] xmlBytes)
-            throws ParserConfigurationException, SAXException, IOException {
+    private Document parseSecurely(byte[] xmlBytes) throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);

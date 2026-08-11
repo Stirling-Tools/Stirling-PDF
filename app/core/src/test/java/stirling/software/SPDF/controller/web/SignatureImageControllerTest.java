@@ -35,8 +35,7 @@ class SignatureImageControllerTest {
         byte[] data = new byte[] {1, 2, 3};
         when(sharedSignatureService.getSharedSignatureBytes("sig.png")).thenReturn(data);
 
-        SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+        SignatureImageController controller = new SignatureImageController(sharedSignatureService, null, null);
 
         ResponseEntity<byte[]> response = controller.getSignature("sig.png");
 
@@ -52,8 +51,7 @@ class SignatureImageControllerTest {
         byte[] data = new byte[] {4, 5, 6};
         when(sharedSignatureService.getSharedSignatureBytes("sig.jpg")).thenReturn(data);
 
-        SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+        SignatureImageController controller = new SignatureImageController(sharedSignatureService, null, null);
 
         ResponseEntity<byte[]> response = controller.getSignature("sig.jpg");
 
@@ -66,8 +64,7 @@ class SignatureImageControllerTest {
         byte[] data = new byte[] {7, 8, 9};
         when(sharedSignatureService.getSharedSignatureBytes("sig.jpeg")).thenReturn(data);
 
-        SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+        SignatureImageController controller = new SignatureImageController(sharedSignatureService, null, null);
 
         ResponseEntity<byte[]> response = controller.getSignature("sig.jpeg");
 
@@ -84,8 +81,7 @@ class SignatureImageControllerTest {
                 .thenReturn(personalData);
 
         SignatureImageController controller =
-                new SignatureImageController(
-                        sharedSignatureService, personalSignatureService, userService);
+                new SignatureImageController(sharedSignatureService, personalSignatureService, userService);
 
         ResponseEntity<byte[]> response = controller.getSignature("sig.png");
 
@@ -106,8 +102,7 @@ class SignatureImageControllerTest {
         when(sharedSignatureService.getSharedSignatureBytes("sig.png")).thenReturn(sharedData);
 
         SignatureImageController controller =
-                new SignatureImageController(
-                        sharedSignatureService, personalSignatureService, userService);
+                new SignatureImageController(sharedSignatureService, personalSignatureService, userService);
 
         ResponseEntity<byte[]> response = controller.getSignature("sig.png");
 
@@ -126,8 +121,7 @@ class SignatureImageControllerTest {
         when(sharedSignatureService.getSharedSignatureBytes("sig.png")).thenReturn(sharedData);
 
         SignatureImageController controller =
-                new SignatureImageController(
-                        sharedSignatureService, personalSignatureService, userService);
+                new SignatureImageController(sharedSignatureService, personalSignatureService, userService);
 
         ResponseEntity<byte[]> response = controller.getSignature("sig.png");
 
@@ -139,11 +133,9 @@ class SignatureImageControllerTest {
 
     @Test
     void getSignature_notFoundAnywhere_returns404() throws IOException {
-        when(sharedSignatureService.getSharedSignatureBytes("missing.png"))
-                .thenThrow(new IOException("not found"));
+        when(sharedSignatureService.getSharedSignatureBytes("missing.png")).thenThrow(new IOException("not found"));
 
-        SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+        SignatureImageController controller = new SignatureImageController(sharedSignatureService, null, null);
 
         ResponseEntity<byte[]> response = controller.getSignature("missing.png");
 
@@ -157,8 +149,7 @@ class SignatureImageControllerTest {
         byte[] sharedData = new byte[] {40, 41};
         when(sharedSignatureService.getSharedSignatureBytes("sig.png")).thenReturn(sharedData);
 
-        SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+        SignatureImageController controller = new SignatureImageController(sharedSignatureService, null, null);
 
         ResponseEntity<byte[]> response = controller.getSignature("sig.png");
 
@@ -173,8 +164,7 @@ class SignatureImageControllerTest {
         byte[] data = new byte[] {50};
         when(sharedSignatureService.getSharedSignatureBytes("SIG.JPG")).thenReturn(data);
 
-        SignatureImageController controller =
-                new SignatureImageController(sharedSignatureService, null, null);
+        SignatureImageController controller = new SignatureImageController(sharedSignatureService, null, null);
 
         ResponseEntity<byte[]> response = controller.getSignature("SIG.JPG");
 

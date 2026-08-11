@@ -52,17 +52,16 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
     @EventListener(ContextRefreshedEvent.class)
     public void discoverToolIO() {
         Map<String, ToolIOSpec> discovered = new TreeMap<>();
-        for (RequestMappingHandlerMapping mapping :
-                applicationContext.getBeansOfType(RequestMappingHandlerMapping.class).values()) {
-            mapping.getHandlerMethods()
-                    .forEach((info, handler) -> register(discovered, info, handler));
+        for (RequestMappingHandlerMapping mapping : applicationContext
+                .getBeansOfType(RequestMappingHandlerMapping.class)
+                .values()) {
+            mapping.getHandlerMethods().forEach((info, handler) -> register(discovered, info, handler));
         }
         specsByPath = Map.copyOf(discovered);
         log.debug("Discovered {} endpoints declaring @ToolIO", specsByPath.size());
     }
 
-    private static void register(
-            Map<String, ToolIOSpec> target, RequestMappingInfo info, HandlerMethod handler) {
+    private static void register(Map<String, ToolIOSpec> target, RequestMappingInfo info, HandlerMethod handler) {
         ToolIO annotation = handler.getMethodAnnotation(ToolIO.class);
         if (annotation == null) {
             return;
@@ -89,10 +88,9 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
         if (spec.isEmpty()) {
             return null;
         }
-        List<String> extensions =
-                output
-                        ? spec.get().resolveOutput().format().getExtensions()
-                        : spec.get().acceptedExtensions();
+        List<String> extensions = output
+                ? spec.get().resolveOutput().format().getExtensions()
+                : spec.get().acceptedExtensions();
         // Callers express "no restriction" as null.
         return extensions.isEmpty() ? null : extensions;
     }

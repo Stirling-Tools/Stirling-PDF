@@ -45,10 +45,8 @@ public class RemoveCertSignController {
     @Operation(
             summary = "Remove digital signature from PDF",
             description =
-                    "This endpoint accepts a PDF file and returns the PDF file without the digital"
-                            + " signature.")
-    public ResponseEntity<Resource> removeCertSignPDF(@ModelAttribute PDFFile request)
-            throws Exception {
+                    "This endpoint accepts a PDF file and returns the PDF file without the digital" + " signature.")
+    public ResponseEntity<Resource> removeCertSignPDF(@ModelAttribute PDFFile request) throws Exception {
         MultipartFile pdf = request.getFileInput();
 
         // Load the PDF document with proper resource management
@@ -61,10 +59,9 @@ public class RemoveCertSignController {
             PDAcroForm acroForm = catalog.getAcroForm();
             if (acroForm != null) {
                 // Remove signature fields safely
-                List<PDField> fieldsToRemove =
-                        acroForm.getFields().stream()
-                                .filter(field -> field instanceof PDSignatureField)
-                                .toList();
+                List<PDField> fieldsToRemove = acroForm.getFields().stream()
+                        .filter(field -> field instanceof PDSignatureField)
+                        .toList();
 
                 if (!fieldsToRemove.isEmpty()) {
                     acroForm.flatten(fieldsToRemove, false);

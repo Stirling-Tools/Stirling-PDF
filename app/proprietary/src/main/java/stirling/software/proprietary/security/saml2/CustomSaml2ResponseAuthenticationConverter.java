@@ -26,8 +26,7 @@ import stirling.software.proprietary.security.service.UserService;
 @Slf4j
 @ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
 @RequiredArgsConstructor
-public class CustomSaml2ResponseAuthenticationConverter
-        implements Converter<ResponseToken, Saml2Authentication> {
+public class CustomSaml2ResponseAuthenticationConverter implements Converter<ResponseToken, Saml2Authentication> {
 
     private final UserService userService;
 
@@ -97,18 +96,15 @@ public class CustomSaml2ResponseAuthenticationConverter
             sessionIndexes.add(authnStatement.getSessionIndex());
         }
 
-        CustomSaml2AuthenticatedPrincipal principal =
-                new CustomSaml2AuthenticatedPrincipal(
-                        userIdentifier,
-                        attributes,
-                        userIdentifier,
-                        sessionIndexes,
-                        responseToken.getToken().getSaml2Response());
+        CustomSaml2AuthenticatedPrincipal principal = new CustomSaml2AuthenticatedPrincipal(
+                userIdentifier,
+                attributes,
+                userIdentifier,
+                sessionIndexes,
+                responseToken.getToken().getSaml2Response());
 
         return new Saml2Authentication(
-                principal,
-                responseToken.getToken().getSaml2Response(),
-                List.of(simpleGrantedAuthority));
+                principal, responseToken.getToken().getSaml2Response(), List.of(simpleGrantedAuthority));
     }
 
     private boolean hasAttribute(Map<String, List<Object>> attributes, String name) {

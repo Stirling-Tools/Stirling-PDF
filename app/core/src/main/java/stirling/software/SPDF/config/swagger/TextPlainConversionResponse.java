@@ -27,8 +27,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                 schema =
                                         @Schema(
                                                 type = "string",
-                                                description =
-                                                        "Plain text content extracted from PDF")),
+                                                description = "Plain text content extracted from PDF")),
                         @Content(
                                 mediaType = "application/rtf",
                                 schema =

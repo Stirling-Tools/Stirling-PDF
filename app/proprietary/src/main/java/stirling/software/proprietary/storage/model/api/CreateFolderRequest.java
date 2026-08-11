@@ -29,15 +29,11 @@ public class CreateFolderRequest {
 
     /** Hex colour string (#rrggbb or #rrggbbaa) - matches the frontend palette format. */
     @Size(max = 32)
-    @Pattern(
-            regexp = "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$",
-            message = "color must be a #RRGGBB or #RRGGBBAA hex value")
+    @Pattern(regexp = "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$", message = "color must be a #RRGGBB or #RRGGBBAA hex value")
     private String color;
 
     /** Icon identifier - lowercase alphanumerics, hyphens, underscores only. */
     @Size(max = 64)
-    @Pattern(
-            regexp = "^[a-z0-9_-]+$",
-            message = "icon must be a lowercase id (a-z, 0-9, '-' or '_')")
+    @Pattern(regexp = "^[a-z0-9_-]+$", message = "icon must be a lowercase id (a-z, 0-9, '-' or '_')")
     private String icon;
 }

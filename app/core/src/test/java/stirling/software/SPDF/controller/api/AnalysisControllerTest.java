@@ -34,16 +34,17 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @ExtendWith(MockitoExtension.class)
 class AnalysisControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @InjectMocks private AnalysisController analysisController;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @InjectMocks
+    private AnalysisController analysisController;
 
     private MockMultipartFile mockFile;
 
     @BeforeEach
     void setUp() {
-        mockFile =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", "application/pdf", "fake-pdf".getBytes());
+        mockFile = new MockMultipartFile("fileInput", "test.pdf", "application/pdf", "fake-pdf".getBytes());
     }
 
     private PDFFile createRequest() {
@@ -89,8 +90,7 @@ class AnalysisControllerTest {
         PDFFile request = createRequest();
         when(pdfDocumentFactory.load(mockFile)).thenThrow(new IOException("corrupt"));
 
-        assertThatThrownBy(() -> analysisController.getPageCount(request))
-                .isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> analysisController.getPageCount(request)).isInstanceOf(IOException.class);
     }
 
     // --- getBasicInfo ---
@@ -279,8 +279,7 @@ class AnalysisControllerTest {
         when(doc.getPages()).thenReturn(pages);
         when(pages.iterator()).thenReturn(List.of(page).iterator());
         when(page.getResources()).thenReturn(resources);
-        when(resources.getFontNames())
-                .thenReturn(Set.of(COSName.getPDFName("F1"), COSName.getPDFName("F2")));
+        when(resources.getFontNames()).thenReturn(Set.of(COSName.getPDFName("F1"), COSName.getPDFName("F2")));
 
         ResponseEntity<?> response = analysisController.getFontInfo(request);
 

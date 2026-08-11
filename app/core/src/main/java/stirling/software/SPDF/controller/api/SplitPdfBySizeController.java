@@ -58,13 +58,12 @@ public class SplitPdfBySizeController {
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Auto split PDF pages into separate documents based on size or count",
-            description =
-                    "split PDF into multiple paged documents based on size/count, ie if 20 pages"
-                            + " and split into 5, it does 5 documents each 4 pages\r\n if 10MB and each page"
-                            + " is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts"
-                            + " 1.9MB but not 2.1MB)")
-    public ResponseEntity<Resource> autoSplitPdf(
-            @ModelAttribute SplitPdfBySizeOrCountRequest request) throws Exception {
+            description = "split PDF into multiple paged documents based on size/count, ie if 20 pages"
+                    + " and split into 5, it does 5 documents each 4 pages\r\n if 10MB and each page"
+                    + " is 1MB and you enter 2MB then 5 docs each 2MB (rounded so that it accepts"
+                    + " 1.9MB but not 2.1MB)")
+    public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute SplitPdfBySizeOrCountRequest request)
+            throws Exception {
 
         MultipartFile file = request.getFileInput();
         String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
@@ -72,12 +71,8 @@ public class SplitPdfBySizeController {
         TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
         try {
             try (TempFile sourceTempFile = new TempFile(tempFileManager, ".pdf");
-                    ZipOutputStream zipOut =
-                            new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
-                Files.copy(
-                        file.getInputStream(),
-                        sourceTempFile.getPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
+                    ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+                Files.copy(file.getInputStream(), sourceTempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
 
                 boolean hasForm;
                 try (PDDocument acroDoc = pdfDocumentFactory.load(sourceTempFile.getFile(), true)) {
@@ -112,8 +107,7 @@ public class SplitPdfBySizeController {
         }
     }
 
-    private List<int[]> computeRanges(SplitPdfBySizeOrCountRequest request, PdfDocument sourceDoc)
-            throws IOException {
+    private List<int[]> computeRanges(SplitPdfBySizeOrCountRequest request, PdfDocument sourceDoc) throws IOException {
         int type = request.getSplitType();
         String value = request.getSplitValue();
         if (type == 0) {
@@ -150,11 +144,7 @@ public class SplitPdfBySizeController {
     }
 
     private void writeRangeViaPdfBox(
-            File sourceFile,
-            int[] range,
-            ZipOutputStream zipOut,
-            String baseFilename,
-            int fileIndex)
+            File sourceFile, int[] range, ZipOutputStream zipOut, String baseFilename, int fileIndex)
             throws IOException {
         Set<Integer> keep = new HashSet<>();
         for (int p : range) {
@@ -173,8 +163,7 @@ public class SplitPdfBySizeController {
         }
     }
 
-    private void extractRangeToFile(PdfDocument sourceDoc, int[] range, Path outputPath)
-            throws IOException {
+    private void extractRangeToFile(PdfDocument sourceDoc, int[] range, Path outputPath) throws IOException {
         int from = range[0];
         int to = range[range.length - 1];
         try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to)) {
@@ -182,8 +171,7 @@ public class SplitPdfBySizeController {
         }
     }
 
-    private void writeEntry(
-            ZipOutputStream zipOut, String baseFilename, int fileIndex, Path pdfPath)
+    private void writeEntry(ZipOutputStream zipOut, String baseFilename, int fileIndex, Path pdfPath)
             throws IOException {
         zipOut.putNextEntry(new ZipEntry(baseFilename + "_" + fileIndex + ".pdf"));
         Files.copy(pdfPath, zipOut);
@@ -203,9 +191,7 @@ public class SplitPdfBySizeController {
                 rangeEnd = pageIndex;
                 int pageAdded = rangeEnd - rangeStart + 1;
                 boolean shouldCheckSize =
-                        (pageAdded % baseCheckFrequency == 0)
-                                || (pageIndex == totalPages - 1)
-                                || (pageAdded >= 20);
+                        (pageAdded % baseCheckFrequency == 0) || (pageIndex == totalPages - 1) || (pageAdded >= 20);
                 if (!shouldCheckSize) {
                     continue;
                 }
@@ -220,14 +206,7 @@ public class SplitPdfBySizeController {
                     rangeStart = rangeEnd + 1;
                     rangeEnd = rangeStart - 1;
                 } else if (pageIndex < totalPages - 1 && actualSize < maxBytes * 0.75) {
-                    int extra =
-                            lookAheadFit(
-                                    sourceDoc,
-                                    rangeStart,
-                                    pageIndex,
-                                    maxBytes,
-                                    totalPages,
-                                    probeFile);
+                    int extra = lookAheadFit(sourceDoc, rangeStart, pageIndex, maxBytes, totalPages, probeFile);
                     pageIndex += extra;
                     rangeEnd = pageIndex;
                 }
@@ -239,8 +218,7 @@ public class SplitPdfBySizeController {
         return ranges;
     }
 
-    private long saveRange(PdfDocument sourceDoc, int from, int to, File output)
-            throws IOException {
+    private long saveRange(PdfDocument sourceDoc, int from, int to, File output) throws IOException {
         try (PdfDocument split = PdfSplit.extractPageRange(sourceDoc, from, to)) {
             split.save(output.toPath());
         }
@@ -248,12 +226,7 @@ public class SplitPdfBySizeController {
     }
 
     private int lookAheadFit(
-            PdfDocument sourceDoc,
-            int rangeStart,
-            int currentEnd,
-            long maxBytes,
-            int totalPages,
-            File probeFile)
+            PdfDocument sourceDoc, int rangeStart, int currentEnd, long maxBytes, int totalPages, File probeFile)
             throws IOException {
         int pagesToLookAhead = Math.min(5, totalPages - currentEnd - 1);
         int extra = 0;
@@ -287,9 +260,7 @@ public class SplitPdfBySizeController {
     private List<int[]> computeDocCountRanges(PdfDocument sourceDoc, int documentCount) {
         if (documentCount <= 0) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalidArgument",
-                    "Invalid argument: {0}",
-                    "document count: " + documentCount);
+                    "error.invalidArgument", "Invalid argument: {0}", "document count: " + documentCount);
         }
         int totalPages = sourceDoc.pageCount();
         int pagesPerDocument = totalPages / documentCount;

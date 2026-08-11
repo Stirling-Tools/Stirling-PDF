@@ -79,15 +79,11 @@ public class AdminJobController {
         int afterCount = taskManager.getJobStats().getTotalJobs();
         int removedCount = beforeCount - afterCount;
 
-        log.info(
-                "Admin triggered job cleanup: removed {} jobs, {} remaining",
-                removedCount,
-                afterCount);
+        log.info("Admin triggered job cleanup: removed {} jobs, {} remaining", removedCount, afterCount);
 
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Cleanup complete",
-                        "removedJobs", removedCount,
-                        "remainingJobs", afterCount));
+        return ResponseEntity.ok(Map.of(
+                "message", "Cleanup complete",
+                "removedJobs", removedCount,
+                "remainingJobs", afterCount));
     }
 }

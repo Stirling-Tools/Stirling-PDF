@@ -61,11 +61,9 @@ public class ExtractImagesController {
     @ToolIO(produces = ToolFormat.IMAGE, arity = ToolArity.SIMO)
     @Operation(
             summary = "Extract images from a PDF file",
-            description =
-                    "This endpoint extracts images from a given PDF file and returns them in a zip"
-                            + " file. Users can specify the output image format.")
-    public ResponseEntity<Resource> extractImages(@ModelAttribute PDFExtractImagesRequest request)
-            throws IOException {
+            description = "This endpoint extracts images from a given PDF file and returns them in a zip"
+                    + " file. Users can specify the output image format.")
+    public ResponseEntity<Resource> extractImages(@ModelAttribute PDFExtractImagesRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         String imageFormat = request.getFormat();
 
@@ -73,8 +71,7 @@ public class ExtractImagesController {
         Set<Integer> processedImageHashes = new HashSet<>();
 
         TempFile zipFile = new TempFile(tempFileManager, ".zip");
-        try (ZipOutputStream zipStream =
-                        new ZipOutputStream(Files.newOutputStream(zipFile.getPath()));
+        try (ZipOutputStream zipStream = new ZipOutputStream(Files.newOutputStream(zipFile.getPath()));
                 PDDocument pdfDoc = pdfDocumentFactory.load(file)) {
 
             zipStream.setLevel(Deflater.BEST_COMPRESSION);
@@ -83,20 +80,14 @@ public class ExtractImagesController {
             for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                 PDPage currentPage = pdfDoc.getPage(pageIndex);
                 extractAndAddImagesToZip(
-                        currentPage,
-                        imageFormat,
-                        baseFilename,
-                        pageIndex + 1,
-                        processedImageHashes,
-                        zipStream);
+                        currentPage, imageFormat, baseFilename, pageIndex + 1, processedImageHashes, zipStream);
             }
         } catch (Exception e) {
             zipFile.close();
             throw e;
         }
 
-        return WebResponseUtils.zipFileToWebResponse(
-                zipFile, baseFilename + "_extracted-images.zip");
+        return WebResponseUtils.zipFileToWebResponse(zipFile, baseFilename + "_extracted-images.zip");
     }
 
     private void extractAndAddImagesToZip(
@@ -130,14 +121,7 @@ public class ExtractImagesController {
                 RenderedImage sourceImage = imageObject.getImage();
                 BufferedImage convertedImage = convertImageToFormat(sourceImage, imageFormat);
 
-                String imagePath =
-                        baseFilename
-                                + "_page_"
-                                + pageNumber
-                                + "_"
-                                + imageCount++
-                                + "."
-                                + imageFormat;
+                String imagePath = baseFilename + "_page_" + pageNumber + "_" + imageCount++ + "." + imageFormat;
                 ByteArrayOutputStream imageBuffer = new ByteArrayOutputStream();
                 ImageIO.write(convertedImage, imageFormat, imageBuffer);
 

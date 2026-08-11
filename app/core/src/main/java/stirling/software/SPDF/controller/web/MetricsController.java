@@ -48,8 +48,7 @@ public class MetricsController {
     @GetMapping("/status")
     @Operation(
             summary = "Application status and version",
-            description =
-                    "This endpoint returns the status of the application and its version number.")
+            description = "This endpoint returns the status of the application and its version number.")
     public ResponseEntity<?> getStatus() {
         return getApplicationStatus();
     }
@@ -144,8 +143,7 @@ public class MetricsController {
     @GetMapping("/load/all/unique")
     @Operation(
             summary = "Unique users count for GET requests for all endpoints",
-            description =
-                    "This endpoint returns the count of unique users for GET requests for each endpoint.")
+            description = "This endpoint returns the count of unique users for GET requests for each endpoint.")
     public ResponseEntity<?> getAllUniqueEndpointLoads() {
         if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
@@ -215,8 +213,7 @@ public class MetricsController {
     @GetMapping("/requests/all/unique")
     @Operation(
             summary = "Unique users count for POST requests for all endpoints",
-            description =
-                    "This endpoint returns the count of unique users for POST requests for each endpoint.")
+            description = "This endpoint returns the count of unique users for POST requests for each endpoint.")
     public ResponseEntity<?> getAllUniquePostRequests() {
         if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
@@ -231,77 +228,67 @@ public class MetricsController {
 
     private double getRequestCount(String method, Optional<String> endpoint) {
         return meterRegistry.find("http.requests").tag("method", method).counters().stream()
-                .filter(
-                        counter -> {
-                            String uri = counter.getId().getTag("uri");
+                .filter(counter -> {
+                    String uri = counter.getId().getTag("uri");
 
-                            // Apply filtering logic - Skip if uri is null
-                            if (uri == null) {
-                                return false;
-                            }
+                    // Apply filtering logic - Skip if uri is null
+                    if (uri == null) {
+                        return false;
+                    }
 
-                            // For POST requests, only include if they start with /api/v1
-                            if ("POST".equals(method) && !uri.contains("api/v1")) {
-                                return false;
-                            }
+                    // For POST requests, only include if they start with /api/v1
+                    if ("POST".equals(method) && !uri.contains("api/v1")) {
+                        return false;
+                    }
 
-                            if (uri.contains(".txt")) {
-                                return false;
-                            }
+                    if (uri.contains(".txt")) {
+                        return false;
+                    }
 
-                            // For GET requests, validate if we have a list of valid endpoints
-                            final boolean validateGetEndpoints =
-                                    !endpointInspector.getValidGetEndpoints().isEmpty();
-                            if ("GET".equals(method)
-                                    && validateGetEndpoints
-                                    && !endpointInspector.isValidGetEndpoint(uri)) {
-                                log.debug("Skipping invalid GET endpoint: {}", uri);
-                                return false;
-                            }
+                    // For GET requests, validate if we have a list of valid endpoints
+                    final boolean validateGetEndpoints =
+                            !endpointInspector.getValidGetEndpoints().isEmpty();
+                    if ("GET".equals(method) && validateGetEndpoints && !endpointInspector.isValidGetEndpoint(uri)) {
+                        log.debug("Skipping invalid GET endpoint: {}", uri);
+                        return false;
+                    }
 
-                            // Filter for specific endpoint if provided
-                            return !endpoint.isPresent() || endpoint.get().equals(uri);
-                        })
+                    // Filter for specific endpoint if provided
+                    return !endpoint.isPresent() || endpoint.get().equals(uri);
+                })
                 .mapToDouble(Counter::count)
                 .sum();
     }
 
     private List<EndpointCount> getEndpointCounts(String method) {
         Map<String, Double> counts = new HashMap<>();
-        meterRegistry
-                .find("http.requests")
-                .tag("method", method)
-                .counters()
-                .forEach(
-                        counter -> {
-                            String uri = counter.getId().getTag("uri");
+        meterRegistry.find("http.requests").tag("method", method).counters().forEach(counter -> {
+            String uri = counter.getId().getTag("uri");
 
-                            // Skip if uri is null
-                            if (uri == null) {
-                                return;
-                            }
+            // Skip if uri is null
+            if (uri == null) {
+                return;
+            }
 
-                            // For POST requests, only include if they start with /api/v1
-                            if ("POST".equals(method) && !uri.contains("api/v1")) {
-                                return;
-                            }
+            // For POST requests, only include if they start with /api/v1
+            if ("POST".equals(method) && !uri.contains("api/v1")) {
+                return;
+            }
 
-                            if (uri.contains(".txt")) {
-                                return;
-                            }
+            if (uri.contains(".txt")) {
+                return;
+            }
 
-                            // For GET requests, validate if we have a list of valid endpoints
-                            final boolean validateGetEndpoints =
-                                    !endpointInspector.getValidGetEndpoints().isEmpty();
-                            if ("GET".equals(method)
-                                    && validateGetEndpoints
-                                    && !endpointInspector.isValidGetEndpoint(uri)) {
-                                log.debug("Skipping invalid GET endpoint: {}", uri);
-                                return;
-                            }
+            // For GET requests, validate if we have a list of valid endpoints
+            final boolean validateGetEndpoints =
+                    !endpointInspector.getValidGetEndpoints().isEmpty();
+            if ("GET".equals(method) && validateGetEndpoints && !endpointInspector.isValidGetEndpoint(uri)) {
+                log.debug("Skipping invalid GET endpoint: {}", uri);
+                return;
+            }
 
-                            counts.merge(uri, counter.count(), Double::sum);
-                        });
+            counts.merge(uri, counter.count(), Double::sum);
+        });
 
         return counts.entrySet().stream()
                 .map(entry -> new EndpointCount(entry.getKey(), entry.getValue()))
@@ -312,59 +299,50 @@ public class MetricsController {
     private double getUniqueUserCount(String method, Optional<String> endpoint) {
         Set<String> uniqueUsers = new HashSet<>();
         meterRegistry.find("http.requests").tag("method", method).counters().stream()
-                .filter(
-                        counter -> {
-                            String uri = counter.getId().getTag("uri");
+                .filter(counter -> {
+                    String uri = counter.getId().getTag("uri");
 
-                            // Skip if uri is null
-                            if (uri == null) {
-                                return false;
-                            }
+                    // Skip if uri is null
+                    if (uri == null) {
+                        return false;
+                    }
 
-                            // For POST requests, only include if they start with /api/v1
-                            if ("POST".equals(method) && !uri.contains("api/v1")) {
-                                return false;
-                            }
+                    // For POST requests, only include if they start with /api/v1
+                    if ("POST".equals(method) && !uri.contains("api/v1")) {
+                        return false;
+                    }
 
-                            if (uri.contains(".txt")) {
-                                return false;
-                            }
+                    if (uri.contains(".txt")) {
+                        return false;
+                    }
 
-                            // For GET requests, validate if we have a list of valid endpoints
-                            final boolean validateGetEndpoints =
-                                    !endpointInspector.getValidGetEndpoints().isEmpty();
-                            if ("GET".equals(method)
-                                    && validateGetEndpoints
-                                    && !endpointInspector.isValidGetEndpoint(uri)) {
-                                log.debug("Skipping invalid GET endpoint: {}", uri);
-                                return false;
-                            }
-                            return !endpoint.isPresent() || endpoint.get().equals(uri);
-                        })
-                .forEach(
-                        counter -> {
-                            String session = counter.getId().getTag("session");
-                            if (session != null) {
-                                uniqueUsers.add(session);
-                            }
-                        });
+                    // For GET requests, validate if we have a list of valid endpoints
+                    final boolean validateGetEndpoints =
+                            !endpointInspector.getValidGetEndpoints().isEmpty();
+                    if ("GET".equals(method) && validateGetEndpoints && !endpointInspector.isValidGetEndpoint(uri)) {
+                        log.debug("Skipping invalid GET endpoint: {}", uri);
+                        return false;
+                    }
+                    return !endpoint.isPresent() || endpoint.get().equals(uri);
+                })
+                .forEach(counter -> {
+                    String session = counter.getId().getTag("session");
+                    if (session != null) {
+                        uniqueUsers.add(session);
+                    }
+                });
         return uniqueUsers.size();
     }
 
     private List<EndpointCount> getUniqueUserCounts(String method) {
         Map<String, Set<String>> uniqueUsers = new HashMap<>();
-        meterRegistry
-                .find("http.requests")
-                .tag("method", method)
-                .counters()
-                .forEach(
-                        counter -> {
-                            String uri = counter.getId().getTag("uri");
-                            String session = counter.getId().getTag("session");
-                            if (uri != null && session != null) {
-                                uniqueUsers.computeIfAbsent(uri, k -> new HashSet<>()).add(session);
-                            }
-                        });
+        meterRegistry.find("http.requests").tag("method", method).counters().forEach(counter -> {
+            String uri = counter.getId().getTag("uri");
+            String session = counter.getId().getTag("session");
+            if (uri != null && session != null) {
+                uniqueUsers.computeIfAbsent(uri, k -> new HashSet<>()).add(session);
+            }
+        });
         return uniqueUsers.entrySet().stream()
                 .map(entry -> new EndpointCount(entry.getKey(), entry.getValue().size()))
                 .sorted(Comparator.comparing(EndpointCount::getCount).reversed())
@@ -384,10 +362,9 @@ public class MetricsController {
     @GetMapping("/wau")
     @Operation(
             summary = "Weekly Active Users statistics",
-            description =
-                    "Returns WAU (Weekly Active Users) count and total unique browsers. "
-                            + "Only available when security is disabled (no-login mode). "
-                            + "Tracks unique browsers via client-generated UUID in localStorage.")
+            description = "Returns WAU (Weekly Active Users) count and total unique browsers. "
+                    + "Only available when security is disabled (no-login mode). "
+                    + "Tracks unique browsers via client-generated UUID in localStorage.")
     public ResponseEntity<?> getWeeklyActiveUsers() {
         if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
@@ -396,8 +373,7 @@ public class MetricsController {
         // Check if WAU service is available (only when security.enableLogin=false)
         if (wauService.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(
-                            "WAU tracking is only available when security is disabled (no-login mode)");
+                    .body("WAU tracking is only available when security is disabled (no-login mode)");
         }
 
         WeeklyActiveUsersService service = wauService.get();

@@ -28,17 +28,15 @@ import stirling.software.common.service.FileStorage.StoredFile;
 
 class FileStorageMoreTest {
 
-    @TempDir Path storageDir;
+    @TempDir
+    Path storageDir;
 
     private FileStorage fileStorage;
 
     @BeforeEach
     void setUp() {
-        fileStorage =
-                new FileStorage(
-                        mock(FileOrUploadService.class),
-                        new LocalDiskFileStore(storageDir.toString()),
-                        Optional.empty());
+        fileStorage = new FileStorage(
+                mock(FileOrUploadService.class), new LocalDiskFileStore(storageDir.toString()), Optional.empty());
     }
 
     @Nested
@@ -49,8 +47,7 @@ class FileStorageMoreTest {
         @DisplayName("storeInputStream returns id and exact byte size")
         void storeInputStreamReturnsSize() throws IOException {
             byte[] payload = "twelve bytes".getBytes(StandardCharsets.UTF_8);
-            StoredFile stored =
-                    fileStorage.storeInputStream(new ByteArrayInputStream(payload), "in.bin");
+            StoredFile stored = fileStorage.storeInputStream(new ByteArrayInputStream(payload), "in.bin");
             assertThat(stored.fileId()).isNotBlank();
             assertThat(stored.size()).isEqualTo(payload.length);
             assertThat(fileStorage.getFileSize(stored.fileId())).isEqualTo(payload.length);
@@ -80,8 +77,7 @@ class FileStorageMoreTest {
             // A MultipartFile whose getResource() reports isFile()=true exercises the
             // file-to-file copy branch in storeFile.
             MultipartFile multipart =
-                    new MockMultipartFile(
-                            "file", "upload.pdf", MediaType.APPLICATION_PDF_VALUE, payload) {
+                    new MockMultipartFile("file", "upload.pdf", MediaType.APPLICATION_PDF_VALUE, payload) {
                         @Override
                         public org.springframework.core.io.Resource getResource() {
                             return new FileSystemResource(onDisk);
@@ -97,9 +93,7 @@ class FileStorageMoreTest {
         @DisplayName("in-memory MultipartFile falls back to the stream copy path")
         void inMemoryFallback() throws IOException {
             byte[] payload = "memory-content".getBytes(StandardCharsets.UTF_8);
-            MultipartFile multipart =
-                    new MockMultipartFile(
-                            "file", "m.pdf", MediaType.APPLICATION_PDF_VALUE, payload);
+            MultipartFile multipart = new MockMultipartFile("file", "m.pdf", MediaType.APPLICATION_PDF_VALUE, payload);
             String id = fileStorage.storeFile(multipart);
             assertThat(fileStorage.retrieveBytes(id)).isEqualTo(payload);
         }
@@ -122,11 +116,10 @@ class FileStorageMoreTest {
         @DisplayName("writer IOException propagates and leaves no lingering file")
         void writerErrorPropagatesAndCleansUp() throws IOException {
             long before = countFiles();
-            StreamingResponseBody body =
-                    out -> {
-                        out.write("partial".getBytes(StandardCharsets.UTF_8));
-                        throw new IOException("boom mid-write");
-                    };
+            StreamingResponseBody body = out -> {
+                out.write("partial".getBytes(StandardCharsets.UTF_8));
+                throw new IOException("boom mid-write");
+            };
             assertThatThrownBy(() -> fileStorage.storeFromStreamingBody(body, "bad.bin"))
                     .isInstanceOf(IOException.class);
             assertThat(countFiles()).isEqualTo(before);
@@ -135,10 +128,9 @@ class FileStorageMoreTest {
         @Test
         @DisplayName("unchecked writer failure is wrapped as IOException")
         void uncheckedWriterErrorWrapped() {
-            StreamingResponseBody body =
-                    out -> {
-                        throw new IllegalStateException("unchecked boom");
-                    };
+            StreamingResponseBody body = out -> {
+                throw new IllegalStateException("unchecked boom");
+            };
             assertThatThrownBy(() -> fileStorage.storeFromStreamingBody(body, "bad2.bin"))
                     .isInstanceOf(IOException.class);
         }

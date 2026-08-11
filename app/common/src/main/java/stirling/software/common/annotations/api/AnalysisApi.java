@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/analysis")
-@Tag(
-        name = "Analysis",
-        description =
-                """
+@Tag(name = "Analysis", description = """
                 Read-only inspection of PDFs: page count, page sizes, fonts, form fields, annotations, document properties, and security details.
                 Use these endpoints to understand what's inside a document without changing it.
 

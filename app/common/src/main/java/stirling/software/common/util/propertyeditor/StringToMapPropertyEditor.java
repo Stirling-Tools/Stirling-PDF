@@ -19,8 +19,7 @@ public class StringToMapPropertyEditor extends PropertyEditorSupport {
             Map<String, String> map = objectMapper.readValue(text, typeRef);
             setValue(map);
         } catch (Exception e) {
-            throw new IllegalArgumentException(
-                    "Failed to convert java.lang.String to java.util.Map");
+            throw new IllegalArgumentException("Failed to convert java.lang.String to java.util.Map");
         }
     }
 }

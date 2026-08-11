@@ -27,7 +27,8 @@ class AiUserDataServiceTest {
 
     private static final String PURGE_PATH = "/api/v1/documents/by-owner";
 
-    @Mock private AiEngineClient aiEngineClient;
+    @Mock
+    private AiEngineClient aiEngineClient;
 
     private AiUserDataService service;
 
@@ -56,9 +57,7 @@ class AiUserDataServiceTest {
 
     @Test
     void swallowsIoExceptionFromEngine() throws IOException {
-        doThrow(new IOException("connection refused"))
-                .when(aiEngineClient)
-                .delete(eq(PURGE_PATH), eq("alice"));
+        doThrow(new IOException("connection refused")).when(aiEngineClient).delete(eq(PURGE_PATH), eq("alice"));
         // Must not throw - the logout path depends on this swallowing failures so the user
         // can still log out when the engine is unreachable.
         service.purgeUserDocuments("alice");

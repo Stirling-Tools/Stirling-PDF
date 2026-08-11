@@ -61,14 +61,12 @@ public class WatermarkController {
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(
-                MultipartFile.class,
-                new PropertyEditorSupport() {
-                    @Override
-                    public void setAsText(String text) throws IllegalArgumentException {
-                        setValue(null);
-                    }
-                });
+        binder.registerCustomEditor(MultipartFile.class, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) throws IllegalArgumentException {
+                setValue(null);
+            }
+        });
     }
 
     @AutoJobPostMapping(
@@ -79,10 +77,9 @@ public class WatermarkController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Add watermark to a PDF file",
-            description =
-                    "This endpoint adds a watermark to a given PDF file. Users can specify the"
-                            + " watermark type (text or image), rotation, opacity, width spacer, and height"
-                            + " spacer.")
+            description = "This endpoint adds a watermark to a given PDF file. Users can specify the"
+                    + " watermark type (text or image), rotation, opacity, width spacer, and height"
+                    + " spacer.")
     public ResponseEntity<Resource> addWatermark(@Valid @ModelAttribute AddWatermarkRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();
@@ -96,8 +93,7 @@ public class WatermarkController {
         if (watermarkImage != null) {
             String watermarkImageFileName = watermarkImage.getOriginalFilename();
             if (watermarkImageFileName != null
-                    && (watermarkImageFileName.contains("..")
-                            || watermarkImageFileName.startsWith("/"))) {
+                    && (watermarkImageFileName.contains("..") || watermarkImageFileName.startsWith("/"))) {
                 throw new SecurityException("Invalid file path in watermarkImage");
             }
         }
@@ -117,12 +113,7 @@ public class WatermarkController {
             for (PDPage page : document.getPages()) {
                 // Get the page's content stream
                 try (PDPageContentStream contentStream =
-                        new PDPageContentStream(
-                                document,
-                                page,
-                                PDPageContentStream.AppendMode.APPEND,
-                                true,
-                                true)) {
+                        new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
 
                     // Set transparency
                     PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
@@ -160,16 +151,14 @@ public class WatermarkController {
                     // Return the watermarked PDF as a response
                     return WebResponseUtils.pdfDocToWebResponse(
                             convertedPdf,
-                            GeneralUtils.generateFilename(
-                                    pdfFile.getOriginalFilename(), "_watermarked.pdf"),
+                            GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_watermarked.pdf"),
                             tempFileManager);
                 }
             } else {
                 // Return the watermarked PDF as a response
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
-                        GeneralUtils.generateFilename(
-                                pdfFile.getOriginalFilename(), "_watermarked.pdf"),
+                        GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_watermarked.pdf"),
                         tempFileManager);
             }
         }
@@ -189,15 +178,14 @@ public class WatermarkController {
             throws IOException {
         String resourceDir = "";
         PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        resourceDir =
-                switch (alphabet) {
-                    case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
-                    case "japanese" -> "static/fonts/NotoSansJP-Regular.ttf";
-                    case "korean" -> "static/fonts/NotoSansKR-Regular.ttf";
-                    case "chinese" -> "static/fonts/NotoSansSC-Regular.ttf";
-                    case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
-                    default -> "static/fonts/NotoSans-Regular.ttf";
-                };
+        resourceDir = switch (alphabet) {
+            case "arabic" -> "static/fonts/NotoSansArabic-Regular.ttf";
+            case "japanese" -> "static/fonts/NotoSansJP-Regular.ttf";
+            case "korean" -> "static/fonts/NotoSansKR-Regular.ttf";
+            case "chinese" -> "static/fonts/NotoSansSC-Regular.ttf";
+            case "thai" -> "static/fonts/NotoSansThai-Regular.ttf";
+            default -> "static/fonts/NotoSans-Regular.ttf";
+        };
 
         ClassPathResource classPathResource = new ClassPathResource(resourceDir);
         String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
@@ -241,13 +229,9 @@ public class WatermarkController {
         // Calculating the new width and height depending on the angle.
         float radians = (float) Math.toRadians(rotation);
         float newWatermarkWidth =
-                (float)
-                        (Math.abs(watermarkWidth * Math.cos(radians))
-                                + Math.abs(watermarkHeight * Math.sin(radians)));
+                (float) (Math.abs(watermarkWidth * Math.cos(radians)) + Math.abs(watermarkHeight * Math.sin(radians)));
         float newWatermarkHeight =
-                (float)
-                        (Math.abs(watermarkWidth * Math.sin(radians))
-                                + Math.abs(watermarkHeight * Math.cos(radians)));
+                (float) (Math.abs(watermarkWidth * Math.sin(radians)) + Math.abs(watermarkHeight * Math.cos(radians)));
 
         // Calculating the number of rows and columns.
 
@@ -258,11 +242,8 @@ public class WatermarkController {
         for (int i = 0; i <= watermarkRows; i++) {
             for (int j = 0; j <= watermarkCols; j++) {
                 contentStream.beginText();
-                contentStream.setTextMatrix(
-                        Matrix.getRotateInstance(
-                                (float) Math.toRadians(rotation),
-                                j * newWatermarkWidth,
-                                i * newWatermarkHeight));
+                contentStream.setTextMatrix(Matrix.getRotateInstance(
+                        (float) Math.toRadians(rotation), j * newWatermarkWidth, i * newWatermarkHeight));
 
                 for (int k = 0; k < textLines.length; ++k) {
                     contentStream.showText(textLines[k]);
@@ -304,15 +285,8 @@ public class WatermarkController {
         float pageWidth = page.getMediaBox().getWidth();
         float pageHeight = page.getMediaBox().getHeight();
         int watermarkRows =
-                Math.min(
-                        (int)
-                                ((pageHeight + heightSpacer)
-                                        / (desiredPhysicalHeight + heightSpacer)),
-                        10_000);
-        int watermarkCols =
-                Math.min(
-                        (int) ((pageWidth + widthSpacer) / (desiredPhysicalWidth + widthSpacer)),
-                        10_000);
+                Math.min((int) ((pageHeight + heightSpacer) / (desiredPhysicalHeight + heightSpacer)), 10_000);
+        int watermarkCols = Math.min((int) ((pageWidth + widthSpacer) / (desiredPhysicalWidth + widthSpacer)), 10_000);
 
         for (int i = 0; i < watermarkRows; i++) {
             for (int j = 0; j < watermarkCols; j++) {
@@ -324,12 +298,10 @@ public class WatermarkController {
 
                 // Create rotation matrix and rotate
                 contentStream.transform(
-                        Matrix.getTranslateInstance(
-                                x + desiredPhysicalWidth / 2, y + desiredPhysicalHeight / 2));
+                        Matrix.getTranslateInstance(x + desiredPhysicalWidth / 2, y + desiredPhysicalHeight / 2));
                 contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
                 contentStream.transform(
-                        Matrix.getTranslateInstance(
-                                -desiredPhysicalWidth / 2, -desiredPhysicalHeight / 2));
+                        Matrix.getTranslateInstance(-desiredPhysicalWidth / 2, -desiredPhysicalHeight / 2));
 
                 // Draw the image and restore the graphics state
                 contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);

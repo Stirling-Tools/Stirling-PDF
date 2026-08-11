@@ -13,22 +13,15 @@ public class MergePdfsRequest extends MultiplePDFFiles {
 
     @Schema(
             description = "The type of sorting to be applied on the input files before merging.",
-            allowableValues = {
-                "orderProvided",
-                "byFileName",
-                "byDateModified",
-                "byDateCreated",
-                "byPDFTitle"
-            },
+            allowableValues = {"orderProvided", "byFileName", "byDateModified", "byDateCreated", "byPDFTitle"},
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "orderProvided")
     private String sortType = "orderProvided";
 
     @Schema(
-            description =
-                    "Flag indicating whether to remove certification signatures from the merged"
-                            + " PDF. If true, all certification signatures will be removed from the"
-                            + " final merged document.",
+            description = "Flag indicating whether to remove certification signatures from the merged"
+                    + " PDF. If true, all certification signatures will be removed from the"
+                    + " final merged document.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "true")
     private Boolean removeCertSign;
@@ -41,8 +34,7 @@ public class MergePdfsRequest extends MultiplePDFFiles {
     private boolean generateToc = false;
 
     @Schema(
-            description =
-                    "JSON array of client-provided IDs for each uploaded file (same order as fileInput)",
+            description = "JSON array of client-provided IDs for each uploaded file (same order as fileInput)",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String clientFileIds;
 }

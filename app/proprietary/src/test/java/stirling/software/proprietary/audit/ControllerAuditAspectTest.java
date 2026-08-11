@@ -40,7 +40,8 @@ import stirling.software.proprietary.service.AuditService;
 @ExtendWith(MockitoExtension.class)
 class ControllerAuditAspectTest {
 
-    @Mock private AuditService auditService;
+    @Mock
+    private AuditService auditService;
 
     private AuditConfigurationProperties auditConfig;
     private ControllerAuditAspect aspect;
@@ -107,8 +108,7 @@ class ControllerAuditAspectTest {
             when(auditService.captureCurrentOrigin()).thenReturn("WEB");
             when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
                     .thenReturn(new HashMap<>());
-            when(auditService.resolveEventType(
-                            any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
+            when(auditService.resolveEventType(any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
                     .thenReturn(AuditEventType.PDF_PROCESS);
             when(jp.proceed()).thenReturn("done");
 
@@ -137,8 +137,7 @@ class ControllerAuditAspectTest {
             when(auditService.shouldAudit(any(Method.class), eq(auditConfig))).thenReturn(true);
             when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
                     .thenReturn(new HashMap<>());
-            when(auditService.resolveEventType(
-                            any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
+            when(auditService.resolveEventType(any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
                     .thenReturn(AuditEventType.PDF_PROCESS);
             when(jp.proceed()).thenReturn("done");
 
@@ -171,8 +170,7 @@ class ControllerAuditAspectTest {
             when(auditService.captureCurrentOrigin()).thenReturn("WEB");
             when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
                     .thenReturn(new HashMap<>());
-            when(auditService.resolveEventType(
-                            any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
+            when(auditService.resolveEventType(any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
                     .thenReturn(AuditEventType.PDF_PROCESS);
             when(jp.proceed()).thenThrow(new IllegalStateException("boom"));
 
@@ -237,8 +235,7 @@ class ControllerAuditAspectTest {
             when(auditService.captureCurrentOrigin()).thenReturn("WEB");
             when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
                     .thenReturn(new HashMap<>());
-            when(auditService.resolveEventType(
-                            any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
+            when(auditService.resolveEventType(any(Method.class), any(Class.class), any(), eq("POST"), isNull()))
                     .thenReturn(AuditEventType.PDF_PROCESS);
             when(auditService.shouldCaptureOperationResults()).thenReturn(true);
             when(auditService.safeToString(eq("done"), anyInt())).thenReturn("done");
@@ -267,8 +264,7 @@ class ControllerAuditAspectTest {
             when(auditService.captureCurrentOrigin()).thenReturn("WEB");
             when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
                     .thenReturn(new HashMap<>());
-            when(auditService.resolveEventType(
-                            any(Method.class), any(Class.class), any(), eq("GET"), isNull()))
+            when(auditService.resolveEventType(any(Method.class), any(Class.class), any(), eq("GET"), isNull()))
                     .thenReturn(AuditEventType.UI_DATA);
             lenient().when(auditService.shouldCaptureOperationResults()).thenReturn(true);
             when(jp.proceed()).thenReturn("payload");

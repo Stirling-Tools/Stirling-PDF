@@ -38,9 +38,7 @@ public class Saml2Configuration {
     public RelyingPartyRegistrationRepository relyingPartyRegistrations() throws Exception {
         SAML2 samlConf = applicationProperties.getSecurity().getSaml2();
 
-        log.info(
-                "Initializing SAML2 configuration with registration ID: {}",
-                samlConf.getRegistrationId());
+        log.info("Initializing SAML2 configuration with registration ID: {}", samlConf.getRegistrationId());
 
         // Load IdP certificate
         X509Certificate idpCert;
@@ -48,11 +46,9 @@ public class Saml2Configuration {
             Resource idpCertResource = samlConf.getIdpCert();
             log.info("Loading IdP certificate from: {}", idpCertResource.getDescription());
             if (!idpCertResource.exists()) {
-                log.error(
-                        "SAML2 IdP certificate not found at: {}", idpCertResource.getDescription());
+                log.error("SAML2 IdP certificate not found at: {}", idpCertResource.getDescription());
                 throw new IllegalStateException(
-                        "SAML2 IdP certificate file does not exist: "
-                                + idpCertResource.getDescription());
+                        "SAML2 IdP certificate file does not exist: " + idpCertResource.getDescription());
             }
             idpCert = CertificateUtils.readCertificate(idpCertResource);
             log.info(
@@ -73,26 +69,22 @@ public class Saml2Configuration {
         if (!privateKeyResource.exists()) {
             log.error("SAML2 SP private key not found at: {}", privateKeyResource.getDescription());
             throw new IllegalStateException(
-                    "SAML2 SP private key file does not exist: "
-                            + privateKeyResource.getDescription());
+                    "SAML2 SP private key file does not exist: " + privateKeyResource.getDescription());
         }
 
         log.info("Loading SP certificate from: {}", certificateResource.getDescription());
         if (!certificateResource.exists()) {
-            log.error(
-                    "SAML2 SP certificate not found at: {}", certificateResource.getDescription());
+            log.error("SAML2 SP certificate not found at: {}", certificateResource.getDescription());
             throw new IllegalStateException(
-                    "SAML2 SP certificate file does not exist: "
-                            + certificateResource.getDescription());
+                    "SAML2 SP certificate file does not exist: " + certificateResource.getDescription());
         }
 
         Saml2X509Credential signingCredential;
         try {
-            signingCredential =
-                    new Saml2X509Credential(
-                            CertificateUtils.readPrivateKey(privateKeyResource),
-                            CertificateUtils.readCertificate(certificateResource),
-                            Saml2X509CredentialType.SIGNING);
+            signingCredential = new Saml2X509Credential(
+                    CertificateUtils.readPrivateKey(privateKeyResource),
+                    CertificateUtils.readCertificate(certificateResource),
+                    Saml2X509CredentialType.SIGNING);
             log.info("Successfully loaded SP credentials");
         } catch (Exception e) {
             log.error("Failed to load SAML2 SP credentials: {}", e.getMessage(), e);
@@ -109,38 +101,28 @@ public class Saml2Configuration {
             log.info("Using configured backend URL for SAML: {}", backendUrl);
         }
 
-        String entityId =
-                backendUrl + "/saml2/service-provider-metadata/" + samlConf.getRegistrationId();
+        String entityId = backendUrl + "/saml2/service-provider-metadata/" + samlConf.getRegistrationId();
         String acsLocation = backendUrl + "/login/saml2/sso/{registrationId}";
         String sloResponseLocation = backendUrl + "/login";
 
-        RelyingPartyRegistration rp =
-                RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
-                        .signingX509Credentials(c -> c.add(signingCredential))
-                        .entityId(entityId)
+        RelyingPartyRegistration rp = RelyingPartyRegistration.withRegistrationId(samlConf.getRegistrationId())
+                .signingX509Credentials(c -> c.add(signingCredential))
+                .entityId(entityId)
+                .singleLogoutServiceBinding(Saml2MessageBinding.POST)
+                .singleLogoutServiceLocation(samlConf.getIdpSingleLogoutUrl())
+                .singleLogoutServiceResponseLocation(sloResponseLocation)
+                .assertionConsumerServiceBinding(Saml2MessageBinding.POST)
+                .assertionConsumerServiceLocation(acsLocation)
+                .authnRequestsSigned(true)
+                .assertingPartyMetadata(metadata -> metadata.entityId(samlConf.getIdpIssuer())
+                        .verificationX509Credentials(c -> c.add(verificationCredential))
+                        .singleSignOnServiceBinding(Saml2MessageBinding.POST)
+                        .singleSignOnServiceLocation(samlConf.getIdpSingleLoginUrl())
                         .singleLogoutServiceBinding(Saml2MessageBinding.POST)
                         .singleLogoutServiceLocation(samlConf.getIdpSingleLogoutUrl())
                         .singleLogoutServiceResponseLocation(sloResponseLocation)
-                        .assertionConsumerServiceBinding(Saml2MessageBinding.POST)
-                        .assertionConsumerServiceLocation(acsLocation)
-                        .authnRequestsSigned(true)
-                        .assertingPartyMetadata(
-                                metadata ->
-                                        metadata.entityId(samlConf.getIdpIssuer())
-                                                .verificationX509Credentials(
-                                                        c -> c.add(verificationCredential))
-                                                .singleSignOnServiceBinding(
-                                                        Saml2MessageBinding.POST)
-                                                .singleSignOnServiceLocation(
-                                                        samlConf.getIdpSingleLoginUrl())
-                                                .singleLogoutServiceBinding(
-                                                        Saml2MessageBinding.POST)
-                                                .singleLogoutServiceLocation(
-                                                        samlConf.getIdpSingleLogoutUrl())
-                                                .singleLogoutServiceResponseLocation(
-                                                        sloResponseLocation)
-                                                .wantAuthnRequestsSigned(true))
-                        .build();
+                        .wantAuthnRequestsSigned(true))
+                .build();
 
         log.info(
                 "SAML2 configuration initialized successfully. Registration ID: {}, IdP: {}",
@@ -156,33 +138,30 @@ public class Saml2Configuration {
         OpenSaml5AuthenticationRequestResolver resolver =
                 new OpenSaml5AuthenticationRequestResolver(relyingPartyRegistrationRepository);
 
-        resolver.setRelayStateResolver(
-                request -> {
-                    String tauriParam = request.getParameter("tauri");
-                    if (!"1".equals(tauriParam)) {
-                        return null;
-                    }
-                    String nonce = request.getParameter("nonce");
-                    return TauriSamlUtils.buildRelayState(nonce);
-                });
+        resolver.setRelayStateResolver(request -> {
+            String tauriParam = request.getParameter("tauri");
+            if (!"1".equals(tauriParam)) {
+                return null;
+            }
+            String nonce = request.getParameter("nonce");
+            return TauriSamlUtils.buildRelayState(nonce);
+        });
 
-        resolver.setAuthnRequestCustomizer(
-                customizer -> {
-                    HttpServletRequest request = customizer.getRequest();
-                    AuthnRequest authnRequest = customizer.getAuthnRequest();
+        resolver.setAuthnRequestCustomizer(customizer -> {
+            HttpServletRequest request = customizer.getRequest();
+            AuthnRequest authnRequest = customizer.getAuthnRequest();
 
-                    // Generate a unique AuthnRequest ID for each SAML request
-                    authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
+            // Generate a unique AuthnRequest ID for each SAML request
+            authnRequest.setID("ARQ" + UUID.randomUUID().toString().substring(1));
 
-                    logAuthnRequestDetails(authnRequest);
-                    logHttpRequestDetails(request);
-                });
+            logAuthnRequestDetails(authnRequest);
+            logHttpRequestDetails(request);
+        });
         return resolver;
     }
 
     private static void logAuthnRequestDetails(AuthnRequest authnRequest) {
-        String message =
-                """
+        String message = """
                         AuthnRequest:
 
                         ID: {}
@@ -205,11 +184,8 @@ public class Saml2Configuration {
     private static void logHttpRequestDetails(HttpServletRequest request) {
         log.debug("HTTP Headers: ");
         Collections.list(request.getHeaderNames())
-                .forEach(
-                        headerName ->
-                                log.debug("{}: {}", headerName, request.getHeader(headerName)));
-        String message =
-                """
+                .forEach(headerName -> log.debug("{}: {}", headerName, request.getHeader(headerName)));
+        String message = """
                         HTTP Request Method: {}
                         Session ID: {}
                         Request Path: {}

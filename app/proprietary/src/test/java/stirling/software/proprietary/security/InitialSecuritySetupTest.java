@@ -34,12 +34,23 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 @ExtendWith(MockitoExtension.class)
 class InitialSecuritySetupTest {
 
-    @Mock private UserService userService;
-    @Mock private TeamService teamService;
-    @Mock private DatabaseServiceInterface databaseService;
-    @Mock private UserLicenseSettingsService licenseSettingsService;
-    @Mock private Environment environment;
-    @Mock private TeamMembershipService teamMembershipService;
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private TeamService teamService;
+
+    @Mock
+    private DatabaseServiceInterface databaseService;
+
+    @Mock
+    private UserLicenseSettingsService licenseSettingsService;
+
+    @Mock
+    private Environment environment;
+
+    @Mock
+    private TeamMembershipService teamMembershipService;
 
     private ApplicationProperties applicationProperties;
     private InitialSecuritySetup initialSecuritySetup;
@@ -58,15 +69,14 @@ class InitialSecuritySetupTest {
                 .thenReturn(Optional.of(internalUser));
         when(teamService.getOrCreateInternalTeam()).thenReturn(internalTeam);
         when(environment.getActiveProfiles()).thenReturn(new String[] {});
-        initialSecuritySetup =
-                new InitialSecuritySetup(
-                        userService,
-                        teamService,
-                        applicationProperties,
-                        databaseService,
-                        licenseSettingsService,
-                        environment,
-                        teamMembershipService);
+        initialSecuritySetup = new InitialSecuritySetup(
+                userService,
+                teamService,
+                applicationProperties,
+                databaseService,
+                licenseSettingsService,
+                environment,
+                teamMembershipService);
     }
 
     @Test
@@ -86,8 +96,7 @@ class InitialSecuritySetupTest {
     }
 
     @Test
-    void initCreatesConfiguredAdminWhenNoBackup()
-            throws SQLException, UnsupportedProviderException {
+    void initCreatesConfiguredAdminWhenNoBackup() throws SQLException, UnsupportedProviderException {
         when(userService.hasUsers()).thenReturn(false);
         when(databaseService.hasBackup()).thenReturn(false);
         when(userService.findByUsernameIgnoreCase("admin")).thenReturn(Optional.empty());
@@ -117,6 +126,7 @@ class InitialSecuritySetupTest {
 
         initialSecuritySetup.init();
 
-        assertThat(applicationProperties.getSecurity().getJwt().isEnableKeyCleanup()).isFalse();
+        assertThat(applicationProperties.getSecurity().getJwt().isEnableKeyCleanup())
+                .isFalse();
     }
 }

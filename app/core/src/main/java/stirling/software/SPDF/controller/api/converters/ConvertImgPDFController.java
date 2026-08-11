@@ -93,12 +93,10 @@ public class ConvertImgPDFController {
                             arity = ToolArity.SISO))
     @Operation(
             summary = "Convert PDF to image(s)",
-            description =
-                    "This endpoint converts a PDF file to image(s) with the specified image format,"
-                            + " color type, and DPI. Users can choose to get a single image or multiple"
-                            + " images.")
-    public ResponseEntity<?> convertToImage(@ModelAttribute ConvertToImageRequest request)
-            throws Exception {
+            description = "This endpoint converts a PDF file to image(s) with the specified image format,"
+                    + " color type, and DPI. Users can choose to get a single image or multiple"
+                    + " images.")
+    public ResponseEntity<?> convertToImage(@ModelAttribute ConvertToImageRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
         String imageFormat = request.getImageFormat();
         String singleOrMultiple = request.getSingleOrMultiple();
@@ -111,9 +109,7 @@ public class ConvertImgPDFController {
         Path tempPdfPath = null;
         byte[] result = null;
         String[] pageOrderArr =
-                (pageNumbers != null && !pageNumbers.trim().isEmpty())
-                        ? pageNumbers.split(",")
-                        : new String[] {"all"};
+                (pageNumbers != null && !pageNumbers.trim().isEmpty()) ? pageNumbers.split(",") : new String[] {"all"};
         ;
         try {
             // Load the input PDF
@@ -129,25 +125,21 @@ public class ConvertImgPDFController {
             boolean singleImage = "single".equals(singleOrMultiple);
             String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
 
-            result =
-                    PdfUtils.convertFromPdf(
-                            pdfDocumentFactory,
-                            newPdfBytes,
-                            "webp".equalsIgnoreCase(imageFormat)
-                                    ? "png"
-                                    : imageFormat.toUpperCase(Locale.ROOT),
-                            colorTypeResult,
-                            singleImage,
-                            dpi,
-                            filename,
-                            includeAnnotations);
+            result = PdfUtils.convertFromPdf(
+                    pdfDocumentFactory,
+                    newPdfBytes,
+                    "webp".equalsIgnoreCase(imageFormat) ? "png" : imageFormat.toUpperCase(Locale.ROOT),
+                    colorTypeResult,
+                    singleImage,
+                    dpi,
+                    filename,
+                    includeAnnotations);
             if (result == null || result.length == 0) {
                 log.error("resultant bytes for {} is null, error converting ", filename);
             }
             if ("webp".equalsIgnoreCase(imageFormat) && !CheckProgramInstall.isPythonAvailable()) {
                 throw ExceptionUtils.createPythonRequiredForWebpException();
-            } else if ("webp".equalsIgnoreCase(imageFormat)
-                    && CheckProgramInstall.isPythonAvailable()) {
+            } else if ("webp".equalsIgnoreCase(imageFormat) && CheckProgramInstall.isPythonAvailable()) {
                 // Write the output stream to a temp file
                 tempFile = Files.createTempFile("temp_png", ".png");
                 try (FileOutputStream fos = new FileOutputStream(tempFile.toFile())) {
@@ -160,10 +152,7 @@ public class ConvertImgPDFController {
 
                 List<String> command = new ArrayList<>();
                 command.add(pythonVersion);
-                command.add(
-                        pngToWebpScript
-                                .toAbsolutePath()
-                                .toString()); // Python script to handle the conversion
+                command.add(pngToWebpScript.toAbsolutePath().toString()); // Python script to handle the conversion
 
                 // Create a temporary directory for the output WebP files
                 tempOutputDir = Files.createTempDirectory("webp_output");
@@ -182,21 +171,21 @@ public class ConvertImgPDFController {
                 }
                 command.add("--dpi");
                 command.add(String.valueOf(dpi));
-                ProcessExecutorResult resultProcess =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                                .runCommandWithOutputHandling(command);
+                ProcessExecutorResult resultProcess = ProcessExecutor.getInstance(
+                                ProcessExecutor.Processes.PYTHON_OPENCV)
+                        .runCommandWithOutputHandling(command);
 
                 // Find all WebP files in the output directory
                 List<Path> webpFiles;
                 try (Stream<Path> walkStream = Files.walk(tempOutputDir)) {
-                    webpFiles =
-                            walkStream.filter(path -> path.toString().endsWith(".webp")).toList();
+                    webpFiles = walkStream
+                            .filter(path -> path.toString().endsWith(".webp"))
+                            .toList();
                 }
 
                 if (webpFiles.isEmpty()) {
                     log.error("No WebP files were created in: {}", tempOutputDir.toString());
-                    throw new IOException(
-                            "No WebP files were created. " + resultProcess.getMessages());
+                    throw new IOException("No WebP files were created. " + resultProcess.getMessages());
                 }
 
                 if (webpFiles.size() == 1) {
@@ -234,8 +223,7 @@ public class ConvertImgPDFController {
                 return WebResponseUtils.bytesToWebResponse(result, docName, mediaType);
             } else {
                 String zipFilename = filename + "_convertedToImages.zip";
-                return WebResponseUtils.bytesToWebResponse(
-                        result, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
+                return WebResponseUtils.bytesToWebResponse(result, zipFilename, MediaType.APPLICATION_OCTET_STREAM);
             }
 
         } finally {
@@ -264,12 +252,10 @@ public class ConvertImgPDFController {
     @ToolIO(accepts = ToolFormat.IMAGE, produces = ToolFormat.PDF, arity = ToolArity.MISO)
     @Operation(
             summary = "Convert images to a PDF file",
-            description =
-                    "This endpoint converts one or more images to a PDF file. Users can specify"
-                            + " whether to stretch the images to fit the PDF page, and whether to"
-                            + " automatically rotate the images.")
-    public ResponseEntity<byte[]> convertToPdf(@ModelAttribute ConvertToPdfRequest request)
-            throws IOException {
+            description = "This endpoint converts one or more images to a PDF file. Users can specify"
+                    + " whether to stretch the images to fit the PDF page, and whether to"
+                    + " automatically rotate the images.")
+    public ResponseEntity<byte[]> convertToPdf(@ModelAttribute ConvertToPdfRequest request) throws IOException {
         MultipartFile[] file = request.getFileInput();
         String fitOption = request.getFitOption();
         String colorType = request.getColorType();
@@ -282,11 +268,9 @@ public class ConvertImgPDFController {
             fitOption = "fillPage";
         }
         // Convert the file to PDF and get the resulting bytes
-        byte[] bytes =
-                PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);
+        byte[] bytes = PdfUtils.imageToPdf(file, fitOption, autoRotate, colorType, pdfDocumentFactory);
         return WebResponseUtils.bytesToWebResponse(
-                bytes,
-                GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
+                bytes, GeneralUtils.generateFilename(file[0].getOriginalFilename(), "_converted.pdf"));
     }
 
     @AutoJobPostMapping(
@@ -297,8 +281,7 @@ public class ConvertImgPDFController {
     @Operation(
             summary = "Convert CBZ comic book archive to PDF",
             description = "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file.")
-    public ResponseEntity<Resource> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request)
-            throws IOException {
+    public ResponseEntity<Resource> convertCbzToPdf(@ModelAttribute ConvertCbzToPdfRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         boolean optimizeForEbook = request.isOptimizeForEbook();
 
@@ -308,9 +291,7 @@ public class ConvertImgPDFController {
             optimizeForEbook = false;
         }
 
-        TempFile pdfFile =
-                CbzUtils.convertCbzToPdf(
-                        file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
+        TempFile pdfFile = CbzUtils.convertCbzToPdf(file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
 
@@ -325,8 +306,7 @@ public class ConvertImgPDFController {
     @Operation(
             summary = "Convert PDF to CBZ comic book archive",
             description = "This endpoint converts a PDF file to a CBZ (ZIP) comic book archive.")
-    public ResponseEntity<Resource> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request)
-            throws IOException {
+    public ResponseEntity<Resource> convertPdfToCbz(@ModelAttribute ConvertPdfToCbzRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         int dpi = request.getDpi();
 
@@ -334,8 +314,7 @@ public class ConvertImgPDFController {
             dpi = 300;
         }
 
-        TempFile cbzFile =
-                PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory, tempFileManager);
+        TempFile cbzFile = PdfToCbzUtils.convertPdfToCbz(file, dpi, pdfDocumentFactory, tempFileManager);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbz");
 
@@ -350,8 +329,7 @@ public class ConvertImgPDFController {
     @Operation(
             summary = "Convert CBR comic book archive to PDF",
             description = "This endpoint converts a CBR (RAR) comic book archive to a PDF file.")
-    public ResponseEntity<?> convertCbrToPdf(@ModelAttribute ConvertCbrToPdfRequest request)
-            throws IOException {
+    public ResponseEntity<?> convertCbrToPdf(@ModelAttribute ConvertCbrToPdfRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         boolean optimizeForEbook = request.isOptimizeForEbook();
 
@@ -361,9 +339,7 @@ public class ConvertImgPDFController {
             optimizeForEbook = false;
         }
 
-        byte[] pdfBytes =
-                CbrUtils.convertCbrToPdf(
-                        file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
+        byte[] pdfBytes = CbrUtils.convertCbrToPdf(file, pdfDocumentFactory, tempFileManager, optimizeForEbook);
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.pdf");
 
@@ -377,11 +353,8 @@ public class ConvertImgPDFController {
     @ToolIO(produces = ToolFormat.CBR)
     @Operation(
             summary = "Convert PDF to CBR comic book archive",
-            description =
-                    "This endpoint converts a PDF file to a CBR comic book archive using the local"
-                            + " RAR CLI.")
-    public ResponseEntity<?> convertPdfToCbr(@ModelAttribute ConvertPdfToCbrRequest request)
-            throws IOException {
+            description = "This endpoint converts a PDF file to a CBR comic book archive using the local" + " RAR CLI.")
+    public ResponseEntity<?> convertPdfToCbr(@ModelAttribute ConvertPdfToCbrRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         int dpi = request.getDpi();
 
@@ -393,8 +366,7 @@ public class ConvertImgPDFController {
 
         String filename = createConvertedFilename(file.getOriginalFilename(), "_converted.cbr");
 
-        return WebResponseUtils.bytesToWebResponse(
-                cbrBytes, filename, MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.bytesToWebResponse(cbrBytes, filename, MediaType.APPLICATION_OCTET_STREAM);
     }
 
     private String createConvertedFilename(String originalFilename, String suffix) {
@@ -423,14 +395,12 @@ public class ConvertImgPDFController {
      * @return A byte array of the rearranged PDF.
      * @throws IOException If an error occurs while processing the PDF.
      */
-    private byte[] rearrangePdfPages(MultipartFile pdfFile, String[] pageOrderArr)
-            throws IOException {
+    private byte[] rearrangePdfPages(MultipartFile pdfFile, String[] pageOrderArr) throws IOException {
         // Load the input PDF
         try (PDDocument document = pdfDocumentFactory.load(pdfFile);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             int totalPages = document.getNumberOfPages();
-            List<Integer> newPageOrder =
-                    GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
+            List<Integer> newPageOrder = GeneralUtils.parsePageList(pageOrderArr, totalPages, false);
 
             // Create a new list to hold the pages in the new order
             List<PDPage> newPages = new ArrayList<>();

@@ -95,8 +95,7 @@ class PolicyRunRegistryTest {
     }
 
     private PolicyRun register(String runId) {
-        PolicyRun run =
-                new PolicyRun(runId, null, new PipelineDefinition(runId, List.of(), List.of()));
+        PolicyRun run = new PolicyRun(runId, null, new PipelineDefinition(runId, List.of(), List.of()));
         registry.register(run);
         return run;
     }

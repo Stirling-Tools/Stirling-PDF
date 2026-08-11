@@ -13,16 +13,15 @@ class BackplaneContractCompilationTest {
     @Test
     void jobStoreEntryRecordRoundTrips() {
         Instant now = Instant.now();
-        JobStoreEntry entry =
-                new JobStoreEntry(
-                        "job-1",
-                        JobStoreEntry.JobState.PENDING,
-                        "node-a",
-                        now,
-                        null,
-                        null,
-                        List.of("file-1"),
-                        Map.of("k", "v"));
+        JobStoreEntry entry = new JobStoreEntry(
+                "job-1",
+                JobStoreEntry.JobState.PENDING,
+                "node-a",
+                now,
+                null,
+                null,
+                List.of("file-1"),
+                Map.of("k", "v"));
         assertEquals("job-1", entry.jobId());
         assertEquals(JobStoreEntry.JobState.PENDING, entry.state());
         assertEquals("node-a", entry.owningNodeId());

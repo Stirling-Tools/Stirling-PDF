@@ -40,8 +40,7 @@ import stirling.software.common.model.ApplicationProperties;
 public class SPDFApplication {
 
     private static final Pattern PORT_SUFFIX_PATTERN = Pattern.compile(".+:\\d+$");
-    private static final Pattern URL_SCHEME_PATTERN =
-            Pattern.compile("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
+    private static final Pattern URL_SCHEME_PATTERN = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+.-]*://.*");
     private static final Pattern TRAILING_SLASH_PATTERN = Pattern.compile("/+$");
     private static String serverPortStatic;
     private static String baseUrlStatic;
@@ -51,8 +50,7 @@ public class SPDFApplication {
     private final Environment env;
     private final ApplicationProperties applicationProperties;
 
-    public SPDFApplication(
-            AppConfig appConfig, Environment env, ApplicationProperties applicationProperties) {
+    public SPDFApplication(AppConfig appConfig, Environment env, ApplicationProperties applicationProperties) {
         this.appConfig = appConfig;
         this.env = env;
         this.applicationProperties = applicationProperties;
@@ -77,8 +75,7 @@ public class SPDFApplication {
         Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
         log.info("Settings file: {}", settingsPath.toString());
         if (Files.exists(settingsPath)) {
-            propertyFiles.put(
-                    "spring.config.additional-location", "file:" + settingsPath.toString());
+            propertyFiles.put("spring.config.additional-location", "file:" + settingsPath.toString());
         } else {
             log.warn("External configuration file '{}' does not exist.", settingsPath.toString());
         }
@@ -86,26 +83,20 @@ public class SPDFApplication {
         Path customSettingsPath = Path.of(InstallationPathConfig.getCustomSettingsPath());
         log.info("Custom settings file: {}", customSettingsPath.toString());
         if (Files.exists(customSettingsPath)) {
-            String existingLocation =
-                    propertyFiles.getOrDefault("spring.config.additional-location", "");
+            String existingLocation = propertyFiles.getOrDefault("spring.config.additional-location", "");
             if (!existingLocation.isEmpty()) {
                 existingLocation += ",";
             }
             propertyFiles.put(
-                    "spring.config.additional-location",
-                    existingLocation + "file:" + customSettingsPath.toString());
+                    "spring.config.additional-location", existingLocation + "file:" + customSettingsPath.toString());
         } else {
-            log.warn(
-                    "Custom configuration file '{}' does not exist.",
-                    customSettingsPath.toString());
+            log.warn("Custom configuration file '{}' does not exist.", customSettingsPath.toString());
         }
         Properties finalProps = new Properties();
 
         if (!propertyFiles.isEmpty()) {
-            finalProps.putAll(
-                    Collections.singletonMap(
-                            "spring.config.additional-location",
-                            propertyFiles.get("spring.config.additional-location")));
+            finalProps.putAll(Collections.singletonMap(
+                    "spring.config.additional-location", propertyFiles.get("spring.config.additional-location")));
         }
 
         if (!props.isEmpty()) {
@@ -139,9 +130,7 @@ public class SPDFApplication {
         // Log Tauri mode information
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
             String parentPid = System.getenv("TAURI_PARENT_PID");
-            log.info(
-                    "Running in Tauri mode. Parent process PID: {}",
-                    parentPid != null ? parentPid : "not set");
+            log.info("Running in Tauri mode. Parent process PID: {}", parentPid != null ? parentPid : "not set");
         }
         // Standard browser opening logic
         String browserOpenEnv = env.getProperty("BROWSER_OPEN");
@@ -168,8 +157,7 @@ public class SPDFApplication {
     public static void setServerPortStatic(String port) {
         if ("auto".equalsIgnoreCase(port)) {
             // Use Spring Boot's automatic port assignment (server.port=0)
-            SPDFApplication.serverPortStatic =
-                    "0"; // This will let Spring Boot assign an available port
+            SPDFApplication.serverPortStatic = "0"; // This will let Spring Boot assign an available port
         } else {
             SPDFApplication.serverPortStatic = port;
         }
@@ -177,8 +165,7 @@ public class SPDFApplication {
 
     @EventListener
     public void onApplicationReady(ApplicationReadyEvent event) {
-        String port =
-                event.getApplicationContext().getEnvironment().getProperty("local.server.port");
+        String port = event.getApplicationContext().getEnvironment().getProperty("local.server.port");
         if (port != null) {
             serverPortStatic = port;
         }
@@ -208,8 +195,7 @@ public class SPDFApplication {
         // 2. Detect classpath shape and pick the matching profile chain.
         boolean hasSaas = isClassPresent("stirling.software.saas.security.SupabaseSecurityConfig");
         boolean hasSecurity =
-                isClassPresent(
-                        "stirling.software.proprietary.security.configuration.SecurityConfiguration");
+                isClassPresent("stirling.software.proprietary.security.configuration.SecurityConfiguration");
 
         if (hasSaas) {
             log.info("SaaS features in jar");
@@ -247,19 +233,17 @@ public class SPDFApplication {
     private static String buildFullUrl(String backendUrl, String port, String contextPath) {
         String normalizedBase = normalizeBackendUrl(backendUrl, port);
 
-        String normalizedContextPath =
-                (contextPath == null || contextPath.isBlank() || "/".equals(contextPath))
-                        ? "/"
-                        : (contextPath.startsWith("/") ? contextPath : "/" + contextPath);
+        String normalizedContextPath = (contextPath == null || contextPath.isBlank() || "/".equals(contextPath))
+                ? "/"
+                : (contextPath.startsWith("/") ? contextPath : "/" + contextPath);
 
         return normalizedBase + normalizedContextPath;
     }
 
     private static String normalizeBackendUrl(String backendUrl, String port) {
-        String trimmedBase =
-                (backendUrl == null || backendUrl.isBlank())
-                        ? "http://localhost"
-                        : TRAILING_SLASH_PATTERN.matcher(backendUrl.trim()).replaceAll("");
+        String trimmedBase = (backendUrl == null || backendUrl.isBlank())
+                ? "http://localhost"
+                : TRAILING_SLASH_PATTERN.matcher(backendUrl.trim()).replaceAll("");
         boolean hasScheme = URL_SCHEME_PATTERN.matcher(trimmedBase).matches();
         String baseForParsing = hasScheme ? trimmedBase : "http://" + trimmedBase;
         Integer parsedPort = parsePort(port);
@@ -282,15 +266,8 @@ public class SPDFApplication {
                 effectivePort = parsedPort;
             }
 
-            java.net.URI rebuilt =
-                    new java.net.URI(
-                            scheme,
-                            uri.getUserInfo(),
-                            host,
-                            effectivePort,
-                            uri.getPath(),
-                            uri.getQuery(),
-                            uri.getFragment());
+            java.net.URI rebuilt = new java.net.URI(
+                    scheme, uri.getUserInfo(), host, effectivePort, uri.getPath(), uri.getQuery(), uri.getFragment());
             return rebuilt.toString();
         } catch (java.net.URISyntaxException e) {
             return appendPortFallback(trimmedBase, parsedPort);

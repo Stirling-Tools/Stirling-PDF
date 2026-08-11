@@ -47,14 +47,10 @@ class CustomPDFDocumentFactoryMoreTest {
         @Test
         @DisplayName("each load overload rejects null with IllegalArgumentException")
         void nullArguments() {
-            assertThatThrownBy(() -> factory.load((File) null))
-                    .isInstanceOf(IllegalArgumentException.class);
-            assertThatThrownBy(() -> factory.load((Path) null))
-                    .isInstanceOf(IllegalArgumentException.class);
-            assertThatThrownBy(() -> factory.load((byte[]) null))
-                    .isInstanceOf(IllegalArgumentException.class);
-            assertThatThrownBy(() -> factory.load((InputStream) null))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> factory.load((File) null)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> factory.load((Path) null)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> factory.load((byte[]) null)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> factory.load((InputStream) null)).isInstanceOf(IllegalArgumentException.class);
             assertThatThrownBy(() -> factory.load((InputStream) null, "pw"))
                     .isInstanceOf(IllegalArgumentException.class);
         }
@@ -142,8 +138,7 @@ class CustomPDFDocumentFactoryMoreTest {
             // load(InputStream, password) drives removePassword + setAllSecurityToBeRemoved so the
             // returned document can be re-saved with no password set.
             byte[] decryptedSaved;
-            try (PDDocument doc =
-                    factory.load(new ByteArrayInputStream(encrypted), "userpw", false)) {
+            try (PDDocument doc = factory.load(new ByteArrayInputStream(encrypted), "userpw", false)) {
                 assertThat(doc.getNumberOfPages()).isPositive();
                 decryptedSaved = factory.saveToBytes(doc);
             }
@@ -157,8 +152,7 @@ class CustomPDFDocumentFactoryMoreTest {
         @DisplayName("MultipartFile with positive small size uses byte[] path")
         void smallMultipartLoadsViaBytes() throws IOException {
             MockMultipartFile multipart =
-                    new MockMultipartFile(
-                            "file", "s.pdf", MediaType.APPLICATION_PDF_VALUE, basePdfBytes);
+                    new MockMultipartFile("file", "s.pdf", MediaType.APPLICATION_PDF_VALUE, basePdfBytes);
             try (PDDocument doc = factory.load(multipart)) {
                 assertThat(doc.getNumberOfPages()).isPositive();
             }

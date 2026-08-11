@@ -24,13 +24,11 @@ public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
             return;
         }
 
-        openApi.getPaths()
-                .forEach(
-                        (path, pathItem) -> {
-                            if (path.startsWith("/api/v1/")) {
-                                addErrorResponsesToPathItem(pathItem);
-                            }
-                        });
+        openApi.getPaths().forEach((path, pathItem) -> {
+            if (path.startsWith("/api/v1/")) {
+                addErrorResponsesToPathItem(pathItem);
+            }
+        });
     }
 
     private void addErrorResponsesToPathItem(PathItem pathItem) {
@@ -73,83 +71,68 @@ public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
 
     private ApiResponse create400Response() {
         return new ApiResponse()
-                .description(
-                        "Bad request - Invalid input parameters, unsupported format, or corrupted file")
-                .content(
-                        new Content()
-                                .addMediaType(
-                                        "application/json",
-                                        new MediaType()
-                                                .schema(
-                                                        createErrorSchema(
-                                                                400,
-                                                                "Invalid input parameters or corrupted file",
-                                                                "/api/v1/example/endpoint"))
-                                                .example(
-                                                        createErrorExample(
-                                                                400,
-                                                                "Invalid input parameters or corrupted file",
-                                                                "/api/v1/example/endpoint"))));
+                .description("Bad request - Invalid input parameters, unsupported format, or corrupted file")
+                .content(new Content()
+                        .addMediaType(
+                                "application/json",
+                                new MediaType()
+                                        .schema(createErrorSchema(
+                                                400,
+                                                "Invalid input parameters or corrupted file",
+                                                "/api/v1/example/endpoint"))
+                                        .example(createErrorExample(
+                                                400,
+                                                "Invalid input parameters or corrupted file",
+                                                "/api/v1/example/endpoint"))));
     }
 
     private ApiResponse create413Response() {
         return new ApiResponse()
                 .description("Payload too large - File exceeds maximum allowed size")
-                .content(
-                        new Content()
-                                .addMediaType(
-                                        "application/json",
-                                        new MediaType()
-                                                .schema(
-                                                        createErrorSchema(
-                                                                413,
-                                                                "File size exceeds maximum allowed limit",
-                                                                "/api/v1/example/endpoint"))
-                                                .example(
-                                                        createErrorExample(
-                                                                413,
-                                                                "File size exceeds maximum allowed limit",
-                                                                "/api/v1/example/endpoint"))));
+                .content(new Content()
+                        .addMediaType(
+                                "application/json",
+                                new MediaType()
+                                        .schema(createErrorSchema(
+                                                413,
+                                                "File size exceeds maximum allowed limit",
+                                                "/api/v1/example/endpoint"))
+                                        .example(createErrorExample(
+                                                413,
+                                                "File size exceeds maximum allowed limit",
+                                                "/api/v1/example/endpoint"))));
     }
 
     private ApiResponse create422Response() {
         return new ApiResponse()
                 .description("Unprocessable entity - File is valid but cannot be processed")
-                .content(
-                        new Content()
-                                .addMediaType(
-                                        "application/json",
-                                        new MediaType()
-                                                .schema(
-                                                        createErrorSchema(
-                                                                422,
-                                                                "File is valid but cannot be processed",
-                                                                "/api/v1/example/endpoint"))
-                                                .example(
-                                                        createErrorExample(
-                                                                422,
-                                                                "File is valid but cannot be processed",
-                                                                "/api/v1/example/endpoint"))));
+                .content(new Content()
+                        .addMediaType(
+                                "application/json",
+                                new MediaType()
+                                        .schema(createErrorSchema(
+                                                422,
+                                                "File is valid but cannot be processed",
+                                                "/api/v1/example/endpoint"))
+                                        .example(createErrorExample(
+                                                422,
+                                                "File is valid but cannot be processed",
+                                                "/api/v1/example/endpoint"))));
     }
 
     private ApiResponse create500Response() {
         return new ApiResponse()
                 .description("Internal server error - Unexpected error during processing")
-                .content(
-                        new Content()
-                                .addMediaType(
-                                        "application/json",
-                                        new MediaType()
-                                                .schema(
-                                                        createErrorSchema(
-                                                                500,
-                                                                "Unexpected error during processing",
-                                                                "/api/v1/example/endpoint"))
-                                                .example(
-                                                        createErrorExample(
-                                                                500,
-                                                                "Unexpected error during processing",
-                                                                "/api/v1/example/endpoint"))));
+                .content(new Content()
+                        .addMediaType(
+                                "application/json",
+                                new MediaType()
+                                        .schema(createErrorSchema(
+                                                500, "Unexpected error during processing", "/api/v1/example/endpoint"))
+                                        .example(createErrorExample(
+                                                500,
+                                                "Unexpected error during processing",
+                                                "/api/v1/example/endpoint"))));
     }
 
     private Schema<?> createErrorSchema(int status, String message, String path) {
@@ -160,10 +143,7 @@ public class GlobalErrorResponseCustomizer implements GlobalOpenApiCustomizer {
                 .addProperty("message", new Schema<>().type("string").example(message))
                 .addProperty(
                         "timestamp",
-                        new Schema<>()
-                                .type("string")
-                                .format("date-time")
-                                .example("2024-01-15T10:30:00Z"))
+                        new Schema<>().type("string").format("date-time").example("2024-01-15T10:30:00Z"))
                 .addProperty("path", new Schema<>().type("string").example(path));
     }
 

@@ -87,28 +87,22 @@ public class MathAuditorOrchestrator {
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
             // Round 1: classify pages cheaply; send manifest; get requisition
             List<FolioType> folioTypes = classifyPages(document);
-            FolioManifest manifest =
-                    new FolioManifest(sessionId, document.getNumberOfPages(), folioTypes, 1);
+            FolioManifest manifest = new FolioManifest(sessionId, document.getNumberOfPages(), folioTypes, 1);
 
             Requisition requisition = callExamine(manifest);
-            log.info(
-                    "[math-auditor-agent] session={} requisition received: {}",
-                    sessionId,
-                    requisition.rationale());
+            log.info("[math-auditor-agent] session={} requisition received: {}", sessionId, requisition.rationale());
 
             // Round 2: fulfil the requisition and get verdict
             Evidence evidence = fulfil(document, sessionId, requisition, 2, true);
             Verdict verdict = callDeliberate(evidence, tolerance);
 
             if (verdict == null) {
-                log.error(
-                        "[math-auditor-agent] session={} null Verdict from deliberate", sessionId);
+                log.error("[math-auditor-agent] session={} null Verdict from deliberate", sessionId);
                 throw new IllegalStateException("Math Auditor Agent returned null Verdict");
             }
 
             log.info(
-                    "[math-auditor-agent] session={} verdict: {} errors, {} warnings,"
-                            + " clean={}",
+                    "[math-auditor-agent] session={} verdict: {} errors, {} warnings," + " clean={}",
                     sessionId,
                     verdict.errorCount(),
                     verdict.warningCount(),
@@ -162,21 +156,14 @@ public class MathAuditorOrchestrator {
     // -----------------------------------------------------------------------
 
     private Evidence fulfil(
-            PDDocument document,
-            String sessionId,
-            Requisition requisition,
-            int round,
-            boolean finalRound)
+            PDDocument document, String sessionId, Requisition requisition, int round, boolean finalRound)
             throws IOException {
 
-        List<Integer> allPages =
-                union(requisition.needText(), requisition.needTables(), requisition.needOcr());
+        List<Integer> allPages = union(requisition.needText(), requisition.needTables(), requisition.needOcr());
         int totalPages = document.getNumberOfPages();
         allPages.removeIf(page -> page < 0 || page >= totalPages);
         if (allPages.isEmpty()) {
-            log.warn(
-                    "[math-auditor-agent] session={} all requested pages are out of bounds",
-                    sessionId);
+            log.warn("[math-auditor-agent] session={} all requested pages are out of bounds", sessionId);
         }
         List<Folio> folios = new ArrayList<>();
         List<Integer> unauditablePages = new ArrayList<>();
@@ -209,8 +196,7 @@ public class MathAuditorOrchestrator {
         }
 
         log.info(
-                "[math-auditor-agent] session={} fulfilled round {} with {} folios, {}"
-                        + " unauditable pages",
+                "[math-auditor-agent] session={} fulfilled round {} with {} folios, {}" + " unauditable pages",
                 sessionId,
                 round,
                 folios.size(),

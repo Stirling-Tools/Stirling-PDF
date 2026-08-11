@@ -52,18 +52,15 @@ class CheckProgramInstallTest {
 
     /** Reset static fields in the CheckProgramInstall class using reflection */
     private static void resetStaticFields() throws Exception {
-        Field pythonAvailableCheckedField =
-                CheckProgramInstall.class.getDeclaredField("pythonAvailableChecked");
+        Field pythonAvailableCheckedField = CheckProgramInstall.class.getDeclaredField("pythonAvailableChecked");
         pythonAvailableCheckedField.setAccessible(true);
         pythonAvailableCheckedField.set(null, false);
 
-        Field availablePythonCommandField =
-                CheckProgramInstall.class.getDeclaredField("availablePythonCommand");
+        Field availablePythonCommandField = CheckProgramInstall.class.getDeclaredField("availablePythonCommand");
         availablePythonCommandField.setAccessible(true);
         availablePythonCommandField.set(null, null);
 
-        Field ffmpegAvailableCheckedField =
-                CheckProgramInstall.class.getDeclaredField("ffmpegAvailableChecked");
+        Field ffmpegAvailableCheckedField = CheckProgramInstall.class.getDeclaredField("ffmpegAvailableChecked");
         ffmpegAvailableCheckedField.setAccessible(true);
         ffmpegAvailableCheckedField.set(null, false);
 
@@ -73,8 +70,7 @@ class CheckProgramInstallTest {
     }
 
     @Test
-    void testGetAvailablePythonCommand_WhenPython3IsAvailable()
-            throws IOException, InterruptedException {
+    void testGetAvailablePythonCommand_WhenPython3IsAvailable() throws IOException, InterruptedException {
         // Arrange
         ProcessExecutorResult result = Mockito.mock(ProcessExecutorResult.class);
         when(result.getRc()).thenReturn(0);
@@ -94,8 +90,7 @@ class CheckProgramInstallTest {
     }
 
     @Test
-    void testGetAvailablePythonCommand_WhenPython3IsNotAvailableButPythonIs()
-            throws IOException, InterruptedException {
+    void testGetAvailablePythonCommand_WhenPython3IsNotAvailableButPythonIs() throws IOException, InterruptedException {
         // Arrange
         when(mockExecutor.runCommandWithOutputHandling(Arrays.asList("python3", "--version")))
                 .thenThrow(new IOException("Command not found"));
@@ -149,11 +144,9 @@ class CheckProgramInstallTest {
     }
 
     @Test
-    void testGetAvailablePythonCommand_WhenNoPythonIsAvailable()
-            throws IOException, InterruptedException {
+    void testGetAvailablePythonCommand_WhenNoPythonIsAvailable() throws IOException, InterruptedException {
         // Arrange
-        when(mockExecutor.runCommandWithOutputHandling(anyList()))
-                .thenThrow(new IOException("Command not found"));
+        when(mockExecutor.runCommandWithOutputHandling(anyList())).thenThrow(new IOException("Command not found"));
 
         // Act
         String pythonCommand = CheckProgramInstall.getAvailablePythonCommand();
@@ -180,8 +173,7 @@ class CheckProgramInstallTest {
         String firstCall = CheckProgramInstall.getAvailablePythonCommand();
 
         // Change the mock to simulate a change in the environment
-        when(mockExecutor.runCommandWithOutputHandling(anyList()))
-                .thenThrow(new IOException("Command not found"));
+        when(mockExecutor.runCommandWithOutputHandling(anyList())).thenThrow(new IOException("Command not found"));
 
         String secondCall = CheckProgramInstall.getAvailablePythonCommand();
 
@@ -190,8 +182,7 @@ class CheckProgramInstallTest {
         assertEquals("python3", secondCall); // Second call should return the cached result
 
         // Verify python3 command was only executed once (caching worked)
-        verify(mockExecutor, times(1))
-                .runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
+        verify(mockExecutor, times(1)).runCommandWithOutputHandling(Arrays.asList("python3", "--version"));
     }
 
     @Test
@@ -224,8 +215,7 @@ class CheckProgramInstallTest {
                 .thenReturn(result);
 
         assertTrue(CheckProgramInstall.isFfmpegAvailable());
-        verify(mockFfmpegExecutor)
-                .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
+        verify(mockFfmpegExecutor).runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
     }
 
     @Test
@@ -235,8 +225,7 @@ class CheckProgramInstallTest {
                 .thenThrow(new IOException("Command not found"));
 
         assertFalse(CheckProgramInstall.isFfmpegAvailable());
-        verify(mockFfmpegExecutor)
-                .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
+        verify(mockFfmpegExecutor).runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
     }
 
     @Test
@@ -253,7 +242,6 @@ class CheckProgramInstallTest {
 
         assertTrue(CheckProgramInstall.isFfmpegAvailable());
 
-        verify(mockFfmpegExecutor, times(1))
-                .runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
+        verify(mockFfmpegExecutor, times(1)).runCommandWithOutputHandling(Arrays.asList("ffmpeg", "-version"));
     }
 }

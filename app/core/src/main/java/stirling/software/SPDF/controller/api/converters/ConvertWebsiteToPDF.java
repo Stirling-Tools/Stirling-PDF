@@ -67,8 +67,7 @@ public class ConvertWebsiteToPDF {
     @ToolIO(accepts = ToolFormat.NONE, produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a URL to a PDF",
-            description =
-                    "This endpoint fetches content from a URL and converts it to a PDF format.")
+            description = "This endpoint fetches content from a URL and converts it to a PDF format.")
     public ResponseEntity<?> urlToPdf(@ModelAttribute UrlToPdfRequest request)
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
@@ -78,29 +77,28 @@ public class ConvertWebsiteToPDF {
         HttpStatus status = HttpStatus.SEE_OTHER;
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
-            location =
-                    uriComponentsBuilder
-                            .queryParam("error", "error.endpointDisabled")
-                            .build()
-                            .toUri();
+            location = uriComponentsBuilder
+                    .queryParam("error", "error.endpointDisabled")
+                    .build()
+                    .toUri();
         } else {
             // Validate the URL format (relaxed: only invalid if BOTH checks fail)
-            boolean patternValid =
-                    RegexPatternUtils.getInstance().getHttpUrlPattern().matcher(URL).matches();
+            boolean patternValid = RegexPatternUtils.getInstance()
+                    .getHttpUrlPattern()
+                    .matcher(URL)
+                    .matches();
             boolean generalValid = GeneralUtils.isValidURL(URL);
             if (!patternValid && !generalValid) {
-                location =
-                        uriComponentsBuilder
-                                .queryParam("error", "error.invalidUrlFormat")
-                                .build()
-                                .toUri();
+                location = uriComponentsBuilder
+                        .queryParam("error", "error.invalidUrlFormat")
+                        .build()
+                        .toUri();
             } else if (!GeneralUtils.isURLReachable(URL)) {
                 // validate the URL is reachable
-                location =
-                        uriComponentsBuilder
-                                .queryParam("error", "error.urlNotReachable")
-                                .build()
-                                .toUri();
+                location = uriComponentsBuilder
+                        .queryParam("error", "error.urlNotReachable")
+                        .build()
+                        .toUri();
             }
         }
 
@@ -116,11 +114,10 @@ public class ConvertWebsiteToPDF {
             String htmlContent = fetchRemoteHtml(URL);
 
             if (containsDisallowedUriScheme(htmlContent)) {
-                URI rejectionLocation =
-                        uriComponentsBuilder
-                                .queryParam("error", "error.disallowedUrlContent")
-                                .build()
-                                .toUri();
+                URI rejectionLocation = uriComponentsBuilder
+                        .queryParam("error", "error.disallowedUrlContent")
+                        .build()
+                        .toUri();
                 log.warn("Rejected URL to PDF conversion due to disallowed content references");
                 return ResponseEntity.status(status).location(rejectionLocation).build();
             }
@@ -140,8 +137,7 @@ public class ConvertWebsiteToPDF {
             command.add("--pdf-forms");
             command.add(tempOutputFile.toString());
 
-            ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT)
-                    .runCommandWithOutputHandling(command);
+            ProcessExecutor.getInstance(ProcessExecutor.Processes.WEASYPRINT).runCommandWithOutputHandling(command);
 
             // Load the PDF using pdfDocumentFactory
             String outputFilename = convertURLToFileName(URL);
@@ -173,18 +169,16 @@ public class ConvertWebsiteToPDF {
     }
 
     private String fetchRemoteHtml(String url) throws IOException, InterruptedException {
-        HttpClient client =
-                HttpClient.newBuilder()
-                        .followRedirects(HttpClient.Redirect.NEVER)
-                        .connectTimeout(Duration.ofSeconds(10))
-                        .build();
+        HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NEVER)
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
 
-        HttpRequest request =
-                HttpRequest.newBuilder(URI.create(url))
-                        .timeout(Duration.ofSeconds(20))
-                        .GET()
-                        .header("User-Agent", "Stirling-PDF/URL-to-PDF")
-                        .build();
+        HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+                .timeout(Duration.ofSeconds(20))
+                .GET()
+                .header("User-Agent", "Stirling-PDF/URL-to-PDF")
+                .build();
 
         HttpResponse<String> response =
                 client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
@@ -212,11 +206,10 @@ public class ConvertWebsiteToPDF {
     private String normalizeForSchemeDetection(String htmlContent) {
         String lowerCaseContent = htmlContent.toLowerCase(Locale.ROOT);
         String decodedHtmlEntities = decodeNumericHtmlEntities(lowerCaseContent);
-        decodedHtmlEntities =
-                decodedHtmlEntities
-                        .replace("&colon;", ":")
-                        .replace("&sol;", "/")
-                        .replace("&frasl;", "/");
+        decodedHtmlEntities = decodedHtmlEntities
+                .replace("&colon;", ":")
+                .replace("&sol;", "/")
+                .replace("&frasl;", "/");
         return percentDecode(decodedHtmlEntities);
     }
 
@@ -247,10 +240,8 @@ public class ConvertWebsiteToPDF {
             String entityBody = matcher.group(1);
             try {
                 int radix = entityBody.startsWith("x") ? 16 : 10;
-                int codePoint =
-                        Integer.parseInt(radix == 16 ? entityBody.substring(1) : entityBody, radix);
-                matcher.appendReplacement(
-                        decoded, Matcher.quoteReplacement(Character.toString((char) codePoint)));
+                int codePoint = Integer.parseInt(radix == 16 ? entityBody.substring(1) : entityBody, radix);
+                matcher.appendReplacement(decoded, Matcher.quoteReplacement(Character.toString((char) codePoint)));
             } catch (NumberFormatException ex) {
                 matcher.appendReplacement(decoded, matcher.group(0));
             }
@@ -269,11 +260,10 @@ public class ConvertWebsiteToPDF {
                 if (hostPart == null || hostPart.isBlank()) {
                     hostPart = "document";
                 }
-                safeName =
-                        RegexPatternUtils.getInstance()
-                                .getNonAlnumUnderscorePattern()
-                                .matcher(hostPart)
-                                .replaceAll("_");
+                safeName = RegexPatternUtils.getInstance()
+                        .getNonAlnumUnderscorePattern()
+                        .matcher(hostPart)
+                        .replaceAll("_");
             } catch (Exception e) {
                 safeName = "document";
             }

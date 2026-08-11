@@ -32,18 +32,10 @@ import stirling.software.proprietary.security.model.User;
         uniqueConstraints =
                 @UniqueConstraint(
                         name = "uk_resource_grant",
-                        columnNames = {
-                            "resource_type",
-                            "resource_id",
-                            "principal_type",
-                            "principal_id",
-                            "permission"
-                        }),
+                        columnNames = {"resource_type", "resource_id", "principal_type", "principal_id", "permission"}),
         indexes = {
             @Index(name = "idx_resource_grants_lookup", columnList = "resource_type,resource_id"),
-            @Index(
-                    name = "idx_resource_grants_principal",
-                    columnList = "principal_type,principal_id")
+            @Index(name = "idx_resource_grants_principal", columnList = "principal_type,principal_id")
         })
 @NoArgsConstructor
 @Getter

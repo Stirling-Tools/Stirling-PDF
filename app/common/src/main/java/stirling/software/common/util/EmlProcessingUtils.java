@@ -44,18 +44,17 @@ public class EmlProcessingUtils {
         (byte) 0xD0, (byte) 0xCF, (byte) 0x11, (byte) 0xE0,
         (byte) 0xA1, (byte) 0xB1, (byte) 0x1A, (byte) 0xE1
     };
-    private final Map<String, String> EXTENSION_TO_MIME_TYPE =
-            Map.of(
-                    ".png", MediaType.IMAGE_PNG_VALUE,
-                    ".jpg", MediaType.IMAGE_JPEG_VALUE,
-                    ".jpeg", MediaType.IMAGE_JPEG_VALUE,
-                    ".gif", MediaType.IMAGE_GIF_VALUE,
-                    ".bmp", "image/bmp",
-                    ".webp", "image/webp",
-                    ".svg", "image/svg+xml",
-                    ".ico", "image/x-icon",
-                    ".tiff", "image/tiff",
-                    ".tif", "image/tiff");
+    private final Map<String, String> EXTENSION_TO_MIME_TYPE = Map.of(
+            ".png", MediaType.IMAGE_PNG_VALUE,
+            ".jpg", MediaType.IMAGE_JPEG_VALUE,
+            ".jpeg", MediaType.IMAGE_JPEG_VALUE,
+            ".gif", MediaType.IMAGE_GIF_VALUE,
+            ".bmp", "image/bmp",
+            ".webp", "image/webp",
+            ".svg", "image/svg+xml",
+            ".ico", "image/x-icon",
+            ".tiff", "image/tiff",
+            ".tif", "image/tiff");
     private volatile String cachedCssContent = null;
 
     public void validateEmlInput(byte[] emlBytes) {
@@ -101,20 +100,16 @@ public class EmlProcessingUtils {
 
             String lowerContent = content.toLowerCase(Locale.ROOT);
 
-            boolean hasFrom =
-                    lowerContent.contains("from:") || lowerContent.contains("return-path:");
+            boolean hasFrom = lowerContent.contains("from:") || lowerContent.contains("return-path:");
             boolean hasSubject = lowerContent.contains("subject:");
             boolean hasMessageId = lowerContent.contains("message-id:");
             boolean hasDate = lowerContent.contains("date:");
             boolean hasTo =
-                    lowerContent.contains("to:")
-                            || lowerContent.contains("cc:")
-                            || lowerContent.contains("bcc:");
-            boolean hasMimeStructure =
-                    lowerContent.contains("multipart/")
-                            || lowerContent.contains(MediaType.TEXT_PLAIN_VALUE)
-                            || lowerContent.contains(MediaType.TEXT_HTML_VALUE)
-                            || lowerContent.contains("boundary=");
+                    lowerContent.contains("to:") || lowerContent.contains("cc:") || lowerContent.contains("bcc:");
+            boolean hasMimeStructure = lowerContent.contains("multipart/")
+                    || lowerContent.contains(MediaType.TEXT_PLAIN_VALUE)
+                    || lowerContent.contains(MediaType.TEXT_HTML_VALUE)
+                    || lowerContent.contains("boundary=");
 
             int headerCount = 0;
             if (hasFrom) headerCount++;
@@ -131,34 +126,26 @@ public class EmlProcessingUtils {
     }
 
     public String generateEnhancedEmailHtml(
-            EmlParser.EmailContent content,
-            EmlToPdfRequest request,
-            CustomHtmlSanitizer customHtmlSanitizer) {
+            EmlParser.EmailContent content, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) {
         StringBuilder html = new StringBuilder();
 
-        html.append(
-                String.format(
-                        Locale.ROOT,
-                        """
+        html.append(String.format(Locale.ROOT, """
                         <!DOCTYPE html>
                         <html lang="en"><head><meta charset="UTF-8">
                         <title>%s</title>
                         <style>
-                        """,
-                        sanitizeText(content.getSubject(), customHtmlSanitizer)));
+                        """, sanitizeText(content.getSubject(), customHtmlSanitizer)));
 
         appendEnhancedStyles(html);
 
-        html.append(
-                """
+        html.append("""
                 </style>
                 </head><body>
                 """);
 
-        html.append(
-                String.format(
-                        Locale.ROOT,
-                        """
+        html.append(String.format(
+                Locale.ROOT,
+                """
                         <div class="email-container">
                         <div class="email-header">
                         <h1>%s</h1>
@@ -166,53 +153,49 @@ public class EmlProcessingUtils {
                         <div><strong>From:</strong> %s</div>
                         <div><strong>To:</strong> %s</div>
                         """,
-                        sanitizeText(content.getSubject(), customHtmlSanitizer),
-                        sanitizeText(content.getFrom(), customHtmlSanitizer),
-                        sanitizeText(content.getTo(), customHtmlSanitizer)));
+                sanitizeText(content.getSubject(), customHtmlSanitizer),
+                sanitizeText(content.getFrom(), customHtmlSanitizer),
+                sanitizeText(content.getTo(), customHtmlSanitizer)));
 
         if (content.getCc() != null && !content.getCc().trim().isEmpty()) {
-            html.append(
-                    String.format(
-                            Locale.ROOT,
-                            "<div><strong>CC:</strong> %s</div>%n",
-                            sanitizeText(content.getCc(), customHtmlSanitizer)));
+            html.append(String.format(
+                    Locale.ROOT,
+                    "<div><strong>CC:</strong> %s</div>%n",
+                    sanitizeText(content.getCc(), customHtmlSanitizer)));
         }
 
         if (content.getBcc() != null && !content.getBcc().trim().isEmpty()) {
-            html.append(
-                    String.format(
-                            Locale.ROOT,
-                            "<div><strong>BCC:</strong> %s</div>%n",
-                            sanitizeText(content.getBcc(), customHtmlSanitizer)));
+            html.append(String.format(
+                    Locale.ROOT,
+                    "<div><strong>BCC:</strong> %s</div>%n",
+                    sanitizeText(content.getBcc(), customHtmlSanitizer)));
         }
 
         if (content.getDate() != null) {
-            html.append(
-                    String.format(
-                            Locale.ROOT,
-                            "<div><strong>Date:</strong> %s</div>%n",
-                            PdfAttachmentHandler.formatEmailDate(content.getDate())));
-        } else if (content.getDateString() != null && !content.getDateString().trim().isEmpty()) {
-            html.append(
-                    String.format(
-                            Locale.ROOT,
-                            "<div><strong>Date:</strong> %s</div>%n",
-                            sanitizeText(content.getDateString(), customHtmlSanitizer)));
+            html.append(String.format(
+                    Locale.ROOT,
+                    "<div><strong>Date:</strong> %s</div>%n",
+                    PdfAttachmentHandler.formatEmailDate(content.getDate())));
+        } else if (content.getDateString() != null
+                && !content.getDateString().trim().isEmpty()) {
+            html.append(String.format(
+                    Locale.ROOT,
+                    "<div><strong>Date:</strong> %s</div>%n",
+                    sanitizeText(content.getDateString(), customHtmlSanitizer)));
         }
 
         html.append(String.format(Locale.ROOT, "</div></div>%n"));
 
         html.append(String.format(Locale.ROOT, "<div class=\"email-body\">%n"));
         if (content.getHtmlBody() != null && !content.getHtmlBody().trim().isEmpty()) {
-            String processedHtml =
-                    processEmailHtmlBody(content.getHtmlBody(), content, customHtmlSanitizer);
+            String processedHtml = processEmailHtmlBody(content.getHtmlBody(), content, customHtmlSanitizer);
             html.append(processedHtml);
-        } else if (content.getTextBody() != null && !content.getTextBody().trim().isEmpty()) {
-            html.append(
-                    String.format(
-                            Locale.ROOT,
-                            "<div class=\"text-body\">%s</div>",
-                            convertTextToHtml(content.getTextBody(), customHtmlSanitizer)));
+        } else if (content.getTextBody() != null
+                && !content.getTextBody().trim().isEmpty()) {
+            html.append(String.format(
+                    Locale.ROOT,
+                    "<div class=\"text-body\">%s</div>",
+                    convertTextToHtml(content.getTextBody(), customHtmlSanitizer)));
         } else {
             html.append("<div class=\"no-content\"><p><em>No content available</em></p></div>");
         }
@@ -227,24 +210,19 @@ public class EmlProcessingUtils {
     }
 
     public String processEmailHtmlBody(
-            String htmlBody,
-            EmlParser.EmailContent emailContent,
-            CustomHtmlSanitizer customHtmlSanitizer) {
+            String htmlBody, EmlParser.EmailContent emailContent, CustomHtmlSanitizer customHtmlSanitizer) {
         if (htmlBody == null) return "";
 
-        String processed =
-                customHtmlSanitizer != null ? customHtmlSanitizer.sanitize(htmlBody) : htmlBody;
+        String processed = customHtmlSanitizer != null ? customHtmlSanitizer.sanitize(htmlBody) : htmlBody;
 
-        processed =
-                RegexPatternUtils.getInstance()
-                        .getFixedPositionCssPattern()
-                        .matcher(processed)
-                        .replaceAll("");
-        processed =
-                RegexPatternUtils.getInstance()
-                        .getAbsolutePositionCssPattern()
-                        .matcher(processed)
-                        .replaceAll("");
+        processed = RegexPatternUtils.getInstance()
+                .getFixedPositionCssPattern()
+                .matcher(processed)
+                .replaceAll("");
+        processed = RegexPatternUtils.getInstance()
+                .getAbsolutePositionCssPattern()
+                .matcher(processed)
+                .replaceAll("");
 
         if (emailContent != null && !emailContent.getAttachments().isEmpty()) {
             processed = PdfAttachmentHandler.processInlineImages(processed, emailContent);
@@ -256,38 +234,28 @@ public class EmlProcessingUtils {
     public String convertTextToHtml(String textBody, CustomHtmlSanitizer customHtmlSanitizer) {
         if (textBody == null) return "";
 
-        String html =
-                customHtmlSanitizer != null
-                        ? customHtmlSanitizer.sanitize(textBody)
-                        : escapeHtml(textBody);
+        String html = customHtmlSanitizer != null ? customHtmlSanitizer.sanitize(textBody) : escapeHtml(textBody);
 
         html = html.replace("\r\n", "\n").replace("\r", "\n");
         html = html.replace("\n", "<br>\n");
 
-        html =
-                RegexPatternUtils.getInstance()
-                        .getUrlLinkPattern()
-                        .matcher(html)
-                        .replaceAll(
-                                "<a href=\"$1\" style=\"color: #1a73e8; text-decoration:"
-                                        + " underline;\">$1</a>");
+        html = RegexPatternUtils.getInstance()
+                .getUrlLinkPattern()
+                .matcher(html)
+                .replaceAll("<a href=\"$1\" style=\"color: #1a73e8; text-decoration:" + " underline;\">$1</a>");
 
-        html =
-                RegexPatternUtils.getInstance()
-                        .getEmailLinkPattern()
-                        .matcher(html)
-                        .replaceAll(
-                                "<a href=\"mailto:$1\" style=\"color: #1a73e8; text-decoration:"
-                                        + " underline;\">$1</a>");
+        html = RegexPatternUtils.getInstance()
+                .getEmailLinkPattern()
+                .matcher(html)
+                .replaceAll("<a href=\"mailto:$1\" style=\"color: #1a73e8; text-decoration:" + " underline;\">$1</a>");
 
         return html;
     }
 
     private void appendEnhancedStyles(StringBuilder html) {
-        html.append(
-                String.format(
-                        Locale.ROOT,
-                        """
+        html.append(String.format(
+                Locale.ROOT,
+                """
                         :root {
                           --font-family: %s;
                           --font-size: %dpx;
@@ -304,19 +272,19 @@ public class EmlProcessingUtils {
                           --note-font-size: %dpx;
                         }
                         """,
-                        DEFAULT_FONT_FAMILY,
-                        DEFAULT_FONT_SIZE,
-                        DEFAULT_LINE_HEIGHT,
-                        DEFAULT_TEXT_COLOR,
-                        DEFAULT_BACKGROUND_COLOR,
-                        DEFAULT_BORDER_COLOR,
-                        DEFAULT_FONT_SIZE + 6,
-                        DEFAULT_FONT_SIZE,
-                        ATTACHMENT_BACKGROUND_COLOR,
-                        ATTACHMENT_BORDER_COLOR,
-                        DEFAULT_FONT_SIZE + 2,
-                        DEFAULT_FONT_SIZE - 1,
-                        DEFAULT_FONT_SIZE - 1));
+                DEFAULT_FONT_FAMILY,
+                DEFAULT_FONT_SIZE,
+                DEFAULT_LINE_HEIGHT,
+                DEFAULT_TEXT_COLOR,
+                DEFAULT_BACKGROUND_COLOR,
+                DEFAULT_BORDER_COLOR,
+                DEFAULT_FONT_SIZE + 6,
+                DEFAULT_FONT_SIZE,
+                ATTACHMENT_BACKGROUND_COLOR,
+                ATTACHMENT_BORDER_COLOR,
+                DEFAULT_FONT_SIZE + 2,
+                DEFAULT_FONT_SIZE - 1,
+                DEFAULT_FONT_SIZE - 1));
 
         html.append(loadEmailStyles());
     }
@@ -364,63 +332,53 @@ public class EmlProcessingUtils {
             """;
     }
 
-    private void appendAttachmentsSection(
-            StringBuilder html, EmlParser.EmailContent content, EmlToPdfRequest request) {
+    private void appendAttachmentsSection(StringBuilder html, EmlParser.EmailContent content, EmlToPdfRequest request) {
         html.append(String.format(Locale.ROOT, "<div class=\"attachment-section\">%n"));
-        int displayedAttachmentCount =
-                content.getAttachmentCount() > 0
-                        ? content.getAttachmentCount()
-                        : content.getAttachments().size();
-        html.append(
-                String.format(
-                        Locale.ROOT, "<h3>Attachments (%d)</h3>%n", displayedAttachmentCount));
+        int displayedAttachmentCount = content.getAttachmentCount() > 0
+                ? content.getAttachmentCount()
+                : content.getAttachments().size();
+        html.append(String.format(Locale.ROOT, "<h3>Attachments (%d)</h3>%n", displayedAttachmentCount));
 
         if (!content.getAttachments().isEmpty()) {
             for (int i = 0; i < content.getAttachments().size(); i++) {
                 EmlParser.EmailAttachment attachment = content.getAttachments().get(i);
 
                 String embeddedFilename =
-                        attachment.getFilename() != null
-                                ? attachment.getFilename()
-                                : ("attachment_" + i);
+                        attachment.getFilename() != null ? attachment.getFilename() : ("attachment_" + i);
                 attachment.setEmbeddedFilename(embeddedFilename);
 
                 String sizeStr = GeneralUtils.formatBytes(attachment.getSizeBytes());
-                String contentType =
-                        attachment.getContentType() != null
-                                        && !attachment.getContentType().isEmpty()
-                                ? ", " + escapeHtml(attachment.getContentType())
-                                : "";
+                String contentType = attachment.getContentType() != null
+                                && !attachment.getContentType().isEmpty()
+                        ? ", " + escapeHtml(attachment.getContentType())
+                        : "";
 
                 String attachmentId = "attachment_" + i;
-                html.append(
-                        String.format(
-                                Locale.ROOT,
-                                """
+                html.append(String.format(
+                        Locale.ROOT,
+                        """
                                 <div class="attachment-item" id="%s">
                                 <span class="attachment-icon" data-filename="%s">@</span>
                                 <span class="attachment-name">%s</span>
                                 <span class="attachment-details">(%s%s)</span>
                                 </div>
                                 """,
-                                attachmentId,
-                                escapeHtml(embeddedFilename),
-                                escapeHtml(EmlParser.safeMimeDecode(attachment.getFilename())),
-                                sizeStr,
-                                contentType));
+                        attachmentId,
+                        escapeHtml(embeddedFilename),
+                        escapeHtml(EmlParser.safeMimeDecode(attachment.getFilename())),
+                        sizeStr,
+                        contentType));
             }
         }
 
         if (request != null && request.isIncludeAttachments()) {
-            html.append(
-                    """
+            html.append("""
                     <div class="attachment-info-note">
                     <p><em>Attachments are embedded in the file.</em></p>
                     </div>
                     """);
         } else {
-            html.append(
-                    """
+            html.append("""
                     <div class="attachment-info-note">
                     <p><em>Attachment information displayed - files not included in PDF.</em></p>
                     </div>
@@ -473,16 +431,12 @@ public class EmlProcessingUtils {
         try {
             StringBuilder result = new StringBuilder();
             Pattern concatenatedPattern =
-                    Pattern.compile(
-                            "(=\\?[^?]+\\?[BbQq]\\?[^?]*\\?=)(\\s*=\\?[^?]+\\?[BbQq]\\?[^?]*\\?=)+");
+                    Pattern.compile("(=\\?[^?]+\\?[BbQq]\\?[^?]*\\?=)(\\s*=\\?[^?]+\\?[BbQq]\\?[^?]*\\?=)+");
             Matcher concatenatedMatcher = concatenatedPattern.matcher(encodedText);
-            String processedText =
-                    concatenatedMatcher.replaceAll(
-                            match ->
-                                    RegexPatternUtils.getInstance()
-                                            .getMimeHeaderWhitespacePattern()
-                                            .matcher(match.group())
-                                            .replaceAll(""));
+            String processedText = concatenatedMatcher.replaceAll(match -> RegexPatternUtils.getInstance()
+                    .getMimeHeaderWhitespacePattern()
+                    .matcher(match.group())
+                    .replaceAll(""));
 
             Pattern mimePattern = RegexPatternUtils.getInstance().getMimeEncodedWordPattern();
             Matcher matcher = mimePattern.matcher(processedText);
@@ -499,11 +453,10 @@ public class EmlProcessingUtils {
                     String decodedValue =
                             switch (encoding) {
                                 case "B" -> {
-                                    String cleanBase64 =
-                                            RegexPatternUtils.getInstance()
-                                                    .getWhitespacePattern()
-                                                    .matcher(encodedValue)
-                                                    .replaceAll("");
+                                    String cleanBase64 = RegexPatternUtils.getInstance()
+                                            .getWhitespacePattern()
+                                            .matcher(encodedValue)
+                                            .replaceAll("");
                                     byte[] decodedBytes = Base64.getDecoder().decode(cleanBase64);
                                     Charset targetCharset;
                                     try {
@@ -547,8 +500,7 @@ public class EmlProcessingUtils {
                             result.append(c);
                         }
                     } else if (i + 1 == encodedText.length()
-                            || (i + 2 == encodedText.length()
-                                    && encodedText.charAt(i + 1) == '\n')) {
+                            || (i + 2 == encodedText.length() && encodedText.charAt(i + 1) == '\n')) {
                         if (i + 1 < encodedText.length() && encodedText.charAt(i + 1) == '\n') {
                             i++; // Skip the newline too
                         }
@@ -592,16 +544,14 @@ public class EmlProcessingUtils {
     }
 
     public String simplifyHtmlContent(String htmlContent) {
-        String simplified =
-                RegexPatternUtils.getInstance()
-                        .getScriptTagPattern()
-                        .matcher(htmlContent)
-                        .replaceAll("");
-        simplified =
-                RegexPatternUtils.getInstance()
-                        .getStyleTagPattern()
-                        .matcher(simplified)
-                        .replaceAll("");
+        String simplified = RegexPatternUtils.getInstance()
+                .getScriptTagPattern()
+                .matcher(htmlContent)
+                .replaceAll("");
+        simplified = RegexPatternUtils.getInstance()
+                .getStyleTagPattern()
+                .matcher(simplified)
+                .replaceAll("");
         return simplified;
     }
 }

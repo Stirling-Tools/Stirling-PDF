@@ -40,8 +40,7 @@ class CorrelationIdFilterTest {
         boolean called = false;
 
         @Override
-        public void doFilter(ServletRequest req, ServletResponse res)
-                throws IOException, ServletException {
+        public void doFilter(ServletRequest req, ServletResponse res) throws IOException, ServletException {
             called = true;
             // Snapshot: MDC and request attributes during chain execution
             capturedMdc.put(CorrelationIdFilter.MDC_KEY, MDC.get(CorrelationIdFilter.MDC_KEY));
@@ -53,8 +52,7 @@ class CorrelationIdFilterTest {
     /** Variant that intentionally throws an exception after capturing (to test cleanup). */
     static class ThrowingAfterCaptureChain extends CapturingFilterChain {
         @Override
-        public void doFilter(ServletRequest req, ServletResponse res)
-                throws IOException, ServletException {
+        public void doFilter(ServletRequest req, ServletResponse res) throws IOException, ServletException {
             super.doFilter(req, res);
             throw new IOException("boom");
         }
@@ -78,9 +76,8 @@ class CorrelationIdFilterTest {
     class ExistingHeader {
 
         @Test
-        @DisplayName(
-                "Should propagate existing ID unchanged to MDC & request attribute, and set it in"
-                        + " the response header")
+        @DisplayName("Should propagate existing ID unchanged to MDC & request attribute, and set it in"
+                + " the response header")
         void shouldPropagateExistingId() throws ServletException, IOException {
             String givenId = "abc-123";
             request.addHeader(CorrelationIdFilter.HEADER, givenId);
@@ -99,9 +96,8 @@ class CorrelationIdFilterTest {
         }
 
         @Test
-        @DisplayName(
-                "Should strip newlines only in the response header, leaving MDC/attribute"
-                        + " unsanitized (per current code)")
+        @DisplayName("Should strip newlines only in the response header, leaving MDC/attribute"
+                + " unsanitized (per current code)")
         void shouldStripNewlinesOnlyInResponseHeader() throws ServletException, IOException {
             String raw = "id-with\r\nnewlines";
             String expectedSanitized = "id-withnewlines"; // Newlines removed
@@ -173,10 +169,7 @@ class CorrelationIdFilterTest {
             request.addHeader(CorrelationIdFilter.HEADER, "req-1");
             ThrowingAfterCaptureChain chain = new ThrowingAfterCaptureChain();
 
-            IOException ex =
-                    assertThrows(
-                            IOException.class,
-                            () -> filter.doFilterInternal(request, response, chain));
+            IOException ex = assertThrows(IOException.class, () -> filter.doFilterInternal(request, response, chain));
             assertEquals("boom", ex.getMessage());
 
             // Was set during the chain…

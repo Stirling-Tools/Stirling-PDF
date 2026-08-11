@@ -30,39 +30,33 @@ public interface SessionRepository extends JpaRepository<SessionEntity, String> 
             @Param("lastRequest") Instant lastRequest,
             @Param("principalName") String principalName);
 
-    @Query(
-            "SELECT t.id as teamId, MAX(s.lastRequest) as lastActivity "
-                    + "FROM stirling.software.proprietary.model.Team t "
-                    + "LEFT JOIN t.users u "
-                    + "LEFT JOIN SessionEntity s ON u.username = s.principalName "
-                    + "GROUP BY t.id")
+    @Query("SELECT t.id as teamId, MAX(s.lastRequest) as lastActivity "
+            + "FROM stirling.software.proprietary.model.Team t "
+            + "LEFT JOIN t.users u "
+            + "LEFT JOIN SessionEntity s ON u.username = s.principalName "
+            + "GROUP BY t.id")
     List<Object[]> findLatestActivityByTeam();
 
-    @Query(
-            "SELECT u.username as username, MAX(s.lastRequest) as lastRequest "
-                    + "FROM stirling.software.proprietary.security.model.User u "
-                    + "LEFT JOIN SessionEntity s ON u.username = s.principalName "
-                    + "WHERE u.team.id = :teamId "
-                    + "GROUP BY u.username")
+    @Query("SELECT u.username as username, MAX(s.lastRequest) as lastRequest "
+            + "FROM stirling.software.proprietary.security.model.User u "
+            + "LEFT JOIN SessionEntity s ON u.username = s.principalName "
+            + "WHERE u.team.id = :teamId "
+            + "GROUP BY u.username")
     List<Object[]> findLatestSessionByTeamId(@Param("teamId") Long teamId);
 
     /** Latest request instant per principal. */
-    @Query(
-            "SELECT s.principalName, MAX(s.lastRequest) FROM SessionEntity s GROUP BY s.principalName")
+    @Query("SELECT s.principalName, MAX(s.lastRequest) FROM SessionEntity s GROUP BY s.principalName")
     List<Object[]> findLatestRequestPerPrincipal();
 
     /** Principals with a live (non-expired, within-window) session. */
-    @Query(
-            "SELECT DISTINCT s.principalName FROM SessionEntity s "
-                    + "WHERE s.expired = false AND s.lastRequest > :cutoff")
+    @Query("SELECT DISTINCT s.principalName FROM SessionEntity s "
+            + "WHERE s.expired = false AND s.lastRequest > :cutoff")
     List<String> findActivePrincipalsSince(@Param("cutoff") Instant cutoff);
 
     /** Flag timed-out sessions as expired. */
     @Modifying
     @Transactional
-    @Query(
-            "UPDATE SessionEntity s SET s.expired = true "
-                    + "WHERE s.expired = false AND s.lastRequest < :cutoff")
+    @Query("UPDATE SessionEntity s SET s.expired = true " + "WHERE s.expired = false AND s.lastRequest < :cutoff")
     int expireOlderThan(@Param("cutoff") Instant cutoff);
 
     /** Purge long-expired sessions to bound table growth. */

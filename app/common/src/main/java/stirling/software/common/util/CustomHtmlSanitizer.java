@@ -16,50 +16,45 @@ public class CustomHtmlSanitizer {
     private final ApplicationProperties applicationProperties;
 
     public CustomHtmlSanitizer(
-            SsrfProtectionService ssrfProtectionService,
-            ApplicationProperties applicationProperties) {
+            SsrfProtectionService ssrfProtectionService, ApplicationProperties applicationProperties) {
         this.ssrfProtectionService = ssrfProtectionService;
         this.applicationProperties = applicationProperties;
     }
 
-    private final AttributePolicy SSRF_SAFE_URL_POLICY =
-            new AttributePolicy() {
-                @Override
-                public String apply(String elementName, String attributeName, String value) {
-                    if (value.trim().isEmpty()) {
-                        return null;
-                    }
+    private final AttributePolicy SSRF_SAFE_URL_POLICY = new AttributePolicy() {
+        @Override
+        public String apply(String elementName, String attributeName, String value) {
+            if (value.trim().isEmpty()) {
+                return null;
+            }
 
-                    String trimmedValue = value.trim();
+            String trimmedValue = value.trim();
 
-                    // Use the SSRF protection service to validate the URL
-                    if (ssrfProtectionService != null
-                            && !ssrfProtectionService.isUrlAllowed(trimmedValue)) {
-                        return null;
-                    }
+            // Use the SSRF protection service to validate the URL
+            if (ssrfProtectionService != null && !ssrfProtectionService.isUrlAllowed(trimmedValue)) {
+                return null;
+            }
 
-                    return trimmedValue;
-                }
-            };
+            return trimmedValue;
+        }
+    };
 
-    private final PolicyFactory SSRF_SAFE_IMAGES_POLICY =
-            new HtmlPolicyBuilder()
-                    .allowElements("img")
-                    .allowAttributes("alt", "width", "height", "title")
-                    .onElements("img")
-                    .allowAttributes("src")
-                    .matching(SSRF_SAFE_URL_POLICY)
-                    .onElements("img")
-                    .toFactory();
+    private final PolicyFactory SSRF_SAFE_IMAGES_POLICY = new HtmlPolicyBuilder()
+            .allowElements("img")
+            .allowAttributes("alt", "width", "height", "title")
+            .onElements("img")
+            .allowAttributes("src")
+            .matching(SSRF_SAFE_URL_POLICY)
+            .onElements("img")
+            .toFactory();
 
-    private final PolicyFactory POLICY =
-            Sanitizers.FORMATTING
-                    .and(Sanitizers.BLOCKS)
-                    .and(Sanitizers.STYLES)
-                    .and(Sanitizers.LINKS)
-                    .and(Sanitizers.TABLES)
-                    .and(SSRF_SAFE_IMAGES_POLICY)
-                    .and(new HtmlPolicyBuilder().disallowElements("noscript").toFactory());
+    private final PolicyFactory POLICY = Sanitizers.FORMATTING
+            .and(Sanitizers.BLOCKS)
+            .and(Sanitizers.STYLES)
+            .and(Sanitizers.LINKS)
+            .and(Sanitizers.TABLES)
+            .and(SSRF_SAFE_IMAGES_POLICY)
+            .and(new HtmlPolicyBuilder().disallowElements("noscript").toFactory());
 
     public String sanitize(String html) {
         boolean disableSanitize = applicationProperties.getSystem().isDisableSanitize();

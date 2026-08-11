@@ -60,10 +60,14 @@ import tools.jackson.databind.json.JsonMapper;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class GetInfoOnPDFMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private VeraPDFService veraPDFService;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private GetInfoOnPDF getInfoOnPDF;
+    @Mock
+    private VeraPDFService veraPDFService;
+
+    @InjectMocks
+    private GetInfoOnPDF getInfoOnPDF;
 
     private final ObjectMapper om = JsonMapper.builder().build();
 
@@ -73,12 +77,10 @@ class GetInfoOnPDFMoreTest {
         doc.save(out);
         doc.close();
         byte[] bytes = out.toByteArray();
-        MockMultipartFile mf =
-                new MockMultipartFile("fileInput", "test.pdf", "application/pdf", bytes);
+        MockMultipartFile mf = new MockMultipartFile("fileInput", "test.pdf", "application/pdf", bytes);
         PDFFile request = new PDFFile();
         request.setFileInput(mf);
-        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true)))
-                .thenAnswer(inv -> Loader.loadPDF(bytes));
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenAnswer(inv -> Loader.loadPDF(bytes));
         ResponseEntity<byte[]> resp = getInfoOnPDF.getPdfInfo(request);
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(resp.getBody()).isNotNull();

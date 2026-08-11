@@ -43,10 +43,8 @@ public class StorageEncryptionState {
     }
 
     /** Test convenience: a pre-materialised state around an existing service. */
-    public static StorageEncryptionState of(
-            boolean writeEnabled, FileEncryptionKeyService keyService) {
-        StorageEncryptionState state =
-                new StorageEncryptionState(writeEnabled, () -> keyService, null);
+    public static StorageEncryptionState of(boolean writeEnabled, FileEncryptionKeyService keyService) {
+        StorageEncryptionState state = new StorageEncryptionState(writeEnabled, () -> keyService, null);
         state.keyService = keyService;
         return state;
     }
@@ -101,8 +99,7 @@ public class StorageEncryptionState {
             return false;
         }
         long now = System.nanoTime();
-        if (keysExistEverChecked
-                && now - keysExistCheckedAtNanos < KEYS_EXIST_CACHE_TTL.toNanos()) {
+        if (keysExistEverChecked && now - keysExistCheckedAtNanos < KEYS_EXIST_CACHE_TTL.toNanos()) {
             return keysExistCached;
         }
         keysExistCached = countKeys().orElse(true /* unreadable registry: fail safe */);

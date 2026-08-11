@@ -44,8 +44,7 @@ public class FolderController {
     }
 
     @PostMapping
-    public ResponseEntity<FolderResponse> createFolder(
-            @Valid @RequestBody CreateFolderRequest request) {
+    public ResponseEntity<FolderResponse> createFolder(@Valid @RequestBody CreateFolderRequest request) {
         FolderResponse response = folderService.createFolder(request);
         // 201 Created with Location header - conventional REST. The idempotent re-return path
         // (same id resubmitted) also lands here; treating it as 201 keeps wire semantics simple.

@@ -53,9 +53,14 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 class PdfCommentAgentOrchestratorTest {
 
-    @Mock private AiEngineClient aiEngineClient;
-    @Mock private PdfTextChunkExtractor pdfTextChunkExtractor;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock
+    private AiEngineClient aiEngineClient;
+
+    @Mock
+    private PdfTextChunkExtractor pdfTextChunkExtractor;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
     private ObjectMapper objectMapper;
     private PdfAnnotationService pdfAnnotationService;
@@ -67,37 +72,27 @@ class PdfCommentAgentOrchestratorTest {
         // Real (not mocked) — it's a pure primitive; exercising it in the test gives us stronger
         // assertions (the annotated PDF actually has the expected sticky notes).
         pdfAnnotationService = new PdfAnnotationService();
-        orchestrator =
-                new PdfCommentAgentOrchestrator(
-                        aiEngineClient,
-                        pdfTextChunkExtractor,
-                        pdfDocumentFactory,
-                        objectMapper,
-                        pdfAnnotationService,
-                        null);
+        orchestrator = new PdfCommentAgentOrchestrator(
+                aiEngineClient, pdfTextChunkExtractor, pdfDocumentFactory, objectMapper, pdfAnnotationService, null);
     }
 
     @Test
     void happyPathAppliesValidInstructionsOnCorrectPagesAndReturnsBytes() throws IOException {
         MockMultipartFile input = pdf("doc.pdf");
         byte[] pdfBytes = twoPagePdfBytes();
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(pdfBytes));
 
         TextChunk c0 = new TextChunk("p0-c0", 0, 72f, 700f, 100f, 12f, "Chunk zero");
         TextChunk c1 = new TextChunk("p0-c1", 0, 72f, 680f, 100f, 12f, "Chunk one");
         TextChunk c2 = new TextChunk("p1-c0", 1, 72f, 700f, 100f, 12f, "Chunk two");
         when(pdfTextChunkExtractor.extract(any(PDDocument.class))).thenReturn(List.of(c0, c1, c2));
 
-        PdfCommentEngineResponse engineResponse =
-                new PdfCommentEngineResponse(
-                        "session-1",
-                        List.of(
-                                new PdfCommentInstruction(
-                                        "p0-c0", "Comment on page 0", "alice", "Heads up"),
-                                new PdfCommentInstruction(
-                                        "p1-c0", "Comment on page 1", null, null)),
-                        "reviewed");
+        PdfCommentEngineResponse engineResponse = new PdfCommentEngineResponse(
+                "session-1",
+                List.of(
+                        new PdfCommentInstruction("p0-c0", "Comment on page 0", "alice", "Heads up"),
+                        new PdfCommentInstruction("p1-c0", "Comment on page 1", null, null)),
+                "reviewed");
         when(aiEngineClient.post(anyString(), anyString(), nullable(String.class)))
                 .thenReturn(objectMapper.writeValueAsString(engineResponse));
 
@@ -119,19 +114,17 @@ class PdfCommentAgentOrchestratorTest {
     void unknownChunkIdsAreSkippedButValidOnesApplied() throws IOException {
         MockMultipartFile input = pdf("doc.pdf");
         byte[] pdfBytes = twoPagePdfBytes();
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(pdfBytes));
 
         TextChunk c0 = new TextChunk("p0-c0", 0, 72f, 700f, 100f, 12f, "Chunk zero");
         when(pdfTextChunkExtractor.extract(any(PDDocument.class))).thenReturn(List.of(c0));
 
-        PdfCommentEngineResponse engineResponse =
-                new PdfCommentEngineResponse(
-                        "session-2",
-                        List.of(
-                                new PdfCommentInstruction("p0-c0", "Valid", null, null),
-                                new PdfCommentInstruction("p999-c999", "Bogus", null, null)),
-                        "mixed");
+        PdfCommentEngineResponse engineResponse = new PdfCommentEngineResponse(
+                "session-2",
+                List.of(
+                        new PdfCommentInstruction("p0-c0", "Valid", null, null),
+                        new PdfCommentInstruction("p999-c999", "Bogus", null, null)),
+                "mixed");
         when(aiEngineClient.post(anyString(), anyString(), nullable(String.class)))
                 .thenReturn(objectMapper.writeValueAsString(engineResponse));
 
@@ -140,7 +133,8 @@ class PdfCommentAgentOrchestratorTest {
         try (PDDocument saved = Loader.loadPDF(result.bytes())) {
             int totalAnnotations = 0;
             for (int i = 0; i < saved.getNumberOfPages(); i++) {
-                totalAnnotations += textAnnotations(saved.getPage(i).getAnnotations()).size();
+                totalAnnotations +=
+                        textAnnotations(saved.getPage(i).getAnnotations()).size();
             }
             assertEquals(1, totalAnnotations, "Only the valid chunk annotation should be applied");
         }
@@ -150,8 +144,7 @@ class PdfCommentAgentOrchestratorTest {
     void emptyCommentsListReturnsDocumentWithoutAnnotations() throws IOException {
         MockMultipartFile input = pdf("doc.pdf");
         byte[] pdfBytes = twoPagePdfBytes();
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(pdfBytes));
 
         TextChunk c0 = new TextChunk("p0-c0", 0, 72f, 700f, 100f, 12f, "Chunk");
         when(pdfTextChunkExtractor.extract(any(PDDocument.class))).thenReturn(List.of(c0));
@@ -177,14 +170,11 @@ class PdfCommentAgentOrchestratorTest {
     void emptyChunksListThrowsBadRequestAndDoesNotCallEngine() throws IOException {
         MockMultipartFile input = pdf("doc.pdf");
         byte[] pdfBytes = twoPagePdfBytes();
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(pdfBytes));
         when(pdfTextChunkExtractor.extract(any(PDDocument.class))).thenReturn(List.of());
 
         ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class,
-                        () -> orchestrator.applyComments(input, "whatever"));
+                assertThrows(ResponseStatusException.class, () -> orchestrator.applyComments(input, "whatever"));
         assertEquals(400, ex.getStatusCode().value());
         verify(aiEngineClient, never()).post(anyString(), anyString(), nullable(String.class));
     }
@@ -195,9 +185,7 @@ class PdfCommentAgentOrchestratorTest {
         String tooLong = "x".repeat(4001);
 
         ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class,
-                        () -> orchestrator.applyComments(input, tooLong));
+                assertThrows(ResponseStatusException.class, () -> orchestrator.applyComments(input, tooLong));
         assertEquals(400, ex.getStatusCode().value());
         verify(aiEngineClient, never()).post(anyString(), anyString(), nullable(String.class));
     }
@@ -207,9 +195,7 @@ class PdfCommentAgentOrchestratorTest {
         MockMultipartFile input = pdf("doc.pdf");
 
         ResponseStatusException ex =
-                assertThrows(
-                        ResponseStatusException.class,
-                        () -> orchestrator.applyComments(input, "   "));
+                assertThrows(ResponseStatusException.class, () -> orchestrator.applyComments(input, "   "));
         assertEquals(400, ex.getStatusCode().value());
         verify(aiEngineClient, never()).post(anyString(), anyString(), nullable(String.class));
     }
@@ -220,10 +206,7 @@ class PdfCommentAgentOrchestratorTest {
 
     private static MockMultipartFile pdf(String filename) {
         return new MockMultipartFile(
-                "fileInput",
-                filename,
-                MediaType.APPLICATION_PDF_VALUE,
-                "%PDF-1.4\n%%EOF".getBytes());
+                "fileInput", filename, MediaType.APPLICATION_PDF_VALUE, "%PDF-1.4\n%%EOF".getBytes());
     }
 
     private static byte[] twoPagePdfBytes() throws IOException {

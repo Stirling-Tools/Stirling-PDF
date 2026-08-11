@@ -66,12 +66,11 @@ public class ConvertSvgToPDF {
                             arity = ToolArity.MISO))
     @Operation(
             summary = "Convert SVG to PDF",
-            description =
-                    "This endpoint converts one or more SVG (Scalable Vector Graphics) files to PDF"
-                            + " format. Each SVG is converted to a separate PDF file. The conversion preserves"
-                            + " vector graphics for crisp output at any resolution - no rasterization occurs."
-                            + " SVG dimensions (width/height) determine the PDF page size; defaults to A4 if"
-                            + " not specified. SVG content is sanitized to prevent XSS attacks.")
+            description = "This endpoint converts one or more SVG (Scalable Vector Graphics) files to PDF"
+                    + " format. Each SVG is converted to a separate PDF file. The conversion preserves"
+                    + " vector graphics for crisp output at any resolution - no rasterization occurs."
+                    + " SVG dimensions (width/height) determine the PDF page size; defaults to A4 if"
+                    + " not specified. SVG content is sanitized to prevent XSS attacks.")
     public ResponseEntity<Resource> convertSvgToPdf(@ModelAttribute SvgToPdfRequest request) {
 
         MultipartFile[] inputFiles = request.getFileInput();
@@ -129,21 +128,16 @@ public class ConvertSvgToPDF {
 
         } catch (Exception e) {
             log.error("Unexpected error during SVG to PDF conversion", e);
-            return errorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "An unexpected error occurred during conversion");
+            return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred during conversion");
         }
     }
 
     private ResponseEntity<Resource> errorResponse(HttpStatus status, String message) {
         byte[] body = message.getBytes(StandardCharsets.UTF_8);
-        return ResponseEntity.status(status)
-                .contentLength(body.length)
-                .body(new ByteArrayResource(body));
+        return ResponseEntity.status(status).contentLength(body.length).body(new ByteArrayResource(body));
     }
 
-    private ResponseEntity<Resource> handleCombinedConversion(
-            List<byte[]> sanitizedSvgs, List<String> filenames) {
+    private ResponseEntity<Resource> handleCombinedConversion(List<byte[]> sanitizedSvgs, List<String> filenames) {
         try {
             log.info("Combining {} SVG files into single PDF", sanitizedSvgs.size());
 
@@ -151,16 +145,14 @@ public class ConvertSvgToPDF {
 
             if (pdfBytes == null || pdfBytes.length == 0) {
                 log.error("PDF conversion failed - empty output");
-                return errorResponse(
-                        HttpStatus.INTERNAL_SERVER_ERROR, "PDF conversion failed - empty output");
+                return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "PDF conversion failed - empty output");
             }
 
             pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
 
-            String outputFilename =
-                    filenames.isEmpty()
-                            ? "combined_svgs.pdf"
-                            : GeneralUtils.generateFilename(filenames.get(0), "_combined.pdf");
+            String outputFilename = filenames.isEmpty()
+                    ? "combined_svgs.pdf"
+                    : GeneralUtils.generateFilename(filenames.get(0), "_combined.pdf");
 
             log.info("Successfully combined {} SVGs into single PDF", sanitizedSvgs.size());
 
@@ -175,13 +167,11 @@ public class ConvertSvgToPDF {
 
         } catch (IOException e) {
             log.error("Error combining SVGs into PDF", e);
-            return errorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Conversion failed: " + e.getMessage());
+            return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Conversion failed: " + e.getMessage());
         }
     }
 
-    private ResponseEntity<Resource> handleSeparateConversion(
-            List<byte[]> sanitizedSvgs, List<String> filenames) {
+    private ResponseEntity<Resource> handleSeparateConversion(List<byte[]> sanitizedSvgs, List<String> filenames) {
         List<ConvertedPdf> convertedPdfs = new ArrayList<>();
 
         for (int i = 0; i < sanitizedSvgs.size(); i++) {
@@ -210,8 +200,7 @@ public class ConvertSvgToPDF {
 
         if (convertedPdfs.isEmpty()) {
             log.error("No files were successfully converted");
-            return errorResponse(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "No files were successfully converted");
+            return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "No files were successfully converted");
         }
 
         try {
@@ -227,11 +216,9 @@ public class ConvertSvgToPDF {
                 return WebResponseUtils.pdfFileToWebResponse(tempOut, pdf.filename);
             }
 
-            String zipFilename =
-                    filenames.isEmpty()
-                            ? "converted_svgs.zip"
-                            : GeneralUtils.generateFilename(
-                                    filenames.get(0), "_converted_svgs.zip");
+            String zipFilename = filenames.isEmpty()
+                    ? "converted_svgs.zip"
+                    : GeneralUtils.generateFilename(filenames.get(0), "_converted_svgs.zip");
             TempFile zipFile = createZipFromPdfs(convertedPdfs);
             return WebResponseUtils.zipFileToWebResponse(zipFile, zipFilename);
         } catch (IOException e) {
@@ -242,8 +229,7 @@ public class ConvertSvgToPDF {
 
     private TempFile createZipFromPdfs(List<ConvertedPdf> pdfs) throws IOException {
         TempFile tempZipFile = tempFileManager.createManagedTempFile(".zip");
-        try (ZipOutputStream zipOut =
-                new ZipOutputStream(Files.newOutputStream(tempZipFile.getPath()))) {
+        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(tempZipFile.getPath()))) {
             for (ConvertedPdf pdf : pdfs) {
                 ZipEntry pdfEntry = new ZipEntry(pdf.filename);
                 zipOut.putNextEntry(pdfEntry);

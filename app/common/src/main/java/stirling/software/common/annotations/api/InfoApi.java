@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/info")
-@Tag(
-        name = "Info",
-        description =
-                """
+@Tag(name = "Info", description = """
                 System information and operational insights for monitoring and performance management.
 
                 This endpoint group provides system information and operational metrics for organizations

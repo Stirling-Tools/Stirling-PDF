@@ -99,11 +99,7 @@ public class UserService implements UserServiceInterface {
 
     @Transactional
     public void processSSOPostLogin(
-            String username,
-            String ssoProviderId,
-            String ssoProvider,
-            boolean autoCreateUser,
-            AuthenticationType type)
+            String username, String ssoProviderId, String ssoProvider, boolean autoCreateUser, AuthenticationType type)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(username)) {
             return;
@@ -112,8 +108,7 @@ public class UserService implements UserServiceInterface {
         // Find user by SSO provider ID first
         Optional<User> existingUser;
         if (ssoProviderId != null && ssoProvider != null) {
-            existingUser =
-                    userRepository.findBySsoProviderAndSsoProviderId(ssoProvider, ssoProviderId);
+            existingUser = userRepository.findBySsoProviderAndSsoProviderId(ssoProvider, ssoProviderId);
 
             if (existingUser.isPresent()) {
                 log.debug("User found by SSO provider ID: {}", ssoProviderId);
@@ -137,12 +132,11 @@ public class UserService implements UserServiceInterface {
         }
 
         if (autoCreateUser) {
-            SaveUserRequest.Builder builder =
-                    SaveUserRequest.builder()
-                            .username(username)
-                            .ssoProviderId(ssoProviderId)
-                            .ssoProvider(ssoProvider)
-                            .authenticationType(type);
+            SaveUserRequest.Builder builder = SaveUserRequest.builder()
+                    .username(username)
+                    .ssoProviderId(ssoProviderId)
+                    .ssoProvider(ssoProvider)
+                    .authenticationType(type);
             saveUserCore(builder.build());
         }
     }
@@ -150,10 +144,9 @@ public class UserService implements UserServiceInterface {
     public Authentication getAuthentication(String apiKey) {
         // Resolve through the shared service (multi-key table, then the legacy per-user column).
         // The key runs as its owner with the owner's authorities.
-        var resolved =
-                apiKeyAuthenticationService
-                        .authenticate(apiKey)
-                        .orElseThrow(() -> new UsernameNotFoundException("API key is not valid"));
+        var resolved = apiKeyAuthenticationService
+                .authenticate(apiKey)
+                .orElseThrow(() -> new UsernameNotFoundException("API key is not valid"));
         return new UsernamePasswordAuthenticationToken(
                 resolved.user(), // principal
                 null, // credentials (we don't expose the password or API key here)
@@ -203,8 +196,7 @@ public class UserService implements UserServiceInterface {
     @Override
     public String getApiKeyForUser(String username) {
         User user =
-                findByUsernameIgnoreCase(username)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                findByUsernameIgnoreCase(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         if (user.getApiKey() == null || user.getApiKey().isEmpty()) {
             user = addApiKeyToUser(username);
         }
@@ -264,8 +256,7 @@ public class UserService implements UserServiceInterface {
         log.info("Deleting all associated data for user: {}", user.getUsername());
 
         // Drop ACL grants held by this user and detach grants they issued
-        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(
-                PrincipalType.USER, user.getId());
+        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(PrincipalType.USER, user.getId());
         resourceGrantRepository.clearGrantedBy(user);
 
         // Integration configs owned by this user FK the users row; drop them and their grants
@@ -299,21 +290,15 @@ public class UserService implements UserServiceInterface {
         storedFileRepository.clearWorkflowSessionReferencesByOwner(user);
 
         // Delete WorkflowSessions (CascadeType.ALL cascades to WorkflowParticipant)
-        workflowSessionRepository.deleteAll(
-                workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(user));
+        workflowSessionRepository.deleteAll(workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(user));
 
         // Collect storage keys for physical cleanup before deleting DB records
         List<StoredFile> files = storedFileRepository.findAllByOwner(user);
-        List<String> storageKeys =
-                files.stream()
-                        .flatMap(
-                                f ->
-                                        java.util.stream.Stream.of(
-                                                f.getStorageKey(),
-                                                f.getHistoryStorageKey(),
-                                                f.getAuditLogStorageKey()))
-                        .filter(k -> k != null && !k.isBlank())
-                        .toList();
+        List<String> storageKeys = files.stream()
+                .flatMap(f -> java.util.stream.Stream.of(
+                        f.getStorageKey(), f.getHistoryStorageKey(), f.getAuditLogStorageKey()))
+                .filter(k -> k != null && !k.isBlank())
+                .toList();
 
         // Clear FileShareAccess per share (no cascade from FileShare), then delete StoredFiles
         // (CascadeType.ALL on StoredFile.shares cascades to FileShare)
@@ -405,37 +390,32 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
     }
 
-    public void changePassword(User user, String newPassword)
-            throws SQLException, UnsupportedProviderException {
+    public void changePassword(User user, String newPassword) throws SQLException, UnsupportedProviderException {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         databaseService.exportDatabase();
     }
 
-    public void changeFirstUse(User user, boolean firstUse)
-            throws SQLException, UnsupportedProviderException {
+    public void changeFirstUse(User user, boolean firstUse) throws SQLException, UnsupportedProviderException {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
         databaseService.exportDatabase();
     }
 
-    public void changeRole(User user, String newRole)
-            throws SQLException, UnsupportedProviderException {
+    public void changeRole(User user, String newRole) throws SQLException, UnsupportedProviderException {
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
         authorityRepository.save(userAuthority);
         databaseService.exportDatabase();
     }
 
-    public void changeUserEnabled(User user, Boolean enbeled)
-            throws SQLException, UnsupportedProviderException {
+    public void changeUserEnabled(User user, Boolean enbeled) throws SQLException, UnsupportedProviderException {
         user.setEnabled(enbeled);
         userRepository.save(user);
         databaseService.exportDatabase();
     }
 
-    public void changeUserTeam(User user, Team team)
-            throws SQLException, UnsupportedProviderException {
+    public void changeUserTeam(User user, Team team) throws SQLException, UnsupportedProviderException {
         if (team == null) {
             team = getDefaultTeam();
         }
@@ -473,14 +453,11 @@ public class UserService implements UserServiceInterface {
      * @return The default team
      */
     private Team getDefaultTeam() {
-        return teamRepository
-                .findByName("Default")
-                .orElseGet(
-                        () -> {
-                            Team team = new Team();
-                            team.setName("Default");
-                            return teamRepository.save(team);
-                        });
+        return teamRepository.findByName("Default").orElseGet(() -> {
+            Team team = new Team();
+            team.setName("Default");
+            return teamRepository.save(team);
+        });
     }
 
     /**
@@ -564,19 +541,17 @@ public class UserService implements UserServiceInterface {
     public boolean isUsernameValid(String username) {
         // Checks whether the simple username is formatted correctly
         // Regular expression for user name: Min. 3 characters, max. 50 characters
-        boolean isValidSimpleUsername =
-                RegexPatternUtils.getInstance()
-                        .getUsernameValidationPattern()
-                        .matcher(username)
-                        .matches();
+        boolean isValidSimpleUsername = RegexPatternUtils.getInstance()
+                .getUsernameValidationPattern()
+                .matcher(username)
+                .matches();
 
         // Checks whether the email address is formatted correctly
         // Regular expression for email addresses: Max. 320 characters, with RFC-like validation
-        boolean isValidEmail =
-                RegexPatternUtils.getInstance()
-                        .getEmailValidationPattern()
-                        .matcher(username)
-                        .matches();
+        boolean isValidEmail = RegexPatternUtils.getInstance()
+                .getEmailValidationPattern()
+                .matcher(username)
+                .matches();
 
         List<String> notAllowedUserList = new ArrayList<>();
         notAllowedUserList.add("ALL_USERS".toLowerCase(Locale.ROOT));
@@ -587,8 +562,7 @@ public class UserService implements UserServiceInterface {
     }
 
     private String getInvalidUsernameMessage() {
-        return messageSource.getMessage(
-                "invalidUsernameMessage", null, LocaleContextHolder.getLocale());
+        return messageSource.getMessage("invalidUsernameMessage", null, LocaleContextHolder.getLocale());
     }
 
     public boolean hasPassword(String username) {
@@ -608,10 +582,8 @@ public class UserService implements UserServiceInterface {
         }
 
         try {
-            AuthenticationType authenticationType =
-                    AuthenticationType.valueOf(authType.toUpperCase(Locale.ROOT));
-            if (authenticationType == AuthenticationType.OAUTH2
-                    || authenticationType == AuthenticationType.SAML2) {
+            AuthenticationType authenticationType = AuthenticationType.valueOf(authType.toUpperCase(Locale.ROOT));
+            if (authenticationType == AuthenticationType.OAUTH2 || authenticationType == AuthenticationType.SAML2) {
                 return true;
             }
         } catch (IllegalArgumentException ignored) {
@@ -622,8 +594,7 @@ public class UserService implements UserServiceInterface {
         return "SSO".equalsIgnoreCase(authType);
     }
 
-    public boolean isAuthenticationTypeByUsername(
-            String username, AuthenticationType authenticationType) {
+    public boolean isAuthenticationTypeByUsername(String username, AuthenticationType authenticationType) {
         Optional<User> user = findByUsernameIgnoreCase(username);
         return user.isPresent()
                 && authenticationType.name().equalsIgnoreCase(user.get().getAuthenticationType());
@@ -638,8 +609,7 @@ public class UserService implements UserServiceInterface {
         String usernameP = "";
 
         for (Object principal : sessionRegistry.getAllPrincipals()) {
-            for (SessionInformation sessionsInformation :
-                    sessionRegistry.getAllSessions(principal, false)) {
+            for (SessionInformation sessionsInformation : sessionRegistry.getAllSessions(principal, false)) {
                 if (principal instanceof UserDetails detailsUser) {
                     usernameP = detailsUser.getUsername();
                 } else if (principal instanceof OAuth2User oAuth2User) {

@@ -24,7 +24,8 @@ class GlobalErrorResponseCustomizerTest {
     void customiseAddsErrorResponsesToApiV1PostOperation() {
         OpenAPI openApi = createOpenApiWithOperation("/api/v1/test", "post");
         customizer.customise(openApi);
-        ApiResponses responses = openApi.getPaths().get("/api/v1/test").getPost().getResponses();
+        ApiResponses responses =
+                openApi.getPaths().get("/api/v1/test").getPost().getResponses();
         assertTrue(responses.containsKey("400"));
         assertTrue(responses.containsKey("413"));
         assertTrue(responses.containsKey("422"));
@@ -58,11 +59,7 @@ class GlobalErrorResponseCustomizerTest {
         OpenAPI openApi = createOpenApiWithOperation("/api/v1/test", "post");
         io.swagger.v3.oas.models.responses.ApiResponse custom400 =
                 new io.swagger.v3.oas.models.responses.ApiResponse().description("Custom 400");
-        openApi.getPaths()
-                .get("/api/v1/test")
-                .getPost()
-                .getResponses()
-                .addApiResponse("400", custom400);
+        openApi.getPaths().get("/api/v1/test").getPost().getResponses().addApiResponse("400", custom400);
         customizer.customise(openApi);
         assertEquals(
                 "Custom 400",
@@ -119,7 +116,8 @@ class GlobalErrorResponseCustomizerTest {
     void errorResponseDescriptionsAreCorrect() {
         OpenAPI openApi = createOpenApiWithOperation("/api/v1/test", "post");
         customizer.customise(openApi);
-        ApiResponses responses = openApi.getPaths().get("/api/v1/test").getPost().getResponses();
+        ApiResponses responses =
+                openApi.getPaths().get("/api/v1/test").getPost().getResponses();
         assertTrue(responses.get("400").getDescription().contains("Bad request"));
         assertTrue(responses.get("413").getDescription().contains("Payload too large"));
         assertTrue(responses.get("422").getDescription().contains("Unprocessable entity"));

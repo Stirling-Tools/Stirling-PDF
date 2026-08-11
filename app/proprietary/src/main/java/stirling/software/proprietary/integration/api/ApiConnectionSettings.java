@@ -67,8 +67,7 @@ public record ApiConnectionSettings(
         }
         URI uri = parseHttpUrl(baseUrl);
         if (uri.getQuery() != null || uri.getFragment() != null) {
-            throw new IllegalArgumentException(
-                    "api config 'baseUrl' must not carry a query string or fragment");
+            throw new IllegalArgumentException("api config 'baseUrl' must not carry a query string or fragment");
         }
 
         ApiAuthType authType = parseAuthType(trimmed(options.get(AUTH_TYPE_OPTION)));
@@ -89,8 +88,7 @@ public record ApiConnectionSettings(
                 require(headerName, "api config authType 'HEADER' requires a 'headerName'");
                 if (!ExternalApiHeaders.isValidName(headerName)) {
                     throw new IllegalArgumentException(
-                            "api config 'headerName' is not a valid HTTP header name: "
-                                    + headerName);
+                            "api config 'headerName' is not a valid HTTP header name: " + headerName);
                 }
             }
             case BASIC -> {
@@ -159,8 +157,7 @@ public record ApiConnectionSettings(
             return ApiAuthType.valueOf(value.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(
-                    "api config 'authType' must be one of NONE, BEARER, BASIC, HEADER; got "
-                            + value);
+                    "api config 'authType' must be one of NONE, BEARER, BASIC, HEADER; got " + value);
         }
     }
 
@@ -175,23 +172,20 @@ public record ApiConnectionSettings(
         Map<String, String> headers = new LinkedHashMap<>();
         for (Map.Entry<?, ?> entry : raw.entrySet()) {
             String name = trimmed(entry.getKey());
-            String headerValue = entry.getValue() == null ? null : entry.getValue().toString();
+            String headerValue =
+                    entry.getValue() == null ? null : entry.getValue().toString();
             if (name == null) {
                 continue;
             }
             if (!ExternalApiHeaders.isValidName(name)) {
-                throw new IllegalArgumentException(
-                        "api config 'headers' has an invalid header name: " + name);
+                throw new IllegalArgumentException("api config 'headers' has an invalid header name: " + name);
             }
             if (ExternalApiHeaders.isReserved(name)) {
                 throw new IllegalArgumentException(
-                        "api config 'headers' must not set '"
-                                + name
-                                + "'; use 'authType' and 'token' instead");
+                        "api config 'headers' must not set '" + name + "'; use 'authType' and 'token' instead");
             }
             if (headerValue == null || !ExternalApiHeaders.isValidValue(headerValue)) {
-                throw new IllegalArgumentException(
-                        "api config 'headers' has an invalid value for '" + name + "'");
+                throw new IllegalArgumentException("api config 'headers' has an invalid value for '" + name + "'");
             }
             headers.put(name, headerValue);
         }
@@ -207,8 +201,7 @@ public record ApiConnectionSettings(
             return Set.of();
         }
         if (!(value instanceof java.util.List<?> list)) {
-            throw new IllegalArgumentException(
-                    "api config 'resultUrlHosts' must be a list of hostnames");
+            throw new IllegalArgumentException("api config 'resultUrlHosts' must be a list of hostnames");
         }
         Set<String> out = new java.util.LinkedHashSet<>();
         for (Object entry : list) {
@@ -220,9 +213,7 @@ public record ApiConnectionSettings(
                 // A URL, port or wildcard here would read as broader than it is; subdomains are
                 // already covered by the "endsWith('.' + host)" rule at match time.
                 throw new IllegalArgumentException(
-                        "api config 'resultUrlHosts' takes bare hostnames, e.g."
-                                + " cdn.vendor.com; got "
-                                + host);
+                        "api config 'resultUrlHosts' takes bare hostnames, e.g." + " cdn.vendor.com; got " + host);
             }
             out.add(host.toLowerCase(Locale.ROOT));
         }

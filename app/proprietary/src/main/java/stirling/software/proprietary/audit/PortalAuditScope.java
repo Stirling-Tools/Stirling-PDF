@@ -3,8 +3,7 @@ package stirling.software.proprietary.audit;
 import java.util.List;
 
 /** Resolved audit visibility: fullServer (admin), principals-scoped (team lead), or !allowed. */
-public record PortalAuditScope(
-        boolean allowed, boolean fullServer, List<String> principals, String cacheKey) {
+public record PortalAuditScope(boolean allowed, boolean fullServer, List<String> principals, String cacheKey) {
 
     public static PortalAuditScope denied() {
         return new PortalAuditScope(false, false, List.of(), "denied");

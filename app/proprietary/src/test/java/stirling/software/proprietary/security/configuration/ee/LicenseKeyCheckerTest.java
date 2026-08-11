@@ -24,8 +24,11 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 @ExtendWith(MockitoExtension.class)
 class LicenseKeyCheckerTest {
 
-    @Mock private KeygenLicenseVerifier verifier;
-    @Mock private UserLicenseSettingsService userLicenseSettingsService;
+    @Mock
+    private KeygenLicenseVerifier verifier;
+
+    @Mock
+    private UserLicenseSettingsService userLicenseSettingsService;
 
     @Test
     void premiumDisabled_skipsVerification() {
@@ -33,8 +36,7 @@ class LicenseKeyCheckerTest {
         props.getPremium().setEnabled(false);
         props.getPremium().setKey("dummy");
 
-        LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
         checker.init();
 
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
@@ -48,8 +50,7 @@ class LicenseKeyCheckerTest {
         props.getPremium().setKey("abc");
         when(verifier.verifyLicense("abc")).thenReturn(License.SERVER);
 
-        LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
         checker.init();
 
         assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
@@ -66,8 +67,7 @@ class LicenseKeyCheckerTest {
         props.getPremium().setKey("file:" + file);
         when(verifier.verifyLicense("filekey")).thenReturn(License.ENTERPRISE);
 
-        LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
         checker.init();
 
         assertEquals(License.ENTERPRISE, checker.getPremiumLicenseEnabledResult());
@@ -81,8 +81,7 @@ class LicenseKeyCheckerTest {
         props.getPremium().setEnabled(true);
         props.getPremium().setKey("file:" + file);
 
-        LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
         checker.init();
 
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
@@ -102,15 +101,13 @@ class LicenseKeyCheckerTest {
     @Test
     void requireProOrEnterprise_serverLicense_passes() {
         LicenseKeyChecker checker = checkerWithLicense(License.SERVER);
-        assertThatCode(() -> checker.requireProOrEnterprise("any.feature=true"))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> checker.requireProOrEnterprise("any.feature=true")).doesNotThrowAnyException();
     }
 
     @Test
     void requireProOrEnterprise_enterpriseLicense_passes() {
         LicenseKeyChecker checker = checkerWithLicense(License.ENTERPRISE);
-        assertThatCode(() -> checker.requireProOrEnterprise("any.feature=true"))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> checker.requireProOrEnterprise("any.feature=true")).doesNotThrowAnyException();
     }
 
     private LicenseKeyChecker checkerWithLicense(License level) {
@@ -122,8 +119,7 @@ class LicenseKeyCheckerTest {
             props.getPremium().setKey("any");
             when(verifier.verifyLicense("any")).thenReturn(level);
         }
-        LicenseKeyChecker checker =
-                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        LicenseKeyChecker checker = new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
         checker.init();
         return checker;
     }

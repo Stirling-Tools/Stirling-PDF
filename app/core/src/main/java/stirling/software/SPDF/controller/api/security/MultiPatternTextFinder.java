@@ -31,8 +31,7 @@ import stirling.software.SPDF.model.PDFText;
 final class MultiPatternTextFinder extends PDFTextStripper {
 
     private static final long REGEX_MATCH_TIMEOUT_SECONDS = 30;
-    private static final ExecutorService REGEX_EXECUTOR =
-            Executors.newVirtualThreadPerTaskExecutor();
+    private static final ExecutorService REGEX_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
     private final List<Pattern> patterns;
     private final Map<Integer, List<PDFText>> foundTextsByPage = new HashMap<>();
@@ -101,16 +100,14 @@ final class MultiPatternTextFinder extends PDFTextStripper {
      * indefinitely; per-match timeout so fast legitimate scans are unaffected.
      */
     private static boolean safeFind(Matcher matcher) throws IOException {
-        Future<Boolean> future =
-                REGEX_EXECUTOR.submit((java.util.concurrent.Callable<Boolean>) matcher::find);
+        Future<Boolean> future = REGEX_EXECUTOR.submit((java.util.concurrent.Callable<Boolean>) matcher::find);
         try {
             return future.get(REGEX_MATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             future.cancel(true);
-            throw new IOException(
-                    "Regex match timed out after "
-                            + REGEX_MATCH_TIMEOUT_SECONDS
-                            + "s — pattern may cause catastrophic backtracking");
+            throw new IOException("Regex match timed out after "
+                    + REGEX_MATCH_TIMEOUT_SECONDS
+                    + "s — pattern may cause catastrophic backtracking");
         } catch (InterruptedException e) {
             future.cancel(true);
             Thread.currentThread().interrupt();
@@ -145,9 +142,7 @@ final class MultiPatternTextFinder extends PDFTextStripper {
         }
 
         if (!foundPosition && matchStart < pageTextPositions.size()) {
-            for (int i = Math.max(0, matchStart - 5);
-                    i < Math.min(pageTextPositions.size(), matchEnd + 5);
-                    i++) {
+            for (int i = Math.max(0, matchStart - 5); i < Math.min(pageTextPositions.size(), matchEnd + 5); i++) {
                 TextPosition pos = pageTextPositions.get(i);
                 if (pos != null) {
                     foundPosition = true;
@@ -162,10 +157,7 @@ final class MultiPatternTextFinder extends PDFTextStripper {
 
         if (!foundPosition) {
             log.warn(
-                    "Found text match '{}' but no valid position data at {}-{}",
-                    matcher.group(),
-                    matchStart,
-                    matchEnd);
+                    "Found text match '{}' but no valid position data at {}-{}", matcher.group(), matchStart, matchEnd);
             return null;
         }
 

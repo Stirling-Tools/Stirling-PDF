@@ -45,8 +45,7 @@ public class SvgSanitizer {
     private static final Pattern JAVASCRIPT_URL_PATTERN =
             Pattern.compile("^\\s*javascript\\s*:", Pattern.CASE_INSENSITIVE);
     private static final Pattern DATA_SCRIPT_PATTERN =
-            Pattern.compile(
-                    "^\\s*data\\s*:[^,]*(?:script|javascript|vbscript)", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("^\\s*data\\s*:[^,]*(?:script|javascript|vbscript)", Pattern.CASE_INSENSITIVE);
     private static final Pattern NULL_BYTE_PATTERN = Pattern.compile("\u0000");
     private final SsrfProtectionService ssrfProtectionService;
     private final ApplicationProperties applicationProperties;
@@ -81,8 +80,7 @@ public class SvgSanitizer {
         }
     }
 
-    private Document parseSecurely(byte[] svgBytes)
-            throws ParserConfigurationException, SAXException, IOException {
+    private Document parseSecurely(byte[] svgBytes) throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
@@ -150,19 +148,13 @@ public class SvgSanitizer {
 
             if (isUrlAttribute(attrName)) {
                 if (isDangerousUrl(attrValue)) {
-                    log.warn(
-                            "Removing dangerous URL in attribute {}: {}",
-                            attrName,
-                            truncateForLog(attrValue));
+                    log.warn("Removing dangerous URL in attribute {}: {}", attrName, truncateForLog(attrValue));
                     attributesToRemove.add(attr.getNodeName());
                     continue;
                 }
 
                 if (isExternalUrl(attrValue) && !isUrlAllowed(attrValue)) {
-                    log.warn(
-                            "Removing SSRF-blocked URL in attribute {}: {}",
-                            attrName,
-                            truncateForLog(attrValue));
+                    log.warn("Removing SSRF-blocked URL in attribute {}: {}", attrName, truncateForLog(attrValue));
                     attributesToRemove.add(attr.getNodeName());
                 }
             }

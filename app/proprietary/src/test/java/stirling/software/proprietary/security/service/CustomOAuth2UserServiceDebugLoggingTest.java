@@ -45,9 +45,14 @@ import ch.qos.logback.core.read.ListAppender;
 @ExtendWith(MockitoExtension.class)
 class CustomOAuth2UserServiceDebugLoggingTest {
 
-    @Mock private UserService userService;
-    @Mock private LoginAttemptService loginAttemptService;
-    @Mock private OidcUserRequest userRequest;
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private LoginAttemptService loginAttemptService;
+
+    @Mock
+    private OidcUserRequest userRequest;
 
     private ListAppender<ILoggingEvent> appender;
     private Logger serviceLogger;
@@ -71,8 +76,7 @@ class CustomOAuth2UserServiceDebugLoggingTest {
     @Test
     void whenDebugLoggingOff_failureProducesNoClaimDump() throws Exception {
         ApplicationProperties.Security.OAUTH2 props = oauthProps("email", false);
-        CustomOAuth2UserService service =
-                new CustomOAuth2UserService(props, userService, loginAttemptService);
+        CustomOAuth2UserService service = new CustomOAuth2UserService(props, userService, loginAttemptService);
         // Provider gave us claims, but no "email" — same shape as the ADFS bug report.
         Map<String, Object> claims = baseClaims();
         claims.put("upn", "jdoe@demarest.com.br");
@@ -92,8 +96,7 @@ class CustomOAuth2UserServiceDebugLoggingTest {
     @Test
     void whenDebugLoggingOn_failureDumpsClaimsAndSuggestsAlternative() throws Exception {
         ApplicationProperties.Security.OAUTH2 props = oauthProps("email", true);
-        CustomOAuth2UserService service =
-                new CustomOAuth2UserService(props, userService, loginAttemptService);
+        CustomOAuth2UserService service = new CustomOAuth2UserService(props, userService, loginAttemptService);
         Map<String, Object> claims = adfsStyleClaims();
         // ADFS-style: no `email`, but `preferred_username` IS a valid UsernameAttribute value.
         claims.put("preferred_username", "jdoe@demarest.com.br");
@@ -107,14 +110,13 @@ class CustomOAuth2UserServiceDebugLoggingTest {
 
         assertThrows(OAuth2AuthenticationException.class, () -> service.loadUser(userRequest));
 
-        List<ILoggingEvent> dumps =
-                appender.list.stream()
-                        .filter(e -> e.getFormattedMessage().contains("[OAUTH2 DEBUG]"))
-                        .toList();
+        List<ILoggingEvent> dumps = appender.list.stream()
+                .filter(e -> e.getFormattedMessage().contains("[OAUTH2 DEBUG]"))
+                .toList();
         assertThat(dumps).as("expected at least one debug-dump log line").isNotEmpty();
 
-        String combined =
-                String.join("\n", dumps.stream().map(ILoggingEvent::getFormattedMessage).toList());
+        String combined = String.join(
+                "\n", dumps.stream().map(ILoggingEvent::getFormattedMessage).toList());
         assertThat(combined)
                 .contains("Provider registrationId : demarest")
                 .contains("Configured useAsUsername: email")
@@ -123,11 +125,10 @@ class CustomOAuth2UserServiceDebugLoggingTest {
                 .contains("<NULL — this is why login fails>");
         // The hint must include 'preferred_username' (a valid UsernameAttribute value present
         // in the claims) and MUST NOT include 'upn' (not in the UsernameAttribute enum).
-        String hintLine =
-                combined.lines()
-                        .filter(l -> l.contains("Hint:"))
-                        .findFirst()
-                        .orElseThrow(() -> new AssertionError("no Hint: line in dump"));
+        String hintLine = combined.lines()
+                .filter(l -> l.contains("Hint:"))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("no Hint: line in dump"));
         assertThat(hintLine).contains("preferred_username").doesNotContain("upn");
     }
 
@@ -138,14 +139,12 @@ class CustomOAuth2UserServiceDebugLoggingTest {
         // being wrapped, breaking Spring's authentication exception handling. This test pins the
         // post-fix behaviour: valueOf() failures stay inside the guarded section.
         ApplicationProperties.Security.OAUTH2 props = oauthProps("not_a_real_attribute", true);
-        CustomOAuth2UserService service =
-                new CustomOAuth2UserService(props, userService, loginAttemptService);
+        CustomOAuth2UserService service = new CustomOAuth2UserService(props, userService, loginAttemptService);
         lenient().when(userRequest.getClientRegistration()).thenReturn(stubRegistration());
         // No need to stub the OIDC delegate — control flow shouldn't reach it.
 
         OAuth2AuthenticationException thrown =
-                assertThrows(
-                        OAuth2AuthenticationException.class, () -> service.loadUser(userRequest));
+                assertThrows(OAuth2AuthenticationException.class, () -> service.loadUser(userRequest));
         assertThat(thrown.getCause()).isInstanceOf(IllegalArgumentException.class);
         // We deliberately do NOT emit the claim dump in this case (we have no resolved
         // usernameAttributeKey to compare against, and the IllegalArgumentException message
@@ -157,8 +156,7 @@ class CustomOAuth2UserServiceDebugLoggingTest {
 
     // ---------- helpers ----------
 
-    private static ApplicationProperties.Security.OAUTH2 oauthProps(
-            String useAsUsername, boolean debugLogging) {
+    private static ApplicationProperties.Security.OAUTH2 oauthProps(String useAsUsername, boolean debugLogging) {
         ApplicationProperties.Security.OAUTH2 p = new ApplicationProperties.Security.OAUTH2();
         p.setEnabled(true);
         p.setUseAsUsername(useAsUsername);
@@ -206,12 +204,9 @@ class CustomOAuth2UserServiceDebugLoggingTest {
      * returns a {@link DefaultOidcUser} built from the supplied claims. Lets us drive the test
      * without standing up a real OIDC provider.
      */
-    private void replaceDelegateWithStub(
-            CustomOAuth2UserService service, Map<String, Object> claims) throws Exception {
-        OidcIdToken idToken =
-                new OidcIdToken("raw-token", Instant.now(), Instant.MAX, new HashMap<>(claims));
-        DefaultOidcUser delegateUser =
-                new DefaultOidcUser(Collections.emptyList(), idToken, IdTokenClaimNames.SUB);
+    private void replaceDelegateWithStub(CustomOAuth2UserService service, Map<String, Object> claims) throws Exception {
+        OidcIdToken idToken = new OidcIdToken("raw-token", Instant.now(), Instant.MAX, new HashMap<>(claims));
+        DefaultOidcUser delegateUser = new DefaultOidcUser(Collections.emptyList(), idToken, IdTokenClaimNames.SUB);
         OidcUserService delegateMock = org.mockito.Mockito.mock(OidcUserService.class);
         when(delegateMock.loadUser(any())).thenReturn(delegateUser);
         Field f = CustomOAuth2UserService.class.getDeclaredField("delegate");

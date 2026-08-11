@@ -40,10 +40,14 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @ExtendWith(MockitoExtension.class)
 class ExtractCSVControllerMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TabulaTableParser tabulaTableParser;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ExtractCSVController controller;
+    @Mock
+    private TabulaTableParser tabulaTableParser;
+
+    @InjectMocks
+    private ExtractCSVController controller;
 
     private static PDDocument docWithPages(int pages) {
         PDDocument doc = new PDDocument();
@@ -54,8 +58,7 @@ class ExtractCSVControllerMoreTest {
     }
 
     private static MockMultipartFile pdf(String name) {
-        return new MockMultipartFile(
-                "fileInput", name, MediaType.APPLICATION_PDF_VALUE, "pdf".getBytes());
+        return new MockMultipartFile("fileInput", name, MediaType.APPLICATION_PDF_VALUE, "pdf".getBytes());
     }
 
     /** Build a TableFragment whose only meaningful payload for CSV output is rawRows. */
@@ -101,12 +104,7 @@ class ExtractCSVControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(docWithPages(1));
             when(tabulaTableParser.parse(any(PDDocument.class), eq(1)))
-                    .thenReturn(
-                            List.of(
-                                    fragment(
-                                            List.of(
-                                                    List.of("Name", "Age"),
-                                                    List.of("Alice", "30")))));
+                    .thenReturn(List.of(fragment(List.of(List.of("Name", "Age"), List.of("Alice", "30")))));
 
             ResponseEntity<?> response = controller.pdfToCsv(request);
 
@@ -128,23 +126,18 @@ class ExtractCSVControllerMoreTest {
             when(tabulaTableParser.parse(any(PDDocument.class), eq(1)))
                     .thenReturn(List.of(fragment(List.of(List.of("a", "b")))));
             when(tabulaTableParser.parse(any(PDDocument.class), eq(2)))
-                    .thenReturn(
-                            List.of(
-                                    fragment(List.of(List.of("c", "d"))),
-                                    fragment(List.of(List.of("e", "f")))));
+                    .thenReturn(List.of(fragment(List.of(List.of("c", "d"))), fragment(List.of(List.of("e", "f")))));
 
             ResponseEntity<?> response = controller.pdfToCsv(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getHeaders().getContentType())
-                    .isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
+            assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
             assertThat(response.getHeaders().getContentDisposition().getFilename())
                     .isEqualTo("multi_extracted.zip");
 
             byte[] body = (byte[]) response.getBody();
             assertThat(zipEntryNames(body))
-                    .containsExactlyInAnyOrder(
-                            "multi_p1_t1.csv", "multi_p2_t1.csv", "multi_p2_t2.csv");
+                    .containsExactlyInAnyOrder("multi_p1_t1.csv", "multi_p2_t1.csv", "multi_p2_t2.csv");
         }
 
         private List<String> zipEntryNames(byte[] zipBytes) throws Exception {
@@ -175,8 +168,7 @@ class ExtractCSVControllerMoreTest {
             when(tabulaTableParser.parse(any(PDDocument.class), eq(1)))
                     .thenThrow(new java.io.IOException("parse boom"));
 
-            assertThatThrownBy(() -> controller.pdfToCsv(request))
-                    .isInstanceOf(java.io.IOException.class);
+            assertThatThrownBy(() -> controller.pdfToCsv(request)).isInstanceOf(java.io.IOException.class);
         }
 
         @Test
@@ -188,8 +180,7 @@ class ExtractCSVControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenThrow(new java.io.IOException("load boom"));
 
-            assertThatThrownBy(() -> controller.pdfToCsv(request))
-                    .isInstanceOf(java.io.IOException.class);
+            assertThatThrownBy(() -> controller.pdfToCsv(request)).isInstanceOf(java.io.IOException.class);
         }
     }
 

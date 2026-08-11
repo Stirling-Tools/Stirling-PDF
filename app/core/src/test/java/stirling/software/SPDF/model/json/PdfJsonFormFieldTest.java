@@ -28,24 +28,23 @@ class PdfJsonFormFieldTest {
         @Test
         @DisplayName("builder sets scalar, list and array fields")
         void builder() {
-            PdfJsonFormField f =
-                    PdfJsonFormField.builder()
-                            .name("form1.text1")
-                            .partialName("text1")
-                            .fieldType("Tx")
-                            .value("hello")
-                            .defaultValue("default")
-                            .flags(2)
-                            .alternateFieldName("alt")
-                            .mappingName("map")
-                            .pageNumber(1)
-                            .rect(new float[] {0f, 0f, 100f, 20f})
-                            .options(List.of("A", "B"))
-                            .selectedIndices(new int[] {0, 1})
-                            .checked(true)
-                            .fontName("Helv")
-                            .fontSize(12f)
-                            .build();
+            PdfJsonFormField f = PdfJsonFormField.builder()
+                    .name("form1.text1")
+                    .partialName("text1")
+                    .fieldType("Tx")
+                    .value("hello")
+                    .defaultValue("default")
+                    .flags(2)
+                    .alternateFieldName("alt")
+                    .mappingName("map")
+                    .pageNumber(1)
+                    .rect(new float[] {0f, 0f, 100f, 20f})
+                    .options(List.of("A", "B"))
+                    .selectedIndices(new int[] {0, 1})
+                    .checked(true)
+                    .fontName("Helv")
+                    .fontSize(12f)
+                    .build();
 
             assertThat(f.getName()).isEqualTo("form1.text1");
             assertThat(f.getPartialName()).isEqualTo("text1");
@@ -83,14 +82,20 @@ class PdfJsonFormFieldTest {
         @Test
         @DisplayName("equal content arrays equal; different content not")
         void arrayEquality() {
-            PdfJsonFormField a =
-                    PdfJsonFormField.builder().name("f").selectedIndices(new int[] {1, 2}).build();
-            PdfJsonFormField b =
-                    PdfJsonFormField.builder().name("f").selectedIndices(new int[] {1, 2}).build();
+            PdfJsonFormField a = PdfJsonFormField.builder()
+                    .name("f")
+                    .selectedIndices(new int[] {1, 2})
+                    .build();
+            PdfJsonFormField b = PdfJsonFormField.builder()
+                    .name("f")
+                    .selectedIndices(new int[] {1, 2})
+                    .build();
             assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
 
-            PdfJsonFormField c =
-                    PdfJsonFormField.builder().name("f").selectedIndices(new int[] {9}).build();
+            PdfJsonFormField c = PdfJsonFormField.builder()
+                    .name("f")
+                    .selectedIndices(new int[] {9})
+                    .build();
             assertThat(a).isNotEqualTo(c).isNotEqualTo(null).isNotEqualTo("string");
         }
 

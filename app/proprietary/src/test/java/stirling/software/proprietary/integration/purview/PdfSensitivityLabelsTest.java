@@ -89,8 +89,7 @@ class PdfSensitivityLabelsTest {
             assertThat(info.getCustomMetadataValue(prefix + "Name")).isEqualTo("Confidential");
             assertThat(info.getCustomMetadataValue(prefix + "ContentBits")).isEqualTo("2");
             // Extended ISO 8601, as the MIP contract specifies.
-            assertThat(info.getCustomMetadataValue(prefix + "SetDate"))
-                    .isEqualTo("2026-07-17T10:15:30+0000");
+            assertThat(info.getCustomMetadataValue(prefix + "SetDate")).isEqualTo("2026-07-17T10:15:30+0000");
         }
     }
 
@@ -136,16 +135,12 @@ class PdfSensitivityLabelsTest {
             PdfSensitivityLabels.apply(document, confidential());
             PdfSensitivityLabels.apply(
                     document,
-                    new SensitivityLabel(
-                            otherLabel, "Public", TENANT, AssignmentMethod.PRIVILEGED, null, null));
+                    new SensitivityLabel(otherLabel, "Public", TENANT, AssignmentMethod.PRIVILEGED, null, null));
 
-            assertThat(PdfSensitivityLabels.readAll(document))
-                    .singleElement()
-                    .satisfies(
-                            label -> {
-                                assertThat(label.labelId()).isEqualTo(otherLabel);
-                                assertThat(label.name()).isEqualTo("Public");
-                            });
+            assertThat(PdfSensitivityLabels.readAll(document)).singleElement().satisfies(label -> {
+                assertThat(label.labelId()).isEqualTo(otherLabel);
+                assertThat(label.name()).isEqualTo("Public");
+            });
         }
     }
 
@@ -156,12 +151,7 @@ class PdfSensitivityLabelsTest {
             PdfSensitivityLabels.apply(
                     document,
                     new SensitivityLabel(
-                            "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-                            "Foreign",
-                            foreignTenant,
-                            null,
-                            null,
-                            null));
+                            "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", "Foreign", foreignTenant, null, null, null));
             PdfSensitivityLabels.apply(document, confidential());
 
             assertThat(PdfSensitivityLabels.readAll(document))
@@ -178,12 +168,7 @@ class PdfSensitivityLabelsTest {
         PdfSensitivityLabels.apply(
                 document,
                 new SensitivityLabel(
-                        foreignLabel,
-                        "Foreign",
-                        "99999999-8888-7777-6666-555555555555",
-                        null,
-                        null,
-                        null));
+                        foreignLabel, "Foreign", "99999999-8888-7777-6666-555555555555", null, null, null));
         PdfSensitivityLabels.apply(document, confidential());
 
         try (PDDocument reloaded = saveAndReload(document)) {
@@ -209,14 +194,13 @@ class PdfSensitivityLabelsTest {
     @Test
     void refusesALabelThatClaimsEncryption() throws IOException {
         try (PDDocument document = newDocument()) {
-            SensitivityLabel encrypting =
-                    new SensitivityLabel(
-                            LABEL_ID,
-                            "Highly Confidential",
-                            TENANT,
-                            AssignmentMethod.STANDARD,
-                            null,
-                            SensitivityLabel.CONTENT_BITS_ENCRYPT);
+            SensitivityLabel encrypting = new SensitivityLabel(
+                    LABEL_ID,
+                    "Highly Confidential",
+                    TENANT,
+                    AssignmentMethod.STANDARD,
+                    null,
+                    SensitivityLabel.CONTENT_BITS_ENCRYPT);
 
             // Marking content as protected without protecting it would mislead every reader.
             assertThatThrownBy(() -> PdfSensitivityLabels.apply(document, encrypting))
@@ -234,9 +218,7 @@ class PdfSensitivityLabelsTest {
 
         try (PDDocument reloaded = saveAndReload(document)) {
             assertThat(reloaded.getDocumentInformation().getAuthor()).isEqualTo("Anthony");
-            assertThat(
-                            reloaded.getDocumentInformation()
-                                    .getCustomMetadataValue("StirlingPDFClassification"))
+            assertThat(reloaded.getDocumentInformation().getCustomMetadataValue("StirlingPDFClassification"))
                     .isEqualTo("{}");
             assertThat(PdfSensitivityLabels.read(reloaded)).isPresent();
         }
@@ -244,8 +226,7 @@ class PdfSensitivityLabelsTest {
 
     @Test
     void labelValuesAreCappedAtTheDocumentedLength() {
-        SensitivityLabel longName =
-                new SensitivityLabel(LABEL_ID, "x".repeat(400), TENANT, null, null, null);
+        SensitivityLabel longName = new SensitivityLabel(LABEL_ID, "x".repeat(400), TENANT, null, null, null);
         assertThat(longName.toMetadata().get("MSIP_Label_" + LABEL_ID + "_Name"))
                 .hasSize(SensitivityLabel.MAX_VALUE_LENGTH);
     }
@@ -263,20 +244,10 @@ class PdfSensitivityLabelsTest {
         // labelId is written into XMP/info key names verbatim; a space or markup char must not
         // pass,
         // or it would corrupt or inject the metadata packet it lands in.
-        assertThatThrownBy(
-                        () ->
-                                new SensitivityLabel(
-                                        "not a guid", "Public", TENANT, null, null, null))
+        assertThatThrownBy(() -> new SensitivityLabel("not a guid", "Public", TENANT, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                new SensitivityLabel(
-                                        "<inject>-2222-3333-4444-5555555555",
-                                        "Public",
-                                        TENANT,
-                                        null,
-                                        null,
-                                        null))
+        assertThatThrownBy(() ->
+                        new SensitivityLabel("<inject>-2222-3333-4444-5555555555", "Public", TENANT, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

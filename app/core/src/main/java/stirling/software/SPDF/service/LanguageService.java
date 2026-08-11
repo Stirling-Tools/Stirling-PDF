@@ -32,21 +32,16 @@ public class LanguageService {
 
             return Arrays.stream(resources)
                     .map(Resource::getFilename)
-                    .filter(
-                            filename ->
-                                    filename != null
-                                            && filename.startsWith("messages_")
-                                            && filename.endsWith(".properties"))
+                    .filter(filename ->
+                            filename != null && filename.startsWith("messages_") && filename.endsWith(".properties"))
                     .map(filename -> filename.replace("messages_", "").replace(".properties", ""))
-                    .filter(
-                            languageCode -> {
-                                Set<String> allowedLanguages =
-                                        new HashSet<>(applicationProperties.getUi().getLanguages());
-                                // Empty list means all languages are allowed (no filtering)
-                                // Non-empty list acts as a strict whitelist
-                                return allowedLanguages.isEmpty()
-                                        || allowedLanguages.contains(languageCode);
-                            })
+                    .filter(languageCode -> {
+                        Set<String> allowedLanguages =
+                                new HashSet<>(applicationProperties.getUi().getLanguages());
+                        // Empty list means all languages are allowed (no filtering)
+                        // Non-empty list acts as a strict whitelist
+                        return allowedLanguages.isEmpty() || allowedLanguages.contains(languageCode);
+                    })
                     .collect(Collectors.toSet());
 
         } catch (IOException e) {

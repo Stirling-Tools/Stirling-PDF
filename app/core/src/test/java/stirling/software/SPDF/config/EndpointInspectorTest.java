@@ -98,8 +98,7 @@ class EndpointInspectorTest {
         when(applicationContext.getBeansOfType(RequestMappingHandlerMapping.class))
                 .thenReturn(new HashMap<>());
 
-        Field validGetEndpointsField =
-                EndpointInspector.class.getDeclaredField("validGetEndpoints");
+        Field validGetEndpointsField = EndpointInspector.class.getDeclaredField("validGetEndpoints");
         validGetEndpointsField.setAccessible(true);
         @SuppressWarnings("unchecked")
         Set<String> set = (Set<String>) validGetEndpointsField.get(inspector);

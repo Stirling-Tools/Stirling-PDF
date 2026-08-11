@@ -30,36 +30,33 @@ class OfficeDocumentSanitizerTest {
     private static final String EXTERNAL_URL = "https://webhook.site/ssrf-callback";
     private static final String INTERNAL_TARGET = "media/image1.png";
 
-    private static final String DOCX_RELS =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                    + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
-                    + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
-                    + " Target=\""
-                    + EXTERNAL_URL
-                    + "\" TargetMode=\"External\"/>"
-                    + "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
-                    + " Target=\""
-                    + INTERNAL_TARGET
-                    + "\"/>"
-                    + "</Relationships>";
+    private static final String DOCX_RELS = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+            + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
+            + " Target=\""
+            + EXTERNAL_URL
+            + "\" TargetMode=\"External\"/>"
+            + "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
+            + " Target=\""
+            + INTERNAL_TARGET
+            + "\"/>"
+            + "</Relationships>";
 
-    private static final String DOCX_DOCUMENT =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                    + "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">"
-                    + "<w:body><w:p/></w:body></w:document>";
+    private static final String DOCX_DOCUMENT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">"
+            + "<w:body><w:p/></w:body></w:document>";
 
-    private static final String ODF_CONTENT_EXTERNAL =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                    + "<office:document-content"
-                    + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
-                    + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
-                    + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
-                    + "<office:body><office:text>"
-                    + "<draw:frame><draw:image xlink:href=\""
-                    + EXTERNAL_URL
-                    + "\" xlink:type=\"simple\"/></draw:frame>"
-                    + "<draw:frame><draw:image xlink:href=\"Pictures/image1.png\" xlink:type=\"simple\"/></draw:frame>"
-                    + "</office:text></office:body></office:document-content>";
+    private static final String ODF_CONTENT_EXTERNAL = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<office:document-content"
+            + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
+            + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
+            + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+            + "<office:body><office:text>"
+            + "<draw:frame><draw:image xlink:href=\""
+            + EXTERNAL_URL
+            + "\" xlink:type=\"simple\"/></draw:frame>"
+            + "<draw:frame><draw:image xlink:href=\"Pictures/image1.png\" xlink:type=\"simple\"/></draw:frame>"
+            + "</office:text></office:body></office:document-content>";
 
     private SsrfProtectionService ssrfProtectionService;
     private ApplicationProperties applicationProperties;
@@ -97,8 +94,7 @@ class OfficeDocumentSanitizerTest {
         byte[] cleaned = sanitizer.sanitize(docx, "docx");
 
         Map<String, byte[]> result = unzip(cleaned);
-        String rels =
-                new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
+        String rels = new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
         assertFalse(rels.contains(EXTERNAL_URL), "External URL should be stripped from .rels");
         assertFalse(
                 rels.toLowerCase().contains("targetmode=\"external\""),
@@ -112,14 +108,13 @@ class OfficeDocumentSanitizerTest {
 
     @Test
     void sanitize_pptxExternalImageRelStripped() throws IOException {
-        String pptxRels =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                        + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
-                        + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
-                        + " Target=\""
-                        + EXTERNAL_URL
-                        + "\" TargetMode=\"External\"/>"
-                        + "</Relationships>";
+        String pptxRels = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
+                + " Target=\""
+                + EXTERNAL_URL
+                + "\" TargetMode=\"External\"/>"
+                + "</Relationships>";
         Map<String, byte[]> entries = new LinkedHashMap<>();
         entries.put("ppt/slides/_rels/slide1.xml.rels", pptxRels.getBytes(StandardCharsets.UTF_8));
         byte[] pptx = zip(entries);
@@ -127,32 +122,27 @@ class OfficeDocumentSanitizerTest {
         byte[] cleaned = sanitizer.sanitize(pptx, "pptx");
 
         Map<String, byte[]> result = unzip(cleaned);
-        String rels =
-                new String(result.get("ppt/slides/_rels/slide1.xml.rels"), StandardCharsets.UTF_8);
+        String rels = new String(result.get("ppt/slides/_rels/slide1.xml.rels"), StandardCharsets.UTF_8);
         assertFalse(rels.contains(EXTERNAL_URL));
     }
 
     @Test
     void sanitize_xlsxExternalImageRelStripped() throws IOException {
-        String xlsxRels =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                        + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
-                        + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
-                        + " Target=\""
-                        + EXTERNAL_URL
-                        + "\" TargetMode=\"External\"/>"
-                        + "</Relationships>";
+        String xlsxRels = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
+                + " Target=\""
+                + EXTERNAL_URL
+                + "\" TargetMode=\"External\"/>"
+                + "</Relationships>";
         Map<String, byte[]> entries = new LinkedHashMap<>();
-        entries.put(
-                "xl/drawings/_rels/drawing1.xml.rels", xlsxRels.getBytes(StandardCharsets.UTF_8));
+        entries.put("xl/drawings/_rels/drawing1.xml.rels", xlsxRels.getBytes(StandardCharsets.UTF_8));
         byte[] xlsx = zip(entries);
 
         byte[] cleaned = sanitizer.sanitize(xlsx, "xlsx");
 
         Map<String, byte[]> result = unzip(cleaned);
-        String rels =
-                new String(
-                        result.get("xl/drawings/_rels/drawing1.xml.rels"), StandardCharsets.UTF_8);
+        String rels = new String(result.get("xl/drawings/_rels/drawing1.xml.rels"), StandardCharsets.UTF_8);
         assertFalse(rels.contains(EXTERNAL_URL));
     }
 
@@ -160,9 +150,8 @@ class OfficeDocumentSanitizerTest {
     void sanitize_odtStripsExternalXlinkHrefButKeepsInternal() throws IOException {
         Map<String, byte[]> entries = new LinkedHashMap<>();
         entries.put("content.xml", ODF_CONTENT_EXTERNAL.getBytes(StandardCharsets.UTF_8));
-        String manifestXml =
-                "<?xml version=\"1.0\"?><manifest:manifest"
-                        + " xmlns:manifest=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"/>";
+        String manifestXml = "<?xml version=\"1.0\"?><manifest:manifest"
+                + " xmlns:manifest=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"/>";
         entries.put("META-INF/manifest.xml", manifestXml.getBytes(StandardCharsets.UTF_8));
         byte[] odt = zip(entries);
 
@@ -189,15 +178,14 @@ class OfficeDocumentSanitizerTest {
 
     @Test
     void sanitize_odpStripsExternalXlinkHrefInStylesXml() throws IOException {
-        String stylesXml =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                        + "<office:document-styles"
-                        + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
-                        + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
-                        + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
-                        + "<draw:image xlink:href=\""
-                        + EXTERNAL_URL
-                        + "\"/></office:document-styles>";
+        String stylesXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<office:document-styles"
+                + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
+                + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
+                + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+                + "<draw:image xlink:href=\""
+                + EXTERNAL_URL
+                + "\"/></office:document-styles>";
         Map<String, byte[]> entries = new LinkedHashMap<>();
         entries.put("styles.xml", stylesXml.getBytes(StandardCharsets.UTF_8));
         byte[] odp = zip(entries);
@@ -254,8 +242,7 @@ class OfficeDocumentSanitizerTest {
         byte[] cleaned = sanitizer.sanitize(docx, "docx");
 
         Map<String, byte[]> result = unzip(cleaned);
-        String rels =
-                new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
+        String rels = new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
         assertTrue(rels.contains(EXTERNAL_URL), "Allow-listed external URL should be preserved");
     }
 
@@ -272,8 +259,7 @@ class OfficeDocumentSanitizerTest {
         byte[] cleaned = sanitizer.sanitize(docx, "docx");
 
         Map<String, byte[]> result = unzip(cleaned);
-        String rels =
-                new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
+        String rels = new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
         assertFalse(rels.contains(EXTERNAL_URL));
     }
 
@@ -293,22 +279,19 @@ class OfficeDocumentSanitizerTest {
 
     @Test
     void sanitize_internalLinksKeptWhenNoExternalPresent() throws IOException {
-        String internalOnlyRels =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                        + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
-                        + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
-                        + " Target=\"media/image1.png\"/>"
-                        + "</Relationships>";
+        String internalOnlyRels = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/image\""
+                + " Target=\"media/image1.png\"/>"
+                + "</Relationships>";
         Map<String, byte[]> entries = new LinkedHashMap<>();
-        entries.put(
-                "word/_rels/document.xml.rels", internalOnlyRels.getBytes(StandardCharsets.UTF_8));
+        entries.put("word/_rels/document.xml.rels", internalOnlyRels.getBytes(StandardCharsets.UTF_8));
         byte[] docx = zip(entries);
 
         byte[] cleaned = sanitizer.sanitize(docx, "docx");
 
         Map<String, byte[]> result = unzip(cleaned);
-        String rels =
-                new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
+        String rels = new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
         assertTrue(rels.contains("media/image1.png"));
     }
 
@@ -322,15 +305,14 @@ class OfficeDocumentSanitizerTest {
 
     @Test
     void sanitize_relativeOdfPathsArePreserved() throws IOException {
-        String content =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                        + "<office:document-content"
-                        + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
-                        + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
-                        + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
-                        + "<draw:image xlink:href=\"../Pictures/image1.png\"/>"
-                        + "<draw:image xlink:href=\"#anchor\"/>"
-                        + "</office:document-content>";
+        String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<office:document-content"
+                + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
+                + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
+                + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+                + "<draw:image xlink:href=\"../Pictures/image1.png\"/>"
+                + "<draw:image xlink:href=\"#anchor\"/>"
+                + "</office:document-content>";
         Map<String, byte[]> entries = new LinkedHashMap<>();
         entries.put("content.xml", content.getBytes(StandardCharsets.UTF_8));
         byte[] odt = zip(entries);

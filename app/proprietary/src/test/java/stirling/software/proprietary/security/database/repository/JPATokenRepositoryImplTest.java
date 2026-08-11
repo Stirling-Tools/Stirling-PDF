@@ -17,10 +17,8 @@ import stirling.software.proprietary.security.model.PersistentLogin;
 
 class JPATokenRepositoryImplTest {
 
-    private final PersistentLoginRepository persistentLoginRepository =
-            mock(PersistentLoginRepository.class);
-    private final JPATokenRepositoryImpl tokenRepository =
-            new JPATokenRepositoryImpl(persistentLoginRepository);
+    private final PersistentLoginRepository persistentLoginRepository = mock(PersistentLoginRepository.class);
+    private final JPATokenRepositoryImpl tokenRepository = new JPATokenRepositoryImpl(persistentLoginRepository);
 
     @Nested
     @DisplayName("createNewToken")
@@ -30,8 +28,7 @@ class JPATokenRepositoryImplTest {
         @DisplayName("should save new PersistentLogin with correct values")
         void shouldSaveNewToken() {
             Date date = new Date();
-            PersistentRememberMeToken token =
-                    new PersistentRememberMeToken("user1", "series123", "tokenABC", date);
+            PersistentRememberMeToken token = new PersistentRememberMeToken("user1", "series123", "tokenABC", date);
 
             tokenRepository.createNewToken(token);
 

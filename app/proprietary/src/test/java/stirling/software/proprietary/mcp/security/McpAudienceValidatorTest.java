@@ -59,8 +59,10 @@ class McpAudienceValidatorTest {
         McpAudienceValidator relaxed = new McpAudienceValidator(RESOURCE, List.of("authenticated"));
         assertThat(relaxed.validate(tokenWithAudience(List.of("authenticated"))).hasErrors())
                 .isFalse();
-        assertThat(relaxed.validate(tokenWithAudience(List.of(RESOURCE))).hasErrors()).isFalse();
-        assertThat(relaxed.validate(tokenWithAudience(List.of("something-else"))).hasErrors())
+        assertThat(relaxed.validate(tokenWithAudience(List.of(RESOURCE))).hasErrors())
+                .isFalse();
+        assertThat(relaxed.validate(tokenWithAudience(List.of("something-else")))
+                        .hasErrors())
                 .isTrue();
     }
 
@@ -68,13 +70,15 @@ class McpAudienceValidatorTest {
     void blankAcceptedAudienceEntries_areIgnored() {
         McpAudienceValidator relaxed = new McpAudienceValidator(RESOURCE, List.of("", "  "));
         assertThat(relaxed.validate(tokenWithAudience(List.of(""))).hasErrors()).isTrue();
-        assertThat(relaxed.validate(tokenWithAudience(List.of(RESOURCE))).hasErrors()).isFalse();
+        assertThat(relaxed.validate(tokenWithAudience(List.of(RESOURCE))).hasErrors())
+                .isFalse();
     }
 
     @Test
     void blankResourceIdWithOnlyBlankAccepted_failsClosed() {
         McpAudienceValidator blank = new McpAudienceValidator("", List.of(" "));
-        assertThat(blank.validate(tokenWithAudience(List.of(RESOURCE))).hasErrors()).isTrue();
+        assertThat(blank.validate(tokenWithAudience(List.of(RESOURCE))).hasErrors())
+                .isTrue();
     }
 
     private static Jwt tokenWithAudience(List<String> audience) {

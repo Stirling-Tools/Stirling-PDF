@@ -28,7 +28,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                             @Schema(
                                                     type = "string",
                                                     format = "binary",
-                                                    description =
-                                                            "JavaScript code extracted from PDF")))
+                                                    description = "JavaScript code extracted from PDF")))
         })
 public @interface JavaScriptResponse {}

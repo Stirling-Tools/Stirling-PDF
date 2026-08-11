@@ -43,9 +43,7 @@ public class ApiIntegrationValidator implements IntegrationConfigValidator {
      * apart on what counts as reachable.
      */
     static void requirePublicHost(
-            ApiConnectionSettings settings,
-            ApplicationProperties applicationProperties,
-            String settingName) {
+            ApiConnectionSettings settings, ApplicationProperties applicationProperties, String settingName) {
         // Block the cloud metadata service unconditionally - before the opt-in check. The private-
         // endpoint opt-in exists for on-prem services (RFC1918, an internal gateway), but the
         // metadata endpoint is never a real integration and reaching it is the highest-value SSRF:
@@ -57,8 +55,7 @@ public class ApiIntegrationValidator implements IntegrationConfigValidator {
                     settings.baseUri(),
                     applicationProperties.getPolicies().isAllowPrivateApiEndpoints(),
                     settingName,
-                    "set policies.allowPrivateApiEndpoints=true to opt in (e.g. for an on-prem"
-                            + " integration).");
+                    "set policies.allowPrivateApiEndpoints=true to opt in (e.g. for an on-prem" + " integration).");
         } catch (IllegalStateException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
@@ -66,8 +63,7 @@ public class ApiIntegrationValidator implements IntegrationConfigValidator {
 
     /** AWS/GCP/Azure, Oracle and IBM metadata addresses; mirrors {@code SsrfProtectionService}. */
     private static final java.util.Set<String> CLOUD_METADATA_IPS =
-            java.util.Set.of(
-                    "169.254.169.254", "169.254.169.253", "169.254.169.250", "fd00:ec2::254");
+            java.util.Set.of("169.254.169.254", "169.254.169.253", "169.254.169.250", "fd00:ec2::254");
 
     private static void denyCloudMetadata(java.net.URI uri, String settingName) {
         String host = uri.getHost();
@@ -83,13 +79,12 @@ public class ApiIntegrationValidator implements IntegrationConfigValidator {
         for (java.net.InetAddress address : addresses) {
             String ip = normalise(address.getHostAddress());
             if (CLOUD_METADATA_IPS.stream().anyMatch(ip::startsWith)) {
-                throw new IllegalArgumentException(
-                        settingName
-                                + " host '"
-                                + host
-                                + "' resolves to the cloud metadata service ("
-                                + ip
-                                + "), which is never a valid integration target.");
+                throw new IllegalArgumentException(settingName
+                        + " host '"
+                        + host
+                        + "' resolves to the cloud metadata service ("
+                        + ip
+                        + "), which is never a valid integration target.");
             }
         }
     }

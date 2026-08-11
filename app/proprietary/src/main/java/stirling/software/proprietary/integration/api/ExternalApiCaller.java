@@ -45,8 +45,7 @@ public class ExternalApiCaller {
     private final ApiTokenCache tokenCache;
 
     @Autowired
-    public ExternalApiCaller(
-            ApplicationProperties applicationProperties, ObjectMapper objectMapper) {
+    public ExternalApiCaller(ApplicationProperties applicationProperties, ObjectMapper objectMapper) {
         this(
                 HttpClient.newBuilder()
                         .connectTimeout(CONNECT_TIMEOUT)
@@ -58,18 +57,14 @@ public class ExternalApiCaller {
                 objectMapper);
     }
 
-    ExternalApiCaller(
-            HttpClient httpClient,
-            ApplicationProperties applicationProperties,
-            ObjectMapper objectMapper) {
+    ExternalApiCaller(HttpClient httpClient, ApplicationProperties applicationProperties, ObjectMapper objectMapper) {
         this.httpClient = httpClient;
         this.applicationProperties = applicationProperties;
         this.tokenCache = new ApiTokenCache(httpClient, objectMapper);
     }
 
     /** What the external API sent back, before the step decides what to do with it. */
-    public record Response(
-            int status, String contentType, byte[] body, Map<String, String> headers) {
+    public record Response(int status, String contentType, byte[] body, Map<String, String> headers) {
 
         public Response {
             headers = headers == null ? Map.of() : Map.copyOf(headers);
@@ -121,22 +116,14 @@ public class ExternalApiCaller {
             Map<String, String> fields)
             throws IOException {
         return dispatch(
-                settings,
-                "POST",
-                path,
-                multipart(fileFieldName, filename, fileContentType, content, fields),
-                Map.of());
+                settings, "POST", path, multipart(fileFieldName, filename, fileContentType, content, fields), Map.of());
     }
 
     /** A request body plus the Content-Type that describes it. */
     record Body(String contentType, HttpRequest.BodyPublisher publisher) {}
 
     static Body multipart(
-            String fileFieldName,
-            String filename,
-            String fileContentType,
-            byte[] content,
-            Map<String, String> fields)
+            String fileFieldName, String filename, String fileContentType, byte[] content, Map<String, String> fields)
             throws IOException {
         MultipartBody body = new MultipartBody();
         body.addFields(fields);
@@ -156,18 +143,13 @@ public class ExternalApiCaller {
      * @param extraHeaders per-step headers, already validated by the caller
      */
     public Response dispatch(
-            ApiConnectionSettings settings,
-            String method,
-            String path,
-            Body body,
-            Map<String, String> extraHeaders)
+            ApiConnectionSettings settings, String method, String path, Body body, Map<String, String> extraHeaders)
             throws IOException {
 
         URI target = ExternalApiPaths.resolve(settings.baseUri(), path);
         // Re-check at dispatch: save-time validation cannot see a DNS record re-pointed at a
         // private address afterwards.
-        ApiIntegrationValidator.requirePublicHost(
-                settings, applicationProperties, "API connection base URL");
+        ApiIntegrationValidator.requirePublicHost(settings, applicationProperties, "API connection base URL");
 
         Response response = attempt(settings, method, target, body, extraHeaders);
         if (response.status() == 401 && settings.authType() == ApiAuthType.TOKEN_LOGIN) {
@@ -181,17 +163,12 @@ public class ExternalApiCaller {
     }
 
     private Response attempt(
-            ApiConnectionSettings settings,
-            String method,
-            URI target,
-            Body body,
-            Map<String, String> extraHeaders)
+            ApiConnectionSettings settings, String method, URI target, Body body, Map<String, String> extraHeaders)
             throws IOException {
-        HttpRequest.Builder request =
-                HttpRequest.newBuilder(target)
-                        .timeout(Duration.ofSeconds(settings.timeoutSeconds()))
-                        .header("Content-Type", body.contentType())
-                        .method(method, body.publisher());
+        HttpRequest.Builder request = HttpRequest.newBuilder(target)
+                .timeout(Duration.ofSeconds(settings.timeoutSeconds()))
+                .header("Content-Type", body.contentType())
+                .method(method, body.publisher());
         applyHeaders(request, settings);
         // Step headers last so a step can override a connection default, but never the auth
         // header: ExternalApiHeaders rejects reserved names before we get here.
@@ -208,30 +185,26 @@ public class ExternalApiCaller {
      * host, and forwarding the connection's token there would leak it to a third party.
      */
     public Response getResult(ApiConnectionSettings settings, URI target) throws IOException {
-        HttpRequest request =
-                HttpRequest.newBuilder(target)
-                        .timeout(Duration.ofSeconds(settings.timeoutSeconds()))
-                        .GET()
-                        .build();
+        HttpRequest request = HttpRequest.newBuilder(target)
+                .timeout(Duration.ofSeconds(settings.timeoutSeconds()))
+                .GET()
+                .build();
         return send(httpClient, request, target);
     }
 
     /** GET {@code path} under the connection's base URL. */
     public Response get(ApiConnectionSettings settings, String path) throws IOException {
         URI target = ExternalApiPaths.resolve(settings.baseUri(), path);
-        ApiIntegrationValidator.requirePublicHost(
-                settings, applicationProperties, "API connection base URL");
+        ApiIntegrationValidator.requirePublicHost(settings, applicationProperties, "API connection base URL");
 
-        HttpRequest.Builder request =
-                HttpRequest.newBuilder(target)
-                        .timeout(Duration.ofSeconds(settings.timeoutSeconds()))
-                        .GET();
+        HttpRequest.Builder request = HttpRequest.newBuilder(target)
+                .timeout(Duration.ofSeconds(settings.timeoutSeconds()))
+                .GET();
         applyHeaders(request, settings);
         return send(httpClient, request.build(), target);
     }
 
-    static Response send(HttpClient httpClient, HttpRequest request, URI target)
-            throws IOException {
+    static Response send(HttpClient httpClient, HttpRequest request, URI target) throws IOException {
         HttpResponse<byte[]> response;
         try {
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
@@ -240,48 +213,37 @@ public class ExternalApiCaller {
             throw new IOException("Interrupted calling " + safeTarget(target), e);
         } catch (IOException e) {
             // The message can carry the host but never the credentials, which live in headers.
-            throw new IOException(
-                    "Failed to call " + safeTarget(target) + ": " + e.getMessage(), e);
+            throw new IOException("Failed to call " + safeTarget(target) + ": " + e.getMessage(), e);
         }
         byte[] body = response.body() == null ? new byte[0] : response.body();
         if (body.length > MAX_RESPONSE_BYTES) {
             throw new IOException(
-                    "Response from "
-                            + safeTarget(target)
-                            + " exceeds the "
-                            + MAX_RESPONSE_BYTES
-                            + " byte limit");
+                    "Response from " + safeTarget(target) + " exceeds the " + MAX_RESPONSE_BYTES + " byte limit");
         }
         String contentType = response.headers().firstValue("content-type").orElse(null);
         Map<String, String> headers = new LinkedHashMap<>();
-        response.headers()
-                .map()
-                .forEach((name, values) -> headers.put(name, String.join(", ", values)));
+        response.headers().map().forEach((name, values) -> headers.put(name, String.join(", ", values)));
         log.debug("[external-api] {} -> HTTP {}", safeTarget(target), response.statusCode());
         return new Response(response.statusCode(), contentType, body, headers);
     }
 
-    private void applyHeaders(HttpRequest.Builder request, ApiConnectionSettings settings)
-            throws IOException {
+    private void applyHeaders(HttpRequest.Builder request, ApiConnectionSettings settings) throws IOException {
         settings.headers().forEach(request::header);
         switch (settings.authType()) {
             case BEARER -> request.header("Authorization", "Bearer " + settings.token());
             case HEADER ->
-                    request.header(
-                            settings.headerName(),
-                            settings.headerPrefix() == null
-                                    ? settings.token()
-                                    : settings.headerPrefix() + " " + settings.token());
+                request.header(
+                        settings.headerName(),
+                        settings.headerPrefix() == null
+                                ? settings.token()
+                                : settings.headerPrefix() + " " + settings.token());
             case BASIC ->
-                    request.header(
-                            "Authorization",
-                            "Basic "
-                                    + Base64.getEncoder()
-                                            .encodeToString(
-                                                    (settings.username()
-                                                                    + ":"
-                                                                    + settings.password())
-                                                            .getBytes(StandardCharsets.UTF_8)));
+                request.header(
+                        "Authorization",
+                        "Basic "
+                                + Base64.getEncoder()
+                                        .encodeToString((settings.username() + ":" + settings.password())
+                                                .getBytes(StandardCharsets.UTF_8)));
             case TOKEN_LOGIN -> {
                 Map.Entry<String, String> auth = tokenCache.authHeader(settings);
                 request.header(auth.getKey(), auth.getValue());

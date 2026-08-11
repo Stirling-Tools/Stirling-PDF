@@ -29,10 +29,7 @@ public enum Role {
     WEB_ONLY_USER("ROLE_WEB_ONLY_USER", 0, 20, "adminUserSettings.webOnlyUser"),
 
     INTERNAL_API_USER(
-            "STIRLING-PDF-BACKEND-API-USER",
-            Integer.MAX_VALUE,
-            Integer.MAX_VALUE,
-            "adminUserSettings.internalApiUser"),
+            "STIRLING-PDF-BACKEND-API-USER", Integer.MAX_VALUE, Integer.MAX_VALUE, "adminUserSettings.internalApiUser"),
 
     DEMO_USER("ROLE_DEMO_USER", 100, 100, "adminUserSettings.demoUser");
 

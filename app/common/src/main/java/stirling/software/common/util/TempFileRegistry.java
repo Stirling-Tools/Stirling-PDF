@@ -32,8 +32,7 @@ public class TempFileRegistry {
      * @return Set of third-party file paths
      */
     @Getter
-    private final Set<Path> thirdPartyTempFiles =
-            Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<Path> thirdPartyTempFiles = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /**
      * -- GETTER -- Get all registered temporary directories.

@@ -25,26 +25,25 @@ class PdfJsonFontConversionCandidateTest {
         @Test
         @DisplayName("builder sets scalar, enum and array fields")
         void builder() {
-            PdfJsonFontConversionCandidate c =
-                    PdfJsonFontConversionCandidate.builder()
-                            .strategyId("s1")
-                            .strategyLabel("Strategy 1")
-                            .status(PdfJsonFontConversionStatus.SUCCESS)
-                            .message("ok")
-                            .synthesizedGlyphs(10)
-                            .missingGlyphs(0)
-                            .widthDelta(0.5d)
-                            .bboxDelta(1.0d)
-                            .program("AAA")
-                            .programFormat("ttf")
-                            .webProgram("BBB")
-                            .webProgramFormat("woff")
-                            .pdfProgram("CCC")
-                            .pdfProgramFormat("cff")
-                            .previewImage("PNG")
-                            .diagnostics("{}")
-                            .glyphCoverage(new int[] {65, 66, 67})
-                            .build();
+            PdfJsonFontConversionCandidate c = PdfJsonFontConversionCandidate.builder()
+                    .strategyId("s1")
+                    .strategyLabel("Strategy 1")
+                    .status(PdfJsonFontConversionStatus.SUCCESS)
+                    .message("ok")
+                    .synthesizedGlyphs(10)
+                    .missingGlyphs(0)
+                    .widthDelta(0.5d)
+                    .bboxDelta(1.0d)
+                    .program("AAA")
+                    .programFormat("ttf")
+                    .webProgram("BBB")
+                    .webProgramFormat("woff")
+                    .pdfProgram("CCC")
+                    .pdfProgramFormat("cff")
+                    .previewImage("PNG")
+                    .diagnostics("{}")
+                    .glyphCoverage(new int[] {65, 66, 67})
+                    .build();
 
             assertThat(c.getStrategyId()).isEqualTo("s1");
             assertThat(c.getStrategyLabel()).isEqualTo("Strategy 1");
@@ -84,31 +83,29 @@ class PdfJsonFontConversionCandidateTest {
         @Test
         @DisplayName("equal content arrays equal; different content not")
         void arrayEquality() {
-            PdfJsonFontConversionCandidate a =
-                    PdfJsonFontConversionCandidate.builder()
-                            .strategyId("s")
-                            .glyphCoverage(new int[] {1, 2})
-                            .build();
-            PdfJsonFontConversionCandidate b =
-                    PdfJsonFontConversionCandidate.builder()
-                            .strategyId("s")
-                            .glyphCoverage(new int[] {1, 2})
-                            .build();
+            PdfJsonFontConversionCandidate a = PdfJsonFontConversionCandidate.builder()
+                    .strategyId("s")
+                    .glyphCoverage(new int[] {1, 2})
+                    .build();
+            PdfJsonFontConversionCandidate b = PdfJsonFontConversionCandidate.builder()
+                    .strategyId("s")
+                    .glyphCoverage(new int[] {1, 2})
+                    .build();
             assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
 
-            PdfJsonFontConversionCandidate c =
-                    PdfJsonFontConversionCandidate.builder()
-                            .strategyId("s")
-                            .glyphCoverage(new int[] {9})
-                            .build();
+            PdfJsonFontConversionCandidate c = PdfJsonFontConversionCandidate.builder()
+                    .strategyId("s")
+                    .glyphCoverage(new int[] {9})
+                    .build();
             assertThat(a).isNotEqualTo(c).isNotEqualTo(null).isNotEqualTo("string");
         }
 
         @Test
         @DisplayName("toString contains class name and value")
         void toStringContent() {
-            PdfJsonFontConversionCandidate a =
-                    PdfJsonFontConversionCandidate.builder().strategyId("stratId").build();
+            PdfJsonFontConversionCandidate a = PdfJsonFontConversionCandidate.builder()
+                    .strategyId("stratId")
+                    .build();
             assertThat(a.toString()).contains("PdfJsonFontConversionCandidate").contains("stratId");
         }
     }

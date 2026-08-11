@@ -25,20 +25,18 @@ public class MetricsFilter extends OncePerRequestFilter {
     private final MeterRegistry meterRegistry;
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String uri = request.getRequestURI();
 
         if (RequestUriUtils.isTrackableResource(request.getContextPath(), uri)) {
             HttpSession session = request.getSession(false);
             String sessionId = (session != null) ? session.getId() : "no-session";
-            Counter counter =
-                    Counter.builder("http.requests")
-                            .tag("session", sessionId)
-                            .tag("method", request.getMethod())
-                            .tag("uri", uri)
-                            .register(meterRegistry);
+            Counter counter = Counter.builder("http.requests")
+                    .tag("session", sessionId)
+                    .tag("method", request.getMethod())
+                    .tag("uri", uri)
+                    .register(meterRegistry);
 
             counter.increment();
         }

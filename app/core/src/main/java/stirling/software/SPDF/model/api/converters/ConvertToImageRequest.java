@@ -19,9 +19,7 @@ public class ConvertToImageRequest extends PDFWithPageNums {
     private String imageFormat;
 
     @Schema(
-            description =
-                    "Choose between a single image containing all pages or separate images for each"
-                            + " page",
+            description = "Choose between a single image containing all pages or separate images for each" + " page",
             defaultValue = "multiple",
             allowableValues = {"single", "multiple"},
             requiredMode = Schema.RequiredMode.REQUIRED)
@@ -40,8 +38,6 @@ public class ConvertToImageRequest extends PDFWithPageNums {
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer dpi;
 
-    @Schema(
-            description = "Include annotations such as comments in the output image(s)",
-            defaultValue = "false")
+    @Schema(description = "Include annotations such as comments in the output image(s)", defaultValue = "false")
     private Boolean includeAnnotations;
 }

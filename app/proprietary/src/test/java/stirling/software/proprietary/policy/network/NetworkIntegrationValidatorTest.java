@@ -41,15 +41,11 @@ class NetworkIntegrationValidatorTest {
 
     @Test
     void rejectsAMalformedConfig() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> validator(true).validate(Map.of("host", "h")));
+        assertThrows(IllegalArgumentException.class, () -> validator(true).validate(Map.of("host", "h")));
     }
 
     @Test
     void rejectsAPrivateHostUnlessOptedIn() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> validator(false).validate(config("10.0.0.5")));
+        assertThrows(IllegalArgumentException.class, () -> validator(false).validate(config("10.0.0.5")));
     }
 }

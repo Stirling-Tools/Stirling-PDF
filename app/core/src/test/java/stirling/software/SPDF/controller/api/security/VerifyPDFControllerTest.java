@@ -39,9 +39,11 @@ import stirling.software.SPDF.service.VeraPDFService;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class VerifyPDFControllerTest {
 
-    @Mock private VeraPDFService veraPDFService;
+    @Mock
+    private VeraPDFService veraPDFService;
 
-    @InjectMocks private VerifyPDFController verifyPDFController;
+    @InjectMocks
+    private VerifyPDFController verifyPDFController;
 
     private byte[] simplePdfBytes;
 
@@ -63,11 +65,7 @@ class VerifyPDFControllerTest {
         @DisplayName("Should return results for compliant PDF")
         void testVerifyPDF_Compliant() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFVerificationRequest request = new PDFVerificationRequest();
             request.setFileInput(pdfFile);
@@ -79,8 +77,7 @@ class VerifyPDFControllerTest {
 
             when(veraPDFService.validatePDF(any(InputStream.class))).thenReturn(List.of(result));
 
-            ResponseEntity<List<PDFVerificationResult>> response =
-                    verifyPDFController.verifyPDF(request);
+            ResponseEntity<List<PDFVerificationResult>> response = verifyPDFController.verifyPDF(request);
 
             assertNotNull(response.getBody());
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -92,20 +89,14 @@ class VerifyPDFControllerTest {
         @DisplayName("Should return empty list when no standards detected")
         void testVerifyPDF_NoStandards() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFVerificationRequest request = new PDFVerificationRequest();
             request.setFileInput(pdfFile);
 
-            when(veraPDFService.validatePDF(any(InputStream.class)))
-                    .thenReturn(Collections.emptyList());
+            when(veraPDFService.validatePDF(any(InputStream.class))).thenReturn(Collections.emptyList());
 
-            ResponseEntity<List<PDFVerificationResult>> response =
-                    verifyPDFController.verifyPDF(request);
+            ResponseEntity<List<PDFVerificationResult>> response = verifyPDFController.verifyPDF(request);
 
             assertNotNull(response.getBody());
             assertTrue(response.getBody().isEmpty());
@@ -115,11 +106,7 @@ class VerifyPDFControllerTest {
         @DisplayName("Should return multiple results for multiple standards")
         void testVerifyPDF_MultipleStandards() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFVerificationRequest request = new PDFVerificationRequest();
             request.setFileInput(pdfFile);
@@ -131,11 +118,9 @@ class VerifyPDFControllerTest {
             result2.setStandard("pdfua-1");
             result2.setCompliant(false);
 
-            when(veraPDFService.validatePDF(any(InputStream.class)))
-                    .thenReturn(List.of(result1, result2));
+            when(veraPDFService.validatePDF(any(InputStream.class))).thenReturn(List.of(result1, result2));
 
-            ResponseEntity<List<PDFVerificationResult>> response =
-                    verifyPDFController.verifyPDF(request);
+            ResponseEntity<List<PDFVerificationResult>> response = verifyPDFController.verifyPDF(request);
 
             assertEquals(2, response.getBody().size());
         }
@@ -158,8 +143,7 @@ class VerifyPDFControllerTest {
         @DisplayName("Should throw for empty file")
         void testVerifyPDF_EmptyFile() {
             MockMultipartFile emptyFile =
-                    new MockMultipartFile(
-                            "fileInput", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0]);
+                    new MockMultipartFile("fileInput", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0]);
 
             PDFVerificationRequest request = new PDFVerificationRequest();
             request.setFileInput(emptyFile);
@@ -176,11 +160,7 @@ class VerifyPDFControllerTest {
         @DisplayName("Should throw on ValidationException")
         void testVerifyPDF_ValidationException() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFVerificationRequest request = new PDFVerificationRequest();
             request.setFileInput(pdfFile);
@@ -195,11 +175,7 @@ class VerifyPDFControllerTest {
         @DisplayName("Should throw on ModelParsingException")
         void testVerifyPDF_ModelParsingException() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFVerificationRequest request = new PDFVerificationRequest();
             request.setFileInput(pdfFile);
@@ -214,11 +190,7 @@ class VerifyPDFControllerTest {
         @DisplayName("Should throw on EncryptedPdfException")
         void testVerifyPDF_EncryptedPdfException() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFVerificationRequest request = new PDFVerificationRequest();
             request.setFileInput(pdfFile);
@@ -233,17 +205,12 @@ class VerifyPDFControllerTest {
         @DisplayName("Should throw on IOException")
         void testVerifyPDF_IOException() throws Exception {
             MockMultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            simplePdfBytes);
+                    new MockMultipartFile("fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, simplePdfBytes);
 
             PDFVerificationRequest request = new PDFVerificationRequest();
             request.setFileInput(pdfFile);
 
-            when(veraPDFService.validatePDF(any(InputStream.class)))
-                    .thenThrow(new IOException("IO error"));
+            when(veraPDFService.validatePDF(any(InputStream.class))).thenThrow(new IOException("IO error"));
 
             assertThrows(RuntimeException.class, () -> verifyPDFController.verifyPDF(request));
         }

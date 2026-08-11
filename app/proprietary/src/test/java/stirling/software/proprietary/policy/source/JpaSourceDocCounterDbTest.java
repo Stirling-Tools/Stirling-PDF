@@ -25,8 +25,11 @@ class JpaSourceDocCounterDbTest {
     private static final Instant NOW = Instant.parse("2026-06-30T12:00:00Z");
     private static final long NOW_HOUR = NOW.getEpochSecond() / 3600;
 
-    @Autowired private SourceDocCountRepository repository;
-    @Autowired private SourceDocTotalRepository totalRepository;
+    @Autowired
+    private SourceDocCountRepository repository;
+
+    @Autowired
+    private SourceDocTotalRepository totalRepository;
 
     private JpaSourceDocCounter counter() {
         return new JpaSourceDocCounter(repository, totalRepository, () -> NOW);

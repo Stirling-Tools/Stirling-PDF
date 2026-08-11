@@ -48,9 +48,7 @@ public class DescribeOperationTool implements McpTool {
         ObjectNode props = schema.putObject("properties");
         ObjectNode op = props.putObject("operation");
         op.put("type", "string");
-        op.put(
-                "description",
-                "Operation id (e.g. compress-pdf, pdf-to-word, q-and-a). See category tool enums.");
+        op.put("description", "Operation id (e.g. compress-pdf, pdf-to-word, q-and-a). See category tool enums.");
         ArrayNode required = schema.putArray("required");
         required.add("operation");
         return schema;

@@ -25,8 +25,11 @@ class ApiKeyUsageRecorderTest {
 
     private static final long KEY = 7L;
 
-    @Mock private ApiKeyUsageWriter writer;
-    @InjectMocks private ApiKeyUsageRecorder recorder;
+    @Mock
+    private ApiKeyUsageWriter writer;
+
+    @InjectMocks
+    private ApiKeyUsageRecorder recorder;
 
     @Test
     @DisplayName("a null key id is a no-op")
@@ -61,8 +64,7 @@ class ApiKeyUsageRecorderTest {
     }
 
     @Test
-    @DisplayName(
-            "lost the insert race: falls back to a second increment so the count is not dropped")
+    @DisplayName("lost the insert race: falls back to a second increment so the count is not dropped")
     void lostInsertRaceReincrements() {
         when(writer.increment(eq(KEY), anyLong())).thenReturn(0);
         when(writer.tryInsertFirstUse(eq(KEY), anyLong())).thenReturn(false);

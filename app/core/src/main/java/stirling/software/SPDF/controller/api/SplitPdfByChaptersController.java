@@ -60,10 +60,7 @@ public class SplitPdfByChaptersController {
     private final TempFileManager tempFileManager;
 
     private static void collectBookmarks(
-            List<stirling.software.jpdfium.doc.Bookmark> source,
-            List<Bookmark> out,
-            int level,
-            int maxLevel) {
+            List<stirling.software.jpdfium.doc.Bookmark> source, List<Bookmark> out, int level, int maxLevel) {
         for (stirling.software.jpdfium.doc.Bookmark bm : source) {
             if (!bm.isInternal()) {
                 continue;
@@ -97,11 +94,8 @@ public class SplitPdfByChaptersController {
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
     @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
-    @Operation(
-            summary = "Split PDFs by Chapters",
-            description = "Splits a PDF into chapters and returns a ZIP file.")
-    public ResponseEntity<Resource> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
-            throws Exception {
+    @Operation(summary = "Split PDFs by Chapters", description = "Splits a PDF into chapters and returns a ZIP file.")
+    public ResponseEntity<Resource> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
 
         boolean includeMetadata = Boolean.TRUE.equals(request.getIncludeMetadata());
@@ -112,10 +106,7 @@ public class SplitPdfByChaptersController {
         }
 
         try (TempFile sourceTempFile = new TempFile(tempFileManager, ".pdf")) {
-            Files.copy(
-                    file.getInputStream(),
-                    sourceTempFile.getPath(),
-                    StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), sourceTempFile.getPath(), StandardCopyOption.REPLACE_EXISTING);
 
             List<Bookmark> bookmarks = new ArrayList<>();
             int totalPages;
@@ -125,15 +116,13 @@ public class SplitPdfByChaptersController {
                 if (roots == null || roots.isEmpty()) {
                     log.warn("No outline found for {}", file.getOriginalFilename());
                     throw ExceptionUtils.createIllegalArgumentException(
-                            "error.pdfBookmarksNotFound",
-                            "No PDF bookmarks/outline found in document");
+                            "error.pdfBookmarksNotFound", "No PDF bookmarks/outline found in document");
                 }
                 collectBookmarks(roots, bookmarks, 0, bookmarkLevel);
                 if (bookmarks.isEmpty()) {
                     log.warn("No outline found for {}", file.getOriginalFilename());
                     throw ExceptionUtils.createIllegalArgumentException(
-                            "error.pdfBookmarksNotFound",
-                            "No PDF bookmarks/outline found in document");
+                            "error.pdfBookmarksNotFound", "No PDF bookmarks/outline found in document");
                 }
                 assignEndPages(bookmarks, totalPages);
             }
@@ -143,11 +132,7 @@ public class SplitPdfByChaptersController {
                 bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);
             }
             for (Bookmark bookmark : bookmarks) {
-                log.info(
-                        "{}::::{} to {}",
-                        bookmark.getTitle(),
-                        bookmark.getStartPage(),
-                        bookmark.getEndPage());
+                log.info("{}::::{} to {}", bookmark.getTitle(), bookmark.getStartPage(), bookmark.getEndPage());
             }
 
             PdfMetadata metadata = null;
@@ -164,9 +149,7 @@ public class SplitPdfByChaptersController {
                 }
             }
 
-            TempFile zipTempFile =
-                    createZipFile(
-                            sourceTempFile.getFile(), bookmarks, metadata, totalPages, hasForm);
+            TempFile zipTempFile = createZipFile(sourceTempFile.getFile(), bookmarks, metadata, totalPages, hasForm);
             String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
             return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
         }
@@ -187,8 +170,7 @@ public class SplitPdfByChaptersController {
 
                     bookmarks.set(
                             bookmarks.indexOf(bookmark),
-                            new Bookmark(
-                                    mergedTitle, bookmark.getStartPage(), bookmark.getEndPage()));
+                            new Bookmark(mergedTitle, bookmark.getStartPage(), bookmark.getEndPage()));
                 }
                 mergedTitle = "";
             }
@@ -198,46 +180,27 @@ public class SplitPdfByChaptersController {
     }
 
     private TempFile createZipFile(
-            File sourceFile,
-            List<Bookmark> bookmarks,
-            PdfMetadata metadata,
-            int totalPages,
-            boolean hasForm)
+            File sourceFile, List<Bookmark> bookmarks, PdfMetadata metadata, int totalPages, boolean hasForm)
             throws Exception {
         String fileNumberFormatter = "%0" + (Integer.toString(bookmarks.size()).length()) + "d ";
         TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
-        try (ZipOutputStream zipOut =
-                new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
             if (hasForm) {
                 // JPDFium's FPDF_ImportPagesByIndex drops the AcroForm dictionary. For form
                 // PDFs, do the per-chapter extract via PDFBox so form fields survive the split.
                 for (int i = 0; i < bookmarks.size(); i++) {
                     writeChapterViaPdfBox(
-                            sourceFile,
-                            bookmarks.get(i),
-                            i,
-                            fileNumberFormatter,
-                            metadata,
-                            zipOut,
-                            totalPages);
+                            sourceFile, bookmarks.get(i), i, fileNumberFormatter, metadata, zipOut, totalPages);
                 }
             } else {
                 try (PdfDocument sourceDocument = PdfDocument.open(sourceFile.toPath())) {
                     for (int i = 0; i < bookmarks.size(); i++) {
                         writeChapterViaJpdfium(
-                                sourceDocument,
-                                bookmarks.get(i),
-                                i,
-                                fileNumberFormatter,
-                                metadata,
-                                zipOut,
-                                totalPages);
+                                sourceDocument, bookmarks.get(i), i, fileNumberFormatter, metadata, zipOut, totalPages);
                     }
                 }
             }
-            log.info(
-                    "Successfully created zip file with split documents: {}",
-                    zipTempFile.getPath());
+            log.info("Successfully created zip file with split documents: {}", zipTempFile.getPath());
             return zipTempFile;
         } catch (Exception e) {
             zipTempFile.close();
@@ -303,10 +266,7 @@ public class SplitPdfByChaptersController {
             if (metadata != null) {
                 pdfMetadataService.setMetadataToPdf(doc, metadata);
             }
-            String fileName =
-                    String.format(Locale.ROOT, fileNumberFormatter, index)
-                            + bookmark.getTitle()
-                            + ".pdf";
+            String fileName = String.format(Locale.ROOT, fileNumberFormatter, index) + bookmark.getTitle() + ".pdf";
             zipOut.putNextEntry(new ZipEntry(fileName));
             doc.save(zipOut);
             zipOut.closeEntry();
@@ -315,11 +275,7 @@ public class SplitPdfByChaptersController {
     }
 
     private void writeZipEntry(
-            ZipOutputStream zipOut,
-            String fileNumberFormatter,
-            int index,
-            String title,
-            Path pdfPath)
+            ZipOutputStream zipOut, String fileNumberFormatter, int index, String title, Path pdfPath)
             throws IOException {
         String fileName = String.format(Locale.ROOT, fileNumberFormatter, index) + title + ".pdf";
         zipOut.putNextEntry(new ZipEntry(fileName));

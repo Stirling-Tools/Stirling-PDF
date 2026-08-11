@@ -21,11 +21,10 @@ class ApplicationPropertiesSaml2HttpTest {
     @Test
     void idpMetadataUri_http_is_resolved_via_mockwebserver() throws Exception {
         try (MockWebServer server = new MockWebServer()) {
-            server.enqueue(
-                    new MockResponse()
-                            .setResponseCode(200)
-                            .addHeader("Content-Type", MediaType.APPLICATION_XML_VALUE)
-                            .setBody("<EntityDescriptor/>"));
+            server.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .addHeader("Content-Type", MediaType.APPLICATION_XML_VALUE)
+                    .setBody("<EntityDescriptor/>"));
             server.start();
 
             String url = server.url("/meta").toString();

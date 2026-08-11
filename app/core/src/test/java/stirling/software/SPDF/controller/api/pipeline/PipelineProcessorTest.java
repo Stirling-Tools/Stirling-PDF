@@ -31,21 +31,24 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class PipelineProcessorTest {
 
-    @Mock ApiDocService apiDocService;
+    @Mock
+    ApiDocService apiDocService;
 
-    @Mock ToolMetadataService toolMetadataService;
+    @Mock
+    ToolMetadataService toolMetadataService;
 
-    @Mock InternalApiClient internalApiClient;
+    @Mock
+    InternalApiClient internalApiClient;
 
-    @Mock TempFileManager tempFileManager;
+    @Mock
+    TempFileManager tempFileManager;
 
     PipelineProcessor pipelineProcessor;
 
     @BeforeEach
     void setUp() throws Exception {
         pipelineProcessor =
-                new PipelineProcessor(
-                        apiDocService, toolMetadataService, internalApiClient, tempFileManager);
+                new PipelineProcessor(apiDocService, toolMetadataService, internalApiClient, tempFileManager);
     }
 
     @Test
@@ -69,16 +72,13 @@ class PipelineProcessorTest {
         Path emptyTemp = Files.createTempFile("empty", ".tmp");
         Resource emptyResource = new FileSystemResource(emptyTemp.toFile());
 
-        when(internalApiClient.post(anyString(), any()))
-                .thenReturn(new ResponseEntity<>(emptyResource, HttpStatus.OK));
+        when(internalApiClient.post(anyString(), any())).thenReturn(new ResponseEntity<>(emptyResource, HttpStatus.OK));
 
         PipelineResult result = pipelineProcessor.runPipelineAgainstFiles(files, config);
 
         Files.deleteIfExists(emptyTemp);
 
-        assertTrue(
-                result.isFiltersApplied(),
-                "Filter flag should be true when operation filters file");
+        assertTrue(result.isFiltersApplied(), "Filter flag should be true when operation filters file");
         assertFalse(result.isHasErrors(), "No errors should occur");
         assertTrue(result.getOutputFiles().isEmpty(), "Filtered file list should be empty");
     }
@@ -96,17 +96,15 @@ class PipelineProcessorTest {
 
         Path tempPath = Files.createTempFile("test-output", ".pdf");
         Files.write(tempPath, "processed_data".getBytes());
-        Resource outputResource =
-                new FileSystemResource(tempPath.toFile()) {
-                    @Override
-                    public String getFilename() {
-                        return "processed.pdf";
-                    }
-                };
+        Resource outputResource = new FileSystemResource(tempPath.toFile()) {
+            @Override
+            public String getFilename() {
+                return "processed.pdf";
+            }
+        };
 
         when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
-        when(toolMetadataService.getExtensionTypes(anyBoolean(), anyString()))
-                .thenReturn(List.of("pdf"));
+        when(toolMetadataService.getExtensionTypes(anyBoolean(), anyString())).thenReturn(List.of("pdf"));
         when(apiDocService.isValidOperation(anyString(), anyMap())).thenReturn(true);
 
         when(internalApiClient.post(anyString(), any()))

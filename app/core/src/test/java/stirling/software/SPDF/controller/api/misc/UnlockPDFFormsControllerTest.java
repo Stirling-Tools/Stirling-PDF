@@ -28,8 +28,11 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class UnlockPDFFormsControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private UnlockPDFFormsController controller;
 
@@ -37,25 +40,16 @@ class UnlockPDFFormsControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
         controller = new UnlockPDFFormsController(pdfDocumentFactory, tempFileManager);
         mockPdfFile =
-                new MockMultipartFile(
-                        "fileInput",
-                        "test.pdf",
-                        "application/pdf",
-                        new byte[] {0x25, 0x50, 0x44, 0x46});
+                new MockMultipartFile("fileInput", "test.pdf", "application/pdf", new byte[] {0x25, 0x50, 0x44, 0x46});
     }
 
     @Test
@@ -93,8 +87,7 @@ class UnlockPDFFormsControllerTest {
 
     @Test
     void unlockPDFForms_withLoadException_returnsNull() throws Exception {
-        when(pdfDocumentFactory.load(any(PDFFile.class)))
-                .thenThrow(new java.io.IOException("Failed to load"));
+        when(pdfDocumentFactory.load(any(PDFFile.class))).thenThrow(new java.io.IOException("Failed to load"));
 
         PDFFile file = new PDFFile();
         file.setFileInput(mockPdfFile);

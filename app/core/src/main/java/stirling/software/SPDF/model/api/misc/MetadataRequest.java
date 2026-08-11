@@ -77,8 +77,7 @@ public class MetadataRequest extends PDFFile {
     private String trapped;
 
     @Schema(
-            description =
-                    "Map list of key and value of custom parameters. Note these must start with"
-                            + " customKey and customValue if they are non-standard")
+            description = "Map list of key and value of custom parameters. Note these must start with"
+                    + " customKey and customValue if they are non-standard")
     private Map<String, String> allRequestParams;
 }

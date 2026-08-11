@@ -32,8 +32,7 @@ public final class PdfModels {
         public static Bounds merge(Bounds a, Bounds b) {
             float x = Math.min(a.x, b.x);
             float y = Math.min(a.y, b.y);
-            return new Bounds(
-                    x, y, Math.max(a.right(), b.right()) - x, Math.max(a.bottom(), b.bottom()) - y);
+            return new Bounds(x, y, Math.max(a.right(), b.right()) - x, Math.max(a.bottom(), b.bottom()) - y);
         }
     }
 
@@ -53,8 +52,7 @@ public final class PdfModels {
             String fontName,
             boolean bold) {}
 
-    public record RawLine(
-            String lineId, List<TextFragment> fragments, Bounds bounds, int pageNumber) {
+    public record RawLine(String lineId, List<TextFragment> fragments, Bounds bounds, int pageNumber) {
 
         public String text() {
             if (fragments.isEmpty()) return "";
@@ -63,7 +61,8 @@ public final class PdfModels {
             for (TextFragment f : fragments) {
                 if (prev != null) {
                     float gap = f.bounds().x() - prev.bounds().right();
-                    float avgCharWidth = prev.bounds().width() / Math.max(prev.text().length(), 1);
+                    float avgCharWidth =
+                            prev.bounds().width() / Math.max(prev.text().length(), 1);
                     if (gap > avgCharWidth * 0.5f) sb.append(' ');
                 }
                 sb.append(f.text());
@@ -124,11 +123,7 @@ public final class PdfModels {
     // ── Page output ───────────────────────────────────────────────────────────
 
     public record ParsedPage(
-            int pageNumber,
-            float widthPt,
-            float heightPt,
-            List<TableFragment> tables,
-            List<RawLine> layoutLines) {}
+            int pageNumber, float widthPt, float heightPt, List<TableFragment> tables, List<RawLine> layoutLines) {}
 
     // ── Parser contract ───────────────────────────────────────────────────────
 

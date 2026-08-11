@@ -16,7 +16,6 @@ public class YamlPropertySourceFactory implements PropertySourceFactory {
         factory.setResources(encodedResource.getResource());
         Properties properties = factory.getObject();
 
-        return new PropertiesPropertySource(
-                encodedResource.getResource().getFilename(), properties);
+        return new PropertiesPropertySource(encodedResource.getResource().getFilename(), properties);
     }
 }

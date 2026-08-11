@@ -76,11 +76,8 @@ public class PdfMarkdownConverter {
             // header keeps this page out of the two-column path so the continuation is rebuilt as a
             // table and stitched back onto the previous block.
             final String continuationHeader = prevPageTrailingTableHeader;
-            boolean tableContinuation =
-                    continuationHeader != null
-                            && lines.stream()
-                                    .anyMatch(
-                                            l -> normaliseSpace(l.text).equals(continuationHeader));
+            boolean tableContinuation = continuationHeader != null
+                    && lines.stream().anyMatch(l -> normaliseSpace(l.text).equals(continuationHeader));
 
             boolean twoColumn = !tableContinuation && detectsTwoColumns(lines);
 
@@ -129,8 +126,7 @@ public class PdfMarkdownConverter {
                 }
                 for (int s = 0; s <= blocks.size(); s++) {
                     List<String> paras = new ArrayList<>();
-                    assembleParagraphs(
-                            segments.get(s), medianSize, medianHeight, paras, tableRowTexts);
+                    assembleParagraphs(segments.get(s), medianSize, medianHeight, paras, tableRowTexts);
                     pageItems.addAll(paras);
                     if (s < blocks.size()) {
                         pageItems.add(blocks.get(s));
@@ -352,12 +348,11 @@ public class PdfMarkdownConverter {
     }
 
     private static List<List<Line>> splitIntoColumns(List<Line> lines) {
-        List<Float> xs =
-                lines.stream()
-                        .filter(l -> l.width >= 40f)
-                        .map(l -> l.x)
-                        .sorted()
-                        .collect(Collectors.toList());
+        List<Float> xs = lines.stream()
+                .filter(l -> l.width >= 40f)
+                .map(l -> l.x)
+                .sorted()
+                .collect(Collectors.toList());
         if (xs.isEmpty()) {
             return List.of(lines);
         }
@@ -393,11 +388,7 @@ public class PdfMarkdownConverter {
     // --- Paragraph assembly ------------------------------------------------
 
     private static void assembleParagraphs(
-            List<Line> lines,
-            float medianSize,
-            float medianHeight,
-            List<String> out,
-            Set<String> tableRowTexts) {
+            List<Line> lines, float medianSize, float medianHeight, List<String> out, Set<String> tableRowTexts) {
         StringBuilder para = new StringBuilder();
         float prevBottomY = Float.MAX_VALUE;
         float prevHeight = 0f;
@@ -472,11 +463,10 @@ public class PdfMarkdownConverter {
      * treated as wrapped-cell continuations and absorbed into the nearest anchor row above them.
      */
     private static List<TableBlock> findTableBlocks(List<Line> lines) {
-        List<Line> cands =
-                lines.stream()
-                        .filter(l -> isTableCandidate(l.source))
-                        .sorted(Comparator.comparingDouble((Line l) -> l.y).reversed())
-                        .collect(Collectors.toList());
+        List<Line> cands = lines.stream()
+                .filter(l -> isTableCandidate(l.source))
+                .sorted(Comparator.comparingDouble((Line l) -> l.y).reversed())
+                .collect(Collectors.toList());
         if (cands.size() < 2) {
             return List.of();
         }
@@ -504,9 +494,7 @@ public class PdfMarkdownConverter {
         anchorGroups.add(current);
 
         List<Line> nonCandidates =
-                lines.stream()
-                        .filter(l -> !isTableCandidate(l.source))
-                        .collect(Collectors.toList());
+                lines.stream().filter(l -> !isTableCandidate(l.source)).collect(Collectors.toList());
 
         List<TableBlock> blocks = new ArrayList<>();
         for (List<Line> anchors : anchorGroups) {
@@ -593,7 +581,8 @@ public class PdfMarkdownConverter {
         // the
         // column count is real, not an artefact), and that most rows are genuinely multi-column.
         int anchorWidth = Math.max(2, Math.round(cols * 0.6f));
-        long anchorRows = rows.stream().filter(r -> filledCells(r) >= anchorWidth).count();
+        long anchorRows =
+                rows.stream().filter(r -> filledCells(r) >= anchorWidth).count();
         long multiColumnRows = rows.stream().filter(r -> filledCells(r) >= 2).count();
         if (anchorRows < 1 || multiColumnRows < 2 || multiColumnRows < rows.size() * 0.5) {
             return "";
@@ -816,7 +805,8 @@ public class PdfMarkdownConverter {
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             switch (c) {
-                case '\\', '`', '*', '_', '[', ']', '<', '>', '|', '~' -> sb.append('\\').append(c);
+                case '\\', '`', '*', '_', '[', ']', '<', '>', '|', '~' ->
+                    sb.append('\\').append(c);
                 default -> sb.append(c);
             }
         }
@@ -853,11 +843,9 @@ public class PdfMarkdownConverter {
 
     // --- Page-level emission helpers ---------------------------------------
 
-    private static void emitImages(PdfDocument doc, int pageIndex, List<Object> pageItems)
-            throws IOException {
+    private static void emitImages(PdfDocument doc, int pageIndex, List<Object> pageItems) throws IOException {
         try (PdfPage page = doc.page(pageIndex)) {
-            List<ExtractedImage> images =
-                    PdfImageExtractor.extract(page.rawDocHandle(), page.rawHandle(), pageIndex);
+            List<ExtractedImage> images = PdfImageExtractor.extract(page.rawDocHandle(), page.rawHandle(), pageIndex);
             for (ExtractedImage img : images) {
                 pageItems.add(describeImage(img));
             }
@@ -910,13 +898,10 @@ public class PdfMarkdownConverter {
         }
         // Only merge a sentence continuation between two text paragraphs, never into/out of a
         // table.
-        if (!(output.get(output.size() - 1) instanceof String last)
-                || !(pageItems.get(0) instanceof String first)) {
+        if (!(output.get(output.size() - 1) instanceof String last) || !(pageItems.get(0) instanceof String first)) {
             return;
         }
-        if (!first.isEmpty()
-                && Character.isLowerCase(first.charAt(0))
-                && !endsWithSentencePunctuation(last)) {
+        if (!first.isEmpty() && Character.isLowerCase(first.charAt(0)) && !endsWithSentencePunctuation(last)) {
             output.set(output.size() - 1, last + " " + first);
             pageItems.remove(0);
         }

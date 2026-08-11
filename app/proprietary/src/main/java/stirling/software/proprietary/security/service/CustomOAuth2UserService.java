@@ -53,9 +53,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
         String usernameAttributeKey = null;
 
         try {
-            usernameAttributeKey =
-                    UsernameAttribute.valueOf(oauth2Properties.getUseAsUsername().toUpperCase())
-                            .getName();
+            usernameAttributeKey = UsernameAttribute.valueOf(
+                            oauth2Properties.getUseAsUsername().toUpperCase())
+                    .getName();
             OidcUser user = delegate.loadUser(userRequest);
 
             if (debugLogging) {
@@ -84,10 +84,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
             if (internalUser.isPresent()) {
                 String internalUsername = internalUser.get().getUsername();
                 if (loginAttemptService.isBlocked(internalUsername)) {
-                    throw new LockedException(
-                            "The account "
-                                    + internalUsername
-                                    + " has been locked due to too many failed login attempts.");
+                    throw new LockedException("The account "
+                            + internalUsername
+                            + " has been locked due to too many failed login attempts.");
                 }
                 if (userService.hasPassword(usernameAttributeKey)) {
                     throw new IllegalArgumentException("Password must not be null");
@@ -96,10 +95,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
 
             // Return a new OidcUser with adjusted attributes
             return new DefaultOidcUser(
-                    user.getAuthorities(),
-                    userRequest.getIdToken(),
-                    user.getUserInfo(),
-                    usernameAttributeKey);
+                    user.getAuthorities(), userRequest.getIdToken(), user.getUserInfo(), usernameAttributeKey);
         } catch (IllegalArgumentException e) {
             log.error("Error loading OIDC user: {}", e.getMessage());
             // Only emit the claim dump if we successfully resolved usernameAttributeKey. A null
@@ -202,19 +198,17 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
             if (resolved == null) {
                 Set<String> hints = suggestUsernameClaims(mergedAttributes.keySet());
                 if (!hints.isEmpty()) {
-                    sb.append(
-                                    "-- Hint: the following claim(s) are present and map to a"
-                                            + " known UsernameAttribute value — try setting"
-                                            + " security.oauth2.useAsUsername to one of: ")
+                    sb.append("-- Hint: the following claim(s) are present and map to a"
+                                    + " known UsernameAttribute value — try setting"
+                                    + " security.oauth2.useAsUsername to one of: ")
                             .append(hints)
                             .append('\n');
                 }
             }
         }
 
-        sb.append(
-                "\nWARNING: this block contains PII. Set security.oauth2.debugLogging=false once"
-                        + " troubleshooting is complete.\n");
+        sb.append("\nWARNING: this block contains PII. Set security.oauth2.debugLogging=false once"
+                + " troubleshooting is complete.\n");
         sb.append("========== [/OAUTH2 DEBUG] ==========");
 
         if (failure) {
@@ -230,12 +224,10 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
             return;
         }
         // Sort for stable, scannable output
-        new TreeSet<>(claims.keySet())
-                .forEach(
-                        key -> {
-                            Object value = claims.get(key);
-                            sb.append("  ").append(key).append(" = ").append(value).append('\n');
-                        });
+        new TreeSet<>(claims.keySet()).forEach(key -> {
+            Object value = claims.get(key);
+            sb.append("  ").append(key).append(" = ").append(value).append('\n');
+        });
     }
 
     /**

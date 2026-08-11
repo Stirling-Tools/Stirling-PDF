@@ -27,8 +27,7 @@ import stirling.software.proprietary.service.AuditService;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@org.springframework.core.annotation.Order(
-        10) // Lower precedence (higher number) - executes after AutoJobAspect
+@org.springframework.core.annotation.Order(10) // Lower precedence (higher number) - executes after AutoJobAspect
 public class AuditAspect {
 
     private final AuditService auditService;
@@ -60,8 +59,7 @@ public class AuditAspect {
             capturedOrigin = auditService.captureCurrentOrigin();
         }
 
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest req = attrs != null ? attrs.getRequest() : null;
 
         String capturedIp = MDC.get("auditIp");
@@ -71,8 +69,7 @@ public class AuditAspect {
         }
 
         // Only create the map once we know we'll use it
-        Map<String, Object> auditData =
-                auditService.createBaseAuditData(joinPoint, auditedAnnotation.level());
+        Map<String, Object> auditData = auditService.createBaseAuditData(joinPoint, auditedAnnotation.level());
 
         // Add HTTP information if we're in a web context
         if (attrs != null) {
@@ -116,9 +113,7 @@ public class AuditAspect {
             auditData.put("status", "success");
 
             // Add result only if requested in annotation AND operation result capture is enabled
-            boolean includeResult =
-                    auditedAnnotation.includeResult()
-                            && auditService.shouldCaptureOperationResults();
+            boolean includeResult = auditedAnnotation.includeResult() && auditService.shouldCaptureOperationResults();
 
             if (includeResult && result != null) {
                 // Use safe string conversion with size limiting
@@ -139,8 +134,7 @@ public class AuditAspect {
             // methods
             HttpServletResponse resp = attrs != null ? attrs.getResponse() : null;
             boolean isHttpRequest = attrs != null;
-            auditService.addTimingData(
-                    auditData, startTime, resp, auditedAnnotation.level(), isHttpRequest);
+            auditService.addTimingData(auditData, startTime, resp, auditedAnnotation.level(), isHttpRequest);
 
             // Merge controller-set policy context + the internal-automation marker onto the event.
             auditService.addAutomationContext(auditData, req);
@@ -153,13 +147,8 @@ public class AuditAspect {
                 path = req.getRequestURI();
             }
 
-            AuditEventType eventType =
-                    auditService.resolveEventType(
-                            method,
-                            joinPoint.getTarget().getClass(),
-                            path,
-                            httpMethod,
-                            auditedAnnotation);
+            AuditEventType eventType = auditService.resolveEventType(
+                    method, joinPoint.getTarget().getClass(), path, httpMethod, auditedAnnotation);
 
             // Check if we should use string type instead
             String typeString = auditedAnnotation.typeString();
@@ -175,12 +164,7 @@ public class AuditAspect {
             } else {
                 // Use the enum type with early-captured values
                 auditService.audit(
-                        capturedPrincipal,
-                        capturedOrigin,
-                        capturedIp,
-                        eventType,
-                        auditData,
-                        auditedAnnotation.level());
+                        capturedPrincipal, capturedOrigin, capturedIp, eventType, auditData, auditedAnnotation.level());
             }
         }
     }

@@ -57,8 +57,7 @@ public class TempFileUtil {
      * @return The result of the function
      * @throws IOException If an I/O error occurs
      */
-    public static <R> R withTempFile(
-            TempFileManager tempFileManager, String suffix, Function<File, R> function)
+    public static <R> R withTempFile(TempFileManager tempFileManager, String suffix, Function<File, R> function)
             throws IOException {
         File tempFile = tempFileManager.createTempFile(suffix);
         try {
@@ -80,10 +79,7 @@ public class TempFileUtil {
      * @throws IOException If an I/O error occurs
      */
     public static <R> R withMultipleTempFiles(
-            TempFileManager tempFileManager,
-            int count,
-            String suffix,
-            Function<List<File>, R> function)
+            TempFileManager tempFileManager, int count, String suffix, Function<List<File>, R> function)
             throws IOException {
         List<File> tempFiles = new ArrayList<>(count);
         try {

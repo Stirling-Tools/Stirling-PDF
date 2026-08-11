@@ -29,11 +29,17 @@ import stirling.software.common.model.job.ResultFile;
 
 class TaskManagerTest {
 
-    @Mock private FileStorage fileStorage;
-    @Mock private JobStore jobStore;
-    @Mock private ClusterBackplane clusterBackplane;
+    @Mock
+    private FileStorage fileStorage;
 
-    @InjectMocks private TaskManager taskManager;
+    @Mock
+    private JobStore jobStore;
+
+    @Mock
+    private ClusterBackplane clusterBackplane;
+
+    @InjectMocks
+    private TaskManager taskManager;
 
     private AutoCloseable closeable;
 
@@ -199,8 +205,7 @@ class TaskManagerTest {
         // 2. Create completed successful job with file
         String successFileJobId = "success-file-job";
         taskManager.createTask(successFileJobId);
-        taskManager.setFileResult(
-                successFileJobId, "file-id", "test.pdf", MediaType.APPLICATION_PDF_VALUE);
+        taskManager.setFileResult(successFileJobId, "file-id", "test.pdf", MediaType.APPLICATION_PDF_VALUE);
 
         // 3. Create completed successful job without file
         String successJobId = "success-job";
@@ -249,13 +254,12 @@ class TaskManagerTest {
         ReflectionTestUtils.setField(oldJob, "complete", true);
 
         // Create a ResultFile and set it using the new approach
-        ResultFile resultFile =
-                ResultFile.builder()
-                        .fileId("file-id")
-                        .fileName("test.pdf")
-                        .contentType(MediaType.APPLICATION_PDF_VALUE)
-                        .fileSize(1024L)
-                        .build();
+        ResultFile resultFile = ResultFile.builder()
+                .fileId("file-id")
+                .fileName("test.pdf")
+                .contentType(MediaType.APPLICATION_PDF_VALUE)
+                .fileSize(1024L)
+                .build();
         ReflectionTestUtils.setField(oldJob, "resultFiles", java.util.List.of(resultFile));
 
         when(fileStorage.deleteFile("file-id")).thenReturn(true);

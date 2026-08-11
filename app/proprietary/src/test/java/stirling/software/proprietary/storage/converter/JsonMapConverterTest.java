@@ -91,7 +91,6 @@ class JsonMapConverterTest {
 
     @Test
     void convertToEntityAttribute_malformedJson_doesNotThrow() {
-        assertThatCode(() -> converter.convertToEntityAttribute("{broken"))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> converter.convertToEntityAttribute("{broken")).doesNotThrowAnyException();
     }
 }

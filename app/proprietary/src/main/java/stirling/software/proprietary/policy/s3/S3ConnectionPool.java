@@ -43,20 +43,16 @@ public class S3ConnectionPool {
     }
 
     /** Factory-injecting constructor for tests. */
-    public S3ConnectionPool(
-            ApplicationProperties applicationProperties,
-            Function<S3Config, S3Client> clientFactory) {
+    public S3ConnectionPool(ApplicationProperties applicationProperties, Function<S3Config, S3Client> clientFactory) {
         this.applicationProperties = applicationProperties;
         this.clientFactory = clientFactory;
     }
 
     public S3Client clientFor(S3Config config) {
-        return clients.computeIfAbsent(
-                config,
-                c -> {
-                    requirePermittedEndpoint(c);
-                    return clientFactory.apply(c);
-                });
+        return clients.computeIfAbsent(config, c -> {
+            requirePermittedEndpoint(c);
+            return clientFactory.apply(c);
+        });
     }
 
     /**
@@ -72,28 +68,23 @@ public class S3ConnectionPool {
                     URI.create(config.endpoint()),
                     applicationProperties.getPolicies().isAllowPrivateS3Endpoints(),
                     "S3 source endpoint",
-                    "set policies.allowPrivateS3Endpoints=true to opt in (e.g. for a local"
-                            + " MinIO).");
+                    "set policies.allowPrivateS3Endpoints=true to opt in (e.g. for a local" + " MinIO).");
         } catch (IllegalStateException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
     }
 
     private static S3Client buildClient(S3Config config) {
-        S3ClientBuilder builder =
-                S3Client.builder()
-                        .httpClient(UrlConnectionHttpClient.create())
-                        .region(Region.of(config.region()))
-                        // Path-style addressing whenever a custom endpoint is set: S3-compatible
-                        // stores rarely support virtual-hosted bucket DNS.
-                        .serviceConfiguration(
-                                S3Configuration.builder()
-                                        .pathStyleAccessEnabled(config.endpoint() != null)
-                                        .build())
-                        .credentialsProvider(
-                                StaticCredentialsProvider.create(
-                                        AwsBasicCredentials.create(
-                                                config.accessKeyId(), config.secretAccessKey())));
+        S3ClientBuilder builder = S3Client.builder()
+                .httpClient(UrlConnectionHttpClient.create())
+                .region(Region.of(config.region()))
+                // Path-style addressing whenever a custom endpoint is set: S3-compatible
+                // stores rarely support virtual-hosted bucket DNS.
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(config.endpoint() != null)
+                        .build())
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(config.accessKeyId(), config.secretAccessKey())));
         if (config.endpoint() != null) {
             builder.endpointOverride(URI.create(config.endpoint()));
         }

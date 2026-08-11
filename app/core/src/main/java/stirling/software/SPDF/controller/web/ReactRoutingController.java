@@ -36,33 +36,30 @@ import stirling.software.common.configuration.InstallationPathConfig;
 @Controller
 public class ReactRoutingController {
 
-    private static final org.slf4j.Logger log =
-            org.slf4j.LoggerFactory.getLogger(ReactRoutingController.class);
-    private static final Pattern BASE_HREF_PATTERN =
-            Pattern.compile("<base href=\\\"[^\\\"]*\\\"\\s*/?>");
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ReactRoutingController.class);
+    private static final Pattern BASE_HREF_PATTERN = Pattern.compile("<base href=\\\"[^\\\"]*\\\"\\s*/?>");
 
     // First path segments owned by the backend or static assets, never SPA routes.
     // Mirrors the exclusion regexes on forwardRootPaths/forwardNestedPaths below.
-    private static final Set<String> NON_SPA_FIRST_SEGMENTS =
-            Set.of(
-                    "api",
-                    "static",
-                    "pipeline",
-                    "pdfjs",
-                    "pdfjs-legacy",
-                    "pdfium",
-                    "vendor",
-                    "fonts",
-                    "images",
-                    "css",
-                    "js",
-                    "assets",
-                    "locales",
-                    "modern-logo",
-                    "classic-logo",
-                    "Login",
-                    "og_images",
-                    "samples");
+    private static final Set<String> NON_SPA_FIRST_SEGMENTS = Set.of(
+            "api",
+            "static",
+            "pipeline",
+            "pdfjs",
+            "pdfjs-legacy",
+            "pdfium",
+            "vendor",
+            "fonts",
+            "images",
+            "css",
+            "js",
+            "assets",
+            "locales",
+            "modern-logo",
+            "classic-logo",
+            "Login",
+            "og_images",
+            "samples");
 
     // After the annotated controllers (order 0), before the resource chain
     // (LOWEST_PRECEDENCE - 1).
@@ -133,8 +130,7 @@ public class ReactRoutingController {
         this.indexHtmlExists = true;
         this.useExternalIndexHtml = false;
         this.loggedMissingIndex = true;
-        log.warn(
-                "index.html not found in classpath or custom path; using lightweight fallback page");
+        log.warn("index.html not found in classpath or custom path; using lightweight fallback page");
     }
 
     private String processIndexHtml() {
@@ -156,14 +152,10 @@ public class ReactRoutingController {
                 String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
                 html = html.replace("%BASE_URL%", baseUrl);
                 // Also rewrite any existing <base> tag (Vite may have baked one in)
-                html =
-                        BASE_HREF_PATTERN
-                                .matcher(html)
-                                .replaceFirst("<base href=\\\"" + baseUrl + "\\\" />");
+                html = BASE_HREF_PATTERN.matcher(html).replaceFirst("<base href=\\\"" + baseUrl + "\\\" />");
 
                 // Inject context path as a global variable for API calls
-                String contextPathScript =
-                        "<script>window.STIRLING_PDF_API_BASE_URL = '" + baseUrl + "';</script>";
+                String contextPathScript = "<script>window.STIRLING_PDF_API_BASE_URL = '" + baseUrl + "';</script>";
                 html = html.replace("</head>", contextPathScript + "</head>");
 
                 return html;
@@ -287,8 +279,7 @@ public class ReactRoutingController {
 
     @GetMapping(
             "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
-    public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
-            throws IOException {
+    public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request) throws IOException {
         return serveIndexHtml(request);
     }
 
@@ -303,25 +294,20 @@ public class ReactRoutingController {
     // position where a catch-all fallback is safe.
     @Bean
     public RouterFunctionMapping spaDeepLinkFallbackMapping() {
-        RouterFunction<ServerResponse> fallback =
-                RouterFunctions.route(
-                        request -> {
-                            HttpServletRequest servletRequest = request.servletRequest();
-                            return "GET".equals(servletRequest.getMethod())
-                                    && isSpaFallbackRoute(
-                                            stripContextPath(
-                                                    servletRequest.getContextPath(),
-                                                    servletRequest.getRequestURI()));
-                        },
-                        request ->
-                                ServerResponse.ok()
-                                        .cacheControl(CacheControl.noCache().mustRevalidate())
-                                        .contentType(MediaType.TEXT_HTML)
-                                        .body(serveIndexHtml(request.servletRequest()).getBody()));
+        RouterFunction<ServerResponse> fallback = RouterFunctions.route(
+                request -> {
+                    HttpServletRequest servletRequest = request.servletRequest();
+                    return "GET".equals(servletRequest.getMethod())
+                            && isSpaFallbackRoute(
+                                    stripContextPath(servletRequest.getContextPath(), servletRequest.getRequestURI()));
+                },
+                request -> ServerResponse.ok()
+                        .cacheControl(CacheControl.noCache().mustRevalidate())
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(serveIndexHtml(request.servletRequest()).getBody()));
         RouterFunctionMapping mapping = new RouterFunctionMapping(fallback);
         mapping.setOrder(SPA_FALLBACK_ORDER);
-        mapping.setMessageConverters(
-                List.of(new StringHttpMessageConverter(StandardCharsets.UTF_8)));
+        mapping.setMessageConverters(List.of(new StringHttpMessageConverter(StandardCharsets.UTF_8)));
         return mapping;
     }
 
@@ -333,9 +319,7 @@ public class ReactRoutingController {
             return false;
         }
         String[] segments = (path.startsWith("/") ? path.substring(1) : path).split("/");
-        return segments.length > 0
-                && !segments[0].isEmpty()
-                && !NON_SPA_FIRST_SEGMENTS.contains(segments[0]);
+        return segments.length > 0 && !segments[0].isEmpty() && !NON_SPA_FIRST_SEGMENTS.contains(segments[0]);
     }
 
     private static String stripContextPath(String contextPath, String uri) {
@@ -400,8 +384,7 @@ public class ReactRoutingController {
                     <p>Stirling PDF is running.</p>
                   </body>
                 </html>
-                """
-                .formatted(escapedBaseUrlHtml, escapedBaseUrlJs, serverUrl);
+                """.formatted(escapedBaseUrlHtml, escapedBaseUrlJs, serverUrl);
     }
 
     private String buildCallbackHtml() {
@@ -646,7 +629,6 @@ public class ReactRoutingController {
                     </div>
                   </body>
                 </html>
-                """
-                .formatted(escapedBaseUrlHtml, serverUrl);
+                """.formatted(escapedBaseUrlHtml, serverUrl);
     }
 }

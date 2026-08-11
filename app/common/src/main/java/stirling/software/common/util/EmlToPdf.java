@@ -11,20 +11,16 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @UtilityClass
 public class EmlToPdf {
 
-    public static String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request)
-            throws IOException {
+    public static String convertEmlToHtml(byte[] emlBytes, EmlToPdfRequest request) throws IOException {
         return convertEmlToHtml(emlBytes, request, null);
     }
 
     public static String convertEmlToHtml(
-            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer)
-            throws IOException {
+            byte[] emlBytes, EmlToPdfRequest request, CustomHtmlSanitizer customHtmlSanitizer) throws IOException {
         EmlProcessingUtils.validateEmlInput(emlBytes);
 
-        EmlParser.EmailContent emailContent =
-                EmlParser.extractEmailContent(emlBytes, request, customHtmlSanitizer);
-        return EmlProcessingUtils.generateEnhancedEmailHtml(
-                emailContent, request, customHtmlSanitizer);
+        EmlParser.EmailContent emailContent = EmlParser.extractEmailContent(emlBytes, request, customHtmlSanitizer);
+        return EmlProcessingUtils.generateEnhancedEmailHtml(emailContent, request, customHtmlSanitizer);
     }
 
     public static byte[] convertEmlToPdf(
@@ -40,25 +36,17 @@ public class EmlToPdf {
         EmlProcessingUtils.validateEmlInput(emlBytes);
 
         try {
-            EmlParser.EmailContent emailContent =
-                    EmlParser.extractEmailContent(emlBytes, request, customHtmlSanitizer);
+            EmlParser.EmailContent emailContent = EmlParser.extractEmailContent(emlBytes, request, customHtmlSanitizer);
 
             String htmlContent =
-                    EmlProcessingUtils.generateEnhancedEmailHtml(
-                            emailContent, request, customHtmlSanitizer);
+                    EmlProcessingUtils.generateEnhancedEmailHtml(emailContent, request, customHtmlSanitizer);
 
             byte[] pdfBytes =
-                    convertHtmlToPdf(
-                            weasyprintPath,
-                            request,
-                            htmlContent,
-                            tempFileManager,
-                            customHtmlSanitizer);
+                    convertHtmlToPdf(weasyprintPath, request, htmlContent, tempFileManager, customHtmlSanitizer);
 
             if (shouldAttachFiles(emailContent, request)) {
-                pdfBytes =
-                        PdfAttachmentHandler.attachFilesToPdf(
-                                pdfBytes, emailContent.getAttachments(), pdfDocumentFactory);
+                pdfBytes = PdfAttachmentHandler.attachFilesToPdf(
+                        pdfBytes, emailContent.getAttachments(), pdfDocumentFactory);
             }
 
             return pdfBytes;
@@ -70,8 +58,7 @@ public class EmlToPdf {
         }
     }
 
-    private static boolean shouldAttachFiles(
-            EmlParser.EmailContent emailContent, EmlToPdfRequest request) {
+    private static boolean shouldAttachFiles(EmlParser.EmailContent emailContent, EmlToPdfRequest request) {
         return emailContent != null
                 && request != null
                 && request.isIncludeAttachments()

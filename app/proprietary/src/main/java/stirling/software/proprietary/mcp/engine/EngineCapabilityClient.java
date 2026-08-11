@@ -49,31 +49,27 @@ public class EngineCapabilityClient {
     private ScheduledExecutorService scheduler;
 
     public EngineCapabilityClient(
-            ApplicationProperties applicationProperties,
-            McpToolCatalog catalog,
-            ObjectMapper mapper) {
+            ApplicationProperties applicationProperties, McpToolCatalog catalog, ObjectMapper mapper) {
         this.applicationProperties = applicationProperties;
         this.catalog = catalog;
         this.mapper = mapper;
-        this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+        this.httpClient =
+                HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
         this.sharedSecret = System.getenv("STIRLING_ENGINE_SHARED_SECRET");
     }
 
     @PostConstruct
     void start() {
-        scheduler =
-                Executors.newSingleThreadScheduledExecutor(
-                        r -> {
-                            Thread t = new Thread(r, "mcp-engine-capability-refresh");
-                            t.setDaemon(true);
-                            return t;
-                        });
+        scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "mcp-engine-capability-refresh");
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void onReady() {
-        long minutes =
-                Math.max(1, applicationProperties.getMcp().getEngineCapabilityRefreshMinutes());
+        long minutes = Math.max(1, applicationProperties.getMcp().getEngineCapabilityRefreshMinutes());
         // First refresh immediately, then on the configured cadence.
         scheduler.schedule(this::refreshSafely, 0, TimeUnit.SECONDS);
         scheduler.scheduleAtFixedRate(this::refreshSafely, minutes, minutes, TimeUnit.MINUTES);
@@ -108,20 +104,17 @@ public class EngineCapabilityClient {
         // Trim whitespace and any trailing slash to avoid a malformed URI.
         String base = applicationProperties.getAiEngine().getUrl().strip().replaceAll("/+$", "");
         URI uri = URI.create(base + "/api/v1/agents/capabilities");
-        HttpRequest.Builder reqBuilder =
-                HttpRequest.newBuilder()
-                        .uri(uri)
-                        .timeout(Duration.ofSeconds(10))
-                        .header("Accept", "application/json")
-                        .GET();
+        HttpRequest.Builder reqBuilder = HttpRequest.newBuilder()
+                .uri(uri)
+                .timeout(Duration.ofSeconds(10))
+                .header("Accept", "application/json")
+                .GET();
         if (sharedSecret != null && !sharedSecret.isBlank()) {
             reqBuilder.header("X-Engine-Auth", sharedSecret);
         }
-        HttpResponse<String> response =
-                httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
-            throw new IOException(
-                    "Engine capabilities endpoint returned HTTP " + response.statusCode());
+            throw new IOException("Engine capabilities endpoint returned HTTP " + response.statusCode());
         }
         Map<String, OperationMeta> parsed = parseManifest(response.body());
         catalog.replaceAiCapabilities(parsed);
@@ -157,9 +150,7 @@ public class EngineCapabilityClient {
             }
             // Fail safe: default to the stricter write scope when the manifest omits one.
             String requiredScope =
-                    scope != null && scope.isTextual() && !scope.asText().isBlank()
-                            ? scope.asText()
-                            : WRITE_SCOPE;
+                    scope != null && scope.isTextual() && !scope.asText().isBlank() ? scope.asText() : WRITE_SCOPE;
             ObjectNode schemaCopy = (ObjectNode) schema.deepCopy();
             out.put(
                     id.asText(),

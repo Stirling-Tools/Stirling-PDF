@@ -55,22 +55,18 @@ public class TaskManager {
     private final FileStorage fileStorage;
     private final JobStore jobStore;
     private final ClusterBackplane clusterBackplane;
-    private final ScheduledExecutorService cleanupExecutor =
-            Executors.newSingleThreadScheduledExecutor(
-                    Thread.ofVirtual().name("task-cleanup-", 0).factory());
+    private final ScheduledExecutorService cleanupExecutor = Executors.newSingleThreadScheduledExecutor(
+            Thread.ofVirtual().name("task-cleanup-", 0).factory());
 
     @Autowired
-    public TaskManager(
-            FileStorage fileStorage, JobStore jobStore, ClusterBackplane clusterBackplane) {
+    public TaskManager(FileStorage fileStorage, JobStore jobStore, ClusterBackplane clusterBackplane) {
         this.fileStorage = fileStorage;
         this.jobStore = jobStore;
         this.clusterBackplane = clusterBackplane;
 
         cleanupExecutor.scheduleAtFixedRate(this::cleanupOldJobs, 10, 10, TimeUnit.MINUTES);
 
-        log.debug(
-                "Task manager initialized with job result expiry of {} minutes",
-                jobResultExpiryMinutes);
+        log.debug("Task manager initialized with job result expiry of {} minutes", jobResultExpiryMinutes);
     }
 
     /**
@@ -106,29 +102,25 @@ public class TaskManager {
      * @param originalFileName The original file name
      * @param contentType The content type of the file
      */
-    public void setFileResult(
-            String jobId, String fileId, String originalFileName, String contentType) {
+    public void setFileResult(String jobId, String fileId, String originalFileName, String contentType) {
         JobResult jobResult = getOrCreateJobResult(jobId);
 
         // Check if this is a ZIP file that should be extracted
         if (isZipFile(contentType, originalFileName)) {
             try {
-                List<ResultFile> extractedFiles =
-                        extractZipToIndividualFiles(fileId, originalFileName);
+                List<ResultFile> extractedFiles = extractZipToIndividualFiles(fileId, originalFileName);
                 if (!extractedFiles.isEmpty()) {
                     jobResult.completeWithFiles(extractedFiles);
                     writeThrough(jobId, jobResult);
                     log.debug(
-                            "Set multiple file results for job ID: {} with {} files extracted from"
-                                    + " ZIP",
+                            "Set multiple file results for job ID: {} with {} files extracted from" + " ZIP",
                             jobId,
                             extractedFiles.size());
                     return;
                 }
             } catch (Exception e) {
                 log.warn(
-                        "Failed to extract ZIP file for job {}: {}. Falling back to single file"
-                                + " result.",
+                        "Failed to extract ZIP file for job {}: {}. Falling back to single file" + " result.",
                         jobId,
                         e.getMessage());
             }
@@ -140,8 +132,7 @@ public class TaskManager {
             jobResult.completeWithSingleFile(fileId, originalFileName, contentType, fileSize);
             log.debug("Set single file result for job ID: {} with file ID: {}", jobId, fileId);
         } catch (Exception e) {
-            log.warn(
-                    "Failed to get file size for job {}: {}. Using size 0.", jobId, e.getMessage());
+            log.warn("Failed to get file size for job {}: {}. Using size 0.", jobId, e.getMessage());
             jobResult.completeWithSingleFile(fileId, originalFileName, contentType, 0);
         }
         writeThrough(jobId, jobResult);
@@ -157,10 +148,7 @@ public class TaskManager {
         JobResult jobResult = getOrCreateJobResult(jobId);
         jobResult.completeWithFiles(resultFiles);
         writeThrough(jobId, jobResult);
-        log.debug(
-                "Set multiple file results for job ID: {} with {} files",
-                jobId,
-                resultFiles.size());
+        log.debug("Set multiple file results for job ID: {} with {} files", jobId, resultFiles.size());
     }
 
     /**
@@ -183,9 +171,7 @@ public class TaskManager {
      */
     public void setComplete(String jobId) {
         JobResult jobResult = getOrCreateJobResult(jobId);
-        if (jobResult.getResult() == null
-                && !jobResult.hasFiles()
-                && jobResult.getError() == null) {
+        if (jobResult.getResult() == null && !jobResult.hasFiles() && jobResult.getError() == null) {
             // If no result or error has been set, mark it as complete with an empty result
             jobResult.completeWithResult("Task completed successfully");
         }
@@ -269,10 +255,8 @@ public class TaskManager {
 
                 // Calculate processing time for completed jobs
                 if (result.getCreatedAt() != null && result.getCompletedAt() != null) {
-                    long processingTimeMs =
-                            java.time.Duration.between(
-                                            result.getCreatedAt(), result.getCompletedAt())
-                                    .toMillis();
+                    long processingTimeMs = java.time.Duration.between(result.getCreatedAt(), result.getCompletedAt())
+                            .toMillis();
                     totalProcessingTimeMs += processingTimeMs;
                 }
 
@@ -289,13 +273,11 @@ public class TaskManager {
 
                 // Track oldest and newest active jobs
                 if (result.getCreatedAt() != null) {
-                    if (oldestActiveJobTime == null
-                            || result.getCreatedAt().isBefore(oldestActiveJobTime)) {
+                    if (oldestActiveJobTime == null || result.getCreatedAt().isBefore(oldestActiveJobTime)) {
                         oldestActiveJobTime = result.getCreatedAt();
                     }
 
-                    if (newestActiveJobTime == null
-                            || result.getCreatedAt().isAfter(newestActiveJobTime)) {
+                    if (newestActiveJobTime == null || result.getCreatedAt().isAfter(newestActiveJobTime)) {
                         newestActiveJobTime = result.getCreatedAt();
                     }
                 }
@@ -303,8 +285,7 @@ public class TaskManager {
         }
 
         // Calculate average processing time
-        long averageProcessingTimeMs =
-                completedJobs > 0 ? totalProcessingTimeMs / completedJobs : 0;
+        long averageProcessingTimeMs = completedJobs > 0 ? totalProcessingTimeMs / completedJobs : 0;
 
         return JobStats.builder()
                 .totalJobs(totalJobs)
@@ -334,24 +315,20 @@ public class TaskManager {
         if (clusterBackplane != null && !clusterBackplane.shouldRunLocalCleanup()) {
             return;
         }
-        LocalDateTime expiryThreshold =
-                LocalDateTime.now().minus(jobResultExpiryMinutes, ChronoUnit.MINUTES);
-        LocalDateTime pendingExpiryThreshold =
-                LocalDateTime.now().minus(pendingJobExpiryMinutes, ChronoUnit.MINUTES);
+        LocalDateTime expiryThreshold = LocalDateTime.now().minus(jobResultExpiryMinutes, ChronoUnit.MINUTES);
+        LocalDateTime pendingExpiryThreshold = LocalDateTime.now().minus(pendingJobExpiryMinutes, ChronoUnit.MINUTES);
         int removedCount = 0;
 
         try {
             for (Map.Entry<String, JobResult> entry : jobResults.entrySet()) {
                 JobResult result = entry.getValue();
 
-                boolean expiredCompletedJob =
-                        result.isComplete()
-                                && result.getCompletedAt() != null
-                                && result.getCompletedAt().isBefore(expiryThreshold);
-                boolean abandonedPendingJob =
-                        !result.isComplete()
-                                && result.getCreatedAt() != null
-                                && result.getCreatedAt().isBefore(pendingExpiryThreshold);
+                boolean expiredCompletedJob = result.isComplete()
+                        && result.getCompletedAt() != null
+                        && result.getCompletedAt().isBefore(expiryThreshold);
+                boolean abandonedPendingJob = !result.isComplete()
+                        && result.getCreatedAt() != null
+                        && result.getCreatedAt().isBefore(pendingExpiryThreshold);
 
                 // Remove old terminal results and abandoned pending jobs. Without the second
                 // branch, a client that starts a task and never completes it keeps its result in
@@ -412,15 +389,7 @@ public class TaskManager {
             meta.put("notesCount", Integer.toString(result.getNotes().size()));
         }
         String owningNodeId = clusterBackplane == null ? "local" : clusterBackplane.localNodeId();
-        return new JobStoreEntry(
-                jobId,
-                state,
-                owningNodeId,
-                createdAt,
-                completedAt,
-                result.getError(),
-                fileIds,
-                meta);
+        return new JobStoreEntry(jobId, state, owningNodeId, createdAt, completedAt, result.getError(), fileIds, meta);
     }
 
     private Instant toInstant(LocalDateTime ldt) {
@@ -445,8 +414,7 @@ public class TaskManager {
     /** Check if a file is a ZIP file based on content type and filename */
     private boolean isZipFile(String contentType, String fileName) {
         if (contentType != null
-                && ("application/zip".equals(contentType)
-                        || "application/x-zip-compressed".equals(contentType))) {
+                && ("application/zip".equals(contentType) || "application/x-zip-compressed".equals(contentType))) {
             return true;
         }
 
@@ -458,33 +426,28 @@ public class TaskManager {
     }
 
     /** Extract a ZIP file into individual files and store them */
-    private List<ResultFile> extractZipToIndividualFiles(
-            String zipFileId, String originalZipFileName) throws IOException {
+    private List<ResultFile> extractZipToIndividualFiles(String zipFileId, String originalZipFileName)
+            throws IOException {
         List<ResultFile> extractedFiles = new ArrayList<>();
 
         try (InputStream fileStream = fileStorage.retrieveInputStream(zipFileId);
-                ZipInputStream zipIn =
-                        ZipSecurity.createHardenedInputStream(
-                                new BufferedInputStream(fileStream))) {
+                ZipInputStream zipIn = ZipSecurity.createHardenedInputStream(new BufferedInputStream(fileStream))) {
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {
                     String contentType = determineContentType(entry.getName());
                     // storeInputStream returns the fileId and byte count - no extra stat needed
-                    FileStorage.StoredFile stored =
-                            fileStorage.storeInputStream(zipIn, entry.getName());
+                    FileStorage.StoredFile stored = fileStorage.storeInputStream(zipIn, entry.getName());
 
-                    ResultFile resultFile =
-                            ResultFile.builder()
-                                    .fileId(stored.fileId())
-                                    .fileName(entry.getName())
-                                    .contentType(contentType)
-                                    .fileSize(stored.size())
-                                    .build();
+                    ResultFile resultFile = ResultFile.builder()
+                            .fileId(stored.fileId())
+                            .fileName(entry.getName())
+                            .contentType(contentType)
+                            .fileSize(stored.size())
+                            .build();
 
                     extractedFiles.add(resultFile);
-                    log.debug(
-                            "Extracted file: {} (size: {} bytes)", entry.getName(), stored.size());
+                    log.debug("Extracted file: {} (size: {} bytes)", entry.getName(), stored.size());
                 }
                 zipIn.closeEntry();
             }
@@ -533,11 +496,7 @@ public class TaskManager {
                 try {
                     fileStorage.deleteFile(resultFile.getFileId());
                 } catch (Exception e) {
-                    log.warn(
-                            "Failed to delete file {} for job {}: {}",
-                            resultFile.getFileId(),
-                            jobId,
-                            e.getMessage());
+                    log.warn("Failed to delete file {} for job {}: {}", resultFile.getFileId(), jobId, e.getMessage());
                 }
             }
         }

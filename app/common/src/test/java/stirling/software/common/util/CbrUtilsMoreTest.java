@@ -30,7 +30,8 @@ class CbrUtilsMoreTest {
     private TempFileManager tempFileManager;
     private CustomPDFDocumentFactory factory;
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -53,10 +54,7 @@ class CbrUtilsMoreTest {
         @DisplayName("non-RAR bytes in a .cbr file are rejected as an invalid archive")
         void nonRarContentCbr() {
             byte[] junk = "this is not a rar archive at all".getBytes(StandardCharsets.UTF_8);
-            assertThatThrownBy(
-                            () ->
-                                    CbrUtils.convertCbrToPdf(
-                                            cbr("comic.cbr", junk), factory, tempFileManager))
+            assertThatThrownBy(() -> CbrUtils.convertCbrToPdf(cbr("comic.cbr", junk), factory, tempFileManager))
                     .isInstanceOf(Exception.class);
         }
 
@@ -64,10 +62,7 @@ class CbrUtilsMoreTest {
         @DisplayName("non-RAR bytes in a .rar file are rejected as an invalid archive")
         void nonRarContentRar() {
             byte[] junk = new byte[] {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-            assertThatThrownBy(
-                            () ->
-                                    CbrUtils.convertCbrToPdf(
-                                            cbr("archive.rar", junk), factory, tempFileManager))
+            assertThatThrownBy(() -> CbrUtils.convertCbrToPdf(cbr("archive.rar", junk), factory, tempFileManager))
                     .isInstanceOf(Exception.class);
         }
 
@@ -76,10 +71,7 @@ class CbrUtilsMoreTest {
         void rarSignatureOnly() {
             // "Rar!\x1A\x07\x00" is the classic RAR4 signature; body is missing/garbage.
             byte[] data = {0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55};
-            assertThatThrownBy(
-                            () ->
-                                    CbrUtils.convertCbrToPdf(
-                                            cbr("comic.cbr", data), factory, tempFileManager))
+            assertThatThrownBy(() -> CbrUtils.convertCbrToPdf(cbr("comic.cbr", data), factory, tempFileManager))
                     .isInstanceOf(Exception.class);
         }
     }

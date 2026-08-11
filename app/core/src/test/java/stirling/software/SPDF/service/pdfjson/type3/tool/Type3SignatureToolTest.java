@@ -55,10 +55,7 @@ class Type3SignatureToolTest {
     @Test
     void main_nonExistentPdf_throwsIOException() {
         assertThrows(
-                Exception.class,
-                () ->
-                        Type3SignatureTool.main(
-                                new String[] {"--pdf", "/nonexistent/path/file.pdf"}));
+                Exception.class, () -> Type3SignatureTool.main(new String[] {"--pdf", "/nonexistent/path/file.pdf"}));
     }
 
     @Test

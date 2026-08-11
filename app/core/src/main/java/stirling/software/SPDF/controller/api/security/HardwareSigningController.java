@@ -40,10 +40,9 @@ public class HardwareSigningController {
     @GetMapping("/capabilities")
     @Operation(
             summary = "Hardware signing capabilities",
-            description =
-                    "Reports whether hardware-backed signing is available on this device and which"
-                            + " PKCS#11 driver libraries were detected. Returns desktop=false when"
-                            + " not running as the desktop app.")
+            description = "Reports whether hardware-backed signing is available on this device and which"
+                    + " PKCS#11 driver libraries were detected. Returns desktop=false when"
+                    + " not running as the desktop app.")
     public ResponseEntity<HardwareSigningCapabilities> getCapabilities() {
         return ResponseEntity.ok(hardwareKeyStoreService.capabilities());
     }
@@ -51,11 +50,10 @@ public class HardwareSigningController {
     @GetMapping("/windows-certificates")
     @Operation(
             summary = "List Windows certificate store signing certificates",
-            description =
-                    "Enumerates certificates with a usable private key from the current user's"
-                            + " Windows certificate store. Desktop-only, loopback-only.")
-    public ResponseEntity<List<HardwareCertificateInfo>> getWindowsCertificates(
-            HttpServletRequest request) throws Exception {
+            description = "Enumerates certificates with a usable private key from the current user's"
+                    + " Windows certificate store. Desktop-only, loopback-only.")
+    public ResponseEntity<List<HardwareCertificateInfo>> getWindowsCertificates(HttpServletRequest request)
+            throws Exception {
         hardwareKeyStoreService.assertLocalDesktop(request);
         return ResponseEntity.ok(hardwareKeyStoreService.listWindowsCertificates());
     }
@@ -63,19 +61,16 @@ public class HardwareSigningController {
     @PostMapping("/pkcs11-certificates")
     @Operation(
             summary = "List PKCS#11 token signing certificates",
-            description =
-                    "Logs into a PKCS#11 token with the supplied PIN and enumerates its signing"
-                            + " certificates. The PIN is used only for this call. Desktop-only,"
-                            + " loopback-only.")
+            description = "Logs into a PKCS#11 token with the supplied PIN and enumerates its signing"
+                    + " certificates. The PIN is used only for this call. Desktop-only,"
+                    + " loopback-only.")
     public ResponseEntity<List<HardwareCertificateInfo>> getPkcs11Certificates(
-            HttpServletRequest request, @RequestBody Pkcs11CertificatesRequest body)
-            throws Exception {
+            HttpServletRequest request, @RequestBody Pkcs11CertificatesRequest body) throws Exception {
         hardwareKeyStoreService.assertLocalDesktop(request);
         char[] pin = body.pin() != null ? body.pin().toCharArray() : null;
         try {
             return ResponseEntity.ok(
-                    hardwareKeyStoreService.listPkcs11Certificates(
-                            body.libraryPath(), body.slot(), pin));
+                    hardwareKeyStoreService.listPkcs11Certificates(body.libraryPath(), body.slot(), pin));
         } finally {
             if (pin != null) {
                 java.util.Arrays.fill(pin, '\0');

@@ -47,22 +47,20 @@ public class ValkeyInstanceRegistry implements InstanceRegistry {
         // MULTI/EXEC so the hash fields and the TTL commit together. Without this, a crash
         // between HSET and EXPIRE leaves the hash with no TTL: it never expires, masks the
         // dead node as alive, and only a subsequent successful register() would re-arm it.
-        template.execute(
-                (RedisCallback<Object>)
-                        connection -> {
-                            connection.multi();
-                            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-                            Map<byte[], byte[]> hashBytes = new LinkedHashMap<>();
-                            for (Map.Entry<String, String> f : fields.entrySet()) {
-                                hashBytes.put(
-                                        f.getKey().getBytes(StandardCharsets.UTF_8),
-                                        f.getValue().getBytes(StandardCharsets.UTF_8));
-                            }
-                            connection.hashCommands().hMSet(keyBytes, hashBytes);
-                            connection.keyCommands().pExpire(keyBytes, ttlMs);
-                            connection.exec();
-                            return null;
-                        });
+        template.execute((RedisCallback<Object>) connection -> {
+            connection.multi();
+            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+            Map<byte[], byte[]> hashBytes = new LinkedHashMap<>();
+            for (Map.Entry<String, String> f : fields.entrySet()) {
+                hashBytes.put(
+                        f.getKey().getBytes(StandardCharsets.UTF_8),
+                        f.getValue().getBytes(StandardCharsets.UTF_8));
+            }
+            connection.hashCommands().hMSet(keyBytes, hashBytes);
+            connection.keyCommands().pExpire(keyBytes, ttlMs);
+            connection.exec();
+            return null;
+        });
     }
 
     @Override
@@ -72,7 +70,8 @@ public class ValkeyInstanceRegistry implements InstanceRegistry {
 
     @Override
     public Collection<ClusterNode> activeNodes() {
-        ScanOptions options = ScanOptions.scanOptions().match(PREFIX + "*").count(256).build();
+        ScanOptions options =
+                ScanOptions.scanOptions().match(PREFIX + "*").count(256).build();
         List<ClusterNode> nodes = new ArrayList<>();
         try (Cursor<String> cursor = template.scan(options)) {
             while (cursor.hasNext()) {
@@ -105,11 +104,10 @@ public class ValkeyInstanceRegistry implements InstanceRegistry {
                 // keep default
             }
         }
-        return Optional.of(
-                new ClusterNode(
-                        nodeId.toString(),
-                        String.valueOf(entries.getOrDefault("internalAddress", "")),
-                        heartbeat,
-                        String.valueOf(entries.getOrDefault("role", "BOTH"))));
+        return Optional.of(new ClusterNode(
+                nodeId.toString(),
+                String.valueOf(entries.getOrDefault("internalAddress", "")),
+                heartbeat,
+                String.valueOf(entries.getOrDefault("role", "BOTH"))));
     }
 }

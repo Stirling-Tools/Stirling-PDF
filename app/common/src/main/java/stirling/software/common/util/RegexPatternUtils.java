@@ -187,8 +187,7 @@ public final class RegexPatternUtils {
             log.trace("Compiled and cached regex pattern with flags {}: {}", flags, regex);
             return pattern;
         } catch (PatternSyntaxException e) {
-            log.error(
-                    "Invalid regex pattern: '{}' with flags {} - {}", regex, flags, e.getMessage());
+            log.error("Invalid regex pattern: '{}' with flags {} - {}", regex, flags, e.getMessage());
             throw e;
         }
     }
@@ -505,9 +504,7 @@ public final class RegexPatternUtils {
 
     /** Pattern for matching inline CID images in HTML (case-insensitive) */
     public Pattern getInlineCidImagePattern() {
-        return getPattern(
-                "(?i)<img[^>]*\\ssrc\\s*=\\s*['\"]cid:([^'\"]+)['\"][^>]*>",
-                Pattern.CASE_INSENSITIVE);
+        return getPattern("(?i)<img[^>]*\\ssrc\\s*=\\s*['\"]cid:([^'\"]+)['\"][^>]*>", Pattern.CASE_INSENSITIVE);
     }
 
     /** Pattern for matching image file extensions (case-insensitive) */

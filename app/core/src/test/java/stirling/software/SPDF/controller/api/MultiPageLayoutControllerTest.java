@@ -44,33 +44,29 @@ class MultiPageLayoutControllerTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private MultiPageLayoutController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private MultiPageLayoutController controller;
 
     private MockMultipartFile fileWithExt;
     private MockMultipartFile fileNoExt;
 
     @BeforeEach
     void setup() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
-        fileWithExt =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
-        fileNoExt =
-                new MockMultipartFile("fileInput", "name", "application/pdf", new byte[] {4, 5, 6});
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
+        fileWithExt = new MockMultipartFile("fileInput", "test.pdf", "application/pdf", new byte[] {1, 2, 3});
+        fileNoExt = new MockMultipartFile("fileInput", "name", "application/pdf", new byte[] {4, 5, 6});
     }
 
     @Test
@@ -81,8 +77,7 @@ class MultiPageLayoutControllerTest {
         req.setAddBorder(Boolean.TRUE);
         req.setFileInput(fileWithExt);
 
-        Assertions.assertThrows(
-                IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> controller.mergeMultiplePagesIntoOne(req));
     }
 
     @Test

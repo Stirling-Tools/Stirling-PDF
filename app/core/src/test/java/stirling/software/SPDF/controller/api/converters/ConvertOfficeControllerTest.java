@@ -60,14 +60,26 @@ import stirling.software.common.util.WebResponseUtils;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ConvertOfficeControllerTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private RuntimePathConfig runtimePathConfig;
-    @Mock private CustomHtmlSanitizer customHtmlSanitizer;
-    @Mock private OfficeDocumentSanitizer officeDocumentSanitizer;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @Mock
+    private CustomHtmlSanitizer customHtmlSanitizer;
+
+    @Mock
+    private OfficeDocumentSanitizer officeDocumentSanitizer;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private TempFileManager tempFileManager;
 
     private ConvertOfficeController controller;
 
@@ -110,8 +122,7 @@ class ConvertOfficeControllerTest {
                 }
             }
         }
-        throw new IllegalStateException(
-                "No method " + methodName + " with " + args.length + " args");
+        throw new IllegalStateException("No method " + methodName + " with " + args.length + " args");
     }
 
     private MockMultipartFile docxFile(byte[] content) {
@@ -149,7 +160,8 @@ class ConvertOfficeControllerTest {
         @Test
         @DisplayName("rejects too-long or symbol extensions")
         void rejectsInvalid() throws Exception {
-            assertThat((boolean) invokeInstance("isValidFileExtension", "toolongext")).isFalse();
+            assertThat((boolean) invokeInstance("isValidFileExtension", "toolongext"))
+                    .isFalse();
             assertThat((boolean) invokeInstance("isValidFileExtension", "a")).isFalse();
             assertThat((boolean) invokeInstance("isValidFileExtension", "d.x")).isFalse();
         }
@@ -162,24 +174,16 @@ class ConvertOfficeControllerTest {
         @Test
         @DisplayName("blank filename throws file-no-name exception")
         void blankFilename() {
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "", "application/octet-stream", "x".getBytes());
-            assertThatThrownBy(() -> controller.convertToPdf(file))
-                    .isInstanceOf(IllegalArgumentException.class);
+            MockMultipartFile file = new MockMultipartFile("fileInput", "", "application/octet-stream", "x".getBytes());
+            assertThatThrownBy(() -> controller.convertToPdf(file)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         @DisplayName("unsupported/invalid extension throws invalid-extension exception")
         void invalidExtension() {
             MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "archive.toolong",
-                            "application/octet-stream",
-                            "x".getBytes());
-            assertThatThrownBy(() -> controller.convertToPdf(file))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    new MockMultipartFile("fileInput", "archive.toolong", "application/octet-stream", "x".getBytes());
+            assertThatThrownBy(() -> controller.convertToPdf(file)).isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -199,15 +203,13 @@ class ConvertOfficeControllerTest {
                 ProcessExecutorResult result = mockExecutor(pe, 0);
                 ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
                 ArgumentCaptor<List<String>> cmd = ArgumentCaptor.forClass(List.class);
-                when(executor.runCommandWithOutputHandling(cmd.capture()))
-                        .thenAnswer(
-                                inv -> {
-                                    // unoconvert writes directly to the output path (last arg)
-                                    List<String> command = inv.getArgument(0);
-                                    Path out = Path.of(command.get(command.size() - 1));
-                                    Files.writeString(out, "%PDF-1.4 produced");
-                                    return result;
-                                });
+                when(executor.runCommandWithOutputHandling(cmd.capture())).thenAnswer(inv -> {
+                    // unoconvert writes directly to the output path (last arg)
+                    List<String> command = inv.getArgument(0);
+                    Path out = Path.of(command.get(command.size() - 1));
+                    Files.writeString(out, "%PDF-1.4 produced");
+                    return result;
+                });
 
                 File pdf = controller.convertToPdf(docxFile("real-docx".getBytes()));
 
@@ -234,16 +236,14 @@ class ConvertOfficeControllerTest {
                 ProcessExecutorResult result = mockExecutor(pe, 0);
                 ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
                 ArgumentCaptor<List<String>> cmd = ArgumentCaptor.forClass(List.class);
-                when(executor.runCommandWithOutputHandling(cmd.capture()))
-                        .thenAnswer(
-                                inv -> {
-                                    // soffice writes <basename>.pdf into the --outdir (workDir)
-                                    List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.get(command.size() - 1));
-                                    Path out = inputPath.getParent().resolve("report.pdf");
-                                    Files.writeString(out, "%PDF soffice");
-                                    return result;
-                                });
+                when(executor.runCommandWithOutputHandling(cmd.capture())).thenAnswer(inv -> {
+                    // soffice writes <basename>.pdf into the --outdir (workDir)
+                    List<String> command = inv.getArgument(0);
+                    Path inputPath = Path.of(command.get(command.size() - 1));
+                    Path out = inputPath.getParent().resolve("report.pdf");
+                    Files.writeString(out, "%PDF soffice");
+                    return result;
+                });
 
                 File pdf = controller.convertToPdf(docxFile("real-docx".getBytes()));
 
@@ -307,15 +307,13 @@ class ConvertOfficeControllerTest {
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 ProcessExecutorResult result = mockExecutor(pe, 0);
                 ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any(List.class)))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.get(command.size() - 1));
-                                    Path out = inputPath.getParent().resolve("report.pdf");
-                                    Files.write(out, new byte[0]);
-                                    return result;
-                                });
+                when(executor.runCommandWithOutputHandling(any(List.class))).thenAnswer(inv -> {
+                    List<String> command = inv.getArgument(0);
+                    Path inputPath = Path.of(command.get(command.size() - 1));
+                    Path out = inputPath.getParent().resolve("report.pdf");
+                    Files.write(out, new byte[0]);
+                    return result;
+                });
 
                 assertThatThrownBy(() -> controller.convertToPdf(docxFile("docx".getBytes())))
                         .isInstanceOf(IllegalStateException.class)
@@ -330,25 +328,22 @@ class ConvertOfficeControllerTest {
             when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
             when(customHtmlSanitizer.sanitize(anyString())).thenReturn("<html>clean</html>");
 
-            MockMultipartFile html =
-                    new MockMultipartFile(
-                            "fileInput",
-                            "page.html",
-                            "text/html",
-                            "<html><body>hi</body></html>".getBytes(StandardCharsets.UTF_8));
+            MockMultipartFile html = new MockMultipartFile(
+                    "fileInput",
+                    "page.html",
+                    "text/html",
+                    "<html><body>hi</body></html>".getBytes(StandardCharsets.UTF_8));
 
             try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
                 ProcessExecutorResult result = mockExecutor(pe, 0);
                 ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any(List.class)))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.get(command.size() - 1));
-                                    Path out = inputPath.getParent().resolve("page.pdf");
-                                    Files.writeString(out, "%PDF html");
-                                    return result;
-                                });
+                when(executor.runCommandWithOutputHandling(any(List.class))).thenAnswer(inv -> {
+                    List<String> command = inv.getArgument(0);
+                    Path inputPath = Path.of(command.get(command.size() - 1));
+                    Path out = inputPath.getParent().resolve("page.pdf");
+                    Files.writeString(out, "%PDF html");
+                    return result;
+                });
 
                 File pdf = controller.convertToPdf(html);
 
@@ -394,31 +389,23 @@ class ConvertOfficeControllerTest {
 
                 ProcessExecutorResult result = mockExecutor(pe, 0);
                 ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
-                when(executor.runCommandWithOutputHandling(any(List.class)))
-                        .thenAnswer(
-                                inv -> {
-                                    List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.get(command.size() - 1));
-                                    Path out = inputPath.getParent().resolve("report.pdf");
-                                    Files.writeString(out, "%PDF produced");
-                                    return result;
-                                });
+                when(executor.runCommandWithOutputHandling(any(List.class))).thenAnswer(inv -> {
+                    List<String> command = inv.getArgument(0);
+                    Path inputPath = Path.of(command.get(command.size() - 1));
+                    Path out = inputPath.getParent().resolve("report.pdf");
+                    Files.writeString(out, "%PDF produced");
+                    return result;
+                });
 
                 gu.when(() -> GeneralUtils.generateFilename(anyString(), anyString()))
                         .thenReturn("report_convertedToPDF.pdf");
-                wr.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(expected);
 
                 ResponseEntity<Resource> response = controller.processFileToPDF(generalFile);
 
                 assertThat(response).isSameAs(expected);
-                wr.verify(
-                        () ->
-                                WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class), anyString()));
+                wr.verify(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()));
             }
 
             doc.close();

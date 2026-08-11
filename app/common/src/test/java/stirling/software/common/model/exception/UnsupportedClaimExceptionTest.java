@@ -16,9 +16,7 @@ class UnsupportedClaimExceptionTest {
 
         // Verify the stored message
         assertEquals(
-                expectedMessage,
-                exception.getMessage(),
-                "Constructor should correctly store the provided message");
+                expectedMessage, exception.getMessage(), "Constructor should correctly store the provided message");
     }
 
     @Test
@@ -27,8 +25,6 @@ class UnsupportedClaimExceptionTest {
         UnsupportedClaimException exception = new UnsupportedClaimException(null);
 
         // Null message should be stored as null
-        assertNull(
-                exception.getMessage(),
-                "Constructor should accept null message and store it as null");
+        assertNull(exception.getMessage(), "Constructor should accept null message and store it as null");
     }
 }

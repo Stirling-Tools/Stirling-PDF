@@ -24,7 +24,8 @@ public class S3FileStoreConfiguration {
     @Bean(destroyMethod = "close")
     @ConditionalOnMissingBean
     public FileStore fileStore(@Value("${cluster.s3.keyPrefix:transient/}") String keyPrefix) {
-        ApplicationProperties.Storage.S3 cfg = applicationProperties.getStorage().getS3();
+        ApplicationProperties.Storage.S3 cfg =
+                applicationProperties.getStorage().getS3();
         S3Clients.Bundle bundle = S3Clients.build(cfg, "cluster file store");
         // FileStore has no signed-URL contract; close the unused presigner immediately.
         try {

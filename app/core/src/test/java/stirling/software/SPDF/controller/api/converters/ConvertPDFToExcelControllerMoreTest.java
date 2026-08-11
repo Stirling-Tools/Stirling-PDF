@@ -44,26 +44,26 @@ import stirling.software.common.util.TempFileManager;
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToExcelControllerMoreTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertPDFToExcelController controller;
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private ConvertPDFToExcelController controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("xlsx-test", inv.<String>getArgument(0))
-                                            .toFile();
-                            f.deleteOnExit();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("xlsx-test", inv.<String>getArgument(0))
+                    .toFile();
+            f.deleteOnExit();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     private static MockMultipartFile pdf(String name) {
@@ -160,8 +160,7 @@ class ConvertPDFToExcelControllerMoreTest {
     class WorkbookWriting {
 
         @Test
-        @DisplayName(
-                "a bordered table page produces an xlsx response or, if undetected, no content")
+        @DisplayName("a bordered table page produces an xlsx response or, if undetected, no content")
         void borderedTableProducesXlsx() throws Exception {
             PDFWithPageNums request = new PDFWithPageNums();
             request.setFileInput(pdf("table.pdf"));
@@ -174,8 +173,7 @@ class ConvertPDFToExcelControllerMoreTest {
             // Lattice detection depends on the Tabula build; accept either outcome but assert the
             // success path produced a real, non-empty xlsx body.
             if (response.getStatusCode() == HttpStatus.OK) {
-                assertThat(response.getHeaders().getContentType().toString())
-                        .contains("spreadsheetml.sheet");
+                assertThat(response.getHeaders().getContentType().toString()).contains("spreadsheetml.sheet");
                 assertThat(response.getHeaders().getContentDisposition().getFilename())
                         .isEqualTo("table.xlsx");
                 assertThat(response.getBody()).isNotNull();
@@ -198,8 +196,7 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenThrow(new java.io.IOException("load boom"));
 
-            assertThatThrownBy(() -> controller.pdfToExcel(request))
-                    .isInstanceOf(java.io.IOException.class);
+            assertThatThrownBy(() -> controller.pdfToExcel(request)).isInstanceOf(java.io.IOException.class);
         }
     }
 

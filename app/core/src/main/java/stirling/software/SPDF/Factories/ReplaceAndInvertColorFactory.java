@@ -41,15 +41,11 @@ public class ReplaceAndInvertColorFactory {
 
         return switch (replaceAndInvertOption) {
             case CUSTOM_COLOR, HIGH_CONTRAST_COLOR ->
-                    new CustomColorReplaceStrategy(
-                            file,
-                            replaceAndInvertOption,
-                            textColor,
-                            backGroundColor,
-                            highContrastColorCombination);
+                new CustomColorReplaceStrategy(
+                        file, replaceAndInvertOption, textColor, backGroundColor, highContrastColorCombination);
             case FULL_INVERSION -> new InvertFullColorStrategy(file, replaceAndInvertOption);
             case COLOR_SPACE_CONVERSION ->
-                    new ColorSpaceConversionStrategy(file, replaceAndInvertOption, tempFileManager);
+                new ColorSpaceConversionStrategy(file, replaceAndInvertOption, tempFileManager);
         };
     }
 }

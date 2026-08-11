@@ -14,14 +14,10 @@ public class GoogleProvider extends Provider {
     private static final String CLIENT_NAME = "Google";
     private static final String AUTHORIZATION_URI = "https://accounts.google.com/o/oauth2/v2/auth";
     private static final String TOKEN_URI = "https://www.googleapis.com/oauth2/v4/token";
-    private static final String USER_INFO_URI =
-            "https://www.googleapis.com/oauth2/v3/userinfo?alt=json";
+    private static final String USER_INFO_URI = "https://www.googleapis.com/oauth2/v3/userinfo?alt=json";
 
     public GoogleProvider(
-            String clientId,
-            String clientSecret,
-            Collection<String> scopes,
-            UsernameAttribute useAsUsername) {
+            String clientId, String clientSecret, Collection<String> scopes, UsernameAttribute useAsUsername) {
         super(
                 null,
                 NAME,

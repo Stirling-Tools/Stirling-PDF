@@ -56,7 +56,8 @@ import stirling.software.common.util.WebResponseUtils;
 @DisplayName("RemoveImagesController")
 class RemoveImagesControllerTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private CustomPDFDocumentFactory pdfDocumentFactory;
     private TempFileManager tempFileManager;
@@ -73,19 +74,15 @@ class RemoveImagesControllerTest {
         controller = new RemoveImagesController(pdfDocumentFactory, tempFileManager);
         savedTempFiles.clear();
 
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile(tempDir, "out", inv.<String>getArgument(0))
-                                            .toFile();
-                            savedTempFiles.add(f);
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile(tempDir, "out", inv.<String>getArgument(0))
+                    .toFile();
+            savedTempFiles.add(f);
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     // ----- helpers -------------------------------------------------------------------------
@@ -209,10 +206,7 @@ class RemoveImagesControllerTest {
 
             ResponseEntity<Resource> response;
             try (MockedStatic<WebResponseUtils> web = mockStatic(WebResponseUtils.class)) {
-                web.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                web.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(okResponse());
                 response = controller.removeImages(req);
             }
@@ -234,10 +228,7 @@ class RemoveImagesControllerTest {
             when(pdfDocumentFactory.load(req)).thenReturn(loaded);
 
             try (MockedStatic<WebResponseUtils> web = mockStatic(WebResponseUtils.class)) {
-                web.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                web.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(okResponse());
                 ResponseEntity<Resource> response = controller.removeImages(req);
                 assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -265,10 +256,7 @@ class RemoveImagesControllerTest {
             assertEquals(1, countImagesInResources(loaded.getPage(0).getResources()));
 
             try (MockedStatic<WebResponseUtils> web = mockStatic(WebResponseUtils.class)) {
-                web.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                web.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(okResponse());
                 controller.removeImages(req);
             }
@@ -294,10 +282,7 @@ class RemoveImagesControllerTest {
             when(pdfDocumentFactory.load(req)).thenReturn(loaded);
 
             try (MockedStatic<WebResponseUtils> web = mockStatic(WebResponseUtils.class)) {
-                web.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                web.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(okResponse());
                 ResponseEntity<Resource> response = controller.removeImages(req);
                 assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -322,10 +307,7 @@ class RemoveImagesControllerTest {
             when(pdfDocumentFactory.load(req)).thenReturn(loaded);
 
             try (MockedStatic<WebResponseUtils> web = mockStatic(WebResponseUtils.class)) {
-                web.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                web.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(okResponse());
                 ResponseEntity<Resource> response = controller.removeImages(req);
                 assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -344,10 +326,7 @@ class RemoveImagesControllerTest {
             when(pdfDocumentFactory.load(req)).thenReturn(Loader.loadPDF(bytes));
 
             try (MockedStatic<WebResponseUtils> web = mockStatic(WebResponseUtils.class)) {
-                web.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                web.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(okResponse());
                 controller.removeImages(req);
             }
@@ -375,20 +354,13 @@ class RemoveImagesControllerTest {
             when(pdfDocumentFactory.load(req)).thenReturn(Loader.loadPDF(bytes));
 
             try (MockedStatic<WebResponseUtils> web = mockStatic(WebResponseUtils.class)) {
-                web.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                web.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(okResponse());
 
                 controller.removeImages(req);
 
-                web.verify(
-                        () ->
-                                WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class),
-                                        org.mockito.ArgumentMatchers.eq(
-                                                "report_images_removed.pdf")));
+                web.verify(() -> WebResponseUtils.pdfFileToWebResponse(
+                        any(TempFile.class), org.mockito.ArgumentMatchers.eq("report_images_removed.pdf")));
             }
         }
 
@@ -397,28 +369,20 @@ class RemoveImagesControllerTest {
         void nullOriginalFilename() throws IOException {
             byte[] bytes = pdfWithImagesBytes(1);
             // MockMultipartFile with a null original filename
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", null, MediaType.APPLICATION_PDF_VALUE, bytes);
+            MockMultipartFile file = new MockMultipartFile("fileInput", null, MediaType.APPLICATION_PDF_VALUE, bytes);
             PDFFile req = request(file);
 
             when(pdfDocumentFactory.load(req)).thenReturn(Loader.loadPDF(bytes));
 
             try (MockedStatic<WebResponseUtils> web = mockStatic(WebResponseUtils.class)) {
-                web.when(
-                                () ->
-                                        WebResponseUtils.pdfFileToWebResponse(
-                                                any(TempFile.class), anyString()))
+                web.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                         .thenReturn(okResponse());
 
                 ResponseEntity<Resource> response = controller.removeImages(req);
                 assertEquals(HttpStatus.OK, response.getStatusCode());
 
                 // GeneralUtils.generateFilename handles null safely; just assert it was called
-                web.verify(
-                        () ->
-                                WebResponseUtils.pdfFileToWebResponse(
-                                        any(TempFile.class), anyString()));
+                web.verify(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()));
             }
         }
     }

@@ -43,34 +43,32 @@ import stirling.software.common.util.TempFileRegistry;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class OCRControllerTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
 
     private TempFileManager tempFileManager;
     private ApplicationProperties applicationProperties;
     private OCRController ocrController;
 
-    @TempDir Path baseTmpDir;
+    @TempDir
+    Path baseTmpDir;
 
     @BeforeEach
     void setUp() {
         applicationProperties = new ApplicationProperties();
-        applicationProperties
-                .getSystem()
-                .getTempFileManagement()
-                .setBaseTmpDir(baseTmpDir.toString());
+        applicationProperties.getSystem().getTempFileManagement().setBaseTmpDir(baseTmpDir.toString());
         applicationProperties.getSystem().getTempFileManagement().setPrefix("ocr-test-");
 
         tempFileManager = new TempFileManager(new TempFileRegistry(), applicationProperties);
 
-        ocrController =
-                new OCRController(
-                        applicationProperties,
-                        pdfDocumentFactory,
-                        tempFileManager,
-                        endpointConfiguration,
-                        runtimePathConfig);
+        ocrController = new OCRController(
+                applicationProperties, pdfDocumentFactory, tempFileManager, endpointConfiguration, runtimePathConfig);
     }
 
     /** Build a minimal request with sensible defaults the caller can override. */
@@ -88,8 +86,7 @@ class OCRControllerTest {
                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             doc.addPage(new PDPage());
             doc.save(out);
-            return new MockMultipartFile(
-                    "fileInput", name, MediaType.APPLICATION_PDF_VALUE, out.toByteArray());
+            return new MockMultipartFile("fileInput", name, MediaType.APPLICATION_PDF_VALUE, out.toByteArray());
         }
     }
 
@@ -268,11 +265,10 @@ class OCRControllerTest {
             // The only files left under the temp dir should be our tessdata dir and its
             // contents; the controller's .pdf temp files must have been closed/deleted.
             try (var stream = Files.walk(baseTmpDir)) {
-                boolean leakedPdf =
-                        stream.filter(Files::isRegularFile)
-                                .map(p -> p.getFileName().toString())
-                                .filter(n -> n.startsWith("ocr-test-"))
-                                .anyMatch(n -> n.endsWith(".pdf"));
+                boolean leakedPdf = stream.filter(Files::isRegularFile)
+                        .map(p -> p.getFileName().toString())
+                        .filter(n -> n.startsWith("ocr-test-"))
+                        .anyMatch(n -> n.endsWith(".pdf"));
                 assertFalse(leakedPdf, "controller temp PDF files should be cleaned up");
             }
         }

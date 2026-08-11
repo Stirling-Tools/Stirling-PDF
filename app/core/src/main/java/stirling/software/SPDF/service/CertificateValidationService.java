@@ -72,17 +72,13 @@ public class CertificateValidationService {
     private static final String NS_TSL = "http://uri.etsi.org/02231/v2#";
 
     // Qualified CA service types to import as trust anchors (per ETSI TS 119 612)
-    private static final Set<String> EUTL_SERVICE_TYPES =
-            new HashSet<>(
-                    Arrays.asList(
-                            "http://uri.etsi.org/TrstSvc/Svctype/CA/QC",
-                            "http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC"));
+    private static final Set<String> EUTL_SERVICE_TYPES = new HashSet<>(Arrays.asList(
+            "http://uri.etsi.org/TrstSvc/Svctype/CA/QC", "http://uri.etsi.org/TrstSvc/Svctype/NationalRootCA-QC"));
 
     // Active statuses to accept (per ETSI TS 119 612)
     private static final String STATUS_UNDER_SUPERVISION =
             "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision";
-    private static final String STATUS_ACCREDITED =
-            "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited";
+    private static final String STATUS_ACCREDITED = "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited";
     private static final String STATUS_SUPERVISION_IN_CESSATION =
             "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/supervisionincessation";
 
@@ -164,14 +160,16 @@ public class CertificateValidationService {
 
         // Intermediate certificate store
         List<Certificate> allCerts = new ArrayList<>(intermediates);
-        CertStore intermediateStore =
-                CertStore.getInstance("Collection", new CollectionCertStoreParameters(allCerts));
+        CertStore intermediateStore = CertStore.getInstance("Collection", new CollectionCertStoreParameters(allCerts));
 
         // PKIX parameters
         PKIXBuilderParameters params = new PKIXBuilderParameters(anchors, target);
         params.addCertStore(intermediateStore);
-        String revocationMode =
-                applicationProperties.getSecurity().getValidation().getRevocation().getMode();
+        String revocationMode = applicationProperties
+                .getSecurity()
+                .getValidation()
+                .getRevocation()
+                .getMode();
         params.setRevocationEnabled(!"none".equalsIgnoreCase(revocationMode));
         if (validationTime != null) {
             params.setDate(validationTime);
@@ -180,20 +178,17 @@ public class CertificateValidationService {
         // Revocation checking
         if (!"none".equalsIgnoreCase(revocationMode)) {
             try {
-                PKIXRevocationChecker rc =
-                        (PKIXRevocationChecker)
-                                CertPathValidator.getInstance("PKIX").getRevocationChecker();
+                PKIXRevocationChecker rc = (PKIXRevocationChecker)
+                        CertPathValidator.getInstance("PKIX").getRevocationChecker();
 
-                Set<PKIXRevocationChecker.Option> options =
-                        EnumSet.noneOf(PKIXRevocationChecker.Option.class);
+                Set<PKIXRevocationChecker.Option> options = EnumSet.noneOf(PKIXRevocationChecker.Option.class);
 
                 // Soft-fail: allow validation to succeed if revocation status unavailable
-                boolean revocationHardFail =
-                        applicationProperties
-                                .getSecurity()
-                                .getValidation()
-                                .getRevocation()
-                                .isHardFail();
+                boolean revocationHardFail = applicationProperties
+                        .getSecurity()
+                        .getValidation()
+                        .getRevocation()
+                        .isHardFail();
                 if (!revocationHardFail) {
                     options.add(PKIXRevocationChecker.Option.SOFT_FAIL);
                 }
@@ -232,16 +227,11 @@ public class CertificateValidationService {
             // 1) Check for timestamp token (RFC 3161) - highest priority
             var unsignedAttrs = signerInfo.getUnsignedAttributes();
             if (unsignedAttrs != null) {
-                var attr =
-                        unsignedAttrs.get(new ASN1ObjectIdentifier("1.2.840.113549.1.9.16.2.14"));
+                var attr = unsignedAttrs.get(new ASN1ObjectIdentifier("1.2.840.113549.1.9.16.2.14"));
                 if (attr != null) {
                     try {
-                        TimeStampToken tst =
-                                new TimeStampToken(
-                                        new CMSSignedData(
-                                                attr.getAttributeValues()[0]
-                                                        .toASN1Primitive()
-                                                        .getEncoded()));
+                        TimeStampToken tst = new TimeStampToken(new CMSSignedData(
+                                attr.getAttributeValues()[0].toASN1Primitive().getEncoded()));
                         Date tstTime = tst.getTimeStampInfo().getGenTime();
                         log.debug("Using timestamp token time: {}", tstTime);
                         return new ValidationTime(tstTime, "timestamp");
@@ -297,8 +287,11 @@ public class CertificateValidationService {
      * @return true if revocation mode is not "none"
      */
     public boolean isRevocationEnabled() {
-        String revocationMode =
-                applicationProperties.getSecurity().getValidation().getRevocation().getMode();
+        String revocationMode = applicationProperties
+                .getSecurity()
+                .getValidation()
+                .getRevocation()
+                .getMode();
         return !"none".equalsIgnoreCase(revocationMode);
     }
 
@@ -392,8 +385,7 @@ public class CertificateValidationService {
             log.info("Loading certificates from Java system trust store");
 
             // Get default trust manager factory
-            TrustManagerFactory tmf =
-                    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             tmf.init((KeyStore) null); // null = use system default
 
             // Extract certificates from trust managers
@@ -425,8 +417,7 @@ public class CertificateValidationService {
     private void loadBundledMozillaCACerts() {
         try {
             log.info("Loading bundled Mozilla CA certificates from resources");
-            try (InputStream certStream =
-                    getClass().getClassLoader().getResourceAsStream("certs/cacert.pem")) {
+            try (InputStream certStream = getClass().getClassLoader().getResourceAsStream("certs/cacert.pem")) {
                 if (certStream == null) {
                     log.debug(
                             "Bundled Mozilla CA certificate file not found in resources — using Java system trust store only");
@@ -477,13 +468,9 @@ public class CertificateValidationService {
 
                 if (selfSigned || ca) {
                     signingTrustAnchors.setCertificateEntry("server-anchor", serverCert);
-                    log.info(
-                            "Loaded server certificate as trust anchor (self-signed: {}, CA: {})",
-                            selfSigned,
-                            ca);
+                    log.info("Loaded server certificate as trust anchor (self-signed: {}, CA: {})", selfSigned, ca);
                 } else {
-                    log.warn(
-                            "Server certificate is neither self-signed nor a CA; not adding as trust anchor");
+                    log.warn("Server certificate is neither self-signed nor a CA; not adding as trust anchor");
                 }
             }
         } catch (Exception e) {
@@ -494,7 +481,11 @@ public class CertificateValidationService {
     /** Download and parse Adobe Approved Trust List (AATL) and add CA certs as trust anchors. */
     private void loadAATLCertificates() {
         try {
-            String aatlUrl = applicationProperties.getSecurity().getValidation().getAatl().getUrl();
+            String aatlUrl = applicationProperties
+                    .getSecurity()
+                    .getValidation()
+                    .getAatl()
+                    .getUrl();
             log.info("Loading Adobe Approved Trust List (AATL) from: {}", aatlUrl);
             byte[] pdfBytes = downloadTrustList(aatlUrl);
             if (pdfBytes == null) {
@@ -634,9 +625,7 @@ public class CertificateValidationService {
 
             try {
                 byte[] certBytes = java.util.Base64.getMimeDecoder().decode(base64);
-                X509Certificate cert =
-                        (X509Certificate)
-                                cf.generateCertificate(new ByteArrayInputStream(certBytes));
+                X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certBytes));
 
                 // Only add CA certs as anchors
                 if (isCA(cert)) {
@@ -666,8 +655,11 @@ public class CertificateValidationService {
      */
     private void loadEUTLCertificates() {
         try {
-            String lotlUrl =
-                    applicationProperties.getSecurity().getValidation().getEutl().getLotlUrl();
+            String lotlUrl = applicationProperties
+                    .getSecurity()
+                    .getValidation()
+                    .getEutl()
+                    .getLotlUrl();
             log.info("Loading EU Trusted List (LOTL) from: {}", lotlUrl);
             byte[] lotlBytes = downloadXml(lotlUrl);
             if (lotlBytes == null) {
@@ -790,8 +782,7 @@ public class CertificateValidationService {
                         byte[] certBytes = java.util.Base64.getMimeDecoder().decode(base64);
                         CertificateFactory cf = CertificateFactory.getInstance("X.509");
                         X509Certificate cert =
-                                (X509Certificate)
-                                        cf.generateCertificate(new ByteArrayInputStream(certBytes));
+                                (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certBytes));
 
                         if (!isCA(cert)) {
                             log.debug(
@@ -809,10 +800,7 @@ public class CertificateValidationService {
                             added++;
                         }
                     } catch (Exception e) {
-                        log.debug(
-                                "Failed to import a certificate from {}: {}",
-                                sourceUrl,
-                                e.getMessage());
+                        log.debug("Failed to import a certificate from {}: {}", sourceUrl, e.getMessage());
                     }
                 }
             }
@@ -827,11 +815,7 @@ public class CertificateValidationService {
         if (STATUS_UNDER_SUPERVISION.equals(statusUri)) return true;
         if (STATUS_ACCREDITED.equals(statusUri)) return true;
         boolean acceptTransitional =
-                applicationProperties
-                        .getSecurity()
-                        .getValidation()
-                        .getEutl()
-                        .isAcceptTransitional();
+                applicationProperties.getSecurity().getValidation().getEutl().isAcceptTransitional();
         if (acceptTransitional && STATUS_SUPERVISION_IN_CESSATION.equals(statusUri)) return true;
         return false;
     }

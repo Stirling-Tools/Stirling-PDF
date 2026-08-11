@@ -18,10 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @RestController
 @RequestMapping("/api/v1/ui-data")
-@Tag(
-        name = "UI Data",
-        description =
-                """
+@Tag(name = "UI Data", description = """
                 User interface data services for dynamic frontend applications and user experience customization.
 
                 This endpoint group provides data services for frontend applications to render personalized

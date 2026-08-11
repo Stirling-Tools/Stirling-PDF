@@ -97,9 +97,7 @@ public class WorkflowParticipant implements Serializable {
 
     // Notification history
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(
-            name = "participant_notifications",
-            joinColumns = @JoinColumn(name = "participant_id"))
+    @CollectionTable(name = "participant_notifications", joinColumns = @JoinColumn(name = "participant_id"))
     @Column(name = "notification_message", columnDefinition = "text")
     private List<String> notifications = new ArrayList<>();
 
@@ -135,7 +133,6 @@ public class WorkflowParticipant implements Serializable {
     public boolean canEdit() {
         return !hasCompleted()
                 && !isExpired()
-                && (accessRole == ShareAccessRole.EDITOR
-                        || accessRole == ShareAccessRole.COMMENTER);
+                && (accessRole == ShareAccessRole.EDITOR || accessRole == ShareAccessRole.COMMENTER);
     }
 }

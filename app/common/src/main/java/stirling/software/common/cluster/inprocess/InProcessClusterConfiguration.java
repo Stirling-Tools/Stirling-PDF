@@ -22,8 +22,7 @@ import stirling.software.common.model.ApplicationProperties;
 @Slf4j
 @Configuration
 @ConditionalOnExpression(
-        "!${cluster.enabled:false} ||"
-                + " '${cluster.backplane:inprocess}'.equalsIgnoreCase('inprocess')")
+        "!${cluster.enabled:false} ||" + " '${cluster.backplane:inprocess}'.equalsIgnoreCase('inprocess')")
 public class InProcessClusterConfiguration {
 
     @Bean

@@ -37,15 +37,13 @@ import stirling.software.proprietary.service.AuditService;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@org.springframework.core.annotation.Order(
-        0) // Highest precedence - runs BEFORE AutoJobAspect to populate MDC
+@org.springframework.core.annotation.Order(0) // Highest precedence - runs BEFORE AutoJobAspect to populate MDC
 public class ControllerAuditAspect {
 
     private final AuditService auditService;
     private final AuditConfigurationProperties auditConfig;
 
-    @Around(
-            "execution(* org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(..))")
+    @Around("execution(* org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(..))")
     public Object auditStaticResource(ProceedingJoinPoint jp) throws Throwable {
         return auditController(jp, "GET");
     }
@@ -86,8 +84,7 @@ public class ControllerAuditAspect {
         return auditController(joinPoint, "POST");
     }
 
-    private Object auditController(ProceedingJoinPoint joinPoint, String httpMethod)
-            throws Throwable {
+    private Object auditController(ProceedingJoinPoint joinPoint, String httpMethod) throws Throwable {
         MethodSignature sig = (MethodSignature) joinPoint.getSignature();
         Method method = sig.getMethod();
 
@@ -123,8 +120,7 @@ public class ControllerAuditAspect {
             }
         }
 
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest req = attrs != null ? attrs.getRequest() : null;
         HttpServletResponse resp = attrs != null ? attrs.getResponse() : null;
 
@@ -210,13 +206,8 @@ public class ControllerAuditAspect {
                 auditService.addAutomationContext(data, req);
 
                 // Resolve the event type using the unified method
-                AuditEventType eventType =
-                        auditService.resolveEventType(
-                                method,
-                                joinPoint.getTarget().getClass(),
-                                path,
-                                httpMethod,
-                                auditedAnnotation);
+                AuditEventType eventType = auditService.resolveEventType(
+                        method, joinPoint.getTarget().getClass(), path, httpMethod, auditedAnnotation);
 
                 // Add result only if operation result capture is explicitly enabled
                 // Skip result for UI_DATA events to avoid storing large response bodies
@@ -230,29 +221,15 @@ public class ControllerAuditAspect {
                 // Check if we should use string type instead (for backward compatibility)
                 if (auditedAnnotation != null) {
                     String typeString = auditedAnnotation.typeString();
-                    if (eventType == AuditEventType.HTTP_REQUEST
-                            && StringUtils.isNotEmpty(typeString)) {
-                        auditService.audit(
-                                capturedPrincipal,
-                                capturedOrigin,
-                                capturedIp,
-                                typeString,
-                                data,
-                                level);
+                    if (eventType == AuditEventType.HTTP_REQUEST && StringUtils.isNotEmpty(typeString)) {
+                        auditService.audit(capturedPrincipal, capturedOrigin, capturedIp, typeString, data, level);
                     } else {
                         // Use the enum type with early-captured values
-                        auditService.audit(
-                                capturedPrincipal,
-                                capturedOrigin,
-                                capturedIp,
-                                eventType,
-                                data,
-                                level);
+                        auditService.audit(capturedPrincipal, capturedOrigin, capturedIp, eventType, data, level);
                     }
                 } else {
                     // Use the enum type with early-captured values
-                    auditService.audit(
-                            capturedPrincipal, capturedOrigin, capturedIp, eventType, data, level);
+                    auditService.audit(capturedPrincipal, capturedOrigin, capturedIp, eventType, data, level);
                 }
             }
 
@@ -269,8 +246,7 @@ public class ControllerAuditAspect {
 
     private String getRequestPath(Method method, String httpMethod) {
         // Prefer actual request URI over annotation patterns (which may contain regex)
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attrs != null) {
             HttpServletRequest request = attrs.getRequest();
             if (request != null) {

@@ -113,8 +113,7 @@ class CertificateValidationServiceMoreTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T invokePrivate(
-            CertificateValidationService svc, String name, Class<?>[] sig, Object... args)
+    private static <T> T invokePrivate(CertificateValidationService svc, String name, Class<?>[] sig, Object... args)
             throws Exception {
         Method m = CertificateValidationService.class.getDeclaredMethod(name, sig);
         m.setAccessible(true);
@@ -135,18 +134,12 @@ class CertificateValidationServiceMoreTest {
         @DisplayName("PEM, CRT and CER all decode to the same X.509 certificate")
         void loadsTextEncodedFormats() throws Exception {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            X509Certificate fromPem =
-                    (X509Certificate)
-                            cf.generateCertificate(
-                                    new ByteArrayInputStream(readResource("certs/test-cert.pem")));
-            X509Certificate fromCrt =
-                    (X509Certificate)
-                            cf.generateCertificate(
-                                    new ByteArrayInputStream(readResource("certs/test-cert.crt")));
-            X509Certificate fromCer =
-                    (X509Certificate)
-                            cf.generateCertificate(
-                                    new ByteArrayInputStream(readResource("certs/test-cert.cer")));
+            X509Certificate fromPem = (X509Certificate)
+                    cf.generateCertificate(new ByteArrayInputStream(readResource("certs/test-cert.pem")));
+            X509Certificate fromCrt = (X509Certificate)
+                    cf.generateCertificate(new ByteArrayInputStream(readResource("certs/test-cert.crt")));
+            X509Certificate fromCer = (X509Certificate)
+                    cf.generateCertificate(new ByteArrayInputStream(readResource("certs/test-cert.cer")));
 
             assertThat(fromPem).isEqualTo(fromCrt).isEqualTo(fromCer);
             assertThat(fromPem.getSubjectX500Principal().getName()).contains("CN=Test");
@@ -156,10 +149,8 @@ class CertificateValidationServiceMoreTest {
         @DisplayName("DER binary certificate decodes and matches the PEM form")
         void loadsDerFormat() throws Exception {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            X509Certificate fromDer =
-                    (X509Certificate)
-                            cf.generateCertificate(
-                                    new ByteArrayInputStream(readResource("certs/test-cert.der")));
+            X509Certificate fromDer = (X509Certificate)
+                    cf.generateCertificate(new ByteArrayInputStream(readResource("certs/test-cert.der")));
             assertThat(fromDer).isEqualTo(realCert);
         }
 
@@ -273,8 +264,7 @@ class CertificateValidationServiceMoreTest {
         void throwsWithoutAnchors() throws Exception {
             CertificateValidationService svc = newService(defaultProps());
             initTrustStore(svc); // empty keystore, no anchors
-            assertThatThrownBy(
-                            () -> svc.buildAndValidatePath(realCert, List.of(), null, new Date()))
+            assertThatThrownBy(() -> svc.buildAndValidatePath(realCert, List.of(), null, new Date()))
                     .isInstanceOf(GeneralSecurityException.class);
         }
 
@@ -284,10 +274,7 @@ class CertificateValidationServiceMoreTest {
             CertificateValidationService svc = newService(defaultProps());
             // A different self-signed cert as anchor cannot validate the real signer.
             X509Certificate stranger = secondSelfSignedCert();
-            assertThatThrownBy(
-                            () ->
-                                    svc.buildAndValidatePath(
-                                            realCert, List.of(), stranger, new Date()))
+            assertThatThrownBy(() -> svc.buildAndValidatePath(realCert, List.of(), stranger, new Date()))
                     .isInstanceOf(GeneralSecurityException.class);
         }
 
@@ -327,8 +314,7 @@ class CertificateValidationServiceMoreTest {
             java.security.KeyPairGenerator kpg = java.security.KeyPairGenerator.getInstance("RSA");
             kpg.initialize(2048);
             java.security.KeyPair kp = kpg.generateKeyPair();
-            org.bouncycastle.asn1.x500.X500Name dn =
-                    new org.bouncycastle.asn1.x500.X500Name("CN=Stranger");
+            org.bouncycastle.asn1.x500.X500Name dn = new org.bouncycastle.asn1.x500.X500Name("CN=Stranger");
             Date from = new Date(System.currentTimeMillis() - 86_400_000L);
             Date to = new Date(System.currentTimeMillis() + 86_400_000L * 365);
             org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder builder =
@@ -336,8 +322,7 @@ class CertificateValidationServiceMoreTest {
                             dn, java.math.BigInteger.valueOf(1), from, to, dn, kp.getPublic());
             org.bouncycastle.operator.ContentSigner signer =
                     new JcaContentSignerBuilder("SHA256WithRSA").build(kp.getPrivate());
-            return new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter()
-                    .getCertificate(builder.build(signer));
+            return new org.bouncycastle.cert.jcajce.JcaX509CertificateConverter().getCertificate(builder.build(signer));
         }
     }
 
@@ -393,8 +378,7 @@ class CertificateValidationServiceMoreTest {
         @Test
         @DisplayName("Server certificate is added as an anchor when self-signed")
         void serverCertAddedAsAnchor() throws Exception {
-            ServerCertificateServiceInterface serverSvc =
-                    mock(ServerCertificateServiceInterface.class);
+            ServerCertificateServiceInterface serverSvc = mock(ServerCertificateServiceInterface.class);
             when(serverSvc.isEnabled()).thenReturn(true);
             when(serverSvc.hasServerCertificate()).thenReturn(true);
             when(serverSvc.getServerCertificate()).thenReturn(realCert);
@@ -412,8 +396,7 @@ class CertificateValidationServiceMoreTest {
         @Test
         @DisplayName("Disabled server certificate service contributes no anchor")
         void disabledServerCertNotAdded() throws Exception {
-            ServerCertificateServiceInterface serverSvc =
-                    mock(ServerCertificateServiceInterface.class);
+            ServerCertificateServiceInterface serverSvc = mock(ServerCertificateServiceInterface.class);
             when(serverSvc.isEnabled()).thenReturn(false);
 
             ApplicationProperties props = defaultProps();
@@ -456,17 +439,15 @@ class CertificateValidationServiceMoreTest {
         @Test
         @DisplayName("parseSecuritySettingsXML imports CA certificate nodes and skips empties")
         void parseSecuritySettingsXmlImportsCa() throws Exception {
-            String xml =
-                    "<Settings>"
-                            + certXmlElement("Certificate", realCertDer)
-                            + "<Certificate></Certificate>"
-                            + "</Settings>";
-            int added =
-                    invokePrivate(
-                            svc,
-                            "parseSecuritySettingsXML",
-                            new Class<?>[] {InputStream.class},
-                            new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+            String xml = "<Settings>"
+                    + certXmlElement("Certificate", realCertDer)
+                    + "<Certificate></Certificate>"
+                    + "</Settings>";
+            int added = invokePrivate(
+                    svc,
+                    "parseSecuritySettingsXML",
+                    new Class<?>[] {InputStream.class},
+                    new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
             assertThat(added).isEqualTo(1);
             assertThat(svc.getSigningTrustStore().size()).isEqualTo(1);
         }
@@ -475,12 +456,11 @@ class CertificateValidationServiceMoreTest {
         @DisplayName("parseSecuritySettingsXML returns zero when no Certificate nodes present")
         void parseSecuritySettingsXmlNoCerts() throws Exception {
             String xml = "<Settings><Other>x</Other></Settings>";
-            int added =
-                    invokePrivate(
-                            svc,
-                            "parseSecuritySettingsXML",
-                            new Class<?>[] {InputStream.class},
-                            new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+            int added = invokePrivate(
+                    svc,
+                    "parseSecuritySettingsXML",
+                    new Class<?>[] {InputStream.class},
+                    new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
             assertThat(added).isZero();
         }
 
@@ -488,9 +468,7 @@ class CertificateValidationServiceMoreTest {
         @DisplayName("tryParseSecuritySettingsXML returns null when the file spec is missing")
         void tryParseReturnsNullWithoutSpec() throws Exception {
             Map<String, ?> empty = Map.of();
-            Object result =
-                    invokePrivate(
-                            svc, "tryParseSecuritySettingsXML", new Class<?>[] {Map.class}, empty);
+            Object result = invokePrivate(svc, "tryParseSecuritySettingsXML", new Class<?>[] {Map.class}, empty);
             assertThat(result).isNull();
         }
 
@@ -498,19 +476,14 @@ class CertificateValidationServiceMoreTest {
         @DisplayName("parseLotlForTslLocations extracts every TSLLocation URL")
         void parseLotlExtractsLocations() throws Exception {
             String ns = "http://uri.etsi.org/02231/v2#";
-            String lotl =
-                    "<TrustServiceStatusList xmlns=\""
-                            + ns
-                            + "\"><SchemeInformation><PointersToOtherTSL>"
-                            + "<OtherTSLPointer><TSLLocation>https://a.test/tsl1.xml</TSLLocation></OtherTSLPointer>"
-                            + "<OtherTSLPointer><TSLLocation>https://b.test/tsl2.xml</TSLLocation></OtherTSLPointer>"
-                            + "</PointersToOtherTSL></SchemeInformation></TrustServiceStatusList>";
-            List<String> urls =
-                    invokePrivate(
-                            svc,
-                            "parseLotlForTslLocations",
-                            new Class<?>[] {byte[].class},
-                            (Object) lotl.getBytes(StandardCharsets.UTF_8));
+            String lotl = "<TrustServiceStatusList xmlns=\""
+                    + ns
+                    + "\"><SchemeInformation><PointersToOtherTSL>"
+                    + "<OtherTSLPointer><TSLLocation>https://a.test/tsl1.xml</TSLLocation></OtherTSLPointer>"
+                    + "<OtherTSLPointer><TSLLocation>https://b.test/tsl2.xml</TSLLocation></OtherTSLPointer>"
+                    + "</PointersToOtherTSL></SchemeInformation></TrustServiceStatusList>";
+            List<String> urls = invokePrivate(svc, "parseLotlForTslLocations", new Class<?>[] {byte[].class}, (Object)
+                    lotl.getBytes(StandardCharsets.UTF_8));
             assertThat(urls).containsExactly("https://a.test/tsl1.xml", "https://b.test/tsl2.xml");
         }
 
@@ -518,16 +491,9 @@ class CertificateValidationServiceMoreTest {
         @DisplayName("parseLotlForTslLocations returns empty list when no pointers exist")
         void parseLotlNoPointers() throws Exception {
             String ns = "http://uri.etsi.org/02231/v2#";
-            String lotl =
-                    "<TrustServiceStatusList xmlns=\""
-                            + ns
-                            + "\"><SchemeInformation/></TrustServiceStatusList>";
-            List<String> urls =
-                    invokePrivate(
-                            svc,
-                            "parseLotlForTslLocations",
-                            new Class<?>[] {byte[].class},
-                            (Object) lotl.getBytes(StandardCharsets.UTF_8));
+            String lotl = "<TrustServiceStatusList xmlns=\"" + ns + "\"><SchemeInformation/></TrustServiceStatusList>";
+            List<String> urls = invokePrivate(svc, "parseLotlForTslLocations", new Class<?>[] {byte[].class}, (Object)
+                    lotl.getBytes(StandardCharsets.UTF_8));
             assertThat(urls).isEmpty();
         }
 
@@ -535,23 +501,21 @@ class CertificateValidationServiceMoreTest {
         @DisplayName("parseTslAndAddCas imports a qualified, active CA certificate")
         void parseTslImportsQualifiedActiveCa() throws Exception {
             String ns = "http://uri.etsi.org/02231/v2#";
-            String tsl =
-                    "<TrustServiceStatusList xmlns=\""
-                            + ns
-                            + "\"><TSPService><ServiceInformation>"
-                            + "<ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>"
-                            + "<ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</ServiceStatus>"
-                            + "<ServiceDigitalIdentity><DigitalId>"
-                            + certXmlElement("X509Certificate", realCertDer)
-                            + "</DigitalId></ServiceDigitalIdentity>"
-                            + "</ServiceInformation></TSPService></TrustServiceStatusList>";
-            int added =
-                    invokePrivate(
-                            svc,
-                            "parseTslAndAddCas",
-                            new Class<?>[] {byte[].class, String.class},
-                            tsl.getBytes(StandardCharsets.UTF_8),
-                            "https://source.test/tsl.xml");
+            String tsl = "<TrustServiceStatusList xmlns=\""
+                    + ns
+                    + "\"><TSPService><ServiceInformation>"
+                    + "<ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>"
+                    + "<ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</ServiceStatus>"
+                    + "<ServiceDigitalIdentity><DigitalId>"
+                    + certXmlElement("X509Certificate", realCertDer)
+                    + "</DigitalId></ServiceDigitalIdentity>"
+                    + "</ServiceInformation></TSPService></TrustServiceStatusList>";
+            int added = invokePrivate(
+                    svc,
+                    "parseTslAndAddCas",
+                    new Class<?>[] {byte[].class, String.class},
+                    tsl.getBytes(StandardCharsets.UTF_8),
+                    "https://source.test/tsl.xml");
             assertThat(added).isEqualTo(1);
             assertThat(svc.getSigningTrustStore().size()).isEqualTo(1);
         }
@@ -560,23 +524,21 @@ class CertificateValidationServiceMoreTest {
         @DisplayName("parseTslAndAddCas skips services whose type is not qualified")
         void parseTslSkipsNonQualified() throws Exception {
             String ns = "http://uri.etsi.org/02231/v2#";
-            String tsl =
-                    "<TrustServiceStatusList xmlns=\""
-                            + ns
-                            + "\"><TSPService><ServiceInformation>"
-                            + "<ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/unspecified</ServiceTypeIdentifier>"
-                            + "<ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</ServiceStatus>"
-                            + "<ServiceDigitalIdentity><DigitalId>"
-                            + certXmlElement("X509Certificate", realCertDer)
-                            + "</DigitalId></ServiceDigitalIdentity>"
-                            + "</ServiceInformation></TSPService></TrustServiceStatusList>";
-            int added =
-                    invokePrivate(
-                            svc,
-                            "parseTslAndAddCas",
-                            new Class<?>[] {byte[].class, String.class},
-                            tsl.getBytes(StandardCharsets.UTF_8),
-                            "https://source.test/tsl.xml");
+            String tsl = "<TrustServiceStatusList xmlns=\""
+                    + ns
+                    + "\"><TSPService><ServiceInformation>"
+                    + "<ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/unspecified</ServiceTypeIdentifier>"
+                    + "<ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</ServiceStatus>"
+                    + "<ServiceDigitalIdentity><DigitalId>"
+                    + certXmlElement("X509Certificate", realCertDer)
+                    + "</DigitalId></ServiceDigitalIdentity>"
+                    + "</ServiceInformation></TSPService></TrustServiceStatusList>";
+            int added = invokePrivate(
+                    svc,
+                    "parseTslAndAddCas",
+                    new Class<?>[] {byte[].class, String.class},
+                    tsl.getBytes(StandardCharsets.UTF_8),
+                    "https://source.test/tsl.xml");
             assertThat(added).isZero();
         }
 
@@ -584,47 +546,42 @@ class CertificateValidationServiceMoreTest {
         @DisplayName("parseTslAndAddCas skips qualified services in an inactive status")
         void parseTslSkipsInactiveStatus() throws Exception {
             String ns = "http://uri.etsi.org/02231/v2#";
-            String tsl =
-                    "<TrustServiceStatusList xmlns=\""
-                            + ns
-                            + "\"><TSPService><ServiceInformation>"
-                            + "<ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>"
-                            + "<ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn</ServiceStatus>"
-                            + "<ServiceDigitalIdentity><DigitalId>"
-                            + certXmlElement("X509Certificate", realCertDer)
-                            + "</DigitalId></ServiceDigitalIdentity>"
-                            + "</ServiceInformation></TSPService></TrustServiceStatusList>";
-            int added =
-                    invokePrivate(
-                            svc,
-                            "parseTslAndAddCas",
-                            new Class<?>[] {byte[].class, String.class},
-                            tsl.getBytes(StandardCharsets.UTF_8),
-                            "https://source.test/tsl.xml");
+            String tsl = "<TrustServiceStatusList xmlns=\""
+                    + ns
+                    + "\"><TSPService><ServiceInformation>"
+                    + "<ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>"
+                    + "<ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn</ServiceStatus>"
+                    + "<ServiceDigitalIdentity><DigitalId>"
+                    + certXmlElement("X509Certificate", realCertDer)
+                    + "</DigitalId></ServiceDigitalIdentity>"
+                    + "</ServiceInformation></TSPService></TrustServiceStatusList>";
+            int added = invokePrivate(
+                    svc,
+                    "parseTslAndAddCas",
+                    new Class<?>[] {byte[].class, String.class},
+                    tsl.getBytes(StandardCharsets.UTF_8),
+                    "https://source.test/tsl.xml");
             assertThat(added).isZero();
         }
 
         @Test
         @DisplayName("isActiveStatus accepts supervised/accredited and rejects withdrawn")
         void isActiveStatusBranches() throws Exception {
-            boolean supervised =
-                    invokePrivate(
-                            svc,
-                            "isActiveStatus",
-                            new Class<?>[] {String.class},
-                            "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision");
-            boolean accredited =
-                    invokePrivate(
-                            svc,
-                            "isActiveStatus",
-                            new Class<?>[] {String.class},
-                            "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited");
-            boolean withdrawn =
-                    invokePrivate(
-                            svc,
-                            "isActiveStatus",
-                            new Class<?>[] {String.class},
-                            "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn");
+            boolean supervised = invokePrivate(
+                    svc,
+                    "isActiveStatus",
+                    new Class<?>[] {String.class},
+                    "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision");
+            boolean accredited = invokePrivate(
+                    svc,
+                    "isActiveStatus",
+                    new Class<?>[] {String.class},
+                    "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/accredited");
+            boolean withdrawn = invokePrivate(
+                    svc,
+                    "isActiveStatus",
+                    new Class<?>[] {String.class},
+                    "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/withdrawn");
             assertThat(supervised).isTrue();
             assertThat(accredited).isTrue();
             assertThat(withdrawn).isFalse();
@@ -637,12 +594,11 @@ class CertificateValidationServiceMoreTest {
             props.getSecurity().getValidation().getEutl().setAcceptTransitional(true);
             CertificateValidationService transitional = newService(props);
             initTrustStore(transitional);
-            boolean cessation =
-                    invokePrivate(
-                            transitional,
-                            "isActiveStatus",
-                            new Class<?>[] {String.class},
-                            "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/supervisionincessation");
+            boolean cessation = invokePrivate(
+                    transitional,
+                    "isActiveStatus",
+                    new Class<?>[] {String.class},
+                    "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/supervisionincessation");
             assertThat(cessation).isTrue();
         }
 
@@ -650,16 +606,13 @@ class CertificateValidationServiceMoreTest {
         @DisplayName("parseAATLPdf returns zero for a PDF without embedded files")
         void parseAatlPdfNoEmbeddedFiles() throws Exception {
             byte[] plainPdf;
-            try (org.apache.pdfbox.pdmodel.PDDocument doc =
-                    new org.apache.pdfbox.pdmodel.PDDocument()) {
+            try (org.apache.pdfbox.pdmodel.PDDocument doc = new org.apache.pdfbox.pdmodel.PDDocument()) {
                 doc.addPage(new org.apache.pdfbox.pdmodel.PDPage());
                 java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
                 doc.save(baos);
                 plainPdf = baos.toByteArray();
             }
-            int added =
-                    invokePrivate(
-                            svc, "parseAATLPdf", new Class<?>[] {byte[].class}, (Object) plainPdf);
+            int added = invokePrivate(svc, "parseAATLPdf", new Class<?>[] {byte[].class}, (Object) plainPdf);
             assertThat(added).isZero();
         }
     }
@@ -700,11 +653,9 @@ class CertificateValidationServiceMoreTest {
 
             CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
             gen.addSignerInfoGenerator(
-                    new JcaSignerInfoGeneratorBuilder(
-                                    new JcaDigestCalculatorProviderBuilder().build())
+                    new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build())
                             .build(new JcaContentSignerBuilder("SHA256WithRSA").build(pk), cert));
-            gen.addCertificates(
-                    new JcaCertStore(new ArrayList<>(Arrays.asList(new Certificate[] {cert}))));
+            gen.addCertificates(new JcaCertStore(new ArrayList<>(Arrays.asList(new Certificate[] {cert}))));
             // encapsulate=true so signed attributes (incl. signingTime) are generated.
             CMSSignedData sd = gen.generate(new CMSProcessableByteArray("data".getBytes()), true);
             // Re-parse from DER so the signingTime value deserializes as ASN1UTCTime.
@@ -724,16 +675,12 @@ class CertificateValidationServiceMoreTest {
             CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
             // No signed-attribute table -> no signingTime, no timestamp.
             gen.addSignerInfoGenerator(
-                    new JcaSignerInfoGeneratorBuilder(
-                                    new JcaDigestCalculatorProviderBuilder().build())
+                    new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().build())
                             .setDirectSignature(true)
                             .build(new JcaContentSignerBuilder("SHA256WithRSA").build(pk), cert));
-            gen.addCertificates(
-                    new JcaCertStore(new ArrayList<>(Arrays.asList(new Certificate[] {cert}))));
+            gen.addCertificates(new JcaCertStore(new ArrayList<>(Arrays.asList(new Certificate[] {cert}))));
             CMSSignedData sd = gen.generate(new CMSProcessableByteArray("data".getBytes()), false);
-            CMSSignedData reparsed =
-                    new CMSSignedData(
-                            new CMSProcessableByteArray("data".getBytes()), sd.getEncoded());
+            CMSSignedData reparsed = new CMSSignedData(new CMSProcessableByteArray("data".getBytes()), sd.getEncoded());
             return reparsed.getSignerInfos().getSigners().iterator().next();
         }
     }
@@ -749,12 +696,8 @@ class CertificateValidationServiceMoreTest {
         @Test
         @DisplayName("bytesToHex renders bytes as upper-case two-digit hex")
         void bytesToHexFormatsBytes() throws Exception {
-            String hex =
-                    invokePrivate(
-                            svc,
-                            "bytesToHex",
-                            new Class<?>[] {byte[].class},
-                            (Object) new byte[] {0x00, 0x0f, (byte) 0xff, 0x10});
+            String hex = invokePrivate(svc, "bytesToHex", new Class<?>[] {byte[].class}, (Object)
+                    new byte[] {0x00, 0x0f, (byte) 0xff, 0x10});
             assertThat(hex).isEqualTo("000FFF10");
         }
 

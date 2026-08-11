@@ -22,7 +22,8 @@ import stirling.software.SPDF.controller.web.UploadLimitService;
 @Slf4j
 public class MultipartConfiguration {
 
-    @Autowired private UploadLimitService uploadLimitService;
+    @Autowired
+    private UploadLimitService uploadLimitService;
 
     /**
      * Creates MultipartConfigElement that respects fileUploadLimit from settings.yml or environment
@@ -35,8 +36,7 @@ public class MultipartConfiguration {
         MultipartConfigFactory factory = new MultipartConfigFactory();
 
         // First check if SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE is explicitly set
-        String springMaxFileSize =
-                java.lang.System.getenv("SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE");
+        String springMaxFileSize = java.lang.System.getenv("SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE");
         long uploadLimitBytes = 0;
 
         if (springMaxFileSize != null && !springMaxFileSize.trim().isEmpty()) {
@@ -46,10 +46,7 @@ public class MultipartConfiguration {
                 uploadLimitBytes = dataSize.toBytes();
                 log.info("Using SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: {}", springMaxFileSize);
             } catch (Exception e) {
-                log.warn(
-                        "Failed to parse SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: {}",
-                        springMaxFileSize,
-                        e);
+                log.warn("Failed to parse SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: {}", springMaxFileSize, e);
             }
         }
 
@@ -58,9 +55,7 @@ public class MultipartConfiguration {
         if (uploadLimitBytes == 0) {
             uploadLimitBytes = uploadLimitService.getUploadLimit();
             if (uploadLimitBytes > 0) {
-                log.info(
-                        "Using fileUploadLimit setting: {}",
-                        uploadLimitService.getReadableUploadLimit());
+                log.info("Using fileUploadLimit setting: {}", uploadLimitService.getReadableUploadLimit());
             }
         }
 

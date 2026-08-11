@@ -29,11 +29,10 @@ public class ClusterLicenseGate {
             return; // saas flavor - licensed via Stripe elsewhere
         }
         if (!runningProOrHigher) {
-            throw new IllegalStateException(
-                    "Cluster mode (cluster.enabled=true) requires a SERVER or"
-                            + " ENTERPRISE license. Configure stirling.premium.key with a valid"
-                            + " license key (contact sales@stirlingpdf.com to obtain one), or set"
-                            + " cluster.enabled=false.");
+            throw new IllegalStateException("Cluster mode (cluster.enabled=true) requires a SERVER or"
+                    + " ENTERPRISE license. Configure stirling.premium.key with a valid"
+                    + " license key (contact sales@stirlingpdf.com to obtain one), or set"
+                    + " cluster.enabled=false.");
         }
         log.info("Cluster license gate: SERVER/ENTERPRISE license verified, cluster mode allowed.");
     }

@@ -31,13 +31,12 @@ class PdfJsonPageDimensionTest {
     @Test
     @DisplayName("builder and setters round-trip")
     void builderAndSetters() {
-        PdfJsonPageDimension d =
-                PdfJsonPageDimension.builder()
-                        .pageNumber(2)
-                        .width(100f)
-                        .height(200f)
-                        .rotation(180)
-                        .build();
+        PdfJsonPageDimension d = PdfJsonPageDimension.builder()
+                .pageNumber(2)
+                .width(100f)
+                .height(200f)
+                .rotation(180)
+                .build();
         assertThat(d.getPageNumber()).isEqualTo(2);
         assertThat(d.getWidth()).isEqualTo(100f);
         assertThat(d.getHeight()).isEqualTo(200f);

@@ -83,56 +83,49 @@ public class UserController {
 
             if (userService.usernameExistsIgnoreCase(username)) {
                 log.warn("Registration failed: username already exists: {}", username);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "User already exists"));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "User already exists"));
             }
 
             if (!userService.isUsernameValid(username)) {
                 log.warn("Registration failed: invalid username format: {}", username);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Invalid username format"));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid username format"));
             }
 
             if (password == null || password.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Password is required"));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Password is required"));
             }
 
             if (licenseSettingsService.wouldExceedLimit(1)) {
                 long availableSlots = licenseSettingsService.getAvailableUserSlots();
                 int maxAllowed = licenseSettingsService.calculateMaxAllowedUsers();
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(
-                                Map.of(
-                                        "error",
-                                        "Maximum number of users reached. Allowed: "
-                                                + maxAllowed
-                                                + ", Available slots: "
-                                                + availableSlots));
+                        .body(Map.of(
+                                "error",
+                                "Maximum number of users reached. Allowed: "
+                                        + maxAllowed
+                                        + ", Available slots: "
+                                        + availableSlots));
             }
             Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
-            SaveUserRequest.Builder builder =
-                    SaveUserRequest.builder()
-                            .username(username)
-                            .password(password)
-                            .team(team)
-                            .enabled(false);
+            SaveUserRequest.Builder builder = SaveUserRequest.builder()
+                    .username(username)
+                    .password(password)
+                    .team(team)
+                    .enabled(false);
             User user = userService.saveUserCore(builder.build());
 
             log.info("User registered successfully: {}", username);
 
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(
-                            Map.of(
-                                    "user",
-                                    buildUserResponse(user),
-                                    "message",
-                                    "Account created successfully. Please log in."));
+                    .body(Map.of(
+                            "user",
+                            buildUserResponse(user),
+                            "message",
+                            "Account created successfully. Please log in."));
 
         } catch (IllegalArgumentException e) {
             log.error("Registration validation error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Registration error for user: {}", username, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -204,22 +197,13 @@ public class UserController {
                 userService.changeUsername(user, newUsername);
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(
-                                Map.of(
-                                        "error",
-                                        "invalidUsername",
-                                        "message",
-                                        "Invalid username format"));
+                        .body(Map.of("error", "invalidUsername", "message", "Invalid username format"));
             }
         }
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
-        return ResponseEntity.ok(
-                Map.of(
-                        "message",
-                        "credsUpdated",
-                        "description",
-                        "Username changed successfully. Please log in again."));
+        return ResponseEntity.ok(Map.of(
+                "message", "credsUpdated", "description", "Username changed successfully. Please log in again."));
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
@@ -250,33 +234,25 @@ public class UserController {
                 || confirmPassword == null
                 || confirmPassword.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "missingParameters",
-                                    "message",
-                                    "Current password, new password, and confirmation are"
-                                            + " required"));
+                    .body(Map.of(
+                            "error",
+                            "missingParameters",
+                            "message",
+                            "Current password, new password, and confirmation are" + " required"));
         }
 
         if (!newPassword.equals(confirmPassword)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "passwordMismatch",
-                                    "message",
-                                    "New password and confirmation do not match"));
+                    .body(Map.of("error", "passwordMismatch", "message", "New password and confirmation do not match"));
         }
 
         if (newPassword.equals(currentPassword)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "passwordUnchanged",
-                                    "message",
-                                    "New password must be different from the current password"));
+                    .body(Map.of(
+                            "error",
+                            "passwordUnchanged",
+                            "message",
+                            "New password must be different from the current password"));
         }
 
         User user = userOpt.get();
@@ -290,12 +266,8 @@ public class UserController {
         userService.changeFirstUse(user, false);
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
-        return ResponseEntity.ok(
-                Map.of(
-                        "message",
-                        "credsUpdated",
-                        "description",
-                        "Password changed successfully. Please log in again."));
+        return ResponseEntity.ok(Map.of(
+                "message", "credsUpdated", "description", "Password changed successfully. Please log in again."));
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
@@ -325,12 +297,8 @@ public class UserController {
         userService.changePassword(user, newPassword);
         // Logout using Spring's utility
         new SecurityContextLogoutHandler().logout(request, response, null);
-        return ResponseEntity.ok(
-                Map.of(
-                        "message",
-                        "credsUpdated",
-                        "description",
-                        "Password changed successfully. Please log in again."));
+        return ResponseEntity.ok(Map.of(
+                "message", "credsUpdated", "description", "Password changed successfully. Please log in again."));
     }
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
@@ -353,8 +321,7 @@ public class UserController {
      * @throws UnsupportedProviderException If the operation is not supported for the user's
      *     provider.
      */
-    public ResponseEntity<?> updateUserSettings(
-            @RequestBody Map<String, String> updates, Principal principal)
+    public ResponseEntity<?> updateUserSettings(@RequestBody Map<String, String> updates, Principal principal)
             throws SQLException, UnsupportedProviderException {
         log.debug("Processed updates: {}", updates);
         // Assuming you have a method in userService to update the settings for a user
@@ -370,42 +337,34 @@ public class UserController {
             @RequestParam(name = "role") String role,
             @RequestParam(name = "teamId", required = false) Long teamId,
             @RequestParam(name = "authType") String authType,
-            @RequestParam(name = "forceChange", required = false, defaultValue = "false")
-                    boolean forceChange,
-            @RequestParam(name = "forceMFA", required = false, defaultValue = "false")
-                    boolean forceMFA)
+            @RequestParam(name = "forceChange", required = false, defaultValue = "false") boolean forceChange,
+            @RequestParam(name = "forceMFA", required = false, defaultValue = "false") boolean forceMFA)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.isUsernameValid(username)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "Invalid username format. Username must be 3-50 characters."));
+                    .body(Map.of("error", "Invalid username format. Username must be 3-50 characters."));
         }
         if (licenseSettingsService.wouldExceedLimit(1)) {
             long availableSlots = licenseSettingsService.getAvailableUserSlots();
             int maxAllowed = licenseSettingsService.calculateMaxAllowedUsers();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "Maximum number of users reached. Allowed: "
-                                            + maxAllowed
-                                            + ", Available slots: "
-                                            + availableSlots));
+                    .body(Map.of(
+                            "error",
+                            "Maximum number of users reached. Allowed: "
+                                    + maxAllowed
+                                    + ", Available slots: "
+                                    + availableSlots));
         }
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         User user = null;
         if (userOpt.isPresent()) {
             user = userOpt.get();
             if (user.getUsername().equalsIgnoreCase(username)) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(Map.of("error", "Username already exists."));
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Username already exists."));
             }
         }
         if (userService.usernameExistsIgnoreCase(username)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Username already exists."));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Username already exists."));
         }
         try {
             // Validate the role
@@ -417,8 +376,7 @@ public class UserController {
             }
         } catch (IllegalArgumentException e) {
             // If the role ID is not valid, return error
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Invalid role specified."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid role specified."));
         }
 
         // Use teamId if provided, otherwise use default team
@@ -432,15 +390,16 @@ public class UserController {
         } else {
             // Check if the selected team is Internal - prevent assigning to it
             Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
-            if (selectedTeam != null
-                    && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
+            if (selectedTeam != null && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Cannot assign users to Internal team."));
             }
         }
 
-        SaveUserRequest.Builder builder =
-                SaveUserRequest.builder().username(username).teamId(effectiveTeamId).role(role);
+        SaveUserRequest.Builder builder = SaveUserRequest.builder()
+                .username(username)
+                .teamId(effectiveTeamId)
+                .role(role);
 
         AuthenticationType requestedAuthType;
         if ("SSO".equalsIgnoreCase(authType)) {
@@ -457,8 +416,7 @@ public class UserController {
 
         if (requestedAuthType == AuthenticationType.WEB) {
             if (password == null || password.isBlank()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Password is required."));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Password is required."));
             }
             if (password.length() < 6) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -481,18 +439,13 @@ public class UserController {
 
         // Check if email invites are enabled
         if (!applicationProperties.getMail().isEnableInvites()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Email invites are not enabled"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Email invites are not enabled"));
         }
 
         // Check if email service is available
         if (!emailService.isPresent()) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "Email service is not configured. Please configure SMTP"
-                                            + " settings."));
+                    .body(Map.of("error", "Email service is not configured. Please configure SMTP" + " settings."));
         }
 
         // Parse comma-separated email addresses
@@ -507,15 +460,14 @@ public class UserController {
             long availableSlots = licenseSettingsService.getAvailableUserSlots();
             int maxAllowed = licenseSettingsService.calculateMaxAllowedUsers();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "Not enough user slots available. Allowed: "
-                                            + maxAllowed
-                                            + ", Available: "
-                                            + availableSlots
-                                            + ", Requested: "
-                                            + emailArray.length));
+                    .body(Map.of(
+                            "error",
+                            "Not enough user slots available. Allowed: "
+                                    + maxAllowed
+                                    + ", Available: "
+                                    + availableSlots
+                                    + ", Requested: "
+                                    + emailArray.length));
         }
 
         // Validate role
@@ -526,8 +478,7 @@ public class UserController {
                         .body(Map.of("error", "Cannot assign INTERNAL_API_USER role"));
             }
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Invalid role specified"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid role specified"));
         }
 
         // Determine team
@@ -540,8 +491,7 @@ public class UserController {
             }
         } else {
             Team selectedTeam = teamRepository.findById(effectiveTeamId).orElse(null);
-            if (selectedTeam != null
-                    && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
+            if (selectedTeam != null && TeamService.INTERNAL_TEAM_NAME.equals(selectedTeam.getName())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "Cannot assign users to Internal team"));
             }
@@ -598,19 +548,16 @@ public class UserController {
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (!userOpt.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
         }
         if (!userService.usernameExistsIgnoreCase(username)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
         }
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
         // Check if the provided username matches the current session's username
         if (currentUsername.equalsIgnoreCase(username)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Cannot change your own role."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Cannot change your own role."));
         }
         try {
             // Validate the role
@@ -622,8 +569,7 @@ public class UserController {
             }
         } catch (IllegalArgumentException e) {
             // If the role ID is not valid, return error
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Invalid role specified."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid role specified."));
         }
         User user = userOpt.get();
 
@@ -662,15 +608,13 @@ public class UserController {
             @RequestParam(name = "generateRandom", defaultValue = "false") boolean generateRandom,
             @RequestParam(name = "sendEmail", defaultValue = "false") boolean sendEmail,
             @RequestParam(name = "includePassword", defaultValue = "false") boolean includePassword,
-            @RequestParam(name = "forcePasswordChange", defaultValue = "false")
-                    boolean forcePasswordChange,
+            @RequestParam(name = "forcePasswordChange", defaultValue = "false") boolean forcePasswordChange,
             HttpServletRequest request,
             Authentication authentication)
             throws SQLException, UnsupportedProviderException, MessagingException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
         }
 
         String currentUsername = authentication.getName();
@@ -687,8 +631,7 @@ public class UserController {
         }
 
         if (finalPassword == null || finalPassword.trim().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "New password is required."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "New password is required."));
         }
 
         // Set force password change flag before changing password so both are saved together
@@ -700,29 +643,23 @@ public class UserController {
 
         if (sendEmail) {
             if (emailService.isEmpty() || !applicationProperties.getMail().isEnabled()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Email is not configured."));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Email is not configured."));
             }
 
             String userEmail = user.getUsername();
             // Check if username is a valid email format
             if (userEmail == null || userEmail.isBlank() || !userEmail.contains("@")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(
-                                Map.of(
-                                        "error",
-                                        "User's email is not a valid email address. Notifications"
-                                                + " are disabled."));
+                        .body(Map.of(
+                                "error",
+                                "User's email is not a valid email address. Notifications" + " are disabled."));
             }
 
             String loginUrl = buildLoginUrl(request);
             emailService
                     .get()
                     .sendPasswordChangedNotification(
-                            userEmail,
-                            user.getUsername(),
-                            includePassword ? finalPassword : null,
-                            loginUrl);
+                            userEmail, user.getUsername(), includePassword ? finalPassword : null, loginUrl);
         }
 
         return ResponseEntity.ok(Map.of("message", "User password updated successfully"));
@@ -737,12 +674,10 @@ public class UserController {
             throws SQLException, UnsupportedProviderException {
         Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
         }
         if (!userService.usernameExistsIgnoreCase(username)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
         }
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
@@ -758,8 +693,7 @@ public class UserController {
             List<Object> principals = sessionRegistry.getAllPrincipals();
             String userNameP = "";
             for (Object principal : principals) {
-                List<SessionInformation> sessionsInformation =
-                        sessionRegistry.getAllSessions(principal, false);
+                List<SessionInformation> sessionsInformation = sessionRegistry.getAllSessions(principal, false);
                 if (principal instanceof UserDetails detailsUser) {
                     userNameP = detailsUser.getUsername();
                 } else if (principal instanceof OAuth2User oAuth2User) {
@@ -776,8 +710,7 @@ public class UserController {
                 }
             }
         }
-        return ResponseEntity.ok(
-                Map.of("message", "User " + (enabled ? "enabled" : "disabled") + " successfully"));
+        return ResponseEntity.ok(Map.of("message", "User " + (enabled ? "enabled" : "disabled") + " successfully"));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -791,11 +724,9 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/deleteUser/{username}")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
-    public ResponseEntity<?> deleteUser(
-            @PathVariable("username") String username, Authentication authentication) {
+    public ResponseEntity<?> deleteUser(@PathVariable("username") String username, Authentication authentication) {
         if (!userService.usernameExistsIgnoreCase(username)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found."));
         }
         // Get the currently authenticated username
         String currentUsername = authentication.getName();
@@ -805,8 +736,7 @@ public class UserController {
                     .body(Map.of("error", "Cannot delete your own account."));
         }
         // Invalidate all sessions before deleting the user
-        List<SessionInformation> sessionsInformations =
-                sessionRegistry.getAllSessions(username, false);
+        List<SessionInformation> sessionsInformations = sessionRegistry.getAllSessions(username, false);
         for (SessionInformation sessionsInformation : sessionsInformations) {
             sessionRegistry.expireSession(sessionsInformation.getSessionId());
             sessionRegistry.removeSessionInformation(sessionsInformation.getSessionId());
@@ -819,14 +749,12 @@ public class UserController {
     @PostMapping("/get-api-key")
     public ResponseEntity<Map<String, String>> getApiKey(Principal principal) {
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "User not authenticated."));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "User not authenticated."));
         }
         String username = principal.getName();
         String apiKey = userService.getApiKeyForUser(username);
         if (apiKey == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "API key not found for user."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "API key not found for user."));
         }
         return ResponseEntity.ok(Map.of("apiKey", apiKey));
     }
@@ -835,15 +763,13 @@ public class UserController {
     @PostMapping("/update-api-key")
     public ResponseEntity<Map<String, String>> updateApiKey(Principal principal) {
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "User not authenticated."));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "User not authenticated."));
         }
         String username = principal.getName();
         User user = userService.refreshApiKeyForUser(username);
         String apiKey = user.getApiKey();
         if (apiKey == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "API key not found for user."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "API key not found for user."));
         }
         return ResponseEntity.ok(Map.of("apiKey", apiKey));
     }
@@ -859,19 +785,17 @@ public class UserController {
         String configuredFrontendUrl = applicationProperties.getSystem().getFrontendUrl();
         if (configuredFrontendUrl != null && !configuredFrontendUrl.trim().isEmpty()) {
             // Use configured frontend URL (remove trailing slash if present)
-            baseUrl =
-                    configuredFrontendUrl.endsWith("/")
-                            ? configuredFrontendUrl.substring(0, configuredFrontendUrl.length() - 1)
-                            : configuredFrontendUrl;
+            baseUrl = configuredFrontendUrl.endsWith("/")
+                    ? configuredFrontendUrl.substring(0, configuredFrontendUrl.length() - 1)
+                    : configuredFrontendUrl;
         } else {
             // Fall back to backend URL from request
-            baseUrl =
-                    request.getScheme()
-                            + "://"
-                            + request.getServerName()
-                            + (request.getServerPort() != 80 && request.getServerPort() != 443
-                                    ? ":" + request.getServerPort()
-                                    : "");
+            baseUrl = request.getScheme()
+                    + "://"
+                    + request.getServerName()
+                    + (request.getServerPort() != 80 && request.getServerPort() != 443
+                            ? ":" + request.getServerPort()
+                            : "");
         }
         return baseUrl + "/login";
     }
@@ -885,8 +809,7 @@ public class UserController {
      * @param loginUrl The URL to the login page
      * @return InviteResult containing success status and optional error message
      */
-    private InviteResult processEmailInvite(
-            String email, Long teamId, String role, String loginUrl) {
+    private InviteResult processEmailInvite(String email, Long teamId, String role, String loginUrl) {
         try {
             // Validate email format (basic check)
             if (!email.contains("@") || !email.contains(".")) {
@@ -902,13 +825,12 @@ public class UserController {
             String temporaryPassword = java.util.UUID.randomUUID().toString().substring(0, 12);
 
             // Create user with forceChange=true
-            SaveUserRequest.Builder builder =
-                    SaveUserRequest.builder()
-                            .username(email)
-                            .password(temporaryPassword)
-                            .teamId(teamId)
-                            .role(role)
-                            .firstLogin(true);
+            SaveUserRequest.Builder builder = SaveUserRequest.builder()
+                    .username(email)
+                    .password(temporaryPassword)
+                    .teamId(teamId)
+                    .role(role)
+                    .firstLogin(true);
             userService.saveUserCore(builder.build());
 
             // Send invite email
@@ -959,8 +881,7 @@ public class UserController {
         try {
             String username = userService.getCurrentUsername();
             if (username == null || "anonymousUser".equalsIgnoreCase(username)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
             }
 
             Optional<User> userOpt = userService.findByUsernameIgnoreCase(username);
@@ -976,8 +897,7 @@ public class UserController {
             return ResponseEntity.ok().body(Map.of("success", true));
         } catch (Exception e) {
             log.error("Error completing initial setup", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to complete initial setup");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to complete initial setup");
         }
     }
 
@@ -1013,8 +933,10 @@ public class UserController {
             source = userRepository.findAll();
         }
 
-        List<UserSummaryDTO> users =
-                source.stream().filter(User::isEnabled).map(this::toUserSummaryDTO).toList();
+        List<UserSummaryDTO> users = source.stream()
+                .filter(User::isEnabled)
+                .map(this::toUserSummaryDTO)
+                .toList();
 
         return ResponseEntity.ok(users);
     }

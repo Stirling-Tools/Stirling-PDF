@@ -23,7 +23,8 @@ import stirling.software.common.model.ApplicationProperties;
 
 class WebResponseUtilsTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private TempFileManager tempFileManager;
 
@@ -51,8 +52,7 @@ class WebResponseUtilsTest {
     void testBytesToWebResponse_customMediaType() throws IOException {
         byte[] data = "zip data".getBytes(StandardCharsets.UTF_8);
         ResponseEntity<byte[]> response =
-                WebResponseUtils.bytesToWebResponse(
-                        data, "output.zip", MediaType.APPLICATION_OCTET_STREAM);
+                WebResponseUtils.bytesToWebResponse(data, "output.zip", MediaType.APPLICATION_OCTET_STREAM);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(MediaType.APPLICATION_OCTET_STREAM, response.getHeaders().getContentType());
@@ -76,8 +76,7 @@ class WebResponseUtilsTest {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write("data".getBytes(StandardCharsets.UTF_8));
 
-        ResponseEntity<byte[]> response =
-                WebResponseUtils.baosToWebResponse(baos, "doc.html", MediaType.TEXT_HTML);
+        ResponseEntity<byte[]> response = WebResponseUtils.baosToWebResponse(baos, "doc.html", MediaType.TEXT_HTML);
 
         assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
     }
@@ -96,8 +95,7 @@ class WebResponseUtilsTest {
     void testBytesToWebResponse_specialCharsInFilename() throws IOException {
         byte[] data = "test".getBytes(StandardCharsets.UTF_8);
         // A space in the filename gets URL-encoded to '+' then replaced with '%20'
-        ResponseEntity<byte[]> response =
-                WebResponseUtils.bytesToWebResponse(data, "file name.pdf");
+        ResponseEntity<byte[]> response = WebResponseUtils.bytesToWebResponse(data, "file name.pdf");
 
         String contentDisposition = response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
         assertNotNull(contentDisposition);
@@ -123,8 +121,7 @@ class WebResponseUtilsTest {
         File backing = tempFile.getFile();
         assertTrue(backing.exists(), "precondition: backing file should exist");
 
-        WebResponseUtils.ManagedTempFileResource resource =
-                new WebResponseUtils.ManagedTempFileResource(tempFile);
+        WebResponseUtils.ManagedTempFileResource resource = new WebResponseUtils.ManagedTempFileResource(tempFile);
 
         byte[] readBack;
         try (InputStream in = resource.getInputStream()) {
@@ -132,9 +129,7 @@ class WebResponseUtilsTest {
         }
 
         assertArrayEquals(payload, readBack, "stream should deliver the original bytes");
-        assertFalse(
-                backing.exists(),
-                "backing temp file must be deleted once the response stream is closed");
+        assertFalse(backing.exists(), "backing temp file must be deleted once the response stream is closed");
     }
 
     @Test
@@ -149,16 +144,13 @@ class WebResponseUtilsTest {
         File backing = tempFile.getFile();
         assertTrue(backing.exists());
 
-        WebResponseUtils.ManagedTempFileResource resource =
-                new WebResponseUtils.ManagedTempFileResource(tempFile);
+        WebResponseUtils.ManagedTempFileResource resource = new WebResponseUtils.ManagedTempFileResource(tempFile);
 
         InputStream in = resource.getInputStream();
         // Pre-close the underlying stream to guarantee read() throws.
         in.close();
         // After close, the temp file has been deleted already.
-        assertFalse(
-                backing.exists(),
-                "backing file is deleted on first close — precondition for read assertion");
+        assertFalse(backing.exists(), "backing file is deleted on first close — precondition for read assertion");
 
         // Any attempt to read from the already-closed stream must throw IOException
         // (not silently return -1). This exercises the ClosingInputStream.read() path
@@ -176,24 +168,18 @@ class WebResponseUtilsTest {
         // super.getInputStream() throws on open. Instrument close() with an AtomicBoolean
         // hook to confirm the cleanup path ran.
         AtomicBoolean closed = new AtomicBoolean(false);
-        TempFile spying =
-                new TempFile(tempFileManager, ".pdf") {
-                    @Override
-                    public void close() {
-                        closed.set(true);
-                        super.close();
-                    }
-                };
-        assertTrue(
-                spying.getFile().delete(),
-                "precondition: delete backing so super.getInputStream() fails");
+        TempFile spying = new TempFile(tempFileManager, ".pdf") {
+            @Override
+            public void close() {
+                closed.set(true);
+                super.close();
+            }
+        };
+        assertTrue(spying.getFile().delete(), "precondition: delete backing so super.getInputStream() fails");
 
-        WebResponseUtils.ManagedTempFileResource resource =
-                new WebResponseUtils.ManagedTempFileResource(spying);
+        WebResponseUtils.ManagedTempFileResource resource = new WebResponseUtils.ManagedTempFileResource(spying);
 
         assertThrows(IOException.class, resource::getInputStream);
-        assertTrue(
-                closed.get(),
-                "tempFile.close() must run when super.getInputStream() fails on open");
+        assertTrue(closed.get(), "tempFile.close() must run when super.getInputStream() fails on open");
     }
 }

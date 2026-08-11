@@ -56,10 +56,9 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
      * @param userId the user ID
      * @return the user's primary membership, if any
      */
-    @Query(
-            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.team"
-                    + " WHERE tm.user.id = :userId"
-                    + " ORDER BY tm.createdAt ASC")
+    @Query("SELECT tm FROM TeamMembership tm JOIN FETCH tm.team"
+            + " WHERE tm.user.id = :userId"
+            + " ORDER BY tm.createdAt ASC")
     List<TeamMembership> findPrimaryMembership(@Param("userId") Long userId);
 
     /**
@@ -69,10 +68,8 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
      * @param role the team role (LEADER or MEMBER)
      * @return List of team memberships
      */
-    @Query(
-            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.user WHERE tm.team.id = :teamId AND tm.role = :role")
-    List<TeamMembership> findByTeamIdAndRole(
-            @Param("teamId") Long teamId, @Param("role") TeamRole role);
+    @Query("SELECT tm FROM TeamMembership tm JOIN FETCH tm.user WHERE tm.team.id = :teamId AND tm.role = :role")
+    List<TeamMembership> findByTeamIdAndRole(@Param("teamId") Long teamId, @Param("role") TeamRole role);
 
     /**
      * Count members with a specific role in a team. Lighter than {@link #findByTeamIdAndRole} when
@@ -115,9 +112,7 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
     boolean existsByUserIdAndRole(Long userId, TeamRole role);
 
     /** All rows holding a role, users and teams pre-fetched for out-of-session mapping. */
-    @Query(
-            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.user JOIN FETCH tm.team"
-                    + " WHERE tm.role = :role")
+    @Query("SELECT tm FROM TeamMembership tm JOIN FETCH tm.user JOIN FETCH tm.team" + " WHERE tm.role = :role")
     List<TeamMembership> findByRoleFetchingUserAndTeam(@Param("role") TeamRole role);
 
     void deleteByTeamId(Long teamId);

@@ -123,8 +123,7 @@ class PdfJsonImageServiceMoreTest {
                 PdfJsonImageElement element = new PdfJsonImageElement();
                 element.setImageData(pngBase64(5, 5));
                 element.setId("t-nan");
-                element.setTransform(
-                        new float[] {Float.NaN, 0f, 0f, Float.POSITIVE_INFINITY, 0f, 0f});
+                element.setTransform(new float[] {Float.NaN, 0f, 0f, Float.POSITIVE_INFINITY, 0f, 0f});
                 Map<String, PDImageXObject> cache = new HashMap<>();
 
                 service.drawImageElement(cs, doc, element, cache);
@@ -169,13 +168,7 @@ class PdfJsonImageServiceMoreTest {
 
                 service.drawImageElement(cs, doc, element, cache);
 
-                verify(cs)
-                        .drawImage(
-                                any(PDImageXObject.class),
-                                anyFloat(),
-                                anyFloat(),
-                                anyFloat(),
-                                anyFloat());
+                verify(cs).drawImage(any(PDImageXObject.class), anyFloat(), anyFloat(), anyFloat(), anyFloat());
             }
         }
 
@@ -273,11 +266,8 @@ class PdfJsonImageServiceMoreTest {
                 doc.addPage(page);
                 drawImageOnPage(doc, page);
 
-                var progress =
-                        new java.util.ArrayList<
-                                stirling.software.SPDF.model.api.PdfJsonConversionProgress>();
-                Map<Integer, List<PdfJsonImageElement>> result =
-                        service.collectImages(doc, 1, progress::add);
+                var progress = new java.util.ArrayList<stirling.software.SPDF.model.api.PdfJsonConversionProgress>();
+                Map<Integer, List<PdfJsonImageElement>> result = service.collectImages(doc, 1, progress::add);
 
                 assertThat(result).containsKey(1);
                 assertThat(result.get(1)).hasSize(1);
@@ -291,19 +281,18 @@ class PdfJsonImageServiceMoreTest {
             try (PDDocument doc = new PDDocument()) {
                 PDPage page = new PDPage(PDRectangle.LETTER);
                 doc.addPage(page);
-                PDImageXObject image =
-                        PDImageXObject.createFromByteArray(doc, pngBytes(8, 8), "shared");
+                PDImageXObject image = PDImageXObject.createFromByteArray(doc, pngBytes(8, 8), "shared");
                 try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
                     cs.drawImage(image, 10, 10, 40, 40);
                     cs.drawImage(image, 100, 100, 40, 40);
                 }
 
-                Map<Integer, List<PdfJsonImageElement>> result =
-                        service.collectImages(doc, 1, p -> {});
+                Map<Integer, List<PdfJsonImageElement>> result = service.collectImages(doc, 1, p -> {});
                 assertThat(result.get(1)).hasSize(2);
                 // both elements share identical base64 payload
                 assertEquals(
-                        result.get(1).get(0).getImageData(), result.get(1).get(1).getImageData());
+                        result.get(1).get(0).getImageData(),
+                        result.get(1).get(1).getImageData());
             }
         }
     }
@@ -321,20 +310,11 @@ class PdfJsonImageServiceMoreTest {
         @Test
         @DisplayName("safeFloat replaces null / NaN / Infinity with default")
         void safeFloat() throws Exception {
+            assertEquals(5f, invoke("safeFloat", new Class<?>[] {Float.class, float.class}, null, 5f));
+            assertEquals(9f, invoke("safeFloat", new Class<?>[] {Float.class, float.class}, Float.NaN, 9f));
             assertEquals(
-                    5f, invoke("safeFloat", new Class<?>[] {Float.class, float.class}, null, 5f));
-            assertEquals(
-                    9f,
-                    invoke("safeFloat", new Class<?>[] {Float.class, float.class}, Float.NaN, 9f));
-            assertEquals(
-                    2f,
-                    invoke(
-                            "safeFloat",
-                            new Class<?>[] {Float.class, float.class},
-                            Float.POSITIVE_INFINITY,
-                            2f));
-            assertEquals(
-                    7f, invoke("safeFloat", new Class<?>[] {Float.class, float.class}, 7f, 0f));
+                    2f, invoke("safeFloat", new Class<?>[] {Float.class, float.class}, Float.POSITIVE_INFINITY, 2f));
+            assertEquals(7f, invoke("safeFloat", new Class<?>[] {Float.class, float.class}, 7f, 0f));
         }
 
         @Test
@@ -345,35 +325,18 @@ class PdfJsonImageServiceMoreTest {
             bounds.setRight(40f);
             bounds.setBottom(5f);
             bounds.setTop(25f);
-            assertEquals(
-                    30f,
-                    invoke("fallbackWidth", new Class<?>[] {PdfJsonImageElement.class}, bounds));
-            assertEquals(
-                    20f,
-                    invoke("fallbackHeight", new Class<?>[] {PdfJsonImageElement.class}, bounds));
+            assertEquals(30f, invoke("fallbackWidth", new Class<?>[] {PdfJsonImageElement.class}, bounds));
+            assertEquals(20f, invoke("fallbackHeight", new Class<?>[] {PdfJsonImageElement.class}, bounds));
 
             PdfJsonImageElement nativeOnly = new PdfJsonImageElement();
             nativeOnly.setNativeWidth(123);
             nativeOnly.setNativeHeight(456);
-            assertEquals(
-                    123f,
-                    invoke(
-                            "fallbackWidth",
-                            new Class<?>[] {PdfJsonImageElement.class},
-                            nativeOnly));
-            assertEquals(
-                    456f,
-                    invoke(
-                            "fallbackHeight",
-                            new Class<?>[] {PdfJsonImageElement.class},
-                            nativeOnly));
+            assertEquals(123f, invoke("fallbackWidth", new Class<?>[] {PdfJsonImageElement.class}, nativeOnly));
+            assertEquals(456f, invoke("fallbackHeight", new Class<?>[] {PdfJsonImageElement.class}, nativeOnly));
 
             PdfJsonImageElement empty = new PdfJsonImageElement();
-            assertEquals(
-                    1f, invoke("fallbackWidth", new Class<?>[] {PdfJsonImageElement.class}, empty));
-            assertEquals(
-                    1f,
-                    invoke("fallbackHeight", new Class<?>[] {PdfJsonImageElement.class}, empty));
+            assertEquals(1f, invoke("fallbackWidth", new Class<?>[] {PdfJsonImageElement.class}, empty));
+            assertEquals(1f, invoke("fallbackHeight", new Class<?>[] {PdfJsonImageElement.class}, empty));
         }
 
         @Test
@@ -382,41 +345,19 @@ class PdfJsonImageServiceMoreTest {
             PdfJsonImageElement leftEl = new PdfJsonImageElement();
             leftEl.setLeft(11f);
             assertEquals(
-                    11f,
-                    invoke(
-                            "resolveLeft",
-                            new Class<?>[] {PdfJsonImageElement.class, float.class},
-                            leftEl,
-                            10f));
+                    11f, invoke("resolveLeft", new Class<?>[] {PdfJsonImageElement.class, float.class}, leftEl, 10f));
 
             PdfJsonImageElement xEl = new PdfJsonImageElement();
             xEl.setX(22f);
-            assertEquals(
-                    22f,
-                    invoke(
-                            "resolveLeft",
-                            new Class<?>[] {PdfJsonImageElement.class, float.class},
-                            xEl,
-                            10f));
+            assertEquals(22f, invoke("resolveLeft", new Class<?>[] {PdfJsonImageElement.class, float.class}, xEl, 10f));
 
             PdfJsonImageElement rightEl = new PdfJsonImageElement();
             rightEl.setRight(100f);
             assertEquals(
-                    70f,
-                    invoke(
-                            "resolveLeft",
-                            new Class<?>[] {PdfJsonImageElement.class, float.class},
-                            rightEl,
-                            30f));
+                    70f, invoke("resolveLeft", new Class<?>[] {PdfJsonImageElement.class, float.class}, rightEl, 30f));
 
             PdfJsonImageElement none = new PdfJsonImageElement();
-            assertEquals(
-                    0f,
-                    invoke(
-                            "resolveLeft",
-                            new Class<?>[] {PdfJsonImageElement.class, float.class},
-                            none,
-                            30f));
+            assertEquals(0f, invoke("resolveLeft", new Class<?>[] {PdfJsonImageElement.class, float.class}, none, 30f));
         }
 
         @Test
@@ -426,40 +367,21 @@ class PdfJsonImageServiceMoreTest {
             bottomEl.setBottom(11f);
             assertEquals(
                     11f,
-                    invoke(
-                            "resolveBottom",
-                            new Class<?>[] {PdfJsonImageElement.class, float.class},
-                            bottomEl,
-                            10f));
+                    invoke("resolveBottom", new Class<?>[] {PdfJsonImageElement.class, float.class}, bottomEl, 10f));
 
             PdfJsonImageElement yEl = new PdfJsonImageElement();
             yEl.setY(22f);
             assertEquals(
-                    22f,
-                    invoke(
-                            "resolveBottom",
-                            new Class<?>[] {PdfJsonImageElement.class, float.class},
-                            yEl,
-                            10f));
+                    22f, invoke("resolveBottom", new Class<?>[] {PdfJsonImageElement.class, float.class}, yEl, 10f));
 
             PdfJsonImageElement topEl = new PdfJsonImageElement();
             topEl.setTop(100f);
             assertEquals(
-                    60f,
-                    invoke(
-                            "resolveBottom",
-                            new Class<?>[] {PdfJsonImageElement.class, float.class},
-                            topEl,
-                            40f));
+                    60f, invoke("resolveBottom", new Class<?>[] {PdfJsonImageElement.class, float.class}, topEl, 40f));
 
             PdfJsonImageElement none = new PdfJsonImageElement();
             assertEquals(
-                    0f,
-                    invoke(
-                            "resolveBottom",
-                            new Class<?>[] {PdfJsonImageElement.class, float.class},
-                            none,
-                            40f));
+                    0f, invoke("resolveBottom", new Class<?>[] {PdfJsonImageElement.class, float.class}, none, 40f));
         }
 
         @Test

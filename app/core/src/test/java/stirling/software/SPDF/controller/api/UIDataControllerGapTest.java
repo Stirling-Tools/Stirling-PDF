@@ -46,24 +46,30 @@ import tools.jackson.databind.json.JsonMapper;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class UIDataControllerGapTest {
 
-    @Mock private ApplicationProperties applicationProperties;
-    @Mock private ApplicationProperties.System system;
-    @Mock private ApplicationProperties.Legal legal;
-    @Mock private SharedSignatureService signatureService;
-    @Mock private UserServiceInterface userService;
-    @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock
+    private ApplicationProperties applicationProperties;
+
+    @Mock
+    private ApplicationProperties.System system;
+
+    @Mock
+    private ApplicationProperties.Legal legal;
+
+    @Mock
+    private SharedSignatureService signatureService;
+
+    @Mock
+    private UserServiceInterface userService;
+
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
 
     private final ResourceLoader resourceLoader = new DefaultResourceLoader();
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     private UIDataController controller(UserServiceInterface user) {
         return new UIDataController(
-                applicationProperties,
-                signatureService,
-                user,
-                resourceLoader,
-                runtimePathConfig,
-                objectMapper);
+                applicationProperties, signatureService, user, resourceLoader, runtimePathConfig, objectMapper);
     }
 
     @BeforeEach
@@ -170,7 +176,8 @@ class UIDataControllerGapTest {
         @Test
         @DisplayName("returns the placeholder entry when the config directory is missing")
         void missingDirectoryYieldsPlaceholder() {
-            String missing = Path.of("nonexistent-pipeline-dir-" + UUID.randomUUID()).toString();
+            String missing =
+                    Path.of("nonexistent-pipeline-dir-" + UUID.randomUUID()).toString();
             when(runtimePathConfig.getPipelineDefaultWebUiConfigs()).thenReturn(missing);
 
             ResponseEntity<UIDataController.PipelineData> response =
@@ -203,18 +210,15 @@ class UIDataControllerGapTest {
             assertNotNull(body);
             assertEquals(1, body.getPipelineConfigs().size());
             assertEquals(1, body.getPipelineConfigsWithNames().size());
-            assertEquals("My Pipeline", body.getPipelineConfigsWithNames().get(0).get("name"));
-            assertTrue(
-                    body.getPipelineConfigsWithNames().get(0).get("json").contains("My Pipeline"));
+            assertEquals(
+                    "My Pipeline", body.getPipelineConfigsWithNames().get(0).get("name"));
+            assertTrue(body.getPipelineConfigsWithNames().get(0).get("json").contains("My Pipeline"));
         }
 
         @Test
         @DisplayName("falls back to the filename (sans extension) when name is missing")
         void fallsBackToFilenameWhenNameMissing(@TempDir Path dir) throws Exception {
-            Files.writeString(
-                    dir.resolve("fallback-name.json"),
-                    "{\"operations\":[]}",
-                    StandardCharsets.UTF_8);
+            Files.writeString(dir.resolve("fallback-name.json"), "{\"operations\":[]}", StandardCharsets.UTF_8);
             when(runtimePathConfig.getPipelineDefaultWebUiConfigs()).thenReturn(dir.toString());
 
             ResponseEntity<UIDataController.PipelineData> response =
@@ -224,16 +228,15 @@ class UIDataControllerGapTest {
             UIDataController.PipelineData body = response.getBody();
             assertNotNull(body);
             assertEquals(1, body.getPipelineConfigsWithNames().size());
-            assertEquals("fallback-name", body.getPipelineConfigsWithNames().get(0).get("name"));
+            assertEquals(
+                    "fallback-name", body.getPipelineConfigsWithNames().get(0).get("name"));
         }
 
         @Test
         @DisplayName("falls back to the filename when name is blank")
         void fallsBackToFilenameWhenNameBlank(@TempDir Path dir) throws Exception {
             Files.writeString(
-                    dir.resolve("blank-name.json"),
-                    "{\"name\":\"\",\"operations\":[]}",
-                    StandardCharsets.UTF_8);
+                    dir.resolve("blank-name.json"), "{\"name\":\"\",\"operations\":[]}", StandardCharsets.UTF_8);
             when(runtimePathConfig.getPipelineDefaultWebUiConfigs()).thenReturn(dir.toString());
 
             ResponseEntity<UIDataController.PipelineData> response =
@@ -248,8 +251,7 @@ class UIDataControllerGapTest {
         @DisplayName("ignores non-json files in the config directory")
         void ignoresNonJsonFiles(@TempDir Path dir) throws Exception {
             Files.writeString(dir.resolve("notes.txt"), "ignore me", StandardCharsets.UTF_8);
-            Files.writeString(
-                    dir.resolve("real.json"), "{\"name\":\"Real\"}", StandardCharsets.UTF_8);
+            Files.writeString(dir.resolve("real.json"), "{\"name\":\"Real\"}", StandardCharsets.UTF_8);
             when(runtimePathConfig.getPipelineDefaultWebUiConfigs()).thenReturn(dir.toString());
 
             ResponseEntity<UIDataController.PipelineData> response =
@@ -309,7 +311,8 @@ class UIDataControllerGapTest {
         void nullUserServiceUsesEmptyUsername() {
             when(signatureService.getAvailableSignatures("")).thenReturn(List.of());
 
-            ResponseEntity<UIDataController.SignData> response = controller(null).getSignData();
+            ResponseEntity<UIDataController.SignData> response =
+                    controller(null).getSignData();
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             UIDataController.SignData body = response.getBody();
@@ -328,7 +331,8 @@ class UIDataControllerGapTest {
         @DisplayName("returns an empty language list when the tessdata directory is absent")
         void absentTessdataDirYieldsEmptyList() {
             when(runtimePathConfig.getTessDataPath())
-                    .thenReturn(Path.of("nonexistent-tessdata-" + UUID.randomUUID()).toString());
+                    .thenReturn(
+                            Path.of("nonexistent-tessdata-" + UUID.randomUUID()).toString());
 
             ResponseEntity<UIDataController.OcrData> response =
                     controller(userService).getOcrPdfData();
@@ -387,17 +391,14 @@ class UIDataControllerGapTest {
             assertEquals("truetype", new UIDataController.FontResource("Arial", "ttf").getType());
             assertEquals("woff", new UIDataController.FontResource("Arial", "woff").getType());
             assertEquals("woff2", new UIDataController.FontResource("Arial", "woff2").getType());
-            assertEquals(
-                    "embedded-opentype",
-                    new UIDataController.FontResource("Arial", "eot").getType());
+            assertEquals("embedded-opentype", new UIDataController.FontResource("Arial", "eot").getType());
             assertEquals("svg", new UIDataController.FontResource("Arial", "svg").getType());
         }
 
         @Test
         @DisplayName("maps unknown extensions to an empty type and preserves name/extension")
         void mapsUnknownExtensionToEmpty() {
-            UIDataController.FontResource resource =
-                    new UIDataController.FontResource("Arial", "otf");
+            UIDataController.FontResource resource = new UIDataController.FontResource("Arial", "otf");
             assertEquals("", resource.getType());
             assertEquals("Arial", resource.getName());
             assertEquals("otf", resource.getExtension());
@@ -415,8 +416,7 @@ class UIDataControllerGapTest {
 
             controller(userService).getFooterData();
 
-            verify(signatureService, never())
-                    .getAvailableSignatures(org.mockito.ArgumentMatchers.anyString());
+            verify(signatureService, never()).getAvailableSignatures(org.mockito.ArgumentMatchers.anyString());
             verify(userService, never()).getCurrentUsername();
         }
     }

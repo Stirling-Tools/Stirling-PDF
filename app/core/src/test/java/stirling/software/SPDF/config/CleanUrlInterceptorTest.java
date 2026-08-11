@@ -93,7 +93,6 @@ class CleanUrlInterceptorTest {
 
     @Test
     void afterCompletionDoesNotThrow() {
-        assertDoesNotThrow(
-                () -> interceptor.afterCompletion(request, response, new Object(), null));
+        assertDoesNotThrow(() -> interceptor.afterCompletion(request, response, new Object(), null));
     }
 }

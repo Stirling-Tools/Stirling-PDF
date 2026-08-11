@@ -63,18 +63,14 @@ public class IntegrationConfigService {
         if (isInfrastructureType(cfg.getIntegrationType())
                 && scope == OwnerScope.USER
                 && !ownership.isAdmin(currentUser)) {
-            throw forbidden(
-                    "S3 and network connections can only be created by administrators or team"
-                            + " owners");
+            throw forbidden("S3 and network connections can only be created by administrators or team" + " owners");
         }
         requireCustomApiAllowed(cfg.getIntegrationType(), currentUser);
         cfg.setName(require(request.name(), "name"));
         cfg.setEnabled(request.enabled() == null || request.enabled());
         cfg.setLocked(request.locked() != null && request.locked());
         cfg.setDefaultAccess(
-                request.defaultAccess() == null
-                        ? DefaultAccessPolicy.EXPLICIT_ONLY
-                        : request.defaultAccess());
+                request.defaultAccess() == null ? DefaultAccessPolicy.EXPLICIT_ONLY : request.defaultAccess());
 
         // TEAM scope may omit the team id: default to the caller's own team so clients (the
         // portal) need not know it. assignOwnership still enforces admin-or-leader of that team.
@@ -83,11 +79,7 @@ public class IntegrationConfigService {
             ownerTeamId = currentUser.getTeam().getId();
         }
         ownership.assignOwnership(
-                cfg,
-                scope,
-                ownerTeamId,
-                currentUser,
-                () -> lockedServerExists(cfg.getIntegrationType()));
+                cfg, scope, ownerTeamId, currentUser, () -> lockedServerExists(cfg.getIntegrationType()));
         Map<String, Object> config = secretMasker.sanitize(request.config());
         validateConfig(cfg.getIntegrationType(), config);
         cfg.setConfig(writeJson(config));
@@ -122,8 +114,7 @@ public class IntegrationConfigService {
             // Editing the config of a custom integration is the same authoring power as creating
             // one - it is where the base URL and body live - so it is gated identically.
             requireCustomApiAllowed(cfg.getIntegrationType(), currentUser);
-            Map<String, Object> merged =
-                    secretMasker.merge(readJson(cfg.getConfig()), request.config());
+            Map<String, Object> merged = secretMasker.merge(readJson(cfg.getConfig()), request.config());
             validateConfig(cfg.getIntegrationType(), merged);
             cfg.setConfig(writeJson(merged));
         }
@@ -142,8 +133,7 @@ public class IntegrationConfigService {
         }
         if (!applicationProperties.getPolicies().isAllowCustomApiIntegrations()) {
             throw forbidden(
-                    "Custom API integrations are disabled on this server"
-                            + " (policies.allowCustomApiIntegrations)");
+                    "Custom API integrations are disabled on this server" + " (policies.allowCustomApiIntegrations)");
         }
         if (!ownership.isAdmin(currentUser)) {
             throw forbidden("Custom API integrations can only be created by administrators");
@@ -157,8 +147,7 @@ public class IntegrationConfigService {
 
     /** Whether this caller may author custom API integrations, for the UI to offer or hide it. */
     public boolean canAuthorCustomApi(User currentUser) {
-        return applicationProperties.getPolicies().isAllowCustomApiIntegrations()
-                && ownership.isAdmin(currentUser);
+        return applicationProperties.getPolicies().isAllowCustomApiIntegrations() && ownership.isAdmin(currentUser);
     }
 
     @Transactional
@@ -168,10 +157,9 @@ public class IntegrationConfigService {
             throw forbidden("You cannot manage this integration");
         }
         // Refuse to pull a connection out from under whatever still references it.
-        List<String> usages =
-                usageChecks.stream()
-                        .flatMap(check -> check.usagesOf(cfg.getId()).stream())
-                        .toList();
+        List<String> usages = usageChecks.stream()
+                .flatMap(check -> check.usagesOf(cfg.getId()).stream())
+                .toList();
         if (!usages.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "Integration is in use by: " + String.join(", ", usages));
@@ -273,10 +261,7 @@ public class IntegrationConfigService {
     private IntegrationConfig load(Long id) {
         return repository
                 .findById(id)
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND, "Integration not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Integration not found"));
     }
 
     private String writeJson(Map<String, Object> config) {
@@ -292,8 +277,7 @@ public class IntegrationConfigService {
             return new LinkedHashMap<>();
         }
         try {
-            return OBJECT_MAPPER.readValue(
-                    json, new TypeReference<LinkedHashMap<String, Object>>() {});
+            return OBJECT_MAPPER.readValue(json, new TypeReference<LinkedHashMap<String, Object>>() {});
         } catch (Exception e) {
             log.error("Failed to parse integration config JSON", e);
             return new LinkedHashMap<>();

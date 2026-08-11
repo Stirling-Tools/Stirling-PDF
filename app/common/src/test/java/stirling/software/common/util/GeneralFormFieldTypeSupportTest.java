@@ -26,8 +26,7 @@ class GeneralFormFieldTypeSupportTest {
         try (PDDocument doc = new PDDocument()) {
             PDAcroForm form = new PDAcroForm(doc);
             PDTextField field = new PDTextField(form);
-            assertEquals(
-                    GeneralFormFieldTypeSupport.TEXT, GeneralFormFieldTypeSupport.forField(field));
+            assertEquals(GeneralFormFieldTypeSupport.TEXT, GeneralFormFieldTypeSupport.forField(field));
         }
     }
 
@@ -36,9 +35,7 @@ class GeneralFormFieldTypeSupportTest {
         try (PDDocument doc = new PDDocument()) {
             PDAcroForm form = new PDAcroForm(doc);
             PDCheckBox field = new PDCheckBox(form);
-            assertEquals(
-                    GeneralFormFieldTypeSupport.CHECKBOX,
-                    GeneralFormFieldTypeSupport.forField(field));
+            assertEquals(GeneralFormFieldTypeSupport.CHECKBOX, GeneralFormFieldTypeSupport.forField(field));
         }
     }
 
@@ -47,8 +44,7 @@ class GeneralFormFieldTypeSupportTest {
         try (PDDocument doc = new PDDocument()) {
             PDAcroForm form = new PDAcroForm(doc);
             PDRadioButton field = new PDRadioButton(form);
-            assertEquals(
-                    GeneralFormFieldTypeSupport.RADIO, GeneralFormFieldTypeSupport.forField(field));
+            assertEquals(GeneralFormFieldTypeSupport.RADIO, GeneralFormFieldTypeSupport.forField(field));
         }
     }
 
@@ -57,9 +53,7 @@ class GeneralFormFieldTypeSupportTest {
         try (PDDocument doc = new PDDocument()) {
             PDAcroForm form = new PDAcroForm(doc);
             PDComboBox field = new PDComboBox(form);
-            assertEquals(
-                    GeneralFormFieldTypeSupport.COMBOBOX,
-                    GeneralFormFieldTypeSupport.forField(field));
+            assertEquals(GeneralFormFieldTypeSupport.COMBOBOX, GeneralFormFieldTypeSupport.forField(field));
         }
     }
 
@@ -68,9 +62,7 @@ class GeneralFormFieldTypeSupportTest {
         try (PDDocument doc = new PDDocument()) {
             PDAcroForm form = new PDAcroForm(doc);
             PDListBox field = new PDListBox(form);
-            assertEquals(
-                    GeneralFormFieldTypeSupport.LISTBOX,
-                    GeneralFormFieldTypeSupport.forField(field));
+            assertEquals(GeneralFormFieldTypeSupport.LISTBOX, GeneralFormFieldTypeSupport.forField(field));
         }
     }
 
@@ -79,9 +71,7 @@ class GeneralFormFieldTypeSupportTest {
         try (PDDocument doc = new PDDocument()) {
             PDAcroForm form = new PDAcroForm(doc);
             PDSignatureField field = new PDSignatureField(form);
-            assertEquals(
-                    GeneralFormFieldTypeSupport.SIGNATURE,
-                    GeneralFormFieldTypeSupport.forField(field));
+            assertEquals(GeneralFormFieldTypeSupport.SIGNATURE, GeneralFormFieldTypeSupport.forField(field));
         }
     }
 
@@ -90,9 +80,7 @@ class GeneralFormFieldTypeSupportTest {
         try (PDDocument doc = new PDDocument()) {
             PDAcroForm form = new PDAcroForm(doc);
             PDPushButton field = new PDPushButton(form);
-            assertEquals(
-                    GeneralFormFieldTypeSupport.BUTTON,
-                    GeneralFormFieldTypeSupport.forField(field));
+            assertEquals(GeneralFormFieldTypeSupport.BUTTON, GeneralFormFieldTypeSupport.forField(field));
         }
     }
 

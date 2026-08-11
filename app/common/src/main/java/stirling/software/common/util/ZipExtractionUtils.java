@@ -69,8 +69,7 @@ public class ZipExtractionUtils {
      * recursively extracted up to {@link #MAX_UNZIP_DEPTH}. Each entry is materialized as a
      * hardened-extracted managed temp file so downstream consumers can stream the bytes.
      */
-    public static List<Resource> extractZip(Resource zip, TempFileManager tempFileManager)
-            throws IOException {
+    public static List<Resource> extractZip(Resource zip, TempFileManager tempFileManager) throws IOException {
         return extractZip(zip, tempFileManager, null);
     }
 
@@ -80,22 +79,15 @@ public class ZipExtractionUtils {
      * temp files with an auxiliary lifecycle (e.g. {@code PipelineResult}).
      */
     public static List<Resource> extractZip(
-            Resource zip, TempFileManager tempFileManager, Consumer<TempFile> tempFileConsumer)
-            throws IOException {
+            Resource zip, TempFileManager tempFileManager, Consumer<TempFile> tempFileConsumer) throws IOException {
         return extractZipInternal(zip, tempFileManager, tempFileConsumer, 0);
     }
 
     private static List<Resource> extractZipInternal(
-            Resource zip,
-            TempFileManager tempFileManager,
-            Consumer<TempFile> tempFileConsumer,
-            int depth)
+            Resource zip, TempFileManager tempFileManager, Consumer<TempFile> tempFileConsumer, int depth)
             throws IOException {
         if (depth > MAX_UNZIP_DEPTH) {
-            log.warn(
-                    "ZIP nesting depth {} exceeds limit {}, treating as file",
-                    depth,
-                    MAX_UNZIP_DEPTH);
+            log.warn("ZIP nesting depth {} exceeds limit {}, treating as file", depth, MAX_UNZIP_DEPTH);
             return List.of(zip);
         }
         log.debug("Unzipping data of length: {}", zip.contentLength());
@@ -119,18 +111,15 @@ public class ZipExtractionUtils {
                     }
                 }
                 final String filename = entry.getName();
-                Resource fileResource =
-                        new FileSystemResource(tempFile.getFile()) {
-                            @Override
-                            public String getFilename() {
-                                return filename;
-                            }
-                        };
+                Resource fileResource = new FileSystemResource(tempFile.getFile()) {
+                    @Override
+                    public String getFilename() {
+                        return filename;
+                    }
+                };
                 if (isZip(fileResource, filename)) {
                     log.debug("Nested ZIP entry {} — recursing", filename);
-                    extracted.addAll(
-                            extractZipInternal(
-                                    fileResource, tempFileManager, tempFileConsumer, depth + 1));
+                    extracted.addAll(extractZipInternal(fileResource, tempFileManager, tempFileConsumer, depth + 1));
                 } else {
                     extracted.add(fileResource);
                 }

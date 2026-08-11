@@ -41,31 +41,31 @@ import stirling.software.common.util.TempFileManager;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SplitPdfBySectionsControllerTest {
 
-    @TempDir Path tempDir;
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private TempFileManager tempFileManager;
-    @InjectMocks private SplitPdfBySectionsController controller;
+    @TempDir
+    Path tempDir;
+
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @InjectMocks
+    private SplitPdfBySectionsController controller;
 
     @BeforeEach
     void setUp() throws IOException {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            String suffix = inv.getArgument(0);
-                            return Files.createTempFile(tempDir, "test", suffix).toFile();
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(inv -> {
+            String suffix = inv.getArgument(0);
+            return Files.createTempFile(tempDir, "test", suffix).toFile();
+        });
     }
 
     private byte[] createPdf(int numPages) throws IOException {
@@ -92,8 +92,7 @@ class SplitPdfBySectionsControllerTest {
     void shouldSplitAllPagesHalvesMerged() throws Exception {
         byte[] pdfBytes = createPdf(2);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
         request.setFileInput(file);
@@ -115,8 +114,7 @@ class SplitPdfBySectionsControllerTest {
     void shouldSplitAllPagesQuartersNoMerge() throws Exception {
         byte[] pdfBytes = createPdf(1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
         request.setFileInput(file);
@@ -137,8 +135,7 @@ class SplitPdfBySectionsControllerTest {
     void shouldSplitAllMode() throws Exception {
         byte[] pdfBytes = createPdf(2);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
         request.setFileInput(file);
@@ -159,8 +156,7 @@ class SplitPdfBySectionsControllerTest {
     void shouldSplitExceptFirst() throws Exception {
         byte[] pdfBytes = createPdf(3);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
         request.setFileInput(file);
@@ -181,8 +177,7 @@ class SplitPdfBySectionsControllerTest {
     void shouldSplitExceptLast() throws Exception {
         byte[] pdfBytes = createPdf(3);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
         request.setFileInput(file);
@@ -203,8 +198,7 @@ class SplitPdfBySectionsControllerTest {
     void shouldSplitExceptFirstAndLast() throws Exception {
         byte[] pdfBytes = createPdf(4);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
         request.setFileInput(file);
@@ -225,8 +219,7 @@ class SplitPdfBySectionsControllerTest {
     void shouldSplitCustomPagesNoMerge() throws Exception {
         byte[] pdfBytes = createPdf(3);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
         request.setFileInput(file);
@@ -248,8 +241,7 @@ class SplitPdfBySectionsControllerTest {
     void shouldThrowForCustomModeNoPages() throws Exception {
         byte[] pdfBytes = createPdf(2);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
         request.setFileInput(file);
@@ -269,8 +261,7 @@ class SplitPdfBySectionsControllerTest {
     void shouldHandleSinglePageMerge() throws Exception {
         byte[] pdfBytes = createPdf(1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
         request.setFileInput(file);
@@ -290,8 +281,7 @@ class SplitPdfBySectionsControllerTest {
     void shouldSplitThirdsVertically() throws Exception {
         byte[] pdfBytes = createPdf(1);
         MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+                new MockMultipartFile("fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
         SplitPdfBySectionsRequest request = new SplitPdfBySectionsRequest();
         request.setFileInput(file);

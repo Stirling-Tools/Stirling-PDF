@@ -73,15 +73,32 @@ import tools.jackson.databind.json.JsonMapper;
 @org.mockito.junit.jupiter.MockitoSettings(strictness = Strictness.LENIENT)
 class PdfJsonConversionServiceGapTest {
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private EndpointConfiguration endpointConfiguration;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private TaskManager taskManager;
-    @Mock private PdfJsonFallbackFontService fallbackFontService;
-    @Mock private PdfJsonFontService fontService;
-    @Mock private Type3FontConversionService type3FontConversionService;
-    @Mock private Type3GlyphExtractor type3GlyphExtractor;
-    @Mock private ApplicationProperties applicationProperties;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
+
+    @Mock
+    private EndpointConfiguration endpointConfiguration;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private TaskManager taskManager;
+
+    @Mock
+    private PdfJsonFallbackFontService fallbackFontService;
+
+    @Mock
+    private PdfJsonFontService fontService;
+
+    @Mock
+    private Type3FontConversionService type3FontConversionService;
+
+    @Mock
+    private Type3GlyphExtractor type3GlyphExtractor;
+
+    @Mock
+    private ApplicationProperties applicationProperties;
 
     // Real collaborators: COS (de)serialization is complex and pure, so we use the real component.
     private final PdfJsonCosMapper cosMapper = new PdfJsonCosMapper();
@@ -93,10 +110,9 @@ class PdfJsonConversionServiceGapTest {
     // field).
     // A naive JsonMapper.builder().build() keeps the Jackson 3 default (true) and would throw
     // MismatchedInputException on round-trip, which is a test-mapper config gap, not a product bug.
-    private final ObjectMapper objectMapper =
-            JsonMapper.builder()
-                    .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-                    .build();
+    private final ObjectMapper objectMapper = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+            .build();
 
     private PdfJsonConversionService service;
 
@@ -104,36 +120,31 @@ class PdfJsonConversionServiceGapTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        service =
-                new PdfJsonConversionService(
-                        pdfDocumentFactory,
-                        objectMapper,
-                        endpointConfiguration,
-                        tempFileManager,
-                        taskManager,
-                        cosMapper,
-                        fallbackFontService,
-                        fontService,
-                        type3FontConversionService,
-                        type3GlyphExtractor,
-                        applicationProperties);
+        service = new PdfJsonConversionService(
+                pdfDocumentFactory,
+                objectMapper,
+                endpointConfiguration,
+                tempFileManager,
+                taskManager,
+                cosMapper,
+                fallbackFontService,
+                fontService,
+                type3FontConversionService,
+                type3GlyphExtractor,
+                applicationProperties);
 
         // The TempFile wrapper delegates straight to the manager; back it with real temp files so
         // convertPdfToJson can transferTo() and size/read the working path.
-        when(tempFileManager.createTempFile(anyString()))
-                .thenAnswer(
-                        invocation -> {
-                            String suffix = invocation.getArgument(0);
-                            Path path = Files.createTempFile("pdfjson-gap-test", suffix);
-                            createdTempFiles.add(path);
-                            return path.toFile();
-                        });
-        when(tempFileManager.deleteTempFile(any(File.class)))
-                .thenAnswer(
-                        invocation -> {
-                            File file = invocation.getArgument(0);
-                            return file != null && file.delete();
-                        });
+        when(tempFileManager.createTempFile(anyString())).thenAnswer(invocation -> {
+            String suffix = invocation.getArgument(0);
+            Path path = Files.createTempFile("pdfjson-gap-test", suffix);
+            createdTempFiles.add(path);
+            return path.toFile();
+        });
+        when(tempFileManager.deleteTempFile(any(File.class))).thenAnswer(invocation -> {
+            File file = invocation.getArgument(0);
+            return file != null && file.delete();
+        });
     }
 
     @AfterEach
@@ -168,21 +179,18 @@ class PdfJsonConversionServiceGapTest {
     /** Stubs the fallback font service so buildFontMap can always resolve a usable PDFont. */
     private void stubFallbackFont() throws IOException {
         when(fallbackFontService.buildFallbackFontModel())
-                .thenAnswer(
-                        invocation ->
-                                PdfJsonFont.builder()
-                                        .id(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
-                                        .uid(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
-                                        .baseName("Fallback")
-                                        .subtype("TrueType")
-                                        .build());
+                .thenAnswer(invocation -> PdfJsonFont.builder()
+                        .id(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
+                        .uid(PdfJsonFallbackFontService.FALLBACK_FONT_ID)
+                        .baseName("Fallback")
+                        .subtype("TrueType")
+                        .build());
         when(fallbackFontService.loadFallbackPdfFont(any(PDDocument.class)))
                 .thenAnswer(invocation -> new PDType1Font(Standard14Fonts.FontName.HELVETICA));
     }
 
     private MockMultipartFile pdfMultipart() {
-        return new MockMultipartFile(
-                "fileInput", "input.pdf", "application/pdf", "%PDF-1.4 placeholder".getBytes());
+        return new MockMultipartFile("fileInput", "input.pdf", "application/pdf", "%PDF-1.4 placeholder".getBytes());
     }
 
     private byte[] runJsonToPdf(PdfJsonDocument doc) throws IOException {
@@ -231,9 +239,7 @@ class PdfJsonConversionServiceGapTest {
         @DisplayName("null document throws IllegalArgumentException")
         void nullDocumentThrows() {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> service.convertJsonToPdf((PdfJsonDocument) null, out));
+            assertThrows(IllegalArgumentException.class, () -> service.convertJsonToPdf((PdfJsonDocument) null, out));
         }
 
         @Test
@@ -365,10 +371,8 @@ class PdfJsonConversionServiceGapTest {
         @DisplayName("base64 XMP packet is restored onto the document catalog")
         void xmpMetadataApplied() throws IOException {
             stubFallbackFont();
-            String xmpXml =
-                    "<?xpacket begin=\"\"?><x:xmpmeta xmlns:x=\"adobe:ns:meta/\"></x:xmpmeta>";
-            String base64 =
-                    Base64.getEncoder().encodeToString(xmpXml.getBytes(StandardCharsets.UTF_8));
+            String xmpXml = "<?xpacket begin=\"\"?><x:xmpmeta xmlns:x=\"adobe:ns:meta/\"></x:xmpmeta>";
+            String base64 = Base64.getEncoder().encodeToString(xmpXml.getBytes(StandardCharsets.UTF_8));
 
             PdfJsonPage page = new PdfJsonPage();
             page.setPageNumber(1);
@@ -403,12 +407,8 @@ class PdfJsonConversionServiceGapTest {
             assertTrue(pdfBytes.length > 0);
             // buildFontMap mutates the (now non-null) list by appending the fallback model.
             assertNotNull(doc.getFonts());
-            assertTrue(
-                    doc.getFonts().stream()
-                            .anyMatch(
-                                    f ->
-                                            PdfJsonFallbackFontService.FALLBACK_FONT_ID.equals(
-                                                    f.getId())));
+            assertTrue(doc.getFonts().stream()
+                    .anyMatch(f -> PdfJsonFallbackFontService.FALLBACK_FONT_ID.equals(f.getId())));
         }
     }
 
@@ -424,9 +424,7 @@ class PdfJsonConversionServiceGapTest {
         @DisplayName("null file throws IllegalArgumentException")
         void nullFileThrows() {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> service.convertJsonToPdf((MockMultipartFile) null, out));
+            assertThrows(IllegalArgumentException.class, () -> service.convertJsonToPdf((MockMultipartFile) null, out));
         }
 
         @Test
@@ -441,8 +439,7 @@ class PdfJsonConversionServiceGapTest {
             doc.setPages(List.of(page));
 
             byte[] json = objectMapper.writeValueAsBytes(doc);
-            MockMultipartFile file =
-                    new MockMultipartFile("fileInput", "doc.json", "application/json", json);
+            MockMultipartFile file = new MockMultipartFile("fileInput", "doc.json", "application/json", json);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             service.convertJsonToPdf(file, out);
@@ -478,8 +475,7 @@ class PdfJsonConversionServiceGapTest {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 service.convertPdfToJson(pdfMultipart(), out);
 
-                PdfJsonDocument result =
-                        objectMapper.readValue(out.toByteArray(), PdfJsonDocument.class);
+                PdfJsonDocument result = objectMapper.readValue(out.toByteArray(), PdfJsonDocument.class);
                 assertEquals(1, result.getPages().size());
                 PdfJsonPage page = result.getPages().get(0);
                 assertEquals(1, page.getPageNumber());
@@ -493,15 +489,13 @@ class PdfJsonConversionServiceGapTest {
         @Test
         @DisplayName("multi-page PDF preserves per-page dimensions in the JSON model")
         void multiPageDimensions() throws IOException {
-            try (PDDocument pdf =
-                    newPdf(new float[][] {{200f, 300f}, {612f, 792f}}, new int[] {0, 90})) {
+            try (PDDocument pdf = newPdf(new float[][] {{200f, 300f}, {612f, 792f}}, new int[] {0, 90})) {
                 when(pdfDocumentFactory.load(any(Path.class), eq(true))).thenReturn(pdf);
 
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 service.convertPdfToJson(pdfMultipart(), out);
 
-                PdfJsonDocument result =
-                        objectMapper.readValue(out.toByteArray(), PdfJsonDocument.class);
+                PdfJsonDocument result = objectMapper.readValue(out.toByteArray(), PdfJsonDocument.class);
                 assertEquals(2, result.getPages().size());
                 assertEquals(200f, result.getPages().get(0).getWidth(), 0.01f);
                 assertEquals(792f, result.getPages().get(1).getHeight(), 0.01f);
@@ -521,8 +515,7 @@ class PdfJsonConversionServiceGapTest {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 service.convertPdfToJson(pdfMultipart(), out);
 
-                PdfJsonDocument result =
-                        objectMapper.readValue(out.toByteArray(), PdfJsonDocument.class);
+                PdfJsonDocument result = objectMapper.readValue(out.toByteArray(), PdfJsonDocument.class);
                 assertEquals("Original Title", result.getMetadata().getTitle());
                 assertEquals("Original Author", result.getMetadata().getAuthor());
             }
@@ -537,8 +530,7 @@ class PdfJsonConversionServiceGapTest {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 service.convertPdfToJson(pdfMultipart(), true, out);
 
-                PdfJsonDocument result =
-                        objectMapper.readValue(out.toByteArray(), PdfJsonDocument.class);
+                PdfJsonDocument result = objectMapper.readValue(out.toByteArray(), PdfJsonDocument.class);
                 assertEquals(1, result.getPages().size());
             }
         }
@@ -595,18 +587,14 @@ class PdfJsonConversionServiceGapTest {
         @DisplayName("extractSinglePage with unknown jobId throws CacheUnavailableException")
         void extractSinglePageUnknownJob() {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThrows(
-                    CacheUnavailableException.class,
-                    () -> service.extractSinglePage("missing-job", 1, out));
+            assertThrows(CacheUnavailableException.class, () -> service.extractSinglePage("missing-job", 1, out));
         }
 
         @Test
         @DisplayName("extractPageFonts with unknown jobId throws CacheUnavailableException")
         void extractPageFontsUnknownJob() {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThrows(
-                    CacheUnavailableException.class,
-                    () -> service.extractPageFonts("missing-job", 1, out));
+            assertThrows(CacheUnavailableException.class, () -> service.extractPageFonts("missing-job", 1, out));
         }
 
         @Test
@@ -614,8 +602,7 @@ class PdfJsonConversionServiceGapTest {
         void exportUpdatedPagesNullJob() {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             assertThrows(
-                    IllegalArgumentException.class,
-                    () -> service.exportUpdatedPages(null, new PdfJsonDocument(), out));
+                    IllegalArgumentException.class, () -> service.exportUpdatedPages(null, new PdfJsonDocument(), out));
         }
 
         @Test
@@ -640,9 +627,7 @@ class PdfJsonConversionServiceGapTest {
         @DisplayName("extractDocumentMetadata with null file throws IllegalArgumentException")
         void extractDocumentMetadataNullFile() {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> service.extractDocumentMetadata(null, "job", out));
+            assertThrows(IllegalArgumentException.class, () -> service.extractDocumentMetadata(null, "job", out));
         }
 
         @Test

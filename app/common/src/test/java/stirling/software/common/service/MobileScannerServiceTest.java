@@ -27,7 +27,8 @@ import stirling.software.common.service.MobileScannerService.SessionInfo;
  */
 class MobileScannerServiceTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private MobileScannerService service;
 
@@ -39,8 +40,7 @@ class MobileScannerServiceTest {
     }
 
     private MultipartFile file(String name, String content) {
-        return new MockMultipartFile(
-                "file", name, "text/plain", content.getBytes(StandardCharsets.UTF_8));
+        return new MockMultipartFile("file", name, "text/plain", content.getBytes(StandardCharsets.UTF_8));
     }
 
     private MultipartFile emptyFile(String name) {
@@ -211,8 +211,7 @@ class MobileScannerServiceTest {
         @DisplayName("falls back to a generated name when original filename is null")
         void generatesNameWhenNull() throws IOException {
             service.createSession("up5");
-            MultipartFile noName =
-                    new MockMultipartFile("file", null, "text/plain", "x".getBytes());
+            MultipartFile noName = new MockMultipartFile("file", null, "text/plain", "x".getBytes());
             service.uploadFiles("up5", List.of(noName));
 
             List<FileMetadata> metas = service.getSessionFiles("up5");
@@ -224,8 +223,7 @@ class MobileScannerServiceTest {
         @DisplayName("rejects invalid session ID before any storage")
         void rejectsInvalidSessionId() {
             assertThrows(
-                    IllegalArgumentException.class,
-                    () -> service.uploadFiles("bad/id", List.of(file("a.txt", "x"))));
+                    IllegalArgumentException.class, () -> service.uploadFiles("bad/id", List.of(file("a.txt", "x"))));
         }
 
         @Test
@@ -280,8 +278,7 @@ class MobileScannerServiceTest {
         @Test
         @DisplayName("throws when the session does not exist")
         void unknownSessionThrows() {
-            IOException ex =
-                    assertThrows(IOException.class, () -> service.getFile("ghost", "doc.txt"));
+            IOException ex = assertThrows(IOException.class, () -> service.getFile("ghost", "doc.txt"));
             assertTrue(ex.getMessage().contains("Session not found"));
         }
 
@@ -291,8 +288,7 @@ class MobileScannerServiceTest {
             service.createSession("f2");
             service.uploadFiles("f2", List.of(file("present.txt", "x")));
 
-            IOException ex =
-                    assertThrows(IOException.class, () -> service.getFile("f2", "missing.txt"));
+            IOException ex = assertThrows(IOException.class, () -> service.getFile("f2", "missing.txt"));
             assertTrue(ex.getMessage().contains("File not found"));
         }
 
@@ -461,8 +457,7 @@ class MobileScannerServiceTest {
     @SuppressWarnings("unchecked")
     private void forceLastAccess(String sessionId, long lastAccessTime) {
         java.util.Map<String, Object> sessions =
-                (java.util.Map<String, Object>)
-                        ReflectionTestUtils.getField(service, "activeSessions");
+                (java.util.Map<String, Object>) ReflectionTestUtils.getField(service, "activeSessions");
         assertNotNull(sessions);
         Object sessionData = sessions.get(sessionId);
         assertNotNull(sessionData, "session not found: " + sessionId);

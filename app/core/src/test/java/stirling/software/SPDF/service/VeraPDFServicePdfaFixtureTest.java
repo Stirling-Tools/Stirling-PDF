@@ -56,8 +56,7 @@ class VeraPDFServicePdfaFixtureTest {
         assertEquals("1b", result.getValidationProfile());
         assertTrue(result.isDeclaredPdfa(), "Genuine PDF/A-1b must be reported as declared PDF/A");
         assertTrue(result.isCompliant(), "Genuine PDF/A-1b must validate as compliant");
-        assertEquals(
-                0, result.getTotalFailures(), () -> "Unexpected failures: " + messages(result));
+        assertEquals(0, result.getTotalFailures(), () -> "Unexpected failures: " + messages(result));
         assertTrue(
                 result.getStandardName().startsWith("PDF/A-"),
                 "Display name should name the PDF/A standard, got: " + result.getStandardName());
@@ -85,10 +84,9 @@ class VeraPDFServicePdfaFixtureTest {
         byte[] pdfBytes = createSimplePdf();
 
         // veraPDF 1.30 returns an empty flavour list here where 1.28 returned [1b]; get(0) threw
-        List<PDFVerificationResult> results =
-                assertDoesNotThrow(
-                        () -> service.validatePDF(new ByteArrayInputStream(pdfBytes)),
-                        "Empty veraPDF flavour list must not surface as IndexOutOfBoundsException");
+        List<PDFVerificationResult> results = assertDoesNotThrow(
+                () -> service.validatePDF(new ByteArrayInputStream(pdfBytes)),
+                "Empty veraPDF flavour list must not surface as IndexOutOfBoundsException");
 
         assertEquals(1, results.size());
         PDFVerificationResult result = results.get(0);
@@ -127,8 +125,7 @@ class VeraPDFServicePdfaFixtureTest {
 
     @Test
     void detectedFlavours_withNullFlavourList_returnsEmptyList() throws Exception {
-        Method method =
-                VeraPDFService.class.getDeclaredMethod("detectedFlavours", PDFAParser.class);
+        Method method = VeraPDFService.class.getDeclaredMethod("detectedFlavours", PDFAParser.class);
         method.setAccessible(true);
 
         PDFAParser parser = mock(PDFAParser.class);
@@ -137,33 +134,27 @@ class VeraPDFServicePdfaFixtureTest {
         assertEquals(List.of(), method.invoke(null, parser));
     }
 
-    private static void assertVeraPdfVerdict(
-            String fixtureName, PDFAFlavour expectedFlavour, boolean expectedCompliant)
+    private static void assertVeraPdfVerdict(String fixtureName, PDFAFlavour expectedFlavour, boolean expectedCompliant)
             throws Exception {
         VeraGreenfieldFoundryProvider.initialise();
         byte[] bytes = fixture(fixtureName);
 
         List<PDFAFlavour> flavours;
-        try (PDFAParser parser =
-                Foundries.defaultInstance().createParser(new ByteArrayInputStream(bytes))) {
+        try (PDFAParser parser = Foundries.defaultInstance().createParser(new ByteArrayInputStream(bytes))) {
             flavours = parser.getFlavours();
         }
         assertEquals(List.of(expectedFlavour), flavours, fixtureName + " declared flavours");
 
         try (PDFAParser parser =
-                Foundries.defaultInstance()
-                        .createParser(new ByteArrayInputStream(bytes), expectedFlavour)) {
-            PDFAValidator validator =
-                    Foundries.defaultInstance().createValidator(expectedFlavour, false);
+                Foundries.defaultInstance().createParser(new ByteArrayInputStream(bytes), expectedFlavour)) {
+            PDFAValidator validator = Foundries.defaultInstance().createValidator(expectedFlavour, false);
             ValidationResult result = validator.validate(parser);
-            assertEquals(
-                    expectedCompliant, result.isCompliant(), fixtureName + " veraPDF compliance");
+            assertEquals(expectedCompliant, result.isCompliant(), fixtureName + " veraPDF compliance");
         }
     }
 
     private PDFVerificationResult onlyResult(byte[] pdfBytes) throws Exception {
-        List<PDFVerificationResult> results =
-                service.validatePDF(new ByteArrayInputStream(pdfBytes));
+        List<PDFVerificationResult> results = service.validatePDF(new ByteArrayInputStream(pdfBytes));
 
         assertNotNull(results);
         assertEquals(1, results.size(), () -> "Expected a single result, got: " + results);
@@ -179,8 +170,7 @@ class VeraPDFServicePdfaFixtureTest {
     }
 
     private static byte[] fixture(String name) throws IOException {
-        try (InputStream in =
-                VeraPDFServicePdfaFixtureTest.class.getResourceAsStream("/pdfa/" + name)) {
+        try (InputStream in = VeraPDFServicePdfaFixtureTest.class.getResourceAsStream("/pdfa/" + name)) {
             assertNotNull(in, "Missing test fixture /pdfa/" + name);
             return in.readAllBytes();
         }

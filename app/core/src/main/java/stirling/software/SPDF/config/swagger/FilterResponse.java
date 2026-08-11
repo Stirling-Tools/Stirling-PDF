@@ -50,8 +50,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                     schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(
                     responseCode = "422",
-                    description =
-                            "Unprocessable entity - PDF is valid but cannot be analyzed for filtering",
+                    description = "Unprocessable entity - PDF is valid but cannot be analyzed for filtering",
                     content =
                             @Content(
                                     mediaType = "application/json",

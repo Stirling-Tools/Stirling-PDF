@@ -42,8 +42,7 @@ class ManualRedactionService {
     // Area and page redaction
     // -----------------------------------------------------------------------
 
-    void redactAreas(List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
-            throws IOException {
+    void redactAreas(List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages) throws IOException {
 
         if (redactionAreas == null || redactionAreas.isEmpty()) {
             return;
@@ -77,8 +76,7 @@ class ManualRedactionService {
             PDPage page = allPages.get(pageNumber - 1);
 
             try (PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                    new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
 
                 contentStream.saveGraphicsState();
                 for (RedactionArea redactionArea : areasForPage) {
@@ -101,8 +99,7 @@ class ManualRedactionService {
         }
     }
 
-    void redactPages(ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages)
-            throws IOException {
+    void redactPages(ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages) throws IOException {
 
         Color redactColor = decodeOrDefault(request.getPageRedactionColor());
         List<Integer> pageNumbers = getPageNumbers(request, allPages.getCount());
@@ -111,8 +108,7 @@ class ManualRedactionService {
             PDPage page = allPages.get(pageNumber);
 
             try (PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                    new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 contentStream.setNonStrokingColor(redactColor);
 
                 PDRectangle box = page.getBBox();
@@ -138,7 +134,9 @@ class ManualRedactionService {
 
         Map<Integer, List<PDFText>> blocksByPage = new HashMap<>();
         for (PDFText block : blocks) {
-            blocksByPage.computeIfAbsent(block.getPageIndex(), k -> new ArrayList<>()).add(block);
+            blocksByPage
+                    .computeIfAbsent(block.getPageIndex(), k -> new ArrayList<>())
+                    .add(block);
         }
 
         for (Map.Entry<Integer, List<PDFText>> entry : blocksByPage.entrySet()) {
@@ -151,8 +149,7 @@ class ManualRedactionService {
 
             var page = allPages.get(pageIndex);
             try (PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                    new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
 
                 contentStream.saveGraphicsState();
 
@@ -162,8 +159,7 @@ class ManualRedactionService {
 
                     for (PDFText block : pageBlocks) {
                         float padding =
-                                (block.getY2() - block.getY1()) * DEFAULT_TEXT_PADDING_MULTIPLIER
-                                        + customPadding;
+                                (block.getY2() - block.getY1()) * DEFAULT_TEXT_PADDING_MULTIPLIER + customPadding;
 
                         float originalWidth = block.getX2() - block.getX1();
                         float boxWidth;
@@ -203,9 +199,7 @@ class ManualRedactionService {
                     if (ar != null) {
                         for (PDFText block : pageBlocks) {
                             float padding =
-                                    (block.getY2() - block.getY1())
-                                                    * DEFAULT_TEXT_PADDING_MULTIPLIER
-                                            + customPadding;
+                                    (block.getY2() - block.getY1()) * DEFAULT_TEXT_PADDING_MULTIPLIER + customPadding;
                             float bx1 = block.getX1();
                             float bx2 = block.getX2();
                             float by1 = pageH - block.getY2() - padding;
@@ -225,16 +219,12 @@ class ManualRedactionService {
                 }
                 page.setAnnotations(kept);
             } catch (Exception e) {
-                log.debug(
-                        "[redact] could not remove annotations on page {}: {}",
-                        pageIndex,
-                        e.getMessage());
+                log.debug("[redact] could not remove annotations on page {}: {}", pageIndex, e.getMessage());
             }
         }
     }
 
-    void redactImageBoxes(PDDocument document, List<float[]> imageBoxes, Color color)
-            throws IOException {
+    void redactImageBoxes(PDDocument document, List<float[]> imageBoxes, Color color) throws IOException {
         Map<Integer, List<float[]>> byPage = new HashMap<>();
         for (float[] box : imageBoxes) {
             byPage.computeIfAbsent((int) box[0], k -> new ArrayList<>()).add(box);
@@ -248,8 +238,7 @@ class ManualRedactionService {
             }
             PDPage page = pages.get(pageIdx);
             try (PDPageContentStream cs =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                    new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 cs.saveGraphicsState();
                 cs.setNonStrokingColor(color);
                 for (float[] box : entry.getValue()) {
@@ -270,8 +259,7 @@ class ManualRedactionService {
      * Returns bounding boxes for every text line and image on {@code page} in PDF user-space
      * coordinates: {@code [x1, y1, x2, y2]} (origin bottom-left, Y increases upward).
      */
-    List<float[]> extractPageElementBoxes(PDDocument document, PDPage page, int pageIndex)
-            throws IOException {
+    List<float[]> extractPageElementBoxes(PDDocument document, PDPage page, int pageIndex) throws IOException {
         List<float[]> boxes = new ArrayList<>();
 
         AllTextLineExtractor textExtractor =
@@ -393,10 +381,8 @@ class ManualRedactionService {
 
     private List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
         String pageNumbersInput = request.getPageNumbers();
-        String[] parsedPageNumbers =
-                pageNumbersInput != null ? pageNumbersInput.split(",") : new String[0];
-        List<Integer> pageNumbers =
-                GeneralUtils.parsePageList(parsedPageNumbers, pagesCount, false);
+        String[] parsedPageNumbers = pageNumbersInput != null ? pageNumbersInput.split(",") : new String[0];
+        List<Integer> pageNumbers = GeneralUtils.parsePageList(parsedPageNumbers, pagesCount, false);
         Collections.sort(pageNumbers);
         return pageNumbers;
     }

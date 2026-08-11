@@ -53,9 +53,8 @@ class KeygenLicenseVerifierTest {
 
     // Reflectively builds a private LicenseContext instance.
     private Object newContext() throws Exception {
-        Class<?> ctxClass =
-                Class.forName(
-                        "stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier$LicenseContext");
+        Class<?> ctxClass = Class.forName(
+                "stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier$LicenseContext");
         Constructor<?> ctor = ctxClass.getDeclaredConstructor();
         ctor.setAccessible(true);
         return ctor.newInstance();
@@ -162,24 +161,16 @@ class KeygenLicenseVerifierTest {
         @DisplayName("returns false for a forged signature")
         void forgedSignature_returnsFalse() throws Exception {
             String sig = Base64.getEncoder().encodeToString(new byte[64]);
-            Object result =
-                    invokePrivate(
-                            "verifyEd25519Signature",
-                            new Class<?>[] {String.class, String.class},
-                            "some-encrypted-data",
-                            sig);
+            Object result = invokePrivate(
+                    "verifyEd25519Signature", new Class<?>[] {String.class, String.class}, "some-encrypted-data", sig);
             assertThat((Boolean) result).isFalse();
         }
 
         @Test
         @DisplayName("returns false when signature is not valid base64")
         void invalidBase64Signature_returnsFalse() throws Exception {
-            Object result =
-                    invokePrivate(
-                            "verifyEd25519Signature",
-                            new Class<?>[] {String.class, String.class},
-                            "data",
-                            "@@@not-base64@@@");
+            Object result = invokePrivate(
+                    "verifyEd25519Signature", new Class<?>[] {String.class, String.class}, "data", "@@@not-base64@@@");
             assertThat((Boolean) result).isFalse();
         }
     }
@@ -193,11 +184,7 @@ class KeygenLicenseVerifierTest {
         void forgedSignature_returnsFalse() throws Exception {
             String sig = Base64.getUrlEncoder().withoutPadding().encodeToString(new byte[64]);
             Object result =
-                    invokePrivate(
-                            "verifyJWTSignature",
-                            new Class<?>[] {String.class, String.class},
-                            "payload",
-                            sig);
+                    invokePrivate("verifyJWTSignature", new Class<?>[] {String.class, String.class}, "payload", sig);
             assertThat((Boolean) result).isFalse();
         }
     }
@@ -209,12 +196,7 @@ class KeygenLicenseVerifierTest {
         private boolean process(String json) throws Exception {
             Object ctx = newContext();
             Class<?> ctxClass = ctx.getClass();
-            Object result =
-                    invokePrivate(
-                            "processCertificateData",
-                            new Class<?>[] {String.class, ctxClass},
-                            json,
-                            ctx);
+            Object result = invokePrivate("processCertificateData", new Class<?>[] {String.class, ctxClass}, json, ctx);
             return (Boolean) result;
         }
 
@@ -326,12 +308,8 @@ class KeygenLicenseVerifierTest {
             attrs.put("maxMachines", 7);
 
             Object ctx = newContext();
-            Object result =
-                    invokePrivate(
-                            "processCertificateData",
-                            new Class<?>[] {String.class, ctx.getClass()},
-                            root.toString(),
-                            ctx);
+            Object result = invokePrivate(
+                    "processCertificateData", new Class<?>[] {String.class, ctx.getClass()}, root.toString(), ctx);
 
             assertThat((Boolean) result).isTrue();
             assertThat(readContextBoolean(ctx, "isFloatingLicense")).isTrue();
@@ -344,11 +322,7 @@ class KeygenLicenseVerifierTest {
     class ProcessJwtPayload {
 
         private Object processWithContext(String json, Object ctx) throws Exception {
-            return invokePrivate(
-                    "processJWTLicensePayload",
-                    new Class<?>[] {String.class, ctx.getClass()},
-                    json,
-                    ctx);
+            return invokePrivate("processJWTLicensePayload", new Class<?>[] {String.class, ctx.getClass()}, json, ctx);
         }
 
         @Test

@@ -96,21 +96,19 @@ public class PdfLazyLoadingService {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
 
-        Consumer<PdfJsonConversionProgress> progress =
-                jobId != null
-                        ? (p) -> {
-                            log.info(
-                                    "Progress: [{}%] {} - {}{}",
-                                    p.getPercent(),
-                                    p.getStage(),
-                                    p.getMessage(),
-                                    (p.getCurrent() != null && p.getTotal() != null)
-                                            ? String.format(
-                                                    " (%d/%d)", p.getCurrent(), p.getTotal())
-                                            : "");
-                            reportProgressToTaskManager(jobId, p);
-                        }
-                        : (p) -> {};
+        Consumer<PdfJsonConversionProgress> progress = jobId != null
+                ? (p) -> {
+                    log.info(
+                            "Progress: [{}%] {} - {}{}",
+                            p.getPercent(),
+                            p.getStage(),
+                            p.getMessage(),
+                            (p.getCurrent() != null && p.getTotal() != null)
+                                    ? String.format(" (%d/%d)", p.getCurrent(), p.getTotal())
+                                    : "");
+                    reportProgressToTaskManager(jobId, p);
+                }
+                : (p) -> {};
 
         // Read PDF bytes once for processing and caching
         byte[] pdfBytes = file.getBytes();
@@ -127,8 +125,7 @@ public class PdfLazyLoadingService {
 
             List<PdfJsonFont> serializedFonts = new ArrayList<>(fonts.values());
             serializedFonts.sort(
-                    Comparator.comparing(
-                            PdfJsonFont::getUid, Comparator.nullsLast(Comparator.naturalOrder())));
+                    Comparator.comparing(PdfJsonFont::getUid, Comparator.nullsLast(Comparator.naturalOrder())));
             docMetadata.setFonts(serializedFonts);
 
             // Extract page dimensions
@@ -150,17 +147,13 @@ public class PdfLazyLoadingService {
             if (jobId != null) {
                 CachedPdfDocument cached = new CachedPdfDocument(pdfBytes, docMetadata);
                 documentCache.put(jobId, cached);
-                log.info(
-                        "Cached PDF bytes ({} bytes) for lazy loading, jobId: {}",
-                        pdfBytes.length,
-                        jobId);
+                log.info("Cached PDF bytes ({} bytes) for lazy loading, jobId: {}", pdfBytes.length, jobId);
 
                 // Schedule cleanup after 30 minutes
                 scheduleDocumentCleanup(jobId);
             }
 
-            progress.accept(
-                    PdfJsonConversionProgress.of(100, "complete", "Metadata extraction complete"));
+            progress.accept(PdfJsonConversionProgress.of(100, "complete", "Metadata extraction complete"));
 
             objectMapper.writeValue(out, docMetadata);
         }
@@ -185,10 +178,8 @@ public class PdfLazyLoadingService {
             java.util.function.Function<COSBase, PdfJsonCosValue> serializeCosValue,
             java.util.function.Function<PDPage, List<PdfJsonStream>> extractContentStreams,
             java.util.function.Function<COSBase, COSBase> filterImageXObjectsFromResources,
-            java.util.function.BiFunction<PDDocument, Integer, List<PdfJsonTextElement>>
-                    extractText,
-            java.util.function.BiFunction<PDDocument, Integer, List<PdfJsonAnnotation>>
-                    extractAnnotations,
+            java.util.function.BiFunction<PDDocument, Integer, List<PdfJsonTextElement>> extractText,
+            java.util.function.BiFunction<PDDocument, Integer, List<PdfJsonAnnotation>> extractAnnotations,
             OutputStream out)
             throws IOException {
         CachedPdfDocument cached = documentCache.get(jobId);
@@ -200,8 +191,7 @@ public class PdfLazyLoadingService {
         int totalPages = cached.getMetadata().getPageDimensions().size();
 
         if (pageIndex < 0 || pageIndex >= totalPages) {
-            throw new IllegalArgumentException(
-                    "Page number " + pageNumber + " out of range (1-" + totalPages + ")");
+            throw new IllegalArgumentException("Page number " + pageNumber + " out of range (1-" + totalPages + ")");
         }
 
         log.debug("Loading PDF from bytes to extract page {} (jobId: {})", pageNumber, jobId);
@@ -223,8 +213,7 @@ public class PdfLazyLoadingService {
             pageModel.setAnnotations(extractAnnotations.apply(document, pageNumber));
 
             // Extract images on-demand
-            List<PdfJsonImageElement> images =
-                    imageService.extractImagesForPage(document, page, pageNumber);
+            List<PdfJsonImageElement> images = imageService.extractImagesForPage(document, page, pageNumber);
             pageModel.setImageElements(images);
 
             // Extract resources and content streams
@@ -249,26 +238,21 @@ public class PdfLazyLoadingService {
     public void clearCachedDocument(String jobId) {
         CachedPdfDocument cached = documentCache.remove(jobId);
         if (cached != null) {
-            log.info(
-                    "Removed cached PDF bytes ({} bytes) for jobId: {}",
-                    cached.getPdfBytes().length,
-                    jobId);
+            log.info("Removed cached PDF bytes ({} bytes) for jobId: {}", cached.getPdfBytes().length, jobId);
         }
     }
 
     /** Schedules automatic cleanup of cached documents after 30 minutes. */
     private void scheduleDocumentCleanup(String jobId) {
-        Thread.ofVirtual()
-                .start(
-                        () -> {
-                            try {
-                                Thread.sleep(TimeUnit.MINUTES.toMillis(30));
-                                clearCachedDocument(jobId);
-                                log.info("Auto-cleaned cached document for jobId: {}", jobId);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                        });
+        Thread.ofVirtual().start(() -> {
+            try {
+                Thread.sleep(TimeUnit.MINUTES.toMillis(30));
+                clearCachedDocument(jobId);
+                log.info("Auto-cleaned cached document for jobId: {}", jobId);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
     }
 
     /**
@@ -279,24 +263,19 @@ public class PdfLazyLoadingService {
      */
     private void reportProgressToTaskManager(String jobId, PdfJsonConversionProgress progress) {
         try {
-            log.info(
-                    "Reporting progress for job {}: {}% - {}",
-                    jobId, progress.getPercent(), progress.getStage());
+            log.info("Reporting progress for job {}: {}% - {}", jobId, progress.getPercent(), progress.getStage());
             String note;
             if (progress.getCurrent() != null && progress.getTotal() != null) {
-                note =
-                        String.format(
-                                "[%d%%] %s: %s (%d/%d)",
-                                progress.getPercent(),
-                                progress.getStage(),
-                                progress.getMessage(),
-                                progress.getCurrent(),
-                                progress.getTotal());
+                note = String.format(
+                        "[%d%%] %s: %s (%d/%d)",
+                        progress.getPercent(),
+                        progress.getStage(),
+                        progress.getMessage(),
+                        progress.getCurrent(),
+                        progress.getTotal());
             } else {
-                note =
-                        String.format(
-                                "[%d%%] %s: %s",
-                                progress.getPercent(), progress.getStage(), progress.getMessage());
+                note = String.format(
+                        "[%d%%] %s: %s", progress.getPercent(), progress.getStage(), progress.getMessage());
             }
             boolean added = taskManager.addNote(jobId, note);
             if (!added) {

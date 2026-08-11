@@ -25,19 +25,8 @@ class SavedSignatureResponseTest {
         @Test
         @DisplayName("all-args constructor sets every field")
         void allArgs() {
-            SavedSignatureResponse r =
-                    new SavedSignatureResponse(
-                            "id-1",
-                            "label",
-                            "canvas",
-                            "shared",
-                            "data:url",
-                            "Bob",
-                            "Arial",
-                            16,
-                            "#ffffff",
-                            100L,
-                            200L);
+            SavedSignatureResponse r = new SavedSignatureResponse(
+                    "id-1", "label", "canvas", "shared", "data:url", "Bob", "Arial", 16, "#ffffff", 100L, 200L);
 
             assertThat(r.getId()).isEqualTo("id-1");
             assertThat(r.getLabel()).isEqualTo("label");

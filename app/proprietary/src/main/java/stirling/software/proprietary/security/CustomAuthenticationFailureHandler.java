@@ -31,8 +31,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
     private UserService userService;
 
-    public CustomAuthenticationFailureHandler(
-            final LoginAttemptService loginAttemptService, UserService userService) {
+    public CustomAuthenticationFailureHandler(final LoginAttemptService loginAttemptService, UserService userService) {
         this.loginAttemptService = loginAttemptService;
         this.userService = userService;
     }
@@ -40,9 +39,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
     @Override
     @Audited(type = AuditEventType.USER_FAILED_LOGIN, level = AuditLevel.BASIC)
     public void onAuthenticationFailure(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException exception)
+            HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
             throws IOException, ServletException {
 
         if (exception instanceof DisabledException) {
@@ -64,24 +61,20 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
         if (username != null && optUser.isPresent() && !isDemoUser(optUser)) {
             log.info(
-                    "Remaining attempts for user {}: {}",
-                    username,
-                    loginAttemptService.getRemainingAttempts(username));
+                    "Remaining attempts for user {}: {}", username, loginAttemptService.getRemainingAttempts(username));
             loginAttemptService.loginFailed(username);
             if (loginAttemptService.isBlocked(username) || exception instanceof LockedException) {
                 getRedirectStrategy().sendRedirect(request, response, "/login?error=locked");
                 return;
             }
         }
-        if (exception instanceof BadCredentialsException
-                || exception instanceof UsernameNotFoundException) {
+        if (exception instanceof BadCredentialsException || exception instanceof UsernameNotFoundException) {
             getRedirectStrategy().sendRedirect(request, response, "/login?error=badCredentials");
             return;
         }
         if (exception instanceof InternalAuthenticationServiceException
                 || "Password must not be null".equalsIgnoreCase(exception.getMessage())) {
-            getRedirectStrategy()
-                    .sendRedirect(request, response, "/login?error=oauth2AuthenticationError");
+            getRedirectStrategy().sendRedirect(request, response, "/login?error=oauth2AuthenticationError");
             return;
         }
 

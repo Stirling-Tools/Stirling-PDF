@@ -16,11 +16,7 @@ import java.util.List;
  * @param rationale Human-readable reason logged for observability.
  */
 public record Requisition(
-        String type,
-        List<Integer> needText,
-        List<Integer> needTables,
-        List<Integer> needOcr,
-        String rationale) {
+        String type, List<Integer> needText, List<Integer> needTables, List<Integer> needOcr, String rationale) {
 
     public boolean isEmpty() {
         return (needText == null || needText.isEmpty())

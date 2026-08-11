@@ -63,8 +63,7 @@ class S3VendorComprehensiveTest {
     private static String vendorLabel;
     private static User owner;
 
-    private static final List<String> keysToCleanup =
-            Collections.synchronizedList(new ArrayList<>());
+    private static final List<String> keysToCleanup = Collections.synchronizedList(new ArrayList<>());
 
     @BeforeAll
     static void setUp() {
@@ -109,8 +108,7 @@ class S3VendorComprehensiveTest {
         c.setRegion(System.getenv().getOrDefault("S3_SMOKE_REGION", "us-east-1"));
         c.setAccessKey(requireEnv("S3_SMOKE_KEY"));
         c.setSecretKey(requireEnv("S3_SMOKE_SECRET"));
-        c.setPathStyleAccess(
-                Boolean.parseBoolean(System.getenv().getOrDefault("S3_SMOKE_PATHSTYLE", "false")));
+        c.setPathStyleAccess(Boolean.parseBoolean(System.getenv().getOrDefault("S3_SMOKE_PATHSTYLE", "false")));
         c.setAllowPrivateEndpoints(false);
         return c;
     }
@@ -150,14 +148,12 @@ class S3VendorComprehensiveTest {
 
         provider.delete(obj.getStorageKey());
 
-        assertThatThrownBy(() -> provider.load(obj.getStorageKey()))
-                .isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> provider.load(obj.getStorageKey())).isInstanceOf(IOException.class);
     }
 
     @Test
     void provider_load_missingKey_throws() {
-        assertThatThrownBy(() -> provider.load(PREFIX + "does-not-exist"))
-                .isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> provider.load(PREFIX + "does-not-exist")).isInstanceOf(IOException.class);
     }
 
     @Test
@@ -167,15 +163,11 @@ class S3VendorComprehensiveTest {
         StoredObject obj = provider.store(owner, file);
         track(obj.getStorageKey());
 
-        java.util.Optional<java.net.URI> url =
-                provider.signedDownloadUrl(obj.getStorageKey(), Duration.ofMinutes(5));
+        java.util.Optional<java.net.URI> url = provider.signedDownloadUrl(obj.getStorageKey(), Duration.ofMinutes(5));
         assertThat(url).isPresent();
 
-        HttpResponse<byte[]> resp =
-                HttpClient.newHttpClient()
-                        .send(
-                                HttpRequest.newBuilder(url.get()).GET().build(),
-                                HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<byte[]> resp = HttpClient.newHttpClient()
+                .send(HttpRequest.newBuilder(url.get()).GET().build(), HttpResponse.BodyHandlers.ofByteArray());
 
         assertThat(resp.statusCode()).isEqualTo(200);
         assertThat(resp.body()).isEqualTo(payload);
@@ -183,8 +175,7 @@ class S3VendorComprehensiveTest {
 
     @Test
     void provider_store_zeroBytes_isAccepted() throws IOException {
-        MockMultipartFile empty =
-                new MockMultipartFile("file", "empty.txt", "text/plain", new byte[0]);
+        MockMultipartFile empty = new MockMultipartFile("file", "empty.txt", "text/plain", new byte[0]);
         StoredObject obj = provider.store(owner, empty);
         track(obj.getStorageKey());
 
@@ -194,15 +185,13 @@ class S3VendorComprehensiveTest {
     }
 
     @Test
-    void provider_store_unicodeFilename_yieldsOpaqueAsciiKey_andPreservesNameForDisplay()
-            throws IOException {
+    void provider_store_unicodeFilename_yieldsOpaqueAsciiKey_andPreservesNameForDisplay() throws IOException {
         // Regression: pre-fix, the storage key embedded the filename verbatim, which Supabase
         // rejected with 400 Invalid key. Post-fix, the key is {ownerId}/{uuid} (ASCII-only)
         // and the original unicode name lives on StoredObject.originalFilename.
         String unicodeName = "résumé-日本語-é.pdf";
         byte[] payload = "u".getBytes(StandardCharsets.UTF_8);
-        MockMultipartFile file =
-                new MockMultipartFile("file", unicodeName, "application/pdf", payload);
+        MockMultipartFile file = new MockMultipartFile("file", unicodeName, "application/pdf", payload);
 
         StoredObject obj = provider.store(owner, file);
         track(obj.getStorageKey());
@@ -210,9 +199,7 @@ class S3VendorComprehensiveTest {
         assertThat(obj.getStorageKey()).matches("[0-9]+/[0-9a-fA-F-]+");
         assertThat(obj.getStorageKey())
                 .isEqualTo(
-                        new String(
-                                obj.getStorageKey().getBytes(StandardCharsets.US_ASCII),
-                                StandardCharsets.US_ASCII));
+                        new String(obj.getStorageKey().getBytes(StandardCharsets.US_ASCII), StandardCharsets.US_ASCII));
         assertThat(obj.getOriginalFilename()).isEqualTo(unicodeName);
         assertThat(provider.load(obj.getStorageKey()).getInputStream().readAllBytes())
                 .isEqualTo(payload);
@@ -225,27 +212,18 @@ class S3VendorComprehensiveTest {
     @Test
     void provider_concurrent10Uploads_allSucceedWithDistinctKeys() throws Exception {
         int n = 10;
-        java.util.concurrent.ExecutorService pool =
-                java.util.concurrent.Executors.newFixedThreadPool(n);
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(n);
         try {
             List<java.util.concurrent.Future<StoredObject>> futures = new ArrayList<>();
             for (int i = 0; i < n; i++) {
                 final int idx = i;
-                futures.add(
-                        pool.submit(
-                                () -> {
-                                    byte[] payload =
-                                            ("concurrent-" + idx).getBytes(StandardCharsets.UTF_8);
-                                    MockMultipartFile f =
-                                            new MockMultipartFile(
-                                                    "file",
-                                                    "c-" + idx + ".txt",
-                                                    "text/plain",
-                                                    payload);
-                                    StoredObject obj = provider.store(owner, f);
-                                    track(obj.getStorageKey());
-                                    return obj;
-                                }));
+                futures.add(pool.submit(() -> {
+                    byte[] payload = ("concurrent-" + idx).getBytes(StandardCharsets.UTF_8);
+                    MockMultipartFile f = new MockMultipartFile("file", "c-" + idx + ".txt", "text/plain", payload);
+                    StoredObject obj = provider.store(owner, f);
+                    track(obj.getStorageKey());
+                    return obj;
+                }));
             }
 
             java.util.Set<String> keys = new java.util.HashSet<>();
@@ -283,30 +261,26 @@ class S3VendorComprehensiveTest {
         track(putRaw(key, "presign expiry"));
 
         // 2-second TTL, then wait long enough that any vendor clock skew tolerance is also past.
-        PresignedGetObjectRequest presigned =
-                bundle.presigner()
-                        .presignGetObject(
-                                GetObjectPresignRequest.builder()
-                                        .signatureDuration(Duration.ofSeconds(2))
-                                        .getObjectRequest(g -> g.bucket(bucket).key(key))
-                                        .build());
+        PresignedGetObjectRequest presigned = bundle.presigner()
+                .presignGetObject(GetObjectPresignRequest.builder()
+                        .signatureDuration(Duration.ofSeconds(2))
+                        .getObjectRequest(g -> g.bucket(bucket).key(key))
+                        .build());
 
         // Confirm it works while valid - rules out unrelated failures.
-        HttpResponse<byte[]> ok =
-                HttpClient.newHttpClient()
-                        .send(
-                                HttpRequest.newBuilder(presigned.url().toURI()).GET().build(),
-                                HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<byte[]> ok = HttpClient.newHttpClient()
+                .send(
+                        HttpRequest.newBuilder(presigned.url().toURI()).GET().build(),
+                        HttpResponse.BodyHandlers.ofByteArray());
         assertThat(ok.statusCode()).isEqualTo(200);
         assertThat(ok.body()).isEqualTo(payload);
 
         Thread.sleep(5_000);
 
-        HttpResponse<byte[]> expired =
-                HttpClient.newHttpClient()
-                        .send(
-                                HttpRequest.newBuilder(presigned.url().toURI()).GET().build(),
-                                HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<byte[]> expired = HttpClient.newHttpClient()
+                .send(
+                        HttpRequest.newBuilder(presigned.url().toURI()).GET().build(),
+                        HttpResponse.BodyHandlers.ofByteArray());
         assertThat(expired.statusCode())
                 .as("presigned URL must be rejected after TTL expires")
                 .isIn(400, 403);
@@ -316,8 +290,7 @@ class S3VendorComprehensiveTest {
     void provider_store_4MBPayload_streams() throws IOException {
         byte[] payload = new byte[4 * 1024 * 1024];
         java.util.Arrays.fill(payload, (byte) 0x42);
-        MockMultipartFile file =
-                new MockMultipartFile("file", "big.bin", "application/octet-stream", payload);
+        MockMultipartFile file = new MockMultipartFile("file", "big.bin", "application/octet-stream", payload);
 
         StoredObject obj = provider.store(owner, file);
         track(obj.getStorageKey());
@@ -356,8 +329,7 @@ class S3VendorComprehensiveTest {
     @Test
     void fileStore_retrieveBytes_missingKey_throws() {
         S3FileStore store = new S3FileStore(bundle.client(), bucket, PREFIX + "fs/", false);
-        assertThatThrownBy(() -> store.retrieveBytes("does-not-exist"))
-                .isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> store.retrieveBytes("does-not-exist")).isInstanceOf(IOException.class);
     }
 
     @Test
@@ -402,17 +374,14 @@ class S3VendorComprehensiveTest {
 
         track(oldKey);
         track(newKey);
-        bundle.client()
-                .putObject(p -> p.bucket(bucket).key(oldKey), RequestBody.fromBytes(payload));
+        bundle.client().putObject(p -> p.bucket(bucket).key(oldKey), RequestBody.fromBytes(payload));
 
         // Simulate move: server-side copy + delete original.
         bundle.client()
-                .copyObject(
-                        c ->
-                                c.sourceBucket(bucket)
-                                        .sourceKey(oldKey)
-                                        .destinationBucket(bucket)
-                                        .destinationKey(newKey));
+                .copyObject(c -> c.sourceBucket(bucket)
+                        .sourceKey(oldKey)
+                        .destinationBucket(bucket)
+                        .destinationKey(newKey));
         bundle.client().deleteObject(d -> d.bucket(bucket).key(oldKey));
 
         assertThat(headOrNull(oldKey)).isNull();
@@ -455,8 +424,7 @@ class S3VendorComprehensiveTest {
     void invalidEndpointUri_atBuildTime_throwsIllegalState() {
         ApplicationProperties.Storage.S3 bad = configFromEnv();
         bad.setEndpoint("not a valid uri ::::");
-        assertThatThrownBy(() -> S3Clients.build(bad, "bad-uri"))
-                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> S3Clients.build(bad, "bad-uri")).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -495,8 +463,7 @@ class S3VendorComprehensiveTest {
     private String putRaw(String key, String body) {
         bundle.client()
                 .putObject(
-                        p -> p.bucket(bucket).key(key),
-                        RequestBody.fromBytes(body.getBytes(StandardCharsets.UTF_8)));
+                        p -> p.bucket(bucket).key(key), RequestBody.fromBytes(body.getBytes(StandardCharsets.UTF_8)));
         return key;
     }
 
@@ -514,7 +481,9 @@ class S3VendorComprehensiveTest {
 
     private byte[] tryGetBytes(String key) {
         try {
-            return bundle.client().getObjectAsBytes(g -> g.bucket(bucket).key(key)).asByteArray();
+            return bundle.client()
+                    .getObjectAsBytes(g -> g.bucket(bucket).key(key))
+                    .asByteArray();
         } catch (Exception e) {
             return null;
         }
@@ -538,8 +507,7 @@ class S3VendorComprehensiveTest {
 
         // S3 spec: trailing slash is legal and creates a 0-byte "folder marker" object.
         // Some vendors normalize it away; capture either behavior.
-        bundle.client()
-                .putObject(p -> p.bucket(bucket).key(key), RequestBody.fromBytes(new byte[0]));
+        bundle.client().putObject(p -> p.bucket(bucket).key(key), RequestBody.fromBytes(new byte[0]));
         Object head = headOrNull(key);
         // Either: vendor accepts the marker (head is non-null) or normalizes to bare key.
         assertThat(head != null || headOrNull(key.substring(0, key.length() - 1)) != null)
@@ -553,8 +521,7 @@ class S3VendorComprehensiveTest {
         track(key);
         bundle.client()
                 .putObject(
-                        p -> p.bucket(bucket).key(key),
-                        RequestBody.fromBytes("ds".getBytes(StandardCharsets.UTF_8)));
+                        p -> p.bucket(bucket).key(key), RequestBody.fromBytes("ds".getBytes(StandardCharsets.UTF_8)));
 
         // Either GET-with-the-exact-key works, or vendor normalized -> single-slash form works.
         String alt = key.replace("//", "/");
@@ -580,8 +547,7 @@ class S3VendorComprehensiveTest {
         track(longKey);
 
         byte[] payload = "long-key".getBytes(StandardCharsets.UTF_8);
-        bundle.client()
-                .putObject(p -> p.bucket(bucket).key(longKey), RequestBody.fromBytes(payload));
+        bundle.client().putObject(p -> p.bucket(bucket).key(longKey), RequestBody.fromBytes(payload));
         assertThat(getRaw(longKey)).isEqualTo(payload);
     }
 
@@ -592,17 +558,12 @@ class S3VendorComprehensiveTest {
         // confirms the SDK SigV4 signer copes with slightly more exotic ASCII-safe keys.
         // Note: Supabase rejects keys containing space / + / ? / & / # ("400 Invalid key"),
         // see documentsVendorKeyRestrictions_tolerantTest for that documentation.
-        String key =
-                PREFIX
-                        + "safe-special/"
-                        + UUID.randomUUID()
-                        + "_segment.with-dots.and_underscores.txt";
+        String key = PREFIX + "safe-special/" + UUID.randomUUID() + "_segment.with-dots.and_underscores.txt";
         track(key);
 
         bundle.client()
                 .putObject(
-                        p -> p.bucket(bucket).key(key),
-                        RequestBody.fromBytes("safe".getBytes(StandardCharsets.UTF_8)));
+                        p -> p.bucket(bucket).key(key), RequestBody.fromBytes("safe".getBytes(StandardCharsets.UTF_8)));
         assertThat(getRaw(key)).isEqualTo("safe".getBytes(StandardCharsets.UTF_8));
     }
 
@@ -649,37 +610,27 @@ class S3VendorComprehensiveTest {
         track(putRaw(key, "x"));
 
         // SigV4 caps presigned URL TTL at 7 days. SDK should refuse to sign anything larger.
-        assertThatThrownBy(
-                        () ->
-                                bundle.presigner()
-                                        .presignGetObject(
-                                                GetObjectPresignRequest.builder()
-                                                        .signatureDuration(Duration.ofDays(8))
-                                                        .getObjectRequest(
-                                                                g -> g.bucket(bucket).key(key))
-                                                        .build()))
+        assertThatThrownBy(() -> bundle.presigner()
+                        .presignGetObject(GetObjectPresignRequest.builder()
+                                .signatureDuration(Duration.ofDays(8))
+                                .getObjectRequest(g -> g.bucket(bucket).key(key))
+                                .build()))
                 .isInstanceOfAny(IllegalArgumentException.class, RuntimeException.class);
     }
 
     @Test
-    void provider_signedDownloadUrl_attachmentDisposition_endsWithAttachmentHeader()
-            throws Exception {
+    void provider_signedDownloadUrl_attachmentDisposition_endsWithAttachmentHeader() throws Exception {
         byte[] payload = "attach me".getBytes(StandardCharsets.UTF_8);
-        MockMultipartFile file =
-                new MockMultipartFile("file", "report.pdf", "application/pdf", payload);
+        MockMultipartFile file = new MockMultipartFile("file", "report.pdf", "application/pdf", payload);
         StoredObject obj = provider.store(owner, file);
         track(obj.getStorageKey());
 
         java.util.Optional<java.net.URI> url =
-                provider.signedDownloadUrl(
-                        obj.getStorageKey(), Duration.ofMinutes(2), false, "report.pdf");
+                provider.signedDownloadUrl(obj.getStorageKey(), Duration.ofMinutes(2), false, "report.pdf");
         assertThat(url).isPresent();
 
-        HttpResponse<byte[]> resp =
-                HttpClient.newHttpClient()
-                        .send(
-                                HttpRequest.newBuilder(url.get()).GET().build(),
-                                HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<byte[]> resp = HttpClient.newHttpClient()
+                .send(HttpRequest.newBuilder(url.get()).GET().build(), HttpResponse.BodyHandlers.ofByteArray());
 
         assertThat(resp.statusCode()).isEqualTo(200);
         // Supabase + AWS both honor response-content-disposition query param.
@@ -691,21 +642,16 @@ class S3VendorComprehensiveTest {
     @Test
     void provider_signedDownloadUrl_inlineDisposition_endsWithInlineHeader() throws Exception {
         byte[] payload = "inline".getBytes(StandardCharsets.UTF_8);
-        MockMultipartFile file =
-                new MockMultipartFile("file", "preview.pdf", "application/pdf", payload);
+        MockMultipartFile file = new MockMultipartFile("file", "preview.pdf", "application/pdf", payload);
         StoredObject obj = provider.store(owner, file);
         track(obj.getStorageKey());
 
         java.util.Optional<java.net.URI> url =
-                provider.signedDownloadUrl(
-                        obj.getStorageKey(), Duration.ofMinutes(2), true, "preview.pdf");
+                provider.signedDownloadUrl(obj.getStorageKey(), Duration.ofMinutes(2), true, "preview.pdf");
         assertThat(url).isPresent();
 
-        HttpResponse<byte[]> resp =
-                HttpClient.newHttpClient()
-                        .send(
-                                HttpRequest.newBuilder(url.get()).GET().build(),
-                                HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<byte[]> resp = HttpClient.newHttpClient()
+                .send(HttpRequest.newBuilder(url.get()).GET().build(), HttpResponse.BodyHandlers.ofByteArray());
 
         assertThat(resp.statusCode()).isEqualTo(200);
         assertThat(resp.headers().firstValue("content-disposition").orElse(""))
@@ -725,19 +671,15 @@ class S3VendorComprehensiveTest {
             track(putRaw(prefix + "obj-" + i, "p" + i));
         }
 
-        var first = bundle.client().listObjectsV2(l -> l.bucket(bucket).prefix(prefix).maxKeys(1));
+        var first = bundle.client()
+                .listObjectsV2(l -> l.bucket(bucket).prefix(prefix).maxKeys(1));
         assertThat(first.contents()).hasSize(1);
         assertThat(first.isTruncated()).isTrue();
         assertThat(first.nextContinuationToken()).isNotBlank();
 
-        var second =
-                bundle.client()
-                        .listObjectsV2(
-                                l ->
-                                        l.bucket(bucket)
-                                                .prefix(prefix)
-                                                .maxKeys(2)
-                                                .continuationToken(first.nextContinuationToken()));
+        var second = bundle.client()
+                .listObjectsV2(l ->
+                        l.bucket(bucket).prefix(prefix).maxKeys(2).continuationToken(first.nextContinuationToken()));
         assertThat(second.contents()).hasSize(2);
         assertThat(second.isTruncated()).isFalse();
     }
@@ -745,7 +687,8 @@ class S3VendorComprehensiveTest {
     @Test
     void headObject_missingKey_throwsNoSuchKeyOr404() {
         String missing = PREFIX + "head-missing-" + UUID.randomUUID();
-        assertThatThrownBy(() -> bundle.client().headObject(h -> h.bucket(bucket).key(missing)))
+        assertThatThrownBy(
+                        () -> bundle.client().headObject(h -> h.bucket(bucket).key(missing)))
                 .isInstanceOf(S3Exception.class)
                 .satisfies(e -> assertThat(((S3Exception) e).statusCode()).isEqualTo(404));
     }
@@ -759,19 +702,16 @@ class S3VendorComprehensiveTest {
         byte[] payload = "direct presign".getBytes(StandardCharsets.UTF_8);
         track(putRaw(key, "direct presign"));
 
-        PresignedGetObjectRequest presigned =
-                bundle.presigner()
-                        .presignGetObject(
-                                GetObjectPresignRequest.builder()
-                                        .signatureDuration(Duration.ofMinutes(2))
-                                        .getObjectRequest(g -> g.bucket(bucket).key(key))
-                                        .build());
+        PresignedGetObjectRequest presigned = bundle.presigner()
+                .presignGetObject(GetObjectPresignRequest.builder()
+                        .signatureDuration(Duration.ofMinutes(2))
+                        .getObjectRequest(g -> g.bucket(bucket).key(key))
+                        .build());
 
-        HttpResponse<byte[]> resp =
-                HttpClient.newHttpClient()
-                        .send(
-                                HttpRequest.newBuilder(presigned.url().toURI()).GET().build(),
-                                HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<byte[]> resp = HttpClient.newHttpClient()
+                .send(
+                        HttpRequest.newBuilder(presigned.url().toURI()).GET().build(),
+                        HttpResponse.BodyHandlers.ofByteArray());
 
         assertThat(resp.statusCode()).isEqualTo(200);
         assertThat(resp.body()).isEqualTo(payload);

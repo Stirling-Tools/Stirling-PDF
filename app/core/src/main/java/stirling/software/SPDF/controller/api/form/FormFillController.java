@@ -43,10 +43,7 @@ import tools.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api/v1/form")
-@Tag(
-        name = "Forms",
-        description =
-                """
+@Tag(name = "Forms", description = """
                 Work with PDF form fields: read them, fill them, edit them, or remove them.
                 Treats a PDF as a structured form instead of just flat pages.
 
@@ -63,8 +60,7 @@ public class FormFillController {
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
 
-    private ResponseEntity<Resource> saveDocument(PDDocument document, String baseName)
-            throws IOException {
+    private ResponseEntity<Resource> saveDocument(PDDocument document, String baseName) throws IOException {
         return WebResponseUtils.pdfDocToWebResponse(document, baseName + ".pdf", tempFileManager);
     }
 
@@ -113,8 +109,7 @@ public class FormFillController {
         requirePdf(file);
         try (PDDocument document = pdfDocumentFactory.load(file, true)) {
             FormUtils.repairMissingWidgetPageReferences(document);
-            FormUtils.FormFieldExtraction extraction =
-                    FormUtils.extractFieldsWithTemplate(document);
+            FormUtils.FormFieldExtraction extraction = FormUtils.extractFieldsWithTemplate(document);
             return ResponseEntity.ok(extraction);
         }
     }
@@ -122,9 +117,8 @@ public class FormFillController {
     @PostMapping(value = "/fields-with-coordinates", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Inspect PDF form fields with widget coordinates",
-            description =
-                    "Returns metadata describing each field in the provided PDF form, "
-                            + "including precise widget coordinates for interactive rendering")
+            description = "Returns metadata describing each field in the provided PDF form, "
+                    + "including precise widget coordinates for interactive rendering")
     public ResponseEntity<List<FormFieldWithCoordinates>> listFieldsWithCoordinates(
             @Parameter(
                             description = "The input PDF file",
@@ -140,8 +134,7 @@ public class FormFillController {
         requirePdf(file);
         try (PDDocument document = pdfDocumentFactory.load(file, true)) {
             FormUtils.repairMissingWidgetPageReferences(document);
-            List<FormFieldWithCoordinates> fields =
-                    FormUtils.extractFormFieldsWithCoordinates(document);
+            List<FormFieldWithCoordinates> fields = FormUtils.extractFormFieldsWithCoordinates(document);
             return ResponseEntity.ok(fields);
         }
     }
@@ -149,8 +142,7 @@ public class FormFillController {
     @PostMapping(value = "/extract-csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Extract form fields as CSV",
-            description =
-                    "Returns a CSV file containing all form field names and their current values")
+            description = "Returns a CSV file containing all form field names and their current values")
     public ResponseEntity<byte[]> extractCsv(
             @Parameter(
                             description = "The input PDF file",
@@ -172,8 +164,7 @@ public class FormFillController {
 
             if (data != null && !data.isEmpty()) {
                 Map<String, String> values =
-                        objectMapper.readValue(
-                                data.getInputStream(), new TypeReference<Map<String, String>>() {});
+                        objectMapper.readValue(data.getInputStream(), new TypeReference<Map<String, String>>() {});
                 FormUtils.applyFieldValues(document, values, false);
             }
 
@@ -198,8 +189,7 @@ public class FormFillController {
     @PostMapping(value = "/extract-xlsx", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Extract form fields as XLSX",
-            description =
-                    "Returns an Excel (XLSX) file containing all form field names and their current values")
+            description = "Returns an Excel (XLSX) file containing all form field names and their current values")
     public ResponseEntity<byte[]> extractXlsx(
             @Parameter(
                             description = "The input PDF file",
@@ -222,8 +212,7 @@ public class FormFillController {
 
             if (data != null && !data.isEmpty()) {
                 Map<String, String> values =
-                        objectMapper.readValue(
-                                data.getInputStream(), new TypeReference<Map<String, String>>() {});
+                        objectMapper.readValue(data.getInputStream(), new TypeReference<Map<String, String>>() {});
                 FormUtils.applyFieldValues(document, values, false);
             }
 
@@ -252,16 +241,14 @@ public class FormFillController {
             return WebResponseUtils.bytesToWebResponse(
                     baos.toByteArray(),
                     baseName + ".xlsx",
-                    MediaType.parseMediaType(
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+                    MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         }
     }
 
     @PostMapping(value = "/modify-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Modify existing form fields",
-            description =
-                    "Updates existing fields in the provided PDF and returns the updated file")
+            description = "Updates existing fields in the provided PDF and returns the updated file")
     public ResponseEntity<Resource> modifyFields(
             @Parameter(
                             description = "The input PDF file",
@@ -280,13 +267,10 @@ public class FormFillController {
                 FormPayloadParser.parseModificationDefinitions(objectMapper, rawUpdates);
         if (modifications.isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.dataRequired",
-                    "{0} must contain at least one definition",
-                    "updates payload");
+                    "error.dataRequired", "{0} must contain at least one definition", "updates payload");
         }
 
-        return processSingleFile(
-                file, "updated", document -> FormUtils.modifyFormFields(document, modifications));
+        return processSingleFile(file, "updated", document -> FormUtils.modifyFormFields(document, modifications));
     }
 
     @PostMapping(value = "/delete-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -304,9 +288,8 @@ public class FormFillController {
                     @RequestParam("file")
                     MultipartFile file,
             @Parameter(
-                            description =
-                                    "JSON array of field names or objects with a name property,"
-                                            + " matching the /fields response format",
+                            description = "JSON array of field names or objects with a name property,"
+                                    + " matching the /fields response format",
                             example = "[{\"name\":\"Field1\"}]")
                     @RequestPart(value = "names", required = false)
                     byte[] namesPayload)
@@ -319,16 +302,14 @@ public class FormFillController {
                     "error.dataRequired", "{0} must contain at least one value", "names payload");
         }
 
-        return processSingleFile(
-                file, "updated", document -> FormUtils.deleteFormFields(document, names));
+        return processSingleFile(file, "updated", document -> FormUtils.deleteFormFields(document, names));
     }
 
     @PostMapping(value = "/fill", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Fill PDF form fields",
-            description =
-                    "Populates the supplied PDF form using values from the provided JSON payload"
-                            + " and returns the filled PDF")
+            description = "Populates the supplied PDF form using values from the provided JSON payload"
+                    + " and returns the filled PDF")
     public ResponseEntity<Resource> fillForm(
             @Parameter(
                             description = "The input PDF file",
@@ -339,9 +320,7 @@ public class FormFillController {
                                             schema = @Schema(type = "string", format = "binary")))
                     @RequestParam("file")
                     MultipartFile file,
-            @Parameter(
-                            description = "JSON object of field-value pairs to apply",
-                            example = "{\"field\":\"value\"}")
+            @Parameter(description = "JSON object of field-value pairs to apply", example = "{\"field\":\"value\"}")
                     @RequestPart(value = "data", required = false)
                     byte[] valuesPayload,
             @RequestParam(value = "flatten", defaultValue = "false") boolean flatten)
@@ -351,13 +330,11 @@ public class FormFillController {
         Map<String, Object> values = FormPayloadParser.parseValueMap(objectMapper, rawValues);
 
         return processSingleFile(
-                file,
-                "filled",
-                document -> FormUtils.applyFieldValues(document, values, flatten, true));
+                file, "filled", document -> FormUtils.applyFieldValues(document, values, flatten, true));
     }
 
-    private ResponseEntity<Resource> processSingleFile(
-            MultipartFile file, String suffix, DocumentProcessor processor) throws IOException {
+    private ResponseEntity<Resource> processSingleFile(MultipartFile file, String suffix, DocumentProcessor processor)
+            throws IOException {
         requirePdf(file);
 
         String baseName = buildBaseName(file, suffix);

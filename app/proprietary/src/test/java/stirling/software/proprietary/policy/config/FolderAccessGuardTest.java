@@ -29,7 +29,8 @@ import stirling.software.proprietary.policy.source.SourceStore;
  */
 class FolderAccessGuardTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
 
@@ -38,8 +39,7 @@ class FolderAccessGuardTest {
         properties.getPolicies().setAllowedFolderRoots(allowedRoots);
         StandardEnvironment environment = new StandardEnvironment();
         environment.setActiveProfiles(activeProfiles);
-        return new FolderAccessGuard(
-                properties, new RuntimePathConfig(properties), environment, sourceStore);
+        return new FolderAccessGuard(properties, new RuntimePathConfig(properties), environment, sourceStore);
     }
 
     private FolderAccessGuard guardWithStorage(
@@ -51,24 +51,14 @@ class FolderAccessGuardTest {
         storage.setProvider(provider);
         storage.getLocal().setBasePath(basePath);
         return new FolderAccessGuard(
-                properties,
-                new RuntimePathConfig(properties),
-                new StandardEnvironment(),
-                sourceStore);
+                properties, new RuntimePathConfig(properties), new StandardEnvironment(), sourceStore);
     }
 
     private FolderAccessGuard guardWithWatchedFolder(String watchedDir) {
         ApplicationProperties properties = new ApplicationProperties();
-        properties
-                .getSystem()
-                .getCustomPaths()
-                .getPipeline()
-                .setWatchedFoldersDirs(List.of(watchedDir));
+        properties.getSystem().getCustomPaths().getPipeline().setWatchedFoldersDirs(List.of(watchedDir));
         return new FolderAccessGuard(
-                properties,
-                new RuntimePathConfig(properties),
-                new StandardEnvironment(),
-                sourceStore);
+                properties, new RuntimePathConfig(properties), new StandardEnvironment(), sourceStore);
     }
 
     @Test
@@ -84,8 +74,7 @@ class FolderAccessGuardTest {
         FolderAccessGuard guard = guard(List.of(tempDir.toString()));
         // FolderAccessDeniedException (not the base type): the admin can fix this in settings.
         assertThrows(
-                FolderAccessDeniedException.class,
-                () -> guard.requirePermitted(tempDir.resolveSibling("elsewhere")));
+                FolderAccessDeniedException.class, () -> guard.requirePermitted(tempDir.resolveSibling("elsewhere")));
     }
 
     @Test
@@ -105,8 +94,7 @@ class FolderAccessGuardTest {
     @Test
     void permitsTheLocalServerStorageDirectoryEvenWithNoConfiguredRoots() {
         Path storageBase = tempDir.resolve("storage");
-        FolderAccessGuard guard =
-                guardWithStorage(List.of(), true, "local", storageBase.toString());
+        FolderAccessGuard guard = guardWithStorage(List.of(), true, "local", storageBase.toString());
         Path within = storageBase.resolve("inbox");
 
         assertEquals(within.toAbsolutePath().normalize(), guard.requirePermitted(within));
@@ -115,8 +103,7 @@ class FolderAccessGuardTest {
     @Test
     void ignoresServerStorageWhenTheStorageFeatureIsDisabled() {
         Path storageBase = tempDir.resolve("storage");
-        FolderAccessGuard guard =
-                guardWithStorage(List.of(), false, "local", storageBase.toString());
+        FolderAccessGuard guard = guardWithStorage(List.of(), false, "local", storageBase.toString());
 
         assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
     }
@@ -146,10 +133,8 @@ class FolderAccessGuardTest {
         FolderAccessGuard guard = guard(List.of(configDir.getParent().toString()));
 
         // Not a FolderAccessDeniedException: editing the allowlist can't unprotect the config dir.
-        IllegalArgumentException ex =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> guard.requirePermitted(configDir.resolve("settings.yml")));
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class, () -> guard.requirePermitted(configDir.resolve("settings.yml")));
         assertFalse(ex instanceof FolderAccessDeniedException);
     }
 
@@ -166,30 +151,17 @@ class FolderAccessGuardTest {
     void usesFolderAccessDetectsFolderSourcesAndOutputs() {
         FolderAccessGuard guard = guard(List.of(tempDir.toString()));
 
-        assertTrue(
-                guard.usesFolderAccess(
-                        policy(List.of(InputSpec.folder("/in")), OutputSpec.inline())));
+        assertTrue(guard.usesFolderAccess(policy(List.of(InputSpec.folder("/in")), OutputSpec.inline())));
         assertTrue(guard.usesFolderAccess(policy(List.of(), OutputSpec.folder("/out"))));
         assertFalse(guard.usesFolderAccess(policy(List.of(), OutputSpec.inline())));
     }
 
     private Policy policy(List<InputSpec> sources, OutputSpec output) {
-        List<String> sourceIds =
-                sources.stream()
-                        .map(
-                                spec ->
-                                        sourceStore
-                                                .save(
-                                                        new Source(
-                                                                null,
-                                                                "src",
-                                                                spec.type(),
-                                                                spec.options(),
-                                                                true,
-                                                                "owner",
-                                                                null))
-                                                .id())
-                        .toList();
+        List<String> sourceIds = sources.stream()
+                .map(spec -> sourceStore
+                        .save(new Source(null, "src", spec.type(), spec.options(), true, "owner", null))
+                        .id())
+                .toList();
         return new Policy(
                 "p1",
                 "p",

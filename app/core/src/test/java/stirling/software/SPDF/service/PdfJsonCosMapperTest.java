@@ -276,9 +276,7 @@ class PdfJsonCosMapperTest {
             COSStream cosStream = newCosStreamWithData(data);
             cosStream.setItem(COSName.FILTER, COSName.getPDFName("FlateDecode"));
 
-            PdfJsonStream result =
-                    mapper.serializeStream(
-                            cosStream, SerializationContext.CONTENT_STREAMS_LIGHTWEIGHT);
+            PdfJsonStream result = mapper.serializeStream(cosStream, SerializationContext.CONTENT_STREAMS_LIGHTWEIGHT);
             assertNotNull(result);
             assertNull(result.getRawData());
             // Dictionary metadata is still preserved.
@@ -313,8 +311,7 @@ class PdfJsonCosMapperTest {
             byte[] data = "pdstream".getBytes(StandardCharsets.UTF_8);
             PDStream pdStream = new PDStream(document, new java.io.ByteArrayInputStream(data));
 
-            PdfJsonStream result =
-                    mapper.serializeStream(pdStream, SerializationContext.RESOURCES_LIGHTWEIGHT);
+            PdfJsonStream result = mapper.serializeStream(pdStream, SerializationContext.RESOURCES_LIGHTWEIGHT);
             assertNotNull(result);
             assertNull(result.getRawData());
         }
@@ -328,7 +325,8 @@ class PdfJsonCosMapperTest {
             PdfJsonCosValue value = mapper.serializeCosValue(cosStream);
             assertEquals(PdfJsonCosValue.Type.STREAM, value.getType());
             assertNotNull(value.getStream());
-            assertEquals(Base64.getEncoder().encodeToString(data), value.getStream().getRawData());
+            assertEquals(
+                    Base64.getEncoder().encodeToString(data), value.getStream().getRawData());
         }
     }
 
@@ -360,11 +358,10 @@ class PdfJsonCosMapperTest {
         @Test
         @DisplayName("BOOLEAN type returns matching COSBoolean")
         void booleanType() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.BOOLEAN)
-                            .value(Boolean.TRUE)
-                            .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.BOOLEAN)
+                    .value(Boolean.TRUE)
+                    .build();
             COSBase result = mapper.deserializeCosValue(value, document);
             assertEquals(COSBoolean.TRUE, result);
         }
@@ -372,22 +369,20 @@ class PdfJsonCosMapperTest {
         @Test
         @DisplayName("BOOLEAN type with non-boolean value returns null")
         void booleanTypeWrongValue() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.BOOLEAN)
-                            .value("not-a-boolean")
-                            .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.BOOLEAN)
+                    .value("not-a-boolean")
+                    .build();
             assertNull(mapper.deserializeCosValue(value, document));
         }
 
         @Test
         @DisplayName("INTEGER type returns COSInteger from a Number value")
         void integerType() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.INTEGER)
-                            .value(123L)
-                            .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.INTEGER)
+                    .value(123L)
+                    .build();
             COSBase result = mapper.deserializeCosValue(value, document);
             assertInstanceOf(COSInteger.class, result);
             assertEquals(123L, ((COSInteger) result).longValue());
@@ -396,11 +391,10 @@ class PdfJsonCosMapperTest {
         @Test
         @DisplayName("INTEGER type accepts an Integer value via Number")
         void integerTypeFromInteger() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.INTEGER)
-                            .value(Integer.valueOf(5))
-                            .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.INTEGER)
+                    .value(Integer.valueOf(5))
+                    .build();
             COSBase result = mapper.deserializeCosValue(value, document);
             assertInstanceOf(COSInteger.class, result);
             assertEquals(5L, ((COSInteger) result).longValue());
@@ -409,19 +403,20 @@ class PdfJsonCosMapperTest {
         @Test
         @DisplayName("INTEGER type with non-number returns null")
         void integerTypeWrongValue() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.INTEGER)
-                            .value("oops")
-                            .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.INTEGER)
+                    .value("oops")
+                    .build();
             assertNull(mapper.deserializeCosValue(value, document));
         }
 
         @Test
         @DisplayName("FLOAT type returns COSFloat from a Number value")
         void floatType() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder().type(PdfJsonCosValue.Type.FLOAT).value(2.25f).build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.FLOAT)
+                    .value(2.25f)
+                    .build();
             COSBase result = mapper.deserializeCosValue(value, document);
             assertInstanceOf(COSFloat.class, result);
             assertEquals(2.25f, ((COSFloat) result).floatValue());
@@ -430,22 +425,20 @@ class PdfJsonCosMapperTest {
         @Test
         @DisplayName("FLOAT type with non-number returns null")
         void floatTypeWrongValue() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.FLOAT)
-                            .value("oops")
-                            .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.FLOAT)
+                    .value("oops")
+                    .build();
             assertNull(mapper.deserializeCosValue(value, document));
         }
 
         @Test
         @DisplayName("NAME type returns COSName from a String value")
         void nameType() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.NAME)
-                            .value("MyName")
-                            .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.NAME)
+                    .value("MyName")
+                    .build();
             COSBase result = mapper.deserializeCosValue(value, document);
             assertEquals(COSName.getPDFName("MyName"), result);
         }
@@ -453,8 +446,10 @@ class PdfJsonCosMapperTest {
         @Test
         @DisplayName("NAME type with non-string returns null")
         void nameTypeWrongValue() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder().type(PdfJsonCosValue.Type.NAME).value(123L).build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.NAME)
+                    .value(123L)
+                    .build();
             assertNull(mapper.deserializeCosValue(value, document));
         }
 
@@ -463,11 +458,10 @@ class PdfJsonCosMapperTest {
         void stringType() throws IOException {
             byte[] raw = "round-trip".getBytes(StandardCharsets.UTF_8);
             String encoded = Base64.getEncoder().encodeToString(raw);
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.STRING)
-                            .value(encoded)
-                            .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.STRING)
+                    .value(encoded)
+                    .build();
             COSBase result = mapper.deserializeCosValue(value, document);
             assertInstanceOf(COSString.class, result);
             assertArrayEquals(raw, ((COSString) result).getBytes());
@@ -476,34 +470,38 @@ class PdfJsonCosMapperTest {
         @Test
         @DisplayName("STRING type with invalid base64 returns null")
         void stringTypeInvalidBase64() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.STRING)
-                            .value("!!!not base64!!!")
-                            .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.STRING)
+                    .value("!!!not base64!!!")
+                    .build();
             assertNull(mapper.deserializeCosValue(value, document));
         }
 
         @Test
         @DisplayName("STRING type with non-string value returns null")
         void stringTypeWrongValue() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder().type(PdfJsonCosValue.Type.STRING).value(42L).build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.STRING)
+                    .value(42L)
+                    .build();
             assertNull(mapper.deserializeCosValue(value, document));
         }
 
         @Test
         @DisplayName("ARRAY type deserializes each item")
         void arrayType() throws IOException {
-            PdfJsonCosValue item1 =
-                    PdfJsonCosValue.builder().type(PdfJsonCosValue.Type.INTEGER).value(1L).build();
-            PdfJsonCosValue item2 =
-                    PdfJsonCosValue.builder().type(PdfJsonCosValue.Type.NAME).value("N").build();
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.ARRAY)
-                            .items(List.of(item1, item2))
-                            .build();
+            PdfJsonCosValue item1 = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.INTEGER)
+                    .value(1L)
+                    .build();
+            PdfJsonCosValue item2 = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.NAME)
+                    .value("N")
+                    .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.ARRAY)
+                    .items(List.of(item1, item2))
+                    .build();
 
             COSBase result = mapper.deserializeCosValue(value, document);
             assertInstanceOf(COSArray.class, result);
@@ -518,16 +516,14 @@ class PdfJsonCosMapperTest {
         void arrayTypeWithNullItems() throws IOException {
             // An INTEGER type with a non-number value deserializes to null and is replaced by
             // COSNull.NULL inside the array.
-            PdfJsonCosValue bad =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.INTEGER)
-                            .value("nope")
-                            .build();
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.ARRAY)
-                            .items(List.of(bad))
-                            .build();
+            PdfJsonCosValue bad = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.INTEGER)
+                    .value("nope")
+                    .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.ARRAY)
+                    .items(List.of(bad))
+                    .build();
 
             COSArray result = (COSArray) mapper.deserializeCosValue(value, document);
             assertEquals(1, result.size());
@@ -550,12 +546,14 @@ class PdfJsonCosMapperTest {
             Map<String, PdfJsonCosValue> entries = new LinkedHashMap<>();
             entries.put(
                     "Count",
-                    PdfJsonCosValue.builder().type(PdfJsonCosValue.Type.INTEGER).value(3L).build());
-            PdfJsonCosValue value =
                     PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.DICTIONARY)
-                            .entries(entries)
-                            .build();
+                            .type(PdfJsonCosValue.Type.INTEGER)
+                            .value(3L)
+                            .build());
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.DICTIONARY)
+                    .entries(entries)
+                    .build();
 
             COSDictionary result = (COSDictionary) mapper.deserializeCosValue(value, document);
             assertNotNull(result);
@@ -572,11 +570,10 @@ class PdfJsonCosMapperTest {
                             .type(PdfJsonCosValue.Type.INTEGER)
                             .value("nope")
                             .build());
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder()
-                            .type(PdfJsonCosValue.Type.DICTIONARY)
-                            .entries(entries)
-                            .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.DICTIONARY)
+                    .entries(entries)
+                    .build();
 
             COSDictionary result = (COSDictionary) mapper.deserializeCosValue(value, document);
             assertNotNull(result);
@@ -586,8 +583,9 @@ class PdfJsonCosMapperTest {
         @Test
         @DisplayName("DICTIONARY type with null entries map yields empty COSDictionary")
         void dictionaryTypeNullEntries() throws IOException {
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder().type(PdfJsonCosValue.Type.DICTIONARY).build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder()
+                    .type(PdfJsonCosValue.Type.DICTIONARY)
+                    .build();
             COSDictionary result = (COSDictionary) mapper.deserializeCosValue(value, document);
             assertNotNull(result);
             assertEquals(0, result.size());
@@ -605,13 +603,11 @@ class PdfJsonCosMapperTest {
         @DisplayName("STREAM type builds a COSStream from the model")
         void streamType() throws IOException {
             byte[] data = "stream-content".getBytes(StandardCharsets.UTF_8);
-            PdfJsonStream streamModel =
-                    PdfJsonStream.builder()
-                            .rawData(Base64.getEncoder().encodeToString(data))
-                            .build();
-            PdfJsonCosValue value =
-                    PdfJsonCosValue.builder().type(PdfJsonCosValue.Type.STREAM).stream(streamModel)
-                            .build();
+            PdfJsonStream streamModel = PdfJsonStream.builder()
+                    .rawData(Base64.getEncoder().encodeToString(data))
+                    .build();
+            PdfJsonCosValue value = PdfJsonCosValue.builder().type(PdfJsonCosValue.Type.STREAM).stream(streamModel)
+                    .build();
 
             COSBase result = mapper.deserializeCosValue(value, document);
             assertInstanceOf(COSStream.class, result);
@@ -633,10 +629,9 @@ class PdfJsonCosMapperTest {
         @DisplayName("model with rawData writes base64-decoded bytes and sets Length")
         void withRawData() throws IOException {
             byte[] data = "hello-world".getBytes(StandardCharsets.UTF_8);
-            PdfJsonStream model =
-                    PdfJsonStream.builder()
-                            .rawData(Base64.getEncoder().encodeToString(data))
-                            .build();
+            PdfJsonStream model = PdfJsonStream.builder()
+                    .rawData(Base64.getEncoder().encodeToString(data))
+                    .build();
 
             COSStream result = mapper.buildStreamFromModel(model, document);
             assertNotNull(result);
@@ -665,8 +660,7 @@ class PdfJsonCosMapperTest {
             COSStream result = mapper.buildStreamFromModel(model, document);
             assertNotNull(result);
             assertEquals(COSName.getPDFName("XObject"), result.getItem(COSName.TYPE));
-            assertEquals(
-                    100L, ((COSInteger) result.getItem(COSName.getPDFName("Width"))).longValue());
+            assertEquals(100L, ((COSInteger) result.getItem(COSName.getPDFName("Width"))).longValue());
         }
 
         @Test
@@ -712,7 +706,8 @@ class PdfJsonCosMapperTest {
         @Test
         @DisplayName("model with invalid base64 rawData falls back to empty data")
         void invalidBase64RawData() throws IOException {
-            PdfJsonStream model = PdfJsonStream.builder().rawData("###not-base64###").build();
+            PdfJsonStream model =
+                    PdfJsonStream.builder().rawData("###not-base64###").build();
             COSStream result = mapper.buildStreamFromModel(model, document);
             assertNotNull(result);
             assertEquals(0L, ((COSInteger) result.getItem(COSName.LENGTH)).longValue());
@@ -748,9 +743,7 @@ class PdfJsonCosMapperTest {
             COSArray resultArr = (COSArray) result.getItem(COSName.getPDFName("Arr"));
             assertEquals(2, resultArr.size());
             assertEquals(3.5f, ((COSFloat) resultArr.get(0)).floatValue());
-            assertArrayEquals(
-                    "abc".getBytes(StandardCharsets.UTF_8),
-                    ((COSString) resultArr.get(1)).getBytes());
+            assertArrayEquals("abc".getBytes(StandardCharsets.UTF_8), ((COSString) resultArr.get(1)).getBytes());
         }
 
         @Test

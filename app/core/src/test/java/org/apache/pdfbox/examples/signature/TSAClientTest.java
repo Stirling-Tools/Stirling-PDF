@@ -75,13 +75,9 @@ class TSAClientTest {
         Date to = new Date(now + 365L * 24 * 60 * 60 * 1000);
         BigInteger serial = BigInteger.valueOf(now);
         ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSA").build(kp.getPrivate());
-        JcaX509v3CertificateBuilder builder =
-                new JcaX509v3CertificateBuilder(dn, serial, from, to, dn, kp.getPublic());
+        JcaX509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(dn, serial, from, to, dn, kp.getPublic());
         // RFC 3161 requires the TSA signing cert to carry a critical id-kp-timeStamping EKU.
-        builder.addExtension(
-                Extension.extendedKeyUsage,
-                true,
-                new ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping));
+        builder.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeId.id_kp_timeStamping));
         X509CertificateHolder holder = builder.build(signer);
         return new JcaX509CertificateConverter().setProvider("BC").getCertificate(holder);
     }
@@ -91,35 +87,26 @@ class TSAClientTest {
         TimeStampRequest request = new TimeStampRequest(requestBytes);
 
         // SHA-1 digest calculator for the token's messageImprint of the signer cert.
-        DigestCalculator sha1 =
-                new JcaDigestCalculatorProviderBuilder()
-                        .setProvider("BC")
-                        .build()
-                        .get(
-                                new AlgorithmIdentifier(
-                                        org.bouncycastle.asn1.oiw.OIWObjectIdentifiers.idSHA1));
+        DigestCalculator sha1 = new JcaDigestCalculatorProviderBuilder()
+                .setProvider("BC")
+                .build()
+                .get(new AlgorithmIdentifier(org.bouncycastle.asn1.oiw.OIWObjectIdentifiers.idSHA1));
 
-        ContentSigner signer =
-                new JcaContentSignerBuilder("SHA256WithRSA").build(tsaKeyPair.getPrivate());
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSA").build(tsaKeyPair.getPrivate());
 
-        TimeStampTokenGenerator tokenGen =
-                new TimeStampTokenGenerator(
-                        new org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder(
-                                        new JcaDigestCalculatorProviderBuilder()
-                                                .setProvider("BC")
-                                                .build())
-                                .build(signer, tsaCert),
-                        sha1,
-                        new org.bouncycastle.asn1.ASN1ObjectIdentifier("1.2.3.4.1"));
+        TimeStampTokenGenerator tokenGen = new TimeStampTokenGenerator(
+                new org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder()
+                                .setProvider("BC")
+                                .build())
+                        .build(signer, tsaCert),
+                sha1,
+                new org.bouncycastle.asn1.ASN1ObjectIdentifier("1.2.3.4.1"));
         // Embed the signer certificate so the response token validates standalone.
-        tokenGen.addCertificates(
-                new org.bouncycastle.cert.jcajce.JcaCertStore(java.util.List.of(tsaCert)));
+        tokenGen.addCertificates(new org.bouncycastle.cert.jcajce.JcaCertStore(java.util.List.of(tsaCert)));
 
         // Accept the SHA-256 digest used by the request's messageImprint.
-        Set<String> acceptedAlgorithms =
-                Set.of(org.bouncycastle.asn1.nist.NISTObjectIdentifiers.id_sha256.getId());
-        TimeStampResponseGenerator responseGen =
-                new TimeStampResponseGenerator(tokenGen, acceptedAlgorithms);
+        Set<String> acceptedAlgorithms = Set.of(org.bouncycastle.asn1.nist.NISTObjectIdentifiers.id_sha256.getId());
+        TimeStampResponseGenerator responseGen = new TimeStampResponseGenerator(tokenGen, acceptedAlgorithms);
         TimeStampResponse response = responseGen.generate(request, BigInteger.ONE, new Date());
         return response.getEncoded();
     }
@@ -192,8 +179,7 @@ class TSAClientTest {
             TSAClient client = newClient(url, "", "secret");
             client.getTimeStampToken(new ByteArrayInputStream("data".getBytes()));
 
-            verify(connection, never())
-                    .setRequestProperty(org.mockito.ArgumentMatchers.eq("Authorization"), any());
+            verify(connection, never()).setRequestProperty(org.mockito.ArgumentMatchers.eq("Authorization"), any());
         }
     }
 
@@ -207,21 +193,17 @@ class TSAClientTest {
             URL url = mock(URL.class);
             URLConnection connection = mock(URLConnection.class);
             when(url.openConnection()).thenReturn(connection);
-            OutputStream failing =
-                    new OutputStream() {
-                        @Override
-                        public void write(int b) throws IOException {
-                            throw new IOException("write boom");
-                        }
-                    };
+            OutputStream failing = new OutputStream() {
+                @Override
+                public void write(int b) throws IOException {
+                    throw new IOException("write boom");
+                }
+            };
             when(connection.getOutputStream()).thenReturn(failing);
 
             TSAClient client = newClient(url, null, null);
 
-            assertThatThrownBy(
-                            () ->
-                                    client.getTimeStampToken(
-                                            new ByteArrayInputStream("data".getBytes())))
+            assertThatThrownBy(() -> client.getTimeStampToken(new ByteArrayInputStream("data".getBytes())))
                     .isInstanceOf(IOException.class)
                     .hasMessageContaining("write boom");
         }
@@ -237,10 +219,7 @@ class TSAClientTest {
 
             TSAClient client = newClient(url, null, null);
 
-            assertThatThrownBy(
-                            () ->
-                                    client.getTimeStampToken(
-                                            new ByteArrayInputStream("data".getBytes())))
+            assertThatThrownBy(() -> client.getTimeStampToken(new ByteArrayInputStream("data".getBytes())))
                     .isInstanceOf(IOException.class)
                     .hasMessageContaining("read boom");
         }
@@ -252,15 +231,11 @@ class TSAClientTest {
             URLConnection connection = mock(URLConnection.class);
             when(url.openConnection()).thenReturn(connection);
             when(connection.getOutputStream()).thenReturn(new CapturingOutputStream());
-            when(connection.getInputStream())
-                    .thenReturn(new ByteArrayInputStream("not a tsp response".getBytes()));
+            when(connection.getInputStream()).thenReturn(new ByteArrayInputStream("not a tsp response".getBytes()));
 
             TSAClient client = newClient(url, null, null);
 
-            assertThatThrownBy(
-                            () ->
-                                    client.getTimeStampToken(
-                                            new ByteArrayInputStream("data".getBytes())))
+            assertThatThrownBy(() -> client.getTimeStampToken(new ByteArrayInputStream("data".getBytes())))
                     .isInstanceOf(IOException.class);
         }
 
@@ -272,10 +247,7 @@ class TSAClientTest {
 
             TSAClient client = newClient(url, null, null);
 
-            assertThatThrownBy(
-                            () ->
-                                    client.getTimeStampToken(
-                                            new ByteArrayInputStream("data".getBytes())))
+            assertThatThrownBy(() -> client.getTimeStampToken(new ByteArrayInputStream("data".getBytes())))
                     .isInstanceOf(IOException.class)
                     .hasMessageContaining("no route");
         }

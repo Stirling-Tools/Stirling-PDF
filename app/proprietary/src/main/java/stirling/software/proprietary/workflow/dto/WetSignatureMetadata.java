@@ -26,9 +26,7 @@ public class WetSignatureMetadata {
 
     /** Type of wet signature: "canvas" (drawn), "image" (uploaded), or "text" (typed) */
     @NotNull(message = "Wet signature type is required")
-    @Pattern(
-            regexp = "canvas|image|text",
-            message = "Wet signature type must be canvas, image, or text")
+    @Pattern(regexp = "canvas|image|text", message = "Wet signature type must be canvas, image, or text")
     private String type;
 
     /**
@@ -82,13 +80,11 @@ public class WetSignatureMetadata {
     public boolean validate() {
         if (type.equals("canvas") || type.equals("image")) {
             if (!data.startsWith("data:image/")) {
-                throw new IllegalArgumentException(
-                        "Image wet signature data must start with data:image/ prefix");
+                throw new IllegalArgumentException("Image wet signature data must start with data:image/ prefix");
             }
         }
         if (x != null && width != null && x + width > 1.0) {
-            throw new IllegalArgumentException(
-                    "Signature extends beyond the right edge of the page (x + width > 1.0)");
+            throw new IllegalArgumentException("Signature extends beyond the right edge of the page (x + width > 1.0)");
         }
         if (y != null && height != null && y + height > 1.0) {
             throw new IllegalArgumentException(

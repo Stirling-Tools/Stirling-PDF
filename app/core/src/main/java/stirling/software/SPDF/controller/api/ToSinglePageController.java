@@ -44,12 +44,10 @@ public class ToSinglePageController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a multi-page PDF into a single long page PDF",
-            description =
-                    "This endpoint converts a multi-page PDF document into a single paged PDF"
-                            + " document. The width of the single page will be same as the input's width, but"
-                            + " the height will be the sum of all the pages' heights.")
-    public ResponseEntity<Resource> pdfToSinglePage(@ModelAttribute PDFFile request)
-            throws IOException {
+            description = "This endpoint converts a multi-page PDF document into a single paged PDF"
+                    + " document. The width of the single page will be same as the input's width, but"
+                    + " the height will be the sum of all the pages' heights.")
+    public ResponseEntity<Resource> pdfToSinglePage(@ModelAttribute PDFFile request) throws IOException {
 
         // Load the source document
         try (PDDocument sourceDocument = pdfDocumentFactory.load(request)) {
@@ -63,8 +61,7 @@ public class ToSinglePageController {
             }
 
             // Create new document and page with calculated dimensions
-            try (PDDocument newDocument =
-                    pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
+            try (PDDocument newDocument = pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
                 PDPage newPage = new PDPage(new PDRectangle(maxWidth, totalHeight));
                 newDocument.addPage(newPage);
 
@@ -81,9 +78,8 @@ public class ToSinglePageController {
                 for (PDPage page : sourceDocument.getPages()) {
                     PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, pageIndex);
                     if (form != null) {
-                        AffineTransform af =
-                                AffineTransform.getTranslateInstance(
-                                        0, yOffset - page.getMediaBox().getHeight());
+                        AffineTransform af = AffineTransform.getTranslateInstance(
+                                0, yOffset - page.getMediaBox().getHeight());
                         String defaultLayerName = "Layer" + pageIndex;
                         layerUtility.appendFormAsLayer(newPage, form, af, defaultLayerName);
                     }
@@ -93,8 +89,7 @@ public class ToSinglePageController {
 
                 return WebResponseUtils.pdfDocToWebResponse(
                         newDocument,
-                        GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_singlePage.pdf"),
+                        GeneralUtils.generateFilename(request.getFileInput().getOriginalFilename(), "_singlePage.pdf"),
                         tempFileManager);
             }
         }

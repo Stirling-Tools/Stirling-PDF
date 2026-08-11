@@ -55,16 +55,12 @@ public class NetworkInputSource implements InputSource {
         NetworkProtocol expected = NetworkProtocol.forSourceType(spec.type());
         if (expected != null && config.protocol() != expected) {
             throw new IllegalArgumentException(
-                    "source type '"
-                            + spec.type()
-                            + "' does not match the connection protocol "
-                            + config.protocol());
+                    "source type '" + spec.type() + "' does not match the connection protocol " + config.protocol());
         }
         try (RemoteFileClient client = clientFactory.connect(config)) {
             client.list(config.directory(), false);
         } catch (IOException e) {
-            throw new IllegalArgumentException(
-                    "cannot access " + config.protocol() + " source: " + e.getMessage(), e);
+            throw new IllegalArgumentException("cannot access " + config.protocol() + " source: " + e.getMessage(), e);
         }
     }
 
@@ -79,8 +75,7 @@ public class NetworkInputSource implements InputSource {
         }
         if (files.size() >= RemoteFileClient.MAX_FILES) {
             log.warn(
-                    "Network source listing hit the {}-file cap; remaining files are picked up"
-                            + " on later sweeps",
+                    "Network source listing hit the {}-file cap; remaining files are picked up" + " on later sweeps",
                     RemoteFileClient.MAX_FILES);
         }
 
@@ -90,10 +85,9 @@ public class NetworkInputSource implements InputSource {
                     .toList();
         }
 
-        ctx.reportPresent(
-                files.stream()
-                        .map(file -> NetworkIdentities.identity(config, file.path()))
-                        .toList());
+        ctx.reportPresent(files.stream()
+                .map(file -> NetworkIdentities.identity(config, file.path()))
+                .toList());
 
         List<ResolvedInput> work = new ArrayList<>();
         for (RemoteFile file : files) {
@@ -102,11 +96,9 @@ public class NetworkInputSource implements InputSource {
             if (!ctx.claim(identity, gate, null)) {
                 continue;
             }
-            work.add(
-                    new ResolvedInput(
-                            PolicyInputs.of(List.of(resource(config, file))),
-                            success ->
-                                    completeConsumed(ctx, config, file, identity, gate, success)));
+            work.add(new ResolvedInput(
+                    PolicyInputs.of(List.of(resource(config, file))),
+                    success -> completeConsumed(ctx, config, file, identity, gate, success)));
         }
         return work;
     }

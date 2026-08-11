@@ -37,8 +37,7 @@ class GeneralUtilsGapTest {
         @Test
         @DisplayName("removes extension then appends suffix")
         void removesAndAppends() {
-            assertEquals(
-                    "report_out.pdf", GeneralUtils.generateFilename("report.docx", "_out.pdf"));
+            assertEquals("report_out.pdf", GeneralUtils.generateFilename("report.docx", "_out.pdf"));
         }
 
         @Test
@@ -91,15 +90,13 @@ class GeneralUtilsGapTest {
         @Test
         @DisplayName("null expression throws")
         void nullThrows() {
-            assertThrows(
-                    IllegalArgumentException.class, () -> GeneralUtils.evaluateNFunc(null, 10));
+            assertThrows(IllegalArgumentException.class, () -> GeneralUtils.evaluateNFunc(null, 10));
         }
 
         @Test
         @DisplayName("blank expression throws")
         void blankThrows() {
-            assertThrows(
-                    IllegalArgumentException.class, () -> GeneralUtils.evaluateNFunc("   ", 10));
+            assertThrows(IllegalArgumentException.class, () -> GeneralUtils.evaluateNFunc("   ", 10));
         }
 
         @Test
@@ -111,15 +108,13 @@ class GeneralUtilsGapTest {
         @Test
         @DisplayName("maxValue above 10000 throws")
         void maxValueTooHigh() {
-            assertThrows(
-                    IllegalArgumentException.class, () -> GeneralUtils.evaluateNFunc("n", 10001));
+            assertThrows(IllegalArgumentException.class, () -> GeneralUtils.evaluateNFunc("n", 10001));
         }
 
         @Test
         @DisplayName("invalid characters throw")
         void invalidCharsThrow() {
-            assertThrows(
-                    IllegalArgumentException.class, () -> GeneralUtils.evaluateNFunc("n$", 10));
+            assertThrows(IllegalArgumentException.class, () -> GeneralUtils.evaluateNFunc("n$", 10));
         }
 
         @Test
@@ -213,8 +208,7 @@ class GeneralUtilsGapTest {
         @DisplayName("convertMultipartFileToFile writes content to a temp file")
         void convertWritesContent() throws IOException {
             byte[] content = "hello world".getBytes(StandardCharsets.UTF_8);
-            MultipartFile mf =
-                    new MockMultipartFile("file", "input.bin", "application/octet-stream", content);
+            MultipartFile mf = new MockMultipartFile("file", "input.bin", "application/octet-stream", content);
 
             File out = GeneralUtils.convertMultipartFileToFile(mf);
             try {
@@ -228,9 +222,7 @@ class GeneralUtilsGapTest {
         @Test
         @DisplayName("convertMultipartFileToFile handles empty input")
         void convertEmpty() throws IOException {
-            MultipartFile mf =
-                    new MockMultipartFile(
-                            "file", "empty.bin", "application/octet-stream", new byte[0]);
+            MultipartFile mf = new MockMultipartFile("file", "empty.bin", "application/octet-stream", new byte[0]);
 
             File out = GeneralUtils.convertMultipartFileToFile(mf);
             try {
@@ -269,9 +261,7 @@ class GeneralUtilsGapTest {
             Files.writeString(tempDir.resolve("two.txt"), "2");
 
             String pattern = "file:" + tempDir.toString().replace("\\", "/") + "/*";
-            Resource[] resources =
-                    GeneralUtils.getResourcesFromLocationPattern(
-                            pattern, new DefaultResourceLoader());
+            Resource[] resources = GeneralUtils.getResourcesFromLocationPattern(pattern, new DefaultResourceLoader());
 
             assertNotNull(resources);
             assertEquals(2, resources.length);
@@ -280,10 +270,8 @@ class GeneralUtilsGapTest {
         @Test
         @DisplayName("classpath pattern with no matches returns an empty array")
         void classpathNoMatches() throws Exception {
-            Resource[] resources =
-                    GeneralUtils.getResourcesFromLocationPattern(
-                            "classpath*:this/path/does/not/exist/**/*.nope",
-                            new DefaultResourceLoader());
+            Resource[] resources = GeneralUtils.getResourcesFromLocationPattern(
+                    "classpath*:this/path/does/not/exist/**/*.nope", new DefaultResourceLoader());
 
             assertNotNull(resources);
             assertEquals(0, resources.length);

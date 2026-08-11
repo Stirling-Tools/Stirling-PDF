@@ -54,8 +54,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u.id, KEY(s), VALUE(s) FROM User u JOIN u.settings s WHERE u.id IN :ids")
     List<Object[]> findSettingsByUserIds(@Param("ids") Collection<Long> ids);
 
-    @Query(
-            "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
+    @Query("SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
 
     long countByTeam(Team team);
@@ -76,48 +75,39 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * Finds all SSO users - those with sso_provider set OR authenticationType is sso/oauth2/saml2.
      * This catches V1 users who were created via SSO but never signed in (sso_provider is null).
      */
-    @Query(
-            "SELECT u FROM User u WHERE u.ssoProvider IS NOT NULL "
-                    + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
+    @Query("SELECT u FROM User u WHERE u.ssoProvider IS NOT NULL "
+            + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
     List<User> findAllSsoUsers();
 
     /**
      * Finds SSO users who have never created a session (pending activation) and are not yet
      * grandfathered.
      */
-    @Query(
-            "SELECT u FROM User u "
-                    + "LEFT JOIN SessionEntity s ON u.username = s.principalName "
-                    + "WHERE (u.ssoProvider IS NOT NULL "
-                    + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')) "
-                    + "AND (u.oauthGrandfathered IS NULL OR u.oauthGrandfathered = false) "
-                    + "AND s.sessionId IS NULL")
+    @Query("SELECT u FROM User u "
+            + "LEFT JOIN SessionEntity s ON u.username = s.principalName "
+            + "WHERE (u.ssoProvider IS NOT NULL "
+            + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')) "
+            + "AND (u.oauthGrandfathered IS NULL OR u.oauthGrandfathered = false) "
+            + "AND s.sessionId IS NULL")
     List<User> findPendingSsoUsersWithoutSession();
 
     /**
      * Counts all SSO users - those with sso_provider set OR authenticationType is sso/oauth2/saml2.
      */
-    @Query(
-            "SELECT COUNT(u) FROM User u WHERE u.ssoProvider IS NOT NULL "
-                    + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
+    @Query("SELECT COUNT(u) FROM User u WHERE u.ssoProvider IS NOT NULL "
+            + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
     long countSsoUsers();
 
-    @Query(
-            "SELECT COUNT(u) FROM User u JOIN u.settings settings "
-                    + "WHERE KEY(settings) = :key AND settings = :value")
+    @Query("SELECT COUNT(u) FROM User u JOIN u.settings settings " + "WHERE KEY(settings) = :key AND settings = :value")
     long countUsersBySetting(@Param("key") String key, @Param("value") String value);
 
     @Modifying
-    @Query(
-            value = "DELETE FROM user_settings WHERE user_id = :userId AND setting_key IN (:keys)",
-            nativeQuery = true)
-    void deleteSettingsByUserIdAndKeys(
-            @Param("userId") Long userId, @Param("keys") List<String> keys);
+    @Query(value = "DELETE FROM user_settings WHERE user_id = :userId AND setting_key IN (:keys)", nativeQuery = true)
+    void deleteSettingsByUserIdAndKeys(@Param("userId") Long userId, @Param("keys") List<String> keys);
 
     /** Anonymous users (no username) created before the cut-off, streamed for batch cleanup. */
     @Query("SELECT u.id FROM User u WHERE u.username IS NULL AND u.createdAt < :cutoffDate")
-    Stream<Long> findByUsernameIsNullAndCreatedAtBefore(
-            @Param("cutoffDate") LocalDateTime cutoffDate);
+    Stream<Long> findByUsernameIsNullAndCreatedAtBefore(@Param("cutoffDate") LocalDateTime cutoffDate);
 
     /** Single-shot UPDATE that reassigns a user to a different team. */
     @Modifying

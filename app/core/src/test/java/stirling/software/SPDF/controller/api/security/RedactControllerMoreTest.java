@@ -76,30 +76,24 @@ class RedactControllerMoreTest {
         tempFileManager = mock(TempFileManager.class);
         redactExecuteService = mock(RedactExecuteService.class);
 
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile(
-                                                    "redact-ctl-test", inv.<String>getArgument(0))
-                                            .toFile();
-                            createdTempFiles.add(f);
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("redact-ctl-test", inv.<String>getArgument(0))
+                    .toFile();
+            createdTempFiles.add(f);
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
 
         textRedactionService = new TextRedactionService();
         manualRedactionService = new ManualRedactionService(tempFileManager);
-        controller =
-                new RedactController(
-                        pdfDocumentFactory,
-                        tempFileManager,
-                        manualRedactionService,
-                        textRedactionService,
-                        redactExecuteService);
+        controller = new RedactController(
+                pdfDocumentFactory,
+                tempFileManager,
+                manualRedactionService,
+                textRedactionService,
+                redactExecuteService);
     }
 
     @AfterEach
@@ -115,9 +109,7 @@ class RedactControllerMoreTest {
 
     /** Wires the factory so each load() returns a brand-new doc parsed from the same bytes. */
     private void factoryReturns(byte[] pdfBytes) throws IOException {
-        lenient()
-                .when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
+        lenient().when(pdfDocumentFactory.load(any(MultipartFile.class))).thenAnswer(inv -> Loader.loadPDF(pdfBytes));
     }
 
     private byte[] singlePageTextPdf(String... lines) throws IOException {
@@ -294,8 +286,7 @@ class RedactControllerMoreTest {
             request.setFileInput(pdfFile(new byte[] {1, 2, 3}));
             request.setListOfText("   ");
 
-            assertThatThrownBy(() -> controller.redactPdf(request))
-                    .isInstanceOf(RuntimeException.class);
+            assertThatThrownBy(() -> controller.redactPdf(request)).isInstanceOf(RuntimeException.class);
             verify(pdfDocumentFactory, never()).load(any(MultipartFile.class));
         }
 
@@ -306,8 +297,7 @@ class RedactControllerMoreTest {
             request.setFileInput(pdfFile(new byte[] {1, 2, 3}));
             request.setListOfText(null);
 
-            assertThatThrownBy(() -> controller.redactPdf(request))
-                    .isInstanceOf(RuntimeException.class);
+            assertThatThrownBy(() -> controller.redactPdf(request)).isInstanceOf(RuntimeException.class);
             verify(pdfDocumentFactory, never()).load(any(MultipartFile.class));
         }
 
@@ -318,15 +308,13 @@ class RedactControllerMoreTest {
             request.setFileInput(null);
             request.setListOfText("secret");
 
-            assertThatThrownBy(() -> controller.redactPdf(request))
-                    .isInstanceOf(RuntimeException.class);
+            assertThatThrownBy(() -> controller.redactPdf(request)).isInstanceOf(RuntimeException.class);
         }
 
         @Test
         @DisplayName("a load failure is wrapped as a runtime redaction failure")
         void loadFailureWrapped() throws IOException {
-            when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                    .thenThrow(new IOException("boom"));
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenThrow(new IOException("boom"));
 
             RedactPdfRequest request = new RedactPdfRequest();
             request.setFileInput(pdfFile(new byte[] {9, 9, 9}));
@@ -484,8 +472,7 @@ class RedactControllerMoreTest {
 
             TempFile resultTemp = mock(TempFile.class);
             when(resultTemp.getFile()).thenReturn(outFile);
-            when(redactExecuteService.execute(any(RedactExecuteRequest.class)))
-                    .thenReturn(resultTemp);
+            when(redactExecuteService.execute(any(RedactExecuteRequest.class))).thenReturn(resultTemp);
 
             RedactExecuteRequest request = new RedactExecuteRequest();
             request.setFileInput(pdfFile(singlePageTextPdf("in")));
@@ -502,8 +489,7 @@ class RedactControllerMoreTest {
             RedactExecuteRequest request = new RedactExecuteRequest();
             request.setFileInput(null);
 
-            assertThatThrownBy(() -> controller.executeRedaction(request))
-                    .isInstanceOf(Exception.class);
+            assertThatThrownBy(() -> controller.executeRedaction(request)).isInstanceOf(Exception.class);
             verify(redactExecuteService, never()).execute(any(RedactExecuteRequest.class));
         }
     }

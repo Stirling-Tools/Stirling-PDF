@@ -30,8 +30,7 @@ public class JpaSourceDocCounter implements SourceDocCounter {
     private final Supplier<Instant> clock;
 
     @Autowired
-    public JpaSourceDocCounter(
-            SourceDocCountRepository countRepository, SourceDocTotalRepository totalRepository) {
+    public JpaSourceDocCounter(SourceDocCountRepository countRepository, SourceDocTotalRepository totalRepository) {
         this(countRepository, totalRepository, Instant::now);
     }
 
@@ -56,9 +55,7 @@ public class JpaSourceDocCounter implements SourceDocCounter {
                 () -> totalRepository.saveAndFlush(new SourceDocTotalEntity(sourceId, docs)));
         upsert(
                 () -> countRepository.increment(sourceId, bucketHour, docs),
-                () ->
-                        countRepository.saveAndFlush(
-                                new SourceDocCountEntity(sourceId, bucketHour, docs)));
+                () -> countRepository.saveAndFlush(new SourceDocCountEntity(sourceId, bucketHour, docs)));
     }
 
     /**
@@ -87,22 +84,16 @@ public class JpaSourceDocCounter implements SourceDocCounter {
         long now = currentHour();
         Map<String, Long> totals = sums(totalRepository.totalsFor(sourceIds));
         Map<String, Long> last24h =
-                sums(
-                        countRepository.sumBySourceSince(
-                                sourceIds, now - (SourceDocWindows.HOURS_IN_24H - 1)));
+                sums(countRepository.sumBySourceSince(sourceIds, now - (SourceDocWindows.HOURS_IN_24H - 1)));
         Map<String, Long> last30d =
-                sums(
-                        countRepository.sumBySourceSince(
-                                sourceIds, SourceDocWindows.firstDayHour(now)));
+                sums(countRepository.sumBySourceSince(sourceIds, SourceDocWindows.firstDayHour(now)));
 
         Map<String, DocStats> stats = new HashMap<>();
         for (String id : sourceIds) {
             stats.put(
                     id,
                     new DocStats(
-                            totals.getOrDefault(id, 0L),
-                            last24h.getOrDefault(id, 0L),
-                            last30d.getOrDefault(id, 0L)));
+                            totals.getOrDefault(id, 0L), last24h.getOrDefault(id, 0L), last30d.getOrDefault(id, 0L)));
         }
         return stats;
     }
@@ -111,11 +102,9 @@ public class JpaSourceDocCounter implements SourceDocCounter {
     public List<Long> dailySeriesFor(String sourceId) {
         long now = currentHour();
         Collection<String> ids = List.of(sourceId);
-        Map<Long, Long> dailyCounts =
-                dailyBySource(
-                                countRepository.dailyCountsSince(
-                                        ids, SourceDocWindows.firstDayHour(now)))
-                        .getOrDefault(sourceId, Map.of());
+        Map<Long, Long> dailyCounts = dailyBySource(
+                        countRepository.dailyCountsSince(ids, SourceDocWindows.firstDayHour(now)))
+                .getOrDefault(sourceId, Map.of());
         return SourceDocWindows.series(dailyCounts, now / 24);
     }
 

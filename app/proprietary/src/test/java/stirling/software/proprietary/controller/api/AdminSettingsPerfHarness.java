@@ -83,8 +83,7 @@ class AdminSettingsPerfHarness {
         this.emf = emf;
     }
 
-    Measure seedAndMeasure(
-            ProprietaryUIDataController controller, Authentication auth, int userCount) {
+    Measure seedAndMeasure(ProprietaryUIDataController controller, Authentication auth, int userCount) {
         wipe();
         seed(userCount);
         em.flush();
@@ -178,23 +177,17 @@ class AdminSettingsPerfHarness {
     }
 
     ProprietaryUIDataController buildController() {
-        ApplicationProperties applicationProperties =
-                mock(ApplicationProperties.class, RETURNS_DEEP_STUBS);
+        ApplicationProperties applicationProperties = mock(ApplicationProperties.class, RETURNS_DEEP_STUBS);
 
-        SessionPersistentRegistry sessionRegistry =
-                new SessionPersistentRegistry(sessionRepository);
-        ReflectionTestUtils.setField(
-                sessionRegistry, "defaultMaxInactiveInterval", SESSION_TIMEOUT);
+        SessionPersistentRegistry sessionRegistry = new SessionPersistentRegistry(sessionRepository);
+        ReflectionTestUtils.setField(sessionRegistry, "defaultMaxInactiveInterval", SESSION_TIMEOUT);
 
-        ResourceAccessService resourceAccessService =
-                new ResourceAccessService(
-                        resourceGrantRepository,
-                        new MembershipTeamLeadLookup(teamMembershipRepository),
-                        new DefaultPrincipalResolver());
+        ResourceAccessService resourceAccessService = new ResourceAccessService(
+                resourceGrantRepository,
+                new MembershipTeamLeadLookup(teamMembershipRepository),
+                new DefaultPrincipalResolver());
         ReflectionTestUtils.setField(
-                resourceAccessService,
-                "portalDefaultPolicy",
-                DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS);
+                resourceAccessService, "portalDefaultPolicy", DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS);
 
         UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
         UserLicenseSettings licenseSettings = mock(UserLicenseSettings.class);

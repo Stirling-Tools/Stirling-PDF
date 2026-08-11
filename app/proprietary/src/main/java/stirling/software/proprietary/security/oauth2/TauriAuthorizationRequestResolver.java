@@ -13,11 +13,9 @@ public class TauriAuthorizationRequestResolver implements OAuth2AuthorizationReq
 
     private final OAuth2AuthorizationRequestResolver delegate;
 
-    public TauriAuthorizationRequestResolver(
-            ClientRegistrationRepository clientRegistrationRepository) {
+    public TauriAuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
         this.delegate =
-                new DefaultOAuth2AuthorizationRequestResolver(
-                        clientRegistrationRepository, "/oauth2/authorization");
+                new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
     }
 
     @Override
@@ -26,8 +24,7 @@ public class TauriAuthorizationRequestResolver implements OAuth2AuthorizationReq
     }
 
     @Override
-    public OAuth2AuthorizationRequest resolve(
-            HttpServletRequest request, String clientRegistrationId) {
+    public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
         return customize(request, delegate.resolve(request, clientRegistrationId));
     }
 
@@ -53,6 +50,8 @@ public class TauriAuthorizationRequestResolver implements OAuth2AuthorizationReq
             customState = customState + ":" + nonce;
         }
 
-        return OAuth2AuthorizationRequest.from(authorizationRequest).state(customState).build();
+        return OAuth2AuthorizationRequest.from(authorizationRequest)
+                .state(customState)
+                .build();
     }
 }

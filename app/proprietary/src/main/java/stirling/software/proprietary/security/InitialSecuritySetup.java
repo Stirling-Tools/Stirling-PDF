@@ -68,9 +68,8 @@ public class InitialSecuritySetup {
             configureJWTSettings();
             initializeInternalApiUser();
             if (isSaas()) {
-                log.info(
-                        "SaaS profile active - skipping self-host user-table bootstrap"
-                                + " (default-team backfill, seat-license grandfathering).");
+                log.info("SaaS profile active - skipping self-host user-table bootstrap"
+                        + " (default-team backfill, seat-license grandfathering).");
             } else {
                 assignUsersToDefaultTeamIfMissing();
                 initializeUserLicenseSettings();
@@ -93,10 +92,7 @@ public class InitialSecuritySetup {
 
         boolean jwtEnabled = jwtProperties.isEnableKeystore();
         if (!v2Enabled || !jwtEnabled) {
-            log.debug(
-                    "V2 enabled: {}, JWT enabled: {} - disabling all JWT features",
-                    v2Enabled,
-                    jwtEnabled);
+            log.debug("V2 enabled: {}, JWT enabled: {} - disabling all JWT features", v2Enabled, jwtEnabled);
 
             jwtProperties.setEnableKeyCleanup(false);
         }
@@ -118,9 +114,7 @@ public class InitialSecuritySetup {
         userService.saveAll(usersWithoutTeam); // batch save
         usersWithoutTeam.forEach(teamMembershipService::syncMembership);
         if (usersWithoutTeam != null && !usersWithoutTeam.isEmpty()) {
-            log.info(
-                    "Assigned {} user(s) without a team to the default team.",
-                    usersWithoutTeam.size());
+            log.info("Assigned {} user(s) without a team to the default team.", usersWithoutTeam.size());
         }
     }
 
@@ -136,13 +130,12 @@ public class InitialSecuritySetup {
                 && userService.findByUsernameIgnoreCase(initialUsername).isEmpty()) {
 
             Team team = teamService.getOrCreateDefaultTeam();
-            SaveUserRequest.Builder builder =
-                    SaveUserRequest.builder()
-                            .username(initialUsername)
-                            .password(initialPassword)
-                            .team(team)
-                            .role(Role.ADMIN.getRoleId())
-                            .firstLogin(false);
+            SaveUserRequest.Builder builder = SaveUserRequest.builder()
+                    .username(initialUsername)
+                    .password(initialPassword)
+                    .team(team)
+                    .role(Role.ADMIN.getRoleId())
+                    .firstLogin(false);
             userService.saveUserCore(builder.build());
             log.info("Admin user created: {}", initialUsername);
         } else {
@@ -156,13 +149,12 @@ public class InitialSecuritySetup {
 
         if (userService.findByUsernameIgnoreCase(defaultUsername).isEmpty()) {
             Team team = teamService.getOrCreateDefaultTeam();
-            SaveUserRequest.Builder builder =
-                    SaveUserRequest.builder()
-                            .username(defaultUsername)
-                            .password(defaultPassword)
-                            .team(team)
-                            .role(Role.ADMIN.getRoleId())
-                            .firstLogin(true);
+            SaveUserRequest.Builder builder = SaveUserRequest.builder()
+                    .username(defaultUsername)
+                    .password(defaultPassword)
+                    .team(team)
+                    .role(Role.ADMIN.getRoleId())
+                    .firstLogin(true);
             userService.saveUserCore(builder.build());
             log.info("Default admin user created: {}", defaultUsername);
         }
@@ -172,13 +164,12 @@ public class InitialSecuritySetup {
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!userService.usernameExistsIgnoreCase(Role.INTERNAL_API_USER.getRoleId())) {
             Team team = teamService.getOrCreateInternalTeam();
-            SaveUserRequest.Builder builder =
-                    SaveUserRequest.builder()
-                            .username(Role.INTERNAL_API_USER.getRoleId())
-                            .password(UUID.randomUUID().toString())
-                            .team(team)
-                            .role(Role.INTERNAL_API_USER.getRoleId())
-                            .firstLogin(false);
+            SaveUserRequest.Builder builder = SaveUserRequest.builder()
+                    .username(Role.INTERNAL_API_USER.getRoleId())
+                    .password(UUID.randomUUID().toString())
+                    .team(team)
+                    .role(Role.INTERNAL_API_USER.getRoleId())
+                    .firstLogin(false);
             userService.saveUserCore(builder.build());
             userService.addApiKeyToUser(Role.INTERNAL_API_USER.getRoleId());
             log.info("Internal API user created: {}", Role.INTERNAL_API_USER.getRoleId());
@@ -188,9 +179,9 @@ public class InitialSecuritySetup {
             if (internalApiUserOpt.isPresent()) {
                 User internalApiUser = internalApiUserOpt.get();
                 // move to team internal API user
-                if (!TeamService.INTERNAL_TEAM_NAME.equals(internalApiUser.getTeam().getName())) {
-                    log.info(
-                            "Moving internal API user to team: {}", TeamService.INTERNAL_TEAM_NAME);
+                if (!TeamService.INTERNAL_TEAM_NAME.equals(
+                        internalApiUser.getTeam().getName())) {
+                    log.info("Moving internal API user to team: {}", TeamService.INTERNAL_TEAM_NAME);
                     Team internalTeam = teamService.getOrCreateInternalTeam();
 
                     userService.changeUserTeam(internalApiUser, internalTeam);

@@ -52,27 +52,30 @@ class ConvertMarkdownToPdfTest {
         return baos.toByteArray();
     }
 
-    @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
-    @Mock private RuntimePathConfig runtimePathConfig;
-    @Mock private TempFileManager tempFileManager;
-    @Mock private CustomHtmlSanitizer customHtmlSanitizer;
+    @Mock
+    private CustomPDFDocumentFactory pdfDocumentFactory;
 
-    @InjectMocks private ConvertMarkdownToPdf controller;
+    @Mock
+    private RuntimePathConfig runtimePathConfig;
+
+    @Mock
+    private TempFileManager tempFileManager;
+
+    @Mock
+    private CustomHtmlSanitizer customHtmlSanitizer;
+
+    @InjectMocks
+    private ConvertMarkdownToPdf controller;
 
     @BeforeEach
     void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
+        lenient().when(tempFileManager.createManagedTempFile(anyString())).thenAnswer(inv -> {
+            File f = Files.createTempFile("test", inv.<String>getArgument(0)).toFile();
+            TempFile tf = mock(TempFile.class);
+            lenient().when(tf.getFile()).thenReturn(f);
+            lenient().when(tf.getPath()).thenReturn(f.toPath());
+            return tf;
+        });
     }
 
     @Test
@@ -85,8 +88,7 @@ class ConvertMarkdownToPdfTest {
 
     @Test
     void markdownToPdf_invalidExtensionThrows() {
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "test.txt", "text/plain", "content".getBytes());
+        MockMultipartFile file = new MockMultipartFile("fileInput", "test.txt", "text/plain", "content".getBytes());
         GeneralFile generalFile = new GeneralFile();
         generalFile.setFileInput(file);
 
@@ -99,8 +101,7 @@ class ConvertMarkdownToPdfTest {
         byte[] pdfBytes = "pdf-content".getBytes();
         byte[] processedPdf = "processed-pdf".getBytes();
 
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "readme.md", "text/markdown", mdContent);
+        MockMultipartFile file = new MockMultipartFile("fileInput", "readme.md", "text/markdown", mdContent);
         GeneralFile generalFile = new GeneralFile();
         generalFile.setFileInput(file);
 
@@ -112,27 +113,21 @@ class ConvertMarkdownToPdfTest {
 
         try (MockedStatic<FileToPdf> ftpMock = Mockito.mockStatic(FileToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
-                MockedStatic<WebResponseUtils> wrMock =
-                        Mockito.mockStatic(WebResponseUtils.class)) {
+                MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
 
-            ftpMock.when(
-                            () ->
-                                    FileToPdf.convertHtmlToPdf(
-                                            eq("/usr/bin/weasyprint"),
-                                            isNull(),
-                                            any(byte[].class),
-                                            eq("converted.html"),
-                                            eq(tempFileManager),
-                                            eq(customHtmlSanitizer)))
+            ftpMock.when(() -> FileToPdf.convertHtmlToPdf(
+                            eq("/usr/bin/weasyprint"),
+                            isNull(),
+                            any(byte[].class),
+                            eq("converted.html"),
+                            eq(tempFileManager),
+                            eq(customHtmlSanitizer)))
                     .thenReturn(pdfBytes);
 
             guMock.when(() -> GeneralUtils.generateFilename("readme.md", ".pdf"))
                     .thenReturn("readme.pdf");
 
-            wrMock.when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+            wrMock.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<Resource> response = controller.markdownToPdf(generalFile);
@@ -143,8 +138,7 @@ class ConvertMarkdownToPdfTest {
 
     @Test
     void markdownToPdf_nullFilenameThrows() {
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", null, "text/markdown", "# Title".getBytes());
+        MockMultipartFile file = new MockMultipartFile("fileInput", null, "text/markdown", "# Title".getBytes());
         GeneralFile generalFile = new GeneralFile();
         generalFile.setFileInput(file);
 

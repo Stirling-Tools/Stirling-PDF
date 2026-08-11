@@ -52,17 +52,13 @@ public class NetworkConnectionResolver {
         if (connectionId == null) {
             return NetworkConfig.from(options);
         }
-        IntegrationConfig connection =
-                connections
-                        .findById(connectionId)
-                        .filter(cfg -> cfg.getIntegrationType() == IntegrationType.NETWORK)
-                        .filter(this::usableByCurrentUser)
-                        // Existence and access collapse into one error so a caller cannot tell
-                        // "no such connection" from "someone else's" and enumerate ids.
-                        .orElseThrow(
-                                () ->
-                                        new IllegalArgumentException(
-                                                "unknown or inaccessible network connection"));
+        IntegrationConfig connection = connections
+                .findById(connectionId)
+                .filter(cfg -> cfg.getIntegrationType() == IntegrationType.NETWORK)
+                .filter(this::usableByCurrentUser)
+                // Existence and access collapse into one error so a caller cannot tell
+                // "no such connection" from "someone else's" and enumerate ids.
+                .orElseThrow(() -> new IllegalArgumentException("unknown or inaccessible network connection"));
         if (!connection.isEnabled()) {
             throw new IllegalArgumentException("network connection is disabled");
         }
@@ -118,16 +114,14 @@ public class NetworkConnectionResolver {
             return Map.of();
         }
         try {
-            return OBJECT_MAPPER.readValue(
-                    json, new TypeReference<LinkedHashMap<String, Object>>() {});
+            return OBJECT_MAPPER.readValue(json, new TypeReference<LinkedHashMap<String, Object>>() {});
         } catch (Exception e) {
             throw new IllegalArgumentException(
                     "network connection '" + connection.getName() + "' has unreadable config", e);
         }
     }
 
-    private static void copyPerUseOption(
-            Map<String, Object> options, Map<String, Object> merged, String key) {
+    private static void copyPerUseOption(Map<String, Object> options, Map<String, Object> merged, String key) {
         Object value = options.get(key);
         if (value != null && !value.toString().isBlank()) {
             merged.put(key, value);

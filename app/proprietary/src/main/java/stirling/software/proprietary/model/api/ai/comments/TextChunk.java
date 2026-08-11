@@ -14,5 +14,4 @@ package stirling.software.proprietary.model.api.ai.comments;
  * @param height Height of the chunk bbox.
  * @param text The plain-text content of the chunk (truncated to a sane length).
  */
-public record TextChunk(
-        String id, int page, float x, float y, float width, float height, String text) {}
+public record TextChunk(String id, int page, float x, float y, float width, float height, String text) {}

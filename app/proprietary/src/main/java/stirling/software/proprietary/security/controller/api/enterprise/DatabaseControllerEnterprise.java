@@ -35,8 +35,7 @@ public class DatabaseControllerEnterprise {
 
     @Operation(
             summary = "Delete the last database backup file",
-            description =
-                    "Only Enterprise - Deletes the last database backup file from the server.")
+            description = "Only Enterprise - Deletes the last database backup file from the server.")
     @DeleteMapping("/deleteLast")
     public ResponseEntity<?> deleteLastFile() {
         log.info("Deleting last database backup file...");
@@ -60,17 +59,15 @@ public class DatabaseControllerEnterprise {
             return ResponseEntity.ok(new DeleteAllResult(List.of(), List.of(), "noContent"));
         }
 
-        List<String> deleted =
-                results.stream()
-                        .filter(p -> Boolean.TRUE.equals(p.getRight()))
-                        .map(p -> p.getLeft().getFileName())
-                        .toList();
+        List<String> deleted = results.stream()
+                .filter(p -> Boolean.TRUE.equals(p.getRight()))
+                .map(p -> p.getLeft().getFileName())
+                .toList();
 
-        List<String> failed =
-                results.stream()
-                        .filter(p -> !Boolean.TRUE.equals(p.getRight()))
-                        .map(p -> p.getLeft().getFileName())
-                        .toList();
+        List<String> failed = results.stream()
+                .filter(p -> !Boolean.TRUE.equals(p.getRight()))
+                .map(p -> p.getLeft().getFileName())
+                .toList();
 
         log.info("Deleted backup files: {}", deleted);
         if (!failed.isEmpty()) {
@@ -79,11 +76,7 @@ public class DatabaseControllerEnterprise {
                     .body(new DeleteAllResult(deleted, failed, "partialFailure"));
         }
         DeleteAllResult result = new DeleteAllResult(deleted, failed, "ok");
-        log.debug(
-                "DeleteAllResult: deleted={}, failed={}, status={}",
-                result.deleted,
-                result.failed,
-                result.status);
+        log.debug("DeleteAllResult: deleted={}, failed={}, status={}", result.deleted, result.failed, result.status);
         return ResponseEntity.ok(result); // 200
     }
 

@@ -49,11 +49,9 @@ public class PasswordController {
             produces = ToolFormat.PDF)
     @Operation(
             summary = "Remove password from a PDF file",
-            description =
-                    "This endpoint removes the password from a protected PDF file. Users need to"
-                            + " provide the existing password.")
-    public ResponseEntity<Resource> removePassword(@ModelAttribute PDFPasswordRequest request)
-            throws IOException {
+            description = "This endpoint removes the password from a protected PDF file. Users need to"
+                    + " provide the existing password.")
+    public ResponseEntity<Resource> removePassword(@ModelAttribute PDFPasswordRequest request) throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String password = request.getPassword();
 
@@ -61,8 +59,7 @@ public class PasswordController {
             document.setAllSecurityToBeRemoved(true);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(
-                            fileInput.getOriginalFilename(), "_password_removed.pdf"),
+                    GeneralUtils.generateFilename(fileInput.getOriginalFilename(), "_password_removed.pdf"),
                     tempFileManager);
         } catch (IOException e) {
             // Handle password errors specifically
@@ -91,23 +88,19 @@ public class PasswordController {
                             arity = ToolArity.SISO))
     @Operation(
             summary = "Add password to a PDF file",
-            description =
-                    "This endpoint adds password protection to a PDF file. Users can specify a set"
-                            + " of permissions that should be applied to the file.")
-    public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request)
-            throws IOException {
+            description = "This endpoint adds password protection to a PDF file. Users can specify a set"
+                    + " of permissions that should be applied to the file.")
+    public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request) throws IOException {
         MultipartFile fileInput = request.getFileInput();
         String ownerPassword = request.getOwnerPassword();
         String password = request.getPassword();
         int keyLength = request.getKeyLength();
         boolean preventAssembly = Boolean.TRUE.equals(request.getPreventAssembly());
         boolean preventExtractContent = Boolean.TRUE.equals(request.getPreventExtractContent());
-        boolean preventExtractForAccessibility =
-                Boolean.TRUE.equals(request.getPreventExtractForAccessibility());
+        boolean preventExtractForAccessibility = Boolean.TRUE.equals(request.getPreventExtractForAccessibility());
         boolean preventFillInForm = Boolean.TRUE.equals(request.getPreventFillInForm());
         boolean preventModify = Boolean.TRUE.equals(request.getPreventModify());
-        boolean preventModifyAnnotations =
-                Boolean.TRUE.equals(request.getPreventModifyAnnotations());
+        boolean preventModifyAnnotations = Boolean.TRUE.equals(request.getPreventModifyAnnotations());
         boolean preventPrinting = Boolean.TRUE.equals(request.getPreventPrinting());
         boolean preventPrintingFaithful = Boolean.TRUE.equals(request.getPreventPrintingFaithful());
 
@@ -121,27 +114,22 @@ public class PasswordController {
             ap.setCanModifyAnnotations(!preventModifyAnnotations);
             ap.setCanPrint(!preventPrinting);
             ap.setCanPrintFaithful(!preventPrintingFaithful);
-            StandardProtectionPolicy spp =
-                    new StandardProtectionPolicy(ownerPassword, password, ap);
+            StandardProtectionPolicy spp = new StandardProtectionPolicy(ownerPassword, password, ap);
 
-            if ((ownerPassword != null && !ownerPassword.isEmpty())
-                    || (password != null && !password.isEmpty())) {
+            if ((ownerPassword != null && !ownerPassword.isEmpty()) || (password != null && !password.isEmpty())) {
                 spp.setEncryptionKeyLength(keyLength);
             }
             spp.setPermissions(ap);
             document.protect(spp);
 
-            if ((ownerPassword == null || ownerPassword.isEmpty())
-                    && (password == null || password.isEmpty()))
+            if ((ownerPassword == null || ownerPassword.isEmpty()) && (password == null || password.isEmpty()))
                 return WebResponseUtils.pdfDocToWebResponse(
                         document,
-                        GeneralUtils.generateFilename(
-                                fileInput.getOriginalFilename(), "_permissions.pdf"),
+                        GeneralUtils.generateFilename(fileInput.getOriginalFilename(), "_permissions.pdf"),
                         tempFileManager);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(
-                            fileInput.getOriginalFilename(), "_passworded.pdf"),
+                    GeneralUtils.generateFilename(fileInput.getOriginalFilename(), "_passworded.pdf"),
                     tempFileManager);
         }
     }
