@@ -6,23 +6,12 @@ import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { withBasePath } from "@app/constants/app";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import ErrorMessage from "@app/auth/ui/ErrorMessage";
-import { Button } from "@app/ui/Button";
-import "@app/auth/ui/auth.css";
+import {
+  PairDeviceView,
+  type PairPhase,
+  type PendingPairing,
+} from "@app/routes/PairDeviceView";
 import "@app/routes/authShared/saas-auth.css";
-import "@app/routes/PairDevice.css";
-
-/** Shape of GET /api/v1/pair/lookup. All display-only, and all instance-supplied. */
-interface PendingPairing {
-  userCode: string;
-  name: string | null;
-  version: string | null;
-  address: string | null;
-  requestedAt: string | null;
-  expiresAt: string | null;
-}
-
-type Phase = "entry" | "confirm" | "done" | "declined";
 
 /**
  * Approve a self-hosted server's pairing request (device grant, RFC 8628).
@@ -37,6 +26,8 @@ type Phase = "entry" | "confirm" | "done" | "declined";
  * are phishable: an attacker can start a pairing on their own server and talk
  * someone into approving the code. So we show what is actually being paired and
  * let the approver walk away.
+ *
+ * <p>Data only. {@link PairDeviceView} draws it.
  */
 export default function PairDevice() {
   const { t } = useTranslation();
@@ -46,7 +37,7 @@ export default function PairDevice() {
 
   const [code, setCode] = useState(params.get("code") ?? "");
   const [pending, setPending] = useState<PendingPairing | null>(null);
-  const [phase, setPhase] = useState<Phase>("entry");
+  const [phase, setPhase] = useState<PairPhase>("entry");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,123 +113,16 @@ export default function PairDevice() {
 
   return (
     <AuthLayout>
-      <div className="pair-device">
-        {phase === "entry" && (
-          <>
-            <h1 className="pair-device__title">
-              {t("pair.entry.title", "Enter your pairing code")}
-            </h1>
-            <p className="pair-device__sub">
-              {t(
-                "pair.entry.sub",
-                "From the screen on the server you are connecting.",
-              )}
-            </p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void lookup(code);
-              }}
-            >
-              <label className="pair-device__label" htmlFor="pair-code">
-                {t("pair.entry.label", "Pairing code")}
-              </label>
-              <input
-                id="pair-code"
-                className="pair-device__input"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="WXYZ-4821"
-                autoComplete="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                aria-describedby={error ? "pair-error" : undefined}
-              />
-              {error && (
-                <div id="pair-error">
-                  <ErrorMessage error={error} />
-                </div>
-              )}
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={busy || code.trim().length === 0}
-              >
-                {t("pair.entry.submit", "Continue")}
-              </Button>
-            </form>
-          </>
-        )}
-
-        {phase === "confirm" && pending && (
-          <>
-            <h1 className="pair-device__title">
-              {t("pair.confirm.title", "Pair this server?")}
-            </h1>
-            <p className="pair-device__sub">
-              {t(
-                "pair.confirm.sub",
-                "Check these details match the server you are connecting. If they do not, decline.",
-              )}
-            </p>
-            <dl className="pair-device__facts">
-              <dt>{t("pair.confirm.name", "Name")}</dt>
-              <dd>{pending.name ?? t("pair.confirm.unnamed", "Not set")}</dd>
-              <dt>{t("pair.confirm.address", "Address")}</dt>
-              <dd>{pending.address ?? t("pair.confirm.unknown", "Unknown")}</dd>
-              <dt>{t("pair.confirm.version", "Version")}</dt>
-              <dd>{pending.version ?? t("pair.confirm.unknown", "Unknown")}</dd>
-              <dt>{t("pair.confirm.code", "Code")}</dt>
-              <dd>{pending.userCode}</dd>
-            </dl>
-            {error && <ErrorMessage error={error} />}
-            <div className="pair-device__actions">
-              <Button
-                variant="secondary"
-                disabled={busy}
-                onClick={() => void decide(false)}
-              >
-                {t("pair.confirm.decline", "Decline")}
-              </Button>
-              <Button
-                variant="primary"
-                disabled={busy}
-                onClick={() => void decide(true)}
-              >
-                {t("pair.confirm.approve", "Pair server")}
-              </Button>
-            </div>
-          </>
-        )}
-
-        {phase === "done" && (
-          <>
-            <h1 className="pair-device__title">
-              {t("pair.done.title", "Server paired")}
-            </h1>
-            <p className="pair-device__sub">
-              {t(
-                "pair.done.sub",
-                "You can close this page. The server picks up the connection within a few seconds.",
-              )}
-            </p>
-          </>
-        )}
-
-        {phase === "declined" && (
-          <>
-            <h1 className="pair-device__title">
-              {t("pair.declined.title", "Pairing declined")}
-            </h1>
-            <p className="pair-device__sub">
-              {t(
-                "pair.declined.sub",
-                "Nothing was connected. If you did not expect this code, someone may have sent it to you by mistake.",
-              )}
-            </p>
-          </>
-        )}
-      </div>
+      <PairDeviceView
+        phase={phase}
+        code={code}
+        pending={pending}
+        busy={busy}
+        error={error}
+        onCodeChange={setCode}
+        onSubmitCode={() => void lookup(code)}
+        onDecide={(approve) => void decide(approve)}
+      />
     </AuthLayout>
   );
 }
