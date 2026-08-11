@@ -27,7 +27,6 @@
     "*.min.*",
     "*.md",
     "*.wxs",
-    "*.html",
     "*.toml",
     "editor/src/output.css"
   ]
