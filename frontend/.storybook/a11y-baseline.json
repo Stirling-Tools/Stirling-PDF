@@ -1,4 +1,7 @@
 {
+  "editor/src/core/assets/Brand.stories.tsx :: Logos": [
+    "scrollable-region-focusable"
+  ],
   "editor/src/core/components/StorageStatsCard.stories.tsx :: Default": [
     "aria-progressbar-name",
     "color-contrast"
@@ -886,9 +889,6 @@
   "editor/src/core/components/tools/changeMetadata/steps/DocumentDatesStep.stories.tsx :: Filled": [
     "button-name"
   ],
-  "editor/src/core/components/tools/compare/CompareDocumentPane.stories.tsx :: Default": [
-    "color-contrast"
-  ],
   "editor/src/core/components/tools/compare/ComparePixelWorkbenchView.stories.tsx :: Default": [
     "color-contrast"
   ],
@@ -1377,8 +1377,17 @@
   "editor/src/core/ui/ChatFABButton.stories.tsx :: Tick While Loading": [
     "button-name"
   ],
-  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Open": ["color-contrast"],
-  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Toggle": ["color-contrast"],
+  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Closed": [
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Open": [
+    "color-contrast",
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/ui/ChatFABWindow.stories.tsx :: Toggle": [
+    "color-contrast",
+    "scrollable-region-focusable"
+  ],
   "editor/src/core/ui/Chip.stories.tsx :: Accents": ["color-contrast"],
   "editor/src/core/ui/Chip.stories.tsx :: Dashed Add": ["nested-interactive"],
   "editor/src/core/ui/Chip.stories.tsx :: In Context Op Chain": [
@@ -1395,10 +1404,15 @@
     "color-contrast"
   ],
   "editor/src/core/ui/CodeBlock.stories.tsx :: Long Scrolling": [
-    "color-contrast",
-    "scrollable-region-focusable"
+    "color-contrast"
   ],
   "editor/src/core/ui/CodeBlock.stories.tsx :: Playground": ["color-contrast"],
+  "editor/src/core/ui/Collapsible.stories.tsx :: Accordion": [
+    "scrollable-region-focusable"
+  ],
+  "editor/src/core/ui/Collapsible.stories.tsx :: Default": [
+    "scrollable-region-focusable"
+  ],
   "editor/src/core/ui/Drawer.stories.tsx :: Playground": [
     "aria-allowed-role",
     "color-contrast"
@@ -1565,11 +1579,16 @@
   "editor/src/core/ui/Table.stories.tsx :: Basic": ["color-contrast"],
   "editor/src/core/ui/Table.stories.tsx :: Interactive": ["color-contrast"],
   "editor/src/core/ui/Tabs.stories.tsx :: In Context Document Verticals": [
-    "color-contrast"
+    "color-contrast",
+    "scrollable-region-focusable"
   ],
-  "editor/src/core/ui/Tabs.stories.tsx :: Playground": ["color-contrast"],
+  "editor/src/core/ui/Tabs.stories.tsx :: Playground": [
+    "color-contrast",
+    "scrollable-region-focusable"
+  ],
   "editor/src/core/ui/Tabs.stories.tsx :: With Disabled Tab": [
-    "color-contrast"
+    "color-contrast",
+    "scrollable-region-focusable"
   ],
   "editor/src/core/ui/Toast.stories.tsx :: Triggers": ["color-contrast"],
   "editor/src/portal/components/AppShell.stories.tsx :: Mobile": [
@@ -1951,24 +1970,34 @@
   "editor/src/portal/components/infrastructure/CreateKeyModal.stories.tsx :: Form": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/DeploymentsTab.stories.tsx :: Default": [
-    "aria-progressbar-name",
-    "color-contrast"
-  ],
   "editor/src/portal/components/infrastructure/ModelsTab.stories.tsx :: Enterprise": [
     "color-contrast"
   ],
   "editor/src/portal/components/infrastructure/ModelsTab.stories.tsx :: Free": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/ModelsTab.stories.tsx :: Pro": [
-    "aria-progressbar-name",
+  "editor/src/portal/components/pipelines/PipelineDefinitionModal.stories.tsx :: Default": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/SecurityTab.stories.tsx :: Default": [
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Editing": [
     "color-contrast"
   ],
-  "editor/src/portal/components/infrastructure/StorageTab.stories.tsx :: Default": [
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Paused": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: Testing": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: With Failed Run": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineHeader.stories.tsx :: With Run Result": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineInspector.stories.tsx :: Failed Step": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/pipelines/PipelineInspector.stories.tsx :: Settings": [
     "color-contrast"
   ],
   "editor/src/portal/components/pipelines/PipelineStepSettings.stories.tsx :: No Settings": [
@@ -2267,17 +2296,9 @@
     "landmark-unique"
   ],
   "editor/src/portal/views/Documents.stories.tsx :: Default": [
-    "aria-prohibited-attr",
-    "color-contrast",
-    "empty-table-header",
-    "nested-interactive"
+    "color-contrast"
   ],
-  "editor/src/portal/views/Documents.stories.tsx :: Empty": [
-    "aria-prohibited-attr",
-    "color-contrast",
-    "empty-table-header",
-    "nested-interactive"
-  ],
+  "editor/src/portal/views/Documents.stories.tsx :: Empty": ["color-contrast"],
   "editor/src/portal/views/Home.stories.tsx :: Enterprise Tier": [
     "color-contrast",
     "landmark-no-duplicate-banner",
@@ -2300,9 +2321,6 @@
   "editor/src/portal/views/Integrations.stories.tsx :: No Connections": [
     "color-contrast"
   ],
-  "editor/src/portal/views/PipelineBuilder.stories.tsx :: Default": [
-    "color-contrast"
-  ],
   "editor/src/portal/views/Pipelines.stories.tsx :: Default": [
     "color-contrast",
     "empty-table-header"
@@ -2311,16 +2329,8 @@
     "color-contrast",
     "empty-table-header"
   ],
-  "editor/src/portal/views/Policies.stories.tsx :: Default": ["color-contrast"],
-  "editor/src/portal/views/Policies.stories.tsx :: Empty": ["color-contrast"],
-  "editor/src/portal/views/Sources.stories.tsx :: Default": [
-    "color-contrast",
-    "empty-table-header"
-  ],
-  "editor/src/portal/views/Sources.stories.tsx :: Empty": [
-    "color-contrast",
-    "empty-table-header"
-  ],
+  "editor/src/portal/views/Sources.stories.tsx :: Default": ["color-contrast"],
+  "editor/src/portal/views/Sources.stories.tsx :: Empty": ["color-contrast"],
   "editor/src/proprietary/auth/ui/AuthScreens.stories.tsx :: Signup": [
     "aria-hidden-focus"
   ],
@@ -2352,6 +2362,9 @@
   ],
   "editor/src/proprietary/components/shared/ChangeUserPasswordModal.stories.tsx :: Non Email Username": [
     "aria-dialog-name",
+    "color-contrast"
+  ],
+  "editor/src/proprietary/components/shared/DividerWithText.stories.tsx :: Default": [
     "color-contrast"
   ],
   "editor/src/proprietary/components/shared/UpdateSeatsModal.stories.tsx :: At Minimum": [
