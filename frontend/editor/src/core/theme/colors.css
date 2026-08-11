@@ -304,6 +304,20 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
      and the tuple's default text). The light theme reaches it by mixing toward
      black; on a dark ground it has to travel the other way to stay readable. */
   --color-primary-600: color-mix(in srgb, var(--c-primary) 85%, var(--p-white));
+  /* The accent's tint rungs, which back every light-variant surface. The light
+     theme builds them by mixing toward white; left unmixed for dark they stay a
+     pale blue and put dark-theme ink on a near-white ground. */
+  --color-primary-50: color-mix(in srgb, var(--c-primary) 12%, var(--c-bg));
+  --color-primary-100: color-mix(in srgb, var(--c-primary) 20%, var(--c-bg));
+  --color-primary-200: color-mix(in srgb, var(--c-primary) 35%, var(--c-bg));
+  --color-primary-300: color-mix(in srgb, var(--c-primary) 55%, var(--c-bg));
+  --color-primary-400: color-mix(in srgb, var(--c-primary) 78%, var(--c-bg));
+  /* The inks that sit on those tints. Mixing toward black is what makes them
+     readable on a pale ground; on the dark tints above they have to travel
+     toward white for the same reason. */
+  --color-primary-700: color-mix(in srgb, var(--c-primary) 70%, var(--p-white));
+  --color-primary-800: color-mix(in srgb, var(--c-primary) 55%, var(--p-white));
+  --color-primary-900: color-mix(in srgb, var(--c-primary) 40%, var(--p-white));
   /* Neutral text / borders / overlay (not accent-tinted). */
   --c-text: var(--p-snow);
   --c-text-muted: var(--p-zinc-200);

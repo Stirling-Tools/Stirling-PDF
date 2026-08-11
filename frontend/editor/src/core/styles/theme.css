@@ -411,10 +411,10 @@
   --special-color-recommended: var(--p-blue-500); /* Cyan for recommended */
 
   /* Success (green) - dark */
-  --color-green-50: var(--p-green-700);
-  --color-green-100: var(--p-green-700);
-  --color-green-200: var(--p-green-700);
-  --color-green-300: var(--p-green-700);
+  --color-green-50: var(--p-zinc-775);
+  --color-green-100: var(--p-zinc-700);
+  --color-green-200: var(--p-zinc-600);
+  --color-green-300: var(--p-zinc-500);
   --color-green-400: var(--p-green-600);
   --color-green-500: var(--p-green-500);
   --color-green-600: var(--p-green-600);
@@ -423,10 +423,10 @@
   --color-green-900: var(--p-green-500);
 
   /* Warning (yellow) - dark */
-  --color-yellow-50: var(--p-amber-600);
-  --color-yellow-100: var(--p-amber-600);
-  --color-yellow-200: var(--p-amber-600);
-  --color-yellow-300: var(--p-amber-600);
+  --color-yellow-50: var(--p-zinc-775);
+  --color-yellow-100: var(--p-zinc-700);
+  --color-yellow-200: var(--p-zinc-600);
+  --color-yellow-300: var(--p-zinc-500);
   --color-yellow-400: var(--p-amber-600);
   --color-yellow-500: var(--p-amber-500);
   --color-yellow-600: var(--p-amber-400);
@@ -572,13 +572,6 @@
 }
 
 /* Plan section card borders - only override in dark mode */
-[data-mantine-color-scheme="dark"] .plan-card {
-}
-
-[data-mantine-color-scheme="dark"] .plan-card [data-size="sm"] {
-  color: var(--p-c-c2c8e0) !important;
-}
-
 /* Current plan badge - use light mode green in dark mode */
 [data-mantine-color-scheme="dark"] .current-plan-badge {
   background-color: var(--color-green-300) !important;
@@ -592,6 +585,9 @@
 [data-mantine-color-scheme="dark"]
   .plan-button:not(:disabled):not([data-disabled]) {
   background-color: var(--p-royal-700) !important;
+  /* The fill is set here, so the label has to be set with it — left alone it
+     keeps the scheme's default ink and reads as dark-on-deep-blue. */
+  color: var(--p-white) !important;
 }
 
 /* Lighter grey for disabled plan buttons */

@@ -338,7 +338,9 @@ export default function SignControlsPanel({
         }}
       />
     ) : (
-      <Group gap={4} wrap="nowrap" c="var(--mantine-color-blue-6)">
+      // Sits on the white signature sheet in both schemes, so it takes a fixed
+      // accent ink rather than the scheme-dependent one.
+      <Group gap={4} wrap="nowrap" c="var(--p-blue-700)">
         <DrawIcon sx={{ fontSize: "0.95rem" }} />
         <Text size="xs" fw={600}>
           {t("certSign.collab.signRequest.preview.create", "Add signature")}

@@ -276,7 +276,9 @@
   --code-bg-alt: var(--p-c-1e293b);
   --code-bg-header: var(--p-c-1a2332);
   --code-text: var(--p-gray-250);
-  --code-dim: var(--p-c-64748b);
+  /* Sits on the code header, the lightest of the dark code grounds, where
+     the mid-slate only reaches 3.3:1. */
+  --code-dim: var(--p-c-8b9bb4);
   --code-muted: var(--p-c-94a3b8);
   --code-keyword: var(--p-blue-400);
   --code-string: var(--p-amber-400);

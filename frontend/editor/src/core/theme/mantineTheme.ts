@@ -117,6 +117,8 @@ const accessibleColorSlots = {
   // text-only variants; the -filled ones back solid badges, and the stock
   // orange and grey are too light to carry a white label.
   "--mantine-color-dimmed": "var(--c-text-muted)",
+  // Placeholders default to a divider-weight grey, which is not a text shade.
+  "--mantine-color-placeholder": "var(--c-text-subtle)",
   // Neutral badges and chips derive their label from the grey ramp, which lands
   // mid-scale and reads against neither ground.
   "--mantine-color-gray-light-color": "var(--c-text-muted)",
@@ -125,6 +127,8 @@ const accessibleColorSlots = {
   "--mantine-color-green-text": "var(--color-green-dark)",
   "--mantine-color-orange-text": "var(--color-amber-dark)",
   "--mantine-color-blue-text": "var(--c-accent-text)",
+  "--mantine-color-blue-filled": "var(--c-accent-solid)",
+  "--mantine-color-green-filled-hover": "var(--c-success-solid)",
   "--mantine-color-orange-filled": "var(--p-amber-700)",
   "--mantine-color-green-filled": "var(--p-green-700)",
   "--mantine-color-yellow-filled": "var(--p-amber-700)",
@@ -151,6 +155,14 @@ export const editorCssVariablesResolver: CSSVariablesResolver = () => ({
   dark: {
     ...accessibleColorSlots,
     "--mantine-color-indigo-light-color": "var(--p-indigo-300)",
+    // Hues the theme never registers keep Mantine's own ramp, whose shade 0 is
+    // a pale tint in both schemes — a light panel in a dark UI. The registered
+    // hues take their tint from the app's own dark rungs already.
+    "--mantine-color-orange-0": "var(--color-yellow-50)",
+    "--mantine-color-orange-1": "var(--color-yellow-100)",
+    "--mantine-color-grape-0": "var(--color-purple-light)",
+    "--mantine-color-indigo-0": "var(--color-primary-50)",
+    "--mantine-color-cyan-0": "var(--color-primary-50)",
   },
 });
 

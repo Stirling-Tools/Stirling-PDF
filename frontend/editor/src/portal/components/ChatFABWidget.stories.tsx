@@ -90,7 +90,7 @@ function MockChatContent({
               maxWidth: "82%",
               background:
                 m.role === "user"
-                  ? "var(--c-accent-text)"
+                  ? "var(--c-accent-solid)"
                   : "var(--c-surface-sunken)",
               color: m.role === "user" ? "#fff" : "inherit",
               borderRadius: 10,
@@ -249,7 +249,9 @@ function ChatFABFullFlowDemo() {
               padding: "4px 10px",
               borderRadius: 6,
               background:
-                step === s ? "var(--c-accent-text)" : "var(--c-surface-sunken)",
+                step === s
+                  ? "var(--c-accent-solid)"
+                  : "var(--c-surface-sunken)",
               color: step === s ? "#fff" : "inherit",
               fontWeight: step === s ? 600 : 400,
             }}
