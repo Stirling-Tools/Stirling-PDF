@@ -101,6 +101,23 @@ function pipelineIdFor(mult: number): string {
 }
 
 /**
+ * Reuse key for the minted Stripe quote. Includes the sizing MULTIPLIER ids alongside the pool + PO,
+ * not just the pool: different posture/size/pipeline combos can yield the same poolCredits (identical
+ * Stripe amount), and keying on the pool alone would skip the re-mint on such an edit and leave the
+ * persisted quote row with stale sizing fields. Keying on the ids re-mints (and re-persists) whenever
+ * the buyer actually changes the config.
+ */
+function buildStripeQuoteSig(
+  poolCredits: number,
+  postureId: string,
+  sizeId: string,
+  pipelineId: string,
+  poNumber: string,
+): string {
+  return `${poolCredits}|${postureId}|${sizeId}|${pipelineId}|${poNumber.trim()}`;
+}
+
+/**
  * Pre-quote calculator progress, persisted per team so closing the modal / reloading doesn't lose the
  * buyer's place. Once a real quote exists it's the source of truth (loaded server-side), so this is
  * only the "still sizing, nothing minted yet" fallback.
@@ -189,7 +206,9 @@ export function BundleCheckoutModal({
   const { t } = useTranslation();
   const teamId = wallet.teamId;
   const currency = wallet.currency ?? "usd";
-  const pricePerDocMinor = wallet.pricePerDocMinor;
+  // The pool is priced per size-scaled RUN at the prepaid-bundle rate (bundle:processor), NOT the
+  // metered per-document rate — so the estimate matches the amount the checkout edge fn charges.
+  const ratePerRunMinor = wallet.bundleRatePerCreditMinor;
 
   const [phase, setPhase] = useState<Phase>("calc");
   const [users, setUsers] = useState(DEFAULT_USERS);
@@ -218,10 +237,12 @@ export function BundleCheckoutModal({
   const [stripeQuoteSig, setStripeQuoteSig] = useState<string | null>(null);
   // The invoice generated when the quote is accepted (awaiting payment); null when simulated.
   const [invoice, setInvoice] = useState<BundleInvoice | null>(null);
-  // On resume, the total the quote was persisted at (server value), frozen so the receipt shows what
-  // the buyer actually quoted rather than a figure recomputed from a since-changed rate. Paired with
-  // the pool size it was persisted at — once the buyer edits the sizing (pool changes) we drop back to
-  // the live estimate, since editing re-mints and re-persists anyway.
+  // On resume, the total the quote was persisted at, frozen so the receipt shows what the buyer
+  // actually quoted rather than a figure recomputed from a since-changed rate. Once the Stripe quote
+  // has been minted this is the server-derived total (create-payg-bundle-quote overwrites price_minor
+  // with Price x qty - amount_off); before that it's the client estimate persisted at upsert. Paired
+  // with the pool size it was persisted at — once the buyer edits the sizing (pool changes) we drop
+  // back to the live estimate, since editing re-mints and re-persists anyway.
   const [persistedPriceMinor, setPersistedPriceMinor] = useState<number | null>(
     null,
   );
@@ -302,7 +323,13 @@ export function BundleCheckoutModal({
           });
           // Match the reuse signature so resuming doesn't immediately re-mint the Stripe quote.
           setStripeQuoteSig(
-            `${latest.poolCredits}|${(saved?.poNumber ?? "").trim()}`,
+            buildStripeQuoteSig(
+              latest.poolCredits,
+              postureIdFor(latest.posturePolicies),
+              sizeIdFor(latest.sizeMult),
+              pipelineIdFor(latest.pipelineMult),
+              saved?.poNumber ?? "",
+            ),
           );
         }
         // Already accepted (an invoice exists) → resume straight to the payment step rather than the
@@ -374,9 +401,9 @@ export function BundleCheckoutModal({
         posturePolicies: policiesFor(postureId),
         sizeMult: sizeMultFor(sizeId),
         pipelineMult: pipelineMultFor(pipelineId),
-        ratePerRunMinor: pricePerDocMinor,
+        ratePerRunMinor,
       }),
-    [users, postureId, sizeId, pipelineId, pricePerDocMinor],
+    [users, postureId, sizeId, pipelineId, ratePerRunMinor],
   );
 
   // The receipt shows the persisted (server) total on resume so it matches the quote the buyer
@@ -459,7 +486,13 @@ export function BundleCheckoutModal({
     stripeQuote: BundleStripeQuote;
   } | null> {
     if (teamId == null) return null;
-    const sig = `${quote.poolCredits}|${poNumber.trim()}`;
+    const sig = buildStripeQuoteSig(
+      quote.poolCredits,
+      postureId,
+      sizeId,
+      pipelineId,
+      poNumber,
+    );
     if (stripeQuote && stripeQuoteSig === sig && quoteId != null) {
       return { quoteId, stripeQuote }; // unchanged since last mint — reuse, no new quote
     }
@@ -632,7 +665,6 @@ export function BundleCheckoutModal({
           {t("portal.billing.prepaid.buy.cancel", "Cancel")}
         </Button>
         <Button
-          accent="premium"
           disabled={!canContinue || pdfBusy}
           onClick={handleContinue}
           rightSection={<span aria-hidden>›</span>}
@@ -653,7 +685,7 @@ export function BundleCheckoutModal({
         >
           {t("portal.billing.prepaid.buy.cancelPurchase", "Cancel purchase")}
         </Button>
-        <Button accent="premium" disabled={busy || pdfBusy} onClick={payOnline}>
+        <Button disabled={busy || pdfBusy} onClick={payOnline}>
           {t("portal.billing.prepaid.pay.payOnline", "Pay online")}
         </Button>
       </div>
@@ -668,7 +700,6 @@ export function BundleCheckoutModal({
           {t("portal.billing.prepaid.buy.back", "Back")}
         </Button>
         <Button
-          accent="premium"
           disabled={!canAccept || busy || pdfBusy}
           onClick={handleFinalise}
         >

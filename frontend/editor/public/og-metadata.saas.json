@@ -101,6 +101,11 @@
       "title": "Rotate - Stirling PDF",
       "description": "Easily rotate your PDFs."
     },
+    "autoRotate": {
+      "image": "/og_images/home.png",
+      "title": "Auto Rotate - Stirling PDF",
+      "description": "Detect each page's orientation and rotate it upright automatically."
+    },
     "annotate": {
       "image": "/og_images/annotate.png",
       "title": "Annotate - Stirling PDF",
@@ -304,11 +309,6 @@
     "/login": {
       "image": "/og_images/home.png",
       "title": "Sign In - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
-    },
-    "/signup": {
-      "image": "/og_images/home.png",
-      "title": "Sign Up - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
     "/mobile-scanner": {
@@ -531,6 +531,11 @@
       "title": "Account Link Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/signup": {
+      "image": "/og_images/home.png",
+      "title": "Sign Up - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/processor": {
       "image": "/og_images/saas/app-processor.png",
       "title": "Stirling Processor - Govern every PDF your organization touches",
@@ -564,6 +569,7 @@
     "/ocr": "ocr",
     "/add-image": "addImage",
     "/rotate": "rotate",
+    "/auto-rotate": "autoRotate",
     "/annotate": "annotate",
     "/scanner-image-split": "scannerImageSplit",
     "/edit-table-of-contents": "editTableOfContents",
@@ -658,7 +664,6 @@
     "/split-pdf-by-sections": "split",
     "/split-pdf-by-chapters": "split",
     "/login": "/login",
-    "/signup": "/signup",
     "/mobile-scanner": "/mobile-scanner",
     "/files": "/files",
     "/settings": "/settings",
@@ -703,6 +708,7 @@
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
     "/settings/payg": "/settings/payg",
     "/settings/account-link": "/settings/account-link",
+    "/signup": "/signup",
     "/processor": "/processor",
     "/editor": "/editor"
   }

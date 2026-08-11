@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { usePageEditor } from "@app/contexts/PageEditorContext";
-import { useFileState } from "@app/contexts/FileContext";
+import { shallowEqual, useFileSelector } from "@app/contexts/FileContext";
 import { FileId } from "@app/types/file";
 import { useFileColorMap } from "@app/components/pageEditor/hooks/useFileColorMap";
 
@@ -24,24 +24,32 @@ const isPdf = (name?: string | null) =>
   typeof name === "string" && name.toLowerCase().endsWith(".pdf");
 
 export function usePageEditorDropdownState(): PageEditorDropdownState {
-  const { state, selectors } = useFileState();
+  const selectedFileIds = useFileSelector((s) => s.ui.selectedFileIds);
   const { toggleFileSelection, reorderFiles, fileOrder } = usePageEditor();
+
+  // Subscribe to the stubs for the files in view so name/version changes
+  // re-render the dropdown. Reading via useFileSelectors() during render would
+  // not subscribe, so the displayed name/version could go stale.
+  const orderedStubs = useFileSelector(
+    (s) => fileOrder.map((fileId) => s.files.byId[fileId]),
+    shallowEqual,
+  );
 
   const pageEditorFiles = useMemo(() => {
     return fileOrder
-      .map<PageEditorDropdownFile | null>((fileId) => {
-        const stub = selectors.getStirlingFileStub(fileId);
+      .map<PageEditorDropdownFile | null>((fileId, index) => {
+        const stub = orderedStubs[index];
         if (!isPdf(stub?.name)) return null;
 
         return {
           fileId,
           name: stub?.name || "",
           versionNumber: stub?.versionNumber,
-          isSelected: state.ui.selectedFileIds.includes(fileId),
+          isSelected: selectedFileIds.includes(fileId),
         };
       })
       .filter((file): file is PageEditorDropdownFile => file !== null);
-  }, [fileOrder, selectors, state.ui.selectedFileIds]);
+  }, [fileOrder, orderedStubs, selectedFileIds]);
 
   const fileColorMap = useFileColorMap(
     pageEditorFiles.map((file) => file.fileId),

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AppConfigModalLazy from "@app/components/shared/AppConfigModalLazy";
+import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { AuthProvider } from "@app/auth/UseSession";
@@ -70,19 +71,25 @@ export function PortalSettingsHost() {
   if (!everOpened) return null;
 
   return (
-    <AuthProvider>
-      <PreferencesProvider>
-        <ThemeProvider>
-          <AppConfigModalLazy
-            opened={settingsOpen}
-            onClose={closeSettings}
-            urlSync={false}
-            initialSection={initialSection}
-            initialFocus={settingsInitialFocus}
-            extraSections={extraSections}
-          />
-        </ThemeProvider>
-      </PreferencesProvider>
-    </AuthProvider>
+    <AppConfigProvider bootstrapMode="non-blocking">
+      <AuthProvider>
+        <PreferencesProvider>
+          <ThemeProvider>
+            <AppConfigModalLazy
+              opened={settingsOpen}
+              onClose={closeSettings}
+              urlSync={false}
+              initialSection={initialSection}
+              initialFocus={settingsInitialFocus}
+              extraSections={extraSections}
+              // TODO: opening Keyboard Shortcuts in the portal white-screens
+              // the app (the section expects editor-only context). Hidden here
+              // as a stopgap; fix the section properly and drop this.
+              hiddenSectionKeys={["hotkeys"]}
+            />
+          </ThemeProvider>
+        </PreferencesProvider>
+      </AuthProvider>
+    </AppConfigProvider>
   );
 }

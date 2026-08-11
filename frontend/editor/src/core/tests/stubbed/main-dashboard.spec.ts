@@ -17,6 +17,7 @@ test.describe("2. Main Dashboard / Home Page", () => {
         page.locator('[data-testid="config-button"]').first(),
       ).toBeVisible();
 
+      // Tool search lives in the global super search bar, always mounted.
       await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
 
       await expect(
@@ -74,6 +75,7 @@ test.describe("2. Main Dashboard / Home Page", () => {
 
       await page.goto("/");
 
+      // Tool search lives in the global super search bar, always mounted.
       await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
     });
   });

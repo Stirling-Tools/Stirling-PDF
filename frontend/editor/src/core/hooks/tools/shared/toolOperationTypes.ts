@@ -74,10 +74,18 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
   responseHandler?: ResponseHandler;
 
   /** Extract user-friendly error messages from API errors */
-  getErrorMessage?: (error: any) => string;
+  getErrorMessage?: (error: unknown) => string;
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  /**
+   * Whether these parameters are complete enough to run. The same predicate a tool gives
+   * `useBaseParameters` as its `validateFn`, so the Run button in the editor and anything composing
+   * the tool without rendering it (a pipeline step, an AI-authored plan) agree on what "configured"
+   * means. Absent means the tool runs happily on its defaults.
+   */
+  validateParams?: (params: TParams) => boolean;
 
   /**
    * Typed frontend params -> backend request model. When a tool provides this,
@@ -92,6 +100,13 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
    * can be re-hydrated into this tool's settings UI.
    */
   fromApiParams?(apiParams: ToolApiParams[TEndpoint]): Partial<TParams>;
+
+  /**
+   * Whether a stored step belongs to this tool, used only to tell apart tools that share an endpoint.
+   * Receives the raw stored request body. Absent means the tool is the general owner of its
+   * endpoint and claims any step no specialised sibling claims.
+   */
+  claimsStoredStep?(apiParams: Record<string, unknown>): boolean;
 
   /**
    * For custom tools: if true, success implies all input files were successfully processed.
@@ -158,8 +173,14 @@ export interface CustomToolOperationConfig<
    */
   endpoint?: string | ((params: TParams) => string | undefined);
 
-  /** `never` so `endpoints` stays readable across the union; custom tools declare no set. */
-  endpoints?: never;
+  /**
+   * The full set of endpoints a dynamic (function) `endpoint` may resolve to. A custom tool whose
+   * endpoint is chosen from frontend-only parameters (e.g. convert's from/to selectors) declares it
+   * so a stored step maps back to this tool by endpoint membership - see findToolByEndpoint - which
+   * replaying the endpoint function against the stored body alone could not recover. Omit for a
+   * static endpoint.
+   */
+  endpoints?: readonly ToolEndpoint[];
 
   /**
    * Custom processing logic that completely bypasses standard file processing.

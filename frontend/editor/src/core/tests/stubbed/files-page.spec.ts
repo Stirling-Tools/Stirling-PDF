@@ -173,7 +173,7 @@ test.describe("Files page", () => {
       await gotoFilesPage(page);
       const cards = page.locator(".files-page-card:not(.is-folder)");
       await cards.nth(0).click();
-      await cards.nth(1).click({ modifiers: ["Control"] });
+      await cards.nth(1).click({ modifiers: ["ControlOrMeta"] });
       await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
 
       // In multi-select (2+), plain-click ADDS instead of replacing.
@@ -198,7 +198,7 @@ test.describe("Files page", () => {
       await expect(page.locator(".files-page-card-selector")).toHaveCount(0);
 
       // 2+ selected: checkboxes appear on every file card.
-      await cards.nth(1).click({ modifiers: ["Control"] });
+      await cards.nth(1).click({ modifiers: ["ControlOrMeta"] });
       await expect(
         page.locator(".files-page-card-selector").first(),
       ).toBeVisible();
@@ -488,7 +488,7 @@ test.describe("Files page", () => {
       const cards = page.locator(".files-page-card:not(.is-folder)");
       await cards.nth(0).click();
       // Drawer stays closed so the second click reaches the card.
-      await cards.nth(1).click({ modifiers: ["Control"] });
+      await cards.nth(1).click({ modifiers: ["ControlOrMeta"] });
       await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
     });
   });

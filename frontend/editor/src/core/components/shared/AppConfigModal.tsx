@@ -48,6 +48,8 @@ interface AppConfigModalProps {
   initialFocus?: string | null;
   /** Host-specific sections appended after the build's registry sections. */
   extraSections?: ConfigNavSection[];
+  /** Registry section keys to drop, for hosts a section can't run in. */
+  hiddenSectionKeys?: NavKey[];
 }
 
 // Extract section from URL path (e.g., /settings/people -> people)
@@ -67,6 +69,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   initialSection,
   initialFocus,
   extraSections,
+  hiddenSectionKeys,
 }) => {
   const { t } = useTranslation();
   // Initialize from the URL so a deep link (`/settings/people`) lands on the
@@ -249,13 +252,17 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     handleCloseSync,
     config?.showSettingsWhenNoLogin ?? true,
   );
-  const configNavSections = useMemo(
-    () =>
-      extraSections?.length
-        ? [...registrySections, ...extraSections]
-        : registrySections,
-    [registrySections, extraSections],
-  );
+  const configNavSections = useMemo(() => {
+    const base = hiddenSectionKeys?.length
+      ? registrySections
+          .map((s) => ({
+            ...s,
+            items: s.items.filter((i) => !hiddenSectionKeys.includes(i.key)),
+          }))
+          .filter((s) => s.items.length > 0)
+      : registrySections;
+    return extraSections?.length ? [...base, ...extraSections] : base;
+  }, [registrySections, extraSections, hiddenSectionKeys]);
 
   const activeLabel = useMemo(() => {
     for (const section of configNavSections) {

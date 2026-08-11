@@ -12,6 +12,8 @@ interface UIContextValue {
   openMobileNav: () => void;
   closeMobileNav: () => void;
   toggleMobileNav: () => void;
+  sidebarCollapsed: boolean;
+  toggleSidebarCollapsed: () => void;
 
   assistantOpen: boolean;
   openAssistant: () => void;
@@ -44,12 +46,40 @@ interface UIContextValue {
   linkModalMode: "link" | "reauth";
   openLinkModal: (mode?: "link" | "reauth") => void;
   closeLinkModal: () => void;
+  /**
+   * A request to begin the enterprise trial, raised from wherever the buyer said yes (the billing
+   * upsell, a sales link). The deal controller lives on Home, so this is a one-shot signal rather
+   * than a direct call: Home consumes it, opens trial setup, and clears it.
+   */
+  trialSetupRequested: boolean;
+  requestTrialSetup: () => void;
+  clearTrialSetupRequest: () => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
 
+const SIDEBAR_COLLAPSED_KEY = "stirling.portalSidebarCollapsed";
+
+function readSidebarCollapsed(): boolean {
+  try {
+    return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeSidebarCollapsed(collapsed: boolean): void {
+  try {
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
+  } catch {
+    // private mode / quota: silently no-op
+  }
+}
+
 export function UIProvider({ children }: { children: ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] =
+    useState(readSidebarCollapsed);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<
@@ -59,6 +89,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     string | null
   >(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [trialSetupRequested, setTrialSetupRequested] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<"link" | "reauth">("link");
   // When the link modal is opened from inside Settings, remember the section to
   // restore so closing the modal returns the admin to where they were.
@@ -74,6 +105,14 @@ export function UIProvider({ children }: { children: ReactNode }) {
       openMobileNav: () => setMobileNavOpen(true),
       closeMobileNav: () => setMobileNavOpen(false),
       toggleMobileNav: () => setMobileNavOpen((o) => !o),
+
+      sidebarCollapsed,
+      toggleSidebarCollapsed: () =>
+        setSidebarCollapsed((c) => {
+          const next = !c;
+          writeSidebarCollapsed(next);
+          return next;
+        }),
 
       assistantOpen,
       openAssistant: () => setAssistantOpen(true),
@@ -110,6 +149,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
         }
         setLinkModalOpen(true);
       },
+      trialSetupRequested,
+      requestTrialSetup: () => {
+        setMobileNavOpen(false);
+        setTrialSetupRequested(true);
+      },
+      clearTrialSetupRequest: () => setTrialSetupRequested(false),
       closeLinkModal: () => {
         setLinkModalOpen(false);
         setLinkModalMode("link");
@@ -123,6 +168,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     }),
     [
       mobileNavOpen,
+      sidebarCollapsed,
       assistantOpen,
       settingsOpen,
       settingsInitialSection,
@@ -130,6 +176,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       linkModalOpen,
       linkModalMode,
       reopenSettingsAfterLink,
+      trialSetupRequested,
     ],
   );
 

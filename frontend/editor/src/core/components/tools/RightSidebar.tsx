@@ -14,8 +14,7 @@ import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import { ToolId } from "@app/types/toolId";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
@@ -112,12 +111,6 @@ export default function RightSidebar() {
       ? (toolRegistry[selectedToolKey as ToolId] ?? null)
       : null;
 
-  // Tool search now lives in the global super search, so the panel header
-  // carries only the active-tool pill or the collapse/close control. When it's
-  // just the collapse chevron, float it into the corner (see CSS) so the tool
-  // list starts at the top instead of below an empty band.
-  const headerCollapseOnly = !activeTool && !showCloseButton;
-
   const expandedWidth = "18.5rem";
 
   const computedWidth = () => {
@@ -157,7 +150,7 @@ export default function RightSidebar() {
       ref={toolPanelRef}
       data-sidebar="tool-panel"
       data-tour={fullscreenExpanded ? undefined : "tool-panel"}
-      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--c-bg-raised)] border-l border-[var(--c-border-subtle)] transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
+      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} ${isMobile || fullscreenExpanded ? "border-l border-[var(--c-border-subtle)]" : "tool-panel--floating"} transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : fullscreenExpanded ? "h-screen" : ""} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
       style={{
         width: computedWidth(),
         padding: "0",
@@ -177,7 +170,7 @@ export default function RightSidebar() {
               className="tool-panel__expand-btn tool-panel__toggle-vt"
               onClick={handleExpand}
             >
-              <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
+              <SidebarToggleIcon size={18} mirrored />
             </ActionIcon>
           </div>
           <div className="tool-panel__collapsed-divider" />
@@ -245,40 +238,39 @@ export default function RightSidebar() {
                 }
               />
             ) : (
-              <div
-                className={`tool-panel__compact-header${
-                  headerCollapseOnly
-                    ? " tool-panel__compact-header--collapse-only"
-                    : ""
-                }`}
-              >
-                {showCloseButton ? (
-                  <ActionIcon
-                    variant="tertiary"
-                    size="md"
-                    shape="circle"
-                    onClick={handleHeaderBack}
-                    aria-label={
-                      inToolView
-                        ? t("toolPanel.backToAllTools", "Back to all tools")
-                        : t("toolPanel.goBack", "Go back")
-                    }
-                    className="tool-panel__expand-btn"
-                  >
-                    <CloseIcon sx={{ fontSize: "1.1rem" }} />
-                  </ActionIcon>
-                ) : (
-                  <ActionIcon
-                    variant="secondary"
-                    size="md"
-                    shape="circle"
-                    onClick={handleCollapse}
-                    aria-label={t("toolPanel.collapse", "Collapse panel")}
-                    className="tool-panel__expand-btn tool-panel__toggle-vt"
-                  >
-                    <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
-                  </ActionIcon>
-                )}
+              <div className="tool-panel__compact-header">
+                <span className="tool-panel__compact-title">
+                  {t("toolPanel.pdfTools", "PDF Tools")}
+                </span>
+                <div className="tool-panel__compact-header-actions">
+                  {showCloseButton ? (
+                    <ActionIcon
+                      variant="tertiary"
+                      size="md"
+                      shape="circle"
+                      onClick={handleHeaderBack}
+                      aria-label={
+                        inToolView
+                          ? t("toolPanel.backToAllTools", "Back to all tools")
+                          : t("toolPanel.goBack", "Go back")
+                      }
+                      className="tool-panel__expand-btn"
+                    >
+                      <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                    </ActionIcon>
+                  ) : (
+                    <ActionIcon
+                      variant="secondary"
+                      size="md"
+                      shape="circle"
+                      onClick={handleCollapse}
+                      aria-label={t("toolPanel.collapse", "Collapse panel")}
+                      className="tool-panel__expand-btn tool-panel__toggle-vt"
+                    >
+                      <SidebarToggleIcon size={18} mirrored />
+                    </ActionIcon>
+                  )}
+                </div>
               </div>
             )}
 

@@ -26,6 +26,10 @@
   flex: 1 1 auto;
   min-height: 0; /* scroll instead of growing past the viewport */
   overflow-y: auto;
+  /* Hold the scrollbar's width whether or not it is showing. Without this, a page that grows past
+     the viewport (an editor panel filling in, say) makes the bar appear and shunts everything
+     sideways as it does. */
+  scrollbar-gutter: stable;
   animation: fadeInUp var(--motion-enter) both;
 }
 
@@ -43,9 +47,6 @@
 }
 
 .portal-shell__topbar-wordmark {
-  height: 1.375rem;
-  width: auto;
-  display: block;
   margin-right: auto;
 }
 
