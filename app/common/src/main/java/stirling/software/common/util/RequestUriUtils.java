@@ -56,8 +56,10 @@ public class RequestUriUtils {
             return true;
         }
 
-        // Mobile scanner page for QR code-based file uploads (peer-to-peer, no backend auth needed)
-        if (normalizedUri.startsWith("/mobile-scanner")) {
+        // Mobile pages reached by scanning a QR code (peer-to-peer, no backend auth
+        // needed): /mobile-scanner uploads photos, /mobile-sign draws a signature.
+        if (normalizedUri.startsWith("/mobile-scanner")
+                || normalizedUri.startsWith("/mobile-sign")) {
             return true;
         }
 
