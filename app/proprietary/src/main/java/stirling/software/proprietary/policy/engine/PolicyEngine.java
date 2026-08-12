@@ -9,7 +9,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import org.slf4j.MDC;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,11 +16,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 
+import jakarta.annotation.PreDestroy;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.ResultFile;
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.FileStorage;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.JobQueue;
@@ -29,12 +32,16 @@ import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
+import stirling.software.proprietary.failure.FailureKind;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.WaitState;
+import stirling.software.proprietary.policy.output.OutputDelivery;
+import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
@@ -54,7 +61,6 @@ import stirling.software.proprietary.service.DownstreamEntitlementError;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyEngine {
 
     // Admission weight for one run. Weighted heavy: a run chains many tools and holds intermediate
@@ -68,13 +74,31 @@ public class PolicyEngine {
     private final PolicyExecutor stepExecutor;
     private final TaskManager taskManager;
     private final PolicyRunRegistry registry;
+    // Durable record of why a run failed. Best-effort by contract: see PolicyFailureRecorder.
+    private final PolicyFailureRecorder failureRecorder;
     private final FileStorage fileStorage;
     private final JobOwnershipService jobOwnershipService;
     private final List<PolicyOutputSink> outputSinks;
+    private final PolicyOutputResolver outputResolver;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
+
+    /** Stop the service-owned executor when the application context is closed or restarted. */
+    @PreDestroy
+    void shutdown() {
+        log.debug("Shutting down policy engine executor");
+        asyncExecutor.shutdown();
+        try {
+            if (!asyncExecutor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                asyncExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            asyncExecutor.shutdownNow();
+        }
+    }
 
     /**
      * Submit a pipeline to run asynchronously. The handle's run id scopes a {@link TaskManager} job
@@ -103,12 +127,26 @@ public class PolicyEngine {
         // async
         // worker.
         String principal = currentActingPrincipal();
-        return submitForPrincipal(principal, principal, policyId, definition, inputs, listener);
+        return submitForPrincipal(
+                principal, principal, policyId, definition, inputs, null, listener);
     }
 
     /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
     public PolicyRunHandle runPolicy(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
+        return runPolicy(policy, inputs, null, listener);
+    }
+
+    /**
+     * As {@link #runPolicy(Policy, PolicyInputs, PolicyProgressListener)}, with the source's opaque
+     * reference to the document being run. Carried so a failure can say which document it was
+     * about, and so the same document failing again folds into one incident.
+     */
+    public PolicyRunHandle runPolicy(
+            Policy policy,
+            PolicyInputs inputs,
+            String fileIdentity,
+            PolicyProgressListener listener) {
         // Bill the policy owner: trigger-fired runs have no security context, and the async worker
         // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
         // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
@@ -118,8 +156,14 @@ public class PolicyEngine {
         // the owner owns those outputs.
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
+        // Resolve the referenced output destinations live (like sourceIds), so a stored policy
+        // delivers to each of its saved Source destinations. Unreferenced policies fall back to
+        // their inline output.
+        PipelineDefinition definition =
+                new PipelineDefinition(
+                        policy.name(), policy.steps(), outputResolver.resolve(policy));
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), policy.toDefinition(), inputs, listener);
+                policy.owner(), fileOwner, policy.id(), definition, inputs, fileIdentity, listener);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -128,12 +172,17 @@ public class PolicyEngine {
             String policyId,
             PipelineDefinition definition,
             PolicyInputs inputs,
+            String fileIdentity,
             PolicyProgressListener listener) {
         // Scope the run id to the current user (this request thread) so the file-download
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
         taskManager.createTask(runId);
-        PolicyRun run = new PolicyRun(runId, policyId, definition);
+        // Tag the shared job entry with the policy id so peers can list it as a policy run.
+        if (policyId != null) {
+            taskManager.putMetadata(runId, "policyId", policyId);
+        }
+        PolicyRun run = new PolicyRun(runId, policyId, definition, fileIdentity);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
@@ -147,6 +196,7 @@ public class PolicyEngine {
                         runAsPrincipal(
                                 billingPrincipal,
                                 fileOwner,
+                                definition.name(),
                                 () -> runToCompletion(run, inputs, tracking, completion));
 
         // One admission unit per run; steps run synchronously within it, so this gates heavy work
@@ -198,58 +248,90 @@ public class PolicyEngine {
             PolicyProgressListener listener,
             CompletableFuture<PolicyRun> completion) {
         String runId = run.getRunId();
-        try {
-            run.markRunning();
-            PolicyExecutionResult result =
-                    stepExecutor.execute(run.getDefinition(), inputs, listener);
-            OutputSpec output = run.getDefinition().output();
-            List<ResultFile> outputs = sinkFor(output).deliver(runId, result.files(), output);
-            taskManager.setMultipleFileResults(runId, outputs);
-            taskManager.setComplete(runId);
-            run.complete(outputs);
-        } catch (PolicyInputRequiredException e) {
-            // Expected path: suspend rather than fail. Persist intermediates as fileIds so the run
-            // can resume after this worker thread is gone.
-            WaitState wait = suspend(e);
-            run.waitForInput(wait);
-            taskManager.addNote(runId, "Waiting for input: " + e.getMessage());
-        } catch (InternalApiTimeoutException e) {
-            String message = toolTimeoutMessage(e);
-            log.error(
-                    "Policy run {} timed out on {}: {}",
-                    runId,
-                    e.getEndpointPath(),
-                    e.getMessage());
-            run.fail(message);
-            taskManager.setError(runId, message);
-        } catch (RestClientResponseException e) {
-            // A downstream tool call returned an error status. When it's a structured entitlement
-            // response (401/402 with a JSON `error` sentinel), surface that code onto the run so
-            // the
-            // client can react — e.g. pop the usage-limit modal — instead of only seeing a generic
-            // failure. We don't interpret the code here (that would couple this module to the saas
-            // billing layer); we just pass it through for the client to map. Other statuses fall
-            // through to the generic failure below.
-            String code = DownstreamEntitlementError.extractCode(e);
-            if (code != null) {
-                log.info("Policy run {} blocked by downstream entitlement gate ({})", runId, code);
-                String message = "Usage limit reached";
-                run.failWithCode(message, code, DownstreamEntitlementError.extractSubscribed(e));
-                taskManager.setError(runId, message);
-            } else {
-                String message = "Policy run failed: " + e.getMessage();
-                log.error("Policy run {} failed (downstream HTTP error)", runId, e);
+        // One policy run = one automation run. Scope the run id on this worker thread (the async
+        // hop already happened) so every tool sub-step dispatched via InternalApiClient groups into
+        // a single charge, and two separate policy runs on the same document stay distinct charges.
+        try (AutomationRunContext.Scope runScope = AutomationRunContext.open(runId)) {
+            try {
+                run.markRunning();
+                PolicyExecutionResult result =
+                        stepExecutor.execute(run.getDefinition(), inputs, listener);
+                // Deliver the run's files to every destination; no destinations means inline
+                // delivery (results stored/returned to the caller), preserving ad-hoc/AI behaviour.
+                List<OutputSpec> destinations = run.getDefinition().outputs();
+                if (destinations.isEmpty()) {
+                    destinations = List.of(OutputSpec.inline());
+                }
+                List<ResultFile> outputs = new ArrayList<>();
+                for (OutputSpec destination : destinations) {
+                    outputs.addAll(
+                            sinkFor(destination)
+                                    .deliver(
+                                            new OutputDelivery(runId, run.getPolicyId()),
+                                            result.files(),
+                                            destination));
+                }
+                taskManager.setMultipleFileResults(runId, outputs);
+                taskManager.setComplete(runId);
+                run.complete(outputs);
+            } catch (PolicyInputRequiredException e) {
+                // Expected path: suspend rather than fail. Persist intermediates as fileIds so the
+                // run
+                // can resume after this worker thread is gone.
+                WaitState wait = suspend(e);
+                run.waitForInput(wait);
+                taskManager.addNote(runId, "Waiting for input: " + e.getMessage());
+            } catch (InternalApiTimeoutException e) {
+                String message = toolTimeoutMessage(e);
+                log.error(
+                        "Policy run {} timed out on {}: {}",
+                        runId,
+                        e.getEndpointPath(),
+                        e.getMessage());
                 run.fail(message);
                 taskManager.setError(runId, message);
+                recordFailure(run, message, e);
+            } catch (RestClientResponseException e) {
+                // A downstream tool call returned an error status. When it's a structured
+                // entitlement
+                // response (401/402 with a JSON `error` sentinel), surface that code onto the run
+                // so
+                // the
+                // client can react — e.g. pop the usage-limit modal — instead of only seeing a
+                // generic
+                // failure. We don't interpret the code here (that would couple this module to the
+                // saas
+                // billing layer); we just pass it through for the client to map. Other statuses
+                // fall
+                // through to the generic failure below.
+                String code = DownstreamEntitlementError.extractCode(e);
+                if (code != null) {
+                    log.info(
+                            "Policy run {} blocked by downstream entitlement gate ({})",
+                            runId,
+                            code);
+                    String message = "Usage limit reached";
+                    run.failWithCode(
+                            message, code, DownstreamEntitlementError.extractSubscribed(e));
+                    taskManager.setError(runId, message);
+                    recordFailure(run, message, e);
+                } else {
+                    String message = "Policy run failed: " + e.getMessage();
+                    log.error("Policy run {} failed (downstream HTTP error)", runId, e);
+                    run.fail(message);
+                    taskManager.setError(runId, message);
+                    recordFailure(run, message, e);
+                }
+            } catch (Exception e) {
+                String message = "Policy run failed: " + e.getMessage();
+                log.error("Policy run {} failed", runId, e);
+                run.fail(message);
+                taskManager.setError(runId, message);
+                recordFailure(run, message, e);
+            } finally {
+                // Always resolve so stream/await callers unblock.
+                completion.complete(run);
             }
-        } catch (Exception e) {
-            String message = "Policy run failed: " + e.getMessage();
-            log.error("Policy run {} failed", runId, e);
-            run.fail(message);
-            taskManager.setError(runId, message);
-        } finally {
-            // Always resolve so stream/await callers unblock.
-            completion.complete(run);
         }
     }
 
@@ -263,9 +345,27 @@ public class PolicyEngine {
             // Transient admission rejection, not a processing failure (see QUEUE_FULL_CODE).
             run.failWithCode(message, QUEUE_FULL_CODE, null);
             taskManager.setError(run.getRunId(), message);
+            // No exception to classify here: nothing was thrown by a tool, the run simply was not
+            // admitted. Record it explicitly so a run lost to load pressure is still accounted for.
+            failureRecorder.recordRunFailureAs(
+                    FailureKind.UNKNOWN, run.getRunId(), run.getPolicyId(), null, message);
             completion.complete(run);
         }
         return null;
+    }
+
+    /**
+     * Record why a run failed. Called after the run's own state transition and task-manager update,
+     * so a recording problem cannot change the outcome the caller observes.
+     */
+    private void recordFailure(PolicyRun run, String message, Throwable cause) {
+        failureRecorder.recordRunFailure(
+                run.getRunId(),
+                run.getPolicyId(),
+                MDC.get(AUDIT_PRINCIPAL_MDC_KEY),
+                run.getFileIdentity(),
+                message,
+                cause);
     }
 
     private WaitState suspend(PolicyInputRequiredException e) {
@@ -355,17 +455,25 @@ public class PolicyEngine {
      * dispatch attributes (and charges) usage to that user. A null/blank principal runs as-is.
      * Restores the previous MDC value afterward (defensive — worker threads aren't pooled).
      */
-    private static void runAsPrincipal(String billingPrincipal, String fileOwner, Runnable body) {
+    private static void runAsPrincipal(
+            String billingPrincipal, String fileOwner, String policyName, Runnable body) {
         // Billing identity (MDC auditPrincipal) and output-file ownership (JobContext owner) are
         // set
         // independently: usage is charged to billingPrincipal, but stored output files are owned by
         // fileOwner — the user who triggered an org-wide policy — so they can fetch their results.
         // Either may be null (e.g. login disabled, or a trigger-fired run); each is applied only
-        // when present and restored afterward (defensive — worker threads aren't pooled).
+        // when present and restored afterward (defensive — worker threads aren't pooled). The
+        // policy
+        // name rides MDC too so each tool step's loopback dispatch (InternalApiClient) can forward
+        // it as a header, letting the audit tie the step back to its policy.
         String previousPrincipal = MDC.get(AUDIT_PRINCIPAL_MDC_KEY);
+        String previousPolicyName = MDC.get(InternalApiClient.POLICY_NAME_MDC_KEY);
         String previousOwner = JobContext.getOwner();
         if (billingPrincipal != null && !billingPrincipal.isBlank()) {
             MDC.put(AUDIT_PRINCIPAL_MDC_KEY, billingPrincipal);
+        }
+        if (policyName != null && !policyName.isBlank()) {
+            MDC.put(InternalApiClient.POLICY_NAME_MDC_KEY, policyName);
         }
         if (fileOwner != null && !fileOwner.isBlank()) {
             JobContext.setOwner(fileOwner);
@@ -377,6 +485,11 @@ public class PolicyEngine {
                 MDC.put(AUDIT_PRINCIPAL_MDC_KEY, previousPrincipal);
             } else {
                 MDC.remove(AUDIT_PRINCIPAL_MDC_KEY);
+            }
+            if (previousPolicyName != null) {
+                MDC.put(InternalApiClient.POLICY_NAME_MDC_KEY, previousPolicyName);
+            } else {
+                MDC.remove(InternalApiClient.POLICY_NAME_MDC_KEY);
             }
             JobContext.setOwner(previousOwner);
         }

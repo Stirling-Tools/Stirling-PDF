@@ -1,50 +1,24 @@
-import { useState, useEffect } from "react";
-import apiClient from "@app/services/apiClient";
+import { useQuery } from "@tanstack/react-query";
+import { fetchFooterInfo, type FooterInfo } from "@app/api/config";
+import { qk } from "@app/query/keys";
+import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 
-export interface FooterInfo {
-  analyticsEnabled?: boolean;
-  termsAndConditions?: string;
-  privacyPolicy?: string;
-  accessibilityStatement?: string;
-  cookiePolicy?: string;
-  impressum?: string;
-}
+export type { FooterInfo };
 
-/**
- * Hook to fetch public footer configuration data.
- * This endpoint is always accessible without authentication.
- */
+const FALLBACK: FooterInfo = { analyticsEnabled: false };
+
+/** Public footer config, shared by Footer and the admin legal section. */
 export function useFooterInfo() {
-  const [footerInfo, setFooterInfo] = useState<FooterInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const { data, isPending, error } = useQuery({
+    queryKey: qk.footerInfo(),
+    queryFn: fetchFooterInfo,
+    staleTime: CONFIG_STALE_TIME,
+  });
 
-  useEffect(() => {
-    const fetchFooterInfo = async () => {
-      try {
-        setLoading(true);
-        const response = await apiClient.get<FooterInfo>(
-          "/api/v1/ui-data/footer-info",
-          {
-            suppressErrorToast: true,
-          } as any,
-        );
-        setFooterInfo(response.data);
-        setError(null);
-      } catch (err) {
-        console.error("[useFooterInfo] Failed to fetch footer info:", err);
-        setError(err as Error);
-        // Set defaults on error
-        setFooterInfo({
-          analyticsEnabled: false,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFooterInfo();
-  }, []);
-
-  return { footerInfo, loading, error };
+  return {
+    // Callers render legal links off this, so a failure must still yield an object.
+    footerInfo: data ?? (error ? FALLBACK : null),
+    loading: isPending,
+    error: (error as Error | null) ?? null,
+  };
 }

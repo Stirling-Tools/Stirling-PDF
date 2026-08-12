@@ -81,7 +81,7 @@ public class UserServerCertificateService {
 
         // Certificate details with username
         String username = user.getUsername();
-        X500Name subject = new X500Name("CN=" + username + ", O=Stirling-PDF User, C=US");
+        X500Name subject = new X500Name("CN=" + username + ", OU=User, O=Stirling PDF Inc, C=US");
         BigInteger serialNumber = BigInteger.valueOf(System.currentTimeMillis());
         Date notBefore = new Date();
         Date notAfter =

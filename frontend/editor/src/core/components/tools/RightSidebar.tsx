@@ -1,30 +1,23 @@
 import { useMemo, useState } from "react";
-import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
-import {
-  PoliciesCollapsedButton,
-  PoliciesSection,
-  PolicyDetailTakeover,
-  usePoliciesEnabled,
-  usePoliciesVisible,
-  usePolicyDetailActive,
-} from "@app/components/policies/PoliciesSidebar";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
-import { PanelHeader } from "@shared/components/PanelHeader";
+import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import CloseIcon from "@mui/icons-material/Close";
+import SearchIcon from "@mui/icons-material/Search";
 import { ToolId } from "@app/types/toolId";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import {
@@ -66,8 +59,6 @@ export default function RightSidebar() {
   } = useToolWorkflow();
 
   const policiesEnabled = usePoliciesEnabled();
-  const policiesVisible = usePoliciesVisible();
-  const rawPolicyDetailActive = usePolicyDetailActive();
   const fullscreenExpanded = useIsFullscreenExpanded();
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
@@ -88,6 +79,7 @@ export default function RightSidebar() {
   };
 
   const [allToolsView, setAllToolsView] = useState(false);
+  const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
 
   const handleShowAllTools = () => {
     withViewTransition(() => setAllToolsView(true));
@@ -100,39 +92,12 @@ export default function RightSidebar() {
     });
   };
 
-  // Opening a policy (e.g. from the collapsed rail) lands the rail in the clean
-  // default tool-picker view — the only view the policy takeover renders in — so
-  // it never collides with an open tool or the all-tools/search view.
-  const handleOpenPolicy = () => {
-    withViewTransition(() => {
-      if (readerMode) setReaderMode(false);
-      setLeftPanelView("toolPicker");
-      if (!sidebarsVisible) setSidebarsVisible(true);
-      setAllToolsView(false);
-      setSearchQuery("");
-    });
-  };
-
   // The header shows [back] [search] when we have somewhere to go back to —
   // i.e. the user is in a specific tool, or already in the all-tools/search view.
   const inToolView = leftPanelView !== "toolPicker";
   // Show X (close) button only when there's somewhere to go back to.
   const showCloseButton = inToolView || allToolsView;
-  // Policies sit above the tool list in the default tool-picker view — but only
-  // when the current user actually has policies to see (see usePoliciesVisible),
-  // so regular users with none get the plain tool picker with no empty block.
-  const showPolicies =
-    policiesEnabled &&
-    policiesVisible &&
-    !allToolsView &&
-    leftPanelView === "toolPicker";
-  // When Policies are shown, the search moves OUT of the header to sit between
-  // the Policies and Tools sections (separating them); otherwise it stays in the
-  // header. Show the header search when there's a close button, or in the
-  // default tool-picker view.
-  const showInlineSearch = showPolicies && !showCloseButton;
-  const showHeaderSearch =
-    !showInlineSearch && (showCloseButton || leftPanelView === "toolPicker");
+  const showHeaderSearch = showCloseButton || headerSearchOpen;
 
   const handleHeaderBack = () => {
     if (inToolView) {
@@ -165,15 +130,7 @@ export default function RightSidebar() {
       ? (toolRegistry[selectedToolKey as ToolId] ?? null)
       : null;
 
-  // The detail takeover replaces the tool list ONLY in the same default view —
-  // never over an open tool or the all-tools view (which must keep priority).
-  // A lingering selection is harmless: it stays hidden behind a tool and the
-  // list/takeover reappears on return to the picker (as in the prototype).
-  const policyDetailActive = rawPolicyDetailActive && showPolicies;
-
-  // The rail widens when a policy detail takes it over — the tool list is fine
-  // at 18.5rem, but the policy detail/wizard/settings need more breathing room.
-  const expandedWidth = policyDetailActive ? "25rem" : "18.5rem";
+  const expandedWidth = "18.5rem";
 
   const computedWidth = () => {
     if (isMobile) return "100%";
@@ -212,7 +169,7 @@ export default function RightSidebar() {
       ref={toolPanelRef}
       data-sidebar="tool-panel"
       data-tour={fullscreenExpanded ? undefined : "tool-panel"}
-      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-l border-[var(--border-subtle)] transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
+      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} ${isMobile || fullscreenExpanded ? "border-l border-[var(--c-border-subtle)]" : "tool-panel--floating"} transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : fullscreenExpanded ? "h-screen" : ""} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
       style={{
         width: computedWidth(),
         padding: "0",
@@ -224,21 +181,18 @@ export default function RightSidebar() {
         <div className="tool-panel__collapsed-strip">
           <div className="tool-panel__collapsed-top">
             <ActionIcon
-              variant="outline"
-              color="gray.4"
-              radius="xl"
+              aria-label={t("toolPanel.expand", "Expand panel")}
+              variant="secondary"
+              accent="neutral"
               size="md"
+              shape="circle"
               className="tool-panel__expand-btn tool-panel__toggle-vt"
               onClick={handleExpand}
-              aria-label={t("toolPanel.expand", "Expand panel")}
             >
-              <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
+              <SidebarToggleIcon size={18} mirrored />
             </ActionIcon>
           </div>
           <div className="tool-panel__collapsed-divider" />
-          {policiesEnabled && (
-            <PoliciesCollapsedButton onExpand={handleOpenPolicy} />
-          )}
           <div className="tool-panel__collapsed-tools">
             {collapsedRailItems.map(({ id, tool }) => (
               <AppTooltip
@@ -248,18 +202,18 @@ export default function RightSidebar() {
                 arrow
                 delay={300}
               >
-                <button
-                  type="button"
+                <ActionIcon
+                  aria-label={tool.name}
+                  variant="tertiary"
                   className="tool-panel__collapsed-tool-btn"
                   data-selected={selectedToolKey === id}
                   onClick={() => {
                     handleExpand();
                     handleToolSelectWithTransition(id);
                   }}
-                  aria-label={tool.name}
                 >
                   <ToolIcon icon={tool.icon} marginRight="0" />
-                </button>
+                </ActionIcon>
               </AppTooltip>
             ))}
           </div>
@@ -283,110 +237,99 @@ export default function RightSidebar() {
             flexDirection: "column",
           }}
         >
-          {policyDetailActive ? (
-            <div className="pol-takeover">
-              <PolicyDetailTakeover />
-            </div>
-          ) : (
-            <>
-              {!showPolicies &&
-                (activeTool ? (
-                  <PanelHeader
-                    icon={
-                      <ToolIcon
-                        icon={activeTool.icon}
-                        marginRight="0"
-                        color="currentColor"
-                      />
-                    }
-                    title={activeTool.name}
-                    onClose={handleHeaderBack}
-                    closeLabel={
-                      inToolView
-                        ? t("toolPanel.backToAllTools", "Back to all tools")
-                        : t("toolPanel.goBack", "Go back")
-                    }
+          <>
+            {activeTool ? (
+              <ToolPanelHeader
+                icon={
+                  <ToolIcon
+                    icon={activeTool.icon}
+                    marginRight="0"
+                    color="currentColor"
                   />
-                ) : (
-                  <div className="tool-panel__compact-header">
-                    {showHeaderSearch ? (
-                      <div className="tool-panel__compact-header-search">
-                        <ToolSearch
-                          value={searchQuery}
-                          onChange={handleHeaderSearchChange}
-                          toolRegistry={toolRegistry}
-                          mode="filter"
-                          autoFocus={allToolsView && !inToolView}
-                        />
-                      </div>
-                    ) : null}
-                    {showCloseButton ? (
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        radius="xl"
-                        size="md"
-                        onClick={handleHeaderBack}
-                        aria-label={
-                          inToolView
-                            ? t("toolPanel.backToAllTools", "Back to all tools")
-                            : t("toolPanel.goBack", "Go back")
-                        }
-                        className="tool-panel__expand-btn"
-                      >
-                        <CloseIcon sx={{ fontSize: "1.1rem" }} />
-                      </ActionIcon>
-                    ) : (
-                      <ActionIcon
-                        variant="outline"
-                        radius="xl"
-                        size="md"
-                        onClick={handleCollapse}
-                        aria-label={t("toolPanel.collapse", "Collapse panel")}
-                        className="tool-panel__expand-btn tool-panel__toggle-vt"
-                      >
-                        <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
-                      </ActionIcon>
-                    )}
+                }
+                title={activeTool.name}
+                onClose={handleHeaderBack}
+                closeLabel={
+                  inToolView
+                    ? t("toolPanel.backToAllTools", "Back to all tools")
+                    : t("toolPanel.goBack", "Go back")
+                }
+              />
+            ) : (
+              <div className="tool-panel__compact-header">
+                {showHeaderSearch ? (
+                  <div className="tool-panel__compact-header-search">
+                    <ToolSearch
+                      value={searchQuery}
+                      onChange={handleHeaderSearchChange}
+                      toolRegistry={toolRegistry}
+                      mode="filter"
+                      autoFocus
+                    />
                   </div>
-                ))}
-
-              {showPolicies && (
-                <PoliciesSection
-                  leadingControl={
+                ) : (
+                  <span className="tool-panel__compact-title">
+                    {t("toolPanel.pdfTools", "PDF Tools")}
+                  </span>
+                )}
+                <div className="tool-panel__compact-header-actions">
+                  {!showCloseButton && (
                     <ActionIcon
-                      variant="outline"
-                      radius="xl"
+                      variant="tertiary"
                       size="md"
+                      shape="circle"
+                      onClick={() => {
+                        if (headerSearchOpen) handleHeaderSearchChange("");
+                        setHeaderSearchOpen((open) => !open);
+                      }}
+                      aria-label={t("toolPanel.searchTools", "Search tools")}
+                      className="tool-panel__expand-btn"
+                    >
+                      {headerSearchOpen ? (
+                        <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                      ) : (
+                        <SearchIcon sx={{ fontSize: "1.1rem" }} />
+                      )}
+                    </ActionIcon>
+                  )}
+                  {showCloseButton ? (
+                    <ActionIcon
+                      variant="tertiary"
+                      size="md"
+                      shape="circle"
+                      onClick={handleHeaderBack}
+                      aria-label={
+                        inToolView
+                          ? t("toolPanel.backToAllTools", "Back to all tools")
+                          : t("toolPanel.goBack", "Go back")
+                      }
+                      className="tool-panel__expand-btn"
+                    >
+                      <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                    </ActionIcon>
+                  ) : (
+                    <ActionIcon
+                      variant="secondary"
+                      size="md"
+                      shape="circle"
                       onClick={handleCollapse}
                       aria-label={t("toolPanel.collapse", "Collapse panel")}
                       className="tool-panel__expand-btn tool-panel__toggle-vt"
                     >
-                      <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+                      <SidebarToggleIcon size={18} mirrored />
                     </ActionIcon>
-                  }
-                />
-              )}
-
-              {showInlineSearch && (
-                <div className="tool-panel__between-search">
-                  <ToolSearch
-                    value={searchQuery}
-                    onChange={handleHeaderSearchChange}
-                    toolRegistry={toolRegistry}
-                    mode="filter"
-                  />
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-              <ToolPanel
-                allToolsView={allToolsView}
-                onShowAllTools={handleShowAllTools}
-                onToolSelect={handleToolSelectWithTransition}
-                compact={false}
-              />
-            </>
-          )}
+            <ToolPanel
+              allToolsView={allToolsView}
+              onShowAllTools={handleShowAllTools}
+              onToolSelect={handleToolSelectWithTransition}
+              compact={false}
+            />
+          </>
         </div>
       )}
 

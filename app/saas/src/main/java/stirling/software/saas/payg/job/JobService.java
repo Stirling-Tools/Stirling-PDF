@@ -1,12 +1,16 @@
 package stirling.software.saas.payg.job;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -97,8 +101,14 @@ public class JobService {
             signaturesByInput.put(input, detector.extractSignatures(input));
         }
 
+        // Lineage joins are scoped to one automation run: a standalone call (no run id) never
+        // joins — each is its own charge — and within a run, matching still runs by content so a
+        // run's separate input files each open their own charge (a merge of N inputs = N charges),
+        // while a single file's chain of steps + its split outputs collapse into one.
         Optional<LineageMatch> bestMatch =
-                findBestMatch(ctx.ownerUserId(), inputs, signaturesByInput);
+                ctx.runId() == null
+                        ? Optional.empty()
+                        : findBestMatch(ctx.ownerUserId(), ctx.runId(), inputs, signaturesByInput);
 
         if (bestMatch.isPresent()) {
             ProcessingJob existing =
@@ -212,10 +222,13 @@ public class JobService {
     }
 
     private Optional<LineageMatch> findBestMatch(
-            Long userId, List<Path> inputs, Map<Path, Set<LineageSignature>> signaturesByInput) {
+            Long userId,
+            String runId,
+            List<Path> inputs,
+            Map<Path, Set<LineageSignature>> signaturesByInput) {
         List<LineageMatch> matches = new ArrayList<>(inputs.size());
         for (Path input : inputs) {
-            detector.detect(userId, signaturesByInput.get(input)).ifPresent(matches::add);
+            detector.detect(userId, runId, signaturesByInput.get(input)).ifPresent(matches::add);
         }
         return matches.stream().max(Comparator.comparing(LineageMatch::jobLastStepAt));
     }
@@ -252,6 +265,11 @@ public class JobService {
         fresh.setProcessType(ctx.processType());
         fresh.setSource(ctx.source());
         fresh.setPolicyId(ctx.policyId());
+        fresh.setRunId(ctx.runId());
+        // doc_count = number of input files (the count dimension). A merge (N inputs in one call)
+        // is N; a split (1 input) is 1; a standalone bookkeeping job (no inputs) is 1.
+        fresh.setDocCount(Math.max(1, signaturesByInput.size()));
+        fresh.setDocumentFingerprint(computeFingerprint(signaturesByInput));
         fresh.setStepCount(1);
         LocalDateTime now = LocalDateTime.now();
         fresh.setStartedAt(now);
@@ -260,6 +278,36 @@ public class JobService {
         ProcessingJob saved = jobRepository.save(fresh);
         recordAllInputs(saved.getId(), signaturesByInput);
         return new JoinOrOpenResult(saved, JoinOrOpenResult.Disposition.OPENED);
+    }
+
+    /**
+     * Stable fingerprint of this job's input set — SHA-256 over the sorted union of the inputs'
+     * lineage storage keys. {@code COUNT(DISTINCT ...)} over these gives "unique PDFs processed".
+     * {@code null} when there are no inputs (a standalone bookkeeping job, e.g. an AI Create
+     * session) — such jobs still count toward doc_count but aren't a distinct input PDF.
+     */
+    private static String computeFingerprint(Map<Path, Set<LineageSignature>> signaturesByInput) {
+        List<String> keys =
+                signaturesByInput.values().stream()
+                        .flatMap(Set::stream)
+                        .map(LineageSignature::asStorageKey)
+                        .distinct()
+                        .sorted()
+                        .toList();
+        if (keys.isEmpty()) {
+            return null;
+        }
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            for (String key : keys) {
+                md.update(key.getBytes(StandardCharsets.UTF_8));
+                md.update((byte) 0);
+            }
+            return HexFormat.of().formatHex(md.digest());
+        } catch (NoSuchAlgorithmException e) {
+            // SHA-256 is guaranteed on every JRE; fall back to no fingerprint if it ever isn't.
+            return null;
+        }
     }
 
     private void recordAllInputs(UUID jobId, Map<Path, Set<LineageSignature>> signaturesByInput) {

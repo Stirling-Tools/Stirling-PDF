@@ -10,14 +10,14 @@ import {
   Text,
   Stack,
   Group,
-  Button,
-  ActionIcon,
   Modal,
   ScrollArea,
   Loader,
   TextInput,
   Select,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 import { useCardModalAnimation } from "@app/hooks/useCardModalAnimation";
@@ -47,7 +47,9 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   WATCHED_FOLDER_VIEW_ID,
   WATCHED_FOLDER_WORKBENCH_ID,
-} from "@app/components/watchedFolders/WatchedFoldersRegistration";
+  timeAgo,
+  humaniseOp,
+} from "@app/components/watchedFolders/watchedFolderShared";
 import { automationStorage } from "@app/services/automationStorage";
 import {
   useFolderAutomation,
@@ -58,10 +60,7 @@ import { AutomationConfig } from "@app/types/automation";
 import { iconMap } from "@app/components/tools/automate/iconMap";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId, StirlingFile } from "@app/types/fileContext";
-import {
-  WatchedFolderHomePage,
-  humaniseOp,
-} from "@app/components/watchedFolders/WatchedFolderHomePage";
+import { WatchedFolderHomePage } from "@app/components/watchedFolders/WatchedFolderHomePage";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { FilePreviewModal } from "@app/components/watchedFolders/FilePreviewModal";
 import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandleStorage";
@@ -172,28 +171,6 @@ interface WatchedFolderWorkbenchViewProps {
     pendingFileId?: string;
     pendingFileIds?: string[];
   };
-}
-
-export function timeAgo(date: Date, t: TFunction): string {
-  const secs = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (secs < 60) return t("watchedFolders.time.justNow", "just now");
-  const mins = Math.floor(secs / 60);
-  if (mins < 60)
-    return t("watchedFolders.time.minutesAgo", {
-      count: mins,
-      defaultValue: `${mins}m ago`,
-    });
-  const hours = Math.floor(mins / 60);
-  if (hours < 24)
-    return t("watchedFolders.time.hoursAgo", {
-      count: hours,
-      defaultValue: `${hours}h ago`,
-    });
-  const days = Math.floor(hours / 24);
-  return t("watchedFolders.time.daysAgo", {
-    count: days,
-    defaultValue: `${days}d ago`,
-  });
 }
 
 function RetryCountdown({
@@ -852,17 +829,16 @@ export function WatchedFolderWorkbenchView({
         px="xl"
         py="md"
         style={{
-          borderBottom: "0.0625rem solid var(--border-subtle)",
-          backgroundColor: "var(--bg-toolbar)",
+          borderBottom: "0.0625rem solid var(--c-border-subtle)",
+          backgroundColor: "var(--c-bg-raised)",
           flexShrink: 0,
         }}
       >
         <Group justify="space-between" align="center">
           <Group gap="md" align="center">
             <ActionIcon
-              variant="subtle"
+              variant="tertiary"
               size="sm"
-              color="gray"
               onClick={goHome}
               aria-label={t("watchedFolders.actions.back", "Back")}
             >
@@ -894,7 +870,7 @@ export function WatchedFolderWorkbenchView({
                   width: "0.75rem",
                   height: "0.75rem",
                   borderRadius: "50%",
-                  backgroundColor: "var(--bg-toolbar)",
+                  backgroundColor: "var(--c-bg-raised)",
                   textAlign: "center",
                   display: "flex",
                   alignItems: "center",
@@ -977,9 +953,9 @@ export function WatchedFolderWorkbenchView({
           <Group gap="sm" align="center">
             {folder.isPaused ? (
               <Button
-                size="xs"
-                variant="light"
-                color="green"
+                size="sm"
+                variant="secondary"
+                accent="success"
                 onClick={handlePauseResume}
                 leftSection={<PlayArrowIcon style={{ fontSize: "0.875rem" }} />}
               >
@@ -987,9 +963,8 @@ export function WatchedFolderWorkbenchView({
               </Button>
             ) : (
               <Button
-                size="xs"
-                variant="subtle"
-                color="gray"
+                size="sm"
+                variant="tertiary"
                 onClick={handlePauseResume}
                 leftSection={<PauseIcon style={{ fontSize: "0.875rem" }} />}
               >
@@ -997,8 +972,8 @@ export function WatchedFolderWorkbenchView({
               </Button>
             )}
             <Button
-              size="xs"
-              variant="light"
+              size="sm"
+              variant="secondary"
               onClick={() =>
                 document
                   .getElementById(`folder-file-input-${folderId}`)
@@ -1063,7 +1038,7 @@ export function WatchedFolderWorkbenchView({
                   <FolderOpenIcon
                     style={{
                       fontSize: "1.125rem",
-                      color: "var(--mantine-color-blue-filled)",
+                      color: "var(--c-accent-text)",
                     }}
                   />
                 }
@@ -1201,7 +1176,7 @@ export function WatchedFolderWorkbenchView({
                       <Text
                         style={{
                           fontSize: "0.625rem",
-                          color: "var(--mantine-color-blue-filled)",
+                          color: "var(--c-accent-text)",
                         }}
                       >
                         {t("watchedFolders.workbench.countProcessing", {
@@ -1223,7 +1198,7 @@ export function WatchedFolderWorkbenchView({
                     style={{
                       height: "0.1875rem",
                       borderRadius: "999px",
-                      backgroundColor: "var(--border-subtle)",
+                      backgroundColor: "var(--c-border-subtle)",
                       overflow: "hidden",
                     }}
                   >
@@ -1265,7 +1240,7 @@ export function WatchedFolderWorkbenchView({
                 flex: 1,
                 color: isDragOver
                   ? "var(--mantine-color-blue-filled)"
-                  : "var(--tool-subcategory-text-color)",
+                  : "var(--c-text-subtle)",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
               }}
@@ -1277,8 +1252,8 @@ export function WatchedFolderWorkbenchView({
             {activityStatusFilter === "error" &&
               filteredActivityIds.length > 0 && (
                 <Button
-                  size="xs"
-                  variant="outline"
+                  size="sm"
+                  variant="secondary"
                   onClick={handleRetryAllFiltered}
                   leftSection={<ReplayIcon style={{ fontSize: "0.75rem" }} />}
                 >
@@ -1289,8 +1264,8 @@ export function WatchedFolderWorkbenchView({
               filteredActivityIds.length > 0 && (
                 <>
                   <Button
-                    size="xs"
-                    variant="outline"
+                    size="sm"
+                    variant="secondary"
                     onClick={() =>
                       void handleBatchDownload(filteredActivityIds)
                     }
@@ -1301,8 +1276,8 @@ export function WatchedFolderWorkbenchView({
                     {t("watchedFolders.workbench.exportZip", "Export zip")}
                   </Button>
                   <Button
-                    size="xs"
-                    variant="outline"
+                    size="sm"
+                    variant="secondary"
                     onClick={() =>
                       void handleBatchDownloadSeparate(filteredActivityIds)
                     }
@@ -1363,8 +1338,8 @@ export function WatchedFolderWorkbenchView({
                 <Box
                   style={{
                     padding: "0.375rem 0.75rem",
-                    borderTop: "0.0625rem solid var(--border-subtle)",
-                    borderBottom: "0.0625rem solid var(--border-subtle)",
+                    borderTop: "0.0625rem solid var(--c-border-subtle)",
+                    borderBottom: "0.0625rem solid var(--c-border-subtle)",
                     backgroundColor: "var(--mantine-color-blue-light)",
                     display: "flex",
                     alignItems: "center",
@@ -1375,7 +1350,7 @@ export function WatchedFolderWorkbenchView({
                   <Text
                     size="xs"
                     fw={600}
-                    style={{ color: "var(--mantine-color-blue-filled)" }}
+                    style={{ color: "var(--c-accent-text)" }}
                   >
                     {t("watchedFolders.workbench.countSelected", {
                       count: selectedActivityIds.size,
@@ -1384,8 +1359,8 @@ export function WatchedFolderWorkbenchView({
                   </Text>
                   {selectedActivityIds.size < filteredActivityIds.length && (
                     <Button
-                      size="xs"
-                      variant="subtle"
+                      size="sm"
+                      variant="tertiary"
                       onClick={() =>
                         setSelectedActivityIds(new Set(filteredActivityIds))
                       }
@@ -1399,8 +1374,8 @@ export function WatchedFolderWorkbenchView({
                   <Box style={{ flex: 1 }} />
                   {showRetry && (
                     <Button
-                      size="xs"
-                      variant="outline"
+                      size="sm"
+                      variant="secondary"
                       onClick={handleBatchRetry}
                       leftSection={
                         <ReplayIcon style={{ fontSize: "0.75rem" }} />
@@ -1412,8 +1387,8 @@ export function WatchedFolderWorkbenchView({
                   {showExport && (
                     <>
                       <Button
-                        size="xs"
-                        variant="outline"
+                        size="sm"
+                        variant="secondary"
                         onClick={() => void handleBatchDownload()}
                         leftSection={
                           <DownloadIcon style={{ fontSize: "0.75rem" }} />
@@ -1422,8 +1397,8 @@ export function WatchedFolderWorkbenchView({
                         {t("watchedFolders.workbench.exportZip", "Export zip")}
                       </Button>
                       <Button
-                        size="xs"
-                        variant="outline"
+                        size="sm"
+                        variant="secondary"
                         onClick={() => void handleBatchDownloadSeparate()}
                         leftSection={
                           <DownloadIcon style={{ fontSize: "0.75rem" }} />
@@ -1437,9 +1412,9 @@ export function WatchedFolderWorkbenchView({
                     </>
                   )}
                   <Button
-                    size="xs"
-                    variant="outline"
-                    color="red"
+                    size="sm"
+                    variant="secondary"
+                    accent="danger"
                     onClick={() => void handleBatchDelete()}
                     leftSection={
                       <DeleteOutlineIcon style={{ fontSize: "0.75rem" }} />
@@ -1448,9 +1423,8 @@ export function WatchedFolderWorkbenchView({
                     {t("watchedFolders.workbench.delete", "Delete")}
                   </Button>
                   <ActionIcon
-                    variant="subtle"
+                    variant="tertiary"
                     size="sm"
-                    color="gray"
                     onClick={() => setSelectedActivityIds(new Set())}
                     aria-label={t(
                       "watchedFolders.workbench.clearSelection",
@@ -1505,10 +1479,10 @@ export function WatchedFolderWorkbenchView({
                         key={fileId}
                         style={{
                           borderRadius: "var(--mantine-radius-sm)",
-                          border: `0.0625rem solid ${isFocused ? "var(--mantine-color-blue-4)" : isSelected ? "var(--mantine-color-blue-filled)" : status === "error" ? "var(--mantine-color-red-light)" : "var(--border-subtle)"}`,
+                          border: `0.0625rem solid ${isFocused ? "var(--mantine-color-blue-4)" : isSelected ? "var(--mantine-color-blue-filled)" : status === "error" ? "var(--mantine-color-red-light)" : "var(--c-border-subtle)"}`,
                           backgroundColor: isSelected
                             ? "var(--mantine-color-blue-light)"
-                            : "var(--bg-toolbar)",
+                            : "var(--c-bg-raised)",
                           overflow: "hidden",
                           outline: "none",
                         }}
@@ -1536,9 +1510,8 @@ export function WatchedFolderWorkbenchView({
                           }
                         >
                           <ActionIcon
-                            variant="subtle"
+                            variant="tertiary"
                             size="sm"
-                            color="gray"
                             style={{ flexShrink: 0 }}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1666,9 +1639,8 @@ export function WatchedFolderWorkbenchView({
                             >
                               {!isExpanded && primaryFile && (
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleView(primaryFile);
@@ -1685,9 +1657,8 @@ export function WatchedFolderWorkbenchView({
                               )}
                               {!isExpanded && primaryFile && (
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     void handleDownload(
@@ -1706,9 +1677,8 @@ export function WatchedFolderWorkbenchView({
                                 </ActionIcon>
                               )}
                               <ActionIcon
-                                variant="subtle"
+                                variant="tertiary"
                                 size="sm"
-                                color="gray"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   void handleDeleteOne(fileId);
@@ -1729,7 +1699,7 @@ export function WatchedFolderWorkbenchView({
                         {isExpanded && (
                           <Box
                             style={{
-                              borderTop: `0.0625rem solid ${status === "error" ? "var(--mantine-color-red-light)" : "var(--border-subtle)"}`,
+                              borderTop: `0.0625rem solid ${status === "error" ? "var(--mantine-color-red-light)" : "var(--c-border-subtle)"}`,
                               padding: "0.375rem 0.625rem 0.375rem 2rem",
                               backgroundColor: "var(--bg-app)",
                             }}
@@ -1777,9 +1747,8 @@ export function WatchedFolderWorkbenchView({
                                   {formatBytes(inputFile.size)}
                                 </Text>
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleView(inputFile);
@@ -1794,9 +1763,8 @@ export function WatchedFolderWorkbenchView({
                                   />
                                 </ActionIcon>
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDownload(inputFile, inputFile.name);
@@ -1852,9 +1820,8 @@ export function WatchedFolderWorkbenchView({
                                   {formatBytes(out.size)}
                                 </Text>
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleView(out);
@@ -1869,9 +1836,8 @@ export function WatchedFolderWorkbenchView({
                                   />
                                 </ActionIcon>
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDownload(out, out.name);
@@ -1900,7 +1866,7 @@ export function WatchedFolderWorkbenchView({
                                 {meta?.errorMessage && (
                                   <Text
                                     size="xs"
-                                    c="red"
+                                    c="var(--color-red-dark)"
                                     style={{
                                       flex: 1,
                                       minWidth: 0,
@@ -1915,8 +1881,8 @@ export function WatchedFolderWorkbenchView({
                                 )}
                                 {inputFile && (
                                   <Button
-                                    size="xs"
-                                    variant="light"
+                                    size="sm"
+                                    variant="secondary"
                                     style={{ flexShrink: 0 }}
                                     leftSection={
                                       <ReplayIcon
@@ -2000,9 +1966,8 @@ export function WatchedFolderWorkbenchView({
               {(["24h", "7d", "30d", "all"] as const).map((p) => (
                 <Button
                   key={p}
-                  size="xs"
-                  variant={statsPeriod === p ? "light" : "subtle"}
-                  color={statsPeriod === p ? "blue" : "gray"}
+                  size="sm"
+                  variant={statsPeriod === p ? "secondary" : "tertiary"}
                   onClick={() => setStatsPeriod(p)}
                 >
                   {p === "all"
@@ -2040,7 +2005,7 @@ export function WatchedFolderWorkbenchView({
                 >
                   {t("watchedFolders.workbench.failed", "Failed")}
                 </Text>
-                <Text size="xl" fw={800} c="red">
+                <Text size="xl" fw={800} c="var(--color-red-dark)">
                   {dashboardStats.failed}
                 </Text>
               </Box>
@@ -2206,7 +2171,7 @@ export function WatchedFolderWorkbenchView({
                     style={{
                       flex: 1,
                       position: "relative",
-                      borderBottom: "0.0625rem solid var(--border-subtle)",
+                      borderBottom: "0.0625rem solid var(--c-border-subtle)",
                     }}
                   >
                     {[0, 25, 50, 75].map((pct) => (
@@ -2217,7 +2182,7 @@ export function WatchedFolderWorkbenchView({
                           top: `${pct}%`,
                           left: 0,
                           right: 0,
-                          borderTop: "0.0625rem dashed var(--border-subtle)",
+                          borderTop: "0.0625rem dashed var(--c-border-subtle)",
                           pointerEvents: "none",
                         }}
                       />
@@ -2257,8 +2222,9 @@ export function WatchedFolderWorkbenchView({
                                   ? `calc(100% - ${chartHover.relX}px + 12px)`
                                   : undefined,
                                 top: Math.max(chartHover.relY - 36, 4),
-                                backgroundColor: "var(--bg-toolbar)",
-                                border: "0.0625rem solid var(--border-subtle)",
+                                backgroundColor: "var(--c-bg-raised)",
+                                border:
+                                  "0.0625rem solid var(--c-border-subtle)",
                                 borderRadius: "var(--mantine-radius-sm)",
                                 padding: "0.3rem 0.5rem",
                                 pointerEvents: "none",
@@ -2412,11 +2378,11 @@ export function WatchedFolderWorkbenchView({
             )}
           </Text>
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => setDeleteConfirm(null)}>
+            <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
               {t("watchedFolders.workbench.cancel", "Cancel")}
             </Button>
             <Button
-              variant="default"
+              variant="secondary"
               onClick={() =>
                 deleteConfirm && void execDelete(deleteConfirm.ids, false)
               }
@@ -2427,7 +2393,8 @@ export function WatchedFolderWorkbenchView({
               )}
             </Button>
             <Button
-              color="red"
+              variant="primary"
+              accent="danger"
               onClick={() =>
                 deleteConfirm && void execDelete(deleteConfirm.ids, true)
               }

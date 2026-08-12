@@ -176,11 +176,13 @@ class TempFileCleanupServiceMoreTest {
     class ScheduledCleanup {
 
         @Test
-        @DisplayName("deletes registered temp directories and reports counts")
+        @DisplayName("deletes stale registered temp directories and reports counts")
         void deletesRegisteredDirectories() throws IOException {
             when(tempFileManager.cleanupOldTempFiles(anyLong())).thenReturn(2);
             Path regDir = Files.createDirectories(tempDir.resolve("registeredDir"));
             Files.createFile(regDir.resolve("inside.txt"));
+            Files.setLastModifiedTime(
+                    regDir, FileTime.fromMillis(System.currentTimeMillis() - 2L * 60 * 60 * 1000));
             Set<Path> dirs = new HashSet<>();
             dirs.add(regDir);
             when(registry.getTempDirectories()).thenReturn(dirs);
@@ -191,6 +193,22 @@ class TempFileCleanupServiceMoreTest {
             // The registered directory was removed by GeneralUtils.deleteDirectory.
             assertThat(Files.exists(regDir)).isFalse();
             verify(tempFileManager).cleanupOldTempFiles(anyLong());
+        }
+
+        @Test
+        @DisplayName("keeps a fresh registered temp directory")
+        void keepsFreshRegisteredDirectory() throws IOException {
+            when(tempFileManager.cleanupOldTempFiles(anyLong())).thenReturn(0);
+            Path regDir = Files.createDirectories(tempDir.resolve("freshRegisteredDir"));
+            Files.createFile(regDir.resolve("inside.txt"));
+            Set<Path> dirs = new HashSet<>();
+            dirs.add(regDir);
+            when(registry.getTempDirectories()).thenReturn(dirs);
+            lenient().when(registry.contains(any(File.class))).thenReturn(false);
+
+            withIsolatedUserHome(cleanupService::scheduledCleanup);
+
+            assertThat(Files.exists(regDir)).isTrue();
         }
 
         @Test

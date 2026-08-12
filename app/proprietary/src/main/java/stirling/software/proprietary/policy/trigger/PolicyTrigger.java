@@ -1,10 +1,14 @@
 package stirling.software.proprietary.policy.trigger;
 
+import java.util.Set;
+
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * Decides <em>when</em> a policy runs. On firing it hands the policy to {@code PolicyRunner}; it
- * never resolves sources itself. New trigger kinds are just new beans of this type.
+ * Decides <em>when</em> a policy input runs. On firing it hands the binding to {@code
+ * PolicyRunner}, which pulls only that input's source; it never resolves sources itself. New
+ * trigger kinds are just new beans of this type.
  */
 public interface PolicyTrigger {
 
@@ -12,10 +16,29 @@ public interface PolicyTrigger {
     String type();
 
     /**
-     * Validate at save time so misconfiguration fails fast, not at fire time. Receives the whole
-     * {@link Policy} so triggers that depend on the policy's sources (folder-watch) can check that.
+     * Whether this trigger needs at least one compatible input source to function. A schedule fires
+     * on the clock regardless of sources, so it is false; folder-watch derives the directories it
+     * watches from the policy's sources, so it is true. Drives whether the UI offers the trigger.
      */
-    default void validate(Policy policy) {}
+    default boolean requiresSource() {
+        return false;
+    }
+
+    /**
+     * The source {@code type()}s this trigger is compatible with (e.g. {@code "folder"}). Empty
+     * means source-agnostic (no constraint). Lets the UI offer a trigger only when a compatible
+     * source is selected, without hard-coding the relationship.
+     */
+    default Set<String> supportedSourceTypes() {
+        return Set.of();
+    }
+
+    /**
+     * Validate one input's use of this trigger at save time so misconfiguration fails fast, not at
+     * fire time. Receives the owning {@link Policy} and the specific {@link PipelineInput} so a
+     * trigger that depends on the input's source (folder-watch) can check it.
+     */
+    default void validate(Policy policy, PipelineInput input) {}
 
     default void start() {}
 

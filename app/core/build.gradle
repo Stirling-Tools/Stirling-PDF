@@ -9,35 +9,6 @@ configurations {
     }
 }
 
-spotless {
-    java {
-        target 'src/**/java/**/*.java'
-        targetExclude 'src/main/resources/static/**', 'src/main/java/org/apache/**'
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
-        // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
-        suppressLintsFor { setStep('google-java-format') }
-
-        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    yaml {
-        target '**/*.yml', '**/*.yaml'
-        targetExclude 'src/main/resources/static/**'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    format 'gradle', {
-        target '**/gradle/*.gradle', '**/*.gradle'
-        targetExclude 'src/main/resources/static/**'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-}
-
 dependencies {
     if (!gradle.ext.disableAdditional) {
         implementation project(':proprietary')
@@ -79,18 +50,18 @@ dependencies {
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
 
-    implementation 'org.verapdf:validation-model:1.28.2'
+    implementation 'org.verapdf:validation-model:1.30.2'
     // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
     implementation "org.mozilla:rhino:${rhinoVersion}"
 
     // veraPDF still uses javax.xml.bind, not the new jakarta namespace
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
-    implementation 'com.sun.xml.bind:jaxb-core:4.0.7'
+    implementation 'com.sun.xml.bind:jaxb-core:4.0.9'
 
     // CVE-2022-25647: Explicit gson to prevent unsafe deserialization (tabula would pull 2.8.7)
     implementation "com.google.code.gson:gson:${gsonVersion}"
-    implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
+    implementation 'org.apache.pdfbox:jbig2-imageio:3.0.5'
     implementation 'com.opencsv:opencsv:5.12.0' // https://mvnrepository.com/artifact/com.opencsv/opencsv
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
@@ -175,6 +146,14 @@ springBoot {
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
 def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
+// The admin portal ships as a lazy route inside the editor bundle (see
+// proprietary/routes/adminRouteExtensions). -PbuildWithPortal=true includes that
+// chunk via VITE_INCLUDE_PORTAL on the editor build; the deploy GHA sets it when
+// the portal or AI layers change. Building the portal implies building the editor.
+def buildWithPortal = project.hasProperty('buildWithPortal') && project.property('buildWithPortal') == 'true'
+if (buildWithPortal) {
+    buildWithFrontend = true
+}
 // Workspace root holds package.json and node_modules (shared across editor /
 // future portal). Editor-specific paths (src, public, dist, tauri) live one
 // level deeper under frontend/editor/.
@@ -297,9 +276,11 @@ tasks.register('npmBuild', Exec) {
     // Override VITE_API_BASE_URL to use relative paths for production builds
     // This ensures JARs work regardless of how they're deployed (direct, proxied, etc.)
     environment 'VITE_API_BASE_URL', '/'
+    // Include the admin portal's lazy route/chunk in the editor build when requested.
+    environment 'VITE_INCLUDE_PORTAL', (buildWithPortal ? 'true' : 'false')
 
     doFirst {
-        println "Building editor frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/)"
+        println "Building editor frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/, portal=${buildWithPortal})"
     }
 }
 
@@ -331,8 +312,9 @@ tasks.register('cleanFrontendAssets', Delete) {
     delete generatedFrontendPaths.collect { new File(resourcesStaticDir, it) }
     // Prerendered per-route SPA pages (e.g. compress.html) carry per-tool OG tags and are
     // copied from the frontend build. Remove stale ones so renamed/removed tools don't linger.
-    // api-landing.html and mobile-upload.html are real backend source files, not generated artifacts.
-    delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html'])
+    // api-landing.html, mobile-upload.html and mobile-sign.html are real backend source files,
+    // not generated artifacts.
+    delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html', 'mobile-sign.html'])
     // Nested prerendered route pages (e.g. settings/people.html)
     delete new File(resourcesStaticDir, 'settings')
 }

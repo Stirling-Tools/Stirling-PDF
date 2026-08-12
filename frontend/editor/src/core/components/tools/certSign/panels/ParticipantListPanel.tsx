@@ -1,4 +1,5 @@
-import { Stack, Text, List, Group, Badge, ActionIcon } from "@mantine/core";
+import { Stack, Text, List, Group, Badge } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PendingIcon from "@mui/icons-material/Pending";
@@ -84,10 +85,14 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
                 {!finalized && !isSigned && !isDeclined && (
                   <ActionIcon
                     size="sm"
-                    variant="subtle"
-                    color="red"
+                    variant="tertiary"
+                    accent="danger"
                     onClick={() => onRemove(participant.id)}
                     title={t(
+                      "certSign.collab.sessionDetail.removeParticipant",
+                      "Remove",
+                    )}
+                    aria-label={t(
                       "certSign.collab.sessionDetail.removeParticipant",
                       "Remove",
                     )}

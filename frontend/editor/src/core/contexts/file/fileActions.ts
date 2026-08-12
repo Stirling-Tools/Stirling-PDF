@@ -13,7 +13,7 @@ import {
   ProcessedFileMetadata,
 } from "@app/types/fileContext";
 import { FileId, ToolOperation } from "@app/types/file";
-import { generateThumbnailWithMetadata } from "@app/utils/thumbnailUtils";
+import { generateThumbnailPairWithMetadata } from "@app/utils/thumbnailUtils";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import { buildQuickKeySet } from "@app/contexts/file/fileSelectors";
 import { StirlingFile } from "@app/types/fileContext";
@@ -21,6 +21,10 @@ import { fileStorage } from "@app/services/fileStorage";
 import { zipFileService } from "@app/services/zipFileService";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
 import { trackPdfUploaded } from "@app/services/analytics";
+import {
+  reportBulkAddProgress,
+  clearBulkAddProgress,
+} from "@app/services/bulkAddProgress";
 const DEBUG = process.env.NODE_ENV === "development";
 const HYDRATION_CONCURRENCY = 2;
 let activeHydrations = 0;
@@ -121,11 +125,20 @@ export async function generateProcessedFileMetadata(
   }
 
   try {
-    // Generate unrotated thumbnails for PageEditor (rotation applied via CSS)
-    const unrotatedResult = await generateThumbnailWithMetadata(file, false);
+    // One parse produces both variants: unrotated thumbnails for PageEditor
+    // (rotation applied via CSS) and the rotated one for file manager display.
+    const { unrotated: unrotatedResult, rotated: rotatedResult } =
+      await generateThumbnailPairWithMetadata(file);
 
-    // Generate rotated thumbnail for file manager display
-    const rotatedResult = await generateThumbnailWithMetadata(file, true);
+    // Large PDF whose linearized-prefix attempt failed: report "no metadata"
+    // (the tolerated failure shape) rather than a bogus zero-page document.
+    if (
+      !unrotatedResult.thumbnail &&
+      unrotatedResult.pageCount === 0 &&
+      !unrotatedResult.isEncrypted
+    ) {
+      return undefined;
+    }
 
     const processedFile = createProcessedFile(
       unrotatedResult.pageCount,
@@ -254,6 +267,9 @@ interface AddFileOptions {
   ) => Promise<boolean>; // Optional callback to confirm extraction of large ZIP files
   allowDuplicates?: boolean;
   skipUploadTracking?: boolean;
+  /** When true, marks every added stub as derivedFromTool so the policy
+   *  auto-run skips it — used for policy outputs imported via addFiles. */
+  derivedFromTool?: boolean;
 }
 
 /**
@@ -354,12 +370,68 @@ export async function addFiles(
 
     // Collect hydrations to schedule after dispatch so updateStirlingFileStub finds files in state.
     const pendingHydrations: Array<() => Promise<void>> = [];
+    // Per-chunk persistence promises (kicked off as chunks flush, awaited before
+    // return). See flushChunk — we stream writes instead of one batch at the end.
+    const persistPromises: Array<Promise<unknown>> = [];
+
+    // Dispatch stubs in chunks so rows (and thumbnail hydrations) stream in
+    // rather than dumping the whole drop in one render.
+    const DISPATCH_CHUNK = 5;
+    let flushedStubs = 0;
+    let flushedHydrations = 0;
+    // Flushes the pending chunk and returns this chunk's persistence promises,
+    // so the caller can await the writes (see the loop's yield) before the policy
+    // auto-run tries to read the file back from storage.
+    const flushChunk = (): Array<Promise<unknown>> => {
+      const chunkWrites: Array<Promise<unknown>> = [];
+      if (stirlingFileStubs.length > flushedStubs) {
+        const from = flushedStubs;
+        const newStubs = stirlingFileStubs.slice(from);
+        flushedStubs = stirlingFileStubs.length;
+        if (!options.skipWorkspaceDispatch) {
+          dispatch({
+            type: "ADD_FILES",
+            payload: { stirlingFileStubs: newStubs },
+          });
+        }
+        // Persist each chunk as it flushes, not one batch at the end: the policy
+        // auto-run reads files from IndexedDB with no in-memory fallback.
+        if (enablePersistence) {
+          const newFiles = stirlingFiles.slice(from);
+          for (let i = 0; i < newFiles.length; i++) {
+            const sf = newFiles[i];
+            const stub = newStubs[i];
+            const write = fileStorage
+              .storeStirlingFile(sf, stub)
+              .catch((error) => {
+                console.error(
+                  "Failed to persist file to storage:",
+                  sf.name,
+                  error,
+                );
+              });
+            chunkWrites.push(write);
+            persistPromises.push(write);
+          }
+        }
+      }
+      // Hydrations only after their chunk is dispatched, so
+      // updateStirlingFileStub finds the files in state.
+      while (flushedHydrations < pendingHydrations.length) {
+        scheduleMetadataHydration(pendingHydrations[flushedHydrations++]);
+      }
+      return chunkWrites;
+    };
+
+    reportBulkAddProgress(0, filesToProcess.length);
+    let scannedCount = 0;
 
     for (const file of filesToProcess) {
       const quickKey = createQuickKey(file);
 
       // Soft deduplication: Check if file already exists by metadata
       if (!allowDuplicates && existingQuickKeys.has(quickKey)) {
+        reportBulkAddProgress(++scannedCount, filesToProcess.length);
         continue;
       }
 
@@ -368,16 +440,15 @@ export async function addFiles(
 
       // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
       const fileStub = createNewStirlingFileStub(file, fileId);
+      if (options.derivedFromTool) fileStub.derivedFromTool = true;
 
       // Early encryption detection for PDFs — set the flag before dispatch so the
       // viewer gate and modal queue pick it up immediately instead of after hydration
       if (file.type === "application/pdf") {
         try {
           if (await FileAnalyzer.isPDFUserPasswordProtected(file)) {
-            fileStub.processedFile = (fileStub.processedFile || {
-              pages: [],
-            }) as any;
-            fileStub.processedFile!.isEncrypted = true;
+            fileStub.processedFile = fileStub.processedFile || { pages: [] };
+            fileStub.processedFile.isEncrypted = true;
           }
         } catch (error) {
           // Never block upload on analysis failure — but log so it's debuggable
@@ -394,26 +465,28 @@ export async function addFiles(
       try {
         const { pendingFilePathMappings } =
           await import("@app/services/pendingFilePathMappings");
-        console.log(
-          `[FileActions] Checking for localFilePath mapping for quickKey: ${quickKey}`,
-        );
-        console.log(
-          `[FileActions] Available mappings:`,
-          Array.from(pendingFilePathMappings.keys()),
-        );
+        // DEBUG-gated: these fire per file, and a 300-file drop emitting 4 log
+        // lines each measurably stalls the main thread with devtools open.
+        if (DEBUG) {
+          console.log(
+            `[FileActions] Checking for localFilePath mapping for quickKey: ${quickKey}`,
+          );
+        }
         const localFilePath = pendingFilePathMappings.get(quickKey);
         if (localFilePath) {
-          console.log(`[FileActions] ✓ Found localFilePath: ${localFilePath}`);
+          if (DEBUG)
+            console.log(
+              `[FileActions] ✓ Found localFilePath: ${localFilePath}`,
+            );
           fileStub.localFilePath = localFilePath;
           pendingFilePathMappings.delete(quickKey); // Clean up after use
-          console.log(
-            `[FileActions] Applied localFilePath to file: ${file.name}`,
-          );
-        } else {
-          console.log(`[FileActions] ✗ No localFilePath found for this file`);
         }
       } catch (error) {
-        console.log("[FileActions] Could not check for localFilePath:", error);
+        if (DEBUG)
+          console.log(
+            "[FileActions] Could not check for localFilePath:",
+            error,
+          );
         // FileManagerContext may not be available in all contexts
       }
 
@@ -501,43 +574,28 @@ export async function addFiles(
           }
         }
       });
+
+      reportBulkAddProgress(++scannedCount, filesToProcess.length);
+      if (stirlingFileStubs.length - flushedStubs >= DISPATCH_CHUNK) {
+        const chunkWrites = flushChunk();
+        // Yield a MACROTASK so React commits this chunk and runs its effects
+        // (incl. the policy-enforcement dispatch) before the next chunk scans.
+        // The per-file awaits above are only microtasks, which don't give React
+        // a turn — without this, all dispatches batch and processing can't begin
+        // until the whole drop is scanned. Awaiting the chunk's writes first means
+        // the auto-run finds each file's bytes already committed in storage.
+        await Promise.all(chunkWrites);
+        await new Promise((resolve) => setTimeout(resolve));
+      }
     }
 
-    // Batch dispatch in one render. Suppressed by skipWorkspaceDispatch.
-    if (stirlingFileStubs.length > 0 && !options.skipWorkspaceDispatch) {
-      dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs } });
-    }
+    // Flush the remainder (also the sole dispatch for small batches).
+    flushChunk();
 
-    // Schedule hydrations after dispatch so updateStirlingFileStub finds files in state
-    for (const task of pendingHydrations) {
-      scheduleMetadataHydration(task);
-    }
-
-    // Persist to storage if enabled using fileStorage service
-    if (enablePersistence && stirlingFiles.length > 0) {
-      await Promise.all(
-        stirlingFiles.map(async (stirlingFile, index) => {
-          try {
-            // Get corresponding stub with all metadata
-            const fileStub = stirlingFileStubs[index];
-
-            // Store using the cleaner signature - pass StirlingFile + StirlingFileStub directly
-            await fileStorage.storeStirlingFile(stirlingFile, fileStub);
-
-            if (DEBUG)
-              console.log(
-                `📄 addFiles: Stored file ${stirlingFile.name} with metadata:`,
-                fileStub,
-              );
-          } catch (error) {
-            console.error(
-              "Failed to persist file to storage:",
-              stirlingFile.name,
-              error,
-            );
-          }
-        }),
-      );
+    // Wait for the per-chunk writes (streamed in flushChunk) to commit, so
+    // addFiles only resolves once every file is durably stored.
+    if (enablePersistence && persistPromises.length > 0) {
+      await Promise.all(persistPromises);
     }
 
     if (!options.skipUploadTracking && stirlingFiles.length > 0) {
@@ -546,6 +604,7 @@ export async function addFiles(
 
     return stirlingFiles;
   } finally {
+    clearBulkAddProgress();
     // Always release mutex even if error occurs
     addFilesMutex.unlock();
   }
@@ -561,6 +620,10 @@ export async function consumeFiles(
   outputStirlingFileStubs: StirlingFileStub[],
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
+  // Silent: replace the input in place (same grid slot) without auto-selecting
+  // or reordering the output. Used by background enforcement (policy auto-run)
+  // so a finished file updates in place instead of jumping to the top / opening.
+  options?: { silent?: boolean },
 ): Promise<FileId[]> {
   if (DEBUG)
     console.log(
@@ -607,6 +670,7 @@ export async function consumeFiles(
     payload: {
       inputFileIds,
       outputStirlingFileStubs: outputStirlingFileStubs,
+      silent: options?.silent ?? false,
     },
   });
 
@@ -633,7 +697,7 @@ export async function undoConsumeFiles(
       file: File,
       fileId: FileId,
       existingThumbnail?: string,
-    ) => Promise<any>;
+    ) => Promise<StirlingFileStub>;
     deleteFile: (fileId: FileId) => Promise<void>;
     bumpRevision?: () => void;
   } | null,

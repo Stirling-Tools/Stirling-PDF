@@ -1,4 +1,4 @@
-import { Suspense, type ReactNode } from "react";
+import { Suspense, lazy, type ReactNode } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
@@ -16,14 +16,18 @@ import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
-import MobileScannerPage from "@app/pages/MobileScannerPage";
+import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
+import { RootGate } from "@app/routes/RootGate";
+
+const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
 
 // Import global styles
 import "@app/styles/tailwind.css";
-import "@app/styles/saas-theme.css";
+import "@app/auth/ui/auth-theme.css";
 import "@app/styles/cookieconsent.css";
 import "@app/styles/index.css";
 
@@ -80,31 +84,49 @@ export default function App() {
           }
         />
 
-        {/* Everything else needs the auth/backend providers. */}
+        {/* Mobile signature drawing - reached from the Sign tool QR code */}
+        <Route
+          path="/mobile-sign"
+          element={
+            <PublicRouteProviders>
+              <MobileSignPage />
+            </PublicRouteProviders>
+          }
+        />
+
+        {/* Admin-only route-set (the portal): its own top-level shell, mounted
+            before the catch-all. */}
+        {getAdminRouteExtensions()}
+
+        {/* Everything else needs the auth/backend providers. RootGate makes "/"
+            route by role BEFORE any of it mounts, so a user bound for the
+            processor never boots the editor on the way. */}
         <Route
           path="*"
           element={
-            <AppProviders
-              appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
-            >
-              <AppLayout>
-                <NonAuthBootstraps />
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/auth/reset" element={<ResetPassword />} />
-                  <Route path="/oauth/consent" element={<OAuthConsent />} />
-                  {/* Shared-file links. Team invites are NOT routed here: on
-                      SaaS they are accepted in-app via the Supabase team
-                      invitation banner, not the Spring password-based
-                      /invite/:token page used by the self-hosted build. */}
-                  <Route path="/share/:token" element={<ShareLinkPage />} />
-                  <Route path="/*" element={<Landing />} />
-                </Routes>
-                <OnboardingTour />
-              </AppLayout>
-            </AppProviders>
+            <RootGate>
+              <AppProviders
+                appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
+              >
+                <AppLayout>
+                  <NonAuthBootstraps />
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/auth/reset" element={<ResetPassword />} />
+                    <Route path="/oauth/consent" element={<OAuthConsent />} />
+                    {/* Shared-file links. Team invites are NOT routed here: on
+                        SaaS they are accepted in-app via the Supabase team
+                        invitation banner, not the Spring password-based
+                        /invite/:token page used by the self-hosted build. */}
+                    <Route path="/share/:token" element={<ShareLinkPage />} />
+                    <Route path="/*" element={<Landing />} />
+                  </Routes>
+                  <OnboardingTour />
+                </AppLayout>
+              </AppProviders>
+            </RootGate>
           }
         />
       </Routes>

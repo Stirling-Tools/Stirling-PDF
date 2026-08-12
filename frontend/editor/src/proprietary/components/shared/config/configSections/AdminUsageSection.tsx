@@ -1,14 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Stack,
-  Group,
-  Text,
-  Button,
-  SegmentedControl,
-  Loader,
-  Alert,
-  Card,
-} from "@mantine/core";
+import { Stack, Group, Text, Loader, Alert, Card } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import usageAnalyticsService, {
@@ -300,8 +293,8 @@ const AdminUsageSection: React.FC = () => {
             </Text>
             <Group gap="sm">
               <Button
-                variant="light"
-                size="xs"
+                variant="secondary"
+                size="sm"
                 onClick={() => navigate("/settings/adminSecurity")}
                 rightSection={
                   <LocalIcon
@@ -314,8 +307,8 @@ const AdminUsageSection: React.FC = () => {
                 {t("usage.configureSettings", "Configure Analytics Settings")}
               </Button>
               <Button
-                variant="light"
-                size="xs"
+                variant="secondary"
+                size="sm"
                 onClick={() => navigate("/settings/adminSecurity#auditLogging")}
                 rightSection={
                   <LocalIcon
@@ -342,24 +335,26 @@ const AdminUsageSection: React.FC = () => {
                 onChange={(value) =>
                   setDisplayMode(value as "top10" | "top20" | "all")
                 }
-                disabled={showDemoData}
-                data={[
+                options={[
                   {
                     value: "top10",
                     label: t("usage.controls.top10", "Top 10"),
+                    disabled: showDemoData,
                   },
                   {
                     value: "top20",
                     label: t("usage.controls.top20", "Top 20"),
+                    disabled: showDemoData,
                   },
                   {
                     value: "all",
                     label: t("usage.controls.all", "All"),
+                    disabled: showDemoData,
                   },
                 ]}
               />
               <Button
-                variant="outline"
+                variant="secondary"
                 leftSection={
                   <LocalIcon icon="refresh" width="1rem" height="1rem" />
                 }
@@ -379,19 +374,21 @@ const AdminUsageSection: React.FC = () => {
             <SegmentedControl
               value={dataType}
               onChange={(value) => setDataType(value as "all" | "api" | "ui")}
-              disabled={showDemoData}
-              data={[
+              options={[
                 {
                   value: "all",
                   label: t("usage.controls.dataType.all", "All"),
+                  disabled: showDemoData,
                 },
                 {
                   value: "api",
                   label: t("usage.controls.dataType.api", "API"),
+                  disabled: showDemoData,
                 },
                 {
                   value: "ui",
                   label: t("usage.controls.dataType.ui", "UI"),
+                  disabled: showDemoData,
                 },
               ]}
             />

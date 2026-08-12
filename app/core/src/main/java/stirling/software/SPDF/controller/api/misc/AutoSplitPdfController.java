@@ -41,6 +41,9 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -283,13 +286,13 @@ public class AutoSplitPdfController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @MultiFileResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Auto split PDF pages into separate documents",
             description =
                     "This endpoint accepts a PDF file, scans each page for a specific QR code, and"
-                            + " splits the document at the QR code boundaries. The output is a zip"
-                            + " file containing each separate PDF document. Input:PDF Output:ZIP-PDF"
-                            + " Type:SISO")
+                            + " splits the document at the QR code boundaries. The output is a zip file"
+                            + " containing each separate PDF document.")
     public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
             throws IOException {
         MultipartFile file = request.getFileInput();

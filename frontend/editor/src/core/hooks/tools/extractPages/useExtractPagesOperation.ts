@@ -1,12 +1,13 @@
 import apiClient from "@app/services/apiClient";
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
+  defineCustomTool,
   useToolOperation,
   CustomProcessorResult,
 } from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
+  validateExtractPagesParameters,
   ExtractPagesParameters,
   defaultParameters,
 } from "@app/hooks/tools/extractPages/useExtractPagesParameters";
@@ -33,8 +34,8 @@ async function resolveSelectionToCsv(
   }
 }
 
-export const extractPagesOperationConfig = {
-  toolType: ToolType.custom,
+export const extractPagesOperationConfig = defineCustomTool({
+  validateParams: validateExtractPagesParameters,
   operationType: "extractPages",
   customProcessor: async (
     parameters: ExtractPagesParameters,
@@ -71,7 +72,7 @@ export const extractPagesOperationConfig = {
     };
   },
   defaultParameters,
-} as const;
+});
 
 export const useExtractPagesOperation = () => {
   const { t } = useTranslation();

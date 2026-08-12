@@ -3,12 +3,12 @@ import {
   Stack,
   Text,
   Group,
-  Button,
   Box,
   Popover,
-  UnstyledButton,
   useMantineTheme,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { useTranslation } from "react-i18next";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -35,7 +35,7 @@ interface GroupedFormatDropdownProps {
 
 const GroupedFormatDropdown = ({
   value,
-  placeholder = "Select an option",
+  placeholder,
   options,
   onChange,
   disabled = false,
@@ -44,6 +44,8 @@ const GroupedFormatDropdown = ({
   withinPortal = true,
   zIndex = Z_INDEX_AUTOMATE_DROPDOWN,
 }: GroupedFormatDropdownProps) => {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("dropdownList.selectOption");
   const [dropdownOpened, setDropdownOpened] = useState(false);
   const theme = useMantineTheme();
 
@@ -61,12 +63,12 @@ const GroupedFormatDropdown = ({
   }, [options]);
 
   const selectedLabel = useMemo(() => {
-    if (!value) return placeholder;
+    if (!value) return resolvedPlaceholder;
     const selected = options.find((opt) => opt.value === value);
     return selected
       ? `${selected.group} (${selected.label})`
       : value.toUpperCase();
-  }, [value, options, placeholder]);
+  }, [value, options, resolvedPlaceholder]);
 
   const handleOptionSelect = (selectedValue: string) => {
     onChange(selectedValue);
@@ -87,7 +89,10 @@ const GroupedFormatDropdown = ({
       zIndex={zIndex}
     >
       <Popover.Target>
-        <UnstyledButton
+        <Button
+          variant="tertiary"
+          hover={false}
+          fullWidth
           name={name}
           data-testid={name}
           onClick={() => setDropdownOpened(!dropdownOpened)}
@@ -102,11 +107,11 @@ const GroupedFormatDropdown = ({
             cursor: disabled ? "not-allowed" : "pointer",
             width: "100%",
             color: disabled
-              ? "var(--dropdown-trigger-text-disabled)"
+              ? "var(--c-text-subtle)"
               : "var(--dropdown-trigger-text)",
           }}
         >
-          <Group justify="space-between">
+          <Group justify="space-between" style={{ width: "100%" }}>
             <Text size="sm" c={value ? undefined : "dimmed"}>
               {selectedLabel}
             </Text>
@@ -119,7 +124,7 @@ const GroupedFormatDropdown = ({
               }}
             />
           </Group>
-        </UnstyledButton>
+        </Button>
       </Popover.Target>
       <Popover.Dropdown
         style={{
@@ -147,10 +152,21 @@ const GroupedFormatDropdown = ({
                   <Button
                     key={option.value}
                     data-testid={`format-option-${option.value}`}
-                    variant={value === option.value ? "filled" : "outline"}
+                    variant={value === option.value ? "primary" : "secondary"}
                     size="sm"
                     onClick={() => handleOptionSelect(option.value)}
                     disabled={option.enabled === false}
+                    rightSection={
+                      option.usesCloud ? (
+                        <CloudOutlinedIcon
+                          style={{
+                            fontSize: "0.625rem",
+                            marginLeft: "0.25rem",
+                            opacity: 0.7,
+                          }}
+                        />
+                      ) : undefined
+                    }
                     style={{
                       fontSize: "0.75rem",
                       height: "2rem",
@@ -160,15 +176,6 @@ const GroupedFormatDropdown = ({
                     }}
                   >
                     {option.label}
-                    {option.usesCloud && (
-                      <CloudOutlinedIcon
-                        style={{
-                          fontSize: "0.625rem",
-                          marginLeft: "0.25rem",
-                          opacity: 0.7,
-                        }}
-                      />
-                    )}
                   </Button>
                 ))}
               </Group>

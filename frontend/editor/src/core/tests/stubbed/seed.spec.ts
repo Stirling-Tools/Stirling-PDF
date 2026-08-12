@@ -22,7 +22,14 @@ function resolveFixturePath(filename: string): string {
       filename,
     ),
     path.join(process.cwd(), "src", "core", "tests", "test-fixtures", filename),
-    path.join(__dirname, "..", "core", "tests", "test-fixtures", filename),
+    path.join(
+      import.meta.dirname,
+      "..",
+      "core",
+      "tests",
+      "test-fixtures",
+      filename,
+    ),
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) return p;
@@ -49,7 +56,7 @@ export const TEST_FILES = {
 test.describe("Stirling-PDF seed", () => {
   test("seed - app loads", async ({ page }) => {
     // Navigate to the Stirling-PDF frontend
-    await page.goto("/");
+    await page.goto("/editor");
 
     // The app may redirect to /login if authentication is enabled.
     // Wait for the app to be ready: either the dashboard layout or the login page.

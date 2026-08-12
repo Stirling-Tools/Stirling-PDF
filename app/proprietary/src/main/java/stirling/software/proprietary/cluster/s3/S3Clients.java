@@ -133,29 +133,45 @@ public final class S3Clients {
      * storage.s3.allow-private-endpoints=true}.
      */
     static void validateEndpointHost(URI endpoint, boolean allowPrivate) {
+        validateEndpointHost(
+                endpoint,
+                allowPrivate,
+                "storage.s3.endpoint",
+                "set storage.s3.allow-private-endpoints=true to opt in"
+                        + " (e.g. for MinIO or in-cluster S3).");
+    }
+
+    /**
+     * The same private-address guard for S3 endpoints configured outside the {@code storage.s3.*}
+     * block (e.g. per-source policy config), with the setting named in messages supplied by the
+     * caller.
+     */
+    public static void validateEndpointHost(
+            URI endpoint, boolean allowPrivate, String settingName, String optInHint) {
         if (allowPrivate) {
             return;
         }
         String host = endpoint.getHost();
         if (host == null || host.isBlank()) {
-            throw new IllegalStateException("storage.s3.endpoint must include a host: " + endpoint);
+            throw new IllegalStateException(settingName + " must include a host: " + endpoint);
         }
         InetAddress[] addresses;
         try {
             addresses = InetAddress.getAllByName(host);
         } catch (UnknownHostException e) {
             throw new IllegalStateException(
-                    "Unable to resolve storage.s3.endpoint host '" + host + "'", e);
+                    "Unable to resolve " + settingName + " host '" + host + "'", e);
         }
         for (InetAddress address : addresses) {
             if (isPrivateOrLocal(address)) {
                 throw new IllegalStateException(
-                        "storage.s3.endpoint host '"
+                        settingName
+                                + " host '"
                                 + host
                                 + "' resolves to private/link-local address "
                                 + address.getHostAddress()
-                                + "; set storage.s3.allow-private-endpoints=true to opt in"
-                                + " (e.g. for MinIO or in-cluster S3).");
+                                + "; "
+                                + optInHint);
             }
         }
     }

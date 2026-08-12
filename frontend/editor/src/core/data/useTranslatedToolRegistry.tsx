@@ -1,5 +1,6 @@
 import { lazy, useMemo } from "react";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import { useTranslation } from "react-i18next";
 import { devApiLink } from "@app/constants/links";
 import { reorganizePagesOperationConfig } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
@@ -44,10 +45,13 @@ import { usePrototypeToolRegistry } from "@app/data/usePrototypeToolRegistry";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { rotateOperationConfig } from "@app/hooks/tools/rotate/useRotateOperation";
+import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
 import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { signOperationConfig } from "@app/hooks/tools/sign/useSignOperation";
 import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
 import { removeAnnotationsOperationConfig } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
+import { removeImageOperationConfig } from "@app/hooks/tools/removeImage/useRemoveImageOperation";
+import { pageLayoutOperationConfig } from "@app/hooks/tools/pageLayout/usePageLayoutOperation";
 import { extractImagesOperationConfig } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
 import { replaceColorOperationConfig } from "@app/hooks/tools/replaceColor/useReplaceColorOperation";
 import { removePagesOperationConfig } from "@app/hooks/tools/removePages/useRemovePagesOperation";
@@ -220,6 +224,20 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ), // TODO:: not all settings shown, suggested next tools shown
         synonyms: getSynonyms(t, "sign"),
         supportsAutomate: false, //TODO make support Sign
+      },
+      sharedSign: {
+        icon: <GroupAddOutlinedIcon sx={{ fontSize: "1.5rem" }} />,
+        name: t("home.sharedSign.title", "Shared Signing"),
+        component: lazy(() => import("@app/tools/SharedSign")),
+        description: t(
+          "home.sharedSign.desc",
+          "Request signatures from others and track signing sessions",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.SIGNING,
+        automationSettings: null,
+        supportsAutomate: false,
+        synonyms: getSynonyms(t, "sharedSign"),
       },
       addText: {
         icon: (
@@ -510,6 +528,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         maxFiles: -1,
         endpoints: ["validate-signature"],
         synonyms: getSynonyms(t, "validateSignature"),
+        // Reports on signatures rather than transforming the PDF, and its hook is
+        // not on the operationConfig seam, so it cannot run as an automation step.
+        supportsAutomate: false,
         automationSettings: null,
       },
 
@@ -619,6 +640,31 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
         synonyms: getSynonyms(t, "rotate"),
       },
+      autoRotate: {
+        icon: (
+          <LocalIcon
+            icon="screen-rotation-alt-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.autoRotate.title", "Auto Rotate"),
+        component: lazy(() => import("@app/tools/AutoRotate")),
+        description: t(
+          "home.autoRotate.desc",
+          "Detect each page's orientation and rotate it upright automatically.",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["auto-rotate-pdf"],
+        operationConfig: asRegistryConfig(autoRotateOperationConfig),
+        automationSettings: lazySettings(
+          () =>
+            import("@app/components/tools/autoRotate/AutoRotateAutomationSettings"),
+        ),
+        synonyms: getSynonyms(t, "autoRotate"),
+      },
       split: {
         icon: (
           <LocalIcon
@@ -714,6 +760,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         maxFiles: -1,
         endpoints: ["multi-page-layout"],
+        operationConfig: asRegistryConfig(pageLayoutOperationConfig),
         automationSettings: lazySettings(
           () => import("@app/components/tools/pageLayout/PageLayoutSettings"),
         ),
@@ -926,7 +973,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.REMOVAL,
         maxFiles: -1,
         endpoints: ["remove-image-pdf"],
-        operationConfig: undefined,
+        operationConfig: asRegistryConfig(removeImageOperationConfig),
         synonyms: getSynonyms(t, "removeImage"),
         automationSettings: null,
       },
@@ -1155,6 +1202,9 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
         endpoints: ["scanner-effect"],
         synonyms: getSynonyms(t, "scannerEffect"),
+        // No frontend implementation yet (component is null), so it has no
+        // operationConfig to execute as an automation step.
+        supportsAutomate: false,
         automationSettings: null,
       },
 
@@ -1184,7 +1234,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             icon="open-in-new-rounded"
             width="1.5rem"
             height="1.5rem"
-            style={{ color: "#2F7BF6" }}
+            style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
         name: t("home.devApi.title", "API"),
@@ -1204,7 +1254,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             icon="open-in-new-rounded"
             width="1.5rem"
             height="1.5rem"
-            style={{ color: "#2F7BF6" }}
+            style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
         name: t("home.devFolderScanning.title", "Automated Folder Scanning"),
@@ -1227,7 +1277,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             icon="open-in-new-rounded"
             width="1.5rem"
             height="1.5rem"
-            style={{ color: "#2F7BF6" }}
+            style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
         name: t("home.devSsoGuide.title", "SSO Guide"),
@@ -1247,7 +1297,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             icon="open-in-new-rounded"
             width="1.5rem"
             height="1.5rem"
-            style={{ color: "#2F7BF6" }}
+            style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
           />
         ),
         name: t("home.devAirgapped.title", "Air-gapped Setup"),

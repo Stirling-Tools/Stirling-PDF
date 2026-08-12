@@ -1,6 +1,8 @@
-import { Stack, Group, ActionIcon, Text } from "@mantine/core";
+import { Stack, Group, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { ActionIcon } from "@app/ui/ActionIcon";
 
 export interface NavigationControlsProps {
   currentIndex: number;
@@ -15,13 +17,15 @@ const NavigationControls = ({
   onPrevious,
   onNext,
 }: NavigationControlsProps) => {
+  const { t } = useTranslation();
   if (totalFiles <= 1) return null;
 
   return (
     <Stack align="center" gap="xs" mt="xs">
       <Group justify="center" gap="xs">
         <ActionIcon
-          variant="light"
+          aria-label={t("common.previous", "Previous")}
+          variant="secondary"
           size="sm"
           onClick={onPrevious}
           disabled={totalFiles <= 1}
@@ -34,7 +38,8 @@ const NavigationControls = ({
         </Text>
 
         <ActionIcon
-          variant="light"
+          aria-label={t("common.next", "Next")}
+          variant="secondary"
           size="sm"
           onClick={onNext}
           disabled={totalFiles <= 1}

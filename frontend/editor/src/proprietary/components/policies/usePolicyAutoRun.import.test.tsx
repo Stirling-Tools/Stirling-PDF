@@ -15,15 +15,18 @@ const mocks = vi.hoisted(() => ({
   persistVersionedOutputs: vi.fn(),
   getStirlingFile: vi.fn(),
   getStirlingFileStub: vi.fn(),
+  updateFileMetadata: vi.fn(),
   downloadPolicyOutput: vi.fn(),
   listPolicyRuns: vi.fn(),
   createStirlingFilesAndStubs: vi.fn(),
 }));
 
-vi.mock("@app/constants/featureFlags", () => ({ POLICIES_ENABLED: true }));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.fileStubs }),
-  useFileManagement: () => ({ addFiles: mocks.addFiles }),
+  useFileManagement: () => ({
+    addFiles: mocks.addFiles,
+    updateStirlingFileStub: vi.fn(),
+  }),
   useFileContext: () => ({ consumeFiles: mocks.consumeFiles }),
 }));
 vi.mock("@app/contexts/IndexedDBContext", () => ({
@@ -48,11 +51,13 @@ vi.mock("@app/services/policyApi", () => ({
   getPolicyRun: vi.fn(),
   listPolicyRuns: mocks.listPolicyRuns,
   downloadPolicyOutput: mocks.downloadPolicyOutput,
+  resolvePolicyRunTarget: () => "saas",
 }));
 vi.mock("@app/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: mocks.getStirlingFile,
     getStirlingFileStub: mocks.getStirlingFileStub,
+    updateFileMetadata: mocks.updateFileMetadata,
     persistVersionedOutputs: mocks.persistVersionedOutputs,
   },
 }));
@@ -75,6 +80,7 @@ function recordCompletedRun() {
     fileId: "file-1",
     fileName: "doc.pdf",
     fileSize: 1234,
+    target: "saas",
     status: "COMPLETED",
     outputs: [{ fileId: "out-file-1", fileName: "doc.pdf" }],
     error: null,
@@ -98,6 +104,7 @@ beforeEach(() => {
   mocks.listPolicyRuns.mockResolvedValue([]);
   mocks.getStirlingFileStub.mockResolvedValue(null);
   mocks.persistVersionedOutputs.mockResolvedValue(undefined);
+  mocks.updateFileMetadata.mockResolvedValue(true);
   mocks.consumeFiles.mockResolvedValue(undefined);
   mocks.addFiles.mockResolvedValue([{ fileId: "out-1" }]);
   mocks.downloadPolicyOutput.mockResolvedValue(
@@ -131,17 +138,23 @@ describe("auto-run import: new-version output delivery", () => {
     expect(mocks.addFiles).not.toHaveBeenCalled();
   });
 
-  it("versions the input in the workspace when it's open (consumeFiles, not a storage write)", async () => {
+  it("versions the input in place SILENTLY when it's open (consumeFiles with silent, + sidebar bump)", async () => {
     mocks.fileStubs = [{ id: "file-1" }];
 
     recordCompletedRun();
     await runImport();
 
+    // Background enforcement must not disturb the workbench: the silent consume
+    // replaces the file in place without auto-selecting / reordering / opening it.
     expect(mocks.consumeFiles).toHaveBeenCalledWith(
       ["file-1"],
       expect.any(Array),
       expect.any(Array),
+      { silent: true },
     );
+    // No redundant bump in the in-workspace path — the silent consume's own state
+    // update drives the sidebar refresh (avoids an O(n) IDB re-read per delivery).
+    expect(mocks.bumpRevision).not.toHaveBeenCalled();
     expect(mocks.persistVersionedOutputs).not.toHaveBeenCalled();
     expect(mocks.addFiles).not.toHaveBeenCalled();
   });
@@ -153,14 +166,23 @@ describe("auto-run import: new-version output delivery", () => {
     recordCompletedRun();
     await runImport();
 
-    expect(mocks.addFiles).toHaveBeenCalled();
+    // derivedFromTool must ride along so the auto-run never re-enforces this
+    // output, even after the dispatched list is wiped (fresh device / storage
+    // clear) — without it the output re-triggers the policy indefinitely.
+    expect(mocks.addFiles).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.objectContaining({ derivedFromTool: true }),
+    );
     expect(mocks.persistVersionedOutputs).not.toHaveBeenCalled();
     expect(mocks.consumeFiles).not.toHaveBeenCalled();
   });
 
-  it("adopts a server-only run, dating it from the server's createdAt (not now)", async () => {
-    // A run the client never recorded (true orphan): reconcile adopts it from the server. With no
-    // local input link it delivers as a new file, and its age comes from the server, not Date.now().
+  it("adopts a server-only run for visibility, without delivering its outputs", async () => {
+    // A run the client never recorded (true orphan): reconcile adopts it from the server for the
+    // activity feed, dated from the server's createdAt (not Date.now()). It is adopted already
+    // `imported` — with no local input link a delivery would add its output as a NEW workspace
+    // file, and since cap-evicted runs are re-adopted on every refresh, that meant phantom
+    // duplicates opening onto the workbench after each reload.
     mocks.listPolicyRuns.mockResolvedValue([
       {
         runId: "srv-1",
@@ -180,7 +202,8 @@ describe("auto-run import: new-version output delivery", () => {
     });
 
     expect(getRun("srv-1")?.startedAt).toBe(1000);
-    expect(mocks.addFiles).toHaveBeenCalled();
+    expect(mocks.addFiles).not.toHaveBeenCalled();
+    expect(mocks.downloadPolicyOutput).not.toHaveBeenCalled();
     expect(mocks.persistVersionedOutputs).not.toHaveBeenCalled();
   });
 });

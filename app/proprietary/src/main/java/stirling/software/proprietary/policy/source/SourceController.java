@@ -1,12 +1,15 @@
 package stirling.software.proprietary.policy.source;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.config.FolderAccessDeniedException;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
@@ -29,6 +33,7 @@ import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
+import stirling.software.proprietary.util.SecretMasker;
 
 /**
  * CRUD for persisted, reusable input connections plus the Sources overview for the admin portal. A
@@ -41,8 +46,16 @@ import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Sources", description = "Reusable policy input connections")
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class SourceController {
+
+    /**
+     * Machine-readable marker on the error body when a folder source is rejected for pointing
+     * outside the allowed roots. The admin portal keys off this to offer a link straight to the
+     * Folder Access settings rather than only showing the message.
+     */
+    public static final String FOLDER_ACCESS_DENIED_CODE = "folderAccessDenied";
+
+    private static final String WEBHOOK_TYPE = "webhook";
 
     private final SourceStore sourceStore;
     private final SourceAccessGuard sourceAccessGuard;
@@ -65,12 +78,35 @@ public class SourceController {
     }
 
     @GetMapping("/{sourceId}")
-    @Operation(summary = "Get a source by id")
+    @Operation(
+            summary = "Get a source by id",
+            description =
+                    "Secret-bearing options are returned as a redaction sentinel, never their"
+                            + " stored values; an edit that sends the sentinel back keeps them.")
     public ResponseEntity<Source> get(@PathVariable String sourceId) {
         return sourceStore
                 .get(sourceId)
                 .filter(sourceAccessGuard::canAccess)
+                .map(SourceController::withMaskedSecrets)
                 .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{sourceId}/document-counts")
+    @Operation(
+            summary = "Daily document counts for a source",
+            description =
+                    "The trailing 30-day per-day document series (oldest first) for the source's"
+                            + " sparkline.")
+    public ResponseEntity<List<Long>> documentCounts(@PathVariable String sourceId) {
+        // The editor is virtual: its series is tracked per team, not against a persisted source.
+        if (EditorSource.ID.equals(sourceId)) {
+            return ResponseEntity.ok(overviewService.editorDailySeries());
+        }
+        return sourceStore
+                .get(sourceId)
+                .filter(sourceAccessGuard::canAccess)
+                .map(source -> ResponseEntity.ok(overviewService.dailySeries(source.id())))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -83,9 +119,15 @@ public class SourceController {
                             + " matching source type.")
     public ResponseEntity<Source> save(@RequestBody Source source) {
         requireSourceEditingAllowed();
-        Source owned = resolveOwnership(source);
+        requireNotEditor(source.id(), source.type());
+        boolean isCreate = source.id() == null || source.id().isBlank();
+        Source owned = withPreparedOptions(withStoredSecrets(resolveOwnership(source)), isCreate);
         try {
             validateConfig(owned);
+        } catch (FolderAccessDeniedException e) {
+            // Surfaced with a machine-readable code by handleFolderAccessDenied so the portal can
+            // link to the Folder Access settings; don't flatten it into a plain 400 here.
+            throw e;
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
@@ -93,7 +135,7 @@ public class SourceController {
         // An edited folder source can change which directory needs watching, so re-sync trigger
         // registrations now instead of waiting for the next reconcile.
         policyTriggerManager.notifyPoliciesChanged();
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(revealOnCreate(saved, isCreate));
     }
 
     @DeleteMapping("/{sourceId}")
@@ -104,6 +146,7 @@ public class SourceController {
                             + " so the connection can't be pulled out from under a live policy.")
     public ResponseEntity<Void> delete(@PathVariable String sourceId) {
         requireSourceEditingAllowed();
+        requireNotEditor(sourceId, null);
         Source source = sourceStore.get(sourceId).filter(sourceAccessGuard::canAccess).orElse(null);
         if (source == null) {
             return ResponseEntity.notFound().build();
@@ -119,6 +162,22 @@ public class SourceController {
         }
         sourceStore.delete(sourceId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * A folder source was rejected for pointing outside the allowed roots. Return a 400 carrying
+     * {@link #FOLDER_ACCESS_DENIED_CODE} so the portal can offer a link to the Folder Access
+     * settings, while other guard rejections (SaaS mode, the protected config dir) fall through to
+     * the global handler as plain 400s the admin can't fix by editing the allowlist.
+     */
+    @ExceptionHandler(FolderAccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleFolderAccessDenied(FolderAccessDeniedException ex) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setProperty("code", FOLDER_ACCESS_DENIED_CODE);
+        return ResponseEntity.badRequest()
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problem);
     }
 
     /**
@@ -155,15 +214,70 @@ public class SourceController {
                 teamId);
     }
 
+    private static Source withOptions(Source source, Map<String, Object> options) {
+        return new Source(
+                source.id(),
+                source.name(),
+                source.type(),
+                options,
+                source.enabled(),
+                source.owner(),
+                source.teamId());
+    }
+
+    /** Secrets never leave the server: reads return the redaction sentinel in their place. */
+    private static Source withMaskedSecrets(Source source) {
+        return withOptions(source, SecretMasker.mask(source.options()));
+    }
+
+    /**
+     * An edit that round-trips a masked read sends secrets back as the sentinel; restore them from
+     * the stored source so saving without re-typing keeps them (validation then runs against the
+     * real values).
+     */
+    private Source withStoredSecrets(Source incoming) {
+        if (incoming.id() == null || incoming.id().isBlank()) {
+            return incoming;
+        }
+        return sourceStore
+                .get(incoming.id())
+                .map(
+                        existing ->
+                                withOptions(
+                                        incoming,
+                                        SecretMasker.restoreRedacted(
+                                                incoming.options(), existing.options())))
+                .orElse(incoming);
+    }
+
     /** Validate the config against the bean that handles the source's type, as the engine will. */
     private void validateConfig(Source source) {
         InputSpec spec = source.toInputSpec();
-        inputSources.stream()
-                .filter(inputSource -> inputSource.supports(spec))
-                .findFirst()
+        inputSourceFor(spec)
                 .orElseThrow(
                         () -> new IllegalArgumentException("unknown source type: " + source.type()))
                 .validate(spec);
+    }
+
+    private Source withPreparedOptions(Source source, boolean isCreate) {
+        InputSpec spec = source.toInputSpec();
+        InputSource input = inputSourceFor(spec).orElse(null);
+        if (input == null) {
+            return source;
+        }
+        Map<String, Object> prepared = input.prepareOptionsForSave(source.options(), isCreate);
+        return prepared == null ? source : withOptions(source, prepared);
+    }
+
+    private static Source revealOnCreate(Source saved, boolean isCreate) {
+        if (isCreate && WEBHOOK_TYPE.equals(saved.type())) {
+            return saved;
+        }
+        return withMaskedSecrets(saved);
+    }
+
+    private Optional<InputSource> inputSourceFor(InputSpec spec) {
+        return inputSources.stream().filter(input -> input.supports(spec)).findFirst();
     }
 
     /**
@@ -181,10 +295,29 @@ public class SourceController {
         }
     }
 
-    /** Names of the caller's visible policies that reference the given source. */
+    /**
+     * The editor is a built-in, virtual source: it is always present and cannot be created, edited,
+     * or deleted like a persisted connection. Reject any attempt to touch it by id or type.
+     */
+    private static void requireNotEditor(String id, String type) {
+        if (EditorSource.ID.equals(id) || EditorSource.TYPE.equals(type)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "The editor is a built-in source and cannot be created, edited, or deleted");
+        }
+    }
+
+    /**
+     * Names of the caller's visible policies that reference the given source - as an input ({@code
+     * sourceIds}) or as their output destination ({@code outputId}), so a location in use either
+     * way is protected from deletion.
+     */
     private List<String> referencingPolicyNames(String sourceId) {
         return policyAccessGuard.visibleFrom(policyStore).stream()
-                .filter(policy -> policy.sourceIds().contains(sourceId))
+                .filter(
+                        policy ->
+                                policy.sourceIds().contains(sourceId)
+                                        || policy.outputIds().contains(sourceId))
                 .map(Policy::name)
                 .toList();
     }

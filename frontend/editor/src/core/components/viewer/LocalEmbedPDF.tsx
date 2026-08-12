@@ -1,7 +1,13 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
-import { EmbedPDF } from "@embedpdf/core/react";
+import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -70,7 +76,10 @@ import type {
   SignatureAPI,
   AnnotationAPI,
   HistoryAPI,
+  SignaturePreview,
+  SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
+import { SignaturePreviewLayer } from "@app/components/viewer/SignaturePreviewLayer";
 import { ExportAPIBridge } from "@app/components/viewer/ExportAPIBridge";
 import { BookmarkAPIBridge } from "@app/components/viewer/BookmarkAPIBridge";
 import { AttachmentAPIBridge } from "@app/components/viewer/AttachmentAPIBridge";
@@ -121,6 +130,74 @@ interface LocalEmbedPDFProps {
   isSignMode?: boolean;
   /** Controls CSS filter applied only to rendered PDF canvas tiles */
   pdfRenderMode?: "normal" | "dark" | "sepia";
+  // ── Signature overlay (opt-in; all default off) ──────────────────────────
+  /** Read-only / interactive signature preview overlays to render per page. */
+  signaturePreviews?: SignaturePreview[];
+  /** If true, previews are display-only (cannot be moved, resized, or deleted). */
+  signaturePreviewsReadOnly?: boolean;
+  /** When true (and not read-only), clicking a page places a new preview. */
+  signaturePlacementMode?: boolean;
+  /** Base64 PNG used for placement and the cursor ghost preview. */
+  signaturePlacementData?: string;
+  /** Signature type assigned to newly placed previews. */
+  signaturePlacementType?: "canvas" | "image" | "text";
+  /** Emits the full updated preview array whenever overlays change. */
+  onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
+  /** Imperative handle for reading/clearing/deleting signature previews. */
+  signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
+}
+
+interface ViewerPageContainerProps {
+  documentId: string;
+  pageIndex: number;
+  width: number;
+  height: number;
+  children: React.ReactNode;
+}
+
+function normalizePageRotation(rotation: number | null | undefined): number {
+  const value =
+    typeof rotation === "number" && Number.isFinite(rotation) ? rotation : 0;
+  return ((Math.round(value) % 4) + 4) % 4;
+}
+
+function ViewerPageContainer({
+  documentId,
+  pageIndex,
+  width,
+  height,
+  children,
+}: ViewerPageContainerProps) {
+  const documentState = useDocumentState(documentId);
+  const pageRotation = normalizePageRotation(
+    documentState?.document?.pages?.[pageIndex]?.rotation,
+  );
+
+  return (
+    <div
+      data-page-index={pageIndex}
+      data-page-width={width}
+      data-page-height={height}
+      data-page-rotation={pageRotation}
+      style={{
+        width,
+        height,
+        position: "relative",
+        overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        MozUserSelect: "none",
+        msUserSelect: "none",
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+      }}
+      draggable={false}
+      onDragStart={(e) => e.preventDefault()}
+      onDrop={(e) => e.preventDefault()}
+      onDragOver={(e) => e.preventDefault()}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function LocalEmbedPDF({
@@ -142,6 +219,13 @@ export function LocalEmbedPDF({
   commentsSidebarRightOffset = "0rem",
   isSignMode = false,
   pdfRenderMode = "normal",
+  signaturePreviews,
+  signaturePreviewsReadOnly = false,
+  signaturePlacementMode = false,
+  signaturePlacementData,
+  signaturePlacementType,
+  onSignaturePreviewsChange,
+  signatureOverlayApiRef,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -150,6 +234,58 @@ export function LocalEmbedPDF({
     Array<{ id: string; pageIndex: number; rect: Rect }>
   >([]);
   const [commentAuthorName, setCommentAuthorName] = useState<string>("Guest");
+
+  const [localSignaturePreviews, setLocalSignaturePreviews] = useState<
+    SignaturePreview[]
+  >(signaturePreviews ?? []);
+
+  // Mount the overlay for controlled previews, placement mode, or once any
+  // signature is placed — so leaving placement mode doesn't hide placements.
+  const signatureOverlayEnabled =
+    signaturePreviews !== undefined ||
+    signaturePlacementMode ||
+    localSignaturePreviews.length > 0;
+  const [selectedSignatureId, setSelectedSignatureId] = useState<string | null>(
+    null,
+  );
+
+  // Keep internal state in sync when the caller supplies controlled previews.
+  useEffect(() => {
+    if (signaturePreviews !== undefined) {
+      setLocalSignaturePreviews(signaturePreviews);
+    }
+  }, [signaturePreviews]);
+
+  const handleSignaturePreviewsChange = useCallback(
+    (next: SignaturePreview[]) => {
+      setLocalSignaturePreviews(next);
+      onSignaturePreviewsChange?.(next);
+    },
+    [onSignaturePreviewsChange],
+  );
+
+  useImperativeHandle(
+    signatureOverlayApiRef,
+    () => ({
+      getSignaturePreviews: () => localSignaturePreviews,
+      clearPreviews: () => {
+        setLocalSignaturePreviews([]);
+        setSelectedSignatureId(null);
+        onSignaturePreviewsChange?.([]);
+      },
+      deleteSelected: () => {
+        if (!selectedSignatureId) return;
+        const next = localSignaturePreviews.filter(
+          (p) => p.id !== selectedSignatureId,
+        );
+        setSelectedSignatureId(null);
+        setLocalSignaturePreviews(next);
+        onSignaturePreviewsChange?.(next);
+      },
+      hasSelected: () => selectedSignatureId !== null,
+    }),
+    [localSignaturePreviews, selectedSignatureId, onSignaturePreviewsChange],
+  );
 
   useEffect(() => {
     if (!config?.enableLogin) return;
@@ -350,7 +486,11 @@ export function LocalEmbedPDF({
       <Center h="100%" w="100%">
         <Stack align="center" gap="md">
           <div style={{ fontSize: "24px" }}>❌</div>
-          <Text c="red" size="sm" style={{ textAlign: "center" }}>
+          <Text
+            c="var(--color-red-dark)"
+            size="sm"
+            style={{ textAlign: "center" }}
+          >
             Error loading PDF engine: {error.message}
           </Text>
         </Stack>
@@ -914,7 +1054,7 @@ export function LocalEmbedPDF({
                     <Viewport
                       documentId={documentId}
                       style={{
-                        backgroundColor: "var(--bg-background)",
+                        backgroundColor: "var(--c-bg)",
                         height: "100%",
                         width: "100%",
                         maxHeight: "100%",
@@ -940,25 +1080,11 @@ export function LocalEmbedPDF({
                                 documentId={documentId}
                                 pageIndex={pageIndex}
                               >
-                                <div
-                                  data-page-index={pageIndex}
-                                  data-page-width={width}
-                                  data-page-height={height}
-                                  style={{
-                                    width,
-                                    height,
-                                    position: "relative",
-                                    overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
-                                    userSelect: "none",
-                                    WebkitUserSelect: "none",
-                                    MozUserSelect: "none",
-                                    msUserSelect: "none",
-                                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                                  }}
-                                  draggable={false}
-                                  onDragStart={(e) => e.preventDefault()}
-                                  onDrop={(e) => e.preventDefault()}
-                                  onDragOver={(e) => e.preventDefault()}
+                                <ViewerPageContainer
+                                  documentId={documentId}
+                                  pageIndex={pageIndex}
+                                  width={width}
+                                  height={height}
                                 >
                                   <div
                                     style={{
@@ -1073,7 +1199,24 @@ export function LocalEmbedPDF({
                                     documentId={documentId}
                                     pageIndex={pageIndex}
                                   />
-                                </div>
+
+                                  {/* Signature preview overlay (opt-in; off by default) */}
+                                  {signatureOverlayEnabled && (
+                                    <SignaturePreviewLayer
+                                      pageIndex={pageIndex}
+                                      pageWidth={width}
+                                      pageHeight={height}
+                                      previews={localSignaturePreviews}
+                                      readOnly={signaturePreviewsReadOnly}
+                                      placementMode={signaturePlacementMode}
+                                      placementData={signaturePlacementData}
+                                      placementType={signaturePlacementType}
+                                      onChange={handleSignaturePreviewsChange}
+                                      selectedId={selectedSignatureId}
+                                      onSelect={setSelectedSignatureId}
+                                    />
+                                  )}
+                                </ViewerPageContainer>
                               </PagePointerProvider>
                             </Rotate>
                           );

@@ -13,16 +13,12 @@ permissions:
   contents: read
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   playwright-all-browsers:
     name: Playwright (chromium + firefox + webkit)
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -30,7 +26,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
           cache: "npm"
@@ -53,9 +49,53 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-nightly-${{ github.run_id }}
-          path: frontend/editor/playwright-report/
+          name: playwright-report-nightly-${{ github.run_id }}
+          path: frontend/playwright-report/
           retention-days: 14
+
+  # Whole-suite accessibility sweep. Pull requests only scan the stories they
+  # touch (frontend-a11y.yml) because a full pass takes ~30 minutes; this covers
+  # everything else, so a violation introduced by a change somewhere other than
+  # the story itself — a shared component, a theme token — still surfaces within
+  # a day.
+  a11y-all-stories:
+    name: a11y (every story, light + dark)
+    runs-on: ubuntu-latest
+    # Two full sweeps (one per theme), each ~30 minutes of browser time.
+    timeout-minutes: 120
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+
+      - name: a11y gate (every story, light + dark)
+        run: task frontend:storybook:a11y
+
+      - name: Upload scan reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: a11y-scan-nightly-${{ github.run_id }}
+          path: frontend/.a11y-scan/
+          retention-days: 14
+          if-no-files-found: ignore
+          # The reports live in a dot-directory, which upload-artifact treats as
+          # hidden and silently skips by default.
+          include-hidden-files: true
 
   # Builds all desktop platforms on a schedule so the Rust dependency cache is
   # written on main, where PR and merge-queue tauri builds can restore it.
