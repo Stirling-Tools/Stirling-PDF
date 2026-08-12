@@ -5,10 +5,6 @@ on:
   schedule:
     - cron: "0 3 * * 1"
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: update-gradle
   cancel-in-progress: true
@@ -16,6 +12,9 @@ concurrency:
 jobs:
   update-gradle:
     name: Update Gradle and Docker images
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
