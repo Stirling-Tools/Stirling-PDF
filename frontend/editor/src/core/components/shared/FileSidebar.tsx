@@ -61,7 +61,8 @@ import {
   deleteServerFile,
   type DeleteScope,
 } from "@app/services/serverStorageDelete";
-import { fileStorage } from "@app/services/fileStorage";
+import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
+import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
 import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
@@ -288,6 +289,19 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
+    // Files whose stored bytes this session PROVED unreadable. Rows render a
+    // "data lost" state instead of pretending the file can open; storage keeps
+    // the record so a reload re-tests it.
+    const [lostFileIds, setLostFileIds] = useState<ReadonlySet<string>>(
+      () => new Set(),
+    );
+    useEffect(
+      () =>
+        onRecordUnreadable((fileId) =>
+          setLostFileIds((prev) => new Set(prev).add(fileId as string)),
+        ),
+      [],
+    );
     const [stubsLoaded, setStubsLoaded] = useState(false);
     // Kebab "Save to cloud" target; drives BulkUploadToServerModal.
     const [saveToServerTarget, setSaveToServerTarget] = useState<
@@ -540,6 +554,22 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (!stub) return;
 
+        // Its bytes are gone; opening it can only fail. Say so instead of a
+        // click that goes nowhere.
+        if (stub.dataUnavailable || lostFileIds.has(fileId as string)) {
+          alert({
+            alertType: "warning",
+            title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
+            body: t(
+              "fileSidebar.dataLostBody",
+              "This browser lost this file's contents. Upload it again to keep working with it.",
+            ),
+            expandable: false,
+            durationMs: 6000,
+          });
+          return;
+        }
+
         // In the Watched Folders view a click sends the file into the open folder
         // (mirrors how a click toggles a file into the active workbench elsewhere).
         // On the folder list (no folder open) it's a no-op so browsing isn't disrupted.
@@ -594,6 +624,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [
         allFileStubs,
+        lostFileIds,
+        t,
         state.files.ids,
         state.ui.selectedFileIds,
         fileActions,
@@ -781,6 +813,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             ? state.files.byId[workbenchFileId]?.thumbnailUrl
             : undefined) || stub.thumbnailUrl;
       const fileOrigin = getFileOrigin(stub);
+      const dataUnavailable =
+        stub.dataUnavailable === true || lostFileIds.has(stub.id as string);
       // Key by lineage (originalFileId) so a version swap updates the row in place instead of
       // remounting. But a 1-input→many-output op (split) yields sibling leaves that share one
       // originalFileId; those would collide on the key, so fall back to the unique leaf id when a
@@ -803,6 +837,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           thumbnailUrl={thumbnailUrl}
           onClick={handleFileClick}
           onEyeClick={handleEyeClick}
+          dataUnavailable={dataUnavailable}
           draggable={isWatchedFoldersActive}
           onDragStart={handleWatchedFolderDragStart}
           folders={memberFolders}

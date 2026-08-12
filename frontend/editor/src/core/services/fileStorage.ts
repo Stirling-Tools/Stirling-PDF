@@ -185,6 +185,9 @@ class FileStorageService {
   /** Ids already reported as unreadable, so one dead record is surfaced once
    *  rather than on every read of it. Session-scoped on purpose. */
   private readonly unreadableRecords = new Set<FileId>();
+  /** Ids whose blob bytes this session has already audited (either way), so
+   *  listings don't re-probe every record on every refresh. */
+  private readonly auditedRecords = new Set<FileId>();
 
   /**
    * Get database connection using centralized manager
@@ -396,22 +399,62 @@ class FileStorageService {
   }
 
   /**
-   * Tell the user (once) when a record's bytes are gone, WITHOUT gating anything on
-   * the answer. Awaiting this was a mistake: in Safari the probe read of a lost
-   * backing store can stay pending forever, so it stalled every file open instead
-   * of the one consumer that would have failed anyway.
+   * Audit a blob-backed record's bytes WITHOUT gating anything on the answer.
+   * Awaiting this was a mistake: in Safari the probe read of a lost backing store
+   * can stay pending forever, so it stalled every file open instead of the one
+   * consumer that would have failed anyway.
+   *
+   * Two outcomes, both out of band:
+   * - Bytes gone: mark + report, so the library shows "data lost" instead of a
+   *   file that pretends to open.
+   * - Bytes readable on a browser whose verdict is "blobs unsupported": RESCUE the
+   *   record to an ArrayBuffer copy now, while the bytes still exist. Legacy blob
+   *   records on WebKit are one engine hiccup away from being lost for good.
    */
   private reportIfUnreadable(record: StoredStirlingFileRecord): void {
     if (!(record.data instanceof Blob)) return;
     if (this.unreadableRecords.has(record.id)) return;
+    if (this.auditedRecords.has(record.id)) return;
+    this.auditedRecords.add(record.id);
     void blobReadFailure(record.data).then((failure) => {
       if (!failure) {
         this.blobReadbackVerified = true;
+        if (!this.blobValuesSupported) void this.rescueBlobRecord(record.id);
         return;
       }
       this.noteBlobUnreadable(failure);
       this.reportUnreadableRecord(record, failure);
     });
+  }
+
+  /**
+   * Rewrite one still-readable legacy blob record as an ArrayBuffer copy. Reads
+   * the FULL bytes (the audit only proved the first one) and goes through
+   * {@link updateRecord}'s read-modify-write so a concurrent metadata update
+   * isn't clobbered by a stale snapshot.
+   */
+  private async rescueBlobRecord(fileId: FileId): Promise<void> {
+    try {
+      const db = await this.getDatabase();
+      const record = await this.readRecord(db, fileId);
+      if (!(record?.data instanceof Blob)) return;
+      const bytes = await withProbeDeadline(record.data.arrayBuffer());
+      if (bytes === PROBE_UNANSWERED || !(bytes instanceof ArrayBuffer)) return;
+      record.data = bytes;
+      await this.putRecord(db, record);
+      console.info(
+        `[fileStorage] rescued "${record.name}" (${fileId}) to an in-memory copy before this browser could lose its blob`,
+      );
+    } catch (error) {
+      // Best-effort: a failed rescue leaves the record exactly as it was.
+      console.warn(`[fileStorage] could not rescue ${fileId}:`, error);
+    }
+  }
+
+  /** Whether this session has proven a record's bytes unreadable. Synchronous on
+   *  purpose: stub listings consult it while building rows. */
+  isRecordUnreadable(id: FileId): boolean {
+    return this.unreadableRecords.has(id);
   }
 
   /** One console error and one toast per dead record: every consumer of the file
@@ -610,9 +653,13 @@ class FileStorageService {
         // We still gate thumbnailUrl on freshness so stale thumbnails
         // don't leak through this read path.
         const fresh = this.isThumbnailFresh(record);
+        // Out-of-band byte audit, so the library reflects lost data (and rescues
+        // still-readable legacy blobs) instead of listing files that can't open.
+        this.reportIfUnreadable(record);
 
         const stub: StirlingFileStub = {
           id: record.id,
+          dataUnavailable: this.unreadableRecords.has(record.id) || undefined,
           name: record.name,
           type: record.type,
           size: record.size,
@@ -672,8 +719,11 @@ class FileStorageService {
               if (fresh) tobump.push(record.id);
               else toexpire.push(record.id);
             }
+            this.reportIfUnreadable(record);
             stubs.push({
               id: record.id,
+              dataUnavailable:
+                this.unreadableRecords.has(record.id) || undefined,
               name: record.name,
               type: record.type,
               size: record.size,
@@ -765,8 +815,11 @@ class FileStorageService {
               if (fresh) tobump.push(record.id);
               else toexpire.push(record.id);
             }
+            this.reportIfUnreadable(record);
             leafStubs.push({
               id: record.id,
+              dataUnavailable:
+                this.unreadableRecords.has(record.id) || undefined,
               name: record.name,
               type: record.type,
               size: record.size,

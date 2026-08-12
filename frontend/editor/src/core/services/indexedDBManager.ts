@@ -429,17 +429,32 @@ class IndexedDBManager {
    */
   async getDatabaseVersion(name: string): Promise<number | null> {
     return new Promise((resolve) => {
+      // This probe runs BEFORE the guarded open, and a versionless open can be
+      // delayed indefinitely by another tab mid-versionchange. Unknown after the
+      // grace period beats hanging every storage consumer: the real open that
+      // follows has its own blocked guard and a message the user can act on.
+      const giveUp = setTimeout(() => {
+        console.warn(
+          `Version probe for ${name} did not answer in ${BLOCKED_GRACE_MS}ms; proceeding without it.`,
+        );
+        resolve(null);
+      }, BLOCKED_GRACE_MS);
       const request = indexedDB.open(name);
       request.onsuccess = () => {
+        clearTimeout(giveUp);
         const db = request.result;
         const version = db.version;
         db.close();
         resolve(version);
       };
-      request.onerror = () => resolve(null);
+      request.onerror = () => {
+        clearTimeout(giveUp);
+        resolve(null);
+      };
       request.onupgradeneeded = () => {
         // Cancel the upgrade
         request.transaction?.abort();
+        clearTimeout(giveUp);
         resolve(null);
       };
     });

@@ -424,3 +424,75 @@ describe("confirmed-unreadable records", () => {
     unsubscribe();
   });
 });
+
+/** A readable-blob substitute, for the rescue path: fake-indexeddb never returns
+ *  Blob values, so a healthy legacy blob record is injected the same way a dead
+ *  one is. */
+function substituteHealthyBlobOnRead(reads: number) {
+  let remaining = reads;
+  IDBObjectStore.prototype.get = function (
+    this: IDBObjectStore,
+    key: IDBValidKey | IDBKeyRange,
+  ) {
+    const request = nativeGet.call(this, key as IDBValidKey);
+    let injected = false;
+    return new Proxy(request, {
+      get(target, prop) {
+        const value = Reflect.get(target, prop, target);
+        if (prop !== "result") {
+          return typeof value === "function" ? value.bind(target) : value;
+        }
+        if (!value || injected || remaining === 0) return value;
+        injected = true;
+        remaining--;
+        return {
+          ...(value as object),
+          data: new Blob(["%PDF-1.7 stirling"], { type: "application/pdf" }),
+        };
+      },
+      set(target, prop, value) {
+        Reflect.set(target, prop, value, target);
+        return true;
+      },
+    });
+  } as typeof IDBObjectStore.prototype.get;
+}
+
+/** The library must tell the truth per row: a record whose bytes are gone lists
+ *  as data-lost instead of a file that pretends to open. */
+describe("stub listings — data-lost auditing", () => {
+  test("flags a dead record on the stub once the audit lands", async () => {
+    expectConsole.warn(/could not read its bytes back/);
+    expectConsole.error(/cannot be read/);
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    const id = await store("husk.pdf");
+
+    loseBackingStoreOnRead(1);
+    // First read schedules the out-of-band audit; unknown is not yet flagged.
+    expect(
+      (await fileStorage.getStirlingFileStub(id))?.dataUnavailable,
+    ).toBeUndefined();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect((await fileStorage.getStirlingFileStub(id))?.dataUnavailable).toBe(
+      true,
+    );
+    expect(fileStorage.isRecordUnreadable(id)).toBe(true);
+  });
+
+  test("rescues a still-readable legacy blob to a copy on a no-blob browser", async () => {
+    // The durable verdict says this browser loses blob values...
+    localStorage.setItem("stirling.indexeddb.blobValuesUnsupported", "true");
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    instrumentPut();
+    const id = await store("legacy.pdf");
+
+    // ...and a legacy record still holds a READABLE blob: save it while we can.
+    substituteHealthyBlobOnRead(5);
+    await fileStorage.getStirlingFileStub(id);
+    await vi.waitFor(() => expect(putAttempts).toContain("copy"));
+    expect(fileStorage.isRecordUnreadable(id)).toBe(false);
+  });
+});
