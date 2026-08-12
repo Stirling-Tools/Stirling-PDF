@@ -96,7 +96,7 @@ jobs:
             echo '## AI Engine coverage'
             echo
             echo '```text'
-            uv run coverage report --show-missing
+            uv run --group engine-dev coverage report --show-missing
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
