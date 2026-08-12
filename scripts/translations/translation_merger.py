@@ -467,9 +467,7 @@ def main():
 
         # Extract translations from template format or simple dict
         if "translations" in translations_data:
-            translations = {
-                k: v["translated"] for k, v in translations_data["translations"].items() if v.get("translated")
-            }
+            translations = {k: v["translated"] for k, v in translations_data["translations"].items() if v.get("translated")}
         else:
             translations = translations_data
 

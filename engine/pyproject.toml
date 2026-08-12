@@ -29,6 +29,7 @@ engine-dev = [
     "datamodel-code-generator[ruff]==0.64.0",
     "pyright>=1.1.411",
     "pytest>=9.1.1",
+    "pytest-cov>=7.0.0",
     "referencing>=0.37.0",
     "ruff==0.15.5",
 ]
@@ -64,9 +65,9 @@ updater-signatures = [
 ]
 # Pinned repository-wide pre-commit tooling.
 pre-commit = [
-    "codespell==2.4.2",
-    "ruff==0.15.5",
-    "tomli-w==1.2.0",
+    "codespell>=2.4.2",
+    "ruff>=0.15.5",
+    "tomli-w>=1.2.0",
 ]
 
 [build-system]
@@ -81,7 +82,7 @@ exclude = ["tests"]
 default-groups = []
 
 [tool.ruff]
-line-length = 120
+line-length = 127
 target-version = "py313"
 
 [tool.ruff.lint]
@@ -95,8 +96,11 @@ select = [
     "UP",
     "PYI", # flake8-pyi: flags deprecated typing constructs
     "FA",  # flake8-future-annotations: flags missing future annotations imports
-    "BLE", # flake8-blind-except: flags bare `except Exception`
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"testing/**/*.py" = ["N803", "BLE001", "E501"]
+"*split_photos.py" = ["E501", "N806"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["stirling", "tests"]

@@ -12,7 +12,7 @@ Covers:
 """
 
 import requests
-from behave import given, then, when
+from behave import then, when
 
 BASE_URL = "http://localhost:8080"
 
@@ -131,9 +131,7 @@ def step_delete_no_auth_and_params(context, endpoint, params):
 # ---------------------------------------------------------------------------
 
 
-@when(
-    'I use the stored value to send a GET request to "{endpoint_template}" with JWT authentication'
-)
+@when('I use the stored value to send a GET request to "{endpoint_template}" with JWT authentication')
 def step_get_stored_jwt(context, endpoint_template):
     """Send GET request substituting {stored} in the path with context.stored_value."""
     endpoint = _expand_stored(endpoint_template, context)
@@ -144,9 +142,7 @@ def step_get_stored_jwt(context, endpoint_template):
     )
 
 
-@when(
-    'I use the stored value to send a GET request to "{endpoint_template}" with no authentication'
-)
+@when('I use the stored value to send a GET request to "{endpoint_template}" with no authentication')
 def step_get_stored_no_auth(context, endpoint_template):
     """Send GET request substituting {stored} in the path with no authentication."""
     endpoint = _expand_stored(endpoint_template, context)
@@ -156,9 +152,7 @@ def step_get_stored_no_auth(context, endpoint_template):
     )
 
 
-@when(
-    'I use the stored value to send a DELETE request to "{endpoint_template}" with JWT authentication'
-)
+@when('I use the stored value to send a DELETE request to "{endpoint_template}" with JWT authentication')
 def step_delete_stored_jwt(context, endpoint_template):
     """Send DELETE request substituting {stored} in the path with context.stored_value."""
     endpoint = _expand_stored(endpoint_template, context)
@@ -169,9 +163,7 @@ def step_delete_stored_jwt(context, endpoint_template):
     )
 
 
-@when(
-    'I use the stored value to send a POST request to "{endpoint_template}" with JWT authentication'
-)
+@when('I use the stored value to send a POST request to "{endpoint_template}" with JWT authentication')
 def step_post_stored_jwt(context, endpoint_template):
     """Send POST request substituting {stored} in the path with context.stored_value."""
     endpoint = _expand_stored(endpoint_template, context)
@@ -207,8 +199,7 @@ def step_json_top_field_not_empty(context, field):
     data = context.response.json()
     value = data.get(field)
     assert value is not None and str(value) != "", (
-        f"Expected field '{field}' to be non-empty, got: {value!r}. "
-        f"Full response: {data}"
+        f"Expected field '{field}' to be non-empty, got: {value!r}. Full response: {data}"
     )
 
 
@@ -223,8 +214,7 @@ def step_response_is_list(context):
     """Assert that the top-level response JSON value is a list."""
     data = context.response.json()
     assert isinstance(data, list), (
-        f"Expected response to be a JSON list but got: {type(data).__name__}. "
-        f"Content: {str(data)[:200]}"
+        f"Expected response to be a JSON list but got: {type(data).__name__}. Content: {str(data)[:200]}"
     )
 
 
@@ -234,8 +224,7 @@ def step_json_field_is_list(context, field):
     data = context.response.json()
     value = data.get(field)
     assert isinstance(value, list), (
-        f"Expected field '{field}' to be a list but got: {type(value).__name__}. "
-        f"Full response: {data}"
+        f"Expected field '{field}' to be a list but got: {type(value).__name__}. Full response: {data}"
     )
 
 
@@ -245,10 +234,7 @@ def step_json_field_is_true(context, field):
     data = context.response.json()
     value = data.get(field)
     actual = str(value).lower() if isinstance(value, bool) else str(value).lower()
-    assert actual == "true", (
-        f"Expected field '{field}' to be true but got: {value!r}. "
-        f"Full response: {data}"
-    )
+    assert actual == "true", f"Expected field '{field}' to be true but got: {value!r}. Full response: {data}"
 
 
 @then('the response JSON field "{field}" should be false')
@@ -257,7 +243,4 @@ def step_json_field_is_false(context, field):
     data = context.response.json()
     value = data.get(field)
     actual = str(value).lower() if isinstance(value, bool) else str(value).lower()
-    assert actual == "false", (
-        f"Expected field '{field}' to be false but got: {value!r}. "
-        f"Full response: {data}"
-    )
+    assert actual == "false", f"Expected field '{field}' to be false but got: {value!r}. Full response: {data}"

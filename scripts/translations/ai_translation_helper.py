@@ -52,7 +52,7 @@ class AITranslationHelper:
                 "target_languages": languages,
                 "max_entries_per_language": max_entries_per_language,
                 "instructions": {
-                    "format": "Translate each entry maintaining JSON structure and placeholder variables like {n}, {total}, {filename}",
+                    "format": "Translate each entry maintaining JSON structure and placeholder variables like {n}, {total}, {filename}",  # noqa: E501
                     "context": "This is for a PDF manipulation tool. Keep technical terms consistent.",
                     "placeholders": "Preserve all placeholders: {n}, {total}, {filename}, etc.",
                     "style": "Keep translations concise and user-friendly",

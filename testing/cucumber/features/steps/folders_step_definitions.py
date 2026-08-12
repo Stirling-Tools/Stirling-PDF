@@ -40,9 +40,7 @@ HTTP_TIMEOUT = 30
 
 def _jwt_headers(context):
     token = getattr(context, "jwt_token", None)
-    assert token, (
-        "No JWT token in context. Use 'Given I am logged in as admin' first."
-    )
+    assert token, "No JWT token in context. Use 'Given I am logged in as admin' first."
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -74,10 +72,7 @@ def _resolve_folder_id(context, ref):
     if ref.endswith(".id"):
         name = ref[:-3]
         _ensure_folders_dict(context)
-        assert name in context.folders_by_name, (
-            f"No folder named {name!r} stashed; available: "
-            f"{list(context.folders_by_name)}"
-        )
+        assert name in context.folders_by_name, f"No folder named {name!r} stashed; available: {list(context.folders_by_name)}"
         return context.folders_by_name[name]
     return ref
 
@@ -120,9 +115,7 @@ def step_clear_all_folders(context):
     early as a clear assertion rather than letting individual steps fail
     with cryptic errors.
     """
-    response = requests.get(
-        FOLDERS_URL, headers=_jwt_headers(context), timeout=HTTP_TIMEOUT
-    )
+    response = requests.get(FOLDERS_URL, headers=_jwt_headers(context), timeout=HTTP_TIMEOUT)
     assert response.status_code in (200, 204), (
         f"Folder list returned {response.status_code} during teardown - "
         f"is the proprietary storage-folders module deployed? Body: "
@@ -145,8 +138,7 @@ def step_clear_all_folders(context):
 def step_folder_exists(context, name):
     response = _create_folder(context, name)
     assert response.status_code == 201, (
-        f"Could not create folder {name!r} during Given step: "
-        f"{response.status_code} {response.text}"
+        f"Could not create folder {name!r} during Given step: {response.status_code} {response.text}"
     )
     _ensure_folders_dict(context)
     context.folders_by_name[name] = response.json()["id"]
@@ -157,15 +149,9 @@ def step_folder_exists(context, name):
 def step_folder_exists_under(context, name, parent):
     _ensure_folders_dict(context)
     parent_id = context.folders_by_name.get(parent)
-    assert parent_id, (
-        f"Parent folder {parent!r} not created yet; available: "
-        f"{list(context.folders_by_name)}"
-    )
+    assert parent_id, f"Parent folder {parent!r} not created yet; available: {list(context.folders_by_name)}"
     response = _create_folder(context, name, parent_id=parent_id)
-    assert response.status_code == 201, (
-        f"Could not create child folder {name!r}: "
-        f"{response.status_code} {response.text}"
-    )
+    assert response.status_code == 201, f"Could not create child folder {name!r}: {response.status_code} {response.text}"
     context.folders_by_name[name] = response.json()["id"]
     context.response = response
 
@@ -254,9 +240,7 @@ def step_delete_folder(context, name):
 
 @when("I list folders")
 def step_list_folders(context):
-    response = requests.get(
-        FOLDERS_URL, headers=_jwt_headers(context), timeout=HTTP_TIMEOUT
-    )
+    response = requests.get(FOLDERS_URL, headers=_jwt_headers(context), timeout=HTTP_TIMEOUT)
     context.response = response
 
 
@@ -270,10 +254,7 @@ def step_list_folders(context):
 def step_patch_file_folder(context, filename, folder_ref):
     _ensure_files_dict(context)
     file_id = context.uploaded_files.get(filename)
-    assert file_id, (
-        f"File {filename!r} not uploaded yet; available: "
-        f"{list(context.uploaded_files)}"
-    )
+    assert file_id, f"File {filename!r} not uploaded yet; available: {list(context.uploaded_files)}"
     folder_id = _resolve_folder_id(context, folder_ref)
     response = requests.patch(
         f"{FILES_URL}/{file_id}/folder",
@@ -286,9 +267,7 @@ def step_patch_file_folder(context, filename, folder_ref):
 
 @when("I list files")
 def step_list_files(context):
-    response = requests.get(
-        FILES_URL, headers=_jwt_headers(context), timeout=HTTP_TIMEOUT
-    )
+    response = requests.get(FILES_URL, headers=_jwt_headers(context), timeout=HTTP_TIMEOUT)
     context.response = response
 
 
@@ -322,52 +301,39 @@ def step_post_folder_no_auth(context, name):
 @then('the response JSON folder should have name "{name}"')
 def step_response_folder_name(context, name):
     data = context.response.json()
-    assert data.get("name") == name, (
-        f"Expected name={name!r}, got {data.get('name')!r}. Body: {data}"
-    )
+    assert data.get("name") == name, f"Expected name={name!r}, got {data.get('name')!r}. Body: {data}"
 
 
 @then("the response JSON folder.parentFolderId should be null")
 def step_response_folder_parent_null(context):
     data = context.response.json()
-    assert data.get("parentFolderId") is None, (
-        f"Expected parentFolderId=null, got {data.get('parentFolderId')!r}"
-    )
+    assert data.get("parentFolderId") is None, f"Expected parentFolderId=null, got {data.get('parentFolderId')!r}"
 
 
 @then('the response JSON folder.parentFolderId should equal "{ref}"')
 def step_response_folder_parent_equal(context, ref):
     data = context.response.json()
     expected = _resolve_folder_id(context, ref)
-    assert data.get("parentFolderId") == expected, (
-        f"Expected parentFolderId={expected!r}, "
-        f"got {data.get('parentFolderId')!r}"
-    )
+    assert data.get("parentFolderId") == expected, f"Expected parentFolderId={expected!r}, got {data.get('parentFolderId')!r}"
 
 
 @then("the response JSON folder.createdAt should not be empty")
 def step_response_folder_createdat_not_empty(context):
     data = context.response.json()
-    assert data.get("createdAt"), (
-        f"Expected non-empty createdAt; body: {data}"
-    )
+    assert data.get("createdAt"), f"Expected non-empty createdAt; body: {data}"
 
 
 @then("the response JSON file.folderId should be null")
 def step_response_file_folderid_null(context):
     data = context.response.json()
-    assert data.get("folderId") is None, (
-        f"Expected folderId=null, got {data.get('folderId')!r}"
-    )
+    assert data.get("folderId") is None, f"Expected folderId=null, got {data.get('folderId')!r}"
 
 
 @then('the response JSON file.folderId should equal "{ref}"')
 def step_response_file_folderid_equal(context, ref):
     data = context.response.json()
     expected = _resolve_folder_id(context, ref)
-    assert data.get("folderId") == expected, (
-        f"Expected folderId={expected!r}, got {data.get('folderId')!r}"
-    )
+    assert data.get("folderId") == expected, f"Expected folderId={expected!r}, got {data.get('folderId')!r}"
 
 
 @then('the folder list should contain "{name}"')
@@ -381,19 +347,13 @@ def step_folder_list_contains(context, name):
 def step_folder_list_not_contains(context, name):
     folders = context.response.json()
     names = [f.get("name") for f in folders]
-    assert name not in names, (
-        f"Folder {name!r} should not be in list: {names}"
-    )
+    assert name not in names, f"Folder {name!r} should not be in list: {names}"
 
 
 @then('the file list should contain a file named "{filename}" with folderId null')
 def step_file_list_contains_root_file(context, filename):
     files = context.response.json()
-    matches = [
-        f
-        for f in files
-        if f.get("fileName") == filename and f.get("folderId") is None
-    ]
+    matches = [f for f in files if f.get("fileName") == filename and f.get("folderId") is None]
     assert matches, (
         f"No file named {filename!r} with folderId=null in list. "
         f"Files seen: "

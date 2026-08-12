@@ -110,6 +110,20 @@ tasks:
     cmds:
       - uv run --locked --group engine --group engine-dev pytest tests
 
+  test:coverage:
+    desc: "Run tests with coverage reporting"
+    deps: [prepare]
+    cmds:
+      - >-
+        uv run --locked --group engine --group engine-dev pytest tests
+        --cov=src/stirling
+        --cov-fail-under=80
+        --cov-report=term-missing
+        --cov-report=xml:coverage/coverage.xml
+        --cov-report=html:coverage/html
+        --cov-report=json:coverage/coverage.json
+      - uv run python scripts/check_coverage.py coverage/coverage.json --minimum 80
+
   fix:
     desc: "Auto-fix lint + format"
     cmds:

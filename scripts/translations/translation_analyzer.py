@@ -46,10 +46,7 @@ class TranslationAnalyzer:
 
             # Convert lists to sets for faster lookup
             return {
-                lang: set(patterns)
-                for lang, data in ignore_data.items()
-                for patterns in [data.get("ignore", [])]
-                if patterns
+                lang: set(patterns) for lang, data in ignore_data.items() for patterns in [data.get("ignore", [])] if patterns
             }
         except Exception as e:
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")
@@ -282,7 +279,7 @@ def main():
     print("\nBottom 5 Languages Needing Attention:")
     for result in sorted_by_completion[-5:]:
         print(
-            f"  {result['language']}: {result['completion_rate']:.1f}% ({result['missing_count']} missing, {result['untranslated_count']} untranslated)"
+            f"  {result['language']}: {result['completion_rate']:.1f}% ({result['missing_count']} missing, {result['untranslated_count']} untranslated)"  # noqa: E501
         )
 
 

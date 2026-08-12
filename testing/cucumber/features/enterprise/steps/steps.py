@@ -16,6 +16,6 @@ _parent_steps = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../s
 if _parent_steps not in sys.path:
     sys.path.insert(0, _parent_steps)
 
-from step_definitions import *  # noqa: F401, F403
-from auth_step_definitions import *  # noqa: F401, F403
-from enterprise_step_definitions import *  # noqa: F401, F403
+from auth_step_definitions import *  # noqa: E402, F403
+from enterprise_step_definitions import *  # noqa: E402, F403
+from step_definitions import *  # noqa: E402, F403

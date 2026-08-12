@@ -1,19 +1,20 @@
-import json as json_module
-import os
-import requests
-from behave import given, when, then
-from pypdf import PdfWriter, PdfReader
-from pypdf.errors import PdfReadError
 import io
+import json as json_module
+import mimetypes
+import os
 import random
+import re
 import string
+import zipfile
+
+import requests
+from behave import given, then, when
+from PIL import Image, ImageDraw
+from pypdf import PdfReader, PdfWriter
+from pypdf.errors import PdfReadError
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
-import mimetypes
-import zipfile
-import re
-from PIL import Image, ImageDraw
 
 API_HEADERS = {"X-API-KEY": "123456789"}
 
@@ -99,15 +100,11 @@ def create_black_box_image(file_name, size):
     can.save()
 
 
-@given(
-    "the pdf contains {image_count:d} images of size {width:d}x{height:d} on {page_count:d} pages"
-)
+@given("the pdf contains {image_count:d} images of size {width:d}x{height:d} on {page_count:d} pages")
 def step_impl(context, image_count, width, height, page_count):
     context.param_name = "fileInput"
     context.file_name = "genericNonCustomisableName.pdf"
-    create_pdf_with_images_and_boxes(
-        context.file_name, image_count, page_count, width, height
-    )
+    create_pdf_with_images_and_boxes(context.file_name, image_count, page_count, width, height)
     if not hasattr(context, "files"):
         context.files = {}
     context.files[context.param_name] = open(context.file_name, "rb")
@@ -122,13 +119,9 @@ def add_black_boxes_to_image(image):
     return image
 
 
-def create_pdf_with_images_and_boxes(
-    file_name, image_count, page_count, image_width, image_height
-):
+def create_pdf_with_images_and_boxes(file_name, image_count, page_count, image_width, image_height):
     page_width, page_height = max(letter[0], image_width), max(letter[1], image_height)
-    boxes_per_page = image_count // page_count + (
-        1 if image_count % page_count != 0 else 0
-    )
+    boxes_per_page = image_count // page_count + (1 if image_count % page_count != 0 else 0)
 
     writer = PdfWriter()
     box_counter = 0
@@ -143,9 +136,7 @@ def create_pdf_with_images_and_boxes(
 
             # Simulating a dynamic image creation (replace this with your actual image creation logic)
             # For demonstration, we'll create a simple black image
-            dummy_image = Image.new(
-                "RGB", (image_width, image_height), color="white"
-            )  # Create a white image
+            dummy_image = Image.new("RGB", (image_width, image_height), color="white")  # Create a white image
             dummy_image = add_black_boxes_to_image(dummy_image)  # Add black boxes
 
             # Convert the PIL Image to bytes to pass to drawImage
@@ -161,9 +152,7 @@ def create_pdf_with_images_and_boxes(
                 break
 
             # Add the image to the PDF
-            can.drawImage(
-                ImageReader(image_bytes), x, y, width=image_width, height=image_height
-            )
+            can.drawImage(ImageReader(image_bytes), x, y, width=image_width, height=image_height)
             box_counter += 1
 
         can.showPage()
@@ -206,9 +195,7 @@ def create_pdf_with_black_boxes(file_name, image_count, page_count):
         packet = io.BytesIO()
         can = canvas.Canvas(packet, pagesize=(page_width, page_height))
 
-        boxes_per_page = image_count // page_count + (
-            1 if image_count % page_count != 0 else 0
-        )
+        boxes_per_page = image_count // page_count + (1 if image_count % page_count != 0 else 0)
         for i in range(boxes_per_page):
             if box_counter >= image_count:
                 break
@@ -496,9 +483,7 @@ def step_pdf_has_attachment(context, attachment_name):
     writer = PdfWriter()
     for page in reader.pages:
         writer.add_page(page)
-    attachment_bytes = (
-        f"Attachment: {attachment_name}\nThis is test attachment content.".encode("utf-8")
-    )
+    attachment_bytes = f"Attachment: {attachment_name}\nThis is test attachment content.".encode()
     writer.add_attachment(attachment_name, attachment_bytes)
     with open(context.file_name, "wb") as f:
         writer.write(f)
@@ -527,10 +512,7 @@ def step_pdf_has_qr_split_marker(context, page_num):
     try:
         import qrcode as _qrcode
     except ImportError:
-        raise ImportError(
-            "qrcode package is required for this step. "
-            "Install with: pip install 'qrcode[pil]'"
-        )
+        raise ImportError("qrcode package is required for this step. Install with: pip install 'qrcode[pil]'")
     reader = PdfReader(context.file_name)
     qr = _qrcode.QRCode(box_size=4, border=2)
     qr.add_data("https://github.com/Stirling-Tools/Stirling-PDF")
@@ -545,9 +527,7 @@ def step_pdf_has_qr_split_marker(context, page_num):
             packet = io.BytesIO()
             can = canvas.Canvas(packet, pagesize=letter)
             w, h = letter
-            can.drawImage(
-                ImageReader(qr_bytes), (w - 100) / 2, (h - 100) / 2, width=100, height=100
-            )
+            can.drawImage(ImageReader(qr_bytes), (w - 100) / 2, (h - 100) / 2, width=100, height=100)
             can.showPage()
             can.save()
             packet.seek(0)
@@ -647,9 +627,9 @@ def step_send_api_request(context, endpoint):
 @then('the response content type should be "{content_type}"')
 def step_check_response_content_type(context, content_type):
     actual_content_type = context.response.headers.get("Content-Type", "")
-    assert actual_content_type.startswith(
-        content_type
-    ), f"Expected {content_type} but got {actual_content_type}. Response content: {context.response.content}"
+    assert actual_content_type.startswith(content_type), (
+        f"Expected {content_type} but got {actual_content_type}. Response content: {context.response.content}"
+    )
 
 
 @then("the response file should have size greater than {size:d}")
@@ -672,20 +652,16 @@ def step_check_response_pdf_passworded(context):
         reader = PdfReader(response_file)
         assert reader.is_encrypted
     except PdfReadError as e:
-        raise AssertionError(
-            f"Failed to read PDF: {str(e)}. Response content: {context.response.content}"
-        )
+        raise AssertionError(f"Failed to read PDF: {str(e)}. Response content: {context.response.content}")
     except Exception as e:
-        raise AssertionError(
-            f"An error occurred: {str(e)}. Response content: {context.response.content}"
-        )
+        raise AssertionError(f"An error occurred: {str(e)}. Response content: {context.response.content}")
 
 
 @then("the response status code should be {status_code:d}")
 def step_check_response_status_code(context, status_code):
-    assert (
-        context.response.status_code == status_code
-    ), f"Expected status code {status_code} but got {context.response.status_code}"
+    assert context.response.status_code == status_code, (
+        f"Expected status code {status_code} but got {context.response.status_code}"
+    )
 
 
 @then('the response should contain error message "{message}"')
@@ -693,9 +669,7 @@ def step_check_response_error_message(context, message):
     response_json = context.response.json()
     # Check for error message in both "error" (old format) and "detail" (RFC 7807 ProblemDetail)
     error_message = response_json.get("error") or response_json.get("detail")
-    assert (
-        error_message == message
-    ), f"Expected error message '{message}' but got '{error_message}'"
+    assert error_message == message, f"Expected error message '{message}' but got '{error_message}'"
 
 
 @then('the response PDF metadata should include "{metadata_key}" as "{metadata_value}"')
@@ -703,9 +677,9 @@ def step_check_response_pdf_metadata(context, metadata_key, metadata_value):
     response_file = io.BytesIO(context.response.content)
     reader = PdfReader(response_file)
     metadata = reader.metadata
-    assert (
-        metadata.get("/" + metadata_key) == metadata_value
-    ), f"Expected {metadata_key} to be '{metadata_value}' but got '{metadata.get(metadata_key)}'"
+    assert metadata.get("/" + metadata_key) == metadata_value, (
+        f"Expected {metadata_key} to be '{metadata_value}' but got '{metadata.get(metadata_key)}'"
+    )
 
 
 @then('the response file should have extension "{extension}"')
@@ -718,9 +692,9 @@ def step_check_response_file_extension(context, extension):
             if part.strip().startswith("filename"):
                 filename = part.split("=")[1].strip().strip('"')
                 break
-    assert filename.endswith(
-        extension
-    ), f"Expected file extension {extension} but got {filename}. Response content: {context.response.content}"
+    assert filename.endswith(extension), (
+        f"Expected file extension {extension} but got {filename}. Response content: {context.response.content}"
+    )
 
 
 @then('save the response file as "{filename}" for debugging')
@@ -735,9 +709,7 @@ def step_check_response_pdf_page_count(context, page_count):
     response_file = io.BytesIO(context.response.content)
     reader = PdfReader(io.BytesIO(response_file.getvalue()))
     actual_page_count = len(reader.pages)
-    assert (
-        actual_page_count == page_count
-    ), f"Expected {page_count} pages but got {actual_page_count} pages"
+    assert actual_page_count == page_count, f"Expected {page_count} pages but got {actual_page_count} pages"
 
 
 @then("the response ZIP should contain {file_count:d} files")
@@ -745,61 +717,45 @@ def step_check_response_zip_file_count(context, file_count):
     response_file = io.BytesIO(context.response.content)
     with zipfile.ZipFile(io.BytesIO(response_file.getvalue())) as zip_file:
         actual_file_count = len(zip_file.namelist())
-    assert (
-        actual_file_count == file_count
-    ), f"Expected {file_count} files but got {actual_file_count} files"
+    assert actual_file_count == file_count, f"Expected {file_count} files but got {actual_file_count} files"
 
 
-@then(
-    "the response ZIP file should contain {doc_count:d} documents each having {pages_per_doc:d} pages"
-)
+@then("the response ZIP file should contain {doc_count:d} documents each having {pages_per_doc:d} pages")
 def step_check_response_zip_doc_page_count(context, doc_count, pages_per_doc):
     response_file = io.BytesIO(context.response.content)
     with zipfile.ZipFile(io.BytesIO(response_file.getvalue())) as zip_file:
         actual_doc_count = len(zip_file.namelist())
-        assert (
-            actual_doc_count == doc_count
-        ), f"Expected {doc_count} documents but got {actual_doc_count} documents"
+        assert actual_doc_count == doc_count, f"Expected {doc_count} documents but got {actual_doc_count} documents"
 
         for file_name in zip_file.namelist():
             with zip_file.open(file_name) as pdf_file:
                 reader = PdfReader(pdf_file)
                 actual_pages_per_doc = len(reader.pages)
-                assert (
-                    actual_pages_per_doc == pages_per_doc
-                ), f"Expected {pages_per_doc} pages per document but got {actual_pages_per_doc} pages in document {file_name}"
+                assert actual_pages_per_doc == pages_per_doc, (
+                    f"Expected {pages_per_doc} pages per document but got {actual_pages_per_doc} pages in document {file_name}"
+                )
 
 
 @then('the JSON value of "{key}" should be "{expected_value}"')
 def step_check_json_value(context, key, expected_value):
     actual_value = context.response.json().get(key)
-    assert (
-        actual_value == expected_value
-    ), f"Expected JSON value for '{key}' to be '{expected_value}' but got '{actual_value}'"
+    assert actual_value == expected_value, f"Expected JSON value for '{key}' to be '{expected_value}' but got '{actual_value}'"
 
 
-@then(
-    'JSON list entry containing "{identifier_key}" as "{identifier_value}" should have "{target_key}" as "{target_value}"'
-)
-def step_check_json_list_entry(
-    context, identifier_key, identifier_self, target_key, target_value
-):
+@then('JSON list entry containing "{identifier_key}" as "{identifier_value}" should have "{target_key}" as "{target_value}"')
+def step_check_json_list_entry(context, identifier_key, identifier_value, target_key, target_value):
     json_response = context.response.json()
     for entry in json_response:
         if entry.get(identifier_key) == identifier_value:
-            assert (
-                entry.get(target_key) == target_value
-            ), f"Expected {target_key} to be {target_value} in entry where {identifier_key} is {identifier_value}, but found {entry.get(target_key)}"
+            assert entry.get(target_key) == target_value, (
+                f"Expected {target_key} to be {target_value} in entry where {identifier_key} is {identifier_value}, but found {entry.get(target_key)}"
+            )
             break
     else:
-        raise AssertionError(
-            f"No entry with {identifier_key} as {identifier_value} found"
-        )
+        raise AssertionError(f"No entry with {identifier_key} as {identifier_value} found")
 
 
 @then('the response should match the regex "{pattern}"')
 def step_response_matches_regex(context, pattern):
     response_text = context.response.text
-    assert re.match(
-        pattern, response_text
-    ), f"Response '{response_text}' does not match the expected pattern '{pattern}'"
+    assert re.match(pattern, response_text), f"Response '{response_text}' does not match the expected pattern '{pattern}'"
