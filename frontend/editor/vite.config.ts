@@ -25,13 +25,10 @@ function resolveBase(runSubpath: string): string {
 
 // Extensions never precompressed by either compression pass. Both
 // vite-plugin-compression2 (regex) and compressStaticCopyPlugin (Set) derive
-// from this single list. wasm is excluded: it is already internally compressed
-// and precompressed copies can break WebAssembly.instantiateStreaming if the
-// host serves the .br/.gz with a wrong Content-Type.
+// from this single list.
 const COMPRESSION_EXCLUDED_EXTENSIONS = [
   ".gz",
   ".br",
-  ".wasm",
   ".png",
   ".jpg",
   ".jpeg",
@@ -47,7 +44,9 @@ const COMPRESSION_EXCLUDE_REGEX = new RegExp(
 
 // Write .gz and .br siblings for a file. Brotli quality 11 is 10-100x slower
 // than gzip, so back off to quality 10 above 1 MB and hint the input size so
-// the encoder can size its window up front.
+// the encoder can size its window up front. wasm keeps q11 with the largest
+// window: it is the heaviest asset and brotli Content-Encoding is compatible
+// with WebAssembly.instantiateStreaming (the browser decompresses natively).
 async function compressOne(file: string, root: string) {
   // Only ever read inside the build output dir. All inputs derive from
   // fs.readdir(distDir), but this guard keeps any stray path from escaping it.
@@ -62,13 +61,16 @@ async function compressOne(file: string, root: string) {
   // Run both encoders concurrently. With UV_THREADPOOL_SIZE raised above they
   // share the libuv pool and parallelize across cores instead of serializing
   // gzip then brotli per file.
-  const brotliQuality = content.length > 1_000_000 ? 10 : 11;
+  const isWasm = ext === ".wasm";
+  const brotliQuality = isWasm ? 11 : content.length > 1_000_000 ? 10 : 11;
   const [gz, br] = await Promise.all([
     gzipPromise(content, { level: 9 }),
     brotliPromise(content, {
       params: {
         [constants.BROTLI_PARAM_QUALITY]: brotliQuality,
         [constants.BROTLI_PARAM_SIZE_HINT]: content.length,
+        // Largest window (16 MB) so wasm gains are kept across versions.
+        ...(isWasm && { [constants.BROTLI_PARAM_LGWIN]: 24 }),
       },
     }),
   ]);
@@ -468,6 +470,12 @@ export default defineConfig(async ({ mode, command }) => {
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
+              // Leaf UI packages: they import react/emotion but are not imported
+              // by them, so they split without creating a chunk cycle. Keeping
+              // them separate stops icon edits from invalidating the whole
+              // vendor-ui chunk.
+              if (id.includes("@mui/icons-material")) return "vendor-mui-icons";
+              if (id.includes("@iconify/react")) return "vendor-iconify";
               // react/react-dom/scheduler/emotion/mui/mantine are mutually
               // circular, so they must stay in one chunk or module init order
               // breaks at runtime (TDZ ReferenceError).

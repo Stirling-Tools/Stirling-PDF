@@ -1,7 +1,8 @@
 # Cloudflare Pages headers. Hashed assets under /assets/ are immutable; the
 # unversioned static copies (pdfium/cmaps/fonts/logos) change on upgrades, so
 # they get a short TTL with revalidation instead. HTML and the service worker
-# are always revalidated.
+# are always revalidated. Precompressed wasm keeps application/wasm so
+# WebAssembly.instantiateStreaming works with native Content-Encoding.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
@@ -26,5 +27,13 @@
 /classic-logo/*
   Cache-Control: public, max-age=86400, must-revalidate
 
-/*.wasm
+*.wasm.br
+  Content-Type: application/wasm
+  Content-Encoding: br
+
+*.wasm.gz
+  Content-Type: application/wasm
+  Content-Encoding: gzip
+
+*.wasm
   Content-Type: application/wasm
