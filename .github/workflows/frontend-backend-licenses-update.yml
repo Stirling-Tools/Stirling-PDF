@@ -46,6 +46,8 @@ jobs:
     name: Generate Frontend License Report
     needs: files-changed
     runs-on: ubuntu-latest
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     permissions:
       contents: write
       pull-requests: write
@@ -61,6 +63,19 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Restore npm dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: npm-dependencies
+          metadata-hints: workflow=frontend-backend-licenses,job=frontend
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
       - name: Setup GitHub App Bot
         if: (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) && github.actor != 'dependabot[bot]'
@@ -83,7 +98,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
-          cache: "npm"
+          cache: ${{ env.BORINGCACHE_ENABLED != 'true' && 'npm' || '' }}
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
@@ -320,6 +335,8 @@ jobs:
     needs: files-changed
     name: Generate Backend License Report
     runs-on: ubuntu-latest
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     permissions:
       contents: write
       pull-requests: write
@@ -336,6 +353,31 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Restore Gradle dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: gradle-dependencies
+          metadata-hints: workflow=frontend-backend-licenses,job=backend
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
+      - name: Configure Gradle build cache with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: gradle
+          metadata-hints: workflow=frontend-backend-licenses,job=backend
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
       - name: Setup GitHub App Bot
         if: (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) && github.actor != 'dependabot[bot]'
         id: setup-bot
@@ -351,6 +393,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle User Home
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |

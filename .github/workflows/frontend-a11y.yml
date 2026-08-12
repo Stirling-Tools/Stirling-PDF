@@ -24,6 +24,8 @@ jobs:
   frontend-a11y:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -34,11 +36,23 @@ jobs:
         with:
           # Need the base branch too, to diff against it.
           fetch-depth: 0
+      - name: Restore npm dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: npm-dependencies
+          metadata-hints: workflow=frontend-a11y
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
-          cache: "npm"
+          cache: ${{ env.BORINGCACHE_ENABLED != 'true' && 'npm' || '' }}
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0

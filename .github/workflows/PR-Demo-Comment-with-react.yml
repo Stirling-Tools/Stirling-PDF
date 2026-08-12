@@ -176,6 +176,8 @@ jobs:
   deploy-pr:
     needs: check-comment
     runs-on: ubuntu-latest
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     permissions:
       issues: write
       pull-requests: write
@@ -204,6 +206,32 @@ jobs:
           ref: refs/pull/${{ needs.check-comment.outputs.pr_number }}/merge
           token: ${{ steps.setup-bot.outputs.token }}
 
+      - name: Restore Gradle dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: gradle-dependencies
+          metadata-hints: workflow=pr-demo-comment
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
+      - name: Configure Gradle build cache with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: gradle
+          proxy-port: 22243
+          metadata-hints: workflow=pr-demo-comment
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
       - name: Set up JDK 25
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
@@ -211,6 +239,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle User Home
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -238,6 +267,8 @@ jobs:
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up Docker Buildx
+        id: buildx
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Login to Docker Hub
@@ -246,29 +277,63 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
+      - name: Set up application Docker cache with BoringCache
+        id: boringcache-app
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: docker
+          proxy-port: 22244
+          working-directory: .github/boringcache/docker-latest
+          docker-command: setup
+          metadata-hints: workflow=pr-demo-comment,image=application
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
       - name: Build and push PR-specific image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
+          builder: ${{ steps.boringcache-app.outputs.buildx-name || steps.buildx.outputs.name }}
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-pdf-latest
-          cache-to: type=gha,mode=max,scope=stirling-pdf-latest
+          cache-from: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-app.outputs.cache-from || 'type=gha,scope=stirling-pdf-latest' }}
+          cache-to: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-app.outputs.cache-to || 'type=gha,mode=max,scope=stirling-pdf-latest' }}
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
           build-args: |
             VERSION_TAG=alpha
             PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
           platforms: linux/amd64
 
+      - name: Set up engine Docker cache with BoringCache
+        id: boringcache-engine
+        if: needs.check-comment.outputs.enable_prototypes == 'true' && env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: docker
+          proxy-port: 22245
+          working-directory: .github/boringcache/docker-engine
+          docker-command: setup
+          metadata-hints: workflow=pr-demo-comment,image=engine
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
       - name: Build and push engine image
         if: needs.check-comment.outputs.enable_prototypes == 'true'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
+          builder: ${{ steps.boringcache-engine.outputs.buildx-name || steps.buildx.outputs.name }}
           context: .
           file: ./engine/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-pdf-engine
-          cache-to: type=gha,mode=max,scope=stirling-pdf-engine
+          cache-from: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-engine.outputs.cache-from || 'type=gha,scope=stirling-pdf-engine' }}
+          cache-to: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-engine.outputs.cache-to || 'type=gha,mode=max,scope=stirling-pdf-engine' }}
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
           platforms: linux/amd64
 

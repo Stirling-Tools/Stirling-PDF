@@ -18,6 +18,8 @@ permissions:
 jobs:
   generated-models:
     runs-on: ubuntu-latest
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     permissions:
       contents: read
       pull-requests: write
@@ -30,10 +32,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Restore build dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: gradle-dependencies,npm-dependencies,uv-dependencies
+          metadata-hints: workflow=check-generated-models
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
+      - name: Configure Gradle build cache with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: gradle
+          metadata-hints: workflow=check-generated-models
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          enable-cache: true
+          enable-cache: ${{ env.BORINGCACHE_ENABLED != 'true' }}
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
@@ -46,6 +73,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle User Home
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -60,7 +88,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
-          cache: "npm"
+          cache: ${{ env.BORINGCACHE_ENABLED != 'true' && 'npm' || '' }}
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task

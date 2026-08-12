@@ -19,6 +19,8 @@ jobs:
   push-base:
     if: ${{ vars.CI_PROFILE != 'lite' && github.actor == 'Frooodle' }}
     runs-on: ubuntu-24.04-8core
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     permissions:
       packages: write
       id-token: write
@@ -64,7 +66,23 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Set up Docker cache with BoringCache
+        id: boringcache-docker
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: docker
+          working-directory: .github/boringcache/docker-base
+          docker-command: setup
+          metadata-hints: workflow=push-docker-base
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
@@ -87,12 +105,12 @@ jobs:
         id: build-push-base
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
-          builder: ${{ steps.buildx.outputs.name }}
+          builder: ${{ steps.boringcache-docker.outputs.buildx-name || steps.buildx.outputs.name }}
           context: docker/base
           file: ./docker/base/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-pdf-base
-          cache-to: type=gha,mode=max,scope=stirling-pdf-base
+          cache-from: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-docker.outputs.cache-from || 'type=gha,scope=stirling-pdf-base' }}
+          cache-to: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-docker.outputs.cache-to || 'type=gha,mode=max,scope=stirling-pdf-base' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64/v8

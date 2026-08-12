@@ -22,6 +22,8 @@ jobs:
   check-files:
     if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     permissions:
       issues: write # Allow posting comments on issues/PRs
       pull-requests: write # Allow writing to pull requests
@@ -33,6 +35,19 @@ jobs:
 
       - name: Checkout main branch first
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Restore uv dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: uv-dependencies
+          metadata-hints: workflow=check-toml
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
       - name: Setup GitHub App Bot
         id: setup-bot
@@ -198,7 +213,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          enable-cache: true
+          enable-cache: ${{ env.BORINGCACHE_ENABLED != 'true' }}
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock

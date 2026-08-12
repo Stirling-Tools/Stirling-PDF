@@ -73,12 +73,12 @@ jobs:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           PLATFORM: ${{ inputs.platform }}
         run: |
-          WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}'
+          WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","cargo_target":"x86_64-pc-windows-msvc","jpdfium_platforms":"windows-x64"}'
           # ARM64: NSIS only (WiX MSI has no arm64 support in Tauri) and no JPDFium
           # natives yet - flip jpdfium_platforms to windows-arm64 once JPDFium ships it.
-          WINDOWS_ARM64='{"platform":"windows-11-arm","args":"--target aarch64-pc-windows-msvc --bundles nsis","name":"windows-arm64","jpdfium_platforms":"none"}'
-          MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
-          LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
+          WINDOWS_ARM64='{"platform":"windows-11-arm","args":"--target aarch64-pc-windows-msvc --bundles nsis","name":"windows-arm64","cargo_target":"aarch64-pc-windows-msvc","jpdfium_platforms":"none"}'
+          MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","cargo_target":"aarch64-apple-darwin","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
+          LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","cargo_target":"x86_64-unknown-linux-gnu","jpdfium_platforms":"linux-x64"}'
 
           case "$PLATFORM" in
             windows)       ENTRIES=("$WINDOWS" "$WINDOWS_ARM64") ;;
@@ -118,6 +118,7 @@ jobs:
       # PR build is not testable. Windows and Linux stay main-only, matching the
       # gates on their own signing steps below.
       SIGN_BUNDLE: ${{ inputs.sign && (matrix.platform == 'macos-15' && secrets.APPLE_CERTIFICATE != '' || github.ref == 'refs/heads/main') }}
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -126,6 +127,45 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Restore desktop dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: gradle-dependencies,npm-dependencies
+          metadata-hints: workflow=tauri-build,platform=${{ matrix.name }}
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
+      - name: Configure Rust compiler cache with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: sccache
+          proxy-port: 22243
+          metadata-hints: workflow=tauri-build,platform=${{ matrix.name }}
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
+      - name: Configure Gradle build cache with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: gradle
+          proxy-port: 22244
+          metadata-hints: workflow=tauri-build,platform=${{ matrix.name }}
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -137,7 +177,7 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-          cache: "npm"
+          cache: ${{ env.BORINGCACHE_ENABLED != 'true' && 'npm' || '' }}
           cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Rust
@@ -150,6 +190,7 @@ jobs:
       # only recompiles the app crate. Written on main; PRs and the merge queue
       # restore from it.
       - name: Cache Rust build
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           workspaces: frontend/editor/src-tauri
@@ -180,6 +221,7 @@ jobs:
           distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
 
       - name: Cache Gradle User Home
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -208,6 +250,43 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:prepare
+
+      - name: Build desktop frontend
+        working-directory: frontend/editor
+        run: npx vite build --mode desktop
+        env:
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
+          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
+          VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
+          CI: true
+
+      - name: Build Rust application with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: cargo
+          proxy-port: 22245
+          metadata-hints: workflow=tauri-build,platform=${{ matrix.name }}
+        env:
+          CARGO_BUILD_TARGET: ${{ matrix.cargo_target }}
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
+      - name: Build x86_64 Rust application with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true' && matrix.platform == 'macos-15'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: cargo
+          proxy-port: 22246
+          metadata-hints: workflow=tauri-build,platform=${{ matrix.name }}
+        env:
+          CARGO_BUILD_TARGET: x86_64-apple-darwin
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
       - name: Run Tauri/Cargo tests
         run: task desktop:test
@@ -417,7 +496,9 @@ jobs:
           # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
           # AppImage runs in its own continue-on-error step below so its
           # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+          args: >-
+            ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+            --config '{"build":{"beforeBuildCommand":""}}'
 
       - name: Build Tauri app (unsigned)
         if: env.SIGN_BUNDLE != 'true'
@@ -439,7 +520,7 @@ jobs:
           # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
           args: >-
             ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
-            --config '{"bundle":{"createUpdaterArtifacts":false}}'
+            --config '{"build":{"beforeBuildCommand":""},"bundle":{"createUpdaterArtifacts":false}}'
 
       # AppImage is decoupled so its linuxdeploy run gets a fresh process
       # (rpm scratch state torn down) and its failure can't tank deb/rpm.
@@ -462,7 +543,7 @@ jobs:
         with:
           projectPath: ./frontend/editor
           tauriScript: npx tauri
-          args: --bundles appimage
+          args: --bundles appimage --config '{"build":{"beforeBuildCommand":""}}'
 
       # Bundled libwayland conflicts with the host's on some distros (Fedora
       # Wayland: EGL_BAD_PARAMETER, blank window - #6878). The AppImage

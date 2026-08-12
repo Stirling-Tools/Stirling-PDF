@@ -50,6 +50,38 @@ gha_endgroup() {
     if is_gha; then echo "::endgroup::"; fi
 }
 
+set_docker_cache_args() {
+    local gha_scope="$1"
+    local cache_from=""
+    local cache_to=""
+    DOCKER_CACHE_ARGS=()
+
+    case "$gha_scope" in
+        stirling-pdf-ultra-lite)
+            cache_from="${BORINGCACHE_DOCKER_CACHE_FROM_ULTRA_LITE:-}"
+            cache_to="${BORINGCACHE_DOCKER_CACHE_TO_ULTRA_LITE:-}"
+            ;;
+        stirling-pdf-fat)
+            cache_from="${BORINGCACHE_DOCKER_CACHE_FROM_FAT:-}"
+            cache_to="${BORINGCACHE_DOCKER_CACHE_TO_FAT:-}"
+            ;;
+    esac
+
+    if [ -n "$cache_from" ]; then
+        while IFS= read -r cache_ref; do
+            [ -n "$cache_ref" ] && DOCKER_CACHE_ARGS+=(--cache-from "$cache_ref")
+        done <<< "$cache_from"
+        if [ -n "$cache_to" ]; then
+            DOCKER_CACHE_ARGS+=(--cache-to "$cache_to")
+        fi
+    elif [ -n "${ACTIONS_RUNTIME_TOKEN:-}" ] && { [ -n "${ACTIONS_RESULTS_URL:-}" ] || [ -n "${ACTIONS_CACHE_URL:-}" ]; }; then
+        DOCKER_CACHE_ARGS=(
+            --cache-from "type=gha,scope=$gha_scope"
+            --cache-to "type=gha,mode=max,scope=$gha_scope"
+        )
+    fi
+}
+
 start_test_timer() {
     local test_name=$1
     test_start_times["$test_name"]=$SECONDS
@@ -726,17 +758,13 @@ main() {
 
         # Build Ultra-Lite image with embedded frontend (matching docker-compose-latest-ultra-lite.yml)
         echo "Building ultra-lite image for tests that require it..."
-        if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
-            DOCKER_CACHE_ARGS_ULTRA_LITE="--cache-from type=gha,scope=stirling-pdf-ultra-lite --cache-to type=gha,mode=max,scope=stirling-pdf-ultra-lite"
-        else
-            DOCKER_CACHE_ARGS_ULTRA_LITE=""
-        fi
+        set_docker_cache_args stirling-pdf-ultra-lite
         local ultra_lite_build_log="$REPORT_DIR/Build-Ultra-Lite-Docker.build.log"
         if ! docker buildx build --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
             -f ./docker/embedded/Dockerfile.ultra-lite \
             --load \
-            ${DOCKER_CACHE_ARGS_ULTRA_LITE} . 2>&1 | tee "$ultra_lite_build_log"; then
+            "${DOCKER_CACHE_ARGS[@]}" . 2>&1 | tee "$ultra_lite_build_log"; then
             failed_tests+=("Build-Ultra-Lite-Docker")
             capture_build_failure "Build-Ultra-Lite-Docker"
             gha_endgroup
@@ -812,18 +840,14 @@ main() {
 
         # Build Fat (Security) image with embedded frontend (matching all 'fat' compose files)
         echo "Building fat image for tests that require it..."
-        if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
-            DOCKER_CACHE_ARGS_FAT="--cache-from type=gha,scope=stirling-pdf-fat --cache-to type=gha,mode=max,scope=stirling-pdf-fat"
-        else
-            DOCKER_CACHE_ARGS_FAT=""
-        fi
+        set_docker_cache_args stirling-pdf-fat
         local fat_build_log="$REPORT_DIR/Build-Fat-Docker.build.log"
         if ! docker buildx build --build-arg VERSION_TAG=alpha \
             ${BASE_IMAGE_ARG} \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
             -f ./docker/embedded/Dockerfile.fat \
             --load \
-            ${DOCKER_CACHE_ARGS_FAT} . 2>&1 | tee "$fat_build_log"; then
+            "${DOCKER_CACHE_ARGS[@]}" . 2>&1 | tee "$fat_build_log"; then
             failed_tests+=("Build-Fat-Docker")
             capture_build_failure "Build-Fat-Docker"
             gha_endgroup

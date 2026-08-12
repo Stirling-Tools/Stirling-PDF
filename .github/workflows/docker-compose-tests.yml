@@ -18,6 +18,8 @@ permissions:
 jobs:
   docker-compose-tests:
     runs-on: ubuntu-latest
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     permissions:
       actions: write
       contents: read
@@ -32,6 +34,31 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Restore build dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: gradle-dependencies,uv-dependencies
+          metadata-hints: workflow=docker-compose-tests
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
+      - name: Configure Gradle build cache with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: gradle
+          metadata-hints: workflow=docker-compose-tests
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
       - name: Set up JDK 25
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
@@ -39,6 +66,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle User Home
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
@@ -56,12 +84,44 @@ jobs:
       # resolves the local base. The gha cache backend is also skipped (its
       # runtime token isn't exposed) since the docker driver can't use it.
       - name: Set up Docker Buildx
-        if: inputs.docker-base-changed != 'true'
+        if: inputs.docker-base-changed != 'true' && env.BORINGCACHE_ENABLED != 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Set up ultra-lite Docker cache with BoringCache
+        id: boringcache-ultra-lite
+        if: inputs.docker-base-changed != 'true' && env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: docker
+          proxy-port: 22244
+          working-directory: .github/boringcache/docker-ultra-lite
+          docker-command: setup
+          metadata-hints: workflow=docker-compose-tests,image=ultra-lite
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
+      - name: Set up fat Docker cache with BoringCache
+        id: boringcache-fat
+        if: inputs.docker-base-changed != 'true' && env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: docker
+          proxy-port: 22245
+          working-directory: .github/boringcache/docker-fat
+          docker-command: setup
+          metadata-hints: workflow=docker-compose-tests,image=fat
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
       # Expose ACTIONS_RUNTIME_TOKEN / ACTIONS_RESULTS_URL for docker buildx type=gha cache backend.
       - name: Expose GitHub runtime for Buildx cache
-        if: inputs.docker-base-changed != 'true'
+        if: inputs.docker-base-changed != 'true' && env.BORINGCACHE_ENABLED != 'true'
         uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
       - name: Install Docker Compose
@@ -72,7 +132,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          enable-cache: true
+          enable-cache: ${{ env.BORINGCACHE_ENABLED != 'true' }}
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
@@ -98,6 +158,10 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
+          BORINGCACHE_DOCKER_CACHE_FROM_ULTRA_LITE: ${{ steps.boringcache-ultra-lite.outputs.cache-from }}
+          BORINGCACHE_DOCKER_CACHE_TO_ULTRA_LITE: ${{ steps.boringcache-ultra-lite.outputs.cache-to }}
+          BORINGCACHE_DOCKER_CACHE_FROM_FAT: ${{ steps.boringcache-fat.outputs.cache-from }}
+          BORINGCACHE_DOCKER_CACHE_TO_FAT: ${{ steps.boringcache-fat.outputs.cache-to }}
           # Tells test.sh to layer testing/compose/docker-compose-coverage.override.yml
           # over the cucumber compose so the container starts with the
           # JaCoCo agent attached via JAVA_CUSTOM_OPTS.

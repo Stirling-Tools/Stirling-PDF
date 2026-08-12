@@ -112,6 +112,7 @@ jobs:
       # Single source of truth for whether this preview embeds the admin portal:
       # drives the image build-arg and the deployment comment.
       BUILD_PORTAL: "true"
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
 
     steps:
       - name: Harden Runner
@@ -184,6 +185,8 @@ jobs:
           fetch-depth: 0 # Fetch full history for commit hash detection
 
       - name: Set up Docker Buildx
+        id: buildx
+        if: env.BORINGCACHE_ENABLED != 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Get version number
@@ -228,15 +231,31 @@ jobs:
             echo "Image needs to be built"
           fi
 
+      - name: Set up Docker cache with BoringCache
+        id: boringcache-docker
+        if: steps.check-image.outputs.exists == 'false' && env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: docker
+          working-directory: .github/boringcache/docker-latest
+          docker-command: setup
+          metadata-hints: workflow=pr-auto-deploy-v2
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
       - name: Build and push V2 image
         if: steps.check-image.outputs.exists == 'false'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
+          builder: ${{ steps.boringcache-docker.outputs.buildx-name || steps.buildx.outputs.name }}
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-pdf-latest
-          cache-to: type=gha,mode=max,scope=stirling-pdf-latest
+          cache-from: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-docker.outputs.cache-from || 'type=gha,scope=stirling-pdf-latest' }}
+          cache-to: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-docker.outputs.cache-to || 'type=gha,mode=max,scope=stirling-pdf-latest' }}
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
           build-args: |
             VERSION_TAG=v2-alpha
@@ -329,12 +348,25 @@ jobs:
               - 'frontend/**/*.mdx'
               - 'frontend/.storybook/**'
 
+      - name: Restore npm dependencies with BoringCache
+        if: steps.sb-changes.outputs.storybook == 'true' && env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        with:
+          trust-policy: auto
+          setup: none
+          mode: archive
+          cache-profiles: npm-dependencies
+          metadata-hints: workflow=pr-auto-deploy-v2,job=storybook
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
       - name: Set up Node.js for Storybook
         if: steps.sb-changes.outputs.storybook == 'true'
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
-          cache: "npm"
+          cache: ${{ env.BORINGCACHE_ENABLED != 'true' && 'npm' || '' }}
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task for Storybook
