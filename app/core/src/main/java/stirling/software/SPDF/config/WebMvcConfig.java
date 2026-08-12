@@ -17,6 +17,7 @@ import org.springframework.web.servlet.resource.EncodedResourceResolver;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.common.configuration.CorsPaths;
 import stirling.software.common.model.ApplicationProperties;
 
 @Configuration
@@ -32,14 +33,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private static final CacheControl NO_CACHE = CacheControl.noCache();
     private static final CacheControl IMMUTABLE_ONE_YEAR =
             CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic().immutable();
-
-    // CORS applies to API and API-docs endpoints only. Registering `/**` would also decorate
-    // static assets and the SPA HTML with Access-Control-Allow-Origin and Vary: Origin, which
-    // fragments CDN and browser caches per origin (and intermediaries often strip the CORS
-    // header from cached copies).
-    private static final String[] CORS_PATH_PATTERNS = {
-        "/api/**", "/v1/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
-    };
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -209,7 +202,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 
     private void registerCorsMappings(CorsRegistry registry, String[] allowedOriginPatterns) {
-        for (String pathPattern : CORS_PATH_PATTERNS) {
+        for (String pathPattern : CorsPaths.CROSS_ORIGIN_PATTERNS) {
             registry.addMapping(pathPattern)
                     .allowedOriginPatterns(allowedOriginPatterns)
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")

@@ -45,6 +45,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.configuration.CorsPaths;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.User;
@@ -64,14 +65,6 @@ import stirling.software.saas.service.SupabaseUserService;
 @Order(1)
 @RequiredArgsConstructor
 public class SupabaseSecurityConfig {
-
-    // CORS applies to API and API-docs endpoints only. Registering `/**` would also decorate
-    // static assets and the SPA HTML with Access-Control-Allow-Origin and Vary: Origin, which
-    // fragments CDN and browser caches per origin (and intermediaries often strip the CORS
-    // header from cached copies).
-    private static final String[] CORS_PATH_PATTERNS = {
-        "/api/**", "/v1/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
-    };
 
     private final UserService userService;
     private final TeamService teamService;
@@ -328,7 +321,7 @@ public class SupabaseSecurityConfig {
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        for (String pathPattern : CORS_PATH_PATTERNS) {
+        for (String pathPattern : CorsPaths.CROSS_ORIGIN_PATTERNS) {
             source.registerCorsConfiguration(pathPattern, cfg);
         }
         return source;

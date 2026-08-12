@@ -31,6 +31,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
+import stirling.software.common.configuration.CorsPaths;
 import stirling.software.common.model.ApplicationProperties;
 
 @ExtendWith(MockitoExtension.class)
@@ -123,14 +124,6 @@ class WebMvcConfigTest {
     @DisplayName("addCorsMappings")
     class AddCorsMappings {
 
-        private static final List<String> EXPECTED_CORS_PATTERNS =
-                List.of(
-                        "/api/**",
-                        "/v1/api-docs/**",
-                        "/v3/api-docs/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html");
-
         private CorsRegistry registry;
         private CorsRegistration registration;
 
@@ -158,7 +151,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            assertThat(capturedMappings()).containsExactlyElementsOf(EXPECTED_CORS_PATTERNS);
+            assertThat(capturedMappings()).containsExactly(CorsPaths.CROSS_ORIGIN_PATTERNS);
         }
 
         @Test
@@ -170,7 +163,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            assertThat(capturedMappings()).containsExactlyElementsOf(EXPECTED_CORS_PATTERNS);
+            assertThat(capturedMappings()).containsExactly(CorsPaths.CROSS_ORIGIN_PATTERNS);
             // origins consulted twice (presence check + value use)
             verify(system, atLeastOnce()).getCorsAllowedOrigins();
         }
@@ -189,7 +182,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            assertThat(capturedMappings()).containsExactlyElementsOf(EXPECTED_CORS_PATTERNS);
+            assertThat(capturedMappings()).containsExactly(CorsPaths.CROSS_ORIGIN_PATTERNS);
         }
 
         @Test
@@ -200,7 +193,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            assertThat(capturedMappings()).containsExactlyElementsOf(EXPECTED_CORS_PATTERNS);
+            assertThat(capturedMappings()).containsExactly(CorsPaths.CROSS_ORIGIN_PATTERNS);
         }
 
         @Test
@@ -210,7 +203,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            assertThat(capturedMappings()).containsExactlyElementsOf(EXPECTED_CORS_PATTERNS);
+            assertThat(capturedMappings()).containsExactly(CorsPaths.CROSS_ORIGIN_PATTERNS);
         }
     }
 }
