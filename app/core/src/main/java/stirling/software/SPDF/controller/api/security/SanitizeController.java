@@ -132,8 +132,11 @@ public class SanitizeController {
             catalog.setOpenAction(null);
         }
 
-        PDDocumentCatalogAdditionalActions catalogActions = catalog.getActions();
-        if (catalogActions != null) {
+        // getActions() creates an empty /AA in the catalog as a side effect when
+        // none exists (#7441), so only call it if /AA is already present.
+        COSDictionary aaDict = catalog.getCOSObject().getCOSDictionary(COSName.AA);
+        if (aaDict != null) {
+            PDDocumentCatalogAdditionalActions catalogActions = catalog.getActions();
             if (catalogActions.getWC() instanceof PDActionJavaScript) {
                 catalogActions.setWC(null);
             }
