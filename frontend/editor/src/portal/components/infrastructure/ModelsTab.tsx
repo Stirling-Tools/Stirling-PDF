@@ -38,21 +38,25 @@ export function ModelsTab() {
     column.entity({
       key: "name",
       header: t("portal.infrastructure.models.columns.model"),
+      sortable: true,
       primary: (m) => m.name,
     }),
     column.text({
       key: "provider",
       header: t("portal.infrastructure.models.columns.provider", "Provider"),
+      sortable: true,
       get: (m) => MODEL_PROVIDER_LABEL[m.provider],
     }),
     column.text({
       key: "type",
       header: t("portal.infrastructure.models.columns.type"),
+      sortable: true,
       get: (m) => t(MODEL_TYPE_LABEL[m.type]),
     }),
     column.badge({
       key: "status",
       header: t("portal.infrastructure.models.columns.status"),
+      sortable: true,
       get: (m) => ({
         tone: MODEL_TONE[m.status],
         label: t(MODEL_LABEL[m.status]),
@@ -61,22 +65,28 @@ export function ModelsTab() {
     column.progress({
       key: "load",
       header: t("portal.infrastructure.models.columns.load"),
+      sortable: true,
       get: (m) => ({ value: m.load, label: pct(m.load) }),
     }),
     column.number({
       key: "latency",
       header: t("portal.infrastructure.models.columns.latency"),
+      sortable: true,
       get: (m) => m.latencyMs,
       format: (n) => t("portal.infrastructure.models.msValue", { value: n }),
     }),
     column.mono({
       key: "cost",
       header: t("portal.infrastructure.models.columns.cost"),
+      // Sort by the raw per-unit cost, not the formatted "$0.01 / page" label.
+      sortable: true,
+      sortBy: (m) => m.cost,
       get: (m) => modelCost(t, m.cost, m.costUnit),
     }),
     column.mono({
       key: "version",
       header: t("portal.infrastructure.models.columns.version"),
+      sortable: true,
       get: (m) => m.version,
     }),
   ];
@@ -98,17 +108,11 @@ export function ModelsTab() {
       key: "operation",
       header: t("portal.infrastructure.models.routingColumns.operation"),
       primary: (r) => r.operation,
-    }),
-    column.text({
-      key: "default",
-      header: t(
-        "portal.infrastructure.models.routingColumns.defaultColumn",
-        "Default",
-      ),
-      get: (r) =>
+      // The default rule was its own near-empty column; show it inline instead.
+      suffix: (r) =>
         r.isDefault
           ? t("portal.infrastructure.models.routingColumns.default")
-          : "",
+          : undefined,
     }),
     column.text({
       key: "docType",

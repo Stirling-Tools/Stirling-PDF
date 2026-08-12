@@ -184,7 +184,12 @@ export function UsersDirectory({
         ),
         primary: (m) => m.name,
         suffix: (m) => (m.isSelf ? t("users.you", "(you)") : undefined),
-        note: (m) => (m.email !== m.name ? m.email : undefined),
+      }),
+      column.muted({
+        key: "email",
+        header: t("users.columns.email", "Email"),
+        // Blank when the name already is the email (no separate display name).
+        get: (m) => (m.email !== m.name ? m.email : undefined),
       }),
       column.labels({
         key: "status",

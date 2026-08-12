@@ -27,12 +27,14 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
       column.entity({
         key: "name",
         header: t("portal.pipelines.table.name"),
+        sortable: true,
         icon: () => <AccountTreeRounded />,
         primary: (p) => p.name,
       }),
       column.text({
         key: "trigger",
         header: t("portal.pipelines.table.trigger", "Trigger"),
+        sortable: true,
         get: (p) =>
           t(`portal.pipelines.trigger.${p.trigger}`, {
             defaultValue: p.trigger,
@@ -41,6 +43,7 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
       column.badge({
         key: "status",
         header: t("portal.pipelines.table.status"),
+        sortable: true,
         get: (p) => ({
           tone: STATUS_TONE[p.status],
           label: t(`portal.pipelines.status.${p.status}`),
@@ -49,11 +52,13 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
       column.number({
         key: "steps",
         header: t("portal.pipelines.table.steps"),
+        sortable: true,
         get: (p) => p.steps.length,
       }),
       column.number({
         key: "sources",
         header: t("portal.pipelines.table.sources"),
+        sortable: true,
         get: (p) => p.sources.length,
       }),
     ],

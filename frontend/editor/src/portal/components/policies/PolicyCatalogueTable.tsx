@@ -31,6 +31,7 @@ export function PolicyCatalogueTable({
       column.entity({
         key: "policy",
         header: t("portal.policies.table.policy", "Policy"),
+        sortable: true,
         icon: (entry) => policyCategoryIcon(entry.category.id),
         primary: (entry) => t(entry.category.label),
       }),
@@ -42,17 +43,20 @@ export function PolicyCatalogueTable({
       column.muted({
         key: "scope",
         header: t("portal.policies.table.appliesTo", "Applies to"),
+        sortable: true,
         get: (entry) => t(entry.config.scopeLabel),
       }),
       column.number({
         key: "docs",
         header: t("portal.policies.table.docs", "Docs enforced"),
+        sortable: true,
         get: (entry) => (entry.policy ? entry.policy.stats.enforced : null),
         format: (n) => n.toLocaleString(),
       }),
       column.badge({
         key: "status",
         header: t("portal.policies.table.status", "Status"),
+        sortable: true,
         // Every state reads as one badge; the "set up" affordance is the row
         // itself (click + chevron), so there's no bespoke button in the cell.
         get: (entry) => {

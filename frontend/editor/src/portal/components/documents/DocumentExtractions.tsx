@@ -28,6 +28,7 @@ export function DocumentExtractions({
     column.text({
       key: "field",
       header: t("portal.documents.extractions.columns.field"),
+      sortable: true,
       get: (e) => e.field,
     }),
     column.mono({
@@ -38,6 +39,10 @@ export function DocumentExtractions({
     column.badge({
       key: "confidence",
       header: t("portal.documents.extractions.columns.confidence"),
+      sortable: true,
+      // Sort on the whole-percent integer, not the "92%" label (keeps decimals
+      // out of the natural-sort comparator).
+      sortBy: (e) => Math.round(e.confidence * 100),
       get: (e) => ({
         tone: confidenceTone(e.confidence),
         label: confidencePct(e.confidence),

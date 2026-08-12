@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   type CellLabel,
   column,
   DataTable,
   type DataTableColumn,
+  type DataTableFilter,
 } from "@app/ui";
 import {
   classificationTone,
@@ -16,12 +17,18 @@ import {
 interface ReviewQueueTableProps {
   documents: ReviewDocument[];
   onRowClick: (doc: ReviewDocument) => void;
+  /** Status filter pills, owned + applied by the table. */
+  filters?: DataTableFilter<ReviewDocument>[];
+  /** Extra controls (e.g. a filename search) shown in the table's toolbar. */
+  toolbar?: ReactNode;
 }
 
 /** The document stream - one row per document your org has processed. */
 export function ReviewQueueTable({
   documents,
   onRowClick,
+  filters,
+  toolbar,
 }: ReviewQueueTableProps) {
   const { t } = useTranslation();
   const columns = useMemo<DataTableColumn<ReviewDocument>[]>(
@@ -29,6 +36,7 @@ export function ReviewQueueTable({
       column.entity({
         key: "document",
         header: t("portal.documents.table.columns.document"),
+        sortable: true,
         primary: (d) => d.name,
         note: (d) => d.note,
       }),
@@ -61,11 +69,13 @@ export function ReviewQueueTable({
       column.text({
         key: "product",
         header: t("portal.documents.table.columns.product"),
+        sortable: true,
         get: (d) => d.product,
       }),
       column.text({
         key: "action",
         header: t("portal.documents.table.columns.action"),
+        sortable: true,
         get: (d) =>
           d.product === "Editor" || !d.action
             ? t("portal.documents.table.editorAction")
@@ -74,11 +84,13 @@ export function ReviewQueueTable({
       column.muted({
         key: "user",
         header: t("portal.documents.table.columns.user"),
+        sortable: true,
         get: (d) => d.user,
       }),
       column.badge({
         key: "status",
         header: t("portal.documents.table.columns.status"),
+        sortable: true,
         get: (d) => ({
           tone: DOCUMENT_STATUS_TONE[d.status],
           label:
@@ -112,6 +124,8 @@ export function ReviewQueueTable({
       rows={documents}
       rowKey={(d) => d.id}
       onRowClick={onRowClick}
+      filters={filters}
+      toolbar={toolbar}
       empty={t("portal.documents.table.empty")}
     />
   );

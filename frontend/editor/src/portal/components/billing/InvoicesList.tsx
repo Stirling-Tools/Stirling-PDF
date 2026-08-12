@@ -85,6 +85,9 @@ export function InvoicesList() {
     column.text({
       key: "date",
       header: t("portal.billing.invoices.columnDate", "Date"),
+      sortable: true,
+      // Sort chronologically on the raw ISO timestamp, not the formatted label.
+      sortBy: (inv) => inv.createdAt ?? undefined,
       get: (inv) =>
         inv.createdAt ? formatPeriodDate(inv.createdAt, { year: true }) : "-",
     }),
@@ -94,6 +97,7 @@ export function InvoicesList() {
         "portal.billing.invoices.columnPdfsProcessed",
         "PDFs processed",
       ),
+      sortable: true,
       // Billed units on the invoice's metered line item; blank when the
       // line-item table isn't synced into the Stripe mirror.
       get: (inv) => inv.pdfsProcessed,
@@ -102,17 +106,20 @@ export function InvoicesList() {
     column.number({
       key: "amount",
       header: t("portal.billing.invoices.columnAmount", "Amount"),
+      sortable: true,
       get: (inv) => inv.totalMinor,
       format: (n, inv) => formatMinor(n, inv.currency),
     }),
     column.badge({
       key: "status",
       header: t("portal.billing.invoices.columnStatus", "Status"),
+      sortable: true,
       get: (inv) => ({ tone: statusTone(inv.status), label: inv.status }),
     }),
     column.text({
       key: "description",
       header: t("portal.billing.invoices.columnDescription", "Description"),
+      sortable: true,
       get: (inv) =>
         inv.description ??
         t("portal.billing.invoices.descriptionFallback", "Invoice"),
@@ -189,6 +196,7 @@ export function InvoicesList() {
             columns={columns}
             rows={visibleRows}
             rowKey={(inv) => inv.id}
+            defaultSort={{ key: "date", direction: "desc" }}
           />
           {hasMore && (
             <div className="portal-billing__invoice-footer">

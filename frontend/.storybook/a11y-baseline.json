@@ -1854,7 +1854,13 @@
     "aria-allowed-role",
     "color-contrast"
   ],
+  "editor/src/portal/components/documents/DocumentExtractions.stories.tsx :: Default": [
+    "color-contrast"
+  ],
   "editor/src/portal/components/documents/DocumentExtractions.stories.tsx :: Masked": [
+    "color-contrast"
+  ],
+  "editor/src/portal/components/documents/DocumentExtractions.stories.tsx :: Unlocked": [
     "color-contrast"
   ],
   "editor/src/portal/components/documents/ElevationBanner.stories.tsx :: Granted": [

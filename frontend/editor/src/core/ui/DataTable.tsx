@@ -6,11 +6,14 @@ import {
   flexRender,
   type RowData,
   rowSortingFeature,
+  sortFn_alphanumeric,
+  sortFn_basic,
   type SortingState,
   tableFeatures,
   useTable,
 } from "@tanstack/react-table";
 import { Skeleton } from "@app/ui/Skeleton";
+import { Tabs } from "@app/ui/Tabs";
 import {
   type CellAction,
   type DataTableColumn,
@@ -35,6 +38,9 @@ const DATA_TABLE_FEATURES = tableFeatures({
   rowSortingFeature,
   sortedRowModel: createSortedRowModel(),
   columnMeta: {} as ColumnMeta,
+  // Register the comparators the column vocabulary uses. Without this v9 falls
+  // back to a case-sensitive `basic` sort and warns per column.
+  sortFns: { alphanumeric: sortFn_alphanumeric, basic: sortFn_basic },
 });
 type DataTableFeatures = typeof DATA_TABLE_FEATURES;
 
@@ -57,6 +63,21 @@ export interface DataTableGroup<T> {
   rows: T[];
   /** Collapse rows past this count behind a "Show all N" toggle. */
   collapseAfter?: number;
+}
+
+/**
+ * A declarative row filter. DataTable renders the options as a pill control,
+ * owns the active value, and applies `predicate` to every row. Supply the
+ * reset / "all" option yourself (usually first) and return true for it.
+ */
+export interface DataTableFilter<T> {
+  key: string;
+  options: { value: string; label: string; count?: number }[];
+  /** Keep the row when it returns true for the active value. */
+  predicate: (row: T, value: string) => boolean;
+  /** Active value on first render. Defaults to the first option. */
+  defaultValue?: string;
+  ariaLabel?: string;
 }
 
 export interface DataTableProps<T> {
@@ -86,6 +107,12 @@ export interface DataTableProps<T> {
   error?: ReactNode;
   /** Shown when there are no rows (and not loading / no error). Text or a node. */
   empty?: ReactNode;
+  /** Shown when filters exclude every row (rows exist, none match). Falls back
+   *  to `empty`. */
+  emptyFiltered?: ReactNode;
+
+  /** Declarative filters, rendered as pill controls above the table. */
+  filters?: DataTableFilter<T>[];
 
   /** Content above the table (filters, search, actions), inside the surface. */
   toolbar?: ReactNode;
@@ -148,6 +175,8 @@ export function DataTable<T extends RowData>({
   skeletonRows = 6,
   error,
   empty,
+  emptyFiltered,
+  filters,
   toolbar,
   variant = "default",
   caption,
@@ -170,11 +199,30 @@ export function DataTable<T extends RowData>({
       return next;
     });
 
-  // The data source is either grouped or flat; TanStack (headers, sorting for
-  // the flat path) is fed the flattened rows.
-  const flatRows = useMemo(
-    () => (groups ? groups.flatMap((g) => g.rows) : rows),
-    [groups, rows],
+  const hasFilters = (filters?.length ?? 0) > 0;
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const filterValue = (f: DataTableFilter<T>) =>
+    filterValues[f.key] ?? f.defaultValue ?? f.options[0]?.value ?? "";
+  const passesFilters = (row: T) =>
+    !filters || filters.every((f) => f.predicate(row, filterValue(f)));
+
+  // The data source is either grouped or flat. The flat path feeds TanStack
+  // (headers + sorting) its rows post-filter; the grouped path filters within
+  // each section below.
+  const tableData = useMemo(
+    () => {
+      const src = groups ? groups.flatMap((g) => g.rows) : rows;
+      if (!filters || filters.length === 0) return src;
+      return src.filter((row) =>
+        filters.every((f) => {
+          const v =
+            filterValues[f.key] ?? f.defaultValue ?? f.options[0]?.value ?? "";
+          return f.predicate(row, v);
+        }),
+      );
+    },
+    // filterValue is derived from filterValues; inlined above to keep deps exact.
+    [groups, rows, filters, filterValues],
   );
 
   const interactive = Boolean(onRowClick);
@@ -213,6 +261,7 @@ export function DataTable<T extends RowData>({
           cell: (ctx) => c.renderCell(ctx.row.original),
           enableSorting: true,
           sortUndefined: "last",
+          sortFn: c.sortFn ?? "basic",
           meta,
         });
       }
@@ -227,7 +276,7 @@ export function DataTable<T extends RowData>({
 
   const table = useTable({
     features: DATA_TABLE_FEATURES,
-    data: flatRows,
+    data: tableData,
     columns: tanstackColumns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -263,56 +312,67 @@ export function DataTable<T extends RowData>({
       </tr>
     );
   } else if (groups) {
-    body = groups.flatMap((g) => {
-      const limit = g.collapseAfter ?? Infinity;
-      const open = openGroups.has(g.key);
-      const overflow = g.rows.length > limit;
-      const shown = overflow && !open ? g.rows.slice(0, limit) : g.rows;
-      const header = (
-        <tr key={`group-${g.key}`} className="sui-datatable__group">
-          <td colSpan={colCount} className="sui-datatable__group-cell">
-            <div className="sui-datatable__group-head">
-              <div className="sui-datatable__group-title">
-                <strong>{g.title}</strong>
-                {g.meta && (
-                  <span className="sui-datatable__group-meta">{g.meta}</span>
-                )}
+    body = groups
+      .map((g) => ({
+        g,
+        gRows: hasFilters ? g.rows.filter(passesFilters) : g.rows,
+      }))
+      .filter((e) => e.gRows.length > 0)
+      .flatMap(({ g, gRows }) => {
+        const limit = g.collapseAfter ?? Infinity;
+        const open = openGroups.has(g.key);
+        const overflow = gRows.length > limit;
+        const shown = overflow && !open ? gRows.slice(0, limit) : gRows;
+        const header = (
+          <tr key={`group-${g.key}`} className="sui-datatable__group">
+            <td colSpan={colCount} className="sui-datatable__group-cell">
+              <div className="sui-datatable__group-head">
+                <div className="sui-datatable__group-title">
+                  <strong>{g.title}</strong>
+                  {g.meta && (
+                    <span className="sui-datatable__group-meta">{g.meta}</span>
+                  )}
+                </div>
+                {g.actions &&
+                  g.actions.length > 0 &&
+                  renderCellActions(g.actions)}
               </div>
-              {g.actions &&
-                g.actions.length > 0 &&
-                renderCellActions(g.actions)}
-            </div>
-          </td>
-        </tr>
-      );
-      const rowEls = shown.map((row) => (
-        <tr key={rowKey(row)} className="sui-datatable__row">
-          {columns.map((c) => (
-            <td key={c.key} className={cellClass(c.align, c.nowrap, c.fit)}>
-              {c.renderCell(row)}
             </td>
-          ))}
-        </tr>
-      ));
-      const moreEl = overflow ? (
-        <tr key={`more-${g.key}`}>
-          <td colSpan={colCount} className="sui-datatable__group-more">
-            <button
-              type="button"
-              className="sui-datatable__show-all"
-              onClick={() => toggleGroup(g.key)}
-            >
-              {open
-                ? collapseLabels.showLess
-                : collapseLabels.showAll(g.rows.length)}
-            </button>
-          </td>
-        </tr>
-      ) : null;
-      return moreEl ? [header, ...rowEls, moreEl] : [header, ...rowEls];
-    });
-  } else if (rows.length === 0) {
-    const isNode = typeof empty === "object" && empty !== null;
+          </tr>
+        );
+        const rowEls = shown.map((row) => (
+          <tr key={rowKey(row)} className="sui-datatable__row">
+            {columns.map((c) => (
+              <td key={c.key} className={cellClass(c.align, c.nowrap, c.fit)}>
+                {c.renderCell(row)}
+              </td>
+            ))}
+          </tr>
+        ));
+        const moreEl = overflow ? (
+          <tr key={`more-${g.key}`}>
+            <td colSpan={colCount} className="sui-datatable__group-more">
+              <button
+                type="button"
+                className="sui-datatable__show-all"
+                onClick={() => toggleGroup(g.key)}
+              >
+                {open
+                  ? collapseLabels.showLess
+                  : collapseLabels.showAll(gRows.length)}
+              </button>
+            </td>
+          </tr>
+        ) : null;
+        return moreEl ? [header, ...rowEls, moreEl] : [header, ...rowEls];
+      });
+  } else if (tableData.length === 0) {
+    // Flat path only (grouped handled above). Rows present but none match the
+    // active filters -> the filtered-empty slot; otherwise the plain empty one.
+    const filteredOut = hasFilters && rows.length > 0;
+    const content =
+      (filteredOut ? (emptyFiltered ?? empty) : empty) ?? "No data";
+    const isNode = typeof content === "object" && content !== null;
     body = (
       <tr>
         <td
@@ -323,7 +383,7 @@ export function DataTable<T extends RowData>({
           }
           colSpan={colCount}
         >
-          {empty ?? "No data"}
+          {content}
         </td>
       </tr>
     );
@@ -379,6 +439,26 @@ export function DataTable<T extends RowData>({
     <div className={`sui-datatable sui-datatable--${variant}`}>
       <div className="sui-datatable__frame">
         {toolbar && <div className="sui-datatable__toolbar">{toolbar}</div>}
+        {hasFilters && (
+          <div className="sui-datatable__filters">
+            {filters?.map((f) => (
+              <Tabs
+                key={f.key}
+                items={f.options.map((o) => ({
+                  key: o.value,
+                  label: o.label,
+                  count: o.count,
+                }))}
+                activeKey={filterValue(f)}
+                onChange={(v) =>
+                  setFilterValues((prev) => ({ ...prev, [f.key]: v }))
+                }
+                variant="pill"
+                ariaLabel={f.ariaLabel}
+              />
+            ))}
+          </div>
+        )}
         <div className="sui-datatable__scroll">
           <table className="sui-datatable__table">
             {caption && (

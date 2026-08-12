@@ -83,16 +83,19 @@ export function SecurityTab() {
     column.text({
       key: "label",
       header: t("portal.infrastructure.security.ipColumns.label"),
+      sortable: true,
       get: (e) => e.label,
     }),
     column.mono({
       key: "cidr",
       header: t("portal.infrastructure.security.ipColumns.cidr"),
+      sortable: true,
       get: (e) => e.cidr,
     }),
     column.mono({
       key: "addedBy",
       header: t("portal.infrastructure.security.ipColumns.addedBy"),
+      sortable: true,
       get: (e) => e.addedBy,
     }),
     column.muted({

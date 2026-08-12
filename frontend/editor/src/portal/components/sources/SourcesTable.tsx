@@ -32,6 +32,7 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
       column.entity({
         key: "name",
         header: t("portal.sources.table.source"),
+        sortable: true,
         icon: (s) => <SourceTypeIcon type={s.type} />,
         // The editor is a system source with no instance name: label it from its
         // type (and leave its Type cell blank, so it isn't repeated).
@@ -43,6 +44,7 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
       column.text({
         key: "type",
         header: t("portal.sources.table.type", "Type"),
+        sortable: true,
         get: (s) =>
           s.type === EDITOR_SOURCE_TYPE
             ? ""
@@ -51,6 +53,7 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
       column.badge({
         key: "status",
         header: t("portal.sources.table.status"),
+        sortable: true,
         get: (s) => ({
           tone: STATUS_TONE[s.status],
           label: t(`portal.sources.status.${s.status}`),
@@ -59,12 +62,14 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
       column.number({
         key: "docs",
         header: t("portal.sources.table.documents"),
+        sortable: true,
         get: (s) => s.docsTotal,
         format: (n) => n.toLocaleString(),
       }),
       column.number({
         key: "referenceCount",
         header: t("portal.sources.table.usedBy"),
+        sortable: true,
         get: (s) => s.referenceCount,
       }),
     ],

@@ -92,7 +92,7 @@ const MEMBERS: Member[] = [
     name: "Priya Patel",
     email: "priya@stirlingpdf.com",
     role: "member",
-    status: "active",
+    status: "suspended",
     lastActive: "Never",
     username: "priya",
     teamId: 2,
@@ -124,6 +124,7 @@ const MEMBERS: Member[] = [
     teamName: "Compliance",
     portalAccess: "granted",
     portalGrantId: 11,
+    locked: true,
   },
 ];
 

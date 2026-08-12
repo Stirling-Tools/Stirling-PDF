@@ -27,6 +27,16 @@
   border-bottom: 1px solid var(--c-border);
 }
 
+/* Declarative filter bar (pill controls) above the table. */
+.sui-datatable__filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--c-border);
+}
+
 .sui-datatable__scroll {
   width: 100%;
   overflow-x: auto;

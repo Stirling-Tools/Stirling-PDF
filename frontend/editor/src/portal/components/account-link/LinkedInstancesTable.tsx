@@ -42,6 +42,7 @@ export function LinkedInstancesTable({
     column.entity({
       key: "name",
       header: t("portal.accountLink.instances.columns.instance", "Instance"),
+      sortable: true,
       primary: (i) =>
         i.name ?? t("portal.accountLink.instances.unnamed", "Unnamed instance"),
       note: (i) => i.deviceId,
@@ -49,6 +50,7 @@ export function LinkedInstancesTable({
     column.badge({
       key: "status",
       header: t("portal.accountLink.instances.columns.status", "Status"),
+      sortable: true,
       get: (i) =>
         i.revoked
           ? {
@@ -63,11 +65,16 @@ export function LinkedInstancesTable({
     column.muted({
       key: "lastSeen",
       header: t("portal.accountLink.instances.columns.lastSeen", "Last seen"),
+      sortable: true,
+      // Sort on the real ISO timestamp, not the "3d ago" label.
+      sortBy: (i) => i.lastSeenAt ?? undefined,
       get: (i) => relativeTime(i.lastSeenAt, t),
     }),
     column.muted({
       key: "created",
       header: t("portal.accountLink.instances.columns.linked", "Linked"),
+      sortable: true,
+      sortBy: (i) => i.createdAt ?? undefined,
       get: (i) => relativeTime(i.createdAt, t),
     }),
     column.actions({

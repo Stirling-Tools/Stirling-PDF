@@ -18,13 +18,11 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-// Isolate ReviewQueue's own branching: stub the heavy children so the test
-// doesn't need TierProvider (DocumentDrawer → useTier) or the real table body.
+// Isolate ReviewQueue's own branching: stub the drawer so the test doesn't need
+// TierProvider (DocumentDrawer → useTier). The table renders for real now, since
+// the status filter pills live inside it.
 vi.mock("@portal/components/documents/DocumentDrawer", () => ({
   DocumentDrawer: () => null,
-}));
-vi.mock("@portal/components/documents/ReviewQueueTable", () => ({
-  ReviewQueueTable: () => null,
 }));
 
 const render = (ui: ReactElement): RenderResult =>

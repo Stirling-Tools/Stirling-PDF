@@ -25,26 +25,31 @@ export function InstanceHealthTable({ instances }: Props) {
     column.entity({
       key: "host",
       header: t("portal.editorAdmin.health.columns.host"),
+      sortable: true,
       primary: (i) => i.host,
     }),
     column.text({
       key: "target",
       header: t("portal.editorAdmin.health.columns.target", "Target"),
+      sortable: true,
       get: (i) => TARGET_LABEL[i.target],
     }),
     column.mono({
       key: "version",
       header: t("portal.editorAdmin.health.columns.version"),
+      sortable: true,
       get: (i) => i.version,
     }),
     column.mono({
       key: "region",
       header: t("portal.editorAdmin.health.columns.region"),
+      sortable: true,
       get: (i) => i.region,
     }),
     column.badge({
       key: "status",
       header: t("portal.editorAdmin.health.columns.status"),
+      sortable: true,
       get: (i) => ({
         tone: INSTANCE_STATUS_TONE[i.status],
         label: t(INSTANCE_STATUS_LABEL[i.status]),
@@ -58,6 +63,7 @@ export function InstanceHealthTable({ instances }: Props) {
     column.number({
       key: "activeUsers",
       header: t("portal.editorAdmin.health.columns.activeUsers"),
+      sortable: true,
       get: (i) => i.activeUsers,
     }),
   ];

@@ -31,12 +31,14 @@ export function DeploymentsTab() {
     column.entity({
       key: "name",
       header: t("portal.infrastructure.deployments.regionColumns.region"),
+      sortable: true,
       primary: (r) => r.name,
       note: (r) => r.code,
     }),
     column.number({
       key: "latency",
       header: t("portal.infrastructure.deployments.regionColumns.latency"),
+      sortable: true,
       get: (r) => r.latencyMs,
       format: (n) =>
         t("portal.infrastructure.deployments.msValue", { value: n }),
@@ -44,11 +46,13 @@ export function DeploymentsTab() {
     column.progress({
       key: "load",
       header: t("portal.infrastructure.deployments.regionColumns.load"),
+      sortable: true,
       get: (r) => ({ value: r.load, label: pct(r.load) }),
     }),
     column.badge({
       key: "status",
       header: t("portal.infrastructure.deployments.regionColumns.status"),
+      sortable: true,
       get: (r) => ({
         tone: REGION_TONE[r.status],
         label: t(REGION_LABEL[r.status]),
@@ -57,22 +61,26 @@ export function DeploymentsTab() {
     column.mono({
       key: "version",
       header: t("portal.infrastructure.deployments.regionColumns.version"),
+      sortable: true,
       get: (r) => r.version,
     }),
     column.number({
       key: "uptime",
       header: t("portal.infrastructure.deployments.regionColumns.uptime"),
+      sortable: true,
       get: (r) => r.uptime,
       format: (n) => pct(n, 3),
     }),
     column.number({
       key: "instances",
       header: t("portal.infrastructure.deployments.regionColumns.instances"),
+      sortable: true,
       get: (r) => r.instances,
     }),
     column.number({
       key: "throughput",
       header: t("portal.infrastructure.deployments.regionColumns.throughput"),
+      sortable: true,
       get: (r) => r.throughput,
       format: (n) =>
         t("portal.infrastructure.deployments.throughputValue", {
@@ -82,6 +90,7 @@ export function DeploymentsTab() {
     column.number({
       key: "p99",
       header: t("portal.infrastructure.deployments.regionColumns.p99"),
+      sortable: true,
       get: (r) => r.p99Ms,
       format: (n) =>
         t("portal.infrastructure.deployments.msValue", { value: n }),
@@ -92,22 +101,26 @@ export function DeploymentsTab() {
     column.mono({
       key: "version",
       header: t("portal.infrastructure.deployments.deployColumns.version"),
+      sortable: true,
       get: (d) => d.version,
     }),
     column.text({
       key: "environment",
       header: t("portal.infrastructure.deployments.deployColumns.environment"),
+      sortable: true,
       get: (d) =>
         d.environment.charAt(0).toUpperCase() + d.environment.slice(1),
     }),
     column.text({
       key: "product",
       header: t("portal.infrastructure.deployments.deployColumns.product"),
+      sortable: true,
       get: (d) => d.product,
     }),
     column.badge({
       key: "status",
       header: t("portal.infrastructure.deployments.deployColumns.status"),
+      sortable: true,
       get: (d) => ({
         tone: DEPLOY_TONE[d.status],
         label: t(DEPLOY_LABEL[d.status]),
@@ -116,6 +129,7 @@ export function DeploymentsTab() {
     column.mono({
       key: "deployedBy",
       header: t("portal.infrastructure.deployments.deployColumns.deployedBy"),
+      sortable: true,
       get: (d) => d.deployedBy,
     }),
     column.muted({

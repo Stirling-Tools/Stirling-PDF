@@ -1,24 +1,20 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
   column,
   DataTable,
   type DataTableColumn,
+  type DataTableFilter,
   EmptyState,
   MetricCard,
   MetricStrip,
-  Tabs,
-  type TabItem,
 } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useSectionFlags } from "@portal/hooks/useAsync";
 import { useAuditLog } from "@portal/queries/infrastructure";
 import { HttpError } from "@portal/api/http";
-import {
-  type AuditCategory,
-  type AuditEvent,
-} from "@portal/api/infrastructure";
+import { type AuditEvent } from "@portal/api/infrastructure";
 import { AuditExportModal } from "@portal/components/infrastructure/AuditExportModal";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import {
@@ -28,30 +24,40 @@ import {
   AUDIT_TONE,
 } from "@portal/components/infrastructure/infraFormat";
 
-type AuditFilter = "all" | AuditCategory;
-
 export function AuditTab() {
   const { t } = useTranslation();
   const { tier } = useTier();
-  const [filter, setFilter] = useState<AuditFilter>("all");
   const [exportOpen, setExportOpen] = useState(false);
 
-  const auditFilters: TabItem<AuditFilter>[] = [
-    { key: "all", label: t("portal.infrastructure.audit.filters.all") },
-    { key: "auth", label: t("portal.infrastructure.audit.filters.auth") },
-    { key: "config", label: t("portal.infrastructure.audit.filters.config") },
+  const auditFilters: DataTableFilter<AuditEvent>[] = [
     {
-      key: "elevation",
-      label: t("portal.infrastructure.audit.filters.elevation"),
-    },
-    { key: "policy", label: t("portal.infrastructure.audit.filters.policy") },
-    {
-      key: "processing",
-      label: t("portal.infrastructure.audit.filters.processing"),
-    },
-    {
-      key: "security",
-      label: t("portal.infrastructure.audit.filters.security"),
+      key: "category",
+      ariaLabel: t("portal.infrastructure.audit.filterAriaLabel"),
+      options: [
+        { value: "all", label: t("portal.infrastructure.audit.filters.all") },
+        { value: "auth", label: t("portal.infrastructure.audit.filters.auth") },
+        {
+          value: "config",
+          label: t("portal.infrastructure.audit.filters.config"),
+        },
+        {
+          value: "elevation",
+          label: t("portal.infrastructure.audit.filters.elevation"),
+        },
+        {
+          value: "policy",
+          label: t("portal.infrastructure.audit.filters.policy"),
+        },
+        {
+          value: "processing",
+          label: t("portal.infrastructure.audit.filters.processing"),
+        },
+        {
+          value: "security",
+          label: t("portal.infrastructure.audit.filters.security"),
+        },
+      ],
+      predicate: (e, value) => value === "all" || e.category === value,
     },
   ];
 
@@ -59,11 +65,13 @@ export function AuditTab() {
     column.mono({
       key: "timestamp",
       header: t("portal.infrastructure.audit.columns.timestamp"),
+      sortable: true,
       get: (e) => e.timestamp,
     }),
     column.badge({
       key: "category",
       header: t("portal.infrastructure.audit.columns.event"),
+      sortable: true,
       get: (e) => ({
         tone: AUDIT_CAT_TONE[e.category],
         label: t(AUDIT_CAT_LABEL[e.category]),
@@ -72,21 +80,25 @@ export function AuditTab() {
     column.text({
       key: "action",
       header: t("portal.infrastructure.audit.columns.action", "Action"),
+      sortable: true,
       get: (e) => e.action,
     }),
     column.mono({
       key: "actor",
       header: t("portal.infrastructure.audit.columns.actor"),
+      sortable: true,
       get: (e) => e.actor,
     }),
     column.text({
       key: "target",
       header: t("portal.infrastructure.audit.columns.target"),
+      sortable: true,
       get: (e) => e.target,
     }),
     column.badge({
       key: "status",
       header: t("portal.infrastructure.audit.columns.status"),
+      sortable: true,
       get: (e) => ({
         tone: AUDIT_TONE[e.status],
         label: t(AUDIT_STATUS_LABEL[e.status]),
@@ -95,6 +107,7 @@ export function AuditTab() {
     column.number({
       key: "latency",
       header: t("portal.infrastructure.audit.columns.latency"),
+      sortable: true,
       get: (e) => e.latencyMs,
       format: (n) =>
         t("portal.infrastructure.audit.latencyValue", { value: n }),
@@ -103,15 +116,11 @@ export function AuditTab() {
 
   const state = useAuditLog(tier);
   const { data, error } = state;
-  const { isLoading, isEmpty } = useSectionFlags(state);
+  const { isLoading } = useSectionFlags(state);
   // Backend returns 403 for scoped-out callers; show an access message, not an empty state.
   const forbidden = error instanceof HttpError && error.status === 403;
 
-  const rows = useMemo(() => {
-    if (!data) return [];
-    if (filter === "all") return data.events;
-    return data.events.filter((e) => e.category === filter);
-  }, [data, filter]);
+  const rows = data?.events ?? [];
 
   return (
     <div className="portal-infra__stack">
@@ -154,21 +163,13 @@ export function AuditTab() {
         </MetricStrip>
       )}
 
-      {!forbidden && (
-        <Tabs<AuditFilter>
-          items={auditFilters}
-          activeKey={filter}
-          onChange={setFilter}
-          variant="pill"
-          ariaLabel={t("portal.infrastructure.audit.filterAriaLabel")}
-        />
-      )}
-
       <DataTable
         columns={cols}
         rows={rows}
         rowKey={(e) => e.id}
         loading={isLoading}
+        filters={forbidden ? undefined : auditFilters}
+        emptyFiltered={t("portal.infrastructure.audit.noEventsInCategory")}
         empty={
           forbidden ? (
             <EmptyState
@@ -178,14 +179,12 @@ export function AuditTab() {
                 "portal.infrastructure.audit.forbidden.description",
               )}
             />
-          ) : isEmpty ? (
+          ) : (
             <EmptyState
               size="compact"
               title={t("portal.infrastructure.audit.empty.title")}
               description={t("portal.infrastructure.audit.empty.description")}
             />
-          ) : (
-            t("portal.infrastructure.audit.noEventsInCategory")
           )
         }
       />

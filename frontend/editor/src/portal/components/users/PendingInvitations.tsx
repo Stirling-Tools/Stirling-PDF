@@ -1,13 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import {
-  Avatar,
-  column,
-  DataTable,
-  type DataTableColumn,
-  type DataTableGroup,
-} from "@app/ui";
+import { Avatar, column, DataTable, type DataTableColumn } from "@app/ui";
 import type { PendingInvitation } from "@portal/api/users";
 
 interface PendingInvitationsProps {
@@ -30,8 +24,9 @@ function expiryLabel(iso: string | undefined, t: TFunction): string {
 }
 
 /**
- * Pending team invitations (SaaS): the parity gap vs the editor. One grouped
- * section; each row shows the invitee and lets a team leader cancel the invite.
+ * Pending team invitations (SaaS): the parity gap vs the editor. A single flat
+ * list (not a section - there's only ever one) captioned with its title; each
+ * row shows the invitee and lets a team leader cancel the invite.
  */
 export function PendingInvitations({
   invitations,
@@ -71,22 +66,12 @@ export function PendingInvitations({
     [t, onCancel],
   );
 
-  const groups: DataTableGroup<PendingInvitation>[] = [
-    {
-      key: "pending",
-      title: t("users.invites.title", "Pending invitations"),
-      meta: t("users.invites.count", "{{count}} pending", {
-        count: invitations.length,
-      }),
-      rows: invitations,
-    },
-  ];
-
   return (
     <DataTable<PendingInvitation>
       columns={columns}
-      groups={groups}
+      rows={invitations}
       rowKey={(inv) => String(inv.id)}
+      caption={t("users.invites.title", "Pending invitations")}
     />
   );
 }

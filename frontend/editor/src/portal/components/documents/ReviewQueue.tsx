@@ -4,11 +4,10 @@ import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import {
   Button,
+  type DataTableFilter,
   EmptyState,
   Input,
   Skeleton,
-  Tabs,
-  type TabItem,
 } from "@app/ui";
 import type { DocumentStatus, ReviewDocument } from "@portal/api/documents";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
@@ -52,10 +51,11 @@ function SearchIcon() {
 export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<QueueFilter>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // Search pre-filters the rows; the status filter is owned + applied by the
+  // table via its `filters` prop, so both controls live in the table frame.
   const searched = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return documents;
@@ -63,12 +63,6 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
       (d) => d.name.toLowerCase().includes(q) || d.id.toLowerCase().includes(q),
     );
   }, [documents, query]);
-
-  const rows = useMemo(() => {
-    const statuses = FILTER_STATUSES[filter];
-    if (statuses === null) return searched;
-    return searched.filter((d) => statuses.includes(d.status));
-  }, [searched, filter]);
 
   const countFor = (f: QueueFilter): number => {
     const statuses = FILTER_STATUSES[f];
@@ -78,57 +72,56 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
 
   const selected = documents.find((d) => d.id === selectedId) ?? null;
 
-  const filterItems: TabItem<QueueFilter>[] = [
+  const statusFilters: DataTableFilter<ReviewDocument>[] = [
     {
-      key: "all",
-      label: t("portal.documents.filters.all"),
-      count: countFor("all"),
-    },
-    {
-      key: "flagged",
-      label: t("portal.documents.filters.flagged"),
-      count: countFor("flagged"),
-    },
-    {
-      key: "processed",
-      label: t("portal.documents.filters.processed"),
-      count: countFor("processed"),
-    },
-    {
-      key: "in-review",
-      label: t("portal.documents.filters.inReview"),
-      count: countFor("in-review"),
+      key: "status",
+      ariaLabel: t("portal.documents.filters.ariaLabel"),
+      options: [
+        {
+          value: "all",
+          label: t("portal.documents.filters.all"),
+          count: countFor("all"),
+        },
+        {
+          value: "flagged",
+          label: t("portal.documents.filters.flagged"),
+          count: countFor("flagged"),
+        },
+        {
+          value: "processed",
+          label: t("portal.documents.filters.processed"),
+          count: countFor("processed"),
+        },
+        {
+          value: "in-review",
+          label: t("portal.documents.filters.inReview"),
+          count: countFor("in-review"),
+        },
+      ],
+      predicate: (d, value) => {
+        const statuses = FILTER_STATUSES[value as QueueFilter];
+        return statuses == null || statuses.includes(d.status);
+      },
     },
   ];
+
+  const search = (
+    <Input
+      className="portal-documents__search"
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      placeholder={t("portal.documents.search")}
+      aria-label={t("portal.documents.search")}
+      leadingIcon={<SearchIcon />}
+      inputSize="sm"
+    />
+  );
 
   const isLoading = loading && documents.length === 0;
   const isEmpty = !loading && documents.length === 0;
 
   return (
     <div className="portal-documents__queue">
-      {/* The filter pills + search are counters over the list, so hide them when
-          the list is empty — the empty state stands alone. */}
-      {!isLoading && !isEmpty && (
-        <div className="portal-documents__toolbar">
-          <Tabs<QueueFilter>
-            items={filterItems}
-            activeKey={filter}
-            onChange={setFilter}
-            variant="pill"
-            ariaLabel={t("portal.documents.filters.ariaLabel")}
-          />
-          <Input
-            className="portal-documents__search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("portal.documents.search")}
-            aria-label={t("portal.documents.search")}
-            leadingIcon={<SearchIcon />}
-            inputSize="sm"
-          />
-        </div>
-      )}
-
       {isLoading && (
         <div className="portal-documents__table-skeleton" aria-hidden>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -169,8 +162,10 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
 
       {!isLoading && !isEmpty && (
         <ReviewQueueTable
-          documents={rows}
+          documents={searched}
           onRowClick={(d) => setSelectedId(d.id)}
+          filters={statusFilters}
+          toolbar={search}
         />
       )}
 

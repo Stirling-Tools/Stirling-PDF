@@ -16,6 +16,13 @@ import { Select, type SelectOption } from "@app/ui/Select";
 type Align = "left" | "right";
 type SortValue = string | number | boolean | null | undefined;
 
+/**
+ * Which built-in comparator sorts a column. Set by the builder from the cell's
+ * data type - `alphanumeric` (case-insensitive, natural: `v2` before `v10`) for
+ * text, `basic` (raw numeric) for numbers. Call-sites never choose this.
+ */
+export type DataTableSortFn = "alphanumeric" | "basic";
+
 /** Opaque, fully-resolved column. Produced only by the {@link column} builders. */
 export interface DataTableColumn<T> {
   key: string;
@@ -27,6 +34,8 @@ export interface DataTableColumn<T> {
   fit: boolean;
   sortable: boolean;
   sortValue?: (row: T) => SortValue;
+  /** Comparator kind, derived from the cell type. Only set when sortable. */
+  sortFn?: DataTableSortFn;
   /** Internal, design-system-owned renderer. Call-sites never supply this. */
   renderCell: (row: T) => ReactNode;
 }
@@ -153,6 +162,7 @@ function base<T>(
   o: Common,
   extra: Pick<DataTableColumn<T>, "align" | "nowrap" | "fit" | "renderCell"> & {
     sortValue?: (row: T) => SortValue;
+    sortFn?: DataTableSortFn;
   },
 ): DataTableColumn<T> {
   return {
@@ -163,26 +173,33 @@ function base<T>(
     fit: extra.fit,
     sortable: !!o.sortable,
     sortValue: o.sortable ? extra.sortValue : undefined,
+    sortFn: o.sortable ? extra.sortFn : undefined,
     renderCell: extra.renderCell,
   };
 }
 
-function text<T>(o: Common & { get: (row: T) => string }): DataTableColumn<T> {
+function text<T>(
+  o: Common & { get: (row: T) => string; sortBy?: (row: T) => SortValue },
+): DataTableColumn<T> {
   return base<T>(o, {
     align: "left",
     nowrap: false,
     fit: false,
-    sortValue: (r) => o.get(r),
+    sortValue: o.sortBy ?? ((r) => o.get(r)),
+    sortFn: "alphanumeric",
     renderCell: (r) => <span className="sui-dtc__text">{o.get(r)}</span>,
   });
 }
 
-function mono<T>(o: Common & { get: (row: T) => string }): DataTableColumn<T> {
+function mono<T>(
+  o: Common & { get: (row: T) => string; sortBy?: (row: T) => SortValue },
+): DataTableColumn<T> {
   return base<T>(o, {
     align: "left",
     nowrap: true,
     fit: false,
-    sortValue: (r) => o.get(r),
+    sortValue: o.sortBy ?? ((r) => o.get(r)),
+    sortFn: "alphanumeric",
     renderCell: (r) => <code className="sui-dtc__mono">{o.get(r)}</code>,
   });
 }
@@ -191,13 +208,16 @@ function muted<T>(
   o: Common & {
     get: (row: T) => string | null | undefined;
     placeholder?: string;
+    /** Override the sort key (e.g. an ISO date behind a "3 days ago" label). */
+    sortBy?: (row: T) => SortValue;
   },
 ): DataTableColumn<T> {
   return base<T>(o, {
     align: "left",
     nowrap: false,
     fit: false,
-    sortValue: (r) => o.get(r) ?? null,
+    sortValue: o.sortBy ?? ((r) => o.get(r) ?? undefined),
+    sortFn: "alphanumeric",
     renderCell: (r) => (
       <span className="sui-dtc__muted">
         {o.get(r) || (o.placeholder ?? "-")}
@@ -211,13 +231,16 @@ function number<T>(
     get: (row: T) => number | null | undefined;
     format?: (n: number, row: T) => string;
     placeholder?: string;
+    /** Override the sort key (e.g. a raw count behind a formatted label). */
+    sortBy?: (row: T) => SortValue;
   },
 ): DataTableColumn<T> {
   return base<T>(o, {
     align: "right",
     nowrap: true,
     fit: false,
-    sortValue: (r) => o.get(r) ?? null,
+    sortValue: o.sortBy ?? ((r) => o.get(r) ?? undefined),
+    sortFn: "basic",
     renderCell: (r) => {
       const n = o.get(r);
       if (n == null) {
@@ -247,6 +270,7 @@ function badge<T>(
     nowrap: true,
     fit: false,
     sortValue: o.sortBy ?? ((r) => o.get(r).label),
+    sortFn: "alphanumeric",
     renderCell: (r) => {
       const b = o.get(r);
       return (
@@ -275,7 +299,8 @@ function labels<T>(
     align: "left",
     nowrap: false,
     fit: false,
-    sortValue: (r) => o.get(r)[0]?.label ?? null,
+    sortValue: (r) => o.get(r)[0]?.label ?? undefined,
+    sortFn: "alphanumeric",
     renderCell: (r) => (
       <div className="sui-dtc__labels">
         {o.get(r).map((l) => (
@@ -350,6 +375,7 @@ function entity<T>(
     nowrap: false,
     fit: false,
     sortValue: o.sortBy ?? ((r) => o.primary(r)),
+    sortFn: "alphanumeric",
     renderCell: (r) => {
       const icon = o.icon?.(r);
       const suffix = o.suffix?.(r);
@@ -400,6 +426,7 @@ function progress<T>(
     nowrap: true,
     fit: false,
     sortValue: (r) => o.get(r).value,
+    sortFn: "basic",
     renderCell: (r) => {
       const p = o.get(r);
       return (

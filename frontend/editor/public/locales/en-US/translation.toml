@@ -7580,7 +7580,6 @@ title = "Model routing is a paid feature"
 
 [portal.infrastructure.models.routingColumns]
 default = "Default"
-defaultColumn = "Default"
 docType = "Document type"
 modelForAria = "Model for {{operation}}"
 operation = "Operation"
@@ -10957,6 +10956,7 @@ processor = "Processor"
 
 [users.columns]
 capabilities = "Capabilities"
+email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
@@ -11021,7 +11021,6 @@ usernamePlaceholder = "jsmith"
 [users.invites]
 by = "Invited by {{who}}"
 cancel = "Cancel"
-count = "{{count}} pending"
 expiresInDays_one = "Expires in {{count}} day"
 expiresInDays_other = "Expires in {{count}} days"
 expiresToday = "Expires today"
