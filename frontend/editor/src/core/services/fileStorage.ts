@@ -97,6 +97,23 @@ function persistBlobValuesUnsupported(): void {
   }
 }
 
+/**
+ * Whether maintenance writes (the thumbnail TTL bump) may re-read/re-write this
+ * record. In WebKit, a `get` touching a blob-bodied record whose backing store is
+ * damaged can HANG rather than error - and one pending request wedges the whole
+ * object store: every later transaction, read or write, queues behind it forever.
+ * That was the infinite "Loading files..." after a reload: the TTL bump's
+ * transaction never completed, so nothing else on the store ever ran. On a
+ * browser whose verdict is "blobs unsupported" the rewrite would be refused
+ * anyway, so blob-bodied records are not worth the risk of touching at all.
+ */
+export function maintenanceMayRewrite(
+  record: { data: ArrayBuffer | Blob },
+  blobValuesSupported: boolean,
+): boolean {
+  return !(record.data instanceof Blob) || blobValuesSupported;
+}
+
 /** WebKit loses backing stores for blobs it accepted, and only a real read shows
  *  it. One byte is enough: what fails is opening the store, not the length. */
 async function blobReadFailure(data: Blob): Promise<unknown> {
@@ -715,7 +732,10 @@ class FileStorageService {
           const record = cursor.value as StoredStirlingFileRecord;
           if (record && record.name && typeof record.size === "number") {
             const fresh = this.isThumbnailFresh(record);
-            if (record.thumbnail) {
+            if (
+              record.thumbnail &&
+              maintenanceMayRewrite(record, this.blobValuesSupported)
+            ) {
               if (fresh) tobump.push(record.id);
               else toexpire.push(record.id);
             }
@@ -811,7 +831,10 @@ class FileStorageService {
             record.isLeaf !== false
           ) {
             const fresh = this.isThumbnailFresh(record);
-            if (record.thumbnail) {
+            if (
+              record.thumbnail &&
+              maintenanceMayRewrite(record, this.blobValuesSupported)
+            ) {
               if (fresh) tobump.push(record.id);
               else toexpire.push(record.id);
             }

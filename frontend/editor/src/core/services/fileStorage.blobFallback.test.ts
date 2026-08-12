@@ -496,3 +496,22 @@ describe("stub listings — data-lost auditing", () => {
     expect(fileStorage.isRecordUnreadable(id)).toBe(false);
   });
 });
+
+/** One hung request inside the TTL bump's readwrite transaction wedged the whole
+ *  store: every later read and write queued behind it forever - the infinite
+ *  "Loading files..." after a Safari reload. Maintenance must not touch
+ *  blob-bodied records on a browser that can't rewrite them anyway. */
+describe("maintenanceMayRewrite", () => {
+  test("keeps maintenance away from blob records on a no-blob browser", async () => {
+    const { maintenanceMayRewrite } = await import("@app/services/fileStorage");
+    const blobRecord = { data: new Blob(["x"]) };
+    const copyRecord = { data: new ArrayBuffer(1) };
+
+    expect(maintenanceMayRewrite(blobRecord, false)).toBe(false);
+    // Copies never hang and their rewrite is accepted - always safe.
+    expect(maintenanceMayRewrite(copyRecord, false)).toBe(true);
+    // On engines that genuinely support blobs (Chrome), nothing changes.
+    expect(maintenanceMayRewrite(blobRecord, true)).toBe(true);
+    expect(maintenanceMayRewrite(copyRecord, true)).toBe(true);
+  });
+});
