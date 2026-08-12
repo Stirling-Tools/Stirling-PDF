@@ -76,7 +76,7 @@
     "react-router-dom": "^7.9.1",
     "recharts": "^3.7.0",
     "remark-gfm": "^4.0.1",
-    "signature_pad": "^5.0.4",
+    "signature_pad": "^5.1.4",
     "smol-toml": "^1.4.2",
     "tailwindcss": "^4.1.13",
     "use-sync-external-store": "^1.6.0",
