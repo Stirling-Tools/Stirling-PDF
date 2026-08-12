@@ -106,6 +106,10 @@ updates:
         patterns:
           - "@posthog/*"
           - "posthog-js"
+      storybook:
+        patterns:
+          - "storybook"
+          - "@storybook/*"
       supabase:
         patterns:
           - "@supabase/*"
