@@ -161,15 +161,26 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
       // sibling plugin cannot reliably compress files written here. Compress the
       // freshly written route HTML here instead (index.html is already handled by
       // the main compression plugin) so Spring's EncodedResourceResolver can serve
-      // it precompressed.
-      const rootEntries = await fs.readdir(distDir, { withFileTypes: true });
-      const routeHtml = rootEntries
-        .filter(
-          (e) =>
-            e.isFile() && e.name.endsWith(".html") && e.name !== "index.html",
-        )
-        .map((e) => path.join(distDir, e.name));
-      await Promise.all(routeHtml.map((f) => compressOne(f, distDir)));
+      // it precompressed. Nested routes (e.g. dist/settings/people.html) are
+      // included, so walk the whole dist tree.
+      const htmlFiles: string[] = [];
+      const walkHtml = async (dir: string) => {
+        let entries;
+        try {
+          entries = await fs.readdir(dir, { withFileTypes: true });
+        } catch {
+          return;
+        }
+        for (const entry of entries) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) await walkHtml(p);
+          else if (entry.name.endsWith(".html") && entry.name !== "index.html") {
+            htmlFiles.push(p);
+          }
+        }
+      };
+      await walkHtml(distDir);
+      await Promise.all(htmlFiles.map((f) => compressOne(f, distDir)));
     },
   };
 }
