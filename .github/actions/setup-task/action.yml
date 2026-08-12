@@ -1,0 +1,61 @@
+name: Setup Task from the CI image
+description: Install the pinned Task binary, using the Ubuntu CI image on Linux
+inputs:
+  version:
+    description: Task version to install
+    required: false
+    default: 3.52.0
+runs:
+  using: composite
+  steps:
+    - name: Install Task from the Ubuntu image
+      if: runner.os == 'Linux'
+      shell: bash
+      env:
+        TASK_VERSION: ${{ inputs.version }}
+        CACHE_SCOPE: setup-task-${{ runner.os }}-${{ runner.arch }}
+      run: |
+        set -euo pipefail
+        image="stirling-pdf-ci:task-${TASK_VERSION}"
+        docker buildx build --load --quiet \
+          --build-arg "TASK_VERSION=${TASK_VERSION}" \
+          --cache-from "type=gha,scope=${CACHE_SCOPE}" \
+          --cache-to "type=gha,mode=max,scope=${CACHE_SCOPE}" \
+          --tag "${image}" \
+          docker/ci
+        container_id="$(docker create "${image}")"
+        cleanup() { docker rm "${container_id}" >/dev/null; }
+        trap cleanup EXIT
+        install_dir="${RUNNER_TEMP}/task-bin"
+        mkdir -p "${install_dir}"
+        docker cp "${container_id}:/usr/local/bin/task" "${install_dir}/task"
+        chmod 0755 "${install_dir}/task"
+        echo "${install_dir}" >> "${GITHUB_PATH}"
+
+    - name: Install Task natively
+      if: runner.os != 'Linux'
+      shell: bash
+      env:
+        TASK_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        install_dir="${RUNNER_TEMP}/task-bin"
+        mkdir -p "${install_dir}"
+        case "${RUNNER_OS}-${RUNNER_ARCH}" in
+          macOS-X64) task_platform=darwin; task_arch=amd64; task_file=task_darwin_amd64.tar.gz; task_sha256=08b0a2107c56940e1fc7be15ebd5999f28a867925cfcd619393f8075fef67409 ;;
+          macOS-ARM64) task_platform=darwin; task_arch=arm64; task_file=task_darwin_arm64.tar.gz; task_sha256=a0330f0df20dd1187e323f284a7f365c0ea1f2f271c1e154811e9fc4724bed13 ;;
+          Windows-X64) task_platform=windows; task_arch=amd64; task_file=task_windows_amd64.zip; task_sha256=422d79dff5afd5a55fb46ae1cfacc7350ec96d4ef27a63a3ec77a5c30a7b0f03 ;;
+          Windows-ARM64) task_platform=windows; task_arch=arm64; task_file=task_windows_arm64.zip; task_sha256=d92bf9561a8a1db591487995eb76a08951de15134c40299a98d77460be4e4e1d ;;
+          *) echo "Unsupported runner: ${RUNNER_OS}-${RUNNER_ARCH}" >&2; exit 1 ;;
+        esac
+        archive="${RUNNER_TEMP}/${task_file}"
+        curl --fail --silent --show-error --location \
+          "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/${task_file}" \
+          --output "${archive}"
+        echo "${task_sha256}  ${archive}" | shasum -a 256 -c -
+        if [[ "${task_platform}" == windows ]]; then
+          unzip -p "${archive}" task.exe > "${install_dir}/task.exe"
+        else
+          tar -xzf "${archive}" -C "${install_dir}" task
+        fi
+        echo "${install_dir}" >> "${GITHUB_PATH}"
