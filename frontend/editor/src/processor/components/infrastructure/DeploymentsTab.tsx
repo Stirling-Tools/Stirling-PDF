@@ -65,7 +65,14 @@ export function DeploymentsTab() {
       width: "9rem",
       render: (r) => (
         <div className="processor-infra__load">
-          <ProgressBar value={r.load} thresholded height={6} />
+          <ProgressBar
+            value={r.load}
+            thresholded
+            height={6}
+            label={t("processor.infrastructure.deployments.loadAria", {
+              name: r.name,
+            })}
+          />
           <span className="processor-infra__load-pct">{pct(r.load)}</span>
         </div>
       ),

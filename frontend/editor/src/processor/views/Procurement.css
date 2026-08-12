@@ -89,7 +89,7 @@
   color: var(--c-text);
 }
 .processor-qb__req {
-  color: var(--c-danger);
+  color: var(--color-red-dark);
 }
 .processor-qb__field[data-invalid] input,
 .processor-qb__field[data-invalid] select {
@@ -98,7 +98,7 @@
 .processor-qb__error {
   margin: 10px 0 0;
   font-size: 12px;
-  color: var(--c-danger);
+  color: var(--color-red-dark);
 }
 .processor-qb__row {
   display: flex;
@@ -138,7 +138,7 @@
 .processor-qb__discount {
   margin: 6px 0 0;
   font-size: 11.5px;
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 .processor-qb__opts {
   display: flex;
@@ -179,7 +179,7 @@
   color: var(--c-text);
 }
 .processor-qb__opt[data-on] .processor-qb__opt-title {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 .processor-qb__opt-sub {
   font-size: 11.5px;
@@ -342,7 +342,7 @@
   color: var(--c-text);
 }
 .processor-qb__lines li[data-kind="DISCOUNT"] {
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 .processor-qb__lines li[data-kind="INCLUDED"] span:last-child {
   color: var(--c-text-subtle);
@@ -516,7 +516,7 @@
   align-items: center;
   justify-content: center;
   /* Holds a CheckIcon, which takes its stroke from `color` and its size from its own prop. */
-  color: var(--c-success);
+  color: var(--color-green-dark);
   background: var(--c-success-subtle);
 }
 .processor-hero__live-text {
@@ -897,7 +897,7 @@
   margin-top: 0.75rem;
 }
 .processor-proc__error {
-  color: var(--c-danger);
+  color: var(--color-red-dark);
   font-size: 0.8125rem;
   margin: 0.5rem 0 0;
 }

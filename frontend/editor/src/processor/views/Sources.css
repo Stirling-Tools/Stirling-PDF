@@ -86,7 +86,7 @@
 
 .processor-sources__caret.is-open {
   transform: rotate(90deg);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 /* Expanded detail panel */
@@ -226,7 +226,7 @@
   display: block;
   width: 100%;
   margin-top: 0.5rem;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .processor-sources__chips {
@@ -414,7 +414,7 @@
 }
 
 .processor-sources__type-card.is-selected .processor-sources__type-icon {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .processor-sources__type-icon .processor-sources__type-svg {

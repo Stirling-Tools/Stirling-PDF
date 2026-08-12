@@ -80,7 +80,7 @@ export const PipelineOps: Story = {
                   borderRadius: 999,
                   border: `1px solid ${STAGE_COLOUR[stage]}33`,
                   background: `${STAGE_COLOUR[stage]}12`,
-                  color: STAGE_COLOUR[stage],
+                  color: "var(--c-text)",
                   fontFamily: "var(--font-mono)",
                 }}
               >
@@ -166,7 +166,7 @@ export const LibraryByCategory: Story = {
                     borderRadius: 999,
                     border: `1px solid ${cat.color}33`,
                     background: `${cat.color}12`,
-                    color: cat.color,
+                    color: "var(--c-text)",
                     fontFamily: "var(--font-mono)",
                   }}
                 >
