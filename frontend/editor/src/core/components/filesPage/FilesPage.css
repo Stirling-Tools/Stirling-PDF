@@ -348,6 +348,9 @@
 }
 
 .files-page-list-row.is-header [data-sortable="true"] {
+  /* Block so the hit area and hover tint fill the columnheader cell that wraps
+     it, rather than hugging the label text. */
+  display: block;
   cursor: pointer;
   padding: 0.2rem 0.4rem;
   margin: -0.2rem -0.4rem;
@@ -753,7 +756,7 @@
   height: 5rem;
   border-radius: 50%;
   background: color-mix(in srgb, var(--c-primary) 12%, transparent);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   margin-bottom: 0.25rem;
 }
 
@@ -999,7 +1002,7 @@
 .files-page-details-version-timeline-count {
   margin-left: auto;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -1131,7 +1134,29 @@
 .files-page-details-version-timeline-expand-btn:hover span {
   color: var(--c-text);
 }
-
+.files-page-details-version-timeline-delta {
+  font-size: 0.82rem;
+  color: var(--c-text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+.files-page-details-version-timeline-delta.is-origin {
+  font-weight: 400;
+  color: var(--c-text-subtle);
+  font-style: italic;
+}
+.files-page-details-version-timeline-delta-plus {
+  color: var(--c-accent-text);
+  font-weight: 700;
+}
+.files-page-details-version-timeline-spacer {
+  flex: 1;
+}
 .files-page-details-version-timeline-chevron {
   color: var(--c-text-subtle);
   transition: transform 0.15s ease;
@@ -1139,7 +1164,7 @@
 
 .files-page-details-version-timeline-chevron.is-expanded {
   transform: rotate(180deg);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .files-page-details-version-timeline-expanded {
@@ -1204,7 +1229,7 @@
   justify-content: center;
   gap: 1rem;
   pointer-events: none;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   font-weight: 600;
   font-size: 1.1rem;
   z-index: 10;

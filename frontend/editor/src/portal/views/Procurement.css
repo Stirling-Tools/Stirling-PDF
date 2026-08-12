@@ -100,7 +100,7 @@
 }
 
 .portal-qb__req {
-  color: var(--c-danger);
+  color: var(--color-red-dark);
 }
 
 .portal-qb__field[data-invalid] input,
@@ -111,7 +111,7 @@
 .portal-qb__error {
   margin: 10px 0 0;
   font-size: 12px;
-  color: var(--c-danger);
+  color: var(--color-red-dark);
 }
 
 .portal-qb__row {
@@ -158,7 +158,7 @@
 .portal-qb__discount {
   margin: 6px 0 0;
   font-size: 11.5px;
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 
 .portal-qb__opts {
@@ -206,7 +206,7 @@
 }
 
 .portal-qb__opt[data-on] .portal-qb__opt-title {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .portal-qb__opt-sub {
@@ -396,7 +396,7 @@
 }
 
 .portal-qb__lines li[data-kind="DISCOUNT"] {
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 
 .portal-qb__lines li[data-kind="INCLUDED"] span:last-child {
@@ -595,7 +595,7 @@
   justify-content: center;
 
   /* Holds a CheckIcon, which takes its stroke from `color` and its size from its own prop. */
-  color: var(--c-success);
+  color: var(--color-green-dark);
   background: var(--c-success-subtle);
 }
 
@@ -1032,7 +1032,7 @@
 }
 
 .portal-proc__error {
-  color: var(--c-danger);
+  color: var(--color-red-dark);
   font-size: 0.8125rem;
   margin: 0.5rem 0 0;
 }

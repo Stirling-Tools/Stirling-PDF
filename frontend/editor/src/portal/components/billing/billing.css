@@ -45,7 +45,7 @@
   padding: 0.3rem 0.7rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   background: var(--color-bg-subtle);
   border: 1px solid var(--c-border);
   border-radius: 999px;
@@ -127,7 +127,7 @@
 /* Free grant still offsetting spend — reads as a positive credit note, pulled up
    under the "PDFs processed" line. */
 .portal-billing__free-remaining {
-  color: var(--color-green);
+  color: var(--color-green-dark);
   margin-top: -0.5rem;
 }
 
@@ -406,7 +406,7 @@
 
 .portal-billing__plan-features li::before {
   content: "✓";
-  color: var(--color-green);
+  color: var(--color-green-dark);
   position: absolute;
   left: 0;
   font-weight: 600;
@@ -584,7 +584,7 @@
    page; when the shared-component move lands, these dedupe to one stylesheet. */
 .scc {
   --scc-accent: var(--c-primary);
-  --scc-accent-text: var(--c-primary);
+  --scc-accent-text: var(--c-accent-text);
   --scc-accent-soft: color-mix(in srgb, var(--c-primary) 12%, transparent);
   --scc-accent-border: color-mix(in srgb, var(--c-primary) 25%, transparent);
   --scc-chip-bg: var(--c-surface-sunken);
@@ -601,7 +601,7 @@
 }
 
 [data-theme="dark"] .scc {
-  --scc-accent-text: var(--c-primary);
+  --scc-accent-text: var(--c-accent-text);
   --scc-accent-soft: color-mix(in srgb, var(--c-primary) 16%, transparent);
   --scc-chip-bg: var(--c-surface-sunken);
   --scc-chip-border: var(--c-border);
@@ -767,7 +767,7 @@
 
 .portal-billing__role-pill[data-leader="true"] {
   background: color-mix(in srgb, var(--c-primary) 12%, transparent);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   border: 1px solid color-mix(in srgb, var(--c-primary) 25%, transparent);
 }
 
@@ -804,11 +804,11 @@
 }
 
 .portal-billing__planhead-lbl--free {
-  color: var(--color-green);
+  color: var(--color-green-dark);
 }
 
 .portal-billing__planhead-lbl--meter {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .portal-billing__planhead-title {
@@ -931,7 +931,7 @@
   border-radius: 0.65rem;
   background: var(--color-bg-subtle);
   border: 1px solid var(--c-border);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 /* Identity, stats, and the "Invite teammates" action all sit on one line; the
@@ -1278,7 +1278,7 @@
 .portal-billing__caplimit-chip[data-selected="true"] {
   background: color-mix(in srgb, var(--c-primary) 12%, transparent);
   border-color: var(--c-primary);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .portal-billing__caplimit-chip:disabled {
@@ -1498,7 +1498,7 @@
 .portal-billing__bundle-row-change {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   flex-shrink: 0;
 }
 
@@ -1544,7 +1544,7 @@
 }
 
 .portal-billing__bundle-card--active .portal-billing__bundle-card-title {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .portal-billing__bundle-card-meta {
@@ -1555,7 +1555,7 @@
 }
 
 .portal-billing__bundle-card--active .portal-billing__bundle-card-meta {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .portal-billing__bundle-card-desc {
@@ -1597,7 +1597,7 @@
 }
 
 .portal-billing__bundle-receipt-price {
-  color: var(--c-primary) !important;
+  color: var(--c-accent-text) !important;
 }
 
 .portal-billing__bundle-consent {
@@ -1645,7 +1645,7 @@
   font: inherit;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   text-align: left;
 }
 
@@ -1711,7 +1711,7 @@
   flex-shrink: 0;
   font-size: 11px;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   background: var(--c-surface);
   padding: 2px 8px;
   border-radius: 8px;

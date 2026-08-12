@@ -77,7 +77,7 @@
 }
 
 .sui-status--info {
-  --sui-status-c: var(--c-primary-hover);
+  --sui-status-c: var(--c-accent-text);
 }
 
 .sui-status--purple {

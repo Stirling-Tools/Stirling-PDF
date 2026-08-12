@@ -56,7 +56,7 @@
 
 .sui-dd__item.is-active {
   background: var(--c-primary-subtle);
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
   font-weight: 500;
 }
 

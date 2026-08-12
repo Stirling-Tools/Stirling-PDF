@@ -318,7 +318,7 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
         fullWidth
         style={{
           backgroundColor: "var(--c-surface-raised)",
-          color: "var(--c-primary)",
+          color: "var(--c-accent-text)",
           border: "1px solid var(--c-border)",
         }}
       >

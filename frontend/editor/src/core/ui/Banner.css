@@ -49,11 +49,11 @@
 }
 
 .sui-banner--info .sui-banner__icon {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .sui-banner--success .sui-banner__icon {
-  color: var(--color-green);
+  color: var(--color-green-dark);
 }
 
 .sui-banner--warning .sui-banner__icon {
@@ -61,7 +61,7 @@
 }
 
 .sui-banner--danger .sui-banner__icon {
-  color: var(--color-red);
+  color: var(--color-red-dark);
 }
 
 .sui-banner__body {

@@ -41,7 +41,7 @@
 }
 
 .sui-tabs--pill .sui-tabs__tab.is-active {
-  color: var(--sui-tab-accent, var(--c-primary));
+  color: var(--sui-tab-accent, var(--c-accent-text));
   background: var(--c-primary-tint);
   border-color: var(--sui-tab-accent, var(--c-primary-border));
   font-weight: 500;
@@ -56,7 +56,7 @@
 }
 
 .sui-tabs--underline .sui-tabs__tab.is-active {
-  color: var(--sui-tab-accent, var(--c-primary));
+  color: var(--sui-tab-accent, var(--c-accent-text));
   border-bottom-color: var(--sui-tab-accent, var(--c-primary));
   font-weight: 500;
 }

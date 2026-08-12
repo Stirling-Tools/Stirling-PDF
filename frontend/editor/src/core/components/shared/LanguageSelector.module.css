@@ -1,7 +1,7 @@
 /* Language selector grid responsive layout */
 .languageGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--language-grid-columns, 4), 1fr);
   gap: 0;
 }
 

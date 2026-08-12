@@ -64,6 +64,8 @@
   --gray-100: 243 244 246;
   --gray-200: 229 231 235;
   --gray-300: 209 213 219;
+  /* Channel form of gray-400. Only for decorative fills/borders — as text it
+     reaches 2.3:1, so label copy uses --gray-600. */
   --gray-400: 156 163 175;
   --gray-500: 107 114 128;
   --gray-600: 75 85 99;
@@ -89,9 +91,9 @@
   --color-primary-900: var(--p-blue-700);
 
   /* Success (green) */
-  --color-green-50: var(--p-green-500);
-  --color-green-100: var(--p-green-500);
-  --color-green-200: var(--p-green-500);
+  --color-green-50: var(--p-green-50);
+  --color-green-100: var(--p-green-100);
+  --color-green-200: var(--p-green-200);
   --color-green-300: var(--p-green-500);
   --color-green-400: var(--p-green-500);
   --color-green-500: var(--p-green-500);
@@ -101,9 +103,9 @@
   --color-green-900: var(--p-green-700);
 
   /* Warning (yellow) */
-  --color-yellow-50: var(--p-amber-400);
-  --color-yellow-100: var(--p-amber-400);
-  --color-yellow-200: var(--p-amber-400);
+  --color-yellow-50: var(--p-amber-50);
+  --color-yellow-100: var(--p-amber-100);
+  --color-yellow-200: var(--p-amber-200);
   --color-yellow-300: var(--p-amber-400);
   --color-yellow-400: var(--p-amber-400);
 
@@ -136,9 +138,10 @@
   --color-yellow-700: var(--p-amber-600);
   --color-yellow-800: var(--p-amber-600);
   --color-yellow-900: var(--p-amber-600);
-  --color-red-50: var(--p-red-400);
-  --color-red-100: var(--p-red-400);
-  --color-red-200: var(--p-red-400);
+
+  --color-red-50: var(--p-red-50);
+  --color-red-100: var(--p-red-100);
+  --color-red-200: var(--p-red-200);
   --color-red-300: var(--p-red-400);
   --color-red-400: var(--p-red-400);
   --color-red-500: var(--p-red-500);
@@ -417,10 +420,10 @@
   --special-color-recommended: var(--p-blue-500); /* Cyan for recommended */
 
   /* Success (green) - dark */
-  --color-green-50: var(--p-green-700);
-  --color-green-100: var(--p-green-700);
-  --color-green-200: var(--p-green-700);
-  --color-green-300: var(--p-green-700);
+  --color-green-50: var(--p-zinc-775);
+  --color-green-100: var(--p-zinc-700);
+  --color-green-200: var(--p-zinc-600);
+  --color-green-300: var(--p-zinc-500);
   --color-green-400: var(--p-green-600);
   --color-green-500: var(--p-green-500);
   --color-green-600: var(--p-green-600);
@@ -429,10 +432,10 @@
   --color-green-900: var(--p-green-500);
 
   /* Warning (yellow) - dark */
-  --color-yellow-50: var(--p-amber-600);
-  --color-yellow-100: var(--p-amber-600);
-  --color-yellow-200: var(--p-amber-600);
-  --color-yellow-300: var(--p-amber-600);
+  --color-yellow-50: var(--p-zinc-775);
+  --color-yellow-100: var(--p-zinc-700);
+  --color-yellow-200: var(--p-zinc-600);
+  --color-yellow-300: var(--p-zinc-500);
   --color-yellow-400: var(--p-amber-600);
   --color-yellow-500: var(--p-amber-500);
   --color-yellow-600: var(--p-amber-400);
@@ -580,11 +583,6 @@
 }
 
 /* Plan section card borders - only override in dark mode */
-
-[data-mantine-color-scheme="dark"] .plan-card [data-size="sm"] {
-  color: var(--p-c-c2c8e0) !important;
-}
-
 /* Current plan badge - use light mode green in dark mode */
 [data-mantine-color-scheme="dark"] .current-plan-badge {
   background-color: var(--color-green-300) !important;
@@ -592,12 +590,15 @@
 
 /* Plan section button colors */
 .plan-button:not(:disabled):not([data-disabled]) {
-  background-color: var(--p-azure-500) !important;
+  background-color: var(--p-azure-700) !important;
 }
 
 [data-mantine-color-scheme="dark"]
 .plan-button:not(:disabled):not([data-disabled]) {
   background-color: var(--p-royal-700) !important;
+  /* The fill is set here, so the label has to be set with it — left alone it
+     keeps the scheme's default ink and reads as dark-on-deep-blue. */
+  color: var(--p-white) !important;
 }
 
 /* Lighter grey for disabled plan buttons */

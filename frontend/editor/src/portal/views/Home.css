@@ -133,5 +133,5 @@
 }
 
 .portal-home__quick-row:hover .portal-home__quick-arrow {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }

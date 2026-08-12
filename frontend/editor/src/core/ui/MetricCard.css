@@ -98,11 +98,11 @@
 }
 
 .sui-metric__delta--up {
-  color: var(--color-green);
+  color: var(--color-green-dark);
 }
 
 .sui-metric__delta--down {
-  color: var(--color-red);
+  color: var(--color-red-dark);
 }
 
 .sui-metric__delta--flat,

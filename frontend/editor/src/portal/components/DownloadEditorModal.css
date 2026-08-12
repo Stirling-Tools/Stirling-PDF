@@ -50,7 +50,7 @@ Install-the-editor modal
   height: 2.25rem;
   flex-shrink: 0;
   border-radius: 0.625rem;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   background: var(--c-primary-tint);
 }
 
@@ -114,7 +114,7 @@ Install-the-editor modal
   background: none;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   cursor: pointer;
 }
 

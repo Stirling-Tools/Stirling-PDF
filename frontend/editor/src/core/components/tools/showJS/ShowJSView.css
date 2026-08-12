@@ -143,7 +143,7 @@
 .showjs-outline-button {
   background: transparent;
   border: 1px solid currentColor;
-  color: var(--mantine-color-blue-5);
+  color: var(--c-accent-text);
 }
 
 .showjs-scrollarea {
