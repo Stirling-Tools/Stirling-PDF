@@ -5,10 +5,10 @@ plugins {
     id "org.springframework.boot" version "4.0.6"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
-    id "com.diffplug.spotless" version "8.5.0"
-    id "com.github.jk1.dependency-license-report" version "3.1.2"
+    id "com.diffplug.spotless" version "8.8.0"
+    id "com.github.jk1.dependency-license-report"
     //id "nebula.lint" version "19.0.3"
-    id "org.sonarqube" version "7.2.3.7755"
+    id "org.sonarqube" version "7.3.1.8318"
 }
 
 import com.github.jk1.license.render.*
@@ -18,17 +18,18 @@ import groovy.xml.XmlSlurper
 import org.gradle.api.JavaVersion
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import stirling.software.gradle.ModuleLicenseOverrideFilter
 
 ext {
     springBootVersion = "4.0.6"
-    pdfboxVersion = "3.0.7"
+    pdfboxVersion = "3.0.8"
     imageioVersion = "3.13.1"
     lombokVersion = "1.18.46"
-    bouncycastleVersion = "1.84"
+    bouncycastleVersion = "1.85"
     springSecuritySamlVersion = "7.0.5"
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
-    googleJavaFormatVersion = "1.28.0"
+    googleJavaFormatVersion = "1.35.0"
     logback = "1.5.32"
     commonsIoVersion = "2.22.0"
     commonsLang3 = "3.20.0"
@@ -36,24 +37,32 @@ ext {
     okhttpBomVersion = "5.3.2"
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
-    jinjavaVersion = "2.8.3"
-    jackson2Version = "2.21.2"
+    jinjavaVersion = "2.8.4"
+    jackson2Version = "2.22.1"
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.4.2"
     batikVersion = "1.19"
-    jpdfiumVersion = "1.0.2"
+    jpdfiumVersion = "1.0.4"
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.44.12"
+    jschVersion = "0.2.23"
+    commonsNetVersion = "3.11.1"
+    smbjVersion = "0.14.0"
+    tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
     // junit-platform-launcher version managed by Spring Boot BOM
     modernJavaVersion = 25
 }
 
+def buildJavaMajorVersion = (project.findProperty('javaVersion') ?: ext.modernJavaVersion).toString().toInteger()
+def buildJavaLanguageVersion = JavaLanguageVersion.of(buildJavaMajorVersion)
+def buildJavaVersion = JavaVersion.toVersion(buildJavaMajorVersion.toString())
+
 java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = buildJavaVersion
+    targetCompatibility = buildJavaVersion
     toolchain {
-        languageVersion = JavaLanguageVersion.of(project.findProperty('javaVersion')?.toString() ?: '25')
+        languageVersion = buildJavaLanguageVersion
     }
 }
 
@@ -171,12 +180,13 @@ subprojects {
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'jacoco'
+    apply from: rootProject.file('gradle/spotless.gradle')
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_25
-        targetCompatibility = JavaVersion.VERSION_25
+        sourceCompatibility = buildJavaVersion
+        targetCompatibility = buildJavaVersion
         toolchain {
-            languageVersion = JavaLanguageVersion.of(25)
+            languageVersion = buildJavaLanguageVersion
         }
     }
 
@@ -271,7 +281,7 @@ subprojects {
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"
-        options.release = rootProject.ext.modernJavaVersion
+        options.release = buildJavaMajorVersion
         if (!project.hasProperty("noSpotless")) {
             dependsOn "spotlessApply"
         }
@@ -286,6 +296,8 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        systemProperty 'java.awt.headless', 'true'
+        systemProperty 'apple.awt.UIElement', 'true'
         finalizedBy(jacocoReport)
     }
 
@@ -539,6 +551,7 @@ gradle.taskGraph.whenReady { graph ->
 }
 
 def allProjects = ((subprojects as Set<Project>) + project) as Set<Project>
+def moduleLicenseOverridesFile = project.layout.projectDirectory.file("app/license-overrides.json").asFile
 
 licenseReport {
     projects = allProjects
@@ -546,6 +559,15 @@ licenseReport {
     allowedLicensesFile = project.layout.projectDirectory.file("app/allowed-licenses.json").asFile
     outputDir = project.layout.buildDirectory.dir("reports/dependency-license").get().asFile.path
     configurations = [ "productionRuntimeClasspath", "runtimeClasspath" ]
+    filters = [new ModuleLicenseOverrideFilter(moduleLicenseOverridesFile)]
+}
+
+tasks.named('generateLicenseReport') {
+    inputs.file(moduleLicenseOverridesFile)
+}
+
+tasks.named('checkLicensePreparation') {
+    inputs.file(moduleLicenseOverridesFile)
 }
 
 // Configure the forked spring boot run task to properly delegate to the stirling-pdf module
@@ -666,10 +688,14 @@ tasks.register('compileRestartHelper', JavaCompile) {
     source = fileTree(dir: 'scripts', include: 'RestartHelper.java')
     classpath = files()
     destinationDirectory = layout.buildDirectory.dir("restart-helper-classes")
-    def restartMajorVersion = project.ext.modernJavaVersion
+    def restartMajorVersion = buildJavaMajorVersion
+    def restartLanguageVersion = JavaLanguageVersion.of(restartMajorVersion)
     def restartCompatibility = JavaVersion.toVersion(restartMajorVersion.toString())
     sourceCompatibility = restartCompatibility
     targetCompatibility = restartCompatibility
+    javaCompiler = javaToolchains.compilerFor {
+        languageVersion = restartLanguageVersion
+    }
     options.release.set(restartMajorVersion)
 }
 

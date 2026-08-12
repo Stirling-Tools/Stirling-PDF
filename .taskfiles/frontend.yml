@@ -85,7 +85,8 @@ tasks:
       # full path, hostname, or user. Consumed at dev-serve time by vite.config
       # and dropped from production builds.
       STIRLING_DEV_LABEL:
-        sh: basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+        sh: >-
+          {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
@@ -183,15 +184,79 @@ tasks:
 
   storybook:
     desc: "Start Storybook dev server"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx storybook dev -p 6006 {{.CLI_ARGS}}
 
   storybook:build:
     desc: "Build static Storybook"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx storybook build {{.CLI_ARGS}}
+
+  storybook:browser:
+    internal: true
+    desc: "Install the Chromium build the story scan runs in"
+    run: once
+    deps: [install]
+    cmds:
+      - npx playwright install chromium
+
+  storybook:test:
+    desc: "Scan every story in real Chromium: it must render and pass axe"
+    deps: [prepare, storybook:browser]
+    cmds:
+      # Runs each story as a browser test. Pass a filter through, e.g.
+      #   task frontend:storybook:test -- Button
+      - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
+
+  storybook:a11y:
+    desc: "a11y regression gate over every story, light and dark: fail only on NEW axe violations"
+    deps: [prepare, storybook:browser]
+    cmds:
+      - node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
+      - SCAN_THEME=dark node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --baseline .storybook/a11y-baseline.dark.json
+
+  storybook:a11y:changed:
+    desc: "a11y gate over the stories this branch affects (default base origin/main)"
+    summary: |
+      Scans the stories a branch affects, which is what pull requests run — a
+      full scan takes ~30 minutes, far too long to sit in front of every merge.
+      A story is affected if its file changed, or if a same-named sibling
+      source file changed (editing Button.tsx or Button.css re-scans
+      Button.stories.tsx — the story renders the live component, so a component
+      edit changes what the story shows without touching the story file).
+      Changes that ripple further than a component's own stories are covered by
+      the nightly full sweep.
+
+      Pass a base ref through CLI_ARGS, e.g.
+        task frontend:storybook:a11y:changed -- origin/release
+    deps: [prepare, storybook:browser]
+    vars:
+      BASE: '{{.CLI_ARGS | default "origin/main"}}'
+      CHANGED:
+        sh: node .storybook/a11y-changed.mjs {{.CLI_ARGS | default "origin/main"}}
+    cmds:
+      - cmd: |
+          if [ -z '{{.CHANGED}}' ]; then
+            echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
+            exit 0
+          fi
+          node .storybook/a11y-scan.mjs {{.CHANGED}}
+          node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
+          SCAN_THEME=dark node .storybook/a11y-scan.mjs {{.CHANGED}}
+          node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --baseline .storybook/a11y-baseline.dark.json
+
+  storybook:a11y:record:
+    desc: "Re-record both a11y baselines (run after intentionally fixing/adding violations)"
+    deps: [prepare, storybook:browser]
+    cmds:
+      - node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record
+      - SCAN_THEME=dark node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record --baseline .storybook/a11y-baseline.dark.json
 
   # ============================================================
   # Code quality
@@ -201,15 +266,28 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
-      - task: lint:eslint
-      - task: lint:dpdm
+      - task: lint:oxlint
       - task: lint:colors
+      - task: lint:css
+
+  lint:css:
+    desc: "Lint stylesheets for duplicate selectors"
+    deps: [install]
+    cmds:
+      # Covers the whole editor tree, including the portal/processor layer and
+      # public/css. Vendored CSS and build output are excluded via ignoreFiles
+      # in stylelint.config.mjs.
+      - npx stylelint "editor/**/*.css"
 
   lint:colors:
-    desc: "Enforce theme tokens — colours in core/theme route through the palette"
+    desc: "Enforce theme tokens — no hardcoded colours or raw primitives in components"
+    aliases: [lint:colours]
     deps: [install]
     cmds:
       - node editor/scripts/lint/theme-lint.mjs
+      - node editor/scripts/lint/theme-lint.mjs css-colors
+      - node editor/scripts/lint/theme-lint.mjs code-colors
+      - node editor/scripts/lint/theme-lint.mjs no-primitives
 
   contrast:
     desc: "Report low-contrast theme token pairs (warning only, never blocks)"
@@ -217,25 +295,17 @@ tasks:
     cmds:
       - node editor/scripts/lint/theme-lint.mjs contrast
 
-  lint:eslint:
-    desc: "Run ESLint linting"
+  lint:oxlint:
+    desc: "Run oxlint linting"
     deps: [install]
     cmds:
-      - npx eslint --max-warnings=0
-
-  lint:dpdm:
-    desc: "Run circular import linting"
-    deps: [install]
-    cmds:
-      # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
-      # shell-agnostic. Covers the whole editor tree, including the portal layer.
-      - npx dpdm "editor/src/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
+      - npx oxlint --config oxlint.config.ts --max-warnings=0
 
   lint:fix:
     desc: "Auto-fix lint issues"
     deps: [install]
     cmds:
-      - npx eslint --fix
+      - npx oxlint --config oxlint.config.ts --fix
 
   format:
     desc: "Auto-fix code formatting"
@@ -325,6 +395,13 @@ tasks:
       - task: typecheck:_run
         vars: { PROJECT: editor/src/portal/tsconfig.json }
 
+  typecheck:storybook:
+    desc: "Typecheck Storybook config and stories"
+    deps: [prepare]
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: .storybook/tsconfig.json }
+
   typecheck:all:
     desc: "Typecheck all build variants"
     cmds:
@@ -336,6 +413,7 @@ tasks:
       - task: typecheck:scripts
       - task: typecheck:prototypes
       - task: typecheck:portal
+      - task: typecheck:storybook
 
   # ============================================================
   # Quality Gate
@@ -379,8 +457,17 @@ tasks:
   test:editor:
     desc: "Run editor tests"
     deps: [prepare]
+    vars:
+      COVERAGE: '{{.COVERAGE | default .CI | default "false"}}'
     cmds:
-      - npx vitest run --root editor
+      - >
+        npx vitest run --root editor
+        {{if eq .COVERAGE "true"}}--coverage
+        --coverage.provider=v8
+        --coverage.reporter=text-summary
+        --coverage.reporter=json-summary
+        --coverage.reporter=html
+        --coverage.reportsDirectory=./coverage{{end}}
 
   test:watch:
     desc: "Run tests in watch mode"
@@ -390,24 +477,9 @@ tasks:
 
   test:coverage:
     desc: "Run tests with coverage (one-shot; CI-friendly)."
-    deps: [prepare]
     cmds:
-      # `vitest run` makes this CI-safe (the bare `vitest` form enters watch
-      # mode). Explicit reporter list because v8 + json-summary is what the
-      # coverage-summary.py helper consumes; html/text are kept for humans.
-      #
-      # reportsDirectory is pinned to ./coverage relative to vitest's root
-      # (--root editor), so output lands at frontend/editor/coverage/. The
-      # CI upload step reads from that path. An earlier attempt with
-      # `./editor/coverage` double-nested into frontend/editor/editor/coverage;
-      # pinning future-proofs against vitest changing the default.
-      - >
-        npx vitest run --root editor --coverage
-        --coverage.provider=v8
-        --coverage.reporter=text-summary
-        --coverage.reporter=json-summary
-        --coverage.reporter=html
-        --coverage.reportsDirectory=./coverage
+      - task: test:editor
+        vars: { COVERAGE: "true" }
 
   # ============================================================
   # Code Generation
@@ -417,18 +489,19 @@ tasks:
     desc: "Generate tool API types from the Java OpenAPI spec"
     deps: [install, ":backend:swagger"]
     cmds:
-      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts
     sources:
       - editor/scripts/generate-tool-api-types.mts
       - ../SwaggerDoc.json
     generates:
       - editor/src/core/types/toolApiTypes.ts
+      - editor/src/core/types/toolIO.ts
 
   tool-models:check:
     desc: "Fail if committed tool API types are out of date"
     deps: [install, ":backend:swagger"]
     cmds:
-      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --check
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts --check
 
   licenses:generate:
     desc: "Generate frontend license report"

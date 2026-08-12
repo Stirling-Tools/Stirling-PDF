@@ -13,8 +13,12 @@ import jakarta.persistence.LockModeType;
 @Repository
 public interface PolicyRepository extends JpaRepository<PolicyEntity, String> {
 
-    /** Enabled policies of a given trigger type, for background triggers to activate. */
-    List<PolicyEntity> findByTriggerTypeAndEnabledTrue(String triggerType);
+    /**
+     * Enabled policies, for background triggers to scan for inputs of their trigger type. Which
+     * inputs (and their trigger types) a policy carries lives in the JSON blob, so the type filter
+     * is applied after parsing rather than in SQL.
+     */
+    List<PolicyEntity> findByEnabledTrue();
 
     /**
      * Policies belonging to a team, in run order (ascending {@code sortOrder}; a null order sorts

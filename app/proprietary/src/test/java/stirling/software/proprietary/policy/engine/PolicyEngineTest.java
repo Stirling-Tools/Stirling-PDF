@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.engine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -10,16 +11,21 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +43,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.FileStorage.StoredFile;
 import stirling.software.common.service.InternalApiClient;
@@ -47,6 +54,7 @@ import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -55,7 +63,11 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.output.InlineOutputSink;
+import stirling.software.proprietary.policy.output.OutputDelivery;
+import stirling.software.proprietary.policy.output.PolicyOutputResolver;
+import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 import tools.jackson.databind.json.JsonMapper;
 
@@ -78,9 +90,11 @@ class PolicyEngineTest {
     @Mock private JobOwnershipService jobOwnershipService;
     @Mock private ResourceMonitor resourceMonitor;
     @Mock private JobQueue jobQueue;
+    @Mock private PolicyFailureRecorder failureRecorder;
 
     @TempDir Path tempDir;
 
+    private final RecordingSink recordingSink = new RecordingSink();
     private PolicyRunRegistry registry;
     private PolicyEngine engine;
 
@@ -98,14 +112,17 @@ class PolicyEngineTest {
                         JsonMapper.builder().build());
         registry = new PolicyRunRegistry(new ApplicationProperties());
         InlineOutputSink sink = new InlineOutputSink(fileStorage);
+        PolicyOutputResolver outputResolver = new PolicyOutputResolver(new InProcessSourceStore());
         engine =
                 new PolicyEngine(
                         executor,
                         taskManager,
                         registry,
+                        failureRecorder,
                         fileStorage,
                         jobOwnershipService,
-                        List.of(sink),
+                        List.of(sink, recordingSink),
+                        outputResolver,
                         resourceMonitor,
                         jobQueue);
 
@@ -157,6 +174,36 @@ class PolicyEngineTest {
     }
 
     @Test
+    void deliversTheRunsFilesToEveryDestination() throws Exception {
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(COMPRESS, pdf("compressed", "out.pdf"));
+
+        // Two destinations of a recording sink; each fully reads the (shared) result file, so this
+        // also proves the result Resources are re-readable across more than one delivery.
+        PipelineDefinition definition =
+                new PipelineDefinition(
+                        "multi",
+                        List.of(new PipelineStep(COMPRESS, Map.of())),
+                        List.of(
+                                new OutputSpec("record", Map.of("dest", "a")),
+                                new OutputSpec("record", Map.of("dest", "b"))));
+
+        PolicyRun run =
+                engine.submit(
+                                definition,
+                                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                                PolicyProgressListener.NOOP)
+                        .completion()
+                        .get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
+        // One result file per destination, and each destination read the same output content.
+        assertEquals(2, run.getOutputs().size());
+        assertEquals(List.of("a:compressed", "b:compressed"), recordingSink.deliveries());
+    }
+
+    @Test
     void submitFailsRunWhenAToolErrors() throws Exception {
         when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
         when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
@@ -172,6 +219,52 @@ class PolicyEngineTest {
         assertEquals(PolicyRunStatus.FAILED, run.getStatus());
         verify(taskManager).setError(eq(runId), anyString());
         verify(taskManager, never()).setComplete(runId);
+        // A failed run is recorded durably, so an admin can see it after the in-memory run expires.
+        verify(failureRecorder)
+                .recordRunFailure(
+                        eq(runId), any(), any(), any(), anyString(), any(Throwable.class));
+    }
+
+    @Test
+    void recordingAFailureNeverChangesTheRunsOutcome() throws Exception {
+        // Recording is best-effort: losing the incident row is bad, but turning a classified
+        // failure
+        // into a different, confusing failure is worse.
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
+        doThrow(new RuntimeException("event store unavailable"))
+                .when(failureRecorder)
+                .recordRunFailure(
+                        anyString(), any(), any(), any(), anyString(), any(Throwable.class));
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+        PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.FAILED, run.getStatus());
+        // The original failure message survives, rather than being replaced by the store's.
+        assertTrue(run.getError().contains("boom"));
+    }
+
+    @Test
+    void successfulRunRecordsNoFailureEvent() throws Exception {
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(ROTATE, pdf("rotated", "rotated.pdf"));
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenReturn(new StoredFile("file-1", 7L));
+
+        engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP)
+                .completion()
+                .get(10, TimeUnit.SECONDS);
+
+        verifyNoInteractions(failureRecorder);
     }
 
     @Test
@@ -222,7 +315,7 @@ class PolicyEngineTest {
                         "rotate",
                         "owner",
                         true,
-                        null,
+                        List.of(),
                         List.of(new PipelineStep(ROTATE, Map.of())),
                         OutputSpec.inline());
 
@@ -266,7 +359,7 @@ class PolicyEngineTest {
                         "rotate",
                         "alice",
                         true,
-                        null,
+                        List.of(),
                         List.of(new PipelineStep(ROTATE, Map.of())),
                         OutputSpec.inline());
 
@@ -367,6 +460,43 @@ class PolicyEngineTest {
         assertFalse(engine.cancel("does-not-exist"));
     }
 
+    @Test
+    void cancellingARunRecordsNoFailureEvent() throws Exception {
+        // A cancellation is an intended outcome, not an incident. Recording one would put a row in
+        // front of an admin describing something a user deliberately did.
+        //
+        // The cancel happens while the tool call is in flight, held on a latch: an earlier version
+        // of this test awaited completion first, and cancel() on a finished run is a documented
+        // no-op, so it asserted nothing.
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        CountDownLatch toolEntered = new CountDownLatch(1);
+        CountDownLatch releaseTool = new CountDownLatch(1);
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        invocation -> {
+                            toolEntered.countDown();
+                            assertTrue(
+                                    releaseTool.await(10, TimeUnit.SECONDS),
+                                    "test never released the tool call");
+                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+                        });
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenReturn(new StoredFile("file-1", 7L));
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+        assertTrue(toolEntered.await(10, TimeUnit.SECONDS), "run never reached the tool call");
+        assertTrue(engine.cancel(handle.runId()), "cancel was a no-op, so this asserts nothing");
+        releaseTool.countDown();
+        handle.completion().get(10, TimeUnit.SECONDS);
+
+        verifyNoInteractions(failureRecorder);
+    }
+
     // --- helpers ---
 
     private static PipelineDefinition definition(PipelineStep... steps) {
@@ -384,5 +514,51 @@ class PolicyEngineTest {
                 return filename;
             }
         };
+    }
+
+    /**
+     * A test output sink (type "record") that fully reads each delivered file and records
+     * "{dest}:{content}" per file, so a test can assert the run was delivered to every destination.
+     */
+    private static final class RecordingSink implements PolicyOutputSink {
+
+        private final List<String> deliveries = new ArrayList<>();
+
+        List<String> deliveries() {
+            return deliveries;
+        }
+
+        @Override
+        public String type() {
+            return "record";
+        }
+
+        @Override
+        public boolean supports(OutputSpec spec) {
+            return spec != null && "record".equals(spec.type());
+        }
+
+        @Override
+        public List<ResultFile> deliver(
+                OutputDelivery delivery, List<Resource> outputs, OutputSpec spec)
+                throws IOException {
+            String dest = String.valueOf(spec.options().get("dest"));
+            List<ResultFile> results = new ArrayList<>();
+            for (Resource file : outputs) {
+                byte[] bytes;
+                try (InputStream is = file.getInputStream()) {
+                    bytes = is.readAllBytes();
+                }
+                deliveries.add(dest + ":" + new String(bytes));
+                results.add(
+                        ResultFile.builder()
+                                .fileId("rec-" + dest)
+                                .fileName(dest + "/" + file.getFilename())
+                                .contentType("application/pdf")
+                                .fileSize(bytes.length)
+                                .build());
+            }
+            return results;
+        }
     }
 }

@@ -47,7 +47,9 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   WATCHED_FOLDER_VIEW_ID,
   WATCHED_FOLDER_WORKBENCH_ID,
-} from "@app/components/watchedFolders/WatchedFoldersRegistration";
+  timeAgo,
+  humaniseOp,
+} from "@app/components/watchedFolders/watchedFolderShared";
 import { automationStorage } from "@app/services/automationStorage";
 import {
   useFolderAutomation,
@@ -58,10 +60,7 @@ import { AutomationConfig } from "@app/types/automation";
 import { iconMap } from "@app/components/tools/automate/iconMap";
 import { fileStorage } from "@app/services/fileStorage";
 import { FileId, StirlingFile } from "@app/types/fileContext";
-import {
-  WatchedFolderHomePage,
-  humaniseOp,
-} from "@app/components/watchedFolders/WatchedFolderHomePage";
+import { WatchedFolderHomePage } from "@app/components/watchedFolders/WatchedFolderHomePage";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { FilePreviewModal } from "@app/components/watchedFolders/FilePreviewModal";
 import { folderDirectoryHandleStorage } from "@app/services/folderDirectoryHandleStorage";
@@ -172,28 +171,6 @@ interface WatchedFolderWorkbenchViewProps {
     pendingFileId?: string;
     pendingFileIds?: string[];
   };
-}
-
-export function timeAgo(date: Date, t: TFunction): string {
-  const secs = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (secs < 60) return t("watchedFolders.time.justNow", "just now");
-  const mins = Math.floor(secs / 60);
-  if (mins < 60)
-    return t("watchedFolders.time.minutesAgo", {
-      count: mins,
-      defaultValue: `${mins}m ago`,
-    });
-  const hours = Math.floor(mins / 60);
-  if (hours < 24)
-    return t("watchedFolders.time.hoursAgo", {
-      count: hours,
-      defaultValue: `${hours}h ago`,
-    });
-  const days = Math.floor(hours / 24);
-  return t("watchedFolders.time.daysAgo", {
-    count: days,
-    defaultValue: `${days}d ago`,
-  });
 }
 
 function RetryCountdown({
@@ -852,8 +829,8 @@ export function WatchedFolderWorkbenchView({
         px="xl"
         py="md"
         style={{
-          borderBottom: "0.0625rem solid var(--border-subtle)",
-          backgroundColor: "var(--bg-toolbar)",
+          borderBottom: "0.0625rem solid var(--c-border-subtle)",
+          backgroundColor: "var(--c-bg-raised)",
           flexShrink: 0,
         }}
       >
@@ -893,7 +870,7 @@ export function WatchedFolderWorkbenchView({
                   width: "0.75rem",
                   height: "0.75rem",
                   borderRadius: "50%",
-                  backgroundColor: "var(--bg-toolbar)",
+                  backgroundColor: "var(--c-bg-raised)",
                   textAlign: "center",
                   display: "flex",
                   alignItems: "center",
@@ -1221,7 +1198,7 @@ export function WatchedFolderWorkbenchView({
                     style={{
                       height: "0.1875rem",
                       borderRadius: "999px",
-                      backgroundColor: "var(--border-subtle)",
+                      backgroundColor: "var(--c-border-subtle)",
                       overflow: "hidden",
                     }}
                   >
@@ -1263,7 +1240,7 @@ export function WatchedFolderWorkbenchView({
                 flex: 1,
                 color: isDragOver
                   ? "var(--mantine-color-blue-filled)"
-                  : "var(--tool-subcategory-text-color)",
+                  : "var(--c-text-subtle)",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
               }}
@@ -1361,8 +1338,8 @@ export function WatchedFolderWorkbenchView({
                 <Box
                   style={{
                     padding: "0.375rem 0.75rem",
-                    borderTop: "0.0625rem solid var(--border-subtle)",
-                    borderBottom: "0.0625rem solid var(--border-subtle)",
+                    borderTop: "0.0625rem solid var(--c-border-subtle)",
+                    borderBottom: "0.0625rem solid var(--c-border-subtle)",
                     backgroundColor: "var(--mantine-color-blue-light)",
                     display: "flex",
                     alignItems: "center",
@@ -1502,10 +1479,10 @@ export function WatchedFolderWorkbenchView({
                         key={fileId}
                         style={{
                           borderRadius: "var(--mantine-radius-sm)",
-                          border: `0.0625rem solid ${isFocused ? "var(--mantine-color-blue-4)" : isSelected ? "var(--mantine-color-blue-filled)" : status === "error" ? "var(--mantine-color-red-light)" : "var(--border-subtle)"}`,
+                          border: `0.0625rem solid ${isFocused ? "var(--mantine-color-blue-4)" : isSelected ? "var(--mantine-color-blue-filled)" : status === "error" ? "var(--mantine-color-red-light)" : "var(--c-border-subtle)"}`,
                           backgroundColor: isSelected
                             ? "var(--mantine-color-blue-light)"
-                            : "var(--bg-toolbar)",
+                            : "var(--c-bg-raised)",
                           overflow: "hidden",
                           outline: "none",
                         }}
@@ -1722,7 +1699,7 @@ export function WatchedFolderWorkbenchView({
                         {isExpanded && (
                           <Box
                             style={{
-                              borderTop: `0.0625rem solid ${status === "error" ? "var(--mantine-color-red-light)" : "var(--border-subtle)"}`,
+                              borderTop: `0.0625rem solid ${status === "error" ? "var(--mantine-color-red-light)" : "var(--c-border-subtle)"}`,
                               padding: "0.375rem 0.625rem 0.375rem 2rem",
                               backgroundColor: "var(--bg-app)",
                             }}
@@ -2194,7 +2171,7 @@ export function WatchedFolderWorkbenchView({
                     style={{
                       flex: 1,
                       position: "relative",
-                      borderBottom: "0.0625rem solid var(--border-subtle)",
+                      borderBottom: "0.0625rem solid var(--c-border-subtle)",
                     }}
                   >
                     {[0, 25, 50, 75].map((pct) => (
@@ -2205,7 +2182,7 @@ export function WatchedFolderWorkbenchView({
                           top: `${pct}%`,
                           left: 0,
                           right: 0,
-                          borderTop: "0.0625rem dashed var(--border-subtle)",
+                          borderTop: "0.0625rem dashed var(--c-border-subtle)",
                           pointerEvents: "none",
                         }}
                       />
@@ -2245,8 +2222,9 @@ export function WatchedFolderWorkbenchView({
                                   ? `calc(100% - ${chartHover.relX}px + 12px)`
                                   : undefined,
                                 top: Math.max(chartHover.relY - 36, 4),
-                                backgroundColor: "var(--bg-toolbar)",
-                                border: "0.0625rem solid var(--border-subtle)",
+                                backgroundColor: "var(--c-bg-raised)",
+                                border:
+                                  "0.0625rem solid var(--c-border-subtle)",
                                 borderRadius: "var(--mantine-radius-sm)",
                                 padding: "0.3rem 0.5rem",
                                 pointerEvents: "none",

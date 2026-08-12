@@ -22,6 +22,12 @@ import { defaultParameters as compressDefaults } from "@app/hooks/tools/compress
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
+import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
+import { defaultParameters as autoRotateDefaults } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
+import { addPasswordOperationConfig } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
+import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
+import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
+import { defaultParameters as convertDefaults } from "@app/hooks/tools/convert/useConvertParameters";
 
 function entry(over: Partial<ToolRegistryEntry>): ToolRegistryEntry {
   return {
@@ -92,6 +98,11 @@ const dynamicRegistry: Partial<ToolRegistry> = {
     automationSettings: NoopSettings,
     operationConfig: asRegistryConfig(redactOperationConfig),
   }),
+  autoRotate: entry({
+    name: "Auto Rotate",
+    automationSettings: NoopSettings,
+    operationConfig: asRegistryConfig(autoRotateOperationConfig),
+  }),
 };
 
 describe("getExecutableTools", () => {
@@ -144,6 +155,21 @@ describe("serialize/deserialize round-trip", () => {
     });
   });
 
+  test("a stored step missing fields falls back to defaults, not undefined", () => {
+    // Mappers echo absent stored fields as explicit undefined; settings UIs
+    // then crash on things like keyLength.toString(). Defaults must win.
+    const back = deserializeToolStep(
+      { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+      registry,
+    );
+    expect(back.params.compressionLevel).toBe(
+      compressDefaults.compressionLevel,
+    );
+    expect(
+      Object.values(back.params).every((value) => value !== undefined),
+    ).toBe(true);
+  });
+
   test("an unknown endpoint is preserved as an unmapped step", () => {
     const step = deserializeToolStep(
       { operation: "/api/v1/unknown/thing", parameters: { keep: true } },
@@ -154,6 +180,40 @@ describe("serialize/deserialize round-trip", () => {
     expect(serializeToolStep(step, registry)).toEqual({
       operation: "/api/v1/unknown/thing",
       parameters: { keep: true },
+    });
+  });
+
+  test("auto rotate carries its detection settings into the backend step", () => {
+    // A custom-processor tool: the browser applies the rotations, but a backend
+    // pipeline still has to receive the detection settings, which only happens
+    // because the config declares mappers.
+    const step: WorkingToolStep = {
+      toolId: "autoRotate" as ToolId,
+      operation: "/api/v1/misc/auto-rotate-pdf",
+      params: {
+        ...autoRotateDefaults,
+        detectionMode: "osd",
+        confidenceThreshold: 20,
+        inferUndetected: false,
+      },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, dynamicRegistry);
+    expect(api.operation).toBe("/api/v1/misc/auto-rotate-pdf");
+    expect(api.parameters).toEqual({
+      detectionMode: "osd",
+      confidenceThreshold: 20,
+      inferUndetected: false,
+    });
+
+    const back = deserializeToolStep(api, dynamicRegistry);
+    expect(back.toolId).toBe("autoRotate");
+    expect(back.support).toBe("editable");
+    expect(back.params).toMatchObject({
+      detectionMode: "osd",
+      confidenceThreshold: 20,
+      inferUndetected: false,
     });
   });
 
@@ -195,6 +255,167 @@ describe("serialize/deserialize round-trip", () => {
     expect(back.support).toBe("editable");
     expect(back.operation).toBe("/api/v1/security/auto-redact");
     expect(back.params).toMatchObject({ mode: "automatic" });
+  });
+});
+
+describe("shared-endpoint disambiguation", () => {
+  const addPassword = entry({
+    name: "Add Password",
+    automationSettings: NoopSettings,
+    operationConfig: asRegistryConfig(addPasswordOperationConfig),
+  });
+  const changePermissions = entry({
+    name: "Change Permissions",
+    automationSettings: NoopSettings,
+    operationConfig: asRegistryConfig(changePermissionsOperationConfig),
+  });
+  const ADD_PASSWORD = "/api/v1/security/add-password";
+
+  // Permissions only, no encryption fields: this is Change Permissions.
+  const permsOnly = {
+    operation: ADD_PASSWORD,
+    parameters: { preventPrinting: true },
+  };
+  // Carries keyLength (and a password): this is Add Password, even with a blank owner password.
+  const withPassword = {
+    operation: ADD_PASSWORD,
+    parameters: { password: "s3cret", ownerPassword: "", keyLength: 256 },
+  };
+
+  // Both share an endpoint, so the wrong one would win by registry order without a discriminator.
+  for (const [label, registry] of [
+    ["add-password declared first", { addPassword, changePermissions }],
+    ["change-permissions declared first", { changePermissions, addPassword }],
+  ] as const) {
+    test(`each stored step reloads as its own tool (${label})`, () => {
+      expect(deserializeToolStep(permsOnly, registry).toolId).toBe(
+        "changePermissions",
+      );
+      expect(deserializeToolStep(withPassword, registry).toolId).toBe(
+        "addPassword",
+      );
+    });
+  }
+});
+
+describe("convert (format-routed custom tool)", () => {
+  const convertRegistry: Partial<ToolRegistry> = {
+    convert: entry({
+      name: "Convert",
+      automationSettings: NoopSettings,
+      operationConfig: asRegistryConfig(convertOperationConfig),
+    }),
+  };
+
+  test("is offered as an editable step despite an unresolved default endpoint", () => {
+    const tools = getExecutableTools(convertRegistry);
+    expect(tools.map((t) => t.toolId)).toEqual(["convert"]);
+    expect(tools[0].support).toBe("editable");
+    // Its from/to are unset by default, so a representative endpoint stands in for the picker.
+    expect(tools[0].endpoint).toBe("/api/v1/convert/file/pdf");
+    expect(tools[0].endpoints).toContain("/api/v1/convert/pdf/word");
+  });
+
+  test("round-trips a PDF -> Word step, carrying from/to and the output format", () => {
+    const step: WorkingToolStep = {
+      toolId: "convert" as ToolId,
+      operation: "/api/v1/convert/file/pdf",
+      params: { ...convertDefaults, fromExtension: "pdf", toExtension: "docx" },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, convertRegistry);
+    expect(api.operation).toBe("/api/v1/convert/pdf/word");
+    expect(api.parameters).toMatchObject({
+      fromExtension: "pdf",
+      toExtension: "docx",
+      outputFormat: "docx",
+    });
+
+    const back = deserializeToolStep(api, convertRegistry);
+    expect(back.toolId).toBe("convert");
+    expect(back.support).toBe("editable");
+    expect(back.operation).toBe("/api/v1/convert/pdf/word");
+    expect(back.params).toMatchObject({
+      fromExtension: "pdf",
+      toExtension: "docx",
+    });
+  });
+
+  test("round-trips a PDF -> image step, restoring the image options", () => {
+    const step: WorkingToolStep = {
+      toolId: "convert" as ToolId,
+      operation: "/api/v1/convert/file/pdf",
+      params: {
+        ...convertDefaults,
+        fromExtension: "pdf",
+        toExtension: "png",
+        imageOptions: { ...convertDefaults.imageOptions, dpi: 600 },
+      },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, convertRegistry);
+    expect(api.operation).toBe("/api/v1/convert/pdf/img");
+    expect(api.parameters).toMatchObject({ imageFormat: "png", dpi: "600" });
+
+    const back = deserializeToolStep(api, convertRegistry);
+    expect(back.operation).toBe("/api/v1/convert/pdf/img");
+    expect(back.params).toMatchObject({
+      toExtension: "png",
+      imageOptions: { dpi: 600 },
+    });
+  });
+
+  test("round-trips an image -> PDF step, restoring the from-image options", () => {
+    const step: WorkingToolStep = {
+      toolId: "convert" as ToolId,
+      operation: "/api/v1/convert/file/pdf",
+      params: {
+        ...convertDefaults,
+        fromExtension: "png",
+        toExtension: "pdf",
+        imageOptions: {
+          ...convertDefaults.imageOptions,
+          fitOption: "fillPage",
+          autoRotate: false,
+        },
+      },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, convertRegistry);
+    expect(api.operation).toBe("/api/v1/convert/img/pdf");
+    expect(api.parameters).toMatchObject({
+      fitOption: "fillPage",
+      autoRotate: "false",
+    });
+
+    const back = deserializeToolStep(api, convertRegistry);
+    expect(back.params).toMatchObject({
+      imageOptions: { fitOption: "fillPage", autoRotate: false },
+    });
+  });
+
+  test("routes PDF/X through the shared PDF/A endpoint and recovers the PDF/X target", () => {
+    const step: WorkingToolStep = {
+      toolId: "convert" as ToolId,
+      operation: "/api/v1/convert/file/pdf",
+      params: { ...convertDefaults, fromExtension: "pdf", toExtension: "pdfx" },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, convertRegistry);
+    // PDF/X has no endpoint of its own; it rides the PDF/A endpoint, distinguished by the bookkeeping.
+    expect(api.operation).toBe("/api/v1/convert/pdf/pdfa");
+    expect(api.parameters).toMatchObject({ toExtension: "pdfx" });
+
+    const back = deserializeToolStep(api, convertRegistry);
+    expect(back.operation).toBe("/api/v1/convert/pdf/pdfa");
+    expect(back.params).toMatchObject({
+      toExtension: "pdfx",
+      pdfxOptions: { outputFormat: "pdfx" },
+    });
   });
 });
 

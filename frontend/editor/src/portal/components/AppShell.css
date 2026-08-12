@@ -8,9 +8,10 @@
 .portal-shell {
   display: flex;
   height: 100vh;
+  height: 100dvh; /* mobile browser chrome shrinks the viewport; dvh tracks it */
   overflow: hidden;
-  background: var(--color-bg);
-  color: var(--color-text-2);
+  background: var(--c-bg);
+  color: var(--c-text-muted);
 }
 
 .portal-shell__main {
@@ -25,5 +26,46 @@
   flex: 1 1 auto;
   min-height: 0; /* scroll instead of growing past the viewport */
   overflow-y: auto;
+  /* Hold the scrollbar's width whether or not it is showing. Without this, a page that grows past
+     the viewport (an editor panel filling in, say) makes the bar appear and shunts everything
+     sideways as it does. */
+  scrollbar-gutter: stable;
   animation: fadeInUp var(--motion-enter) both;
+}
+
+/* Mobile topbar — hidden on desktop, where the sidebar is always visible.
+   Height matches the sidebar's logo row so the brand sits at the same level. */
+.portal-shell__topbar {
+  display: none;
+  height: 3.1875rem;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0 0.625rem;
+  background: var(--color-sidebar-bg);
+  border-bottom: 1px solid var(--color-sidebar-border);
+}
+
+.portal-shell__topbar-wordmark {
+  margin-right: auto;
+}
+
+/* Scrim behind the mobile nav drawer (below SUI modals at z-index 100). */
+.portal-shell__scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  background: var(--c-overlay);
+}
+
+@media (max-width: 48rem) {
+  .portal-shell__topbar {
+    display: flex;
+  }
+  .portal-shell__scrim {
+    display: block;
+    /* fadeIn keyframes come from core tokens.css */
+    animation: fadeIn var(--motion-fast) both;
+  }
 }

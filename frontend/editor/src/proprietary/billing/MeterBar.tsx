@@ -1,5 +1,13 @@
 import type { ReactNode } from "react";
 import type { MeterState } from "@app/billing/format";
+import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
+
+// Meter state → the shared StatusBadge tone (contrast-tuned per theme).
+const STATE_TONE: Record<MeterState, StatusTone> = {
+  FULL: "success",
+  WARNED: "warning",
+  DEGRADED: "danger",
+};
 
 interface MeterBarProps {
   state: MeterState;
@@ -41,10 +49,9 @@ export function MeterBar({
           <span className="paygf-meter__cap">{capSuffix}</span>
         </div>
         {statusLabel != null && (
-          <span className="payg-status" data-state={state}>
-            <span className="payg-status__dot" />
+          <StatusBadge tone={STATE_TONE[state]} size="sm" showDot>
             {statusLabel}
-          </span>
+          </StatusBadge>
         )}
       </div>
       {showBar && (

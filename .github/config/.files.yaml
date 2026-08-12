@@ -9,6 +9,7 @@ ci: &ci
 build: &build
   - *ci
   - build.gradle
+  - gradle/spotless.gradle
   - app/(common|core|proprietary|saas)/build.gradle
   - Taskfile.yml
   - .taskfiles/backend.yml
@@ -83,6 +84,7 @@ frontend: &frontend
   - .taskfiles/frontend.yml
   - .taskfiles/e2e.yml
   - .github/workflows/frontend-validation.yml
+  - .github/workflows/frontend-a11y.yml
   - .github/workflows/e2e-stubbed.yml
   - .github/workflows/e2e-live.yml
 
@@ -121,8 +123,10 @@ generated-models: &generated-models
   - *openapi
   - frontend/editor/scripts/generate-tool-api-types.mts
   - frontend/editor/src/core/types/toolApiTypes.ts
+  - frontend/editor/src/core/types/toolIO.ts
   - engine/scripts/generate_tool_models.py
   - engine/src/stirling/models/tool_models.py
+  - engine/src/stirling/models/tool_io.py
   - .taskfiles/frontend.yml
   - .taskfiles/engine.yml
   - .github/workflows/check-generated-models.yml
@@ -155,4 +159,5 @@ proprietary: &proprietary
   - configs/settings.yml.template
   - build.gradle
   - app/proprietary/build.gradle
+  - gradle/spotless.gradle
   - .github/workflows/build-enterprise.yml

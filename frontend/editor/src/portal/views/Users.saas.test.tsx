@@ -15,7 +15,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter } from "react-router-dom";
 import { setupServer } from "msw/node";
 import {
@@ -45,10 +45,12 @@ vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
 // Force the SaaS flavor: the portal vitest project resolves @app to proprietary,
 // so redirect the two flavor seams to their real SaaS implementations.
 vi.mock("@app/portal/usersCapabilities", async () => ({
+  // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
   usersCapabilities: (await import("../../saas/portal/usersCapabilities"))
     .usersCapabilities,
 }));
 vi.mock("@app/portal/usersBackend", async () => ({
+  // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
   usersBackend: (await import("../../saas/portal/usersBackend")).usersBackend,
 }));
 
@@ -78,11 +80,11 @@ beforeEach(() => resetTeamSaasStore());
 
 function renderUsers() {
   return render(
-    <MantineProvider>
+    <PortalTestProviders>
       <MemoryRouter>
         <Users />
       </MemoryRouter>
-    </MantineProvider>,
+    </PortalTestProviders>,
   );
 }
 

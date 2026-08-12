@@ -2,7 +2,11 @@ package stirling.software.proprietary.policy.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -27,8 +31,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import stirling.software.common.cluster.JobStore;
+import stirling.software.common.cluster.inprocess.InProcessJobStore;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
+import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
@@ -42,6 +49,7 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunView;
@@ -78,6 +86,7 @@ class PolicyControllerTest {
     @Mock private JobOwnershipService jobOwnershipService;
 
     private ApplicationProperties applicationProperties;
+    private final JobStore jobStore = new InProcessJobStore();
     private PolicyController controller;
 
     private final java.util.List<stirling.software.proprietary.policy.trigger.PolicyTrigger>
@@ -106,7 +115,61 @@ class PolicyControllerTest {
                         policyTriggers,
                         applicationProperties,
                         tempFileManager,
-                        jobOwnershipService);
+                        jobOwnershipService,
+                        jobStore);
+    }
+
+    @Test
+    void validateReportsAChainThatCannotRun() {
+        // Delegates to PolicyValidator so the endpoint and the save-time gate cannot disagree.
+        ToolDiagnostic mismatch =
+                ToolDiagnostic.error(
+                        1, ToolDiagnostic.FORMAT_MISMATCH, "rotate cannot take an image");
+        when(policyValidator.diagnoseChain(anyList(), any())).thenReturn(List.of(mismatch));
+
+        PipelineValidation.Response response =
+                controller.validateChain(
+                        new PipelineValidation.Request(
+                                List.of(
+                                        new PipelineStep(
+                                                "/api/v1/misc/extract-images", Map.of(), Map.of()),
+                                        new PipelineStep(
+                                                "/api/v1/general/rotate-pdf", Map.of(), Map.of())),
+                                null));
+
+        assertFalse(response.valid());
+        assertEquals(List.of(mismatch), response.diagnostics());
+    }
+
+    @Test
+    void validateReportsAWorkableChainAsValid() {
+        // Warnings and fan-out notes come back without making the chain invalid.
+        ToolDiagnostic fanOut =
+                ToolDiagnostic.info(1, ToolDiagnostic.FAN_OUT, "runs once per file");
+        when(policyValidator.diagnoseChain(anyList(), any())).thenReturn(List.of(fanOut));
+
+        PipelineValidation.Response response =
+                controller.validateChain(
+                        new PipelineValidation.Request(
+                                List.of(
+                                        new PipelineStep(
+                                                "/api/v1/general/split-pages", Map.of(), Map.of()),
+                                        new PipelineStep(
+                                                "/api/v1/general/rotate-pdf", Map.of(), Map.of())),
+                                null));
+
+        assertTrue(response.valid());
+        assertEquals(List.of(fanOut), response.diagnostics());
+    }
+
+    @Test
+    void validateToleratesNoSteps() {
+        when(policyValidator.diagnoseChain(anyList(), any())).thenReturn(List.of());
+
+        PipelineValidation.Response response =
+                controller.validateChain(new PipelineValidation.Request(null, null));
+
+        assertTrue(response.valid());
     }
 
     private static stirling.software.proprietary.policy.trigger.PolicyTrigger trigger(
@@ -131,11 +194,11 @@ class PolicyControllerTest {
 
     private static PipelineDefinition definitionWithStep() {
         return new PipelineDefinition(
-                "pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), null);
+                "pipe", List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)), List.of());
     }
 
     private static Policy policy(String id, Long teamId) {
-        return new Policy(id, "name", "owner", true, null, List.of(), List.of(), null, teamId);
+        return new Policy(id, "name", "owner", true, List.of(), List.of(), null, teamId);
     }
 
     private static Policy s3OutputPolicy(String id, String secret) {
@@ -146,11 +209,11 @@ class PolicyControllerTest {
                                 "bucket", "outbox",
                                 "accessKeyId", "AKIAEXAMPLE",
                                 "secretAccessKey", secret));
-        return new Policy(id, "name", "owner", true, null, List.of(), List.of(), output, 1L);
+        return new Policy(id, "name", "owner", true, List.of(), List.of(), output, 1L);
     }
 
     private static PolicyRunHandle handle(String runId) {
-        PolicyRun run = new PolicyRun(runId, null, definitionWithStep());
+        PolicyRun run = new PolicyRun(runId, null, definitionWithStep(), null);
         return new PolicyRunHandle(runId, CompletableFuture.completedFuture(run));
     }
 
@@ -186,7 +249,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("rejects a pipeline with no steps")
         void rejectsEmptyPipeline() {
-            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), null);
+            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), List.of());
 
             assertThatThrownBy(() -> controller.run(empty, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
@@ -237,7 +300,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("rejects a pipeline with no steps")
         void rejectsEmpty() {
-            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), null);
+            PipelineDefinition empty = new PipelineDefinition("pipe", List.of(), List.of());
 
             assertThatThrownBy(() -> controller.runStream(empty, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class);
@@ -251,7 +314,7 @@ class PolicyControllerTest {
         @Test
         @DisplayName("returns the run view when present")
         void found() {
-            PolicyRun run = new PolicyRun("run-3", null, definitionWithStep());
+            PolicyRun run = new PolicyRun("run-3", null, definitionWithStep(), null);
             when(runRegistry.get("run-3")).thenReturn(run);
 
             ResponseEntity<PolicyRunView> response = controller.status("run-3");
@@ -264,6 +327,8 @@ class PolicyControllerTest {
         @DisplayName("returns 404 when run is unknown")
         void notFound() {
             when(runRegistry.get("missing")).thenReturn(null);
+            when(jobOwnershipService.extractJobId("missing")).thenReturn("missing");
+            when(jobOwnershipService.createScopedJobKey("missing")).thenReturn("missing");
 
             ResponseEntity<PolicyRunView> response = controller.status("missing");
 
@@ -278,9 +343,9 @@ class PolicyControllerTest {
         @Test
         @DisplayName("excludes ad-hoc runs and runs owned by others")
         void filtersRuns() {
-            PolicyRun adHoc = new PolicyRun("adhoc", null, definitionWithStep());
-            PolicyRun ownedStored = new PolicyRun("owned", "policy-A", definitionWithStep());
-            PolicyRun otherStored = new PolicyRun("other", "policy-B", definitionWithStep());
+            PolicyRun adHoc = new PolicyRun("adhoc", null, definitionWithStep(), null);
+            PolicyRun ownedStored = new PolicyRun("owned", "policy-A", definitionWithStep(), null);
+            PolicyRun otherStored = new PolicyRun("other", "policy-B", definitionWithStep(), null);
             when(runRegistry.all()).thenReturn(List.of(adHoc, ownedStored, otherStored));
 
             // ownedByCurrentUser: strip then re-apply scope reproduces the key only for the owned
@@ -395,8 +460,7 @@ class PolicyControllerTest {
         void updatePreservesOwnership() {
             applicationProperties.getSecurity().setEnableLogin(false);
             Policy existing =
-                    new Policy(
-                            "p2", "name", "origOwner", true, null, List.of(), List.of(), null, 3L);
+                    new Policy("p2", "name", "origOwner", true, List.of(), List.of(), null, 3L);
             when(policyStore.get("p2")).thenReturn(Optional.of(existing));
             when(policyAccessGuard.canAccess(existing)).thenReturn(true);
             when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -404,8 +468,7 @@ class PolicyControllerTest {
             ResponseEntity<Policy> response =
                     controller.savePolicy(
                             new Policy(
-                                    "p2", "name", "forged", true, null, List.of(), List.of(), null,
-                                    77L));
+                                    "p2", "name", "forged", true, List.of(), List.of(), null, 77L));
 
             assertThat(response.getBody().owner()).isEqualTo("origOwner");
             assertThat(response.getBody().teamId()).isEqualTo(3L);

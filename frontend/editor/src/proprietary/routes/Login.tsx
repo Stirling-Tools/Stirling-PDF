@@ -16,12 +16,7 @@ import AuthLayout from "@app/routes/authShared/AuthLayout";
 import { useBackendProbe } from "@app/hooks/useBackendProbe";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { updateSupportedLanguages } from "@app/i18n";
-import {
-  DEBUG_SHOW_ALL_PROVIDERS,
-  oauthProviderConfig,
-} from "@app/auth/ui/OAuthButtons";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
-import AuthSignupPrompt from "@app/auth/ui/AuthSignupPrompt";
 import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
 import LoggedInState from "@app/routes/login/LoggedInState";
@@ -48,10 +43,9 @@ export default function Login() {
   const { refetch } = useAppConfig();
   const { t } = useTranslation();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(true);
   const [_enableLogin, setEnableLogin] = useState<boolean | null>(null);
   const [ssoAutoLogin, setSsoAutoLogin] = useState(false);
-  const [hasSSOProviders, setHasSSOProviders] = useState(false);
   const backendProbe = useBackendProbe();
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
@@ -235,26 +229,13 @@ export default function Login() {
     }
   }, [backendProbe.status, refetch]);
 
-  // Update hasSSOProviders and showEmailForm when providers or loginMethod change
+  // The email/password form is always shown when username/password auth is
+  // allowed; SSO-only mode hides it.
   useEffect(() => {
-    // In debug mode, check if any providers exist in the config
-    const hasProviders = DEBUG_SHOW_ALL_PROVIDERS
-      ? Object.keys(oauthProviderConfig).length > 0
-      : login.providers.length > 0;
-    setHasSSOProviders(hasProviders);
-
-    // Check if username/password authentication is allowed
     const userPassAllowed =
       login.loginMethod === "all" || login.loginMethod === "normal";
-
-    // Show email form if no SSO providers exist AND username/password is allowed
-    if (!hasProviders && userPassAllowed) {
-      setShowEmailForm(true);
-    } else if (!userPassAllowed) {
-      // Hide email form if username/password auth is not allowed
-      setShowEmailForm(false);
-    }
-  }, [login.providers, login.loginMethod]);
+    setShowEmailForm(userPassAllowed);
+  }, [login.loginMethod]);
 
   // Auto-login to SSO when enabled and only one SSO option exists
   useEffect(() => {
@@ -440,11 +421,13 @@ export default function Login() {
             padding: "1.5rem",
             marginTop: "1rem",
             borderRadius: "0.75rem",
-            backgroundColor: "rgba(37, 99, 235, 0.08)",
-            border: "1px solid rgba(37, 99, 235, 0.2)",
+            backgroundColor:
+              "color-mix(in srgb, var(--c-primary) 8%, transparent)",
+            border:
+              "1px solid color-mix(in srgb, var(--c-primary) 20%, transparent)",
           }}
         >
-          <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
+          <p style={{ margin: "0 0 0.75rem 0", color: "var(--c-text)" }}>
             {t(
               "backendStartup.unreachable",
               "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
@@ -480,10 +463,12 @@ export default function Login() {
               style={{
                 padding: "1rem",
                 marginBottom: "1rem",
-                backgroundColor: "rgba(34, 197, 94, 0.1)",
-                border: "1px solid rgba(34, 197, 94, 0.3)",
+                backgroundColor:
+                  "color-mix(in srgb, var(--c-success) 10%, transparent)",
+                border:
+                  "1px solid color-mix(in srgb, var(--c-success) 30%, transparent)",
                 borderRadius: "0.5rem",
-                color: "#16a34a",
+                color: "var(--c-success)",
               }}
             >
               <p
@@ -498,31 +483,10 @@ export default function Login() {
             </div>
           ) : undefined
         }
-        beforeEmailForm={
-          hasSSOProviders && !showEmailForm && isUserPassAllowed ? (
-            <div className="auth-section">
-              <Button
-                type="button"
-                variant="tertiary"
-                hover={false}
-                onClick={() => setShowEmailForm(true)}
-                disabled={login.isSubmitting}
-                className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
-              >
-                {t("login.useEmailInstead", "Login with email")}
-              </Button>
-            </div>
-          ) : undefined
-        }
         footer={
-          <>
-            {isFirstTimeSetup &&
-              showDefaultCredentials &&
-              isUserPassAllowed && <AuthDefaultCredentials />}
-            {isUserPassAllowed && (
-              <AuthSignupPrompt onSignUp={() => navigate("/signup")} />
-            )}
-          </>
+          isFirstTimeSetup && showDefaultCredentials && isUserPassAllowed ? (
+            <AuthDefaultCredentials />
+          ) : undefined
         }
       />
     </AuthLayout>

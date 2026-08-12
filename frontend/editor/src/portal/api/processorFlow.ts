@@ -1,21 +1,7 @@
-/**
- * Processor-flow assembler for the home visualiser.
- *
- * Fans in the three real portal surfaces — sources (`/api/v1/sources`), policies
- * (`/api/v1/policies`) and their runs (`/api/v1/policies/runs`) — and derives the
- * left→middle→right shape the {@link ProcessorFlow} component renders:
- *
- *   sources  →  policies  →  outcomes
- *
- * Everything here is real backend data. Per-run source attribution does not
- * exist (a `PolicyRunView` carries `policyId` but no source id), so the flow
- * animation is illustrative; the node counts are not — each source's `docs24h`,
- * each policy's trailing-24h run count, and the success/failure split all come
- * straight from the API.
- */
+/** Assembles the home visualiser's sources → policies → outcomes from the real
+ *  sources/policies/runs APIs. Counts are real; the flow motion is illustrative. */
 
-import { apiClient } from "@portal/api/http";
-import { fetchSources } from "@portal/api/sources";
+import type { SourcesResponse } from "@portal/api/sources";
 import { POLICY_CATEGORIES } from "@portal/api/policies";
 import { fromWirePolicy } from "@app/policies/codec";
 import type { PolicyRunView, WirePolicy } from "@app/policies/types";
@@ -30,27 +16,19 @@ export interface FlowSource {
   docs24h: number;
 }
 
-/**
- * A connector type shown in the sources column but not yet a real source type —
- * a "coming soon" affordance only. `labelKey` is an i18n key.
- */
+/** A "coming soon" connector shown in the sources column but not a real source
+ *  type yet. `labelKey` is an i18n key. */
 export interface FlowComingSoonSource {
   key: string;
   labelKey: string;
 }
 
-/**
- * Row display state, mirroring the Policies page:
- *   - `active`  — configured + enabled; shows its live 24h run count
- *   - `off`     — available but not set up; offers a "Set up" CTA
- *   - `locked`  — a coming-soon category that doesn't exist yet
- */
+/** Row state (mirrors the Policies page): `active` = configured+enabled with a
+ *  24h count, `off` = available (offers "Set up"), `locked` = coming-soon. */
 export type FlowPolicyState = "active" | "off" | "locked";
 
-/**
- * One row in the middle policies column — the full policy catalogue, in the
- * same order the Policies page shows, including the coming-soon categories.
- */
+/** One policies-column row — the full catalogue in Policies-page order,
+ *  including the coming-soon categories. */
 export interface FlowPolicy {
   /** Category id (also the lane key for the flow animation + its icon). */
   key: string;
@@ -92,11 +70,8 @@ const COMING_SOON_SOURCES: FlowComingSoonSource[] = [
   },
 ];
 
-/**
- * The full policy catalogue, in the Policies-page order, including the
- * coming-soon categories (rendered as locked). `active` rows carry their
- * trailing-24h run count.
- */
+/** Full catalogue in Policies-page order (coming-soon → locked); `active` rows
+ *  carry their trailing-24h run count. */
 function buildPolicies(
   wirePolicies: WirePolicy[],
   runs: PolicyRunView[],
@@ -147,16 +122,16 @@ function buildOutcomes(runs: PolicyRunView[]): FlowOutcome[] {
   ];
 }
 
-/** Assemble the full flow model from the three live portal surfaces. */
-export async function fetchProcessorFlow(): Promise<ProcessorFlow> {
-  const [sourcesResp, wirePolicies, runs] = await Promise.all([
-    fetchSources(),
-    apiClient.local.json<WirePolicy[]>("/api/v1/policies"),
-    apiClient.local
-      .json<PolicyRunView[]>("/api/v1/policies/runs")
-      .catch(() => [] as PolicyRunView[]),
-  ]);
-
+/**
+ * Pure assembly of the flow model from the three raw responses. Split out so
+ * the React Query layer composes it from the shared sources/policies/runs
+ * cache entries instead of re-fetching them (see useProcessorFlow).
+ */
+export function assembleProcessorFlow(
+  sourcesResp: SourcesResponse,
+  wirePolicies: WirePolicy[],
+  runs: PolicyRunView[],
+): ProcessorFlow {
   const sources: FlowSource[] = sourcesResp.sources.map((s) => ({
     id: s.id,
     name: s.name,

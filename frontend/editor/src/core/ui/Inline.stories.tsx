@@ -29,14 +29,12 @@ export const SpaceBetween: Story = {
       style={{
         width: "30rem",
         padding: 12,
-        border: "1px solid var(--color-border)",
+        border: "1px solid var(--c-border)",
         borderRadius: 8,
       }}
     >
       <span>Pipeline name</span>
-      <StatusBadge tone="success" pulse>
-        healthy
-      </StatusBadge>
+      <StatusBadge tone="success">healthy</StatusBadge>
     </Inline>
   ),
 };
