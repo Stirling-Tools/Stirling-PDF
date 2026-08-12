@@ -37,6 +37,19 @@ updates:
     cooldown:
       default-days: 7
     rebase-strategy: "auto"
+    groups:
+      ubuntu:
+        patterns:
+          - "ubuntu"
+      eclipse-temurin:
+        patterns:
+          - "eclipse-temurin"
+      uv:
+        patterns:
+          - "ghcr.io/astral-sh/uv"
+      gradle:
+        patterns:
+          - "gradle"
 
   - package-ecosystem: github-actions
     directory: /
@@ -158,6 +171,14 @@ updates:
 
   - package-ecosystem: pip
     directory: /testing/cucumber
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "uv"
+    directory: "/engine"
     schedule:
       interval: "weekly"
     cooldown:
