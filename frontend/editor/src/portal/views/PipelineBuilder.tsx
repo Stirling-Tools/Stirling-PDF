@@ -1125,7 +1125,7 @@ export function PipelineBuilder() {
           pendingCreateEnabled={pendingCreateEnabled}
           onCreate={() => submitCreate(true)}
           onCreatePaused={() => submitCreate(false)}
-          onCancel={() => attemptLeave(listPath)}
+          onBack={() => attemptLeave(listPath)}
           onViewDefinition={() => setDefinitionOpen(true)}
         />
       )}

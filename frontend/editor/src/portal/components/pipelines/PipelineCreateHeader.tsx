@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import { ActionIcon, Button, Input } from "@app/ui";
 import "@portal/components/pipelines/PipelineCreateHeader.css";
@@ -14,17 +15,17 @@ export interface PipelineCreateHeaderProps {
   pendingCreateEnabled: boolean | null;
   onCreate: () => void;
   onCreatePaused: () => void;
-  onCancel: () => void;
+  onBack: () => void;
 
   /** Opens the definition (JSON + cURL). Rarely used, so it is an icon, not a labelled button. */
   onViewDefinition: () => void;
 }
 
 /**
- * The create-mode toolbar. Mirrors the edit header's shape - identity on the left, actions on the
- * right - so the two modes read as the same page in two states rather than two different screens.
- * The pipeline is named on the left; the right commits it live or paused, or backs out. The create
- * buttons disable until the pipeline is valid, so a click always does something.
+ * The create-mode toolbar. Mirrors the edit header's shape - a back arrow and the name on the left,
+ * actions on the right - so the two modes read as the same page in two states rather than two
+ * different screens. The right commits the pipeline live or paused; the create buttons disable until
+ * it is valid, so a click always does something.
  */
 export function PipelineCreateHeader({
   name,
@@ -34,13 +35,22 @@ export function PipelineCreateHeader({
   pendingCreateEnabled,
   onCreate,
   onCreatePaused,
-  onCancel,
+  onBack,
   onViewDefinition,
 }: PipelineCreateHeaderProps) {
   const { t } = useTranslation();
 
   return (
     <section className="portal-pipeline-create-header">
+      <ActionIcon
+        variant="quiet"
+        size="sm"
+        onClick={onBack}
+        aria-label={t("portal.pipelines.builder.back")}
+      >
+        <ArrowBackRoundedIcon style={{ fontSize: "1.25rem" }} />
+      </ActionIcon>
+
       <Input
         className="portal-pipeline-create-header__name"
         value={name}
@@ -65,14 +75,6 @@ export function PipelineCreateHeader({
           </ActionIcon>
         </Tooltip>
 
-        <Button
-          variant="tertiary"
-          size="sm"
-          onClick={onCancel}
-          disabled={saving}
-        >
-          {t("portal.pipelines.composer.cancel")}
-        </Button>
         <Button
           variant="secondary"
           size="sm"

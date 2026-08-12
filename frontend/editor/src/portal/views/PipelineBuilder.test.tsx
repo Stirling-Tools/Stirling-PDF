@@ -905,7 +905,7 @@ describe("PipelineBuilder", () => {
         target: { value: "Draft" },
       },
     );
-    fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
+    fireEvent.click(screen.getByLabelText("portal.pipelines.builder.back"));
 
     expect(
       await screen.findByText("portal.pipelines.builder.unsavedTitle"),
@@ -969,7 +969,7 @@ describe("PipelineBuilder", () => {
     await screen.findByRole("textbox", {
       name: "portal.pipelines.composer.name",
     });
-    fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
+    fireEvent.click(screen.getByLabelText("portal.pipelines.builder.back"));
 
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });

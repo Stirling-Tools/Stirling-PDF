@@ -22,7 +22,7 @@ function renderHeader(overrides: Partial<PipelineCreateHeaderProps> = {}) {
     onNameChange: vi.fn(),
     onCreate: vi.fn(),
     onCreatePaused: vi.fn(),
-    onCancel: vi.fn(),
+    onBack: vi.fn(),
     onViewDefinition: vi.fn(),
   };
   render(
@@ -54,8 +54,8 @@ describe("PipelineCreateHeader", () => {
     expect(handlers.onCreate).toHaveBeenCalled();
     fireEvent.click(screen.getByText("portal.pipelines.composer.createPaused"));
     expect(handlers.onCreatePaused).toHaveBeenCalled();
-    fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
-    expect(handlers.onCancel).toHaveBeenCalled();
+    fireEvent.click(screen.getByLabelText("portal.pipelines.builder.back"));
+    expect(handlers.onBack).toHaveBeenCalled();
   });
 
   it("blocks both create actions until the pipeline is valid", () => {

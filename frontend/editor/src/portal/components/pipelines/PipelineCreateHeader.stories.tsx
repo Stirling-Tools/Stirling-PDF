@@ -24,7 +24,7 @@ function Playground({ initialName }: { initialName: string }) {
       pendingCreateEnabled={null}
       onCreate={noop}
       onCreatePaused={noop}
-      onCancel={noop}
+      onBack={noop}
       onViewDefinition={noop}
     />
   );

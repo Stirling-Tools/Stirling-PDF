@@ -33,7 +33,8 @@
   flex: none;
 }
 
-.portal-pipeline-create-header__actions .sui-btn {
+/* Every button holds its width (Cancel on the far left included), so labels never squash. */
+.portal-pipeline-create-header .sui-btn {
   flex: none;
   white-space: nowrap;
 }
