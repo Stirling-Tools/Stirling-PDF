@@ -386,7 +386,7 @@ Examples:
     except KeyboardInterrupt:
         print("\n\n⚠ Translation interrupted by user")
         sys.exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"\n\n✗ Error: {e}")
         import traceback
 

@@ -59,7 +59,7 @@ def resize_image(input_image_path, output_image_path, max_size=(16383, 16383)):
             # If dimensions are within the allowed limits, save the image directly
             image.save(output_image_path, format="WEBP", quality=100)
             print(f"The image was successfully saved as WebP: {output_image_path}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"An error occurred: {e}")
 
 

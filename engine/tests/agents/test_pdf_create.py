@@ -275,9 +275,7 @@ async def test_orchestrate_returns_plan_step(agent: PdfCreateAgent) -> None:
     written = _written_sections()
 
     with (
-        agent._meta_planner.override(
-            model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())
-        ),
+        agent._meta_planner.override(model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())),
         agent._sections_planner.override(
             model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=sections.model_dump_json())
         ),
@@ -315,9 +313,7 @@ async def test_orchestrate_empty_sections_returns_cannot_do(agent: PdfCreateAgen
     empty_sections = DocumentSections(sections=[])
 
     with (
-        agent._meta_planner.override(
-            model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())
-        ),
+        agent._meta_planner.override(model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())),
         agent._sections_planner.override(
             model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=empty_sections.model_dump_json())
         ),
@@ -353,9 +349,7 @@ async def test_orchestrate_assembles_multiple_chunks(agent: PdfCreateAgent) -> N
     )
 
     with (
-        agent._meta_planner.override(
-            model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())
-        ),
+        agent._meta_planner.override(model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())),
         agent._sections_planner.override(
             model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=sections.model_dump_json())
         ),
@@ -384,9 +378,7 @@ async def test_orchestrate_applies_planner_inferred_style(agent: PdfCreateAgent)
     written = _written_sections()
 
     with (
-        agent._meta_planner.override(
-            model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())
-        ),
+        agent._meta_planner.override(model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())),
         agent._sections_planner.override(
             model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=sections.model_dump_json())
         ),
@@ -429,9 +421,7 @@ async def test_orchestrate_drops_non_hex_planner_colour(agent: PdfCreateAgent) -
     written = _written_sections()
 
     with (
-        agent._meta_planner.override(
-            model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())
-        ),
+        agent._meta_planner.override(model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=meta.model_dump_json())),
         agent._sections_planner.override(
             model=TestModel(profile=_NATIVE_PROFILE, custom_output_text=sections.model_dump_json())
         ),

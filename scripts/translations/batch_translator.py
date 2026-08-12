@@ -182,7 +182,7 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
 
         placeholder_pattern = r"\{[^}]+\}|\{\{[^}]+\}\}"
 
-        for key in original.keys():
+        for key in original:
             if key not in translated:
                 continue
 
@@ -366,7 +366,7 @@ Examples:
             if i < len(input_files):
                 time.sleep(args.delay)
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"✗ Failed: {e}")
             failed += 1
             continue

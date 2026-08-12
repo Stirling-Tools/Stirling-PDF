@@ -78,14 +78,26 @@ def crop_borders(image, border_color, tolerance=30):
 
 
 def split_photos(
-    input_file, output_directory, tolerance=30, min_area=10000, min_contour_area=500, angle_threshold=10, border_size=0
+    input_file,
+    output_directory,
+    tolerance=30,
+    min_area=10000,
+    min_contour_area=500,
+    angle_threshold=10,
+    border_size=0,
 ):
     image = cv2.imread(input_file)
     background_color = estimate_background_color(image)
 
     # Add a constant border around the image
     image = cv2.copyMakeBorder(
-        image, border_size, border_size, border_size, border_size, cv2.BORDER_CONSTANT, value=background_color
+        image,
+        border_size,
+        border_size,
+        border_size,
+        border_size,
+        cv2.BORDER_CONSTANT,
+        value=background_color,
     )
 
     photo_boundaries = find_photo_boundaries(image, background_color, tolerance)
@@ -117,7 +129,10 @@ def split_photos(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Split photos in an image")
     parser.add_argument("input_file", help="The input scanned image containing multiple photos.")
-    parser.add_argument("output_directory", help="The directory where the result images should be placed.")
+    parser.add_argument(
+        "output_directory",
+        help="The directory where the result images should be placed.",
+    )
     parser.add_argument(
         "--tolerance",
         type=int,
@@ -125,10 +140,16 @@ if __name__ == "__main__":
         help="Determines the range of color variation around the estimated background color (default: 30).",
     )
     parser.add_argument(
-        "--min_area", type=int, default=10000, help="Sets the minimum area threshold for a photo (default: 10000)."
+        "--min_area",
+        type=int,
+        default=10000,
+        help="Sets the minimum area threshold for a photo (default: 10000).",
     )
     parser.add_argument(
-        "--min_contour_area", type=int, default=500, help="Sets the minimum contour area threshold for a photo (default: 500)."
+        "--min_contour_area",
+        type=int,
+        default=500,
+        help="Sets the minimum contour area threshold for a photo (default: 500).",
     )
     parser.add_argument(
         "--angle_threshold",

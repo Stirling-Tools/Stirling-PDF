@@ -116,7 +116,12 @@ def _check_policies_available():
         resp = requests.post(
             f"{_BASE_URL}/api/v1/sources",
             headers={"X-API-KEY": "123456789", "Content-Type": "application/json"},
-            json={"name": "policies-probe", "type": "webhook", "options": {}, "enabled": True},
+            json={
+                "name": "policies-probe",
+                "type": "webhook",
+                "options": {},
+                "enabled": True,
+            },
             timeout=10,
         )
         if resp.status_code != 200:

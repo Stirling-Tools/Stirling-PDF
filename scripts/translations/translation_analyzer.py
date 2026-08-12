@@ -31,7 +31,7 @@ class TranslationAnalyzer:
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Error: Invalid file {file_path}: {e}")
             sys.exit(1)
 
@@ -48,7 +48,7 @@ class TranslationAnalyzer:
             return {
                 lang: set(patterns) for lang, data in ignore_data.items() for patterns in [data.get("ignore", [])] if patterns
             }
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")
             return {}
 

@@ -54,7 +54,10 @@ def step_deliver_with_signature(context, payload, signature):
 def step_deliver_to_id(context, payload, webhook_id):
     context.webhook_response = requests.post(
         f"{BASE_URL}/api/v1/webhooks/{webhook_id}",
-        headers={"Content-Type": "application/pdf", "X-Stirling-Signature": "sha256=00"},
+        headers={
+            "Content-Type": "application/pdf",
+            "X-Stirling-Signature": "sha256=00",
+        },
         data=payload.encode(),
         timeout=15,
     )

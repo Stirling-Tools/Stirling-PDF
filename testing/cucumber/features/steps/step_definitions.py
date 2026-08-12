@@ -527,7 +527,13 @@ def step_pdf_has_qr_split_marker(context, page_num):
             packet = io.BytesIO()
             can = canvas.Canvas(packet, pagesize=letter)
             w, h = letter
-            can.drawImage(ImageReader(qr_bytes), (w - 100) / 2, (h - 100) / 2, width=100, height=100)
+            can.drawImage(
+                ImageReader(qr_bytes),
+                (w - 100) / 2,
+                (h - 100) / 2,
+                width=100,
+                height=100,
+            )
             can.showPage()
             can.save()
             packet.seek(0)
@@ -652,9 +658,9 @@ def step_check_response_pdf_passworded(context):
         reader = PdfReader(response_file)
         assert reader.is_encrypted
     except PdfReadError as e:
-        raise AssertionError(f"Failed to read PDF: {str(e)}. Response content: {context.response.content}")
+        raise AssertionError(f"Failed to read PDF: {e!s}. Response content: {context.response.content}")
     except Exception as e:
-        raise AssertionError(f"An error occurred: {str(e)}. Response content: {context.response.content}")
+        raise AssertionError(f"An error occurred: {e!s}. Response content: {context.response.content}")
 
 
 @then("the response status code should be {status_code:d}")

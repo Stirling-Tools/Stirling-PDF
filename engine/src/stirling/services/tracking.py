@@ -163,9 +163,7 @@ class PostHogSpanProcessor(SpanProcessor):
 
         return properties
 
-    def _maybe_emit_trace_event(
-        self, span: ReadableSpan, attrs: Mapping[str, Any], properties: dict[str, object]
-    ) -> None:
+    def _maybe_emit_trace_event(self, span: ReadableSpan, attrs: Mapping[str, Any], properties: dict[str, object]) -> None:
         """Emit an $ai_trace event for the first span seen per trace ID."""
         trace_id = str(properties.get("$ai_trace_id", ""))
         if not trace_id or trace_id in self._seen_traces:

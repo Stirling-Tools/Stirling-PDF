@@ -37,7 +37,20 @@ def _sh(args, stdin=None, timeout=60):
 
 def _psql(query):
     """Run a query against the shared Postgres, return the raw tab/newline output (trimmed)."""
-    rc, out, err = _sh(["docker", "exec", PG, "psql", "-U", "stirling", "-d", "stirling", "-tAc", query])
+    rc, out, err = _sh(
+        [
+            "docker",
+            "exec",
+            PG,
+            "psql",
+            "-U",
+            "stirling",
+            "-d",
+            "stirling",
+            "-tAc",
+            query,
+        ]
+    )
     assert rc == 0, f"psql failed: {err.strip() or out.strip()}"
     return out.strip()
 
@@ -48,7 +61,15 @@ def _psql_int(query):
 
 
 def _network():
-    rc, out, _ = _sh(["docker", "inspect", "-f", "{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}", NODES[0]])
+    rc, out, _ = _sh(
+        [
+            "docker",
+            "inspect",
+            "-f",
+            "{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}",
+            NODES[0],
+        ]
+    )
     return out.strip() or "compose_stirling-multinode"
 
 
@@ -113,7 +134,11 @@ def _any_connection_id(context):
     cid = getattr(context, "_seed_conn_id", None)
     if cid:
         return cid
-    r = requests.get(f"{LB_URL}/api/v1/integrations", headers={"Authorization": f"Bearer {_token(context)}"}, timeout=15)
+    r = requests.get(
+        f"{LB_URL}/api/v1/integrations",
+        headers={"Authorization": f"Bearer {_token(context)}"},
+        timeout=15,
+    )
     assert r.status_code == 200, f"list integrations failed: HTTP {r.status_code}"
     s3 = next((c for c in r.json() if c.get("integrationType") == "S3"), None)
     assert s3, "no S3 connection available (did the seed run?)"
@@ -127,14 +152,22 @@ def _s3_source_body(name, connection_id):
         {
             "name": name,
             "type": "s3",
-            "options": {"connectionId": connection_id, "prefix": "regr/", "mode": "snapshot"},
+            "options": {
+                "connectionId": connection_id,
+                "prefix": "regr/",
+                "mode": "snapshot",
+            },
             "enabled": True,
         }
     )
 
 
 def _source_id_by_name(context, name):
-    r = requests.get(f"{LB_URL}/api/v1/sources", headers={"Authorization": f"Bearer {_token(context)}"}, timeout=15)
+    r = requests.get(
+        f"{LB_URL}/api/v1/sources",
+        headers={"Authorization": f"Bearer {_token(context)}"},
+        timeout=15,
+    )
     assert r.status_code == 200, f"list sources failed: HTTP {r.status_code}"
     return next((s["id"] for s in r.json().get("sources", []) if s.get("name") == name), None)
 
@@ -161,7 +194,11 @@ def _s3_connection_body(name):
 
 
 def _lb_login(context):
-    r = requests.post(f"{LB_URL}/api/v1/auth/login", json={"username": ADMIN_USER, "password": ADMIN_PASS}, timeout=15)
+    r = requests.post(
+        f"{LB_URL}/api/v1/auth/login",
+        json={"username": ADMIN_USER, "password": ADMIN_PASS},
+        timeout=15,
+    )
     assert r.status_code == 200, f"admin login via LB failed: HTTP {r.status_code}"
     context.jwt_token = r.json()["session"]["access_token"]
 
@@ -192,12 +229,28 @@ def _mc(context, script, stdin=None):
     net = getattr(context, "_net", None) or _network()
     context._net = net
     full = f"mc alias set local http://minio:9000 minioadmin minioadmin >/dev/null 2>&1 && {script}"
-    args = ["docker", "run", "-i", "--rm", "--network", net, "--entrypoint", "/bin/sh", "minio/mc", "-c", full]
+    args = [
+        "docker",
+        "run",
+        "-i",
+        "--rm",
+        "--network",
+        net,
+        "--entrypoint",
+        "/bin/sh",
+        "minio/mc",
+        "-c",
+        full,
+    ]
     return _sh(args, stdin=stdin, timeout=90)
 
 
 def _policy_id_by_name(context, name):
-    r = requests.get(f"{LB_URL}/api/v1/policies", headers={"Authorization": f"Bearer {_token(context)}"}, timeout=15)
+    r = requests.get(
+        f"{LB_URL}/api/v1/policies",
+        headers={"Authorization": f"Bearer {_token(context)}"},
+        timeout=15,
+    )
     assert r.status_code == 200, f"list policies failed: HTTP {r.status_code}"
     data = r.json()
     items = data if isinstance(data, list) else data.get("policies", [])
@@ -282,7 +335,10 @@ def step_keys_encrypted(context):
 def step_create_team(context, name):
     context._team_name = name
     r = requests.post(
-        f"{LB_URL}/api/v1/team/create", headers={"Authorization": f"Bearer {_token(context)}"}, data={"name": name}, timeout=15
+        f"{LB_URL}/api/v1/team/create",
+        headers={"Authorization": f"Bearer {_token(context)}"},
+        data={"name": name},
+        timeout=15,
     )
     assert r.status_code in (200, 201, 409), f"create team failed: HTTP {r.status_code}"
 
@@ -370,7 +426,18 @@ def step_ledger_claim_atomic(context):
     )
     _psql(insert)  # first claim wins
     rc, out, err = _sh(
-        ["docker", "exec", PG, "psql", "-U", "stirling", "-d", "stirling", "-tAc", insert]
+        [
+            "docker",
+            "exec",
+            PG,
+            "psql",
+            "-U",
+            "stirling",
+            "-d",
+            "stirling",
+            "-tAc",
+            insert,
+        ]
     )  # second claim must be rejected
     _psql(f"delete from policy_processed_files where identity_hash = '{ihash}'")
     assert rc != 0 and "duplicate key" in (out + err).lower(), (
@@ -388,7 +455,11 @@ def step_run_policy_on_node(context, name, idx):
     assert pid, f"policy '{name}' not found"
     # Drop an input so the trigger actually produces a run (the source is otherwise empty).
     marker = uuid.uuid4().hex[:12]
-    _mc(context, f"mc pipe local/{BUCKET}/{SOURCE_PREFIX}runvis-{marker}.pdf", stdin=_pdf_bytes(marker))
+    _mc(
+        context,
+        f"mc pipe local/{BUCKET}/{SOURCE_PREFIX}runvis-{marker}.pdf",
+        stdin=_pdf_bytes(marker),
+    )
     status, _ = _curl_on_node(node, "POST", f"/api/v1/policies/{pid}/trigger", token=_token(context))
     assert status in (200, 202), f"triggering the policy on {node} failed: HTTP {status}"
     # Grab the runId that node recorded for the run it just executed.
@@ -491,7 +562,12 @@ def _auth(context):
 @when('I create a policy named "{name}" on node "{idx}"')
 def step_create_policy_on_node(context, name, idx):
     status, body = _curl_on_node(
-        _node(idx), "POST", "/api/v1/policies", token=_token(context), data=_policy_body(name), content_type="application/json"
+        _node(idx),
+        "POST",
+        "/api/v1/policies",
+        token=_token(context),
+        data=_policy_body(name),
+        content_type="application/json",
     )
     assert status in (200, 201), f"create policy on {_node(idx)} failed: HTTP {status}: {body[:200]}"
 
@@ -516,7 +592,10 @@ def step_rename_policy(context, old, new):
     pol = requests.get(f"{LB_URL}/api/v1/policies/{pid}", headers=_auth(context), timeout=15).json()
     pol["name"] = new
     r = requests.post(
-        f"{LB_URL}/api/v1/policies", headers={**_auth(context), "Content-Type": "application/json"}, json=pol, timeout=15
+        f"{LB_URL}/api/v1/policies",
+        headers={**_auth(context), "Content-Type": "application/json"},
+        json=pol,
+        timeout=15,
     )
     assert r.status_code in (200, 201), f"rename policy failed: HTTP {r.status_code}"
 
@@ -626,7 +705,11 @@ def step_conn_resolves(context, name):
 
 @when("I delete the connection via the load balancer")
 def step_delete_conn(context):
-    r = requests.delete(f"{LB_URL}/api/v1/integrations/{context._conn_id}", headers=_auth(context), timeout=15)
+    r = requests.delete(
+        f"{LB_URL}/api/v1/integrations/{context._conn_id}",
+        headers=_auth(context),
+        timeout=15,
+    )
     assert r.status_code in (200, 204), f"delete connection failed: HTTP {r.status_code}"
 
 

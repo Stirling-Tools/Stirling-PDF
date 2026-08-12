@@ -28,7 +28,7 @@ class AITranslationHelper:
         try:
             with open(file_path, "rb") as f:
                 return tomllib.load(f)
-        except (FileNotFoundError, Exception) as e:
+        except (FileNotFoundError, Exception) as e:  # noqa: BLE001
             print(f"Error loading {file_path}: {e}")
             return {}
 

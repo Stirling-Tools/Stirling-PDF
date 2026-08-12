@@ -139,7 +139,7 @@ class DocumentService:
             try:
                 results = await self._store.search(col_name, query_embedding, k, principals)
                 all_results.extend(results)
-            except Exception:  # noqa: BLE001 - any backend error on one collection should not stop the others
+            except Exception:
                 logger.warning(
                     "Skipping collection %s during cross-collection search",
                     col_name,

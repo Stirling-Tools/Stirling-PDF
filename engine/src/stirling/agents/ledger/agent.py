@@ -544,7 +544,5 @@ class MathAuditorAgent:
             if warning_count:
                 parts.append(f"Found {warning_count} warning{'s' if warning_count != 1 else ''}.")
         if unauditable_pages:
-            parts.append(
-                f"Pages {', '.join(str(p + 1) for p in unauditable_pages)} could not be audited (OCR unavailable)."
-            )
+            parts.append(f"Pages {', '.join(str(p + 1) for p in unauditable_pages)} could not be audited (OCR unavailable).")
         return " ".join(parts)
