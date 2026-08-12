@@ -425,11 +425,6 @@ export default defineConfig(async ({ mode, command }) => {
       reportCompressedSize: false,
       rollupOptions: {
         output: {
-          // Function-form manualChunks pulls matched modules' dependencies into
-          // the named chunk, which silently bloats vendor-* and can split
-          // react/react-dom across chunk boundaries. onlyExplicitManualChunks
-          // keeps just the explicitly matched modules in the named chunks.
-          onlyExplicitManualChunks: true,
           assetFileNames: mjsToJsAssetFileNames,
           manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
