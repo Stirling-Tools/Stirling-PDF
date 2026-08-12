@@ -1,5 +1,5 @@
 import { useEffect, useState, Suspense, lazy } from "react";
-import { Box, Loader, Center } from "@mantine/core";
+import { Box, Loader, Center, Stack, Text } from "@mantine/core";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAllFiles } from "@app/contexts/FileContext";
@@ -12,6 +12,7 @@ import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useCookieConsent } from "@app/hooks/useCookieConsent";
+import { useTranslation } from "react-i18next";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
@@ -34,6 +35,7 @@ const FileManagerView = lazy(
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
+  const { t } = useTranslation();
   const { config } = useAppConfig();
 
   // The consent banner used to be initialised by the footer; the legal links
@@ -41,7 +43,7 @@ export default function Workbench() {
   useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
 
   // Use context-based hooks to eliminate all prop drilling
-  const { files: activeFiles } = useAllFiles();
+  const { files: activeFiles, fileIds } = useAllFiles();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
@@ -136,6 +138,20 @@ export default function Workbench() {
     }
 
     if (activeFiles.length === 0) {
+      // Files are open but their bytes are still loading (a cold PDF engine can
+      // take seconds). Showing the drop zone here reads as "the click did nothing".
+      if (fileIds.length > 0) {
+        return (
+          <Center h="100%" w="100%">
+            <Stack align="center" gap="md">
+              <Loader size="lg" />
+              <Text c="dimmed" size="sm">
+                {t("fileManager.loadingFiles", "Loading files...")}
+              </Text>
+            </Stack>
+          </Center>
+        );
+      }
       return <LandingPage />;
     }
 
