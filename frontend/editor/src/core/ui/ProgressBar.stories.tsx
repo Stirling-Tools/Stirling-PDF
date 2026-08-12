@@ -6,7 +6,12 @@ const meta: Meta<typeof ProgressBar> = {
   component: ProgressBar,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
-  args: { value: 0.5, height: 6, thresholded: false },
+  args: {
+    value: 0.5,
+    height: 6,
+    thresholded: false,
+    label: "Docs processed",
+  },
   argTypes: {
     value: { control: { type: "range", min: 0, max: 1, step: 0.01 } },
     height: { control: { type: "number" } },
@@ -42,7 +47,7 @@ export const ThresholdLadder: Story = {
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
             {Math.round(v * 100)}%
           </span>
-          <ProgressBar value={v} thresholded />
+          <ProgressBar value={v} thresholded label="Docs processed" />
         </div>
       ))}
     </div>

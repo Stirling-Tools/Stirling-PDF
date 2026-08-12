@@ -216,7 +216,7 @@ export default function AutomationRun({
                   {step.name}
                 </Text>
                 {step.error && (
-                  <Text size="xs" c="red" mt="xs">
+                  <Text size="xs" c="var(--color-red-dark)" mt="xs">
                     {step.error}
                   </Text>
                 )}

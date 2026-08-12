@@ -317,7 +317,11 @@ export default function TeamsSection() {
             >
               {t("workspace.teams.totalMembers")}
             </Table.Th>
-            <Table.Th style={{ width: 50 }}></Table.Th>
+            <Table.Th style={{ width: 50 }}>
+              <span className="sr-only">
+                {t("workspace.teams.teamActions", "Team actions")}
+              </span>
+            </Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -631,7 +635,7 @@ export default function TeamsSection() {
               availableUsersForSelectedTeam.find(
                 (u) => u.id.toString() === selectedUserId,
               )?.team && (
-                <Text size="xs" c="orange">
+                <Text size="xs" c="var(--color-amber-dark)">
                   {t("workspace.teams.addMemberToTeam.willBeMoved")}
                 </Text>
               )}

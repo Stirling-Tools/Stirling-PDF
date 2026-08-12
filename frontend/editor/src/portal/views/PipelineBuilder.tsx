@@ -16,7 +16,6 @@ import {
   Spinner,
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
-import { type ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
 import {
   deserializeToolStep,
   getExecutableTools,
@@ -24,6 +23,7 @@ import {
   serializeToolStep,
   stepNeedsConfiguring,
   stepRequiresUpload,
+  updateWorkingStepParams,
   type ExecutableTool,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
@@ -78,7 +78,10 @@ import {
   type GraphSelection,
   type GraphStepContent,
 } from "@portal/components/pipelines/graph/PipelineGraph";
-import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
+import {
+  PipelineStepSettings,
+  type ParamsUpdate,
+} from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
 import { BrandMark } from "@portal/components/BrandMarks";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
@@ -453,15 +456,22 @@ export function PipelineBuilder() {
     setSelected(landed.length > 0 ? { steps: landed } : null);
   }
 
-  function updateStepParams(index: number, params: ErasedToolParams) {
+  function updateStepParams(index: number, update: ParamsUpdate) {
     setSteps((current) =>
-      current.map((step, i) =>
+      current.map((step, i) => {
         // Integration steps are deliberately toolId-less, so they must be editable too; only a
         // genuinely unrecognised step has no editor to send changes from.
-        i === index && (step.toolId !== null || isIntegrationStep(step))
-          ? { ...step, params }
-          : step,
-      ),
+        if (i !== index || (step.toolId === null && !isIntegrationStep(step)))
+          return step;
+        // Resolve the update against the CURRENT step params, so a settings UI firing several
+        // single-field changes in one tick (convert's source-format change resets target + options)
+        // accumulates instead of each merge clobbering a stale snapshot. updateWorkingStepParams
+        // also re-resolves the endpoint for a format-routed tool so validation reflects the edit;
+        // it's a no-op on the operation for fixed-endpoint steps.
+        const nextParams =
+          typeof update === "function" ? update(step.params) : update;
+        return updateWorkingStepParams(step, nextParams, allTools);
+      }),
     );
   }
 
@@ -508,18 +518,28 @@ export function PipelineBuilder() {
     .map(stepLabel);
   const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
 
+  // Steps as the I/O checker sees them. A step still needing configuration has no settled endpoint
+  // yet (a format-routed tool like convert doesn't know its from/to), so it is presented as
+  // undeclared: it raises no compatibility error and breaks the carry chain, leaving downstream
+  // steps unjudged until it is filled in. Its own "needs configuring" note already flags it.
+  const validationSteps = useMemo(
+    () =>
+      steps.map((step) => ({
+        operation: stepNeedsConfiguring(step, allTools) ? "" : step.operation,
+        parameters: step.params,
+      })),
+    [steps, allTools],
+  );
+
   // Whether each step can actually accept what the one before it produces. Checked here from the
   // generated tool I/O table rather than by running the pipeline, so an impossible chain (say,
   // Extract Images then Rotate) is caught while it is being built.
   const chainDiagnostics = useMemo(
     () =>
-      validateToolChain(
-        steps.map((step) => ({
-          operation: step.operation,
-          parameters: step.params,
-        })),
+      validateToolChain(validationSteps).filter(
+        (d) => !stepNeedsConfiguring(steps[d.stepIndex], allTools),
       ),
-    [steps],
+    [validationSteps, steps, allTools],
   );
   const blockingSteps = chainDiagnostics
     .filter((d) => d.severity === "ERROR")
@@ -529,19 +549,16 @@ export function PipelineBuilder() {
   /**
    * What a step added at the open slot would be handed, so the picker can flag tools that cannot
    * take it. Scoped to the steps *before* that slot rather than the whole chain: the graph inserts
-   * anywhere, so what precedes the new step is not necessarily the chain's final output.
+   * anywhere, so what precedes the new step is not necessarily the chain's final output. Sliced from
+   * the validation view so an unconfigured step before the slot yields an unknown (undefined) format
+   * rather than a misleading one from its placeholder endpoint.
    */
   const precedingOutput = useMemo(
     () =>
       pickerAt === null
         ? undefined
-        : chainOutputFormat(
-            steps.slice(0, pickerAt).map((step) => ({
-              operation: step.operation,
-              parameters: step.params,
-            })),
-          ),
-    [steps, pickerAt],
+        : chainOutputFormat(validationSteps.slice(0, pickerAt)),
+    [validationSteps, pickerAt],
   );
 
   function diagnosticNote(diagnostic: ToolDiagnostic): string {
