@@ -55,11 +55,16 @@ class FileRunEventStoreDbTest {
     }
 
     private RecordFailure failure(FailureKind kind, Long teamId, String fileId) {
+        return failure(kind, teamId, "author@example.com", fileId);
+    }
+
+    /** As {@link #failure} but naming the actor, which is what the read scope narrows by. */
+    private RecordFailure failure(FailureKind kind, Long teamId, String actor, String fileId) {
         return new RecordFailure(
                 kind,
                 FailureOrigin.POLICY,
                 teamId,
-                "author@example.com",
+                actor,
                 "policy-1",
                 "run-1",
                 null,
@@ -82,6 +87,27 @@ class FileRunEventStoreDbTest {
         assertThat(store.list(null, null, null, null, 10))
                 .extracting(FileRunEvent::fileId)
                 .containsExactly("unteamed");
+    }
+
+    @Test
+    @DisplayName("actor narrowing is enforced by the query, within the team")
+    void actorNarrowingIsEnforcedBySql() {
+        // The clause that makes a member read only their own rows. Exercised here rather than only
+        // against the in-memory repository, which reimplements the filter in Java and would agree
+        // with a query that had lost it.
+        store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "mine@example.com", "f1"));
+        store.record(
+                failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "theirs@example.com", "f2"));
+        store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, null, "f3"));
+
+        assertThat(store.list(TEAM, null, null, "mine@example.com", 10))
+                .extracting(FileRunEvent::fileId)
+                .containsExactly("f1");
+        // A null actor is "no filter", which is what a leader reads with: the whole team, including
+        // the rows nobody is named on.
+        assertThat(store.list(TEAM, null, null, null, 10))
+                .extracting(FileRunEvent::fileId)
+                .containsExactlyInAnyOrder("f1", "f2", "f3");
     }
 
     @Test
