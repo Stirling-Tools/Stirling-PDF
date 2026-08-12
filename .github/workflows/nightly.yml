@@ -33,7 +33,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+        uses: ./.github/actions/setup-task
       - name: Install all Playwright browsers
         run: task e2e:install
 
@@ -80,7 +80,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+        uses: ./.github/actions/setup-task
 
       - name: a11y gate (every story, light + dark)
         run: task frontend:storybook:a11y

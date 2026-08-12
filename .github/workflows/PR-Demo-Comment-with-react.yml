@@ -222,7 +222,7 @@ jobs:
             gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install Task
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+        uses: ./.github/actions/setup-task
       - name: Run Gradle Command
         run: |
           if [ "${{ needs.check-comment.outputs.disable_security }}" == "true" ]; then

@@ -65,7 +65,7 @@ jobs:
           uv sync --project engine --locked --group tools
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: ./.github/actions/setup-task
 
       - name: Sync translation TOML files
         run: |
