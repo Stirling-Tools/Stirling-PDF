@@ -361,6 +361,11 @@ test.describe("Portal bar — tool results hop into the editor", () => {
     await expect(page.locator("#super-search-input")).toBeVisible({
       timeout: 15000,
     });
+    // The editor's URL-driven tool init must run on this route-swap mount,
+    // not just on a cold page load: the Merge tool panel actually opens.
+    await expect(
+      page.getByRole("button", { name: "Merge", exact: true }),
+    ).toBeVisible({ timeout: 10000 });
     expect(
       await page.evaluate(
         () => (window as unknown as { __spaMarker?: boolean }).__spaMarker,
