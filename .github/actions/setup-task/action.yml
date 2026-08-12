@@ -13,7 +13,7 @@ runs:
       shell: bash
       env:
         TASK_VERSION: ${{ inputs.version }}
-        CACHE_SCOPE: setup-task-${{ runner.os }}-${{ runner.arch }}
+        CACHE_SCOPE: setup-task-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}
       run: |
         set -euo pipefail
         image="stirling-pdf-ci:task-${TASK_VERSION}"
