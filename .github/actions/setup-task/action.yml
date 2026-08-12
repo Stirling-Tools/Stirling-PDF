@@ -36,17 +36,17 @@ runs:
         install_dir="${RUNNER_TEMP}/task-bin"
         mkdir -p "${install_dir}"
         case "${RUNNER_OS}-${RUNNER_ARCH}" in
-          macOS-X64) task_platform=darwin; task_arch=amd64; task_file=task_darwin_amd64.tar.gz; task_sha256=08b0a2107c56940e1fc7be15ebd5999f28a867925cfcd619393f8075fef67409 ;;
-          macOS-ARM64) task_platform=darwin; task_arch=arm64; task_file=task_darwin_arm64.tar.gz; task_sha256=a0330f0df20dd1187e323f284a7f365c0ea1f2f271c1e154811e9fc4724bed13 ;;
-          Windows-X64) task_platform=windows; task_arch=amd64; task_file=task_windows_amd64.zip; task_sha256=422d79dff5afd5a55fb46ae1cfacc7350ec96d4ef27a63a3ec77a5c30a7b0f03 ;;
-          Windows-ARM64) task_platform=windows; task_arch=arm64; task_file=task_windows_arm64.zip; task_sha256=d92bf9561a8a1db591487995eb76a08951de15134c40299a98d77460be4e4e1d ;;
+          macOS-X64) task_platform=darwin; task_arch=amd64; task_file=task_darwin_amd64.tar.gz; task_sha256=416348147bc2f1c729417249d932add7894fb01a126128778195942c249d7c0b ;;
+          macOS-ARM64) task_platform=darwin; task_arch=arm64; task_file=task_darwin_arm64.tar.gz; task_sha256=debfa9a3bc06fcb5d5550b44725ecd22bb305499ce057bd6d7a774db5cdaa7b8 ;;
+          Windows-X64) task_platform=windows; task_arch=amd64; task_file=task_windows_amd64.zip; task_sha256=e3bd4439b445f4f135758a2666ec8b33ccde789f7f615309c58f116b0e566e79 ;;
+          Windows-ARM64) task_platform=windows; task_arch=arm64; task_file=task_windows_arm64.zip; task_sha256=3f3b5bbf23d10c73f8f11bc4a47d1465f3a61a30fa231fddf0a87edc52937237 ;;
           *) echo "Unsupported runner: ${RUNNER_OS}-${RUNNER_ARCH}" >&2; exit 1 ;;
         esac
         archive="${RUNNER_TEMP}/${task_file}"
         curl --fail --silent --show-error --location \
           "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/${task_file}" \
           --output "${archive}"
-        echo "${task_sha256}  ${archive}" | shasum -a 256 -c -
+        echo "${task_sha256}  ${archive}" | sha256sum -c -
         if [[ "${task_platform}" == windows ]]; then
           unzip -p "${archive}" task.exe > "${install_dir}/task.exe"
         else
