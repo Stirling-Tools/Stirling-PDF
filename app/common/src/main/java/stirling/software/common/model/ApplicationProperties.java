@@ -1046,6 +1046,8 @@ public class ApplicationProperties {
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
         private boolean enableMobileScanner = true; // Enable mobile phone QR code upload feature
+        private boolean enableMobileSignature =
+                true; // Enable drawing signatures on a phone via QR code
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
         private ServerCertificate serverCertificate = new ServerCertificate();
 

@@ -82,9 +82,12 @@ export function DeveloperDocs() {
         {t("portal.docs.browse")}
       </Button>
 
-      <aside className={"portal-docs__sidebar" + (navOpen ? " is-open" : "")}>
+      {/* Layout column, not a landmark: the <nav> inside already carries its
+          own named landmark, and an unlabelled complementary region would be
+          indistinguishable to assistive tech. */}
+      <div className={"portal-docs__sidebar" + (navOpen ? " is-open" : "")}>
         <DocsNav sections={nav} active={activeId ?? ""} onSelect={onSelect} />
-      </aside>
+      </div>
 
       <main className="portal-docs__content" ref={contentRef}>
         <div className="portal-docs__content-inner">
@@ -105,9 +108,9 @@ export function DeveloperDocs() {
       </main>
 
       {hasToc && (
-        <aside className="portal-docs__toc-col">
+        <div className="portal-docs__toc-col">
           <DocsToc headings={headings} scrollRef={contentRef} />
-        </aside>
+        </div>
       )}
     </div>
   );

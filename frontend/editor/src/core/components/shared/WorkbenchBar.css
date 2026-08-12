@@ -65,7 +65,7 @@
 
 .workbench-bar-view-btn.active {
   background-color: var(--c-primary-subtle);
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
 }
 
 .workbench-bar-view-btn.workbench-bar-back-btn {
@@ -75,7 +75,7 @@
 
 .workbench-bar-view-btn.workbench-bar-back-btn:hover {
   background-color: color-mix(in srgb, var(--c-primary) 12%, transparent);
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
 }
 
 .workbench-bar-view-btn svg {

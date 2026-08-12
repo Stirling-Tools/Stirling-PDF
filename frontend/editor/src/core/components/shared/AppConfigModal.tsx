@@ -30,6 +30,7 @@ import {
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
 import { stripBasePath, withBasePath } from "@app/constants/app";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -225,7 +226,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     if (urlSync && location.pathname.startsWith("/settings")) {
       // "default" key = first entry (deep link/refresh); nothing to pop to.
       if (location.key === "default") {
-        navigate("/", { replace: true });
+        navigate(EDITOR_BASENAME, { replace: true });
       } else {
         navigate(-1);
       }

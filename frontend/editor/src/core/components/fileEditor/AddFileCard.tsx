@@ -161,7 +161,7 @@ const AddFileCard = ({
                 icon={icons.uploadIconName}
                 width="1.25rem"
                 height="1.25rem"
-                style={{ color: "var(--c-primary)", flexShrink: 0 }}
+                style={{ color: "var(--c-accent-text)", flexShrink: 0 }}
               />
               {isUploadHover && (
                 <span

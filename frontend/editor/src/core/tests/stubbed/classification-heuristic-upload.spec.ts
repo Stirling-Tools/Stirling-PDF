@@ -46,7 +46,10 @@ test("a 10-file upload wave classifies every file into its group", async ({
   await page.route("**/api/v1/policies/classify/meter", (route) =>
     route.fulfill({ status: 202, body: "" }),
   );
-  await page.goto("/", { waitUntil: "domcontentloaded", timeout: 120_000 });
+  await page.goto("/editor", {
+    waitUntil: "domcontentloaded",
+    timeout: 120_000,
+  });
 
   await uploadFiles(
     page,
