@@ -43,8 +43,9 @@ export interface FilesModalContextType {
 
 // Exported so a test or story can mount a component against a slice of the
 // value: the provider itself pulls in FileContext and NavigationContext.
-export const FilesModalContext =
-  createContext<FilesModalContextType | null>(null);
+export const FilesModalContext = createContext<FilesModalContextType | null>(
+  null,
+);
 
 export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
