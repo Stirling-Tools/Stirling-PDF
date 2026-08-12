@@ -46,7 +46,10 @@ async function compressOne(file: string, root: string) {
   const content = await fs.readFile(resolved);
   if (content.length < 1024) return;
 
-  await fs.writeFile(`${resolved}.gz`, await gzipPromise(content, { level: 9 }));
+  await fs.writeFile(
+    `${resolved}.gz`,
+    await gzipPromise(content, { level: 9 }),
+  );
 
   const brotliQuality = content.length > 1_000_000 ? 10 : 11;
   const brotlied = await brotliPromise(content, {
@@ -99,7 +102,9 @@ function compressStaticCopyPlugin(): PluginOption {
 
       const POOL = 8;
       for (let i = 0; i < files.length; i += POOL) {
-        await Promise.all(files.slice(i, i + POOL).map((f) => compressOne(f, distDir)));
+        await Promise.all(
+          files.slice(i, i + POOL).map((f) => compressOne(f, distDir)),
+        );
       }
     },
   };
@@ -174,7 +179,10 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         for (const entry of entries) {
           const p = path.join(dir, entry.name);
           if (entry.isDirectory()) await walkHtml(p);
-          else if (entry.name.endsWith(".html") && entry.name !== "index.html") {
+          else if (
+            entry.name.endsWith(".html") &&
+            entry.name !== "index.html"
+          ) {
             htmlFiles.push(p);
           }
         }
