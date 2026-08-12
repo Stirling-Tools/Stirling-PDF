@@ -665,7 +665,7 @@ export const useCompareOperation = (): CompareOperationHook => {
     if (workerRef.current) {
       try {
         workerRef.current.terminate();
-        // eslint-disable-next-line no-empty
+        // oxlint-disable-next-line no-empty
       } catch {}
       workerRef.current = null;
     }
