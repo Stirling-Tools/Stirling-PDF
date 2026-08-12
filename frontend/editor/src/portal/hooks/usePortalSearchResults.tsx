@@ -2,7 +2,6 @@ import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { withBasePath } from "@app/constants/app";
 import { getToolUrlPath } from "@app/data/toolsTaxonomy";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { PORTAL_HIDDEN_SECTION_KEYS } from "@portal/components/PortalSettingsHost";
@@ -56,12 +55,13 @@ const EDITOR_SECTION_LABEL_KEY = "portal.nav.editor";
 const EDITOR_SECTION_LABEL_FALLBACK = "Editor";
 
 /**
- * Tool results live in the editor app, so selecting one is a full page load
- * there (the editor initialises its tool state from the URL on boot —
- * client-side routing can't reach that init once mounted).
+ * Cross-origin editor URL for a tool. Only used when a separately-hosted
+ * editor is configured — the same-app case routes client-side instead: on
+ * bundled deploys the backend serves the frontend and 401s unauthenticated
+ * document GETs (the JWT lives in localStorage, so a full page load carries
+ * no credentials), which would bounce every tool hop to /login.
  */
-function editorHref(path: string): string {
-  if (EDITOR_IS_SAME_APP) return withBasePath(path);
+function externalEditorHref(path: string): string {
   return EDITOR_URL.replace(/\/$/, "") + path;
 }
 
@@ -205,9 +205,17 @@ export function usePortalSearchResults(
         openExternalUrl(tool.link);
         return;
       }
-      assignLocation(editorHref(getToolUrlPath(id)));
+      const path = getToolUrlPath(id);
+      if (EDITOR_IS_SAME_APP) {
+        // One SPA: swap route-sets through the router. The portal tree
+        // unmounts and the editor mounts fresh at the tool URL, so its
+        // URL-driven tool init runs exactly as it does on a cold load.
+        navigate(path);
+      } else {
+        assignLocation(externalEditorHref(path));
+      }
     },
-    [allTools],
+    [allTools, navigate],
   );
 
   const openSettingsSection = useCallback(

@@ -307,3 +307,64 @@ test.describe("Super search — admin with Processor access", () => {
     ).toBeVisible();
   });
 });
+
+test.describe("Portal bar — tool results hop into the editor", () => {
+  test.use({
+    stubOptions: {
+      enableLogin: true,
+      isAdmin: true,
+      user: {
+        id: 1,
+        username: "admin",
+        email: "admin@example.com",
+        role: "ROLE_ADMIN",
+        portalAccess: true,
+      },
+    },
+    seedJwt: true,
+    autoGoto: false,
+  });
+
+  test("selecting a tool routes client-side, not via a full page load", async ({
+    page,
+  }) => {
+    for (const [pattern, json] of [
+      ["**/api/v1/policies", []],
+      ["**/api/v1/policies/runs", []],
+      ["**/api/v1/policies/overview", { pipelines: [] }],
+      ["**/api/v1/sources", { sources: [] }],
+      ["**/api/v1/team/my", []],
+    ] as const) {
+      await page.route(pattern, (route) => route.fulfill({ json }));
+    }
+
+    await page.goto("/processor");
+    const input = page.locator("#portal-search-input");
+    await expect(input).toBeVisible({ timeout: 20000 });
+
+    // A full page load would drop this marker — and on bundled deploys it
+    // would also 401: document GETs carry no Authorization header, so the
+    // backend bounces them to /login even with a live session.
+    await page.evaluate(() => {
+      (window as unknown as { __spaMarker?: boolean }).__spaMarker = true;
+    });
+
+    await input.click();
+    await input.fill("merge");
+    await page
+      .getByRole("option", { name: /^Merge/ })
+      .first()
+      .click();
+
+    await expect(page).toHaveURL(/\/merge/);
+    // Editor mounted: its own search bar replaces the portal's.
+    await expect(page.locator("#super-search-input")).toBeVisible({
+      timeout: 15000,
+    });
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { __spaMarker?: boolean }).__spaMarker,
+      ),
+    ).toBe(true);
+  });
+});
