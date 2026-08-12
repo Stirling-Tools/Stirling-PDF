@@ -22,6 +22,7 @@ import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { detectFileExtension } from "@app/utils/fileUtils";
 import { openExternalUrl } from "@app/utils/safeNavigation";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import {
   rankByFuzzy,
   idToWords,
@@ -504,10 +505,12 @@ export function useSuperSearch(
   // Workbench-bound selections must leave the file manager through the router.
   // Tool/file selection pins its URL via raw history.pushState, which the
   // router never observes — so on /files the route keeps re-asserting the
-  // "myFiles" workbench and the selection appears to do nothing.
+  // "myFiles" workbench and the selection appears to do nothing. Exit to the
+  // editor's home path: on processor-shipping builds "/" is a role router,
+  // not the editor.
   const leaveFileManager = useCallback(() => {
     if (pathname.startsWith("/files")) {
-      navigate("/");
+      navigate(EDITOR_BASENAME);
     }
   }, [pathname, navigate]);
 

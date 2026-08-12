@@ -123,6 +123,29 @@ test.describe("Super search — bar basics", () => {
     await expect(tools.getByRole("option")).toHaveCount(collapsedCount);
   });
 
+  test("selecting a tool from the /files page leaves the file manager", async ({
+    page,
+  }) => {
+    await page.goto("/files");
+    const input = page.locator(INPUT).first();
+    await expect(input).toBeVisible({ timeout: 15000 });
+    await input.click();
+    await input.fill("merge");
+    await page
+      .getByRole("option", { name: /^Merge/ })
+      .first()
+      .click();
+
+    // The selection pins its tool URL via raw history.pushState, which the
+    // router never sees — the sink must leave /files through the router or
+    // the myFiles workbench swallows the selection (and "/" is a role router
+    // on processor-shipping builds, so the exit must target the editor home).
+    await expect(page.locator(".files-page-header-search")).not.toBeVisible({
+      timeout: 5000,
+    });
+    await expect(page).toHaveURL(/\/merge/);
+  });
+
   test("Ctrl+K inside the settings modal closes it and focuses the bar", async ({
     page,
   }) => {
