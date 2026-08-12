@@ -3,7 +3,6 @@ import { compression, defineAlgorithm } from "vite-plugin-compression2";
 import fs from "node:fs/promises";
 import path, { resolve } from "node:path";
 import { constants, brotliCompress, gzip } from "node:zlib";
-import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption } from "vite";
@@ -13,7 +12,46 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Extensions never precompressed by either compression pass. Both
+// vite-plugin-compression2 (regex) and compressStaticCopyPlugin (Set) derive
+// from this single list.
+const COMPRESSION_EXCLUDED_EXTENSIONS = [
+  ".gz",
+  ".br",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".woff",
+  ".woff2",
+];
+const EXCLUDED_EXTENSION_SET = new Set(COMPRESSION_EXCLUDED_EXTENSIONS);
+const COMPRESSION_EXCLUDE_REGEX = new RegExp(
+  `\\.(${COMPRESSION_EXCLUDED_EXTENSIONS.map((e) => e.slice(1)).join("|")})$`,
+);
+
+// Write .gz and .br siblings for a file. Brotli quality 11 is 10-100x slower
+// than gzip, so back off to quality 10 above 1 MB and hint the input size so
+// the encoder can size its window up front.
+async function compressOne(file: string) {
+  const ext = path.extname(file).toLowerCase();
+  if (EXCLUDED_EXTENSION_SET.has(ext)) return;
+  const content = await fs.readFile(file);
+  if (content.length < 1024) return;
+
+  await fs.writeFile(`${file}.gz`, await gzipPromise(content, { level: 9 }));
+
+  const brotliQuality = content.length > 1_000_000 ? 10 : 11;
+  const brotlied = await brotliPromise(content, {
+    params: {
+      [constants.BROTLI_PARAM_QUALITY]: brotliQuality,
+      [constants.BROTLI_PARAM_SIZE_HINT]: content.length,
+    },
+  });
+  await fs.writeFile(`${file}.br`, brotlied);
+}
 
 // Emit pdf.js's hashed .mjs worker assets as .js. Cloudflare caches by file
 // extension (not MIME type) and its default list omits .mjs, so those assets
@@ -32,56 +70,31 @@ function compressStaticCopyPlugin(): PluginOption {
     name: "compress-static-copy",
     apply: "build" as const,
     async closeBundle() {
-      const distDir = path.resolve(__dirname, "dist");
+      const distDir = path.resolve(import.meta.dirname, "dist");
       const targets = ["pdfium", "vendor", "pdfjs"];
 
-      const excludedExtensions = [
-        ".gz",
-        ".br",
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".webp",
-        ".woff",
-        ".woff2",
-      ];
-
-      async function walkAndCompress(dirOrFile: string) {
-        let stat;
+      // Collect first, then compress with bounded concurrency. zlib's async API
+      // runs on libuv's threadpool, so a serial loop idles most cores on the
+      // build's most CPU-heavy step.
+      const files: string[] = [];
+      const walk = async (dir: string) => {
+        let entries;
         try {
-          stat = await fs.stat(dirOrFile);
+          entries = await fs.readdir(dir, { withFileTypes: true });
         } catch {
           return;
         }
-
-        if (stat.isFile()) {
-          const ext = path.extname(dirOrFile).toLowerCase();
-          if (stat.size >= 1024 && !excludedExtensions.includes(ext)) {
-            const content = await fs.readFile(dirOrFile);
-
-            // Gzip (level 9)
-            const gzipped = await gzipPromise(content, { level: 9 });
-            await fs.writeFile(`${dirOrFile}.gz`, gzipped);
-
-            // Brotli (quality 11)
-            const brotlied = await brotliPromise(content, {
-              params: {
-                [constants.BROTLI_PARAM_QUALITY]: 11,
-              },
-            });
-            await fs.writeFile(`${dirOrFile}.br`, brotlied);
-          }
-        } else if (stat.isDirectory()) {
-          const files = await fs.readdir(dirOrFile);
-          for (const file of files) {
-            await walkAndCompress(path.join(dirOrFile, file));
-          }
+        for (const entry of entries) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) await walk(p);
+          else files.push(p);
         }
-      }
+      };
+      for (const target of targets) await walk(path.join(distDir, target));
 
-      for (const target of targets) {
-        await walkAndCompress(path.join(distDir, target));
+      const POOL = 8;
+      for (let i = 0; i < files.length; i += POOL) {
+        await Promise.all(files.slice(i, i + POOL).map(compressOne));
       }
     },
   };
@@ -124,7 +137,10 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
       let manifest;
       try {
         manifest = JSON.parse(
-          await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
+          await fs.readFile(
+            path.resolve(import.meta.dirname, manifestFile),
+            "utf8",
+          ),
         );
       } catch {
         console.warn(
@@ -133,23 +149,33 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         );
         return;
       }
-      const distDir = path.resolve(__dirname, "dist");
-      const count = await prerenderOg({ distDir, manifest, ogBase, baseHref });
-      console.log(
-        `[prerender-og] wrote ${count} prerendered route pages` +
-          (ogBase
-            ? ` (absolute URLs, base=${ogBase})`
-            : " (root-relative URLs)"),
-      );
+      const distDir = path.resolve(import.meta.dirname, "dist");
+      await prerenderOg({ distDir, manifest, ogBase, baseHref });
+
+      // closeBundle hooks run concurrently in Vite, not in plugin order, so a
+      // sibling plugin cannot reliably compress files written here. Compress the
+      // freshly written route HTML here instead (index.html is already handled by
+      // the main compression plugin) so Spring's EncodedResourceResolver can serve
+      // it precompressed.
+      const rootEntries = await fs.readdir(distDir, { withFileTypes: true });
+      const routeHtml = rootEntries
+        .filter(
+          (e) =>
+            e.isFile() && e.name.endsWith(".html") && e.name !== "index.html",
+        )
+        .map((e) => path.join(distDir, e.name));
+      await Promise.all(routeHtml.map(compressOne));
     },
   };
 }
 
 /**
- * When the app is served under a subpath (RUN_SUBPATH → base like "/app/"), Vite
- * serves index.html at "/app/" and redirects "/" → the base, but a bare "/app"
- * (no trailing slash) 404s. This middleware redirects "/app" → "/app/" so either
+ * When the app is served under a subpath (RUN_SUBPATH to base like "/app/"), Vite
+ * serves index.html at "/app/" and redirects "/" to the base, but a bare "/app"
+ * (no trailing slash) 404s. This middleware redirects "/app" to "/app/" so either
  * form loads the app in dev and `vite preview`. Query strings are preserved.
+ * 302 (not 301) so a changed RUN_SUBPATH never leaves a permanently cached
+ * redirect in a dev browser.
  */
 function subpathBareRedirectPlugin(subpath: string): PluginOption {
   const bare = `/${subpath}`;
@@ -159,7 +185,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
     const q = url.indexOf("?");
     const pathname = q === -1 ? url : url.slice(0, q);
     if (pathname === bare) {
-      res.statusCode = 301;
+      res.statusCode = 302;
       res.setHeader("Location", withSlash + (q === -1 ? "" : url.slice(q)));
       res.end();
       return;
@@ -177,7 +203,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
   };
 }
 
-// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
+// NOTE: cloud/ is a SHARED layer, not a runnable build flavor. It's compiled
 // into the saas and desktop builds. It has no entry here and no vite tsconfig;
 // it is only typechecked standalone via editor/src/cloud/tsconfig.json
 // (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
@@ -201,8 +227,8 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
 export default defineConfig(async ({ mode, command }) => {
   // Dev-only browser-tab label (worktree folder basename) surfaced by the
   // top-level dev tasks so concurrent worktrees have distinguishable tabs.
-  // Only injected during `vite` (dev serve) — never baked into a production
-  // build — and carries only the folder name, no path/host/user info.
+  // Only injected during `vite` (dev serve), never baked into a production
+  // build, and carries only the folder name, no path/host/user info.
   const devWorktreeLabel =
     command === "serve" ? (process.env.STIRLING_DEV_LABEL ?? "") : "";
   // Load env files relative to this config (frontend/editor/), regardless of
@@ -283,7 +309,7 @@ export default defineConfig(async ({ mode, command }) => {
       }),
       compression({
         threshold: 1024,
-        exclude: [/\.(png|jpg|jpeg|gif|webp|woff|woff2)$/],
+        exclude: [COMPRESSION_EXCLUDE_REGEX],
         algorithms: [
           defineAlgorithm("gzip", { level: 9 }),
           defineAlgorithm("brotliCompress", {
@@ -345,8 +371,8 @@ export default defineConfig(async ({ mode, command }) => {
           },
         ],
       }),
-      compressStaticCopyPlugin(),
       prerenderOgPlugin(effectiveMode === "saas"),
+      compressStaticCopyPlugin(),
     ],
     server: {
       host: true,
@@ -370,8 +396,16 @@ export default defineConfig(async ({ mode, command }) => {
     },
     build: {
       target: "esnext",
+      // The build already precompresses for real and ships a visualizer; the
+      // per-chunk gzip measurement Vite does for the log is wasted CI time.
+      reportCompressedSize: false,
       rollupOptions: {
         output: {
+          // Function-form manualChunks pulls matched modules' dependencies into
+          // the named chunk, which silently bloats vendor-* and can split
+          // react/react-dom across chunk boundaries. onlyExplicitManualChunks
+          // keeps just the explicitly matched modules in the named chunks.
+          onlyExplicitManualChunks: true,
           assetFileNames: mjsToJsAssetFileNames,
           manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
