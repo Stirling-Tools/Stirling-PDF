@@ -183,7 +183,7 @@ export async function mockAppApis(
 
   // Current user — anonymous by default, configurable for authenticated flows
   await page.route("**/api/v1/auth/me", (route: Route) =>
-    route.fulfill({ json: user }),
+    route.fulfill({ json: { user } }),
   );
 
   // Tool availability — every tool enabled unless overridden
@@ -206,6 +206,12 @@ export async function mockAppApis(
 
   await page.route("**/api/v1/config/group-enabled*", (route: Route) =>
     route.fulfill({ json: true }),
+  );
+
+  // Login agreement / disclaimer — disabled by default so the blocking modal
+  // never shows; specs exercising it register a narrower route afterwards.
+  await page.route("**/api/v1/config/login-disclaimer*", (route: Route) =>
+    route.fulfill({ json: { enabled: false } }),
   );
 
   // Footer / branding — non-critical but proxied, so stub to avoid noise
@@ -247,6 +253,21 @@ export async function mockAppApis(
   // Info sub-resources
   await page.route("**/api/v1/info/wau", (route: Route) =>
     route.fulfill({ json: { count: 0 } }),
+  );
+
+  // Policies (proprietary): the reconcile fires GET /api/v1/policies on app
+  // load. Return an empty list so the stubbed (backend-free) env stays clean —
+  // no failed request polluting the console, and the auto-run controller has
+  // nothing to dispatch.
+  await page.route("**/api/v1/policies", (route: Route) =>
+    route.fulfill({ json: [] }),
+  );
+  // The auto-run controller also reconciles server-side runs on load via
+  // GET /api/v1/policies/runs. The glob above doesn't cover this sub-path, so
+  // stub it empty too; otherwise the request hits the absent backend and the
+  // console error fails the page's no-unexpected-output guard.
+  await page.route("**/api/v1/policies/runs", (route: Route) =>
+    route.fulfill({ json: [] }),
   );
 }
 

@@ -4,9 +4,11 @@ import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import HomePage from "@app/pages/HomePage";
 import { useBackendProbe } from "@app/hooks/useBackendProbe";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import LoginHeader from "@app/routes/login/LoginHeader";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 
 /**
  * Landing component - Smart router based on authentication status
@@ -58,7 +60,7 @@ export default function Landing() {
       if (result.status === "up") {
         await refetch();
         if (result.loginDisabled) {
-          navigate("/", { replace: true });
+          navigate(EDITOR_BASENAME, { replace: true });
         }
       }
     };
@@ -108,7 +110,9 @@ export default function Landing() {
       >
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-          <div className="text-gray-600">Loading...</div>
+          <div className="text-gray-600">
+            {t("common.loading", "Loading...")}
+          </div>
         </div>
       </div>
     );
@@ -127,7 +131,7 @@ export default function Landing() {
       const result = await backendProbe.probe();
       if (result.status === "up") {
         await refetch();
-        navigate("/", { replace: true });
+        navigate(EDITOR_BASENAME, { replace: true });
       }
     };
     return (
@@ -139,23 +143,26 @@ export default function Landing() {
             padding: "1.5rem",
             marginTop: "1rem",
             borderRadius: "0.75rem",
-            backgroundColor: "rgba(37, 99, 235, 0.08)",
-            border: "1px solid rgba(37, 99, 235, 0.2)",
+            backgroundColor:
+              "color-mix(in srgb, var(--c-primary) 8%, transparent)",
+            border:
+              "1px solid color-mix(in srgb, var(--c-primary) 20%, transparent)",
           }}
         >
-          <p
-            style={{ margin: "0 0 0.75rem 0", color: "rgba(15, 23, 42, 0.8)" }}
-          >
-            {t("backendStartup.unreachable")}
+          <p style={{ margin: "0 0 0.75rem 0", color: "var(--c-text)" }}>
+            {t(
+              "backendStartup.unreachable",
+              "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
+            )}
           </p>
-          <button
+          <Button
             type="button"
             onClick={handleRetry}
             className="auth-cta-button px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mt-5 border-0 cursor-pointer"
             style={{ width: "fit-content" }}
           >
             {t("backendStartup.retry", "Retry")}
-          </button>
+          </Button>
         </div>
       </AuthLayout>
     );
@@ -167,10 +174,17 @@ export default function Landing() {
     return <HomePage />;
   }
 
-  // No session - redirect to login page
-  // This ensures the URL always shows /login when not authenticated
+  // No session - redirect to login page. The URL always shows /login when not
+  // authenticated, and carries where we came from so signing in returns there
+  // (going to /editor and logging in lands back on /editor, not the role
+  // router). Also passed as router state; the query is what survives a reload.
+  const returnTo = encodeURIComponent(location.pathname + location.search);
   return config?.enableLogin === true && !backendProbe.loginDisabled ? (
-    <Navigate to="/login" replace state={{ from: location }} />
+    <Navigate
+      to={`/login?from=${returnTo}`}
+      replace
+      state={{ from: location }}
+    />
   ) : (
     <HomePage />
   );

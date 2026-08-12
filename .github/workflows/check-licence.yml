@@ -11,11 +11,9 @@ permissions:
 jobs:
   check-licence:
     runs-on: ubuntu-latest
-    env:
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -23,28 +21,24 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
 
-      - name: Cache Gradle dependency artifacts
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - name: Cache Gradle User Home
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
+            ~/.gradle/caches
             ~/.gradle/wrapper
-            ~/.gradle/caches/modules-2/files-2.1
-            ~/.gradle/caches/modules-2/metadata-2.*
-          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-        with:
-          gradle-version: 9.3.1
-          cache-disabled: true
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
+            gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Check licenses for compatibility
         run: task backend:licenses:check
         env:

@@ -19,6 +19,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import stirling.software.saas.payg.model.BillingCategory;
+import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.ShadowChargeStatus;
 
 /**
@@ -56,6 +58,29 @@ public class PaygShadowCharge implements Serializable {
     @Column(name = "payg_units", nullable = false)
     private Integer paygUnits;
 
+    /**
+     * How many of {@link #paygUnits} were drawn from the team's one-time free grant at charge time.
+     * The paid (Stripe-metered) portion is {@code paygUnits - freeUnitsConsumed}; a refund restores
+     * this many units to {@code payg_team_extensions.free_units_remaining}. {@code 0} for pre-V19
+     * rows and for jobs that consumed no free units (team's grant already exhausted).
+     */
+    @Column(name = "free_units_consumed", nullable = false)
+    private Integer freeUnitsConsumed = 0;
+
+    /**
+     * How many of {@link #paygUnits} were drawn from prepaid bundles (the {@code BOUGHT} bucket) at
+     * charge time — the tier between the free grant and the meter. The paid (Stripe-metered)
+     * portion is {@code paygUnits - freeUnitsConsumed - bundleUnitsConsumed}; a refund restores
+     * this many units to the pool(s) they came from. {@code 0} for pre-bundle rows and jobs that
+     * drew none. The {@code columnDefinition} default keeps the ddl-auto ADD COLUMN safe on the
+     * populated table.
+     */
+    @Column(
+            name = "bundle_units_consumed",
+            nullable = false,
+            columnDefinition = "integer not null default 0")
+    private Integer bundleUnitsConsumed = 0;
+
     @Column(name = "legacy_credits_charged", nullable = false)
     private Integer legacyCreditsCharged;
 
@@ -74,6 +99,24 @@ public class PaygShadowCharge implements Serializable {
     /** Free-form reason, e.g. {@code "first-step-5xx:503"}. */
     @Column(name = "refund_reason", length = 128)
     private String refundReason;
+
+    /**
+     * PAYG analytics axis copied from the request that produced this shadow row. {@code null} for
+     * pre-V16 rows; populated by the charge interceptor going forward. Never affects what Stripe
+     * would meter — the flat-meter assumption holds, this is breakdown metadata.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "billing_category", length = 16)
+    private BillingCategory billingCategory;
+
+    /**
+     * Caller surface that originated the job (copied from {@code processing_job.source} at write
+     * time so the row stays self-describing after the job table is pruned). {@code null} for
+     * pre-V16 rows backfilled when {@code processing_job} is no longer present.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "job_source", length = 32)
+    private JobSource jobSource;
 
     @CreationTimestamp
     @Column(name = "occurred_at", nullable = false, updatable = false)

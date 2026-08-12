@@ -19,12 +19,17 @@ import { folderSyncService } from "@app/services/folderSyncService";
 import { uploadHistoryChain } from "@app/services/serverStorageUpload";
 import { reconcileServerFiles } from "@app/services/fileSyncService";
 import {
+  deleteServerFile,
+  type DeleteScope,
+} from "@app/services/serverStorageDelete";
+import {
   useIndexedDB,
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAuth } from "@app/auth/UseSession";
 
 /** View-toggle modes; tuple keeps the union and iterator in sync. */
 export const FILES_PAGE_VIEW_MODES = ["grid", "list"] as const;
@@ -112,7 +117,14 @@ interface FilesPageContextValue {
     folderId: FolderId,
     newParentId: FolderId | null,
   ) => Promise<void>;
+  /** Queue files for deletion - opens the DeleteFilesDialog. */
   removeFiles: (fileIds: FileId[]) => Promise<void>;
+  /** Files currently queued in the delete dialog (empty when closed). */
+  deleteDialogFileIds: FileId[];
+  deleteDialogOpen: boolean;
+  closeDeleteDialog: () => void;
+  /** Confirmed delete; scope picks local, cloud, or both. */
+  confirmRemoveFiles: (scope: DeleteScope) => Promise<void>;
   /** Open the confirmation dialog; consumer renders DeleteFolderDialog. */
   promptDeleteFolder: (folder: FolderRecord) => void;
   /** Confirmed delete; pass deleteContents=true to also remove files inside. */
@@ -140,6 +152,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { config: appConfig } = useAppConfig();
+  const { isAnonymous } = useAuth();
 
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,6 +179,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const merged = await reconcileServerFiles(localLeaf, {
         storageEnabled,
         shareLinksEnabled,
+        isAnonymous,
       });
       // Drop the merged result if a newer refresh has already started -
       // otherwise its stale snapshot will clobber the newer one's state.
@@ -181,7 +195,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       // Only the latest refresh should clear the loading state.
       if (gen === refreshGenRef.current) setLoading(false);
     }
-  }, [setFoldersError, storageEnabled, shareLinksEnabled]);
+  }, [setFoldersError, storageEnabled, shareLinksEnabled, isAnonymous]);
 
   useEffect(() => {
     void refresh();
@@ -388,26 +402,110 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     [folders, t],
   );
 
+  // Delete dialog state. removeFiles only queues + opens when a cloud copy is
+  // involved; local-only deletes skip the dialog and run immediately.
+  const [deleteDialogFileIds, setDeleteDialogFileIds] = useState<FileId[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // The actual deletion for a chosen scope. Shared by the direct (local-only)
+  // path and the dialog's confirm.
+  const performDelete = useCallback(
+    async (fileIds: FileId[], scope: DeleteScope) => {
+      const stubs = fileIds
+        .map((id) => fileMap.get(id))
+        .filter((s): s is StirlingFileStub => Boolean(s));
+
+      // Cloud delete (owner-only). Dedup by remoteStorageId since a history
+      // chain shares a single server file.
+      if (scope === "cloud" || scope === "everywhere") {
+        const remoteIds = Array.from(
+          new Set(
+            stubs
+              .filter(
+                (s) =>
+                  typeof s.remoteStorageId === "number" &&
+                  s.remoteOwnedByCurrentUser === true,
+              )
+              .map((s) => s.remoteStorageId as number),
+          ),
+        );
+        if (remoteIds.length > 0) {
+          const results = await Promise.allSettled(
+            remoteIds.map((id) => deleteServerFile(id)),
+          );
+          const failed = results.filter((r) => r.status === "rejected").length;
+          if (failed > 0) {
+            folders.setError(
+              t(
+                "filesPage.error.cloudDeleteFailed",
+                "Couldn't delete {{count}} file(s) from the cloud.",
+                { count: failed },
+              ),
+            );
+          }
+        }
+      }
+
+      // Local delete - skip ephemeral server-/shared- stubs (no IDB row).
+      if (scope === "device" || scope === "everywhere") {
+        const localIds = stubs
+          .filter((s) => {
+            const id = String(s.id);
+            return !id.startsWith("server-") && !id.startsWith("shared-");
+          })
+          .map((s) => s.id);
+        if (localIds.length > 0) {
+          await fileActions.removeFiles(localIds, true);
+        }
+      }
+
+      const removedIds = new Set(fileIds);
+      setSelectedFileIds((prev) => {
+        const next = new Set(prev);
+        for (const id of removedIds) next.delete(id);
+        return next;
+      });
+      // reconcile picks up the cloud deletions and strips stale remote pointers.
+      await refresh();
+    },
+    [fileMap, fileActions, folders, refresh, t],
+  );
+
   const removeFiles = useCallback(
     async (fileIds: FileId[]) => {
       if (fileIds.length === 0) return;
-      const ok = window.confirm(
-        t(
-          "filesPage.removeConfirm",
-          "Delete {{count}} file(s)? This cannot be undone.",
-          { count: fileIds.length },
-        ),
-      );
-      if (!ok) return;
-      await fileActions.removeFiles(fileIds, true);
-      setSelectedFileIds((prev) => {
-        const next = new Set(prev);
-        for (const id of fileIds) next.delete(id);
-        return next;
+      // Only prompt when a cloud copy is in play (the user must pick where to
+      // delete). Local-only files have nothing to choose - delete immediately.
+      const hasDeletableCloud = fileIds.some((id) => {
+        const s = fileMap.get(id);
+        return (
+          s != null &&
+          typeof s.remoteStorageId === "number" &&
+          s.remoteOwnedByCurrentUser === true
+        );
       });
-      await refresh();
+      if (!hasDeletableCloud) {
+        await performDelete(fileIds, "device");
+        return;
+      }
+      setDeleteDialogFileIds(fileIds);
+      setDeleteDialogOpen(true);
     },
-    [fileActions, refresh, t],
+    [fileMap, performDelete],
+  );
+
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteDialogOpen(false);
+    setDeleteDialogFileIds([]);
+  }, []);
+
+  const confirmRemoveFiles = useCallback(
+    async (scope: DeleteScope) => {
+      await performDelete(deleteDialogFileIds, scope);
+      setDeleteDialogOpen(false);
+      setDeleteDialogFileIds([]);
+    },
+    [deleteDialogFileIds, performDelete],
   );
 
   const setFolderAppearance = useCallback(
@@ -507,6 +605,10 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       moveFilesTo,
       moveFolderTo,
       removeFiles,
+      deleteDialogFileIds,
+      deleteDialogOpen,
+      closeDeleteDialog,
+      confirmRemoveFiles,
       promptDeleteFolder,
       deleteFolder,
       deleteFolderDialog,
@@ -538,6 +640,10 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       moveFilesTo,
       moveFolderTo,
       removeFiles,
+      deleteDialogFileIds,
+      deleteDialogOpen,
+      closeDeleteDialog,
+      confirmRemoveFiles,
       promptDeleteFolder,
       deleteFolder,
       deleteFolderDialog,

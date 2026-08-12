@@ -3,7 +3,6 @@ import {
   Alert,
   Badge,
   Box,
-  Button,
   Divider,
   Group,
   Paper,
@@ -11,6 +10,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useHotkeys } from "@app/contexts/HotkeyContext";
@@ -215,9 +215,8 @@ const HotkeysSection: React.FC = () => {
 
                       <Group gap="xs">
                         <Button
-                          size="xs"
-                          variant={isEditing ? "filled" : "default"}
-                          color={isEditing ? "blue" : undefined}
+                          size="sm"
+                          variant={isEditing ? "primary" : "secondary"}
                           onClick={() => handleStartCapture(toolId)}
                         >
                           {isEditing
@@ -228,8 +227,8 @@ const HotkeysSection: React.FC = () => {
                             : t("settings.hotkeys.change", "Change shortcut")}
                         </Button>
                         <Button
-                          size="xs"
-                          variant="subtle"
+                          size="sm"
+                          variant="tertiary"
                           disabled={bindingEquals(
                             currentBinding,
                             defaultBinding,
