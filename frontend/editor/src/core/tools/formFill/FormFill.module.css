@@ -208,7 +208,7 @@
   margin-top: 0.25rem;
   font-size: 0.6875rem;
   font-weight: 500;
-  color: var(--mantine-color-red-6);
+  color: var(--color-red-dark);
 }
 
 .emptyState {
