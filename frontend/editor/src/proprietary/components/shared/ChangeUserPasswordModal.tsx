@@ -214,229 +214,244 @@ export default function ChangeUserPasswordModal({
   );
 
   return (
-    <Modal
+    // Composed rather than the plain <Modal>, because only Modal.Content lands
+    // props on the role="dialog" element — the modal draws its own heading, so
+    // the dialog needs an aria-label to have an accessible name.
+    <Modal.Root
       opened={opened}
       onClose={handleClose}
       size="md"
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       centered
       padding="xl"
-      withCloseButton={false}
     >
-      <div style={{ position: "relative" }}>
-        <ActionIcon
-          aria-label={t("common.close", "Close")}
-          variant="tertiary"
-          onClick={handleClose}
-          size="lg"
-          disabled={processing}
-          style={{
-            position: "absolute",
-            top: -8,
-            right: -8,
-            zIndex: 1,
-          }}
-        >
-          <LocalIcon icon="close-rounded" />
-        </ActionIcon>
-        <Stack gap="lg" pt="md">
-          <Stack gap="md" align="center">
-            <LocalIcon
-              icon="lock"
-              width="3rem"
-              height="3rem"
-              style={{ color: "var(--mantine-color-gray-6)" }}
-            />
-            <Text size="xl" fw={600} ta="center">
-              {t("workspace.people.changePassword.title", "Change password")}
-            </Text>
-            <Text size="sm" c="dimmed" ta="center">
-              {t(
-                "workspace.people.changePassword.subtitle",
-                "Update the password for",
-              )}{" "}
-              <strong>{user?.username}</strong>
-            </Text>
-          </Stack>
+      <Modal.Overlay />
+      <Modal.Content
+        aria-label={t(
+          "workspace.people.changePassword.title",
+          "Change password",
+        )}
+      >
+        <Modal.Body>
+          <div style={{ position: "relative" }}>
+            <ActionIcon
+              aria-label={t("common.close", "Close")}
+              variant="tertiary"
+              onClick={handleClose}
+              size="lg"
+              disabled={processing}
+              style={{
+                position: "absolute",
+                top: -8,
+                right: -8,
+                zIndex: 1,
+              }}
+            >
+              <LocalIcon icon="close-rounded" />
+            </ActionIcon>
+            <Stack gap="lg" pt="md">
+              <Stack gap="md" align="center">
+                <LocalIcon
+                  icon="lock"
+                  width="3rem"
+                  height="3rem"
+                  style={{ color: "var(--mantine-color-gray-6)" }}
+                />
+                <Text size="xl" fw={600} ta="center">
+                  {t(
+                    "workspace.people.changePassword.title",
+                    "Change password",
+                  )}
+                </Text>
+                <Text size="sm" c="dimmed" ta="center">
+                  {t(
+                    "workspace.people.changePassword.subtitle",
+                    "Update the password for",
+                  )}{" "}
+                  <strong>{user?.username}</strong>
+                </Text>
+              </Stack>
 
-          <Stack gap="sm">
-            <PasswordInput
-              label={t(
-                "workspace.people.changePassword.newPassword",
-                "New password",
-              )}
-              placeholder={t(
-                "workspace.people.changePassword.placeholder",
-                "Enter a new password",
-              )}
-              value={form.newPassword}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  newPassword: event.currentTarget.value,
-                  generateRandom: false,
-                })
-              }
-              disabled={processing || disabled || form.generateRandom}
-              data-autofocus
-            />
-            <PasswordInput
-              label={t(
-                "workspace.people.changePassword.confirmPassword",
-                "Confirm password",
-              )}
-              placeholder={t(
-                "workspace.people.changePassword.confirmPlaceholder",
-                "Re-enter the new password",
-              )}
-              value={form.confirmPassword}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  confirmPassword: event.currentTarget.value,
-                  generateRandom: false,
-                })
-              }
-              disabled={processing || disabled || form.generateRandom}
-              error={
-                !form.generateRandom &&
-                form.confirmPassword &&
-                form.newPassword !== form.confirmPassword
-                  ? t(
-                      "workspace.people.changePassword.passwordMismatch",
-                      "Passwords do not match",
-                    )
-                  : undefined
-              }
-            />
-            <Group justify="space-between">
-              <Checkbox
-                label={t(
-                  "workspace.people.changePassword.generateRandom",
-                  "Generate secure password",
-                )}
-                checked={form.generateRandom}
-                disabled={processing || disabled}
-                onChange={(event) => {
-                  const checked = event.currentTarget.checked;
-                  setForm((prev) => ({ ...prev, generateRandom: checked }));
-                  if (event.currentTarget.checked) {
-                    handleGeneratePassword();
+              <Stack gap="sm">
+                <PasswordInput
+                  label={t(
+                    "workspace.people.changePassword.newPassword",
+                    "New password",
+                  )}
+                  placeholder={t(
+                    "workspace.people.changePassword.placeholder",
+                    "Enter a new password",
+                  )}
+                  value={form.newPassword}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      newPassword: event.currentTarget.value,
+                      generateRandom: false,
+                    })
                   }
-                }}
-              />
-              {passwordPreview && (
-                <Group gap="xs" align="center">
+                  disabled={processing || disabled || form.generateRandom}
+                  data-autofocus
+                />
+                <PasswordInput
+                  label={t(
+                    "workspace.people.changePassword.confirmPassword",
+                    "Confirm password",
+                  )}
+                  placeholder={t(
+                    "workspace.people.changePassword.confirmPlaceholder",
+                    "Re-enter the new password",
+                  )}
+                  value={form.confirmPassword}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      confirmPassword: event.currentTarget.value,
+                      generateRandom: false,
+                    })
+                  }
+                  disabled={processing || disabled || form.generateRandom}
+                  error={
+                    !form.generateRandom &&
+                    form.confirmPassword &&
+                    form.newPassword !== form.confirmPassword
+                      ? t(
+                          "workspace.people.changePassword.passwordMismatch",
+                          "Passwords do not match",
+                        )
+                      : undefined
+                  }
+                />
+                <Group justify="space-between">
+                  <Checkbox
+                    label={t(
+                      "workspace.people.changePassword.generateRandom",
+                      "Generate secure password",
+                    )}
+                    checked={form.generateRandom}
+                    disabled={processing || disabled}
+                    onChange={(event) => {
+                      const checked = event.currentTarget.checked;
+                      setForm((prev) => ({ ...prev, generateRandom: checked }));
+                      if (event.currentTarget.checked) {
+                        handleGeneratePassword();
+                      }
+                    }}
+                  />
+                  {passwordPreview && (
+                    <Group gap="xs" align="center">
+                      <Text size="xs" c="dimmed">
+                        {t(
+                          "workspace.people.changePassword.generatedPreview",
+                          "Generated password:",
+                        )}{" "}
+                        <strong>{passwordPreview}</strong>
+                      </Text>
+                      <Tooltip
+                        label={t(
+                          "workspace.people.changePassword.copyTooltip",
+                          "Copy to clipboard",
+                        )}
+                      >
+                        <ActionIcon
+                          aria-label={t(
+                            "workspace.people.changePassword.copyTooltip",
+                            "Copy to clipboard",
+                          )}
+                          size="sm"
+                          variant="tertiary"
+                          onClick={handleCopyPassword}
+                          disabled={processing}
+                        >
+                          <LocalIcon
+                            icon="content-copy"
+                            width="0.9rem"
+                            height="0.9rem"
+                          />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  )}
+                </Group>
+              </Stack>
+
+              <Stack gap="xs">
+                <Checkbox
+                  label={t(
+                    "workspace.people.changePassword.sendEmail",
+                    "Email the user about this change",
+                  )}
+                  checked={canEmail && form.sendEmail}
+                  onChange={(event) =>
+                    setForm({ ...form, sendEmail: event.currentTarget.checked })
+                  }
+                  disabled={!canEmail || processing}
+                />
+                <Checkbox
+                  label={t(
+                    "workspace.people.changePassword.includePassword",
+                    "Include the new password in the email",
+                  )}
+                  checked={canEmail && form.sendEmail && form.includePassword}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      includePassword: event.currentTarget.checked,
+                    })
+                  }
+                  disabled={!canEmail || !form.sendEmail || processing}
+                />
+                <Checkbox
+                  label={t(
+                    "workspace.people.changePassword.forcePasswordChange",
+                    "Force user to change password on next login",
+                  )}
+                  checked={form.forcePasswordChange}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      forcePasswordChange: event.currentTarget.checked,
+                    })
+                  }
+                  disabled={processing || disabled}
+                />
+                {!canEmail && (
+                  <Text size="xs" c="dimmed">
+                    {mailEnabled
+                      ? t(
+                          "workspace.people.changePassword.emailUnavailable",
+                          "This user's email is not a valid email address. Notifications are disabled.",
+                        )
+                      : t(
+                          "workspace.people.changePassword.smtpDisabled",
+                          "Email notifications require SMTP to be enabled in settings.",
+                        )}
+                  </Text>
+                )}
+                {canEmail && !form.includePassword && form.sendEmail && (
                   <Text size="xs" c="dimmed">
                     {t(
-                      "workspace.people.changePassword.generatedPreview",
-                      "Generated password:",
-                    )}{" "}
-                    <strong>{passwordPreview}</strong>
+                      "workspace.people.changePassword.notifyOnly",
+                      "An email will be sent without the password, letting the user know an admin changed it.",
+                    )}
                   </Text>
-                  <Tooltip
-                    label={t(
-                      "workspace.people.changePassword.copyTooltip",
-                      "Copy to clipboard",
-                    )}
-                  >
-                    <ActionIcon
-                      aria-label={t(
-                        "workspace.people.changePassword.copyTooltip",
-                        "Copy to clipboard",
-                      )}
-                      size="sm"
-                      variant="tertiary"
-                      onClick={handleCopyPassword}
-                      disabled={processing}
-                    >
-                      <LocalIcon
-                        icon="content-copy"
-                        width="0.9rem"
-                        height="0.9rem"
-                      />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-              )}
-            </Group>
-          </Stack>
-
-          <Stack gap="xs">
-            <Checkbox
-              label={t(
-                "workspace.people.changePassword.sendEmail",
-                "Email the user about this change",
-              )}
-              checked={canEmail && form.sendEmail}
-              onChange={(event) =>
-                setForm({ ...form, sendEmail: event.currentTarget.checked })
-              }
-              disabled={!canEmail || processing}
-            />
-            <Checkbox
-              label={t(
-                "workspace.people.changePassword.includePassword",
-                "Include the new password in the email",
-              )}
-              checked={canEmail && form.sendEmail && form.includePassword}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  includePassword: event.currentTarget.checked,
-                })
-              }
-              disabled={!canEmail || !form.sendEmail || processing}
-            />
-            <Checkbox
-              label={t(
-                "workspace.people.changePassword.forcePasswordChange",
-                "Force user to change password on next login",
-              )}
-              checked={form.forcePasswordChange}
-              onChange={(event) =>
-                setForm({
-                  ...form,
-                  forcePasswordChange: event.currentTarget.checked,
-                })
-              }
-              disabled={processing || disabled}
-            />
-            {!canEmail && (
-              <Text size="xs" c="dimmed">
-                {mailEnabled
-                  ? t(
-                      "workspace.people.changePassword.emailUnavailable",
-                      "This user's email is not a valid email address. Notifications are disabled.",
-                    )
-                  : t(
-                      "workspace.people.changePassword.smtpDisabled",
-                      "Email notifications require SMTP to be enabled in settings.",
-                    )}
-              </Text>
-            )}
-            {canEmail && !form.includePassword && form.sendEmail && (
-              <Text size="xs" c="dimmed">
-                {t(
-                  "workspace.people.changePassword.notifyOnly",
-                  "An email will be sent without the password, letting the user know an admin changed it.",
                 )}
-              </Text>
-            )}
-          </Stack>
+              </Stack>
 
-          <Button
-            onClick={handleSubmit}
-            loading={processing}
-            fullWidth
-            size="md"
-            disabled={disabled}
-            style={{ marginTop: "var(--mantine-spacing-md)" }}
-          >
-            {t("workspace.people.changePassword.submit", "Update password")}
-          </Button>
-        </Stack>
-      </div>
-    </Modal>
+              <Button
+                onClick={handleSubmit}
+                loading={processing}
+                fullWidth
+                size="md"
+                disabled={disabled}
+                style={{ marginTop: "var(--mantine-spacing-md)" }}
+              >
+                {t("workspace.people.changePassword.submit", "Update password")}
+              </Button>
+            </Stack>
+          </div>
+        </Modal.Body>
+      </Modal.Content>
+    </Modal.Root>
   );
 }

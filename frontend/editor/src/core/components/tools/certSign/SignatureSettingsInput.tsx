@@ -24,7 +24,10 @@ const SignatureSettingsInput = ({
 }: SignatureSettingsInputProps) => {
   const { t } = useTranslation();
 
-  const handleChange = (key: keyof SignatureSettings, val: any) => {
+  const handleChange = <K extends keyof SignatureSettings>(
+    key: K,
+    val: SignatureSettings[K],
+  ) => {
     onChange({ ...value, [key]: val });
   };
 
@@ -104,7 +107,9 @@ const SignatureSettingsInput = ({
           <NumberInput
             label={t("certSign.pageNumber", "Page Number")}
             value={value.pageNumber || 1}
-            onChange={(val) => handleChange("pageNumber", val || 1)}
+            onChange={(val) =>
+              handleChange("pageNumber", typeof val === "number" ? val : 1)
+            }
             min={1}
             disabled={disabled}
             size="xs"

@@ -63,63 +63,33 @@ export function legacyDerivedFromTool(
   return undefined;
 }
 
+/**
+ * Can't persist a Blob/File value, so a copy would work? WebKit reports
+ * `UnknownError` ("Error preparing Blob/File data...") when it can't write the
+ * blob's backing file; a refused structured clone is `DataCloneError`.
+ * Narrow on purpose: retrying quota or duplicate-key failures would fail again
+ * and hide the real cause.
+ */
+function isBlobValueRejection(error: unknown): boolean {
+  const name = (error as DOMException | null)?.name;
+  return name === "UnknownError" || name === "DataCloneError";
+}
+
 class FileStorageService {
   private readonly dbConfig = DATABASE_CONFIGS.FILES;
   private readonly storeName = "files";
-  private blobStorageProbe?: Promise<boolean>;
-
-  constructor() {
-    // Kick the probe off at construction so the first store almost never waits
-    // on it. Errors are swallowed inside the probe itself.
-    if (typeof indexedDB !== "undefined") void this.supportsBlobStorage();
-  }
+  /**
+   * Whether this engine accepts Blob/File values in IndexedDB. Optimistic: the
+   * blob path avoids copying multi-GB files into JS memory, so we try it and
+   * remember the answer, rather than pre-emptively degrading everywhere.
+   */
+  private blobValuesSupported = true;
 
   /**
    * Get database connection using centralized manager
    */
   private async getDatabase(): Promise<IDBDatabase> {
     return indexedDBManager.openDatabase(this.dbConfig);
-  }
-
-  /**
-   * WebKit cannot structured-clone a Blob into IndexedDB: `put` fails with
-   * "Error preparing Blob/File data to be stored in object store", the
-   * transaction aborts and the file is silently never stored. That hits Safari
-   * and, because Tauri uses WKWebView on macOS, the desktop app too.
-   *
-   * Probe once against a throwaway database so the storeStirlingFile path can
-   * keep handing IndexedDB the Blob by reference (no JS-side copy, which is
-   * what keeps multi-GB files off the heap) everywhere that supports it, and
-   * fall back to an ArrayBuffer only where it does not.
-   */
-  private async supportsBlobStorage(): Promise<boolean> {
-    this.blobStorageProbe ??= (async () => {
-      const dbName = `stirling-blob-support-probe-${Date.now()}`;
-      try {
-        const db = await new Promise<IDBDatabase>((resolve, reject) => {
-          const req = indexedDB.open(dbName, 1);
-          req.onupgradeneeded = () => req.result.createObjectStore("probe");
-          req.onsuccess = () => resolve(req.result);
-          req.onerror = () => reject(req.error);
-        });
-        try {
-          await new Promise<void>((resolve, reject) => {
-            const tx = db.transaction("probe", "readwrite");
-            tx.objectStore("probe").put(new Blob([new Uint8Array(1)]), "k");
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-            tx.onabort = () => reject(tx.error);
-          });
-          return true;
-        } finally {
-          db.close();
-          indexedDB.deleteDatabase(dbName);
-        }
-      } catch {
-        return false;
-      }
-    })();
-    return this.blobStorageProbe;
   }
 
   /** Returns thumbnail if within TTL, otherwise undefined. */
@@ -180,8 +150,8 @@ class FileStorageService {
       createdAt: stub.createdAt,
       // Store the File (a Blob) itself: IndexedDB persists it by reference and
       // streams to disk, so multi-GB files never materialize in JS memory.
-      // WebKit rejects Blobs here, so fall back to an ArrayBuffer there.
-      data: (await this.supportsBlobStorage())
+      // Engines that reject blob values fall back to a copy — see addFileRecord.
+      data: this.blobValuesSupported
         ? stirlingFile
         : await stirlingFile.arrayBuffer(),
       thumbnail: stub.thumbnailUrl,
@@ -211,6 +181,30 @@ class FileStorageService {
       classificationLabels: stub.classificationLabels,
     };
 
+    try {
+      await this.addFileRecord(db, record);
+    } catch (error) {
+      // Recoverable: re-add as a copy, and stop offering blobs this session.
+      // Anything else is the caller's to report.
+      if (!(record.data instanceof Blob) || !isBlobValueRejection(error)) {
+        throw error;
+      }
+      this.blobValuesSupported = false;
+      console.warn(
+        "IndexedDB rejected a Blob value; falling back to in-memory copies for this session. " +
+          "Very large files may now exhaust renderer memory.",
+        error,
+      );
+      record.data = await record.data.arrayBuffer();
+      await this.addFileRecord(db, record);
+    }
+  }
+
+  /** Single `add` of a file record. Rejects with the underlying IDB error. */
+  private addFileRecord(
+    db: IDBDatabase,
+    record: StoredStirlingFileRecord,
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         // Verify store exists before creating transaction
@@ -225,15 +219,9 @@ class FileStorageService {
 
         const request = store.add(record);
 
-        request.onerror = () => {
-          console.error("IndexedDB add error:", request.error);
-          reject(request.error);
-        };
-        request.onsuccess = () => {
-          resolve();
-        };
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve();
       } catch (error) {
-        console.error("Transaction error:", error);
         reject(error);
       }
     });
