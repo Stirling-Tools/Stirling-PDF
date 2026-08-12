@@ -73,6 +73,21 @@ const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
     ? "assets/[name]-[hash].js"
     : "assets/[name]-[hash][extname]";
 
+// The entry module script is the critical render-blocking resource. Mark it
+// fetchpriority=high so the browser fetches it ahead of the vendor preloads.
+function entryFetchPriorityPlugin(): PluginOption {
+  return {
+    name: "entry-fetch-priority",
+    apply: "build" as const,
+    transformIndexHtml(html) {
+      return html.replace(
+        /<script type="module"([^>]*)>/,
+        '<script type="module"$1 fetchpriority="high">',
+      );
+    },
+  };
+}
+
 function compressStaticCopyPlugin(): PluginOption {
   return {
     name: "compress-static-copy",
@@ -396,6 +411,7 @@ export default defineConfig(async ({ mode, command }) => {
         ],
       }),
       prerenderOgPlugin(effectiveMode === "saas"),
+      entryFetchPriorityPlugin(),
       compressStaticCopyPlugin(),
     ],
     server: {
@@ -432,11 +448,15 @@ export default defineConfig(async ({ mode, command }) => {
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
+              // react/react-dom/scheduler/emotion/mui/mantine are mutually
+              // circular, so they must stay in one chunk or module init order
+              // breaks at runtime (TDZ ReferenceError).
               if (
                 id.includes("react") ||
+                id.includes("scheduler") ||
                 id.includes("@mantine") ||
-                id.includes("@emotion") ||
                 id.includes("@mui") ||
+                id.includes("@emotion") ||
                 id.includes("@iconify")
               ) {
                 return "vendor-ui";
