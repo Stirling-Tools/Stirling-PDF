@@ -108,6 +108,12 @@ bootJar {
     enabled = false
 }
 
+// :saas is only included for SaaS builds, but a default-flavor clean must still remove artifacts
+// left behind by an earlier SaaS build.
+tasks.named('clean') {
+    delete layout.projectDirectory.dir('app/saas/build')
+}
+
 // Configure main class for the root project
 springBoot {
     mainClass = 'stirling.software.SPDF.SPDFApplication'
