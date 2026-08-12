@@ -43,7 +43,8 @@ runs:
           *) echo "Unsupported runner: ${RUNNER_OS}-${RUNNER_ARCH}" >&2; exit 1 ;;
         esac
         archive="${RUNNER_TEMP}/${task_file}"
-        curl --fail --silent --show-error --location \
+        curl --fail --silent --show-error --location --http1.1 \
+          --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
           "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/${task_file}" \
           --output "${archive}"
         echo "${task_sha256}  ${archive}" | sha256sum -c -
