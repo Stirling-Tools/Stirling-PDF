@@ -4,7 +4,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { getToolOgImage } from "@app/data/ogImage";
 // Build tooling (plain ESM, node:fs only) - import the helpers for coverage.
-// eslint-disable-next-line no-restricted-imports -- build script lives outside the @app alias root
+// oxlint-disable-next-line no-restricted-imports -- build script lives outside the @app alias root
 import {
   buildBodyContent,
   buildOgTags,

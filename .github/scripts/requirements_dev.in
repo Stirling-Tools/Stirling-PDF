@@ -1,9 +1,0 @@
-pip
-setuptools
-WeasyPrint
-pdf2image
-pillow
-unoserver
-opencv-python-headless
-pre-commit
-brotli @ git+https://github.com/google/brotli.git@028fb5a23661f123017c060daa546b55cf4bde29
