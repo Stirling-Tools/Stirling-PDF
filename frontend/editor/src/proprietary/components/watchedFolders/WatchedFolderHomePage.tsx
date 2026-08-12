@@ -1,14 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
-import {
-  Box,
-  Text,
-  Stack,
-  Group,
-  ActionIcon,
-  Button,
-  Loader,
-  ScrollArea,
-} from "@mantine/core";
+import { Box, Text, Stack, Group, Loader, ScrollArea } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -39,18 +32,9 @@ import { useNavigationActions } from "@app/contexts/NavigationContext";
 import {
   WATCHED_FOLDER_VIEW_ID,
   WATCHED_FOLDER_WORKBENCH_ID,
-} from "@app/components/watchedFolders/WatchedFoldersRegistration";
-import { timeAgo } from "@app/components/watchedFolders/WatchedFolderWorkbenchView";
+  timeAgo,
+} from "@app/components/watchedFolders/watchedFolderShared";
 import "@app/components/watchedFolders/WatchedFolders.css";
-
-export function humaniseOp(op: string): string {
-  return op
-    .replace(/-pdf$|-pages$|-documents?$/i, "")
-    .replace(/[-_]/g, " ")
-    .replace(/\bocr\b/gi, "OCR")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-}
 
 interface FolderCardProps {
   folder: WatchedFolder;
@@ -127,7 +111,7 @@ function FolderCard({
       ? "var(--mantine-color-blue-filled)"
       : isDone
         ? "var(--color-green-500)"
-        : "var(--text-muted)";
+        : "var(--c-text-subtle)";
   const statusDotPulse = isActive;
 
   const statusLabel = isPaused
@@ -204,7 +188,7 @@ function FolderCard({
       <div
         className="wf-card-thumb"
         style={{
-          background: `linear-gradient(135deg, color-mix(in srgb, ${folder.accentColor} 18%, var(--bg-surface)), color-mix(in srgb, ${folder.accentColor} 6%, var(--bg-surface)))`,
+          background: `linear-gradient(135deg, color-mix(in srgb, ${folder.accentColor} 18%, var(--c-surface)), color-mix(in srgb, ${folder.accentColor} 6%, var(--c-surface)))`,
         }}
       >
         <FolderThumbnail
@@ -243,7 +227,7 @@ function FolderCard({
       <div className="wf-card-actions" onClick={(e) => e.stopPropagation()}>
         <ActionIcon
           size="md"
-          variant="subtle"
+          variant="tertiary"
           onClick={() => onTogglePause(folder)}
           aria-label={
             isPaused
@@ -264,7 +248,7 @@ function FolderCard({
         </ActionIcon>
         <ActionIcon
           size="md"
-          variant="subtle"
+          variant="tertiary"
           onClick={() => onEdit(folder)}
           aria-label={t("watchedFolders.home.editFolder", "Edit folder")}
         >
@@ -272,8 +256,8 @@ function FolderCard({
         </ActionIcon>
         <ActionIcon
           size="md"
-          variant="subtle"
-          color="red"
+          variant="tertiary"
+          accent="danger"
           onClick={() => onDelete(folder)}
           aria-label={t("watchedFolders.home.deleteFolder", "Delete folder")}
         >
@@ -326,8 +310,8 @@ function HowItWorks() {
       style={{
         padding: "1rem 1.25rem",
         borderRadius: "var(--mantine-radius-md)",
-        border: "0.0625rem solid var(--border-subtle)",
-        backgroundColor: "var(--bg-toolbar)",
+        border: "0.0625rem solid var(--c-border-subtle)",
+        backgroundColor: "var(--c-bg-raised)",
       }}
     >
       <Group gap="xs" mb="sm" justify="space-between">
@@ -335,7 +319,7 @@ function HowItWorks() {
           <InfoOutlinedIcon
             style={{
               fontSize: "1rem",
-              color: "var(--mantine-color-blue-filled)",
+              color: "var(--c-accent-text)",
             }}
           />
           <Text fw={600} size="xs">
@@ -343,9 +327,8 @@ function HowItWorks() {
           </Text>
         </Group>
         <ActionIcon
-          size="xs"
-          variant="subtle"
-          color="gray"
+          size="sm"
+          variant="tertiary"
           onClick={() => {
             sessionStorage.setItem("wf_howItWorks_dismissed", "1");
             setDismissed(true);
@@ -353,7 +336,10 @@ function HowItWorks() {
           aria-label={t("watchedFolders.actions.dismiss", "Dismiss")}
         >
           <CloseIcon
-            style={{ fontSize: "0.75rem", color: "var(--mantine-color-text)" }}
+            style={{
+              fontSize: "0.75rem",
+              color: "var(--mantine-color-text)",
+            }}
           />
         </ActionIcon>
       </Group>
@@ -372,7 +358,7 @@ function HowItWorks() {
                 height: "1.375rem",
                 borderRadius: "50%",
                 backgroundColor: "var(--mantine-color-blue-light)",
-                color: "var(--mantine-color-blue-filled)",
+                color: "var(--c-accent-text)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -418,9 +404,10 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 
       <Button
         size="md"
+        variant="primary"
         leftSection={<AddIcon style={{ fontSize: "1.125rem" }} />}
         onClick={onCreate}
-        mt="sm"
+        style={{ marginTop: "var(--mantine-spacing-sm)" }}
       >
         {t("watchedFolders.home.create", "Create your first Watched Folder")}
       </Button>

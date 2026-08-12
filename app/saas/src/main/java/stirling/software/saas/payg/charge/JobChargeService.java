@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
 import stirling.software.saas.payg.job.JobContext;
@@ -68,6 +69,7 @@ public class JobChargeService {
     private final PaygTeamExtensionsRepository teamExtensionsRepository;
     private final PaygMeterReportingService meterReportingService;
     private final WalletLedgerRepository ledgerRepository;
+    private final PrepaidBundleService prepaidBundleService;
 
     public JobChargeService(
             JobService jobService,
@@ -77,7 +79,8 @@ public class JobChargeService {
             ProcessingJobRepository jobRepository,
             PaygTeamExtensionsRepository teamExtensionsRepository,
             PaygMeterReportingService meterReportingService,
-            WalletLedgerRepository ledgerRepository) {
+            WalletLedgerRepository ledgerRepository,
+            PrepaidBundleService prepaidBundleService) {
         this.jobService = Objects.requireNonNull(jobService, "jobService");
         this.policyService = Objects.requireNonNull(policyService, "policyService");
         this.classifier = Objects.requireNonNull(classifier, "classifier");
@@ -88,6 +91,8 @@ public class JobChargeService {
         this.meterReportingService =
                 Objects.requireNonNull(meterReportingService, "meterReportingService");
         this.ledgerRepository = Objects.requireNonNull(ledgerRepository, "ledgerRepository");
+        this.prepaidBundleService =
+                Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
     }
 
     /**
@@ -113,7 +118,8 @@ public class JobChargeService {
                         ctx.source(),
                         ctx.processType(),
                         policy.getId(),
-                        stepLimit);
+                        stepLimit,
+                        ctx.runId());
 
         List<Path> paths = inputs.stream().map(JobInput::path).toList();
         JoinOrOpenResult result = jobService.joinOrOpen(jobCtx, paths);
@@ -122,14 +128,29 @@ public class JobChargeService {
             return new ChargeOutcome(result.job().getId(), 0, ChargeOutcome.Disposition.JOINED);
         }
 
+        ProcessingJob job = result.job();
         int units = computeUnits(inputs, policy);
-        result.job().setDocUnits(units);
+        job.setDocUnits(units);
 
         int freeUsed = consumeFreeGrant(ctx, units);
-        recordShadowRow(ctx, result.job().getId(), policy.getId(), units, freeUsed);
-        recordLedgerDebit(ctx, result.job().getId(), policy.getId(), units);
+        // Prepaid bundle is the tier between the free grant and the meter (free → prepaid →
+        // metered); draw only what the free grant didn't cover.
+        int bundleUsed = drawBundle(ctx, units - freeUsed);
+        recordShadowRow(ctx, job.getId(), policy.getId(), units, freeUsed, bundleUsed);
+        // doc_count + fingerprint were set on the fresh job by JobService.openFresh; carry them
+        // onto the ledger DEBIT so usage analytics query one table. Bundle-drawn units are netted
+        // out of the ledger amount so they never count against the spend cap (they're prepaid, not
+        // metered CYCLE spend).
+        recordLedgerDebit(
+                ctx,
+                job.getId(),
+                policy.getId(),
+                units,
+                bundleUsed,
+                job.getDocCount(),
+                job.getDocumentFingerprint());
 
-        return new ChargeOutcome(result.job().getId(), units, ChargeOutcome.Disposition.OPENED);
+        return new ChargeOutcome(job.getId(), units, ChargeOutcome.Disposition.OPENED);
     }
 
     /**
@@ -164,12 +185,21 @@ public class JobChargeService {
                         ctx.source(),
                         ctx.processType(),
                         policy.getId(),
-                        stepLimit);
+                        stepLimit,
+                        ctx.runId());
         ProcessingJob job = jobService.open(jobCtx, chargeUnits);
 
         int freeUsed = consumeFreeGrant(ctx, chargeUnits);
-        recordShadowRow(ctx, job.getId(), policy.getId(), chargeUnits, freeUsed);
-        recordLedgerDebit(ctx, job.getId(), policy.getId(), chargeUnits);
+        int bundleUsed = drawBundle(ctx, chargeUnits - freeUsed);
+        recordShadowRow(ctx, job.getId(), policy.getId(), chargeUnits, freeUsed, bundleUsed);
+        recordLedgerDebit(
+                ctx,
+                job.getId(),
+                policy.getId(),
+                chargeUnits,
+                bundleUsed,
+                job.getDocCount(),
+                job.getDocumentFingerprint());
 
         // Close immediately — nothing will lineage-join a standalone job — so the paid portion
         // meters via the same afterCommit hook + idempotency key as a normal process completion.
@@ -207,6 +237,24 @@ public class JobChargeService {
     }
 
     /**
+     * Draw this job's prepaid portion from the team's bundles — the tier after the free grant and
+     * before the meter — returning the units taken (0..{@code units}). Same guard as {@link
+     * #consumeFreeGrant}; {@link PrepaidBundleService#draw} holds a pessimistic pool lock inside
+     * this {@code openProcess} transaction so concurrent same-team charges split the pools exactly.
+     * Any remainder is the metered paid portion.
+     */
+    private int drawBundle(ChargeContext ctx, int units) {
+        BillingCategory category = ctx.billingCategory();
+        if (category == null || category == BillingCategory.BYPASSED || ctx.ownerTeamId() == null) {
+            return 0;
+        }
+        if (units <= 0) {
+            return 0;
+        }
+        return prepaidBundleService.draw(ctx.ownerTeamId(), units);
+    }
+
+    /**
      * The live spend record. Everything the customer-facing side reads — the wallet endpoint's
      * {@code spendUnitsThisPeriod}, the per-category breakdown ({@code wallet_category_summary}
      * view), and the cap evaluator's period sum — derives from {@code wallet_ledger} DEBITs. Shadow
@@ -216,21 +264,39 @@ public class JobChargeService {
      * Skipped for {@code BYPASSED} / uncategorised calls — manual UI work is never billed.
      */
     private void recordLedgerDebit(
-            ChargeContext ctx, java.util.UUID jobId, Long policyId, int units) {
+            ChargeContext ctx,
+            java.util.UUID jobId,
+            Long policyId,
+            int units,
+            int bundleUnitsConsumed,
+            int docCount,
+            String documentFingerprint) {
         BillingCategory category = ctx.billingCategory();
         if (category == null || category == BillingCategory.BYPASSED) {
             return;
         }
+        // Prepaid (bundle) units are netted out of the metered CYCLE spend, so the cap + the Stripe
+        // meter don't charge again for capacity already bought up front. (Free-grant units are NOT
+        // netted here — they still count toward CYCLE/cap; only the bundle split is removed.)
+        // doc_count stays the full count so the PDF is still counted once by usage analytics (which
+        // sum doc_count over DEBIT rows, bucket-agnostic). A fully-prepaid charge therefore writes
+        // a
+        // 0-unit DEBIT that still counts toward "PDFs processed".
+        int meteredUnits = units - bundleUnitsConsumed;
         WalletLedgerEntry entry = new WalletLedgerEntry();
         entry.setTeamId(ctx.ownerTeamId());
         entry.setActorUserId(ctx.ownerUserId());
         entry.setEntryType(LedgerEntryType.DEBIT);
         entry.setBucket(LedgerBucket.CYCLE);
-        entry.setAmountUnits(-units);
+        entry.setAmountUnits(-meteredUnits);
         entry.setReferenceType(ReferenceType.JOB);
         entry.setReferenceId(jobId.toString());
         entry.setPolicyId(policyId);
         entry.setBillingCategory(category);
+        // Count dimension + input fingerprint, denormalised from the job for usage analytics
+        // (PDFs processed, unique PDFs, size-multiplier average).
+        entry.setDocCount(docCount);
+        entry.setDocumentFingerprint(documentFingerprint);
         ledgerRepository.save(entry);
     }
 
@@ -271,15 +337,17 @@ public class JobChargeService {
             java.util.UUID jobId,
             Long policyId,
             int units,
-            int freeUnitsConsumed) {
+            int freeUnitsConsumed,
+            int bundleUnitsConsumed) {
         PaygShadowCharge row = new PaygShadowCharge();
         row.setTeamId(ctx.ownerTeamId());
         row.setJobId(jobId);
         row.setPolicyId(policyId);
         row.setPaygUnits(units);
-        // Free-vs-paid split fixed at charge time: paid (metered) = paygUnits - freeUnitsConsumed,
-        // and a refund restores freeUnitsConsumed to the team's grant.
+        // Free/prepaid/paid split fixed at charge time: metered = paygUnits - freeUnitsConsumed -
+        // bundleUnitsConsumed. A refund restores each portion to its source (grant / pools).
         row.setFreeUnitsConsumed(freeUnitsConsumed);
+        row.setBundleUnitsConsumed(bundleUnitsConsumed);
         // No legacy comparison: the legacy credit engine has been removed, so diff stays at 0.
         row.setLegacyCreditsCharged(0);
         row.setDiffPct(0);
@@ -323,11 +391,15 @@ public class JobChargeService {
                 // on the CHARGED→REFUNDED transition) prevents double-credits on re-invocation.
                 BillingCategory category = row.getBillingCategory();
                 if (category != null && category != BillingCategory.BYPASSED) {
+                    int bundleConsumed =
+                            row.getBundleUnitsConsumed() == null ? 0 : row.getBundleUnitsConsumed();
                     WalletLedgerEntry refund = new WalletLedgerEntry();
                     refund.setTeamId(row.getTeamId());
                     refund.setEntryType(LedgerEntryType.REFUND);
                     refund.setBucket(LedgerBucket.CYCLE);
-                    refund.setAmountUnits(row.getPaygUnits());
+                    // Mirror the reduced DEBIT: prepaid units never entered the CYCLE spend, so the
+                    // compensating credit is the metered portion only (paygUnits − bundle).
+                    refund.setAmountUnits(row.getPaygUnits() - bundleConsumed);
                     refund.setReferenceType(ReferenceType.JOB);
                     refund.setReferenceId(jobId.toString());
                     refund.setPolicyId(row.getPolicyId());
@@ -340,6 +412,11 @@ public class JobChargeService {
                             row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
                     if (freeConsumed > 0 && row.getTeamId() != null) {
                         teamExtensionsRepository.restoreFreeUnits(row.getTeamId(), freeConsumed);
+                    }
+                    // Return the prepaid units this job drew to the team's pools (best-effort — see
+                    // PrepaidBundleService.restore).
+                    if (bundleConsumed > 0 && row.getTeamId() != null) {
+                        prepaidBundleService.restore(row.getTeamId(), bundleConsumed);
                     }
                 }
             }
@@ -480,10 +557,14 @@ public class JobChargeService {
         // free grant is app-side only (Stripe's Prices are plain per-unit, no free tier), so the
         // free units were already withheld when this row's free_units_consumed was set.
         int freeConsumed = row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
-        int paidUnits = units - freeConsumed;
+        int bundleConsumed =
+                row.getBundleUnitsConsumed() == null ? 0 : row.getBundleUnitsConsumed();
+        // Metered = units beyond BOTH the free grant and the prepaid bundle; only this hits Stripe.
+        int paidUnits = units - freeConsumed - bundleConsumed;
         if (paidUnits <= 0) {
             log.debug(
-                    "close({}): all {} units came from the free grant → no meter event",
+                    "close({}): all {} units covered by free grant + prepaid bundle → no meter"
+                            + " event",
                     jobId,
                     units);
             return;

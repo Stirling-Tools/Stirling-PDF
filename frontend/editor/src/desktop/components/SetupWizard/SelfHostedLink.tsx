@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import "@shared/auth/ui/auth.css";
+import { Button } from "@app/ui/Button";
+import "@app/auth/ui/auth.css";
 
 interface SelfHostedLinkProps {
   onClick: () => void;
@@ -15,14 +16,14 @@ export const SelfHostedLink: React.FC<SelfHostedLinkProps> = ({
 
   return (
     <div className="navigation-link-container" style={{ marginTop: "1.5rem" }}>
-      <button
-        type="button"
+      <Button
+        variant="tertiary"
         onClick={onClick}
         disabled={disabled}
         className="navigation-link-button"
       >
         {t("setup.selfhosted.link", "or connect to a self hosted account")}
-      </button>
+      </Button>
     </div>
   );
 };

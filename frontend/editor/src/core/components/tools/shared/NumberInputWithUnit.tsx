@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useId, useState, useEffect } from "react";
 import { Stack, Text, NumberInput } from "@mantine/core";
 
 interface NumberInputWithUnitProps {
@@ -20,6 +20,7 @@ const NumberInputWithUnit = ({
   max,
   disabled = false,
 }: NumberInputWithUnitProps) => {
+  const labelId = useId();
   const [localValue, setLocalValue] = useState<number | string>(value);
 
   // Sync local value when external value changes
@@ -34,6 +35,7 @@ const NumberInputWithUnit = ({
   return (
     <Stack gap="xs" style={{ flex: 1 }}>
       <Text
+        id={labelId}
         size="xs"
         fw={500}
         style={{
@@ -51,6 +53,7 @@ const NumberInputWithUnit = ({
         min={min}
         max={max}
         disabled={disabled}
+        aria-labelledby={labelId}
         rightSection={
           <Text size="sm" c="dimmed" pr="sm">
             {unit}

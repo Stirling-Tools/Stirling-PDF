@@ -2,7 +2,7 @@ import { useEffect, useState, Suspense, lazy } from "react";
 import { Box, Loader, Center } from "@mantine/core";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles } from "@app/contexts/FileContext";
 import {
   useNavigationState,
   useNavigationActions,
@@ -10,6 +10,7 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useCookieConsent } from "@app/hooks/useCookieConsent";
 import styles from "@app/components/layout/Workbench.module.css";
 
@@ -40,11 +41,10 @@ export default function Workbench() {
   useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
 
   // Use context-based hooks to eliminate all prop drilling
-  const { selectors } = useFileState();
+  const { files: activeFiles } = useAllFiles();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const activeFiles = selectors.getFiles();
   const {
     previewFile,
     pageEditorFunctions,
@@ -56,6 +56,7 @@ export default function Workbench() {
   } = useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
+  const { overlay: signingOverlay } = useSigningOverlay();
 
   // Get navigation state - this is the source of truth
   const { selectedTool: selectedToolId } = useNavigationState();
@@ -113,6 +114,25 @@ export default function Workbench() {
     // currently loaded into the workbench - it lives on top of the IDB store.
     if (currentView === "myFiles") {
       return <FileManagerView />;
+    }
+
+    // Shared Signing drives the main viewer from the sidebar (document + overlays
+    // via context), ahead of the empty-state landing page.
+    if (currentView === "viewer" && signingOverlay?.file) {
+      return (
+        <Viewer
+          sidebarsVisible={sidebarsVisible}
+          setSidebarsVisible={setSidebarsVisible}
+          previewFile={signingOverlay.file}
+          signaturePreviews={signingOverlay.signaturePreviews}
+          signaturePreviewsReadOnly={signingOverlay.signaturePreviewsReadOnly}
+          signaturePlacementMode={signingOverlay.signaturePlacementMode}
+          signaturePlacementData={signingOverlay.signaturePlacementData}
+          signaturePlacementType={signingOverlay.signaturePlacementType}
+          onSignaturePreviewsChange={signingOverlay.onSignaturePreviewsChange}
+          signatureOverlayApiRef={signingOverlay.signatureOverlayApiRef}
+        />
+      );
     }
 
     if (activeFiles.length === 0) {
@@ -197,7 +217,7 @@ export default function Workbench() {
     <Box
       className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
-      style={{ backgroundColor: "var(--bg-background)", minWidth: 0 }}
+      style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
       {/* Workbench Bar - animates in/out based on file presence */}
       {currentView !== "myFiles" &&

@@ -11,6 +11,7 @@
  * using that registry.
  */
 
+import { resolveRunOn } from "@app/policies/runOn";
 import type { AutomationConfig } from "@app/types/automation";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { PolicyFolderSettings } from "@app/types/policies";
@@ -32,7 +33,8 @@ export interface BackendOutputSpec {
 export interface BackendPipelineDefinition {
   name: string;
   steps: BackendPipelineStep[];
-  output: BackendOutputSpec;
+  /** Destinations a run's files are delivered to; a single inline entry for one-off/editor runs. */
+  outputs: BackendOutputSpec[];
 }
 
 /** How a stored policy is triggered ("manual" | "folder" | "schedule" | "s3"). */
@@ -55,6 +57,12 @@ export interface BackendPolicy {
   steps: BackendPipelineStep[];
   output: BackendOutputSpec;
 }
+
+/**
+ * Where a policy run executes, and therefore where its output files live and
+ * are downloaded from.
+ */
+export type PolicyExecutionTarget = "local" | "saas";
 
 /** Lifecycle states of a backend run (mirrors PolicyRunStatus). */
 export type PolicyRunStatus =
@@ -95,6 +103,16 @@ export interface PolicyRunView {
   createdAt: number;
 }
 
+/**
+ * Operations that run as policy pipeline steps but are NOT user-facing tools, so
+ * they have no tool-registry entry and never appear in the tool picker. Maps the
+ * operation id straight to its backend endpoint.
+ */
+const POLICY_OPERATION_ENDPOINTS: Record<string, string> = {
+  // Document classification — dispatched only by the Classification policy.
+  classify: "/api/v1/ai/tools/classify-and-label",
+};
+
 /** Resolve a frontend operation id to its backend tool endpoint path. */
 function resolveEndpoint(
   operation: string,
@@ -103,10 +121,13 @@ function resolveEndpoint(
 ): string | null {
   const config = toolRegistry[operation as keyof ToolRegistry]?.operationConfig;
   const endpoint = config?.endpoint;
-  if (!endpoint) return null;
-  const resolved =
-    typeof endpoint === "function" ? endpoint(parameters) : endpoint;
-  return resolved ?? null;
+  if (endpoint) {
+    const resolved =
+      typeof endpoint === "function" ? endpoint(parameters) : endpoint;
+    if (resolved) return resolved;
+  }
+  // Policy-only operations have no registry entry; resolve them directly.
+  return POLICY_OPERATION_ENDPOINTS[operation] ?? null;
 }
 
 /**
@@ -172,7 +193,7 @@ export function buildPipelineDefinition(
     definition: {
       name: automation.name,
       steps,
-      output: { type: "inline", options: {} },
+      outputs: [{ type: "inline", options: {} }],
     },
     unresolved,
   };
@@ -216,6 +237,9 @@ export interface DecodedPolicy {
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
   folder: PolicyFolderSettings;
+  /** Position in the team's server-side run order (set from the fetch list index,
+   *  not decoded from the policy itself). */
+  order?: number;
 }
 
 const DEFAULT_FOLDER: PolicyFolderSettings = {
@@ -278,9 +302,10 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     typeof v === "string" ? v : fallback;
   const num = (v: unknown, fallback: number) =>
     typeof v === "number" ? v : fallback;
+  const categoryId = str(meta.categoryId);
   return {
     id: policy.id,
-    categoryId: str(meta.categoryId),
+    categoryId,
     name: policy.name,
     enabled: policy.enabled,
     automation: (output.automation as AutomationConfig | undefined) ?? null,
@@ -292,7 +317,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     fieldValues:
       (meta.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     folder: {
-      runOn: meta.runOn === "export" ? "export" : "upload",
+      runOn: resolveRunOn(meta.runOn, categoryId),
       // Legacy/missing output.mode defaults to new_version, not new_file.
       outputMode: output.mode === "new_file" ? "new_file" : "new_version",
       outputName: str(output.name),

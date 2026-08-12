@@ -23,12 +23,18 @@ import {
 const THUMBNAIL_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export interface StoredStirlingFileRecord extends BaseFileMetadata {
-  data: ArrayBuffer;
+  // Blob since the large-file OOM fix (stored by reference, no JS-side copy);
+  // ArrayBuffer records predate it and are still readable.
+  data: ArrayBuffer | Blob;
   fileId: FileId; // Matches runtime StirlingFile.fileId exactly
   quickKey: string; // Matches runtime StirlingFile.quickKey exactly
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
+  // Cached classification labels — mirrors the stub field so the sidebar can
+  // group by label without re-reading PDF bytes, and it survives versioning.
+  // See StirlingFileStub.classificationLabels.
+  classificationLabels?: string[];
 }
 
 export interface StorageStats {
@@ -57,9 +63,27 @@ export function legacyDerivedFromTool(
   return undefined;
 }
 
+/**
+ * Can't persist a Blob/File value, so a copy would work? WebKit reports
+ * `UnknownError` ("Error preparing Blob/File data...") when it can't write the
+ * blob's backing file; a refused structured clone is `DataCloneError`.
+ * Narrow on purpose: retrying quota or duplicate-key failures would fail again
+ * and hide the real cause.
+ */
+function isBlobValueRejection(error: unknown): boolean {
+  const name = (error as DOMException | null)?.name;
+  return name === "UnknownError" || name === "DataCloneError";
+}
+
 class FileStorageService {
   private readonly dbConfig = DATABASE_CONFIGS.FILES;
   private readonly storeName = "files";
+  /**
+   * Whether this engine accepts Blob/File values in IndexedDB. Optimistic: the
+   * blob path avoids copying multi-GB files into JS memory, so we try it and
+   * remember the answer, rather than pre-emptively degrading everywhere.
+   */
+  private blobValuesSupported = true;
 
   /**
    * Get database connection using centralized manager
@@ -114,7 +138,6 @@ class FileStorageService {
     stub: StirlingFileStub,
   ): Promise<void> {
     const db = await this.getDatabase();
-    const arrayBuffer = await stirlingFile.arrayBuffer();
 
     const record: StoredStirlingFileRecord = {
       id: stirlingFile.fileId,
@@ -125,7 +148,12 @@ class FileStorageService {
       size: stirlingFile.size,
       lastModified: stirlingFile.lastModified,
       createdAt: stub.createdAt,
-      data: arrayBuffer,
+      // Store the File (a Blob) itself: IndexedDB persists it by reference and
+      // streams to disk, so multi-GB files never materialize in JS memory.
+      // Engines that reject blob values fall back to a copy — see addFileRecord.
+      data: this.blobValuesSupported
+        ? stirlingFile
+        : await stirlingFile.arrayBuffer(),
       thumbnail: stub.thumbnailUrl,
       thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
       isLeaf: stub.isLeaf ?? true,
@@ -148,8 +176,35 @@ class FileStorageService {
 
       // Folder organisation (root when null)
       folderId: stub.folderId ?? null,
+
+      // Cached classification category, if already known (preserved across re-stores).
+      classificationLabels: stub.classificationLabels,
     };
 
+    try {
+      await this.addFileRecord(db, record);
+    } catch (error) {
+      // Recoverable: re-add as a copy, and stop offering blobs this session.
+      // Anything else is the caller's to report.
+      if (!(record.data instanceof Blob) || !isBlobValueRejection(error)) {
+        throw error;
+      }
+      this.blobValuesSupported = false;
+      console.warn(
+        "IndexedDB rejected a Blob value; falling back to in-memory copies for this session. " +
+          "Very large files may now exhaust renderer memory.",
+        error,
+      );
+      record.data = await record.data.arrayBuffer();
+      await this.addFileRecord(db, record);
+    }
+  }
+
+  /** Single `add` of a file record. Rejects with the underlying IDB error. */
+  private addFileRecord(
+    db: IDBDatabase,
+    record: StoredStirlingFileRecord,
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         // Verify store exists before creating transaction
@@ -164,15 +219,9 @@ class FileStorageService {
 
         const request = store.add(record);
 
-        request.onerror = () => {
-          console.error("IndexedDB add error:", request.error);
-          reject(request.error);
-        };
-        request.onsuccess = () => {
-          resolve();
-        };
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve();
       } catch (error) {
-        console.error("Transaction error:", error);
         reject(error);
       }
     });
@@ -273,6 +322,7 @@ class FileStorageService {
           sourceFileIds: record.sourceFileIds,
           folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
+          classificationLabels: record.classificationLabels,
         };
 
         resolve(stub);
@@ -332,6 +382,7 @@ class FileStorageService {
               sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
+              classificationLabels: record.classificationLabels,
             });
           }
           cursor.continue();
@@ -423,6 +474,7 @@ class FileStorageService {
               sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
+              classificationLabels: record.classificationLabels,
             });
           }
           cursor.continue();

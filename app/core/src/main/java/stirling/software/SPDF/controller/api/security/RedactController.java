@@ -33,6 +33,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.security.RedactionArea;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
@@ -82,13 +84,14 @@ public class RedactController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             operationId = "redactPdfManual",
             summary = "Redacts areas and pages in a PDF document",
             description =
-                    "This endpoint redacts content from a PDF file based on manually specified areas. "
-                            + "Users can specify areas to redact and optionally convert the PDF to an image. "
-                            + "Input:PDF Output:PDF Type:SISO")
+                    "This endpoint redacts content from a PDF file based on manually specified"
+                            + " areas. Users can specify areas to redact and optionally convert the PDF to an"
+                            + " image.")
     public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
 
@@ -128,19 +131,26 @@ public class RedactController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             summary = "Redact PDF automatically",
             operationId = "redactPdfAuto",
             description =
-                    "This endpoint automatically redacts text from a PDF file based on specified patterns. "
-                            + "Users can provide text patterns to redact, with options for regex and whole word matching. "
-                            + "Input:PDF Output:PDF Type:SISO")
+                    "This endpoint automatically redacts text from a PDF file based on specified"
+                            + " patterns. Users can provide text patterns to redact, with options for regex"
+                            + " and whole word matching.")
     public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request) {
-        String[] listOfText = request.getListOfText().split("\n");
+        String rawListOfText = request.getListOfText();
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
 
-        if (listOfText.length == 0 || (listOfText.length == 1 && listOfText[0].trim().isEmpty())) {
+        if (rawListOfText == null || rawListOfText.trim().isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.redaction.no.patterns", "No text patterns provided for redaction");
+        }
+
+        String[] listOfText = rawListOfText.split("\n");
+        if (listOfText.length == 1 && listOfText[0].trim().isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.redaction.no.patterns", "No text patterns provided for redaction");
         }
@@ -266,13 +276,13 @@ public class RedactController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
+    @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             operationId = "redactExecute",
             summary = "Execute a unified redaction plan on a PDF",
             description =
-                    "Unified redaction endpoint that accepts exact strings, regex patterns, and "
-                            + "page numbers in a single request. Supports execution strategy hints. "
-                            + "Input:PDF Output:PDF Type:SISO")
+                    "Unified redaction endpoint that accepts exact strings, regex patterns, and"
+                            + " page numbers in a single request. Supports execution strategy hints.")
     public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request)
             throws IOException {
 

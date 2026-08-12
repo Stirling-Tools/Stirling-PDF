@@ -14,7 +14,7 @@ interface ToolIconProps {
 export const ToolIcon: React.FC<ToolIconProps> = ({
   icon,
   opacity = 1,
-  color = "var(--tools-text-and-icon-color)",
+  color = "var(--c-text)",
   marginRight = "0.5rem",
 }) => {
   return (

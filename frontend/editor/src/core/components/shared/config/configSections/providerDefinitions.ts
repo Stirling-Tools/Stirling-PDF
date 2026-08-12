@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { oauthIconUrl } from "@shared/auth/ui/oauthIcons";
+import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 
 export type ProviderType = "oauth2" | "saml2" | "telegram" | "googledrive";
 

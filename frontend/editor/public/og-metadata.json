@@ -15,6 +15,11 @@
       "title": "Sign - Stirling PDF",
       "description": "Adds signature to PDF by drawing, text or image"
     },
+    "sharedSign": {
+      "image": "/og_images/home.png",
+      "title": "Shared Signing - Stirling PDF",
+      "description": "Request signatures from others and track signing sessions"
+    },
     "addText": {
       "image": "/og_images/add-text.png",
       "title": "Add Text - Stirling PDF",
@@ -94,6 +99,11 @@
       "image": "/og_images/rotate.png",
       "title": "Rotate - Stirling PDF",
       "description": "Easily rotate your PDFs."
+    },
+    "autoRotate": {
+      "image": "/og_images/home.png",
+      "title": "Auto Rotate - Stirling PDF",
+      "description": "Detect each page's orientation and rotate it upright automatically."
     },
     "annotate": {
       "image": "/og_images/annotate.png",
@@ -295,14 +305,14 @@
       "title": "Air-gapped Setup - Stirling PDF",
       "description": "Link to air-gapped setup guide"
     },
+    "/editor": {
+      "image": "/og_images/home.png",
+      "title": "Editor - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/login": {
       "image": "/og_images/home.png",
       "title": "Sign In - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
-    },
-    "/signup": {
-      "image": "/og_images/home.png",
-      "title": "Sign Up - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
     "/mobile-scanner": {
@@ -465,9 +475,34 @@
       "title": "Admin Storage Sharing Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/adminFolderAccess": {
+      "image": "/og_images/home.png",
+      "title": "Admin Folder Access Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/adminMcp": {
       "image": "/og_images/home.png",
       "title": "Admin Mcp Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiGeneral": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai General Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiModels": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Models Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiDocuments": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Documents Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiLimits": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Limits Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
     "/settings/help": {
@@ -480,15 +515,31 @@
       "title": "Legal Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/backendThirdPartyLicenses": {
+      "image": "/og_images/home.png",
+      "title": "Backend Third Party Licenses Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/frontendThirdPartyLicenses": {
+      "image": "/og_images/home.png",
+      "title": "Frontend Third Party Licenses Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/payg": {
       "image": "/og_images/home.png",
       "title": "Payg Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/account-link": {
+      "image": "/og_images/home.png",
+      "title": "Account Link Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     }
   },
   "byPath": {
     "/cert-sign": "certSign",
     "/sign": "sign",
+    "/shared-sign": "sharedSign",
     "/add-text": "addText",
     "/add-password": "addPassword",
     "/remove-password": "removePassword",
@@ -505,6 +556,7 @@
     "/ocr": "ocr",
     "/add-image": "addImage",
     "/rotate": "rotate",
+    "/auto-rotate": "autoRotate",
     "/annotate": "annotate",
     "/scanner-image-split": "scannerImageSplit",
     "/edit-table-of-contents": "editTableOfContents",
@@ -598,8 +650,8 @@
     "/overlay-pdf": "overlayPdfs",
     "/split-pdf-by-sections": "split",
     "/split-pdf-by-chapters": "split",
+    "/editor": "/editor",
     "/login": "/login",
-    "/signup": "/signup",
     "/mobile-scanner": "/mobile-scanner",
     "/files": "/files",
     "/settings": "/settings",
@@ -632,9 +684,17 @@
     "/settings/adminUsage": "/settings/adminUsage",
     "/settings/adminEndpoints": "/settings/adminEndpoints",
     "/settings/adminStorageSharing": "/settings/adminStorageSharing",
+    "/settings/adminFolderAccess": "/settings/adminFolderAccess",
     "/settings/adminMcp": "/settings/adminMcp",
+    "/settings/adminAiGeneral": "/settings/adminAiGeneral",
+    "/settings/adminAiModels": "/settings/adminAiModels",
+    "/settings/adminAiDocuments": "/settings/adminAiDocuments",
+    "/settings/adminAiLimits": "/settings/adminAiLimits",
     "/settings/help": "/settings/help",
     "/settings/legal": "/settings/legal",
-    "/settings/payg": "/settings/payg"
+    "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
+    "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
+    "/settings/payg": "/settings/payg",
+    "/settings/account-link": "/settings/account-link"
   }
 }
