@@ -975,35 +975,47 @@ function ListView({
 
   return (
     <div className="files-page-list" role="grid">
+      {/* Each direct child is a columnheader: a role="row" may only own cells, so
+          the sort controls and the select-all box have to sit inside one. */}
       <div className="files-page-list-row is-header" role="row">
         {onSetSelection && visibleFileIds.length > 0 ? (
-          <Checkbox
-            checked={allSelected}
-            indeterminate={someSelected}
-            onChange={() => {
-              onSetSelection(allSelected ? new Set() : new Set(visibleFileIds));
-            }}
-            aria-label={
-              allSelected
-                ? t("filesPage.deselectAll", "Clear selection")
-                : t("filesPage.selectAll", "Select all")
-            }
-          />
+          <span role="columnheader">
+            <Checkbox
+              checked={allSelected}
+              indeterminate={someSelected}
+              onChange={() => {
+                onSetSelection(
+                  allSelected ? new Set() : new Set(visibleFileIds),
+                );
+              }}
+              aria-label={
+                allSelected
+                  ? t("filesPage.deselectAll", "Clear selection")
+                  : t("filesPage.selectAll", "Select all")
+              }
+            />
+          </span>
         ) : (
           <span aria-hidden="true" />
         )}
-        <span {...headerProps("name-asc", "name-desc")}>
-          {t("filesPage.column.name", "Name")}
-          {sortIndicator("name-asc", "name-desc")}
+        <span role="columnheader">
+          <span {...headerProps("name-asc", "name-desc")}>
+            {t("filesPage.column.name", "Name")}
+            {sortIndicator("name-asc", "name-desc")}
+          </span>
         </span>
-        <span>{t("filesPage.column.type", "Type")}</span>
-        <span {...headerProps("size-asc", "size-desc")}>
-          {t("filesPage.column.size", "Size")}
-          {sortIndicator("size-asc", "size-desc")}
+        <span role="columnheader">{t("filesPage.column.type", "Type")}</span>
+        <span role="columnheader">
+          <span {...headerProps("size-asc", "size-desc")}>
+            {t("filesPage.column.size", "Size")}
+            {sortIndicator("size-asc", "size-desc")}
+          </span>
         </span>
-        <span {...headerProps("modified-asc", "modified-desc")}>
-          {t("filesPage.column.modified", "Modified")}
-          {sortIndicator("modified-asc", "modified-desc")}
+        <span role="columnheader">
+          <span {...headerProps("modified-asc", "modified-desc")}>
+            {t("filesPage.column.modified", "Modified")}
+            {sortIndicator("modified-asc", "modified-desc")}
+          </span>
         </span>
         <span aria-hidden="true" />
       </div>
@@ -1160,7 +1172,12 @@ function FolderRow({
       className={`files-page-list-row${isDropTarget ? " is-drop-target" : ""}`}
     >
       <span aria-hidden="true" />
-      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      {/* Each direct child is a gridcell: a role="row" may only own cells, so the
+          actions menu has to sit inside one. */}
+      <span
+        role="gridcell"
+        style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+      >
         <FolderThumbnail
           color={folder.color}
           size="row"
@@ -1188,61 +1205,65 @@ function FolderRow({
           )}
         </span>
       </span>
-      <span>{t("filesPage.folder", "Folder")}</span>
-      <span>
+      <span role="gridcell">{t("filesPage.folder", "Folder")}</span>
+      <span role="gridcell">
         {fileCount === 0
           ? "-"
           : t("filesPage.folderItems", "{{count}} items", { count: fileCount })}
       </span>
-      <span>{getFileDate({ lastModified: folder.updatedAt })}</span>
-      <Menu shadow="md" position="bottom-end" withinPortal>
-        <Menu.Target>
-          <ActionIcon
-            ref={kebabRef}
-            variant="tertiary"
-            size="sm"
-            onClick={(e) => e.stopPropagation()}
-            aria-label={t("filesPage.folderMenu", "Folder actions")}
-          >
-            <MoreVertIcon fontSize="small" />
-          </ActionIcon>
-        </Menu.Target>
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<OpenInNewIcon fontSize="small" />}
-            onClick={onOpen}
-          >
-            {t("filesPage.open", "Open")}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-            onClick={onRename}
-            disabled={!serverReachable}
-            title={!serverReachable ? offlineHint : undefined}
-          >
-            {t("filesPage.rename", "Rename")}
-          </Menu.Item>
-          <Menu.Divider />
-          <Menu.Label>
-            {t("filesPage.appearance.title", "Appearance")}
-          </Menu.Label>
-          <FolderAppearancePicker
-            folder={folder}
-            onChange={onChangeAppearance}
-            disabled={!serverReachable}
-          />
-          <Menu.Divider />
-          <Menu.Item
-            color="red"
-            leftSection={<DeleteIcon fontSize="small" />}
-            onClick={onDelete}
-            disabled={!serverReachable}
-            title={!serverReachable ? offlineHint : undefined}
-          >
-            {t("filesPage.deleteFolder", "Delete folder")}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+      <span role="gridcell">
+        {getFileDate({ lastModified: folder.updatedAt })}
+      </span>
+      <span role="gridcell">
+        <Menu shadow="md" position="bottom-end" withinPortal>
+          <Menu.Target>
+            <ActionIcon
+              ref={kebabRef}
+              variant="tertiary"
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={t("filesPage.folderMenu", "Folder actions")}
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<OpenInNewIcon fontSize="small" />}
+              onClick={onOpen}
+            >
+              {t("filesPage.open", "Open")}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+              onClick={onRename}
+              disabled={!serverReachable}
+              title={!serverReachable ? offlineHint : undefined}
+            >
+              {t("filesPage.rename", "Rename")}
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Label>
+              {t("filesPage.appearance.title", "Appearance")}
+            </Menu.Label>
+            <FolderAppearancePicker
+              folder={folder}
+              onChange={onChangeAppearance}
+              disabled={!serverReachable}
+            />
+            <Menu.Divider />
+            <Menu.Item
+              color="red"
+              leftSection={<DeleteIcon fontSize="small" />}
+              onClick={onDelete}
+              disabled={!serverReachable}
+              title={!serverReachable ? offlineHint : undefined}
+            >
+              {t("filesPage.deleteFolder", "Delete folder")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </span>
     </div>
   );
 }
@@ -1323,35 +1344,40 @@ function FileRow({
         isInWorkspace ? " is-in-workspace" : ""
       }`}
     >
-      {/* Checkbox only shows in multi-select mode (see FileCard). When the
-          checkbox is hidden the first grid column collapses, but the row's
-          CSS grid keeps the columns aligned via the named template, so no
-          empty cell shows. */}
+      {/* Each direct child is a gridcell: a role="row" may only own cells, so the
+          checkbox and the actions menu have to sit inside one.
+
+          The checkbox only shows in multi-select mode (see FileCard). When it is
+          hidden the first grid column collapses, but the row's CSS grid keeps the
+          columns aligned via the named template, so no empty cell shows. */}
       {multiSelectActive ? (
-        <Checkbox
-          checked={isSelected}
-          onClick={(e) => {
-            // Toggle this file in/out of the selection without modifier keys.
-            e.stopPropagation();
-            onClick({
-              ...e,
-              shiftKey: false,
-              ctrlKey: true,
-              metaKey: true,
-            } as unknown as React.MouseEvent);
-          }}
-          onChange={() => {
-            /* handled by onClick */
-          }}
-          aria-label={t("filesPage.selectFile", "Select file {{name}}", {
-            name: file.name,
-          })}
-        />
+        <span role="gridcell">
+          <Checkbox
+            checked={isSelected}
+            onClick={(e) => {
+              // Toggle this file in/out of the selection without modifier keys.
+              e.stopPropagation();
+              onClick({
+                ...e,
+                shiftKey: false,
+                ctrlKey: true,
+                metaKey: true,
+              } as unknown as React.MouseEvent);
+            }}
+            onChange={() => {
+              /* handled by onClick */
+            }}
+            aria-label={t("filesPage.selectFile", "Select file {{name}}", {
+              name: file.name,
+            })}
+          />
+        </span>
       ) : (
         // Empty cell preserves grid column alignment.
         <span aria-hidden="true" />
       )}
       <span
+        role="gridcell"
         style={{
           display: "flex",
           alignItems: "center",
@@ -1411,94 +1437,96 @@ function FileRow({
           </span>
         )}
       </span>
-      <span>{ext || t("filesPage.file", "File")}</span>
-      <span>{fileSize}</span>
-      <span>{fileDate}</span>
-      <Menu shadow="md" position="bottom-end" withinPortal>
-        <Menu.Target>
-          <ActionIcon
-            ref={kebabRef}
-            variant="tertiary"
-            size="sm"
-            onClick={(e) => e.stopPropagation()}
-            aria-label={t("filesPage.fileMenu", "File actions")}
-            data-testid="file-card-actions"
-          >
-            <MoreVertIcon fontSize="small" />
-          </ActionIcon>
-        </Menu.Target>
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<OpenInNewIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpen();
-            }}
-          >
-            {t("filesPage.addToWorkspace", "Add to workspace")}
-          </Menu.Item>
-          <OpenInNewWindowMenuItem file={file} />
-          <Menu.Item
-            leftSection={<DriveFileMoveIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              onMove();
-            }}
-          >
-            {t("filesPage.moveTo", "Move to…")}
-          </Menu.Item>
-          {/* Per-file Save to server; shown for local-only files. When
-              storage is off it stays visible but disabled with a tooltip. */}
-          {onSaveToServer && file.remoteStorageId == null && (
-            <Tooltip
-              label={saveToServerDisabledReason}
-              disabled={!saveToServerDisabledReason}
-              withinPortal
-              position="left"
-              multiline
-              w={240}
+      <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
+      <span role="gridcell">{fileSize}</span>
+      <span role="gridcell">{fileDate}</span>
+      <span role="gridcell">
+        <Menu shadow="md" position="bottom-end" withinPortal>
+          <Menu.Target>
+            <ActionIcon
+              ref={kebabRef}
+              variant="tertiary"
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={t("filesPage.fileMenu", "File actions")}
+              data-testid="file-card-actions"
             >
-              <Menu.Item
-                leftSection={<CloudUploadIcon fontSize="small" />}
-                disabled={Boolean(saveToServerDisabledReason)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSaveToServer();
-                }}
-                style={
-                  saveToServerDisabledReason
-                    ? { pointerEvents: "auto" }
-                    : undefined
-                }
-              >
-                {t("filesPage.saveToServer", "Save to server")}
-              </Menu.Item>
-            </Tooltip>
-          )}
-          {onVersionHistory && (file.versionNumber ?? 1) > 1 && (
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
             <Menu.Item
-              leftSection={<HistoryIcon fontSize="small" />}
+              leftSection={<OpenInNewIcon fontSize="small" />}
               onClick={(e) => {
                 e.stopPropagation();
-                onVersionHistory();
+                onOpen();
               }}
             >
-              {t("filesPage.versionHistory", "Version history")}
+              {t("filesPage.addToWorkspace", "Add to workspace")}
             </Menu.Item>
-          )}
-          <Menu.Divider />
-          <Menu.Item
-            color="red"
-            leftSection={<DeleteIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-          >
-            {t("filesPage.remove", "Delete")}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+            <OpenInNewWindowMenuItem file={file} />
+            <Menu.Item
+              leftSection={<DriveFileMoveIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMove();
+              }}
+            >
+              {t("filesPage.moveTo", "Move to…")}
+            </Menu.Item>
+            {/* Per-file Save to server; shown for local-only files. When
+              storage is off it stays visible but disabled with a tooltip. */}
+            {onSaveToServer && file.remoteStorageId == null && (
+              <Tooltip
+                label={saveToServerDisabledReason}
+                disabled={!saveToServerDisabledReason}
+                withinPortal
+                position="left"
+                multiline
+                w={240}
+              >
+                <Menu.Item
+                  leftSection={<CloudUploadIcon fontSize="small" />}
+                  disabled={Boolean(saveToServerDisabledReason)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSaveToServer();
+                  }}
+                  style={
+                    saveToServerDisabledReason
+                      ? { pointerEvents: "auto" }
+                      : undefined
+                  }
+                >
+                  {t("filesPage.saveToServer", "Save to server")}
+                </Menu.Item>
+              </Tooltip>
+            )}
+            {onVersionHistory && (file.versionNumber ?? 1) > 1 && (
+              <Menu.Item
+                leftSection={<HistoryIcon fontSize="small" />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onVersionHistory();
+                }}
+              >
+                {t("filesPage.versionHistory", "Version history")}
+              </Menu.Item>
+            )}
+            <Menu.Divider />
+            <Menu.Item
+              color="red"
+              leftSection={<DeleteIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+            >
+              {t("filesPage.remove", "Delete")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </span>
     </div>
   );
 }

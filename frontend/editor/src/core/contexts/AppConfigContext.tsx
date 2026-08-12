@@ -2,22 +2,17 @@ import React, {
   createContext,
   useContext,
   useMemo,
-  useState,
   useEffect,
-  ReactNode,
   useCallback,
+  useState,
+  ReactNode,
 } from "react";
-import apiClient from "@app/services/apiClient";
-import { getSimulatedAppConfig } from "@app/testing/serverExperienceSimulations";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { DEFAULT_APP_CONFIG, fetchAppConfig } from "@app/api/config";
+import { qk } from "@app/query/keys";
+import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import type { AppConfig, AppConfigBootstrapMode } from "@app/types/appConfig";
 import { useJwtConfigSync } from "@app/hooks/useJwtConfigSync";
-
-/**
- * Sleep utility for delays
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 export interface AppConfigRetryOptions {
   maxRetries?: number;
@@ -40,10 +35,6 @@ const AppConfigContext = createContext<AppConfigContextValue | undefined>({
   refetch: async () => {},
 });
 
-/**
- * Provider component that fetches and provides app configuration
- * Should be placed at the top level of the app, before any components that need config
- */
 export interface AppConfigProviderProps {
   children: ReactNode;
   retryOptions?: AppConfigRetryOptions;
@@ -51,6 +42,22 @@ export interface AppConfigProviderProps {
   bootstrapMode?: AppConfigBootstrapMode;
   autoFetch?: boolean;
   onConfigLoaded?: (config: AppConfig) => void;
+}
+
+function statusOf(error: unknown): number | undefined {
+  return (error as { response?: { status?: number } })?.response?.status;
+}
+
+function errorMessage(error: unknown): string {
+  const axiosLike = error as {
+    response?: { data?: { message?: string } };
+    message?: string;
+  };
+  return (
+    axiosLike?.response?.data?.message ||
+    axiosLike?.message ||
+    "Unknown error occurred"
+  );
 }
 
 export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
@@ -61,171 +68,84 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   autoFetch = true,
   onConfigLoaded,
 }) => {
-  const isBlockingMode = bootstrapMode === "blocking";
-  const [config, setConfig] = useState<AppConfig | null>(initialConfig);
-  const [error, setError] = useState<string | null>(null);
-  // Track how many times we've attempted to fetch. useRef avoids re-renders that can trigger loops.
-  const fetchCountRef = React.useRef(0);
-  const [hasResolvedConfig, setHasResolvedConfig] = useState(
-    Boolean(initialConfig) && !isBlockingMode,
-  );
-  const [loading, setLoading] = useState(!hasResolvedConfig);
+  const maxRetries = retryOptions?.maxRetries ?? 0;
+  const initialDelay = retryOptions?.initialDelay ?? 1000;
+  // Non-blocking mode treats initialConfig as good enough to render on.
+  const seeded = Boolean(initialConfig) && bootstrapMode !== "blocking";
 
   const onConfigLoadedRef = React.useRef(onConfigLoaded);
   onConfigLoadedRef.current = onConfigLoaded;
 
-  const maxRetries = retryOptions?.maxRetries ?? 0;
-  const initialDelay = retryOptions?.initialDelay ?? 1000;
+  const queryClient = useQueryClient();
+  // Auth pages skip the fetch until sign-in asks for one.
+  const [signedIn, setSignedIn] = useState(false);
+  // fetchQuery, not refetchQueries: the latter skips a disabled query, and
+  // enabling one whose cache is still fresh doesn't fetch either. Sign-in has
+  // to force the request — a pre-login 401 leaves a cached default behind.
+  const refetch = useCallback(async () => {
+    setSignedIn(true);
+    await queryClient.fetchQuery({
+      queryKey: qk.appConfig(),
+      queryFn: fetchAppConfig,
+      staleTime: 0,
+    });
+  }, [queryClient]);
 
-  const fetchConfig = useCallback(
-    async (force = false) => {
-      // Prevent duplicate fetches unless forced
-      if (!force && fetchCountRef.current > 0) {
-        console.debug("[AppConfig] Already fetched, skipping");
-        return;
-      }
+  const { isAuthPage } = useJwtConfigSync(refetch);
+  const fetching = autoFetch && (!isAuthPage || signedIn);
 
-      // Mark that we've attempted a fetch to prevent repeated auto-fetch loops
-      fetchCountRef.current += 1;
-
-      const shouldBlockUI = !hasResolvedConfig || isBlockingMode;
-      if (shouldBlockUI) {
-        setLoading(true);
-      }
-      setError(null);
-
-      const startTime = performance.now();
-      for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        try {
-          const testConfig = getSimulatedAppConfig();
-          if (testConfig) {
-            setConfig(testConfig);
-            setHasResolvedConfig(true);
-            setLoading(false);
-            return;
-          }
-
-          if (attempt > 0) {
-            const delay = initialDelay * Math.pow(2, attempt - 1);
-            console.debug(
-              `[AppConfig] Retry attempt ${attempt}/${maxRetries} after ${delay}ms delay...`,
-            );
-            await sleep(delay);
-          }
-
-          // apiClient automatically adds JWT header if available via interceptors
-          // Always suppress error toast - we handle 401 errors locally
-          console.debug("[AppConfig] Fetching app config", {
-            attempt,
-            force,
-            path: window.location.pathname,
-          });
-          const response = await apiClient.get<AppConfig>(
-            "/api/v1/config/app-config",
-            {
-              suppressErrorToast: true,
-              skipAuthRedirect: true,
-            } as any,
-          );
-          const data = response.data;
-
-          console.debug("[AppConfig] Config fetched successfully:", data);
-          console.debug(
-            "[AppConfig] Fetch duration ms:",
-            (performance.now() - startTime).toFixed(2),
-          );
-          setConfig(data);
-          setHasResolvedConfig(true);
-          setLoading(false);
-          onConfigLoadedRef.current?.(data);
-          return; // Success - exit function
-        } catch (err: any) {
-          const status = err?.response?.status;
-
-          // On 401 (not authenticated), use default config with login enabled
-          // This allows the app to work even without authentication
-          if (status === 401) {
-            console.debug(
-              "[AppConfig] 401 error - using default config (login enabled)",
-            );
-            console.debug(
-              "[AppConfig] Fetch duration ms:",
-              (performance.now() - startTime).toFixed(2),
-            );
-            setConfig({ enableLogin: true });
-            setHasResolvedConfig(true);
-            setLoading(false);
-            return;
-          }
-
-          // Check if we should retry (network errors or 5xx errors)
-          const shouldRetry =
-            (!status || status >= 500) && attempt < maxRetries;
-
-          if (shouldRetry) {
-            console.debug(
-              `[AppConfig] Attempt ${attempt + 1} failed (status ${status || "network error"}):`,
-              err.message,
-              "- will retry...",
-            );
-            continue;
-          }
-
-          // Final attempt failed or non-retryable error (4xx)
-          const errorMessage =
-            err?.response?.data?.message ||
-            err?.message ||
-            "Unknown error occurred";
-          setError(errorMessage);
-          console.error(
-            `[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`,
-            err,
-          );
-          console.debug(
-            "[AppConfig] Fetch duration ms:",
-            (performance.now() - startTime).toFixed(2),
-          );
-          // Preserve existing config (initial default or previous fetch). If nothing is set, assume login enabled.
-          setConfig((current) => current ?? { enableLogin: true });
-          setHasResolvedConfig(true);
-          break;
-        }
-      }
-
-      setLoading(false);
+  const { data, error, isFetching } = useQuery({
+    queryKey: qk.appConfig(),
+    queryFn: fetchAppConfig,
+    enabled: fetching,
+    staleTime: CONFIG_STALE_TIME,
+    // Network and 5xx only; failureCount is 0-based, so `<` gives maxRetries retries.
+    retry: (failureCount, err) => {
+      const status = statusOf(err);
+      return (!status || status >= 500) && failureCount < maxRetries;
     },
-    [hasResolvedConfig, isBlockingMode, maxRetries, initialDelay],
-  );
-
-  const { isAuthPage } = useJwtConfigSync(fetchConfig);
+    retryDelay: (attempt) => initialDelay * 2 ** attempt,
+  });
 
   useEffect(() => {
-    if (isAuthPage) {
-      console.debug(
-        "[AppConfig] On auth page - using default config, skipping fetch",
-        { path: window.location.pathname },
-      );
-      setConfig({ enableLogin: true });
-      setHasResolvedConfig(true);
-      setLoading(false);
-      return;
-    }
+    if (error) console.error("[AppConfig] Failed to fetch app config:", error);
+  }, [error]);
 
-    if (autoFetch) {
-      fetchConfig();
-    }
-  }, [autoFetch, fetchConfig, isAuthPage]);
-
-  const refetch = useCallback(() => fetchConfig(true), [fetchConfig]);
+  useEffect(() => {
+    if (data) onConfigLoadedRef.current?.(data);
+  }, [data]);
 
   const value = useMemo<AppConfigContextValue>(
     () => ({
-      config,
-      loading,
-      error,
+      config:
+        data ??
+        initialConfig ??
+        (isAuthPage || error ? DEFAULT_APP_CONFIG : null),
+      // "Config not settled yet": in flight, or never going to be fetched at
+      // all. isFetching rather than isPending because a pre-login 401 resolves
+      // to the default config, so isPending is already false by the time the
+      // post-sign-in fetch runs — and consumers key effects on the flip.
+      loading: seeded
+        ? false
+        : !autoFetch
+          ? true
+          : fetching
+            ? isFetching
+            : false,
+      error: error ? errorMessage(error) : null,
       refetch,
     }),
-    [config, loading, error, refetch],
+    [
+      data,
+      error,
+      isFetching,
+      initialConfig,
+      isAuthPage,
+      seeded,
+      autoFetch,
+      fetching,
+      refetch,
+    ],
   );
 
   return (
@@ -235,16 +155,10 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   );
 };
 
-/**
- * Hook to access application configuration
- * Must be used within AppConfigProvider
- */
 export function useAppConfig(): AppConfigContextValue {
   const context = useContext(AppConfigContext);
-
   if (context === undefined) {
     throw new Error("useAppConfig must be used within AppConfigProvider");
   }
-
   return context;
 }

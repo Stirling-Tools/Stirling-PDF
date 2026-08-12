@@ -17,7 +17,6 @@ import { useBackendProbe } from "@app/hooks/useBackendProbe";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { updateSupportedLanguages } from "@app/i18n";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
-import AuthSignupPrompt from "@app/auth/ui/AuthSignupPrompt";
 import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
 import LoggedInState from "@app/routes/login/LoggedInState";
@@ -469,7 +468,7 @@ export default function Login() {
                 border:
                   "1px solid color-mix(in srgb, var(--c-success) 30%, transparent)",
                 borderRadius: "0.5rem",
-                color: "var(--c-success)",
+                color: "var(--color-green-dark)",
               }}
             >
               <p
@@ -485,14 +484,9 @@ export default function Login() {
           ) : undefined
         }
         footer={
-          <>
-            {isFirstTimeSetup &&
-              showDefaultCredentials &&
-              isUserPassAllowed && <AuthDefaultCredentials />}
-            {isUserPassAllowed && (
-              <AuthSignupPrompt onSignUp={() => navigate("/signup")} />
-            )}
-          </>
+          isFirstTimeSetup && showDefaultCredentials && isUserPassAllowed ? (
+            <AuthDefaultCredentials />
+          ) : undefined
         }
       />
     </AuthLayout>

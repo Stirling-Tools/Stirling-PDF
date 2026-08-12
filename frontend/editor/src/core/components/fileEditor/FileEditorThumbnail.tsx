@@ -23,6 +23,7 @@ import {
   dropTargetForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { StirlingFileStub } from "@app/types/fileContext";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import {
   PolicyBadges,
   type FileItemPolicyRef,
@@ -32,7 +33,10 @@ import { zipFileService } from "@app/services/zipFileService";
 
 import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
 import { useFileContext } from "@app/contexts/FileContext";
-import { useFileState } from "@app/contexts/file/fileHooks";
+import {
+  useFileSelector,
+  useFileSelectors,
+} from "@app/contexts/file/fileHooks";
 import { FileId } from "@app/types/file";
 import ToolChain from "@app/components/shared/ToolChain";
 import HoverActionMenu, {
@@ -48,6 +52,7 @@ import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryMod
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { FileEditorStatusDot } from "@app/components/fileEditor/FileEditorStatusDot";
 
@@ -92,7 +97,7 @@ const FileEditorThumbnail = ({
     actions: fileActions,
     openEncryptedUnlockPrompt,
   } = useFileContext();
-  const { state, selectors } = useFileState();
+  const selectors = useFileSelectors();
   const isMobile = useIsMobile();
 
   const actualFile = useMemo(
@@ -103,7 +108,7 @@ const FileEditorThumbnail = ({
 
   const isZipFile = zipFileService.isZipFileStub(file);
 
-  const hasError = state.ui.errorFileIds.includes(file.id);
+  const hasError = useFileSelector((s) => s.ui.errorFileIds.includes(file.id));
   const pageCount = file.processedFile?.totalPages || 0;
   const {
     isEncrypted,
@@ -300,9 +305,12 @@ const FileEditorThumbnail = ({
   const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   const policyEnforcing = policies.some((p) => p.enforcing);
-  // Accent of the policy currently enforcing, so the overlay's icon/spinner match
-  // that policy's badge instead of a fixed blue.
-  const enforcingAccent = policies.find((p) => p.enforcing)?.accentColor;
+  // The policy currently enforcing, so the overlay's icon/spinner match that
+  // policy's badge instead of a fixed blue.
+  const enforcingPolicy = policies.find((p) => p.enforcing);
+  // A non-blocking run (e.g. classification tagging) — indicated by a small
+  // top-right chip instead of the blocking overlay.
+  const backgroundPolicy = policies.find((p) => p.background && !p.enforcing);
 
   const hoverActions = useMemo<HoverAction[]>(() => {
     const uploadLabel = isUploaded
@@ -568,7 +576,8 @@ const FileEditorThumbnail = ({
               <PolicyEnforcingOverlay
                 enforcing={policyEnforcing}
                 zIndex={2}
-                accentVar={enforcingAccent}
+                accentVar={enforcingPolicy?.accentColor}
+                categoryId={enforcingPolicy?.id}
               />
 
               {/* Thumbnail image or loading state */}
@@ -579,6 +588,9 @@ const FileEditorThumbnail = ({
                 isLoading={
                   !isEncrypted &&
                   !displayThumbnail &&
+                  // No thumbnail is ever produced at/above the parse limit, so
+                  // without this the spinner has no terminal state.
+                  file.size < LARGE_PDF_PARSE_LIMIT &&
                   (isThumbGenerating ||
                     file.type?.startsWith("application/pdf") ||
                     file.type?.startsWith("image/"))
@@ -589,6 +601,27 @@ const FileEditorThumbnail = ({
                   e.currentTarget.style.display = "none";
                 }}
               />
+
+              {backgroundPolicy && (
+                <Tooltip
+                  label={t("policy.badgeRunning", "{{name}} running...", {
+                    name: backgroundPolicy.name,
+                  })}
+                  withArrow
+                >
+                  <span className={styles.thumbBadgesRight}>
+                    <span
+                      className={styles.backgroundPolicyPill}
+                      style={{ color: backgroundPolicy.accentColor }}
+                    >
+                      {policyCategoryIcon(backgroundPolicy.id, {
+                        fontSize: 14,
+                      })}
+                      <Loader size={10} color={backgroundPolicy.accentColor} />
+                    </span>
+                  </span>
+                </Tooltip>
+              )}
 
               {/* Badges — top-left: version, pin, ownership, encrypted */}
               <div className={styles.thumbBadges}>
