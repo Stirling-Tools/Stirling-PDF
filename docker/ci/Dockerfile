@@ -24,6 +24,9 @@ RUN set -eux; \
     chmod 0755 /usr/local/bin/task; \
     rm "${archive}"
 
+RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin taskuser
+
 WORKDIR /workspace
+USER taskuser
 
 ENTRYPOINT ["task"]
