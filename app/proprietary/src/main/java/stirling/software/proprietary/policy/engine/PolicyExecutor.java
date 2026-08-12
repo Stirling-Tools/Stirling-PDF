@@ -280,16 +280,31 @@ public class PolicyExecutor {
         }
         for (Resource file : files) {
             if (!matchesType(file, accepted)) {
+                // Reports the extension rather than the filename, since this message becomes the
+                // run's error and is persisted on the failure record.
                 throw new IOException(
                         "Step "
                                 + operation
                                 + " accepts "
                                 + accepted
-                                + " but received '"
-                                + file.getFilename()
-                                + "'");
+                                + " but received a '"
+                                + extensionOf(file)
+                                + "' file");
             }
         }
+    }
+
+    /** The file's extension, or {@code unknown} when it has no usable name. */
+    private static String extensionOf(Resource file) {
+        String filename = file.getFilename();
+        if (filename == null) {
+            return "unknown";
+        }
+        int dot = filename.lastIndexOf('.');
+        if (dot < 0 || dot == filename.length() - 1) {
+            return "unknown";
+        }
+        return filename.substring(dot + 1).toLowerCase(Locale.ROOT);
     }
 
     private static boolean matchesType(Resource file, List<String> acceptedExtensions) {

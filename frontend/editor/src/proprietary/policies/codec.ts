@@ -7,6 +7,7 @@
  * `policyPipeline.ts`, minus the editor-only `automation` blob.
  */
 
+import { resolveRunOn } from "@app/policies/runOn";
 import type {
   PolicyDecodedState,
   WireOutputOptions,
@@ -60,6 +61,7 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
       : raw.position === "auto-number"
         ? "auto-number"
         : "prefix";
+  const categoryId = str(raw.categoryId);
   // Selection = display metadata ∪ wire sourceIds, so policies saved before
   // sourceIds existed (sources only in options) still round-trip complete.
   const optionSources = Array.isArray(raw.sources)
@@ -70,14 +72,14 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     id: policy.id,
     name: policy.name,
     enabled: policy.enabled,
-    categoryId: str(raw.categoryId),
+    categoryId,
     sources,
     scopeTypes: Array.isArray(raw.scopeTypes)
       ? (raw.scopeTypes as string[])
       : [],
     reviewerEmail: str(raw.reviewerEmail),
     fieldValues: raw.fieldValues ?? {},
-    runOn: raw.runOn === "export" ? "export" : "upload",
+    runOn: resolveRunOn(raw.runOn, categoryId),
     outputMode: raw.mode === "new_file" ? "new_file" : "new_version",
     outputName: str(raw.name),
     outputNamePosition: position,

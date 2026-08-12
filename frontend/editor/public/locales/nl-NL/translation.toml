@@ -46,10 +46,8 @@ filesSelected = "Bestanden geselecteerd"
 font = "Lettertype"
 fontSizeTooltip = "Grootte van de paginanummertekst in punten. Grotere getallen geven grotere tekst."
 fontTypeTooltip = "Lettertypefamilie voor de paginanummers. Kies passend bij de stijl van uw document."
-genericSubmit = "Indienen"
 green = "Groen"
 help = "Hulp"
-imgPrompt = "Selecteer afbeelding(en)"
 incorrectPasswordMessage = "Huidige wachtwoord is onjuist."
 info = "Informatie"
 invalidUndoData = "Kan niet ongedaan maken: ongeldige bewerkingsgegevens"
@@ -62,7 +60,6 @@ loginAgreementTitle = "Inlogovereenkomst"
 logOut = "Uitloggen"
 marginTooltip = "Afstand tussen het paginanummer en de rand van de pagina."
 moreOptions = "Meer opties"
-multiPdfPrompt = "PDF's (2+) selecteren"
 never = "Nooit"
 no = "Nee"
 noFileSelected = "Geen bestand geselecteerd. Upload er een."
@@ -80,7 +77,6 @@ pageOrderPrompt = "Aangepaste pagina volgorde (Voer een komma-gescheiden lijst v
 pages = "Pagen"
 pageSelectionPrompt = "Aangepaste pagina selectie (Voer een komma-gescheiden lijst van paginanummer 1,5,6 of functies zoals 2n+1 in) :"
 password = "Wachtwoord"
-pdfPrompt = "PDF(-en) selecteren"
 pin = "Bestand vastzetten (actief houden na tooluitvoering)"
 pro = "Pro"
 processingComplete = "Je bestand is klaar."
@@ -356,6 +352,7 @@ text = "Deze machtigingen bepalen wat gebruikers met de PDF kunnen doen. Het mee
 title = "Rechten wijzigen"
 
 [addStamp]
+preview = "Stempelvoorbeeld"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -691,6 +688,165 @@ manualLinks = "Handmatige downloads: klik op de links en plaats de bestanden in 
 noLanguages = "Geen tessdata-talen gevonden in de geconfigureerde map."
 permissionNotice = "Het tessdata-pad is niet schrijfbaar. Downloads worden in de browser geopend; sla de .traineddata-bestanden handmatig op in de tessdata-map."
 
+[admin.settings.ai.documents]
+description = "Configureer het embedding-model en de ophaalinstellingen die worden gebruikt om vragen over documenten te beantwoorden. Toegepast op de AI engine bij opslaan."
+title = "Documenten & RAG"
+
+[admin.settings.ai.documents.embeddingApiKey]
+description = "Laat leeg om de eigen omgevingsreferentie van de engine te gebruiken. Van toepassing op zelfgehoste single-engine-implementaties."
+generic = "Embedding API key"
+openai = "OpenAI API key"
+setPlaceholder = "Opgeslagen - laat leeg om de huidige key te behouden"
+voyageai = "VoyageAI API key"
+
+[admin.settings.ai.documents.embeddingBaseUrl]
+description = "Base URL van het OpenAI-compatibele / Ollama embeddings-endpoint, bijv. http://ollama:11434/v1. Moet verwijzen naar een vertrouwd intern endpoint (SSRF-gevoelig)."
+label = "Embedding base URL"
+
+[admin.settings.ai.documents.embeddingModel]
+description = "Naam van het embedding-model. Vrije tekst; suggesties zijn alleen hints."
+label = "Embedding-model"
+
+[admin.settings.ai.documents.embeddingProvider]
+description = "Provider die wordt gebruikt om documenttekst om te zetten in vector-embeddings."
+label = "Embedding-provider"
+
+[admin.settings.ai.documents.maxSearches]
+description = "Maximumaantal ophaalzoekopdrachten dat de agent per verzoek mag uitvoeren."
+label = "Max. zoekopdrachten"
+
+[admin.settings.ai.documents.reindexNote]
+body = "Het wijzigen van het embedding-model wordt direct van kracht, maar documenten die met het vorige model zijn geïndexeerd, moeten opnieuw worden geïndexeerd zodat zoeken juiste resultaten oplevert."
+title = "Opnieuw indexeren vereist"
+
+[admin.settings.ai.documents.saved]
+reindexNote = "Als je het embedding-model hebt gewijzigd, indexeer bestaande documenten dan opnieuw zodat zoeken het nieuwe model gebruikt."
+
+[admin.settings.ai.documents.topK]
+description = "Aantal meest relevante chunks dat per zoekopdracht wordt opgehaald."
+label = "Top K"
+
+[admin.settings.ai.general]
+description = "Verbind Stirling met de Python AI engine en kies welke AI-mogelijkheden beschikbaar zijn. Wijzigingen worden toegepast na herstart."
+title = "AI Engine"
+
+[admin.settings.ai.general.capabilities]
+description = "Schakel afzonderlijke AI-functies in of uit. Uitgeschakelde functies worden verborgen in de app."
+title = "Mogelijkheden"
+
+[admin.settings.ai.general.enabled]
+description = "Hoofdschakelaar. Wanneer uitgeschakeld, zijn er geen AI-tools, agents of engine-aanroepen beschikbaar."
+label = "AI inschakelen"
+
+[admin.settings.ai.general.features.chat]
+description = "Gespreksassistent voor werken met PDFs."
+label = "Chatassistent"
+
+[admin.settings.ai.general.features.classify]
+description = "Categoriseer documenten automatisch op type of inhoud."
+label = "Documentclassificatie"
+
+[admin.settings.ai.general.features.createPdf]
+description = "Genereer een nieuwe PDF (bijv. vanuit HTML) via een AI agent."
+label = "PDF maken vanuit prompt"
+
+[admin.settings.ai.general.features.documentQuestions]
+description = "Stel vragen en krijg antwoorden op basis van een geüpload document."
+label = "Documentvragen"
+
+[admin.settings.ai.general.features.mathAuditor]
+description = "Controleer documenten op wiskundige en numerieke fouten."
+label = "Wiskunde-auditor"
+
+[admin.settings.ai.general.features.pdfComment]
+description = "Voeg door AI geschreven beoordelingsopmerkingen en annotaties toe aan een PDF."
+label = "PDF-opmerkingenagent"
+
+[admin.settings.ai.general.longRunningTimeoutSeconds]
+description = "Time-out voor zwaardere agentbewerkingen zoals documentgeneratie."
+label = "Time-out voor langlopende taken (seconden)"
+
+[admin.settings.ai.general.note]
+body = "De AI engine draait als een aparte service. Het gedeelde geheim"
+body2 = "wordt ingesteld via een containeromgevingsvariabele. Provider API keys kunnen op deze pagina's worden ingevoerd of als engine-omgevingsvariabelen worden opgegeven; keys die hier worden ingevoerd, worden bij opslaan naar de engine gepusht."
+title = "Over de AI engine"
+
+[admin.settings.ai.general.streamTimeoutSeconds]
+description = "Time-out voor gestreamde (token-voor-token) chatantwoorden."
+label = "Stream-time-out (seconden)"
+
+[admin.settings.ai.general.test]
+button = "Verbinding testen"
+failBody = "De AI engine reageerde niet. Controleer de URL, of de engine-container draait en of AI is ingeschakeld (na inschakelen is een herstart nodig)."
+failTitle = "AI engine onbereikbaar"
+okBody = "De AI engine reageerde op een health check."
+okTitle = "AI engine bereikbaar"
+
+[admin.settings.ai.general.timeoutSeconds]
+description = "Time-out voor standaard AI-verzoeken aan de engine."
+label = "Verzoektime-out (seconden)"
+
+[admin.settings.ai.general.url]
+description = "Interne URL van de Python AI engine, bijv. http://stirling-pdf-engine:5001."
+label = "AI engine URL"
+
+[admin.settings.ai.limits]
+description = "Vangrails voor hoeveel werk AI-verzoeken mogen uitvoeren en hoeveel er gelijktijdig draaien. Toegepast op de AI engine bij opslaan."
+title = "Limieten & prestaties"
+
+[admin.settings.ai.limits.maxCharacters]
+description = "Vangrail: wijs AI-verzoeken af waarvan de geëxtraheerde tekst deze lengte overschrijdt."
+label = "Max. tekens per verzoek"
+
+[admin.settings.ai.limits.maxPages]
+description = "Vangrail: wijs AI-verzoeken af met meer dan dit aantal PDF-pagina's."
+label = "Max. pagina's per verzoek"
+
+[admin.settings.ai.limits.modelMaxConcurrency]
+description = "Maximumaantal gelijktijdige modelaanroepen in uitvoering over de hele engine."
+label = "Max. gelijktijdigheid model"
+
+[admin.settings.ai.models]
+description = "Kies de LLM-provider en de slimme/snelle modellen die de AI engine gebruikt. Toegepast op de AI engine bij opslaan."
+title = "Modellen & providers"
+
+[admin.settings.ai.models.apiKey]
+anthropic = "Anthropic API key"
+description = "Laat leeg om de eigen omgevingsreferentie van de engine te gebruiken. Van toepassing op zelfgehoste single-engine-implementaties."
+generic = "API key"
+openai = "OpenAI API key"
+setPlaceholder = "Opgeslagen - laat leeg om de huidige key te behouden"
+
+[admin.settings.ai.models.baseUrl]
+description = "Base URL van het OpenAI-compatibele / Ollama-endpoint, bijv. http://ollama:11434/v1."
+label = "Provider base URL"
+warning = "De base URL moet verwijzen naar een vertrouwd intern endpoint. De engine doet er server-side verzoeken naartoe, dus een niet-vertrouwde waarde is SSRF-gevoelig."
+
+[admin.settings.ai.models.fastMaxTokens]
+description = "Maximumaantal outputtokens voor het snelle model."
+label = "Max. tokens snel model"
+
+[admin.settings.ai.models.fastModel]
+description = "Goedkoper, sneller model voor lichte taken. Vrije tekst; suggesties zijn alleen hints."
+label = "Snel model"
+
+[admin.settings.ai.models.provider]
+description = "Met welke LLM-provider de engine communiceert."
+label = "Provider"
+
+[admin.settings.ai.models.smartMaxTokens]
+description = "Maximumaantal outputtokens voor het slimme model."
+label = "Max. tokens slim model"
+
+[admin.settings.ai.models.smartModel]
+description = "Model met hoge capaciteit voor complexe redeneringen. Vrije tekst; suggesties zijn alleen hints."
+label = "Slim model"
+
+[admin.settings.ai.saved]
+body = "Wijzigingen worden automatisch naar de AI engine gepusht."
+bodyNoPush = "Instellingen opgeslagen. Ze worden toegepast de volgende keer dat de AI engine de configuratie ophaalt."
+title = "AI-instellingen opgeslagen"
+
 [admin.settings.badge]
 clickToUpgrade = "Click to view plan details"
 
@@ -937,6 +1093,25 @@ label = "Opnieuw genereren bij opstarten"
 [admin.settings.features.serverCertificate.validity]
 description = "Aantal dagen dat het certificaat geldig is"
 label = "Certificaatgeldigheid (dagen)"
+
+[admin.settings.folderAccess]
+description = "Mappen waaruit mapbronnen en mapuitvoer mogen lezen en naar mogen schrijven. Dit is een beveiligingsgrens: automatiseringen kunnen nooit naar een serverpad buiten deze lijst worden verwezen."
+securityNote = "Laat dit leeg om mapbronnen en mapuitvoer volledig uit te schakelen. De eigen configuratiemap van Stirling is altijd verboden terrein."
+title = "Maptoegang"
+
+[admin.settings.folderAccess.implied]
+description = "Deze door Stirling beheerde mappen zijn altijd toegestaan en kunnen hier niet worden gewijzigd."
+serverStorage = "Serverbestandsopslag"
+title = "Altijd toegestaan"
+watchedFolder = "Bewaakte Pipeline-map"
+
+[admin.settings.folderAccess.roots]
+add = "Toevoegen"
+empty = "Geen mappen toegestaan. Mapbronnen en mapuitvoer zijn momenteel uitgeschakeld."
+hint = "Voer absolute paden in, bijvoorbeeld /data/inbox."
+label = "Toegestane maproots"
+placeholder = "/data/inbox"
+remove = "Maproot verwijderen"
 
 [admin.settings.general]
 description = "Configureer toepassingsinstellingen voor het hele systeem, inclusief branding en standaardgedrag."
@@ -1842,6 +2017,15 @@ export = "Exporteren"
 accessDenied = "Toegang geweigerd"
 insufficientPermissions = "U hebt geen toestemming om deze actie uit te voeren."
 
+[auth.callback]
+completing = "Authenticatie voltooien"
+invalidToken = "OAuth-aanmelding mislukt - ongeldig token."
+missingToken = "OAuth-aanmelding mislukt - geen token ontvangen."
+oauthFailed = "OAuth-aanmelding mislukt. Probeer het opnieuw."
+pleaseWait = "Even geduld terwijl we je aanmelding afronden."
+signedOut = "Je bent afgemeld. Meld je opnieuw aan."
+windowMayClose = "Je kunt dit venster sluiten zodra dit is voltooid."
+
 [auth.displayName]
 guest = "Gast"
 user = "Gebruiker"
@@ -1986,6 +2170,73 @@ secureWorkflowDesc = "Beveiligt PDF-documenten door mogelijk kwaadaardige inhoud
 [autoRename]
 description = "Deze tool hernoemt PDF-bestanden automatisch op basis van hun inhoud. Het analyseert het document om de meest geschikte titel uit de tekst te vinden."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+
+[autoRotate]
+submit = "Automatisch roteren"
+tags = "automatisch roteren,oriëntatie herstellen,ondersteboven,zijwaarts,rechttrekken,oriënteren,oriëntatie detecteren,rotatie corrigeren,automatisch oriënteren,gescand,OSD"
+
+[autoRotate.confidenceThreshold]
+title = "Betrouwbaarheidsdrempel"
+
+[autoRotate.detectionMode]
+auto = "Automatisch"
+osd = "Alleen OCR"
+text = "Alleen tekst"
+title = "Detectiemethode"
+
+[autoRotate.error]
+failed = "Er is een fout opgetreden bij het automatisch roteren van de PDF."
+
+[autoRotate.inferUndetected]
+title = "Pagina's met lage betrouwbaarheid mee roteren"
+
+[autoRotate.report]
+applied = "{{degrees}}° met de klok mee"
+confidenceValue = "Betrouwbaarheid {{value}}"
+noChange = "Geen wijziging"
+pageLabel = "Pagina {{number}}"
+summary = "{{rotated}} van {{total}} pagina's geroteerd, {{unchanged}} ongewijzigd gelaten"
+title = "Detectierapport"
+
+[autoRotate.report.method]
+inferred = "Overeenkomend"
+none = "Overgeslagen"
+osd = "OCR"
+text = "Tekst"
+
+[autoRotate.report.note]
+belowThreshold = "Onder drempel"
+blankPage = "Pagina is leeg"
+inferredFromDocument = "Hetzelfde als de andere pagina's"
+noDominantDirection = "Gemengde tekstrichtingen"
+osdFailed = "Geen leesbare tekst gevonden"
+osdNoVerdict = "Kon niet bepalen wat boven is"
+tesseractUnavailable = "OCR niet geïnstalleerd"
+tooFewGlyphs = "Te weinig tekst"
+
+[autoRotate.results]
+title = "Resultaten automatisch roteren"
+
+[autoRotate.settings]
+title = "Instellingen"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "Hoe zeker de controle moet zijn voordat een pagina wordt gedraaid. Verlaag dit om meer pagina's te roteren, verhoog dit om meer pagina's ongemoeid te laten."
+title = "Betrouwbaarheidsdrempel"
+
+[autoRotate.tooltip.description]
+text = "Bepaalt hoe elke pagina rechtop moet staan en draait deze de juiste kant op. Pagina's die al rechtop staan, blijven ongemoeid."
+
+[autoRotate.tooltip.detectionMode]
+text = "Automatisch leest eerst de tekst op de pagina en bekijkt daarna de pagina als afbeelding als dat niet genoeg is. Alleen tekst slaat de afbeeldingscontrole over, wat het snelst is voor documenten die nooit zijn gescand. Alleen OCR behandelt elke pagina als afbeelding."
+title = "Detectiemethode"
+
+[autoRotate.tooltip.header]
+title = "Automatisch roteren"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Lege of bijna lege pagina's kunnen niet afzonderlijk worden gecontroleerd. Wanneer elke leesbare pagina dezelfde draai nodig heeft, worden deze pagina's mee gedraaid zodat ze overeenkomen."
+title = "Pagina's met lage betrouwbaarheid mee roteren"
 
 [autoSizeSplitPDF]
 tags = "pdf,splitsen,document,organiseren"
@@ -2188,33 +2439,6 @@ title = "Syntaxisbasis"
 keywords = "Sleutelwoorden: odd, even"
 numbers = "Cijfers/reeksen: 5, 10-20"
 progressions = "Voortgangen: 3n, 4n+1"
-
-[certificateChoice.tooltip]
-header = "Certificaattypen"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "Beheerd door systeembeheerders"
-bullet2 = "Gedeeld met geautoriseerde gebruikers"
-bullet3 = "Vertegenwoordigt bedrijfsidentiteit, niet individueel"
-bullet4 = "Beste voor: Officiële documenten, teamhandtekeningen"
-description = "Een gedeeld certificaat dat door uw organisatie wordt geleverd. Gebruikt voor organisatiebrede ondertekeningsbevoegdheid."
-title = "Organisatiecertificaat"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "Automatisch gegenereerd bij eerste gebruik"
-bullet2 = "Gekoppeld aan uw gebruikersaccount"
-bullet3 = "Kan niet met andere gebruikers worden gedeeld"
-bullet4 = "Beste voor: Persoonlijke documenten, individuele verantwoordelijkheid"
-description = "Een automatisch gegenereerd certificaat dat uniek is voor uw gebruikersaccount. Geschikt voor individuele handtekeningen."
-title = "Persoonlijk certificaat"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "Vereist P12/PFX-bestand en wachtwoord"
-bullet2 = "Kan worden uitgegeven door externe certificaatautoriteiten"
-bullet3 = "Hoger vertrouwensniveau voor juridische documenten"
-bullet4 = "Beste voor: Juridisch bindende contracten, externe validatie"
-description = "Gebruik uw eigen PKCS#12-certificaatbestand. Biedt volledige controle over certificaateigenschappen."
-title = "Aangepaste P12 uploaden"
 
 [certSign]
 awaitingSignatures = "In afwachting van handtekeningen"
@@ -2542,34 +2766,6 @@ server = "Server"
 stepTitle = "Certificaatbron"
 upload = "Uploaden"
 
-[certSign.tooltip.header]
-title = "Over het beheren van handtekeningen"
-
-[certSign.tooltip.overview]
-bullet1 = "Controleer bestaande handtekeningen en hun geldigheid"
-bullet2 = "Bekijk gedetailleerde informatie over ondertekenaars en certificaten"
-bullet3 = "Voeg nieuwe digitale handtekeningen toe om uw documenten te beveiligen"
-bullet4 = "Meerdere bestanden ondersteund met eenvoudige navigatie"
-text = "Met deze tool kunt u controleren of uw PDF's digitaal zijn ondertekend en nieuwe digitale handtekeningen toevoegen. Digitale handtekeningen bewijzen wie een document heeft gemaakt of goedgekeurd en tonen of het sinds de ondertekening is gewijzigd."
-title = "Wat kan deze tool doen?"
-
-[certSign.tooltip.signing]
-bullet1 = "Ondersteunt PEM, PKCS12, JKS en servercertificaatformaten"
-bullet2 = "Optie om de handtekening op de PDF te tonen of te verbergen"
-bullet3 = "Reden, locatie en naam van ondertekenaar toevoegen"
-bullet4 = "Kies op welke pagina zichtbare handtekeningen worden geplaatst"
-bullet5 = "Gebruik servercertificaat voor de eenvoudige optie 'Ondertekenen met Stirling-PDF'"
-text = "Om een PDF te ondertekenen, hebt u een digitaal certificaat nodig (zoals PEM, PKCS12 of JKS). U kunt ervoor kiezen de handtekening zichtbaar te maken in het document of onzichtbaar te laten voor alleen beveiliging."
-title = "Handtekeningen toevoegen"
-
-[certSign.tooltip.validation]
-bullet1 = "Toont of handtekeningen geldig of ongeldig zijn"
-bullet2 = "Toont informatie over ondertekenaar en datum van ondertekening"
-bullet3 = "Controleert of het document na ondertekening is gewijzigd"
-bullet4 = "Kan aangepaste certificaten gebruiken voor verificatie"
-text = "Wanneer u handtekeningen controleert, geeft de tool aan of ze geldig zijn, wie het document heeft ondertekend, wanneer het is ondertekend en of het document na ondertekening is gewijzigd."
-title = "Handtekeningen controleren"
-
 [changeCreds]
 changeUsername = "Werk uw gebruikersnaam bij. U wordt uitgelogd na het bijwerken."
 credsUpdated = "Account bijgewerkt"
@@ -2824,6 +3020,7 @@ next = "Volgende"
 preview = "Voorbeeld"
 previous = "Vorige"
 refresh = "Vernieuwen"
+remaining = "Resterend"
 retry = "Opnieuw proberen"
 save = "Opslaan"
 
@@ -3264,24 +3461,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits.modal]
-advancedMonitoring = "Geavanceerde monitoring"
-allInOneWorkspace = "Alles-in-één PDF-werkruimte (viewer, tools & agent)"
-apiSandbox = "API-sandbox"
-dedicatedSupportSlas = "Toegewijde support & SLA's"
-fasterThroughput = "10x snellere doorvoer"
-fullyPrivateFiles = "Volledige bestandsprivacy"
-largeFileProcessing = "Verwerking van grote bestanden"
-orgWideAccess = "Organisatiebrede toegangscontrole"
-premiumAiModels = "Premium AI-modellen"
-prioritySupport = "Prioritaire support"
-privateDocCloud = "Privé Document Cloud"
-ragFineTuning = "RAG + fine-tuning"
-secureApiAccess = "Beveiligde API-toegang"
-standardThroughput = "Standaard doorvoer"
-unlimitedApiAccess = "Onbeperkte API-toegang"
-unlimitedSeats = "Onbeperkte seats"
-
 [crop]
 autoCrop = "Witruimte autom. bijsnijden"
 noFileSelected = "Selecteer een PDF-bestand om te beginnen met bijsnijden"
@@ -3346,6 +3525,7 @@ message = "Standaard PDF-verwerker instellen mislukt"
 title = "Fout"
 
 [defaultApp.prompt]
+dontRemind = "Herinner mij niet opnieuw"
 message = "Maak Stirling PDF de standaardapp voor het openen van PDF-bestanden."
 
 [defaultApp.settingsOpened]
@@ -3697,10 +3877,10 @@ customizeGroups = "Groepen aanpassen"
 dropHint = "Open bestanden om te beginnen"
 dropToAdd = "Drop files to add"
 expand = "Zijbalk uitvouwen"
-files = "Bestanden"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive is niet geconfigureerd"
 leaveMyFiles = "Mijn bestanden verlaten"
+library = "PDF-bibliotheek"
 myFiles = "Mijn bestanden"
 noFiles = "Nog geen bestanden"
 openFileManager = "Bestandsbeheer openen"
@@ -3723,19 +3903,8 @@ uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
-add = "Toevoegen"
-addLabel = "Een label toevoegen…"
-categoryIconAria = "Kies een pictogram voor {{name}}"
-createCategory = "Categorie maken"
-delete = "Categorie verwijderen"
 done = "Gereed"
-hide = "Categorie verbergen"
-newCategory = "Nieuwe categorienaam…"
-removeLabel = "{{name}} verwijderen"
-rename = "Naam wijzigen"
 reset = "Terugzetten naar standaardinstellingen"
-search = "Labels zoeken…"
-show = "Categorie tonen"
 subtitle = "Groepeer je bestanden in hoofdcategorieën. Voeg bestaande of nieuwe labels toe aan een categorie, wijzig de naam ervan of maak je eigen categorie. Bestanden die in geen van je categorieën staan, verschijnen onder “Overig”."
 title = "Zijbalkcategorieën"
 
@@ -3808,6 +3977,7 @@ refresh = "Vernieuwen vanaf server"
 remove = "Verwijderen"
 removeVersion = "Deze versie verwijderen"
 rename = "Naam wijzigen"
+renamed = "Hernoemd"
 renameFolder = "Mapnaam wijzigen"
 resizeFolderTree = "Mapstructuur vergroten/verkleinen (pijltjestoetsen, Shift voor grotere stappen; dubbelklik om automatisch te passen)"
 save = "Opslaan"
@@ -3910,9 +4080,7 @@ count = "Bestanden"
 folder = "Map"
 labels = "Labels"
 modified = "Gewijzigd"
-name = "Naam"
 size = "Grootte"
-toolHistoryAtVersion = "Cumulatieve toolketen"
 totalSize = "Totale grootte"
 type = "Type"
 versionHistory = "Versietraject"
@@ -4072,10 +4240,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "Alles opgeslagen"
+extractCsvError = "CSV extraheren mislukt"
+extractXlsxError = "XLSX extraheren mislukt"
 flattenAfterFilling = "Afvlakken na invullen"
+requiredAbbreviation = "verpl."
+requiredFieldsError = "Vul alle verplichte velden in"
 rescanFields = "Velden opnieuw scannen"
 rescanFormFields = "Formuliervelden opnieuw scannen"
 save = "Opslaan"
+saveShortcut = "Ctrl+S om op te slaan"
+unsavedChanges = "Niet-opgeslagen wijzigingen"
 
 [formFill.sidebar]
 close = "Zijbalk sluiten"
@@ -4308,6 +4483,11 @@ title = "Automatiseren"
 desc = "Hernoemt een PDF-bestand automatisch op basis van de gedetecteerde kop"
 tags = "automatisch detecteren,op kop gebaseerd,organiseren,herlabelen"
 title = "PDF automatisch hernoemen"
+
+[home.autoRotate]
+desc = "Detecteer de oriëntatie van elke pagina en roteer deze automatisch rechtop."
+tags = "automatisch roteren,oriëntatie herstellen,ondersteboven,zijwaarts,rechttrekken,oriënteren,oriëntatie detecteren,rotatie corrigeren,automatisch oriënteren,gescand,OSD"
+title = "Automatisch roteren"
 
 [home.autoSizeSplitPDF]
 tags = "auto,splitsen,grootte"
@@ -4608,12 +4788,12 @@ hint = "Upload een PNG, JPG, SVG of ander afbeeldingsbestand om op de PDF te pla
 label = "Afbeelding uploaden"
 placeholder = "Afbeeldingsbestand selecteren"
 
-[imageToPdf]
-tags = "conversie,img,jpg,foto"
-
 [imageToPDF]
 header = "Afbeelding naar PDF"
 title = "Afbeelding naar PDF"
+
+[imageToPdf]
+tags = "conversie,img,jpg,foto"
 
 [infoBanner]
 dismiss = "Negeren"
@@ -4647,11 +4827,9 @@ welcomeTitle = "U bent uitgenodigd!"
 
 [landing]
 addFiles = "Bestanden toevoegen"
-heroSubtitle = "Sleep of voeg een bestaande PDF toe om te beginnen."
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Openen vanaf computer"
 uploadFromComputer = "Uploaden vanaf computer"
-workbenchEmptyStateHero = "Zet ergens een PDF neer"
 
 [language]
 direction = "ltr"
@@ -4691,7 +4869,6 @@ enterUsername = "Voer een gebruikersnaam in"
 failedToSignIn = "Inloggen met {{provider}} mislukt: {{message}}"
 forgotPassword = "Wachtwoord vergeten?"
 loggingIn = "Inloggen..."
-logIn = "Inloggen"
 login = "Inloggen"
 magicLinkSent = "Magic link verzonden naar {{email}}! Controleer uw e-mail en klik op de link om in te loggen."
 mfaCode = "Authenticatiecode"
@@ -4715,25 +4892,9 @@ signInWith = "Inloggen met"
 title = "Inloggen"
 unexpectedError = "Onverwachte fout: {{message}}"
 updatePassword = "Wachtwoord bijwerken"
-useEmailInstead = "Inloggen met e-mail"
 useMagicLink = "Gebruik in plaats daarvan een magic link"
 username = "Gebruikersnaam"
 youAreLoggedIn = "U bent ingelogd!"
-
-[login.slides.edit]
-alt = "PDF's bewerken"
-subtitle = "Met meer dan een dozijn tools om PDF's te anonimiseren, ondertekenen, lezen en bewerken vindt u zeker wat u zoekt."
-title = "Bewerk PDF's om de gewenste informatie te tonen/beveiligen"
-
-[login.slides.overview]
-alt = "Stirling PDF-overzicht"
-subtitle = "Een privacy-first cloud suite voor PDF's waarmee u documenten kunt converteren, ondertekenen, anonimiseren en beheren, plus 50+ andere krachtige tools."
-title = "Uw alles-in-een oplossing voor al uw PDF-behoeften."
-
-[login.slides.secure]
-alt = "PDF's beveiligen"
-subtitle = "Voeg wachtwoorden toe, anonimiseer inhoud en beheer certificaten met gemak."
-title = "Bescherm gevoelige informatie in uw PDF's"
 
 [margin]
 large = "Groot"
@@ -4976,6 +5137,7 @@ pinButton = "U kunt de knop <strong>Vastzetten</strong> gebruiken als u wilt dat
 results = "Nadat de tool klaar is met uitvoeren, toont de stap <strong>Beoordeling</strong> een voorbeeld van de resultaten in dit paneel, en kunt u de bewerking ongedaan maken of het bestand downloaden."
 runButton = "Zodra de tool is geconfigureerd, kunt u met deze knop de tool uitvoeren op alle geselecteerde PDF's."
 selectCropTool = "Laten we de tool <strong>Bijsnijden</strong> selecteren om te laten zien hoe u een van de tools gebruikt."
+stepOf = "Stap {{current}} van {{total}}"
 toolInterface = "Dit is de interface van de tool <strong>Bijsnijden</strong>. Zoals u ziet is er nog niet veel, omdat we nog geen PDF-bestanden hebben toegevoegd om mee te werken."
 workbench = "Dit is de <strong>Werkbank</strong> - het hoofdgebied waar u uw PDF's bekijkt en bewerkt."
 wrapUp = "U bent er klaar voor! U kent de belangrijkste onderdelen van de app en hoe u ze gebruikt. Klik wanneer u wilt op de knop <strong>Help</strong> om deze rondleiding opnieuw te zien."
@@ -4988,6 +5150,26 @@ showMeAround = "Geef me een rondleiding"
 skipForNow = "Voor nu overslaan"
 skipTheTour = "Rondleiding overslaan"
 
+[onboarding.checklist]
+dismiss = "Sluiten"
+title = "Stirling PDF instellen"
+
+[onboarding.checklist.downloadDesktop]
+description = "Draai Stirling native op je machine"
+title = "Stirling voor Desktop downloaden"
+
+[onboarding.checklist.inviteTeam]
+description = "Werk samen met je team"
+title = "Teamleden uitnodigen"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help Stirling verbeteren"
+title = "Anonieme gebruiksgegevens delen"
+
+[onboarding.checklist.takeTour]
+description = "Bekijk in een korte rondleiding hoe Stirling werkt"
+title = "Rondleiding starten"
+
 [onboarding.desktopInstall]
 body = "Stirling werkt het best als desktopapp. U kunt het offline gebruiken, sneller documenten openen en lokaal op uw computer bewerken."
 selectOs = "Besturingssysteem selecteren"
@@ -4996,7 +5178,21 @@ titleWithOs = "Downloaden voor {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Authenticatiecode"
+description = "Beveilig je account door een authenticator-app te koppelen. Scan de QR code of voer de instelsleutel in en bevestig daarna de 6-cijferige code om af te ronden."
+enable = "MFA inschakelen"
+enableError = "Kan tweefactorauthenticatie niet inschakelen. Controleer de code en probeer het opnieuw."
+enterCode = "Voer de 6-cijferige code uit je app in."
+enterCodeError = "Voer de authenticatiecode in om door te gaan."
+logout = "Uitloggen"
+openAuthenticator = "Open Google Authenticator, Authy of 1Password."
 qrCodeLoading = "Uw QR-code genereren…"
+regenerateQrCode = "QR code opnieuw genereren"
+scanQrCode = "Scan de QR code of voer hieronder de instelsleutel in."
+setupError = "Kan tweefactorinstelling niet starten. Probeer het opnieuw."
+setupKey = "Instelsleutel (handmatige invoer)"
+stepByStep = "Stap voor stap"
+success = "MFA is ingeschakeld. Je kunt nu doorgaan."
+title = "Multi-Factor Authentication instellen"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Zodra u de loginmodus inschakelt, kunt u gebruikers beheren, instellingen configureren en de servergezondheid monitoren. De eerste <strong>{{freeTierLimit}}</strong> personen op uw server gebruiken Stirling gratis."
@@ -5004,6 +5200,11 @@ adminBodyLoginEnabled = "Als admin kunt u gebruikers beheren, instellingen confi
 adminTitle = "Admin-overzicht"
 userBody = "Nodig teamgenoten uit, wijs rollen toe en houd uw documenten georganiseerd in één veilige werkruimte. Schakel de loginmodus in wanneer u klaar bent om verder te groeien dan solo-gebruik."
 userTitle = "Abonnementoverzicht"
+
+[onboarding.processorIntro]
+body = "Stirling voert nu <strong>Beleid</strong> uit — geautomatiseerde regels die elk document classificeren, beveiligen en verwerken zodra het binnenkomt. Stel ze in en bewaak uitvoeringen in de <strong>Processor</strong>."
+cta = "Bekijk de Processor"
+title = "Bekijk de Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5400,6 +5601,28 @@ askLeader = "Only your team owner can change the cap."
 docs = "PDFs"
 subtitle = "Billable PDFs each teammate has processed this period."
 title = "Team member usage"
+
+[payg.prepaid]
+chip = "Vooruitbetaald jaar"
+
+[payg.prepaid.banner]
+exhausted = "Je vooruitbetaalde capaciteit is opgebruikt; gefactureerd gebruik is hervat. Waardeer op om de korting te behouden."
+expiring_one = "Je vooruitbetaalde jaar eindigt over {{count}} dag. Ongebruikte capaciteit verloopt — waardeer op om een nieuw jaar te starten."
+expiring_other = "Je vooruitbetaalde jaar eindigt over {{count}} dagen. Ongebruikte capaciteit verloopt — waardeer op om een nieuw jaar te starten."
+low = "Je hebt nog {{pct}}% van je vooruitbetaalde capaciteit over. Waardeer op elk moment op om verwerking zonder onderbreking voort te zetten."
+
+[payg.prepaid.card]
+subtitle = "Gebruikt vóór gefactureerd gebruik en buiten je bestedingslimiet."
+title = "Vooruitbetaalde capaciteit"
+
+[payg.prepaid.meter]
+capSuffix = "van {{total}} vooruitbetaalde credits"
+expires = "Verloopt {{date}}"
+
+[payg.prepaid.state]
+exhausted = "Opgebruikt"
+healthy = "Ruim voldoende over"
+low = "Bijna op"
 
 [payg.role]
 leader = "Team owner"
@@ -5937,48 +6160,11 @@ keyDescription = "Plak de licentiesleutel uit uw e-mail"
 success = "Licentie geactiveerd!"
 successMessage = "Uw licentie is met succes geactiveerd. U kunt dit venster nu sluiten."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "afgedwongen"
-enforcing = "Bezig met afdwingen..."
-failed = "Afdwingen mislukt"
 outputsUnavailable = "Beleidsuitvoer is niet langer beschikbaar om te downloaden."
 partialOutputsUnavailable = "Sommige beleidsuitvoer is niet langer beschikbaar om te downloaden."
-retrying = "Bezig, opnieuw proberen..."
 runNotFound = "De afdwingingsuitvoering kon niet meer worden gevonden."
-step = "stap {{current}}/{{total}}"
 timedOut = "Time-out bij afdwingen voordat de uitvoering kon worden voltooid."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Sluiten"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "Bezig met toepassen van {{names}}"
@@ -5989,61 +6175,16 @@ failureBody = "{{failures}} van {{total}} bestand(en) konden niet worden verwerk
 failureTitle = "Geëxporteerd zonder volledige afdwinging"
 printPolicyAppliedBody = "Deze PDF is bijgewerkt om aan een beleid te voldoen. Controleer de wijzigingen en druk vervolgens opnieuw af."
 printPolicyAppliedTitle = "Beleid toegepast vóór het afdrukken"
-queued = "+{{count}} in wachtrij"
 successTitle = "{{names}} toegepast"
 summaryMore = "{{first}}, {{second}} en nog {{more}}"
 summaryTwo = "{{first}} en {{second}}"
 
-[policies.enforcement.triggerVerb]
-convert = "Afdwingen vóór converteren"
-default = "Afdwingen"
-export = "Afdwingen vóór exporteren"
-input = "Afdwingen bij importeren"
-print = "Afdwingen vóór afdrukken"
-
-[policies.field]
-accessLog = "Toegangslog"
-archiveAfter = "Archiveren na"
-auditTrail = "Audittrail"
-belowThreshold = "Onder drempelwaarde"
-destination = "Bestemming"
-frameworks = "Frameworks"
-immutableHold = "Onveranderlijke blokkering"
-keepFor = "Bewaren gedurende"
-minConfidence = "Min. betrouwbaarheid"
-notify = "Melden bij routering"
-onViolation = "Bij niet-naleving"
-webhookUrl = "Webhook URL"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
-
 [policies.labels]
-add = "Toevoegen"
-addPlaceholder = "Een label toevoegen…"
-customNote = "Aangepast voor je team."
-defaultNote = "Gebruikt de ingebouwde standaard, gedeeld met je team."
-duplicate = "\"{{name}}\" bestaat al."
-edit = "Labels bewerken"
-empty = "Nog geen labels."
-export = "JSON exporteren"
-iconAria = "Kies een pictogram voor {{name}}"
-import = "JSON importeren"
-importError = "Kon dat bestand niet importeren."
-managedNote = "Teamlabels worden beheerd door je teamleider."
-modalSubtitle = "Gedeeld met je hele team. De classifier kiest de labels die bij elk document passen."
-modalTitle = "Classificatielabels"
-pickIcon = "Pictogram {{label}} gebruiken"
-removeAria = "{{name}} verwijderen"
-resetToDefault = "Terugzetten naar standaard"
-saveForTeam = "Opslaan voor team"
-saving = "Opslaan…"
-sectionLabel = "Classificatielabels"
-startFromScratch = "Vanaf nul beginnen"
-teamCount = "teamlabels"
-tooLong = "Labels mogen maximaal {{max}} tekens bevatten."
-ungrouped = "Niet gegroepeerd"
-view = "Labels bekijken"
+categoryCount = "categorieën"
+hideCategory = "Categorie verbergen"
+labelCount = "labels"
+sharedNote = "Deze labels zijn ingebouwd en worden gedeeld met je hele team."
+showCategory = "Categorie tonen"
 
 [policies.pii]
 account = "Rekeningnummers (gelabeld)"
@@ -6056,93 +6197,10 @@ placeholder = "Select PII types"
 routing = "US-routingnummers (ABA)"
 ssn = "Social Security-nummers"
 
-[policies.settings]
-noneExport = "Er worden momenteel geen beleidsregels uitgevoerd bij export."
-noneUpload = "Er worden momenteel geen beleidsregels uitgevoerd bij upload."
-onExport = "Bij export"
-onUpload = "Bij upload"
-reorderHandle = "Slepen om te herschikken"
-runOrderDesc = "Wanneer meer dan één beleid op dezelfde trigger wordt uitgevoerd, worden ze in deze volgorde uitgevoerd — elk op de uitvoer van het vorige beleid. Sleep om te herschikken."
-title = "Beleidsinstellingen"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Beleidsopties"
-policySettings = "Beleidsinstellingen"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Mislukte beleidsregels opnieuw proberen ({{count}})"
-rowProgress = "{{completed}} van {{total}} bestanden verwerkt"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "Wat is een beleid?"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Zoekt automatisch gevoelige gegevens en maakt ze zwart — zoals Social Security- en kaartnummers — zodat ze niet in het document kunnen worden gelezen."
-sanitize = "Verwijdert verborgen JavaScript uit het bestand, zodat er niets automatisch wordt uitgevoerd wanneer iemand het opent."
-watermark = "Plaatst een zichtbaar merkteken (bijv. \"Confidential\") over elke pagina."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Sluiten"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} wordt afgedwongen..."
 badgeRan = "{{name}}-beleid is op dit bestand uitgevoerd"
+badgeRunning = "{{name}} wordt uitgevoerd..."
 blockingAction = "{{action}} geblokkeerd tijdens afdwingen van beleid, even geduld..."
 dismiss = "Overlay sluiten"
 enforcingTitle = "Beleid afdwingen..."
@@ -6151,6 +6209,7 @@ viewAnyway = "Bestand bekijken (beleid wordt nog afgedwongen)"
 [policyOption]
 autoRedactPhi = "PHI automatisch redigeren"
 blockExport = "Export blokkeren"
+ccpa = "CCPA"
 contracts = "Contracten"
 documents = "Documenten"
 fedramp = "FedRAMP"
@@ -6269,86 +6328,6 @@ free = "Editor-abonnement"
 subscribed = "Processor-abonnement"
 unlinked = "Niet gekoppeld"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "Bootstrap vanuit document"
-sectionsAriaLabel = "Secties van Agent Builder"
-selectorAriaLabel = "Agents"
-subtitle = "Ontwerp, test en publiceer de AI-agenten die je documenten classificeren, er gegevens uit extraheren en ze routeren. Definieer scenario's, begrens tooltoegang, voer een golden set uit en publiceer een versie."
-title = "Agent Builder"
-
-[portal.agentBuilder.bootstrap]
-cancel = "Annuleren"
-dropzoneText = "Kies een voorbeelddocument (PDF of afbeelding)"
-lead = "Zet een voorbeelddocument neer en we stellen scenario's en een extractieschema voor dat je kunt verfijnen. Er wordt niets gepubliceerd totdat je het hebt beoordeeld."
-submit = "Agent bootstrappen"
-subtitle = "Start een nieuwe agent vanuit één representatief bestand"
-title = "Bootstrap vanuit een document"
-
-[portal.agentBuilder.empty]
-description = "Bootstrap een agent vanuit een voorbeelddocument om de scenario's en het extractieschema te starten, verfijn en publiceer daarna."
-title = "Nog geen agents"
-
-[portal.agentBuilder.evals]
-casesPassing = "Geslaagde cases"
-columnCase = "Eval-case"
-columnLatency = "Latentie"
-columnResult = "Resultaat"
-fail = "mislukt"
-goldenSetPassRate = "Slagingspercentage golden set"
-latencyMs = "{{ms}} ms"
-notRun = "niet uitgevoerd"
-pass = "geslaagd"
-passRate = "Slagingspercentage"
-runEvals = "Evals uitvoeren"
-
-[portal.agentBuilder.evals.empty]
-description = "Evals maken van je scenario's een herhaalbare golden set. Upgrade om het slagingspercentage in de tijd vast te leggen en publicaties daarop te blokkeren."
-title = "Nog geen golden set"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "over golden sets"
-activeAgents = "Actieve agents"
-avgPassRate = "Gem. slagingspercentage evals"
-fleetWide = "over de hele fleet"
-latestPublished = "Laatst gepubliceerd"
-scenarios = "Scenario's"
-testCases = "testcases"
-totalDescription_one = "{{count}} totaal"
-totalDescription_other = "{{count}} totaal"
-
-[portal.agentBuilder.scenarios]
-add = "Toevoegen"
-addScenario = "Scenario toevoegen"
-enable = "Inschakelen"
-expectationLabel = "Verwacht gedrag"
-expectationPlaceholder = "Wat de agent moet doen"
-inEval = "in eval"
-mute = "Dempen"
-muted = "gedempt"
-nameLabel = "Naam"
-namePlaceholder = "bijv. compliance-escalatie"
-
-[portal.agentBuilder.tabs]
-evals = "Evals"
-scenarios = "Scenario's"
-tools = "Tools"
-versions = "Versies"
-
-[portal.agentBuilder.tools]
-broadAccess = "Brede toegang"
-deniedHint = "Geselecteerde tools zijn geblokkeerd. Al het overige blijft aanroepbaar."
-deniedTools = "Geweigerde tools"
-governanceGate = "Tool-governance is beschikbaar in het Enterprise-abonnement."
-restricted = "Beperkt"
-restrictedAccess = "Beperkte tooltoegang"
-restrictedDescription = "Sta elke tool toe behalve de tools die je hieronder weigert."
-
-[portal.agentBuilder.versions]
-current = "huidig"
-historyGate = "Volledige versiegeschiedenis en rollback zijn beschikbaar in het Enterprise-abonnement."
-publish = "Publiceren"
-rollBack = "Terugdraaien"
-
 [portal.assistant]
 close = "Assistent sluiten"
 error = "Kon de assistent niet bereiken."
@@ -6365,15 +6344,43 @@ typing = "Aan het typen"
 loading = "Laden"
 redirectingToEditor = "Doorsturen naar de editor..."
 
+[portal.billing.activation]
+maybeLater = "Misschien later"
+title = "Schakel de Processor in"
+
+[portal.billing.activation.payg]
+sub = "Stel een maandelijkse limiet in. Betaal voor wat je uitvoert."
+title = "Betalen naar gebruik"
+
+[portal.billing.activation.prepay]
+badge = "2 maanden gratis"
+sub = "Eén factuur, kaart of bankoverschrijving."
+title = "Een jaar vooruitbetalen"
+
 [portal.billing.checkout]
 noClientSecret = "Edge-functie heeft geen client_secret geretourneerd."
-subtitle = "Voeg een kaart toe om door te gaan na je gratis Editor-abonnementstegoed. Stripe regelt de rest."
 title = "Processor-abonnement inschakelen"
 
 [portal.billing.checkout.activationSlow]
 body = "Je betaling is gelukt, maar activering duurt iets langer dan normaal. Het wordt automatisch ingeschakeld - sluit dit en het verschijnt hier binnenkort."
 close = "Sluiten"
 title = "Bijna klaar"
+
+[portal.billing.checkout.cap]
+amountAria = "Maandelijkse bestedingslimiet"
+back = "Terug"
+continue = "Doorgaan naar betaling"
+error = "Kan je bestedingslimiet niet instellen"
+finePrint = "Facturen worden maandelijks verstuurd. Altijd opzegbaar."
+noLimit = "Geen limiet"
+note = "Je wordt nooit boven je limiet gefactureerd. Verwerking pauzeert alleen."
+perMonth = "/ mnd"
+title = "Stel je bestedingslimiet in"
+
+[portal.billing.checkout.card]
+fields = "Kaartnummer · MM / JJ · CVC · ZIP"
+label = "Kaartgegevens"
+note = "Kaartgegevens worden verzameld door Stripe. Stirling slaat nooit PAN of CVC op."
 
 [portal.billing.checkout.error]
 title = "Kon checkout niet starten"
@@ -6383,10 +6390,9 @@ body = "Je betaling is verwerkt. We schakelen verbruiksgemeten verwerking in voo
 hint = "Houd dit venster open."
 title = "Je Processor-abonnement activeren..."
 
-[portal.billing.checkout.notConfigured]
-bodyAfter = "in de portal env om checkout in de app in te schakelen."
-bodyBefore = "Stel"
-title = "Stripe niet geconfigureerd"
+[portal.billing.checkout.pay]
+limit = "Maandelijkse bestedingslimiet {{amount}}/mnd. Verwerking pauzeert bij de limiet."
+limitNoCap = "Geen bestedingslimiet. Verwerking pauzeert niet. Facturen worden maandelijks verstuurd."
 
 [portal.billing.enterpriseUpsell]
 cta = "Stel je Enterprise-offerte samen"
@@ -6409,10 +6415,12 @@ currentPlan = "Huidig abonnement"
 freeForever = "Voor altijd gratis"
 noTeamResolved = "Er is nog geen team gekoppeld aan je wallet — vernieuw en probeer opnieuw."
 ownerOnly = "Alleen de teameigenaar kan het Processor-abonnement inschakelen."
+payInvoice = "Factuur betalen om te voltooien"
 planName = "Editor"
 ssoIncluded = "SSO inbegrepen"
 switchOnProcessor = "Processor inschakelen →"
 unlimitedUsers = "Onbeperkt aantal gebruikers"
+viewQuote = "Offerte bekijken"
 
 [portal.billing.invoices]
 columnAmount = "Bedrag"
@@ -6465,7 +6473,111 @@ segmentApiDesc = "Directe API-verzoeken"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automatiseringen en pipelines"
 segmentAutomationLabel = "Automatisering"
+sizeMultiplier = "{{formatted}} PDFs gebruikten een groottevermenigvuldiger"
+summary = "{{unique}} uniek · {{units}} meeteenheden · {{avg}} gem. per PDF"
+summaryNoRate = "{{unique}} uniek · {{units}} meeteenheden"
 unit = "verbruiksgemeten PDF's"
+unitsPending_one = "{{units}} meeteenheid wacht op sync vanaf gekoppelde instanties"
+unitsPending_other = "{{units}} meeteenheden wachten op sync vanaf gekoppelde instanties"
+
+[portal.billing.prepaid]
+capSuffix = "van {{total}} vooruitbetaalde credits"
+expires = "Verloopt {{date}}"
+eyebrow = "Vooruitbetaalde capaciteit"
+note = "Gebruikt vóór gefactureerd gebruik en buiten je bestedingslimiet."
+topUp = "Opwaarderen"
+
+[portal.billing.prepaid.buy]
+back = "Terug"
+calcTitle = "Bereken je jaarlijkse betaling"
+cancel = "Annuleren"
+cancelPurchase = "Aankoop annuleren"
+close = "Sluiten"
+continueToPayment = "Doorgaan naar betaling"
+finalise = "Afronden"
+invoiceErrorTitle = "Kan de factuur niet genereren"
+loadingTitle = "Je offerte laden"
+payTitle = "Betaal voor je jaar"
+step = "Stap {{current}} van {{total}}"
+
+[portal.billing.prepaid.calc]
+change = "Wijzigen"
+deployRow = "Implementatie"
+done = "Gereed"
+enterpriseHint = "Dit is enterprise-schaal. Bij dit volume zijn enterprise-tarieven beter dan welke selfservicekorting ook. Tariefvastheid, voorwaarden en een offerte binnen enkele minuten."
+governanceRow = "Governance"
+governanceValue = "{{label}} · {{count}} beleidsregels"
+handlesLabel = "Je Processor"
+handlesValue = "verwerkt {{volume}} credits / mnd"
+pipelinesLabel = "Pipelines"
+policiesMeta = "{{count}} beleidsregels"
+poolCaption = "Eén pool van {{credits}} credits voor het jaar. Zware maanden lenen van lichte maanden."
+priceLabel = "Je jaar · 12 maanden voor de prijs van 10"
+rateUnknown = "We tonen de exacte prijs bij het afrekenen."
+savings = "Je bespaart {{amount}} · 2 maanden gratis."
+sizingRow = "Omvang"
+sizingValue = "{{label}} · {{desc}}"
+usersLabel = "Totaal aantal gebruikers"
+
+[portal.billing.prepaid.consent]
+label = "Ik begrijp dat wanneer mijn vooruitbetaalde capaciteit is opgebruikt of na 12 maanden verloopt, verwerking automatisch doorgaat tegen het standaard gemeten pay-as-you-go-tarief (tot mijn bestedingslimiet), tenzij ik annuleer, en dat ik op elk moment kan annuleren via de billing portal."
+
+[portal.billing.prepaid.deploy]
+cloud = "Stirling Cloud"
+cloudDesc = "Beheerd door Stirling. Live binnen enkele minuten."
+cloudValue = "Stirling Cloud · Beheerd"
+selfhost = "Zelfgehost"
+selfhostDesc = "Draait op private infrastructuur. Zelfde tarief."
+selfhostValue = "Zelfgehost · Private infrastructuur"
+
+[portal.billing.prepaid.offer]
+cta = "Aanbod bekijken"
+subtitle = "Betaal een jaar PDF-verwerking vooruit en krijg twee maanden gratis, gebruikt vóór gefactureerd gebruik, buiten je bestedingslimiet."
+title = "Krijg 12 maanden voor de prijs van 10"
+
+[portal.billing.prepaid.pay]
+accountName = "Naam rekeninghouder"
+accountNamePlaceholder = "bijv. Jane Smith"
+companyName = "Bedrijfsnaam (optioneel)"
+companyNamePlaceholder = "bijv. Acme Inc."
+downloadInvoice = "Factuur downloaden"
+payOnline = "Online betalen"
+poNumber = "PO-nummer (optioneel)"
+poNumberPlaceholder = "bijv. PO-2026-0142"
+
+[portal.billing.prepaid.pipelines]
+advanced = "Geavanceerd"
+advancedDesc = "Pipelines sturen het grootste deel van je verwerking aan."
+none = "Geen"
+noneDesc = "Er draaien nog geen pipelines. Schakel ze op elk moment in."
+standard = "Standaard"
+standardDesc = "Een paar pipelines verwerken binnenkomende PDFs opnieuw."
+
+[portal.billing.prepaid.posture]
+essentials = "Essentials"
+essentialsDesc = "Classificatie, de standaard, plus Delen"
+governed = "Governed"
+governedDesc = "Voegt Beveiliging en Routering toe"
+regulated = "Regulated"
+regulatedDesc = "Elke categorie, incl. Compliance, Retentie, Ingestie"
+
+[portal.billing.prepaid.review]
+download = "Offerte downloaden (PDF)"
+downloading = "Voorbereiden…"
+share = "delen voor goedkeuring"
+
+[portal.billing.prepaid.size]
+compact = "Compact"
+compactDesc = "Bestanden onder 25 MB, geen datakosten"
+heavy = "Zwaar"
+heavyDesc = "Gescand of met veel afbeeldingen, doorgaans 50 MB+"
+standard = "Standaard"
+standardDesc = "Vooral klein, enkele scans boven 25 MB"
+
+[portal.billing.prepaid.state]
+exhausted = "Opgebruikt"
+healthy = "Ruim voldoende over"
+low = "Bijna op"
 
 [portal.billing.spendLimit]
 adjustLimit = "Limiet aanpassen"
@@ -6494,6 +6606,8 @@ label = "Verwacht te overschrijden."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Uitgaven deze maand"
+freeRemaining_one = "{{formatted}} gratis PDF resterend"
+freeRemaining_other = "{{formatted}} gratis PDFs resterend"
 processed_one = "{{formattedCount}} PDF verwerkt."
 processed_other = "{{formattedCount}} PDF's verwerkt."
 processedWithRate_one = "{{formattedCount}} PDF verwerkt, à {{rate}} per stuk."
@@ -6533,6 +6647,350 @@ signature = "handtekening"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
+
+[portal.connections]
+createTitle = "Nieuwe verbinding"
+createTitleFor = "{{name}} verbinden"
+delete = "Verwijderen"
+edit = "Bewerken"
+editTitle = "Verbinding bewerken"
+unsupportedType = "Dit verbindingstype kan hier niet worden bewerkt."
+
+[portal.connections.categories.advanced]
+description = "Voor een service die we nog niet ondersteunen."
+label = "Geavanceerd"
+
+[portal.connections.categories.audit]
+description = "Leg vast wat er met een document is gebeurd, waar je auditors al kijken."
+label = "Audit- & compliancelogging"
+
+[portal.connections.categories.notify]
+description = "Vertel een ander systeem dat er iets is gebeurd."
+label = "Melden & workflow"
+
+[portal.connections.categories.security]
+description = "Scan of label een document voordat het verdergaat."
+label = "Beveiliging & classificatie"
+
+[portal.connections.categories.signing]
+description = "Stuur een document om te laten ondertekenen of notarieel vastleggen."
+label = "E-handtekening & notariële vastlegging"
+
+[portal.connections.categories.storage]
+description = "Waar verwerkte documenten terechtkomen - een bucket, een drive, een ticket of een pagina."
+label = "Bestand & bijlage"
+
+[portal.connections.commonFields.accessToken]
+helperText = "Stirling slaat dit versleuteld op en toont het nooit meer."
+label = "Access token"
+
+[portal.connections.commonFields.apiKey]
+label = "API key"
+
+[portal.connections.commonFields.apiToken]
+label = "API token"
+
+[portal.connections.commonFields.baseUrl]
+helperText = "Stappen die deze verbinding gebruiken, kunnen alleen paden onder deze URL aanroepen, nooit een andere host."
+label = "Server URL"
+
+[portal.connections.commonFields.email]
+label = "E-mail"
+
+[portal.connections.commonFields.host]
+label = "Host"
+
+[portal.connections.commonFields.password]
+label = "Wachtwoord"
+
+[portal.connections.commonFields.port]
+label = "Poort"
+
+[portal.connections.commonFields.username]
+label = "Gebruikersnaam"
+
+[portal.connections.commonFields.webhookUrl]
+helperText = "Plak de URL die de service je heeft gegeven. Alleen paden daaronder kunnen worden aangeroepen."
+label = "Webhook URL"
+
+[portal.connections.fields]
+name = "Verbindingsnaam"
+namePlaceholder = "bijv. Productie"
+
+[portal.connections.picker]
+cancel = "Annuleren"
+createNew = "Nieuwe verbinding..."
+placeholder = "Selecteer een verbinding"
+save = "Verbinding opslaan"
+
+[portal.connections.picker2]
+back = "Integratie wijzigen"
+heading = "Wat wil je verbinden?"
+noResultsBody = "We ondersteunen dit nog niet - vertel ons erover en we bekijken of we het kunnen toevoegen."
+noResultsTitle = "Niets komt overeen met \"{{query}}\""
+searchPlaceholder = "Integraties zoeken - probeer \"sign\", \"ocr\" of een productnaam"
+
+[portal.connections.types.api]
+description = "Roep elke HTTP API aan vanuit een beleidsregel. Jij kiest de URL, authenticatie en payload."
+label = "Aangepaste API"
+
+[portal.connections.types.api.fields.authType]
+label = "Authenticatie"
+
+[portal.connections.types.api.fields.authType.options.basic]
+label = "Gebruikersnaam en wachtwoord"
+
+[portal.connections.types.api.fields.authType.options.bearer]
+label = "Bearer token"
+
+[portal.connections.types.api.fields.authType.options.header]
+label = "Token in een aangepaste header"
+
+[portal.connections.types.api.fields.authType.options.none]
+label = "Geen"
+
+[portal.connections.types.api.fields.authType.options.tokenLogin]
+label = "Inloggen voor een token"
+
+[portal.connections.types.api.fields.baseUrl]
+helperText = "Stappen die deze verbinding gebruiken, kunnen alleen paden onder deze URL aanroepen, nooit een andere host."
+label = "Base URL"
+placeholder = "https://api.example.com/v1"
+
+[portal.connections.types.api.fields.headerName]
+label = "Headernaam"
+placeholder = "X-API-Key"
+
+[portal.connections.types.api.fields.loginPath]
+label = "Inlogpad"
+placeholder = "/auth/login"
+
+[portal.connections.types.api.fields.password]
+label = "Wachtwoord"
+
+[portal.connections.types.api.fields.resultUrlHosts]
+helperText = "Als de API antwoordt met een downloadlink, mogen alleen deze hosts worden opgehaald. Scheid met komma's. Laat leeg om alleen de eigen host van de base URL toe te staan."
+label = "Toegestane resultaathosts"
+
+[portal.connections.types.api.fields.token]
+label = "Token"
+
+[portal.connections.types.api.fields.tokenHeaderName]
+label = "Verstuur de token als deze header"
+
+[portal.connections.types.api.fields.tokenResponseHeader]
+helperText = "De response-header waarin de login-aanroep de token retourneert, bijv. X-Auth-Token."
+label = "Token-response-header"
+
+[portal.connections.types.api.fields.username]
+label = "Gebruikersnaam"
+
+[portal.connections.types.clamav]
+baseUrlPlaceholder = "http://clamav-rest:9000"
+description = "Scan documenten op malware op een server die je beheert - niets verlaat je netwerk."
+label = "ClamAV (zelfgehost)"
+
+[portal.connections.types.cloudmersive]
+description = "Virus- en contentscanning voor documenten in een beleidsregel."
+label = "Cloudmersive"
+
+[portal.connections.types.cloudmersiveadvanced]
+description = "Blokkeer documenten met macro's, uitvoerbare bestanden, scripts of ingesloten objecten - niet alleen bekende malware."
+label = "Cloudmersive Advanced Scan"
+
+[portal.connections.types.confluence]
+baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
+description = "Voeg verwerkte documenten toe als bijlage aan een Confluence-pagina."
+label = "Confluence"
+
+[portal.connections.types.consigno]
+description = "Stuur documenten naar ConsignO Cloud (Notarius) voor elektronische ondertekening en notariële vastlegging."
+label = "ConsignO Cloud"
+
+[portal.connections.types.consigno.fields.baseUrl]
+helperText = "Je ConsignO Cloud-omgeving, inclusief /api/v1."
+label = "Server URL"
+placeholder = "https://your-org.consignocloud.com/api/v1"
+
+[portal.connections.types.consigno.fields.clientId]
+label = "API key"
+
+[portal.connections.types.consigno.fields.clientSecret]
+label = "API secret"
+
+[portal.connections.types.consigno.fields.password]
+label = "Wachtwoord"
+
+[portal.connections.types.consigno.fields.tenantId]
+helperText = "Alleen nodig als je organisatie tenants gebruikt."
+label = "Tenant"
+
+[portal.connections.types.consigno.fields.username]
+label = "Gebruikersnaam"
+
+[portal.connections.types.discord]
+baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
+description = "Plaats een bericht op Discord wanneer een beleidsregel een document verwerkt."
+label = "Discord"
+
+[portal.connections.types.elastic]
+baseUrlPlaceholder = "https://your-cluster:9200"
+description = "Indexeer een auditgebeurtenis in Elasticsearch telkens wanneer een beleidsregel een document behandelt."
+label = "Elasticsearch"
+
+[portal.connections.types.ftp]
+description = "Controleer een FTP- of FTPS-server op nieuwe documenten."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Verbindingsmodus"
+
+[portal.connections.types.ftp.fields.passive.options]
+active = "Actief"
+passive = "Passief (aanbevolen)"
+
+[portal.connections.types.ftp.fields.security]
+helperText = "Gewone FTP verstuurt referenties en bestanden onversleuteld; kies FTPS als de server dit ondersteunt."
+label = "Versleuteling"
+
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (expliciet / AUTH TLS)"
+implicit = "FTPS (impliciet)"
+none = "Geen (gewone FTP)"
+
+[portal.connections.types.googlechat]
+baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
+description = "Plaats een bericht in een Google Chat-ruimte wanneer een beleidsregel wordt uitgevoerd."
+label = "Google Chat"
+
+[portal.connections.types.jira]
+baseUrlPlaceholder = "https://your-site.atlassian.net"
+description = "Voeg verwerkte documenten toe als bijlage aan een Jira-issue."
+label = "Jira"
+
+[portal.connections.types.mailgun]
+description = "E-mail een document of melding wanneer een beleidsregel wordt uitgevoerd."
+label = "Mailgun"
+
+[portal.connections.types.nextcloud]
+baseUrlPlaceholder = "https://your-server/remote.php/dav"
+description = "Sla verwerkte documenten op in Nextcloud."
+label = "Nextcloud"
+
+[portal.connections.types.nextcloud.fields.appPassword]
+label = "App-wachtwoord"
+
+[portal.connections.types.presidio]
+baseUrlPlaceholder = "http://presidio-analyzer:3000"
+description = "Detecteer persoonsgegevens in documenttekst met een Presidio-server die je beheert."
+label = "Presidio (zelfgehost)"
+
+[portal.connections.types.purview]
+description = "Lees en pas Microsoft Purview-gevoeligheidslabels toe op PDFs."
+label = "Microsoft Purview"
+
+[portal.connections.types.purview.fields.clientId]
+helperText = "Optioneel. Alleen nodig om labels op naam te kiezen; labelen werkt ook zonder dit."
+label = "Application (client) ID"
+
+[portal.connections.types.purview.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.purview.fields.tenantId]
+helperText = "Wordt op elk label gestempeld als SiteId, zodat Purview-bewuste tools weten welke organisatie het heeft toegepast."
+label = "Directory (tenant) ID"
+placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
+
+[portal.connections.types.s3]
+description = "Een S3 bucket waaruit bronnen kunnen lezen en waar Pipeline-uitvoer naartoe kan schrijven."
+label = "S3-opslag"
+
+[portal.connections.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.connections.types.s3.fields.bucket]
+label = "Bucket"
+
+[portal.connections.types.s3.fields.endpoint]
+helperText = "Laat leeg voor AWS. Stel dit in voor MinIO of een andere S3-compatibele opslag."
+label = "Endpoint"
+
+[portal.connections.types.s3.fields.region]
+label = "Regio"
+
+[portal.connections.types.s3.fields.secretAccessKey]
+label = "Secret access key"
+
+[portal.connections.types.sendgrid]
+description = "E-mail een document of melding wanneer een beleidsregel wordt uitgevoerd."
+label = "SendGrid"
+
+[portal.connections.types.sftp]
+description = "Controleer een SFTP (SSH)-server op nieuwe documenten."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "Optioneel. De SHA-256 host key fingerprint van de server (van `ssh-keyscan host | ssh-keygen -lf -`). Indien ingesteld, wordt alleen een server geaccepteerd die deze key presenteert; indien leeg, wordt de key die bij de eerste verbinding wordt gezien gepind en worden latere wijzigingen geweigerd."
+label = "Host key fingerprint"
+placeholder = "SHA256:..."
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Key-wachtzin"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Laat leeg als je in plaats daarvan met een private key authenticeert."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "Optioneel. Plak een OpenSSH private key om te authenticeren met een key in plaats van een wachtwoord."
+label = "Private key"
+
+[portal.connections.types.slack]
+description = "Plaats een bericht op Slack wanneer een beleidsregel een document verwerkt."
+label = "Slack"
+
+[portal.connections.types.smb]
+description = "Bewaak een SMB / CIFS-netwerkshare (Windows of Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Netwerkshare"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "Optioneel. Het Windows-domein of de werkgroep, als je server er een gebruikt."
+label = "Domein"
+
+[portal.connections.types.smb.fields.share]
+label = "Share"
+placeholder = "documents"
+
+[portal.connections.types.splunk]
+baseUrlPlaceholder = "https://your-splunk:8088"
+description = "Stuur een auditgebeurtenis naar Splunk telkens wanneer een beleidsregel een document behandelt."
+label = "Splunk"
+
+[portal.connections.types.sumologic]
+baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
+description = "Stuur een auditgebeurtenis naar een Sumo Logic HTTP-collector."
+label = "Sumo Logic"
+
+[portal.connections.types.teams]
+baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
+description = "Plaats een bericht in een Teams-kanaal wanneer een beleidsregel wordt uitgevoerd."
+label = "Microsoft Teams"
+
+[portal.connections.types.webhook]
+baseUrlPlaceholder = "https://example.com/hooks/documents"
+description = "Plaats elk document, of alleen de details, naar een URL die jij kiest."
+label = "Webhook"
+
+[portal.connections.types.zapier]
+baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
+description = "Trigger een Zap- of Make-scenario vanuit een beleidsregel."
+label = "Zapier & Make"
+
+[portal.docs]
+browse = "Documentatie bekijken"
+viewSource = "Bron bekijken op GitHub"
 
 [portal.docs.authentication]
 codeCaption = "elk verzoek"
@@ -6619,10 +7077,18 @@ title = "Officiële SDKs"
 beta = "Beta"
 deprecated = "Verouderd"
 
+[portal.docs.search]
+empty = "Geen overeenkomende documentatie"
+placeholder = "Documentatie zoeken"
+results = "{{count}} resultaten"
+
 [portal.docs.skills]
 eyebrow = "VAARDIGHEDEN"
 lead = "Gebundelde, benoemde mogelijkheden die je agent als één tool aanroept. Elke vaardigheid is een deterministische op-chain met gekoppelde evals."
 title = "Agentvaardigheden"
+
+[portal.docs.toc]
+title = "Op deze pagina"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -6697,6 +7163,8 @@ type = "Type"
 user = "Gebruiker"
 
 [portal.documents.queue.empty]
+connectSource = "Een bron verbinden"
+createPipeline = "Een pipeline maken"
 description = "Wanneer bronnen documenten naar je pipelines sturen, verschijnen ze hier ter beoordeling."
 title = "Geen documenten in de wachtrij"
 
@@ -6806,12 +7274,70 @@ description = "Deze weergave heeft een onverwachte fout aangetroffen. Probeer he
 retry = "Opnieuw proberen"
 title = "Er is iets misgegaan op deze pagina"
 
+[portal.home.download]
+back = "Terug"
+body = "Download de desktop-app of host de server zelf."
+done = "Gereed"
+guide = "Open de {{name}}-gids"
+openInBrowser = "In plaats daarvan openen in browser"
+sectionDesktop = "Desktop-app"
+sectionSelfHosted = "Zelfgehost"
+title = "Installeer de Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Draai de officiële image op je server."
+note = "Opent op :8080. Standaardinlog: admin / stirling."
+tagline = "Draai de server in een container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standaard"
+
+[portal.home.download.kubernetes]
+detailBody = "Installeer de officiële Helm chart."
+note = "Voeg een PVC toe voor /configs om instellingen te behouden."
+tagline = "Implementeer naar een cluster met Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds voor je distributie."
+guideBtn = "Linux-installatieopties bekijken"
+note = "AppImage-, .deb- en .rpm-builds zijn beschikbaar voor gangbare distro's."
+tagline = "Native desktop-app voor je distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Of via Homebrew"
+detailBody = "Voer het installatieprogramma uit of gebruik Homebrew."
+downloadBtn = "Downloaden voor macOS"
+tagline = "Native app voor Apple silicon en Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Voer de .jar uit op een bare-metalserver."
+downloadBtn = "De .jar downloaden"
+note = "Vereist Java 21+. Opent op :8080; standaardlogin admin / stirling."
+runLabel = "Voer het daarna uit"
+tagline = "Voer de .jar uit op een bare-metalserver"
+title = "Handmatige serverconfiguratie"
+
+[portal.home.download.windows]
+altLabel = "Of via winget"
+detailBody = "Voer het installatieprogramma uit of gebruik een package manager."
+downloadBtn = "Installatieprogramma downloaden"
+tagline = "Native app voor Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
-activeUsers = "{{n}} actief"
-invite = "Teamleden uitnodigen"
+activeOfDeployed = "{{active}} van {{total}} actief deze maand"
 name = "Stirling PDF Editor"
 open = "Openen in browser"
 updated = "bijgewerkt {{time}}"
+
+[portal.home.editor.deploy]
+finish = "Implementatie voltooien"
+options = "Implementatieopties bekijken"
+start = "Editor implementeren"
 
 [portal.home.editor.target]
 cloud = "Managed Cloud"
@@ -6822,49 +7348,6 @@ kubernetes = "Zelfgehost · Kubernetes"
 afternoon = "Goedemiddag"
 evening = "Goedenavond"
 morning = "Goedemorgen"
-
-[portal.home.onboarding]
-dismiss = "Installatie sluiten"
-notStarted = "Niet gestart"
-progress = "{{done}} van {{total}} voltooid"
-title = "Installatie voltooien"
-
-[portal.home.onboarding.enterprise]
-body = "Organisatiebrede SSO + SCIM + RBAC, vaste volumeprijzen en air-gapped implementatie."
-cta = "Proefperiode starten"
-ctaQuote = "Offerte aanvragen"
-lead = "Voor 250+ medewerkers."
-tag = "Enterprise"
-
-[portal.home.onboarding.steps.editor]
-blurb = "Implementeer de desktop-app, voor altijd gratis."
-title = "Download de PDF Editor"
-
-[portal.home.onboarding.steps.policies]
-blurb = "{{active}} actief · {{recommended}} aanbevolen"
-chip = "{{active}} actief"
-title = "Beleid inschakelen"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} verbonden · elke PDF beheerd waar die terechtkomt"
-chip = "{{connected}} verbonden"
-title = "Verbind je bronnen"
-
-[portal.home.quickActions]
-subtitle = "Belangrijkste taken voor vandaag"
-title = "Snelle acties"
-
-[portal.home.quickActions.buildPipeline]
-blurb = "Composer in 3 stappen bovenop de getypte op-bibliotheek"
-title = "Pipeline bouwen"
-
-[portal.home.quickActions.connectSource]
-blurb = "S3, agents, webhooks, bewaakte mappen"
-title = "Bron verbinden"
-
-[portal.home.quickActions.issueApiKey]
-blurb = "Scoped sleutel met rate limits en IP allowlist"
-title = "API-sleutel uitgeven"
 
 [portal.infrastructure]
 manageEditorDeployment = "Editor-implementatie beheren"
@@ -6878,19 +7361,29 @@ heading = "API-sleutels"
 subheading = "Scoped referenties met rate limits per sleutel, machtigingen en IP allowlists."
 
 [portal.infrastructure.apiKeys.card]
-allowedIps = "Toegestane IP's"
-anyIp = "Elk IP (geen allowlist)"
 created = "Aangemaakt"
 lastUsed = "Laatst gebruikt"
-permissions = "Machtigingen"
-rateLimit = "Rate limit"
-rateLimitValue = "{{value}} req/min"
+revoke = "Sleutel intrekken"
 usageMonth = "Gebruik deze maand"
 usageToday = "Gebruik vandaag"
 
 [portal.infrastructure.apiKeys.empty]
 description = "Maak een scoped sleutel om de Stirling API aan te roepen."
 title = "Nog geen API-sleutels"
+
+[portal.infrastructure.apiKeys.error]
+load = "Kon je API-sleutels niet laden. Probeer het opnieuw."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "\"{{name}}\" intrekken? Elke integratie die deze sleutel nog gebruikt, krijgt onmiddellijk 401-fouten. Dit kan niet ongedaan worden gemaakt."
+cancel = "Annuleren"
+confirm = "Sleutel intrekken"
+title = "API-sleutel intrekken"
+
+[portal.infrastructure.attestationLabel]
+attested = "Geattesteerd"
+inScope = "Binnen scope"
+notApplicable = "N.v.t."
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Auditgebeurtenissen filteren op categorie"
@@ -6935,6 +7428,7 @@ all = "Alle"
 auth = "Auth"
 config = "Config"
 elevation = "Verhoging"
+policy = "Beleid"
 processing = "Verwerking"
 security = "Beveiliging"
 
@@ -6944,25 +7438,47 @@ title = "Je hebt geen toegang"
 
 [portal.infrastructure.audit.metrics]
 config = "Config"
-elevation = "Verhoging"
+policy = "Beleid"
 processing = "Verwerking"
 totalEvents = "Totaal aantal gebeurtenissen · 24u"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Configuratie"
+elevation = "Verhoging"
+policy = "Beleid"
+processing = "Verwerking"
+security = "Beveiliging"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Fout"
+info = "Info"
+success = "Succes"
+warning = "Waarschuwing"
+
+[portal.infrastructure.certLabel]
+certified = "Gecertificeerd"
+inProgress = "In behandeling"
+notStarted = "Niet gestart"
 
 [portal.infrastructure.createKey]
 cancel = "Annuleren"
 createKey = "Sleutel maken"
 done = "Gereed"
-ipAllowlistHelper = "Door komma's gescheiden CIDR-bereiken. Laat leeg om elk IP toe te staan."
-ipAllowlistLabel = "IP allowlist"
 keyNameLabel = "Sleutelnaam"
 keyNamePlaceholder = "bijv. Productie · ingest"
-permissionsLabel = "Machtigingen"
 secretKeyCaption = "Geheime sleutel"
 secretWarning = "Sla dit op in een secrets manager. Stirling slaat alleen ooit een hash op — er is geen manier om deze later te herstellen."
 subtitle = "Beperk de sleutel tot het minimum dat nodig is. Je kunt deze op elk moment roteren of intrekken."
 subtitleCreated = "Kopieer dit geheim nu — het wordt niet opnieuw getoond."
 title = "API-sleutel maken"
 titleCreated = "Sleutel aangemaakt"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "In wachtrij"
+rolledBack = "Teruggedraaid"
+rolling = "Wordt uitgerold"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -6999,6 +7515,15 @@ subheading = "Live gezondheid voor elke geïmplementeerde Stirling-regio — lat
 description = "Geïmplementeerde regio's verschijnen hier zodra je werkruimte is ingericht."
 title = "Geen regio's geïmplementeerd"
 
+[portal.infrastructure.keyLabel]
+active = "Actief"
+revoked = "Ingetrokken"
+
+[portal.infrastructure.modelLabel]
+active = "Actief"
+degraded = "Verslechterd"
+disabled = "Uitgeschakeld"
+
 [portal.infrastructure.models]
 heading = "Modellen"
 msValue = "{{value}} ms"
@@ -7026,6 +7551,10 @@ status = "Status"
 type = "Type"
 version = "Versie"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/aanroep"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Actieve modellen"
 avgLatency = "Gem. latentie"
@@ -7048,6 +7577,17 @@ docType = "Documenttype"
 modelForAria = "Model voor {{operation}}"
 operation = "Bewerking"
 routedTo = "Gerouteerd naar"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classificatie"
+extraction = "Extractie"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Verslechterd"
+down = "Uitgevallen"
+healthy = "Gezond"
 
 [portal.infrastructure.security.access.byok]
 description = "Lever een sleutel uit je eigen KMS. Stirling versleutelt ermee, maar kan nog steeds lezen."
@@ -7174,6 +7714,47 @@ models = "Modellen"
 security = "Beveiliging"
 storage = "Opslag"
 
+[portal.integrations]
+addAnother = "Nog een toevoegen"
+availableHeading = "Beschikbaar"
+comingSoonHeading = "Binnenkort beschikbaar"
+connect = "Verbinden"
+connectedHeading = "Verbonden"
+connectionCount_one = "{{count}} verbinding"
+connectionCount_other = "{{count}} verbindingen"
+customApi = "Aangepaste API"
+searchPlaceholder = "Integraties zoeken"
+subtitle = "Alles waarmee Stirling kan praten. Inloggegevens worden hier één keer aangemaakt en daarna gebruikt door bronnen, beleid en pijplijnen."
+title = "Integraties"
+typedName = "{{tool}}-naam"
+
+[portal.integrations.filters]
+all = "Alles"
+audit = "Audit"
+connected = "Verbonden"
+notify = "Melden"
+security = "Beveiliging"
+signing = "Ondertekening"
+storage = "Opslag"
+
+[portal.integrations.status]
+connected = "Verbonden"
+
+[portal.integrations.table]
+integration = "Integratie"
+worksWith = "Werkt met"
+
+[portal.integrations.worksWith]
+pipelines = "Pijplijnen"
+policies = "Beleid"
+sources = "Bronnen"
+
+[portal.legal]
+draft = "{{label}} · concept"
+loadError = "Kon dit document niet laden. Probeer het opnieuw."
+loading = "Laden…"
+title = "Juridisch document"
+
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Componenten"
@@ -7182,6 +7763,7 @@ documents = "Documenten"
 editor = "Editor"
 home = "Home"
 infrastructure = "Infrastructuur"
+integrations = "Integraties"
 pipelines = "Pipelines"
 policies = "Beleid"
 procurement = "Inkoop"
@@ -7190,25 +7772,9 @@ sources = "Bronnen"
 usage = "Gebruik en facturering"
 users = "Gebruikers"
 
-[portal.notifications]
-markAllRead = "Alles als gelezen markeren"
-title = "Meldingen"
-viewAll = "Alles bekijken"
-
-[portal.notifications.ariaLabel]
-none = "Meldingen, geen ongelezen"
-unread_one = "Meldingen, {{count}} ongelezen"
-unread_other = "Meldingen, {{count}} ongelezen"
-
-[portal.notifications.count]
-allRead = "alles gelezen"
-loading = "laden"
-new_one = "{{count}} nieuw"
-new_other = "{{count}} nieuw"
-
-[portal.notifications.empty]
-description = "Geen nieuwe meldingen."
-title = "Je bent helemaal bijgewerkt"
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
 
 [portal.pipelines]
 subtitle = "Elke geautomatiseerde documentpipeline op de backend: een geordende keten van bewerkingen over een set bronnen, uitgevoerd door een trigger. Klik op een rij voor de stappen en bronnen."
@@ -7220,15 +7786,28 @@ newPipeline = "Nieuwe pipeline"
 [portal.pipelines.builder]
 addStep = "Tool toevoegen"
 back = "Terug naar pipelines"
+cannotFollow = "Kan {{produced}} niet verwerken"
+chooseAccount = "Kies een account"
+chooseDestination = "Kies een bestemming"
+chooseOperation = "Kies wat deze stap doet"
+chooseSource = "Kies een bron"
 discard = "Wijzigingen verwerpen"
 enabled = "Ingeschakeld"
+inputs = "Invoer"
+inputSource = "Invoerbron"
+inputTrigger = "Trigger"
 keepEditing = "Blijven bewerken"
+needsConfiguring = "Moet worden ingesteld"
 needsUpload = "Vereist een geüpload bestand"
+noSources = "Nog geen bronnen verbonden. Maak er een aan om deze als invoer te gebruiken."
 noToolMatches = "Geen tools komen overeen met je zoekopdracht."
 pipelineSettings = "Pipeline-instellingen"
 searchTools = "Tools zoeken"
 selectToolBody = "Voeg een tool toe om je pipeline te bouwen."
 selectToolTitle = "Nog geen tools"
+sendToSystem = "Naar een ander systeem verzenden"
+stepsIncompatible = "Deze stappen kunnen niet worden uitgevoerd op wat hun vorige stap oplevert: {{tools}}."
+stepsNeedSetup = "Deze stappen moeten nog worden ingesteld voordat je kunt opslaan: {{tools}}."
 toolSettings = "Toolinstellingen"
 unknownStep = "Niet-herkende bewerking, ongewijzigd behouden."
 unsavedBody = "Je hebt niet-opgeslagen wijzigingen. Sla ze op voordat je weggaat, of verwerp ze?"
@@ -7236,19 +7815,24 @@ unsavedTitle = "Niet-opgeslagen wijzigingen"
 uploadUnsupported = "Geüploade bestanden worden nog niet ondersteund in pipelines, dus deze stappen kunnen niet worden opgeslagen: {{tools}}."
 usesDefaults = "Wordt uitgevoerd met standaardinstellingen"
 
+[portal.pipelines.builder.diagnostic]
+fan-in = "Combineert elk bestand uit de vorige stap"
+fan-out = "Wordt één keer uitgevoerd per bestand uit de vorige stap"
+format-mismatch = "Vereist {{accepts}}, maar de vorige stap levert {{produced}} op"
+output-uncertain = "Wordt mogelijk niet uitgevoerd: de uitvoer van de vorige stap hangt af van hoe deze is ingesteld"
+source-mismatch = "Vereist {{accepts}}, maar de invoer van deze pijplijn is {{produced}}"
+undeclared-operation = "Kan niet controleren wat deze stap accepteert"
+
 [portal.pipelines.composer]
 addTool = "Tool toevoegen"
 cancel = "Annuleren"
 chainEmpty = "Voeg een tool toe om je pipeline te bouwen."
 create = "Pipeline maken"
-directory = "Uitvoermap"
-directoryHelp = "Absoluut pad op de server. Moet binnen de geconfigureerde toegestane mappen liggen."
 editingUnsupported = "Het weergeven van deze toolparams voor bewerking wordt nog niet ondersteund."
 moveDown = "Omlaag verplaatsen"
 moveUp = "Omhoog verplaatsen"
 name = "Naam"
 namePlaceholder = "bijv. Redactiesweep"
-noSources = "Nog geen bronnen verbonden. De pipeline kan nog steeds draaien op bestanden die er rechtstreeks aan worden geleverd."
 noToolSettings = "Deze tool heeft geen configureerbare instellingen."
 operations_one = "Bewerking ({{count}})"
 operations_other = "Bewerkingen ({{count}})"
@@ -7273,11 +7857,13 @@ confirm = "Verwijderen"
 title = "Pipeline verwijderen?"
 
 [portal.pipelines.detail]
+clearHistory = "Geschiedenis wissen"
 delete = "Pipeline verwijderen"
 run = "Nu uitvoeren"
 
 [portal.pipelines.empty]
 action = "Pipeline maken"
+connectSource = "Een bron verbinden"
 description = "Maak je eerste pipeline: kies de bronnen waarop deze draait, koppel de bewerkingen en kies waar de uitvoer naartoe gaat."
 title = "Nog geen pipelines"
 
@@ -7286,15 +7872,17 @@ active = "Actief"
 paused = "Gepauzeerd"
 total = "Pipelines"
 
-[portal.pipelines.output]
-folder = "Naar map schrijven"
-inline = "Bestanden retourneren"
-
 [portal.pipelines.run]
+allProcessed_one = "Niets om uit te voeren: het {{count}} document van de bron is al verwerkt."
+allProcessed_other = "Niets om uit te voeren: alle {{count}} documenten in de bronnen zijn al verwerkt."
 completed_one = "Run voltooid."
 completed_other = "Alle {{count}} runs voltooid."
 empty = "Niets om uit te voeren: de bronnen hadden geen documenten om te verwerken."
 failed = "Run mislukt: {{error}}"
+historyCleared = "Geschiedenis gewist. De volgende uitvoering verwerkt alles opnieuw dat momenteel in de bronnen staat."
+inFlight = "Niets nieuws om uit te voeren: documenten worden nog verwerkt vanuit een eerdere uitvoering."
+parked_one = "Niets om uit te voeren: {{count}} document is eerder mislukt en is geparkeerd. Los de oorzaak op en wis daarna de geschiedenis om het opnieuw te proberen."
+parked_other = "Niets om uit te voeren: {{count}} documenten zijn eerder mislukt en zijn geparkeerd. Los de oorzaak op en wis daarna de geschiedenis om ze opnieuw te proberen."
 running = "Run gestart; nog bezig."
 timeout = "Run duurt langer dan verwacht; deze kan nog op de achtergrond worden voltooid."
 
@@ -7314,12 +7902,18 @@ manual = "Handmatig"
 schedule = "Gepland"
 
 [portal.policies]
+defaultName = "{{category}}-beleid"
 subtitle = "Permanente automatiseringen die een toolpipeline afdwingen op elk document. Elk beleid wordt geactiveerd bij upload of export, voert de toolketen uit en slaat de afgedwongen versie naast het origineel op."
 title = "Beleid"
 
 [portal.policies.card]
 comingSoon = "Upgrade naar Enterprise"
 notSetUp = "Niet ingesteld"
+requiresAiEngine = "Vereist AI-engine"
+
+[portal.policies.categories.classification]
+desc = "Identificeer het type van elk document bij uploaden en tag de metadata voor archivering en zoeken."
+label = "Classificatie"
 
 [portal.policies.categories.compliance]
 desc = "Dwing HIPAA-, GDPR-, SOC 2- of FedRAMP-vereisten af op elk document."
@@ -7343,6 +7937,13 @@ label = "Beveiliging"
 
 [portal.policies.config]
 scopeAll = "Alle documenten"
+
+[portal.policies.config.classification]
+summary = "Classificeert elk geüpload document aan de hand van de labels van je team en tagt de metadata."
+
+[portal.policies.config.classification.rules]
+0 = "Classificeren"
+1 = "Metadata taggen"
 
 [portal.policies.config.compliance]
 summary = "Valideert documenten tegen regelgevende frameworks voordat ze het systeem verlaten."
@@ -7370,6 +7971,29 @@ minConfidence = "Min. betrouwbaarheid"
 1 = "Extraheren"
 2 = "Naam geven"
 3 = "Normaliseren"
+
+[portal.policies.config.purview]
+label = "Een Microsoft Purview-gevoeligheidslabel toepassen"
+
+[portal.policies.config.purview.fields]
+connection = "Purview tenant"
+labelId = "Label ID"
+labelIdHelp = "De GUID van het label, uit de Purview-portal. Door een label toe te passen wordt de metadata ervan naar de PDF geschreven; het kan niet versleutelen, daarvoor is de Microsoft-client nodig."
+labelName = "Labelnaam (optioneel)"
+labelNameHelp = "Wordt naast de ID vastgelegd zodat mensen en tools het label kunnen herkennen."
+
+[portal.policies.config.purview.fields.method]
+help = "Purview maakt onderscheid tussen een label dat door beleid is toegepast en een label dat door een persoon is gekozen."
+label = "Hoe het label wordt vastgelegd"
+privileged = "Zoals gekozen door een persoon"
+standard = "Zoals automatisch toegepast"
+
+[portal.policies.config.purviewRead]
+label = "Een Microsoft Purview-label lezen"
+
+[portal.policies.config.purviewRead.fields]
+connection = "Purview tenant"
+connectionHelp = "Leest het label dat het document al heeft, zodat latere stappen daarop kunnen reageren."
 
 [portal.policies.config.retention]
 summary = "Dwingt af hoe lang documenten worden bewaard, wanneer ze worden gearchiveerd en wanneer ze worden verwijderd."
@@ -7425,6 +8049,7 @@ title = "Nog geen activiteit"
 [portal.policies.endpoints]
 addWatermark = "Watermerk"
 autoRedact = "PII redigeren"
+classifyAndLabel = "Classificeren"
 compressPdf = "Comprimeren"
 flatten = "Plat maken"
 ocrPdf = "OCR"
@@ -7434,6 +8059,183 @@ sanitizePdf = "JavaScript verwijderen"
 description = "Je beleidsregels zijn opgeslagen en verschijnen zodra de verbinding is hersteld."
 retry = "Opnieuw proberen"
 title = "Backend niet beschikbaar"
+
+[portal.policies.operations]
+change = "Wijzigen wat deze stap doet"
+noResults = "Geen stap komt hiermee overeen. Probeer een productnaam of \"scan\", \"notify\", \"attach\"."
+searchPlaceholder = "Stappen zoeken - probeer \"scan\", \"attach\" of een productnaam"
+
+[portal.policies.operations.bodyMode]
+binary = "Ruwe bestandsbytes"
+json = "Binnen een JSON-payload"
+multipart = "Als bestandsupload (multipart)"
+
+[portal.policies.operations.clamavScan]
+description = "Je eigen ClamAV-server controleert het document; niets verlaat je netwerk."
+label = "Scannen op virussen (self-hosted)"
+
+[portal.policies.operations.cloudmersiveAdvancedScan]
+description = "Weigert documenten met macro's, uitvoerbare bestanden, scripts of ingesloten objecten."
+label = "Actieve inhoud blokkeren"
+
+[portal.policies.operations.cloudmersiveScan]
+description = "Cloudmersive controleert het document en de uitvoering stopt als het niet schoon is."
+label = "Scannen op virussen"
+
+[portal.policies.operations.confluenceAttach]
+description = "Slaat het verwerkte document op een pagina op."
+label = "Aan een Confluence-pagina toevoegen"
+
+[portal.policies.operations.consignoSubmit]
+description = "Dient het document in bij ConsignO Cloud voor ondertekening."
+label = "Verzenden voor ondertekening (ConsignO)"
+note = "Dient het document in. Het ophalen van de ondertekende kopie wordt nog niet ondersteund, omdat een stap geen resultaat kan doorgeven aan een latere stap."
+
+[portal.policies.operations.customApiCall]
+description = "Stel de aanroep zelf samen: pad, methode, body en afhandeling van de reactie."
+label = "Een aangepaste API aanroepen"
+
+[portal.policies.operations.discordNotify]
+description = "Meldt aan een kanaal dat het beleid een document heeft afgehandeld."
+label = "Een bericht op Discord plaatsen"
+
+[portal.policies.operations.elasticIndex]
+description = "Legt vast wat het beleid deed als een doorzoekbaar document."
+label = "Een auditgebeurtenis indexeren in Elasticsearch"
+
+[portal.policies.operations.fields.bodyMode]
+helperText = "Multipart past bij upload-APIs; JSON past bij APIs die het bestand in een payload willen; binary verzendt de ruwe bytes."
+label = "Hoe het document wordt verzonden"
+
+[portal.policies.operations.fields.bodyTemplate]
+helperText = "Een JSON-body die ongewijzigd wordt verzonden. {{document.base64}} bevat het bestand; {{document.*}} en {{run.*}} worden per document ingevuld."
+label = "JSON-body"
+
+[portal.policies.operations.fields.connection]
+label = "Account"
+
+[portal.policies.operations.fields.domain]
+label = "Mailgun-domein"
+placeholder = "mg.acme.com"
+
+[portal.policies.operations.fields.fileFieldName]
+helperText = "Het formulierveld waarin de API het document verwacht."
+label = "Naam van bestandsveld"
+placeholder = "file"
+
+[portal.policies.operations.fields.from]
+label = "Van"
+placeholder = "processor@acme.com"
+
+[portal.policies.operations.fields.headers]
+helperText = "Een JSON-object met headernaam/waarde-paren. De inloggegevens van de verbinding worden voor je toegevoegd."
+label = "Headers"
+
+[portal.policies.operations.fields.index]
+label = "Index"
+placeholder = "stirling-audit"
+
+[portal.policies.operations.fields.issueKey]
+label = "Issue key"
+placeholder = "OPS-42"
+
+[portal.policies.operations.fields.message]
+helperText = "Verzonden als de berichttekst. {{document.*}} en {{run.*}} worden per document ingevuld."
+label = "Bericht"
+
+[portal.policies.operations.fields.method]
+label = "Methode"
+
+[portal.policies.operations.fields.pageId]
+label = "Page ID"
+placeholder = "66186"
+
+[portal.policies.operations.fields.path]
+helperText = "Toegevoegd aan de basis-URL van de verbinding. Het kan nooit een andere host bereiken."
+label = "Pad"
+placeholder = "/v1/scan"
+
+[portal.policies.operations.fields.remotePath]
+helperText = "Waar in de drive het moet worden geschreven. {{document.filename}} wordt per document ingevuld."
+label = "Bestemmingspad"
+placeholder = "Processed/{{document.filename}}"
+
+[portal.policies.operations.fields.responseMode]
+helperText = "Rapporteren laat het document ongemoeid. Vervangen wisselt het om voor wat er terugkomt."
+label = "Wat te doen met het antwoord"
+
+[portal.policies.operations.fields.signerEmail]
+label = "E-mailadres van ondertekenaar"
+placeholder = "signer@acme.com"
+
+[portal.policies.operations.fields.subject]
+label = "Onderwerp"
+placeholder = "Verwerkt: {{document.filename}}"
+
+[portal.policies.operations.fields.text]
+helperText = "Presidio analyseert deze tekst. Gebruik {{document.title}} of plak de tekst die je wilt laten controleren."
+label = "Te controleren tekst"
+
+[portal.policies.operations.fields.to]
+label = "Aan"
+placeholder = "records@acme.com"
+
+[portal.policies.operations.fields.username]
+label = "Nextcloud-gebruikersnaam"
+placeholder = "svc-stirling"
+
+[portal.policies.operations.googlechatNotify]
+description = "Meldt aan een space dat het beleid een document heeft afgehandeld."
+label = "Een bericht in Google Chat plaatsen"
+
+[portal.policies.operations.jiraAttach]
+description = "Slaat het verwerkte document op bij een issue."
+label = "Aan een Jira-issue toevoegen"
+
+[portal.policies.operations.mailgunEmail]
+description = "Verzendt het verwerkte document als bijlage."
+label = "Het document e-mailen (Mailgun)"
+
+[portal.policies.operations.nextcloudUpload]
+description = "Schrijft het verwerkte document naar een map."
+label = "Uploaden naar Nextcloud"
+
+[portal.policies.operations.presidioAnalyze]
+description = "Je eigen Presidio-server rapporteert de persoonsgegevens die worden gevonden."
+label = "Persoonsgegevens detecteren"
+note = "Presidio leest tekst, geen bestanden. Geef de tekst op die je wilt laten controleren — het document zelf wordt niet geüpload."
+
+[portal.policies.operations.responseMode]
+replace = "Het document vervangen door het antwoord"
+report = "Het document behouden, het antwoord registreren"
+
+[portal.policies.operations.sendgridEmail]
+description = "Verzendt het verwerkte document als bijlage."
+label = "Het document e-mailen (SendGrid)"
+
+[portal.policies.operations.slackNotify]
+description = "Meldt aan een kanaal dat het beleid een document heeft afgehandeld."
+label = "Een bericht op Slack plaatsen"
+
+[portal.policies.operations.splunkEvent]
+description = "Legt vast wat het beleid deed, waar je auditors al kijken."
+label = "Een auditgebeurtenis naar Splunk verzenden"
+
+[portal.policies.operations.sumologicEvent]
+description = "Legt vast wat het beleid deed naar een HTTP collector."
+label = "Een auditgebeurtenis naar Sumo Logic verzenden"
+
+[portal.policies.operations.teamsNotify]
+description = "Meldt aan een kanaal dat het beleid een document heeft afgehandeld."
+label = "Een bericht op Teams plaatsen"
+
+[portal.policies.operations.webhookPost]
+description = "Verzendt het document zelf naar een URL die je kiest."
+label = "Het document naar een webhook posten"
+
+[portal.policies.operations.zapierNotify]
+description = "Geeft de details van de uitvoering door aan je automatisering."
+label = "Een Zap- of Make-scenario activeren"
 
 [portal.policies.stats]
 activeFor = "Actief"
@@ -7460,12 +8262,23 @@ label = "Docs afgedwongen"
 description = "Geconfigureerd maar niet actief"
 label = "Gepauzeerd"
 
+[portal.policies.table]
+appliesTo = "Van toepassing op"
+docs = "Docs afgedwongen"
+enforces = "Dwingt af"
+policy = "Beleid"
+status = "Status"
+
 [portal.policies.wizard.actions]
 back = "Terug"
 cancel = "Annuleren"
 continue = "Doorgaan"
 enablePolicy = "Beleidsregel inschakelen"
 saveChanges = "Wijzigingen opslaan"
+
+[portal.policies.wizard.capability.classify]
+desc = "Identificeert het type document aan de hand van de labels van je team en tagt het, zodat het per categorie wordt opgeslagen en doorzocht."
+label = "Het document classificeren"
 
 [portal.policies.wizard.capability.compress]
 desc = "Comprimeert het document naar een kleinere bestandsgrootte."
@@ -7487,9 +8300,17 @@ label = "Gevoelige informatie redigeren"
 desc = "Verwijdert verborgen JavaScript zodat niets automatisch kan worden uitgevoerd wanneer het document wordt geopend."
 label = "Actieve inhoud verwijderen"
 
+[portal.policies.wizard.capability.timestampPdf]
+desc = "Bewijst dat het document op een bepaald moment in exact deze vorm bestond, met behulp van een onafhankelijke timestamp authority. Alleen een hash wordt verzonden - het document verlaat nooit je server."
+label = "Een vertrouwd tijdstempel toevoegen"
+
 [portal.policies.wizard.capability.watermark]
 desc = "Plaatst een zichtbare markering (bijv. “Vertrouwelijk”) op elke pagina."
 label = "Watermerk toepassen"
+
+[portal.policies.wizard.classification]
+description = "Elk geüpload document wordt geclassificeerd aan de hand van de ingebouwde labels en getagd met de types die passen. De labelset wordt gedeeld met je hele team."
+labelsHeading = "Classificatielabels"
 
 [portal.policies.wizard.errors]
 noTools = "Schakel eerst minstens één tool in de workflow in."
@@ -7535,73 +8356,118 @@ setUp = "Beleidsregel voor {{category}} instellen"
 [portal.policies.wizard.workflow]
 description = "Kies wat deze beleidsregel doet met elk document dat wordt verwerkt."
 
-[portal.policySummary]
-activeSummary = "{{active}} / {{total}} actief"
-noRule = "Nog geen regel afgedwongen"
-subtitle = "Doorlopende automatiseringen waar elk document doorheen gaat, ongeacht welke pipeline het verwerkt."
-title = "Wat op je PDFs wordt uitgevoerd"
-
 [portal.policySummary.action]
-comingSoon = "Upgraden naar Enterprise"
-configure = "Configureren"
 setUp = "Instellen"
 
-[portal.policySummary.column]
-activeRule = "Actieve regel"
-policy = "Beleidsregel"
-status = "Status"
+[portal.processorFlow]
+footnote = "Aantallen zijn over de laatste 24 uur. De flowsnelheid is illustratief."
+liveBadge = "Live"
+stats = "{{connected}} verbonden · {{processed}} PDFs verwerkt"
+title = "PDF Processor"
 
-[portal.policySummary.empty]
-description = "Zodra beleidsregels zijn geconfigureerd, verschijnen de categorieën hier."
-title = "Nog geen beleidsregels"
+[portal.processorFlow.lens]
+ariaLabel = "Weergavemodus"
+flow = "Flow"
+sankey = "Sankey"
 
-[portal.policySummary.state]
-active = "Actief"
-off = "Uit"
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24u"
+failed = "Mislukt"
+heading = "Resultaten"
+success = "Afgeleverd"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} actief"
+count = "{{n}} · 24u"
+heading = "Beleid"
+setUp = "Instellen"
 soon = "Binnenkort"
 
-[portal.processingStatus]
-managePlan = "Abonnement beheren"
-volumeSuffix = "PDFs verwerkt · laatste 30 dagen"
+[portal.processorFlow.sankey]
+waist = "Beleid · {{n}} actief"
+
+[portal.processorFlow.sankey.empty]
+description = "Verbind een bron en schakel beleid in om documenten door de processor te zien stromen."
+title = "Nog geen flow"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Verbinden"
+editor = "Stirling PDF Editor"
+heading = "Bronnen"
+perDay = "{{n}} / 24u"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "E-mailinvoer"
 
 [portal.procurement]
-reset = "Inkoop resetten (demo)"
 subtitle = "Laat je team evalueren, contracteren en onboarden. Elk document op één plek."
 title = "Inkoop"
 
-[portal.procurement.action]
-download = "Downloaden"
-pay = "Nu betalen"
-request = "Aanvragen"
-sign = "Controleren & ondertekenen"
-upload = "Uploaden"
-
 [portal.procurement.agreement]
 agreeCta = "Akkoord gaan & abonneren"
+confidential = "Vertrouwelijk"
 confirm = "Ik heb de Stirling Enterprise-overeenkomst gelezen en ga ermee akkoord."
-eyebrow = "Overeenkomst"
-intro = "Eén gecombineerde overeenkomst dekt je deal: Master Service Agreement, bestelformulier, EULA en Data Processing Agreement. Controleer deze en ga vervolgens akkoord om de offerte te accepteren als een vast abonnement."
-title = "Controleer je Enterprise-overeenkomst"
+docName = "Stirling Enterprise-overeenkomst"
+docSub = "MSA, orderformulier, EULA en DPA, gecombineerd in één handtekening."
+download = "Downloaden"
+downloadDraftError = "Kon de overeenkomst-PDF niet genereren - de documentrenderer is niet beschikbaar. Probeer het binnenkort opnieuw of neem contact op met support."
+downloadError = "Kon de ondertekende overeenkomst niet downloaden. Probeer het opnieuw."
+legalName = "Naam juridische entiteit"
+legalNamePlaceholder = "De juridische entiteit die zal ondertekenen"
+loadError = "Kon de overeenkomst niet laden. Probeer het opnieuw."
+loading = "Overeenkomst laden..."
+ref = "Ref {{ref}} · {{version}}"
+requestChanges = "Wijzigingen aanvragen"
+scrollHint = "Scroll om te controleren"
+signatory = "Naam ondertekenaar"
+signatoryPlaceholder = "Volledige naam"
+signatoryTitle = "Functie van ondertekenaar"
+signatoryTitlePlaceholder = "bijv. General Counsel"
+signError = "Kon je handtekening niet vastleggen. Probeer het opnieuw."
 
 [portal.procurement.builder]
 addons = "Add-ons"
+addressLine1 = "Adresregel 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Adresregel 2"
+addressLine2Placeholder = "Suite, verdieping, gebouw"
 back = "Terug"
 businessName = "Bedrijfsnaam"
 businessNamePlaceholder = "Je bedrijf"
+city = "Plaats"
+cityPlaceholder = "San Francisco"
+completeRequired = "Vul de verplichte velden (gemarkeerd met *) in met een geldig e-mailadres voordat je de offerte genereert."
+contactEmail = "E-mailadres contactpersoon"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Naam contactpersoon"
+contactNamePlaceholder = "Jane Doe"
 continue = "Doorgaan"
-country = "Land"
-countryEuro = "Eurozone (EUR €)"
-countryUK = "Verenigd Koninkrijk (GBP £)"
-countryUS = "Verenigde Staten (USD $)"
+done = "Gereed"
 eula = "Ik heb de Stirling Enterprise EULA gelezen en ga ermee akkoord. Deze is van toepassing op de overeenkomst die uit deze offerte wordt gegenereerd."
 generate = "Offerte genereren"
-included = "Inbegrepen"
 indemnification = "IP-vrijwaring"
 indemnificationSub = "Wij verdedigen kwalificerende IP-claims, volgens de EULA"
-offlineLicense = "Offline / air-gapped licentie"
-offlineLicenseSub = "Een downloadbaar licentiebestand voor een air-gapped self-hosted instantie"
+paperEyebrow = "Enterprise-offerte"
+paperFor = "Opgesteld voor"
+pdfSize = "PDF-grootte"
+poNumber = "PO-nummer"
+poNumberPlaceholder = "Optioneel"
+postalCode = "Postcode"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} beleid"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classificatie + Delen — de standaardinstellingen"
+posture_governed = "Governed"
+posture_governedSub = "Voegt Beveiliging en Routering toe"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Elke categorie — Compliance, Bewaring, Ingestie"
 qbr = "Kwartaalreviews"
 qbrSub = "Je SE beoordeelt elk kwartaal gebruik en roadmap"
+region = "Staat / regio"
+regionPlaceholder = "Californië"
 running = "{{annual}} / jaar · {{years}} jaar {{tcv}}"
 s1Sub = "Je team en de PDFs die je elk jaar verwacht te verwerken."
 s1Title = "Hoeveel ga je verwerken?"
@@ -7610,6 +8476,12 @@ s2Title = "Commitment en service"
 s3Sub = "Voor de offerte en de overeenkomst die deze genereert."
 s3Title = "Je gegevens"
 serviceLevel = "Serviceniveau"
+size_compact = "Compact"
+size_compactSub = "Vooral tekst, onder 1 MB"
+size_heavy = "Zwaar"
+size_heavySub = "Gescand of veel afbeeldingen, 5 MB+"
+size_standard = "Standaard"
+size_standardSub = "Gemengde tekst en afbeeldingen, 1 tot 5 MB"
 slDedicated = "Dedicated"
 slDedicatedSub = "4 kantooruren · dedicated accountmanager · +30%"
 slPriority = "Priority"
@@ -7617,6 +8489,8 @@ slPrioritySub = "Zelfde werkdag · toegewezen CSM · +15%"
 slStandard = "Standard"
 slStandardSub = "Volgende werkdag · gedeelde CSM · inbegrepen"
 stepOf = "Stap {{n}} van {{total}}"
+taxId = "BTW / belastingnummer"
+taxIdPlaceholder = "Optioneel"
 term = "Looptijd"
 termDiscount = "{{pct}}% korting voor meerjarig commitment toegepast"
 title = "Stel je offerte samen"
@@ -7624,6 +8498,7 @@ training = "Onboarding & training"
 trainingSub = "Live sessies om je team op weg te helpen"
 users = "Totaal aantal gebruikers"
 usersPlaceholder = "bijv. 250"
+viewEula = "Lees het"
 volEstimated = "Geschat op basis van {{count}} gebruikers (~2.000 PDFs elk, inclusief automatisering). Pas aan als je het beter weet."
 volManual = "Je eigen cijfer wordt gebruikt. Schat op elk moment opnieuw op basis van je teamgrootte."
 volNoUsers = "Niet zeker? Voer je teamgrootte in en wij schatten het."
@@ -7632,55 +8507,55 @@ volumePlaceholder = "bijv. 1.000.000"
 years_one = "{{count}} jaar"
 years_other = "{{count}} jaar"
 
-[portal.procurement.docs]
-count_one = "{{count}} doc"
-count_other = "{{count}} docs"
-done = "Klaar"
-here = "Je bent hier"
-hide = "Verbergen"
-optional = "Optioneel"
-paidAddon = "Betaalde add-on"
-show = "Tonen"
-subtitle = "Alles wat je nodig hebt bij elke stap van het traject, zichtbaar zodra de deal die stap bereikt."
-supportingSubtitle = "SOC 2, beveiligingsreviews, belastingformulieren en meer, klaar wanneer je beveiligings- of inkoopteam erom vraagt. Voor sommige geldt een eenmalige vergoeding."
-supportingTitle = "Ondersteuning van je evaluatie"
+[portal.procurement.documents]
+agreement = "Enterprise-overeenkomst"
+agreementSub = "MSA, orderformulier en DPA in één handtekening."
+download = "Downloaden"
+eula = "EULA & commerciële voorwaarden"
+eulaSub = "De software en selfservice commerciële voorwaarden."
+invoice = "Factuur"
+invoiceSub = "Je eerste abonnementsfactuur."
+laterInvoice = "Beschikbaar nadat je accepteert"
+laterQuote = "Beschikbaar zodra je offerte is uitgebracht"
+quote = "Offerte"
+quoteSub = "Je gespecificeerde enterprise-offerte."
+sla = "SLA-bijlage"
+slaSub = "Supportniveaus en responstijden."
+subprocessors = "Subverwerkers"
+subprocessorsSub = "Derden die namens jou gegevens verwerken."
+subtitle = "Je dealdocumenten, altijd beschikbaar."
 title = "Documenten"
-upcoming = "Aankomend"
+view = "Bekijken"
 
 [portal.procurement.error]
 title = "Er is iets misgegaan"
 
 [portal.procurement.hero]
-company = "Je Enterprise-deal"
+barAria = "Fase {{current}} van {{total}}"
 ctaAgreement = "Overeenkomst controleren & ondertekenen"
-ctaLive = "Je bent live"
-ctaPayment = "Betaling toevoegen"
+ctaExploring = "Je proefperiode instellen"
 ctaQuote = "Je offerte controleren"
+ctaReviewQuote = "Offerte bekijken"
 ctaTrial = "Je offerte samenstellen"
+documents = "Documenten"
 eyebrow = "Enterprise-inkoop"
+eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Teamgenoten uitnodigen"
-keyDocs = "Belangrijke documenten"
-nextStep = "Volgende stap: {{action}}"
-notStarted = "Niet gestart"
+licenseKey = "Licentiesleutel"
+liveSub = "Je organisatie is ingericht en je licentie is actief."
+liveTitle = "Je bent live op Stirling Enterprise"
+next = "Volgende: {{stage}}"
 open = "Inkoop openen"
 scheduleCall = "Gesprek plannen"
-setup1Sub = "Nodig je teamgenoten uit"
-setup1Title = "Implementeer de PDF Editor"
-setup2Sub = "Schakel verwerking in voor editors en andere bronnen"
-setup2Title = "Verbind de PDF Processor"
-setup3Sub = "Schakel Security, Compliance, Routing of Retention in wanneer je ze nodig hebt"
-setup3Title = "Aanbevolen beleidsregels toevoegen"
+sentenceAgreement = "de overeenkomst bekijken en ondertekenen"
+sentenceLive = "provisioning en uitrol"
+sentencePayment = "inkooporder en betaling"
+sentenceQuote = "je offerte bekijken en accepteren"
+sentenceTrial = "je proefwerkruimte instellen"
 
 [portal.procurement.journey]
 daysLeft_one = "Nog {{count}} dag"
 daysLeft_other = "Nog {{count}} dagen"
-engineerLabel = "Je solutions engineer"
-eyebrow = "Je uitrol"
-live = "Je bent live op Stirling Enterprise"
-nextStep = "Volgende stap: {{action}}"
-subtitle = "Je solutions engineer begeleidt elke stap. Eén volgende actie tegelijk; de volledige checklist staat hieronder."
-title = "Van trial naar live, één begeleid pad"
-trialTitle = "Enterprise-trial"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "Eén handtekening dekt MSA, bestelformulier, EULA en DPA."
@@ -7714,6 +8589,9 @@ downloadError = "Kon het offline licentiebestand nog niet genereren — probeer 
 downloadOffline = "Offline licentie downloaden (.lic)"
 hint = "Plak deze sleutel in een self-hosted instantie om deze te activeren, of bewaar hem voor je administratie. Bewaar hem veilig."
 label = "Je licentiesleutel"
+subtitle = "Activeer een self-hosted instantie met deze sleutel, of bewaar deze voor je administratie."
+title = "Je licentiesleutel"
+trialFileHint = "Dit is je proeflicentiebestand. Zodra je overeenkomst rond is, kom je terug en download je het opnieuw — anders dan de online licentiesleutel wordt het .lic-bestand niet vanzelf bijgewerkt."
 
 [portal.procurement.link]
 cta = "Account koppelen"
@@ -7726,65 +8604,62 @@ description = "Je abonnement is actief en je licentie is uitgegeven. Je team is 
 eyebrow = "Live"
 title = "Je bent live op Stirling Enterprise"
 
-[portal.procurement.locked]
-description = "Trialsleutels, offertes met vast volume, de overeenkomst met één handtekening, betaling en je documentregister staan hier allemaal zodra je een Enterprise-evaluatie start."
-eyebrow = "Alleen Enterprise"
-talkToSales = "Neem contact op met sales"
-title = "Het inkooptraject opent met Enterprise"
-
 [portal.procurement.milestone]
-accept = "Accepteren & doorgaan"
-description = "Download de PDF om deze met je team te delen, kom terug om te accepteren wanneer je klaar bent, of breng wijzigingen aan."
-download = "PDF downloaden"
 downloadError = "Kon de offerte-PDF nog niet downloaden — probeer het over enkele ogenblikken opnieuw."
-edit = "Offerte bewerken"
-eyebrow = "Offerte {{number}}"
-perYear = " / jaar"
-preparedFor = "Opgesteld voor {{company}}"
-tcv = "{{value}} totale contractwaarde"
-title = "Je offerte is klaar"
-
-[portal.procurement.modal]
-cancel = "Annuleren"
-chooseFile = "Bestand kiezen"
-close = "Sluiten"
-downloadBody = "Je download begint binnenkort."
-downloadCta = "Downloaden"
-downloadTitle = "Downloaden"
-noFile = "Geen bestand geselecteerd"
-payBody = "Betaal je vaste contract via kaart of bankoverschrijving via Stripe. Je workspace wordt ingericht zodra de betaling is verwerkt."
-payCta = "Doorgaan naar Stripe"
-payTitle = "Betaling bevestigen"
-requestBodyFree = "We genereren dit op aanvraag. Bevestig en je solutions engineer stuurt het binnenkort toe."
-requestBodyPaid = "Dit is een betaalde add-on. Bevestig en je solutions engineer bepaalt de scope en stuurt de documenten."
-requestCta = "Aanvragen"
-requestTitle = "Dit document aanvragen"
-signBody = "Opent de Stirling Enterprise-overeenkomst voor elektronische ondertekening: één handtekening dekt de MSA, het bestelformulier, de EULA en de DPA. Wij tekenen automatisch mede en je gaat door naar betaling."
-signCta = "Openen voor ondertekening"
-signTitle = "Controleer en onderteken je overeenkomst"
-uploadBody = "Stuur ons je inkooporder en wij factureren volgens je voorwaarden. Sleep de PDF hierheen of kies hieronder een bestand."
-uploadCta = "Inkooporder uploaden"
-uploadTitle = "Upload je inkooporder"
 
 [portal.procurement.payment]
 description = "Je offerte is geaccepteerd en je licentie is al actief — je team kan meteen beginnen. Betaal de eerste factuur wanneer je er klaar voor bent; je kunt deze hier betalen of downloaden, geen e-mail nodig."
+downloadAgreement = "Ondertekende overeenkomst downloaden"
 downloadInvoice = "Factuur downloaden"
-simulate = "Ontvangen betaling simuleren (demo)"
+eyebrow = "Betaling"
 title = "Abonnement aangemaakt"
 viewInvoice = "Factuur bekijken & betalen"
+
+[portal.procurement.review]
+acceptCta = "Offerte accepteren"
+annual = "Jaarlijkse vergoeding (jaar 1)"
+downloadCta = "Offerte downloaden"
+poNumber = "Inkooporder: {{po}}"
+renewal = "Verlengt tegen {{amount}}/jaar na de looptijd (+{{pct}}% CPI)"
+tcv = "Looptijd van {{years}} jaar, volledig vooraf betaald: {{tcv}}"
+validUntil = "Geldig tot {{date}}"
 
 [portal.procurement.schedule]
 fallback = "Kon de planner niet laden."
 fallbackLink = "Planning openen in een nieuw tabblad"
+loading = "Planner laden..."
 subtitle = "Je solutions engineer begeleidt je team door de uitrol. Kies een tijd die jou uitkomt."
 title = "Gesprek plannen"
 
-[portal.procurement.status]
-action = "Actie nodig"
-available = "Beschikbaar"
-complete = "Voltooid"
-pending = "In behandeling"
-request = "Op aanvraag"
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Afgesloten, geen uitgaand verkeer"
+back = "Terug"
+businessName = "Bedrijfsnaam"
+businessNamePlaceholder = "Acme Corp"
+cloud = "Stirling Cloud"
+cloudSub = "Beheerd, snelste start"
+continue = "Doorgaan"
+deployment = "Waar moet het worden geïmplementeerd?"
+eula = "Ik ga akkoord met de Stirling EULA & commerciële voorwaarden."
+fullName = "Volledige naam"
+fullNamePlaceholder = "Je naam"
+invites = "Teamgenoten uitnodigen · optioneel"
+invitesPlaceholder = "sam@acme.com, lee@acme.com"
+scheduleCall = "Een gesprek plannen"
+seats = "Mensen die testen"
+seatsPlaceholder = "bijv. 15"
+selfhost = "Self-hosted"
+selfhostSub = "Docker of Kubernetes"
+start = "Proefperiode starten"
+stepOf = "Stap {{n}} van {{total}}"
+subtitle = "14 dagen gratis, geen creditcard vereist."
+subtitleDetails = "Een paar gegevens voor je offerte en overeenkomst."
+talkFirst = "Wil je liever eerst praten?"
+title = "Je proefperiode instellen"
+viewEula = "Lees het"
+workEmail = "Werk-e-mailadres"
+workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "Verlengen voegt 7 dagen toe en stelt je solutions engineer op de hoogte."
@@ -7794,20 +8669,6 @@ extend = "7 dagen verlengen"
 maxed = "Maximum bereikt"
 subtitle = "Je gratis trial loopt tot en met {{date}}. Geen kaart vereist."
 title = "Enterprise-trial"
-
-[portal.procurement.upsell]
-homeBadge = "Enterprise"
-homeBody = "Prijzen op basis van vast volume, organisatiebrede SSO + SCIM + RBAC, 90 dagen onveranderbare audit en een dedicated SE."
-homeCta = "Trial starten →"
-homeHeadline = "Verwerk miljoenen PDFs."
-
-[portal.recentActivity]
-title = "Recente activiteit"
-viewAll = "Alles bekijken"
-
-[portal.recentActivity.empty]
-description = "Pipeline-uitvoeringen, implementaties en agentgebeurtenissen verschijnen hier."
-title = "Hier is nog niets"
 
 [portal.search]
 ariaLabel = "Zoeken"
@@ -7825,57 +8686,49 @@ admin = "Admin"
 [portal.settings.sections]
 account-link = "Accountkoppeling"
 
-[portal.shell.header]
-accountFallback = "Account"
-accountMenu = "Accountmenu"
-darkMode = "Donkere modus"
-lightMode = "Lichte modus"
-search = "Zoeken"
-searchPlaceholder = "Zoeken…"
-signOut = "Uitloggen"
-switchToDark = "Overschakelen naar donker thema"
-switchToLight = "Overschakelen naar licht thema"
-
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
-brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} docs"
 linkAccount = "Stirling-account koppelen"
-planEditor = "Editor-abonnement"
-planEnterprise = "Enterprise-abonnement"
-planProcessor = "Processor-abonnement"
 primaryNav = "Primaire navigatie"
 switchApp = "App wisselen"
+
+[portal.shell.topbar]
+closeNav = "Navigatie sluiten"
+openNav = "Navigatie openen"
+search = "Zoeken"
 
 [portal.sources]
 subtitle = "Herbruikbare invoerverbindingen die documenten aan Stirling leveren. Configureer een verbinding één keer en verwijs er vervolgens vanuit meerdere beleidsregels naar. Klik op een rij voor de configuratie en welke beleidsregels deze gebruiken."
 title = "Bronnen"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "Bron verbinden"
+
+[portal.sources.builder]
+back = "Terug naar bronnen"
+backToTypes = "Alle brontypen"
+cancel = "Annuleren"
+chooseHint = "Kies waar documenten vandaan komen. Grijs gemaakte connectors zijn onderweg."
+comingSoon = "Binnenkort beschikbaar"
+comingSoonHeading = "Binnenkort beschikbaar"
+create = "Bron maken"
+createTitle = "Een bron verbinden"
+delete = "Verwijderen"
+editTitle = "Bron bewerken"
+enabled = "Ingeschakeld"
+save = "Wijzigingen opslaan"
+
+[portal.sources.builder.folderAccess]
+description = "Mapautomatiseringen kunnen alleen mappen gebruiken die een beheerder heeft toegestaan. Voeg deze toe onder instellingen voor Maptoegang en probeer het daarna opnieuw."
+openSettings = "Instellingen voor Maptoegang"
+title = "Deze map is niet toegestaan"
 
 [portal.sources.delete]
 body = "\"{{name}}\" verwijderen? Dit kan niet ongedaan worden gemaakt. Beleidsregels die ernaar verwijzen moeten worden bijgewerkt."
 cancel = "Annuleren"
 confirm = "Verwijderen"
 title = "Bron verwijderen?"
-
-[portal.sources.detail]
-closeAriaLabel = "Detail sluiten"
-delete = "Bron verwijderen"
-docs24h = "Laatste 24u"
-docs30d = "Laatste 30 dagen"
-docsTotal = "Totaal gezien"
-docsTrend = "Documenten over de laatste 30 dagen"
-documents = "Documenten"
-edit = "Bewerken"
-notReferenced = "Wordt door geen enkele beleidsregel gebruikt, dus kan veilig worden verwijderd."
-pause = "Pauzeren"
-resume = "Hervatten"
-subtitle = "{{type}} · {{status}}"
-usedBy = "Gebruikt door"
 
 [portal.sources.empty]
 description = "Verbind een map (en binnenkort cloudopslag) zodat je beleidsregels ergens documenten vandaan kunnen halen."
@@ -7886,18 +8739,57 @@ inUse = "In gebruik"
 total = "Verbindingen"
 unused = "Ongebruikt"
 
+[portal.sources.networkFields.connection]
+helperText = "De opgeslagen verbinding met het serveradres en de inloggegevens. Hergebruikt door elke bron die ernaar verwijst."
+label = "Verbinding"
+
+[portal.sources.networkFields.directory]
+helperText = "Map op de server om te pollen, relatief ten opzichte van de login-home of share-root. Laat leeg voor de root."
+label = "Map"
+placeholder = "incoming/"
+
+[portal.sources.networkFields.mode]
+helperText = "Consume verwijdert elk bestand van de server zodra elk beleid het heeft verwerkt."
+label = "Leesmodus"
+
+[portal.sources.networkFields.mode.options]
+consume = "Consume: elk bestand één keer verwerken"
+snapshot = "Snapshot: de map bij elke uitvoering opnieuw lezen"
+
+[portal.sources.networkFields.recursive]
+label = "Mapdiepte"
+
+[portal.sources.networkFields.recursive.options]
+all = "Submappen opnemen"
+top = "Alleen hoogste niveau"
+
 [portal.sources.status]
 active = "Actief"
 disabled = "Uitgeschakeld"
 unused = "Ongebruikt"
 
 [portal.sources.table]
+documents = "Documenten"
 source = "Bron"
 status = "Status"
 usedBy = "Beleidsregels"
 
+[portal.sources.types.box]
+description = "Haal documenten op uit Box-mappen die je team al deelt."
+label = "Box"
+
+[portal.sources.types.dropbox]
+description = "Haal documenten op uit een gedeelde Dropbox-map."
+label = "Dropbox"
+
 [portal.sources.types.editor]
+description = "Documenten die je team in de editor heeft verwerkt, over beleid en AI-uitvoeringen heen."
 label = "Editor"
+noPolicies = "Nog geen beleid uitgevoerd vanuit de editor."
+
+[portal.sources.types.email]
+description = "Zet bijlagen die naar een speciale mailbox worden gestuurd om in documenten."
+label = "E-mailinbox"
 
 [portal.sources.types.folder]
 description = "Bewaak een directory op de server voor nieuwe documenten."
@@ -7930,25 +8822,80 @@ label = "Mapdiepte"
 all = "Submappen opnemen"
 top = "Alleen bovenste niveau"
 
+[portal.sources.types.ftp]
+description = "Poll een FTP- of FTPS-servermap op nieuwe documenten."
+label = "FTP"
+
+[portal.sources.types.googledrive]
+description = "Haal documenten op uit gedeelde Google Drive-mappen."
+label = "Google Drive"
+
+[portal.sources.types.network]
+description = "Bewaak een SMB-netwerkshare op nieuwe documenten."
+label = "Netwerkdrive"
+
+[portal.sources.types.onedrive]
+description = "Bewaak OneDrive-mappen op nieuwe documenten."
+label = "OneDrive"
+
+[portal.sources.types.s3]
+description = "Haal documenten op uit een Amazon S3- of S3-compatibele bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "De opgeslagen verbinding met de bucket en inloggegevens. Hergebruikt door elke bron en pijplijnuitvoer die ernaar verwijst."
+label = "Verbinding"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume verwijdert elk object uit de bucket zodra elk beleid het heeft verwerkt."
+label = "Leesmodus"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: elk object één keer verwerken"
+snapshot = "Snapshot: de bucket bij elke uitvoering opnieuw lezen"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Alleen objecten waarvan de keys met dit prefix beginnen, worden verwerkt."
+label = "Key-prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.sftp]
+description = "Poll een SFTP-dropmap op nieuwe documenten."
+label = "SFTP"
+
+[portal.sources.types.sharepoint]
+description = "Haal documenten op uit SharePoint-documentbibliotheken."
+label = "SharePoint"
+
 [portal.sources.types.unknown]
 label = "Bron"
 
+[portal.sources.types.webhook]
+createNote = "Een delivery URL en signing secret worden gegenereerd wanneer je deze webhook maakt. Afzenders POSTen documenten naar die URL en het verwijzende beleid wordt uitgevoerd bij aankomst."
+description = "Ontvang documenten via ondertekende HTTP POST vanuit elk extern systeem."
+label = "Webhook"
+
+[portal.sources.types.webhook.detail]
+deliveryUrl = "Delivery URL"
+secretNote = "Het signing secret wordt één keer getoond, wanneer de webhook wordt gemaakt. Maak de bron opnieuw aan om het te roteren."
+
+[portal.sources.types.webhook.reveal]
+copy = "Kopiëren"
+done = "Gereed"
+secret = "Signing secret"
+secretHelp = "Onderteken de ruwe body van elke levering met deze sleutel (HMAC-SHA256) en verzend deze als de X-Stirling-Signature-header."
+secretWarning = "Kopieer het signing secret nu. Voor je veiligheid wordt het slechts één keer getoond en kan het later niet worden opgehaald."
+title = "Webhook aangemaakt"
+url = "Delivery URL"
+usage = "POST elk document als de ruwe request body naar de delivery URL met een binair content type (application/pdf of application/octet-stream). Verwijzend beleid wordt automatisch uitgevoerd bij aankomst."
+
 [portal.sources.wizard]
-back = "Terug"
-cancel = "Annuleren"
-continue = "Doorgaan"
-editTitle = "Bron bewerken"
 name = "Naam"
 namePlaceholder = "bijv. Claims intake"
-save = "Wijzigingen opslaan"
-subtitle = "Stap {{current}} van {{total}} · {{label}}"
-title = "Een bron verbinden"
 type = "Type"
 
-[portal.sources.wizard.steps]
-chooseType = "Type kiezen"
-configure = "Configureren"
-review = "Controleren & verbinden"
+[portal.stepModal]
+close = "Sluiten"
 
 [portal.usage]
 managePayment = "Betaling beheren"
@@ -8008,16 +8955,9 @@ summary = "Bezit een team — beheert de resources en gedeelde configuraties van
 2 = "Portal-toegang via de standaardbeleidsregel"
 3 = "Alles wat Member kan doen"
 
-[portal.welcome]
-ariaLabel = "Welkom bij Stirling PDF"
-badge = "Open-source"
-installEditor = "De Editor installeren"
-inviteTeammates = "Teamgenoten uitnodigen"
-openInBrowser = "Openen in browser"
-perks = "Voor altijd gratis · Self-hostable"
-subtitle = "De veiligste PDF Editor ter wereld is gratis voor teams van elke omvang. Inclusief 60+ PDF-bewerkingen en SSO."
-title = "Welkom bij"
-titleAccent = "Stirling PDF"
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Onbeperkt"
 
 [printFile]
 title = "Print bestand"
@@ -8600,6 +9540,14 @@ text = "Draai uw PDF-pagina's met de klok mee of tegen de klok in in stappen van
 [rotate.tooltip.header]
 title = "Overzicht rotatie-instellingen"
 
+[ruler]
+clearAll = "Alles wissen"
+hideAllLabels = "Alle labels verbergen"
+hideSmallLabels = "Kleine labels verbergen"
+physicalValues = "Fysiek"
+scaled = "Geschaald"
+showAllLabels = "Alle labels tonen"
+
 [sanitize]
 desc = "Verwijder mogelijk schadelijke elementen uit PDF-bestanden."
 sanitizationResults = "Opschoonresultaten"
@@ -8641,30 +9589,44 @@ label = "XMP-metagegevens verwijderen"
 [sanitize.steps]
 settings = "Instellingen"
 
-[sanitizePdf]
-tags = "schoonmaken,veilig,veilig,bedreigingen verwijderen"
-
 [sanitizePDF]
 title = "PDF opschonen"
+
+[sanitizePdf]
+tags = "schoonmaken,veilig,veilig,bedreigingen verwijderen"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Pagina-schaal aanpassen"
 
+[scaleSettings]
+activeScale = "Actieve schaal"
+apply = "Schaal toepassen"
+applyCalibration = "Kalibratie toepassen"
+calculatedScale = "Berekende schaal"
+calibrate = "Kalibreren"
+calibrating = "Kalibreren"
+calibrationDistanceRequired = "Voer een werkelijke afstand groter dan nul in"
+calibrationInvalid = "Kan de schaal niet berekenen op basis van deze meting"
+calibrationPaperDistance = "Gemeten pagina-afstand: {{distance}}"
+calibrationTitle = "Schaal kalibreren"
+calibrationTooltip = "Meet een bekende afstand om de schaal automatisch te berekenen"
+customScale = "Aangepaste schaal"
+noneSet = "Geen aangepaste schaal ingesteld"
+presets = "Vooraf ingestelde schalen"
+ratio = "Schaalverhouding"
+ratioHelp = "Verhouding: 1 pagina-eenheid = X werkelijke eenheden"
+ratioPlaceholder = "bijv. 100"
+ratioPositive = "Verhouding moet groter zijn dan nul"
+ratioRequired = "Verhouding is vereist"
+realDistance = "Werkelijke afstand"
+realDistancePlaceholder = "bijv. 5"
+reset = "Terugzetten naar standaardwaarden"
+unit = "Eenheid"
+unitInvalid = "Ongeldige eenheid: {{scaleUnit}}"
+
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-
-[ScannerImageSplit.selectText]
-1 = "Hoek drempel:"
-10 = "Stelt de grootte van de toegevoegde en verwijderde rand in om witte randen in de uitvoer te voorkomen (standaard: 1)."
-2 = "Stelt de minimale absolute hoek in die nodig is om de afbeelding te roteren (standaard: 10)."
-3 = "Tolerantie:"
-4 = "Bepaalt het bereik van kleurvariatie rond de geschatte achtergrondkleur (standaard: 30)."
-5 = "Minimum oppervlakte:"
-6 = "Stelt de minimale oppervlakte drempel in voor een foto (standaard: 10000)."
-7 = "Minimum contour oppervlakte:"
-8 = "Stelt de minimale contour oppervlakte drempel in voor een foto"
-9 = "Randgrootte:"
 
 [scannerImageSplit]
 submit = "Afbeeldingsscans extraheren"
@@ -8697,6 +9659,18 @@ whatThisDoes = "Wat dit doet"
 whatThisDoesDesc = "Detecteert en extraheert automatisch elke foto uit een gescande pagina of samengestelde afbeelding—geen handmatig bijsnijden."
 whenToUse = "Wanneer te gebruiken"
 
+[ScannerImageSplit.selectText]
+1 = "Hoek drempel:"
+10 = "Stelt de grootte van de toegevoegde en verwijderde rand in om witte randen in de uitvoer te voorkomen (standaard: 1)."
+2 = "Stelt de minimale absolute hoek in die nodig is om de afbeelding te roteren (standaard: 10)."
+3 = "Tolerantie:"
+4 = "Bepaalt het bereik van kleurvariatie rond de geschatte achtergrondkleur (standaard: 30)."
+5 = "Minimum oppervlakte:"
+6 = "Stelt de minimale oppervlakte drempel in voor een foto (standaard: 10000)."
+7 = "Minimum contour oppervlakte:"
+8 = "Stelt de minimale contour oppervlakte drempel in voor een foto"
+9 = "Randgrootte:"
+
 [search]
 noResults = "Geen resultaten gevonden"
 placeholder = "Voer zoekterm in..."
@@ -8714,46 +9688,22 @@ toolNotAvailableLocally = "Je Stirling-PDF-server is offline en \"{{endpoint}}\"
 [session]
 expired = "Uw sessie is verlopen. Voer de pagina opnieuw in en probeer het opnieuw."
 
-[sessionManagement.tooltip]
-header = "Ondertekeningssessies beheren"
-
-[sessionManagement.tooltip.addParticipants]
-bullet1 = "Nieuwe deelnemers worden aan het einde van de ondertekeningsvolgorde toegevoegd"
-bullet2 = "Kan geen deelnemers toevoegen nadat sessie is gefinaliseerd"
-bullet3 = "Elke deelnemer ontvangt een melding wanneer hij/zij aan de beurt is"
-description = "U kunt op elk moment vóór de finalisatie meer deelnemers aan een actieve sessie toevoegen."
-title = "Deelnemers toevoegen"
-
-[sessionManagement.tooltip.finalization]
-bullet1 = "<b>Volledige finalisatie</b>: Alle deelnemers hebben getekend"
-bullet2 = "<b>Gedeeltelijke finalisatie</b>: Sommige deelnemers hebben nog niet getekend"
-bullet3 = "Niet-ondertekende deelnemers worden uitgesloten van het definitieve document"
-bullet4 = "Na finalisatie kunt u de ondertekende PDF laden in actieve bestanden"
-description = "Finalisatie combineert alle handtekeningen in één ondertekende PDF. Deze actie kan niet ongedaan worden gemaakt."
-title = "Sessie-finalisatie"
-
-[sessionManagement.tooltip.participantRemoval]
-bullet1 = "Kan geen deelnemers verwijderen die al hebben getekend"
-bullet2 = "Verwijderde deelnemers ontvangen geen meldingen meer"
-bullet3 = "Ondertekeningsvolgorde wordt automatisch aangepast"
-description = "Deelnemers kunnen vóór het tekenen uit sessies worden verwijderd."
-title = "Deelnemers verwijderen"
-
-[sessionManagement.tooltip.signatureOrder]
-bullet1 = "Elke handtekening wordt sequentieel op de PDF toegepast"
-bullet2 = "Latere ondertekenaars kunnen eerdere handtekeningen zien"
-bullet3 = "Cruciaal voor goedkeuringsworkflows en juridische ketens van bewaring"
-description = "De volgorde die u bij het maken van de sessie opgeeft, bepaalt wie als eerste tekent."
-title = "Ondertekeningsvolgorde"
-
 [settings]
 close = "Sluiten"
+
+[settings.ai]
+documents = "Documenten & RAG"
+general = "Algemeen"
+limits = "Limieten & prestaties"
+models = "Modellen & providers"
+title = "AI"
 
 [settings.configuration]
 advanced = "Geavanceerd"
 database = "Database"
 endpoints = "Eindpunten"
 features = "Functies"
+folderAccess = "Maptoegang"
 mcp = "MCP Server"
 storageSharing = "Bestandsopslag en delen"
 systemSettings = "Systeeminstellingen"
@@ -8787,6 +9737,8 @@ defaultPdfEditor = "Standaard PDF-editor"
 defaultPdfEditorActive = "Stirling PDF is de standaard PDF-editor"
 defaultPdfEditorChecking = "Controleren..."
 defaultPdfEditorInactive = "Een andere app is als standaard ingesteld"
+defaultPdfEditorRemind = "Herinner me eraan om als standaard in te stellen"
+defaultPdfEditorRemindDescription = "Toon een banner wanneer Stirling PDF niet je standaard-PDF-toepassing is."
 defaultPdfEditorSet = "Al standaard"
 defaultStartupView = "Standaardweergave bij opstarten"
 defaultStartupViewDescription = "Kies welk tabblad in de linkerkolom actief is wanneer de app start"
@@ -8804,9 +9756,18 @@ languageDescription = "Kies de weergavetaal"
 logout = "Afmelden"
 setAsDefault = "Als standaard instellen"
 theme = "Thema"
+themeAccent = "Accentkleur"
+themeAccentCustom = "Aangepaste kleur"
+themeAccentCustomHint = "Aangepast (standaardwaarden aanbevolen)"
+themeAccentDark = "Accentkleur donkere modus"
+themeAccentDefault = "Standaard"
+themeAccentDefaultHint = "Standaardthema (aanbevolen)"
+themeAccentDescription = "Knoppen, links en markeringen volgen deze kleur, en de app krijgt subtiel die tint. Licht en donker hebben elk hun eigen kleur. Systeem gebruikt de actieve kleur."
+themeAccentLight = "Accentkleur lichte modus"
 themeDark = "Donker"
 themeDescription = "Schakel tussen lichte en donkere modus"
 themeLight = "Licht"
+themeReset = "Thema terugzetten naar standaard"
 themeSystem = "System"
 title = "Algemeen"
 user = "Gebruiker"
@@ -8819,6 +9780,12 @@ dismiss = "Sluiten"
 intro = "Schakel gebruikersauthenticatie, teambeheer en werkruimtefuncties in voor uw organisatie."
 learnMore = "Meer info in de documentatie"
 title = "Voor systeembeheerders"
+
+[settings.general.loginLanding]
+description = "Kies welke app wordt geopend wanneer je inlogt bij Stirling Cloud."
+editor = "Editor"
+processor = "Verwerker"
+title = "Na het inloggen"
 
 [settings.general.mode]
 fullscreen = "Volledig scherm"
@@ -9027,6 +9994,11 @@ connections = "Verbindingen"
 security = "Beveiliging"
 telegram = "Telegram"
 title = "Beveiliging & Authenticatie"
+
+[settings.signOut]
+confirm = "Weet je zeker dat je wilt uitloggen?"
+submit = "Uitloggen"
+title = "Uitloggen"
 
 [settings.team]
 title = "Team"
@@ -9644,6 +10616,9 @@ uploadButton = "Uploaden naar server"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "klik hier"
+fallback = "Als het niet automatisch is geopend,"
+opening = "Swagger UI wordt geopend in een nieuw tabblad..."
 tags = "api,documentatie,swagger,endpoints,ontwikkeling"
 title = "API-documentatie"
 
@@ -9751,14 +10726,42 @@ selectFilesHint = "Selecteer bestanden in Actieve bestanden om deze tool uit te 
 singleFileScope = "Alleen van toepassing op: {{fileName}}"
 viewerMode = "Schakel over naar de bestandseditor om meerdere bestanden te selecteren."
 
+[toolFormat]
+ANY = "elk bestand"
+CBR = "een striparchief (CBR)"
+CBZ = "een striparchief (CBZ)"
+CSV = "een CSV-bestand"
+EBOOK = "een e-book"
+EMAIL = "een e-mail"
+EXCEL = "een spreadsheet"
+HTML = "een webpagina"
+IMAGE = "afbeeldingen"
+JAVASCRIPT = "een JavaScript-bestand"
+JSON = "een JSON-bestand"
+MARKDOWN = "een Markdown-bestand"
+NONE = "geen bestand"
+PCL = "een PCL-afdrukbestand"
+PDF = "een PDF"
+PDF_ENCRYPTED = "een met wachtwoord beveiligde PDF"
+POSTSCRIPT = "een PostScript-bestand"
+PPT = "een presentatie"
+TEXT = "een tekstbestand"
+VIDEO = "een video"
+WORD = "een Word-document"
+XML = "een XML-bestand"
+XPS = "een XPS-document"
+ZIP = "een ZIP-archief"
+
 [toolPanel]
 alpha = "Alfa"
 backToAllTools = "Terug naar alle tools"
 collapse = "Paneel samenvouwen"
 expand = "Paneel uitvouwen"
 goBack = "Ga terug"
+pdfTools = "PDF-tools"
 placeholder = "Kies een tool om te beginnen"
 premiumFeature = "Premiumfunctie:"
+searchTools = "Tools zoeken"
 toolsHeader = "Tools"
 viewAllTools = "Alle tools weergeven"
 
@@ -9792,11 +10795,6 @@ allTools = "ALLE TOOLS"
 noToolsFound = "Geen tools gevonden"
 quickAccess = "SNELLE TOEGANG"
 searchPlaceholder = "Tools zoeken..."
-
-[toolPicker.categories]
-advancedTools = "Geavanceerde tools"
-recommendedTools = "Aanbevolen tools"
-standardTools = "Standaardtools"
 
 [toolPicker.subcategories]
 advancedFormatting = "Geavanceerde opmaak"
@@ -9937,15 +10935,30 @@ title = "Gebruikers"
 you = "(jij)"
 
 [users.action]
+cancelInvite = "Uitnodiging annuleren"
 deleteTeam = "Team verwijderen"
 disableMfa = "MFA resetten"
 move = "Naar team verplaatsen"
 reinstate = "Herstellen"
 remove = "Uit org verwijderen"
+removeTeam = "Uit team verwijderen"
 rename = "Team hernoemen"
 resetPw = "Wachtwoord resetten"
 suspend = "Schorsen"
 unlock = "Account ontgrendelen"
+
+[users.activity]
+daysAgo = "{{count}} d geleden"
+hoursAgo = "{{count}} u geleden"
+justNow = "Zojuist"
+minutesAgo = "{{count}} min geleden"
+monthsAgo_one = "{{count}} maand geleden"
+monthsAgo_other = "{{count}} maanden geleden"
+never = "Nooit"
+weeksAgo_one = "{{count}} week geleden"
+weeksAgo_other = "{{count}} weken geleden"
+yearsAgo_one = "{{count}} jaar geleden"
+yearsAgo_other = "{{count}} jaar geleden"
 
 [users.cap]
 addProcessor = "+ Processor"
@@ -9954,11 +10967,14 @@ editor = "Editor"
 processor = "Processor"
 
 [users.confirm]
+cancelInviteBody = "Uitnodiging voor {{email}} annuleren? Deze persoon kan niet deelnemen met de huidige link."
+cancelInviteTitle = "Uitnodiging annuleren"
 deleteTeamBody = "Het team {{name}} verwijderen? Het team moet eerst leeg zijn - verplaats de leden naar een ander team, en het mag geen integratieconfiguraties meer bezitten."
 deleteTeamTitle = "Team verwijderen"
 disableMfaBody = "MFA-registratie van {{name}} verwijderen? Diegene stelt dit bij de volgende login opnieuw in als het vereist is."
 disableMfaTitle = "MFA resetten"
 removeBody = "{{name}} permanent uit de organisatie verwijderen? Dit kan niet ongedaan worden gemaakt."
+removeTeamBody = "{{name}} uit het team verwijderen? Deze persoon behoudt het account, maar verliest toegang tot de resources van dit team."
 removeTitle = "Lid verwijderen"
 
 [users.empty]
@@ -10008,6 +11024,16 @@ title = "Mensen uitnodigen"
 username = "Gebruikersnaam"
 usernameError = "Gebruikersnaam moet minimaal 3 tekens bevatten"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Uitgenodigd door {{who}}"
+cancel = "Annuleren"
+count = "{{count}} in behandeling"
+desc = "Uitgenodigde personen die nog niet zijn toegetreden. Ze houden een plek bezet totdat ze accepteren."
+expiresInDays_one = "Verloopt over {{count}} dag"
+expiresInDays_other = "Verloopt over {{count}} dagen"
+expiresToday = "Verloopt vandaag"
+title = "Uitnodigingen in behandeling"
 
 [users.loadError]
 description = "Er is iets misgegaan bij het bereiken van de backend, of je hebt geen toegang. Probeer het opnieuw."
@@ -10199,9 +11225,11 @@ title = "Bijlagen"
 
 [viewer.bookmarks]
 bookmarkTitle = "Bladwijzertitel"
+bookmarkTitleRequired = "Bladwijzertitel is vereist"
 closeSidebar = "Zijbalk met bladwijzers sluiten"
 collapseAll = "Alle bladwijzers samenvouwen"
 expandAll = "Alle bladwijzers uitvouwen"
+searchPlaceholder = "Bladwijzers zoeken"
 
 [viewer.comments]
 addComment = "Opmerking toevoegen"
@@ -10592,30 +11620,6 @@ title = "Watermerktekst"
 image = "Afbeelding"
 text = "Tekst"
 
-[wetSignature.tooltip]
-header = "Methoden voor het maken van een handtekening"
-
-[wetSignature.tooltip.draw]
-bullet1 = "Pas penkleur en -dikte aan"
-bullet2 = "Wissen en opnieuw tekenen tot u tevreden bent"
-bullet3 = "Werkt op aanraakapparaten (tablets, telefoons)"
-description = "Maak een handgeschreven handtekening met uw muis of touchscreen. Het best voor persoonlijke, authentieke handtekeningen."
-title = "Handtekening tekenen"
-
-[wetSignature.tooltip.type]
-bullet1 = "Kies uit meerdere lettertypen"
-bullet2 = "Pas tekstgrootte en -kleur aan"
-bullet3 = "Perfect voor gestandaardiseerde handtekeningen"
-description = "Genereer een handtekening vanuit getypte tekst. Snel en consistent, geschikt voor zakelijke documenten."
-title = "Handtekening typen"
-
-[wetSignature.tooltip.upload]
-bullet1 = "Ondersteunt PNG, JPG en andere afbeeldingsformaten"
-bullet2 = "Transparante achtergronden aanbevolen voor de beste resultaten"
-bullet3 = "Afbeelding wordt geschaald naar het handtekeninggebied"
-description = "Upload een vooraf gemaakte handtekeningafbeelding. Ideaal als u een gescande handtekening of bedrijfslogo heeft."
-title = "Handtekeningafbeelding uploaden"
-
 [workbenchBar]
 activeFiles = "Actieve bestanden"
 annotations = "Annotaties"
@@ -10639,6 +11643,7 @@ redact = "Zwartlakken"
 rotateLeft = "Linksom roteren"
 rotateRight = "Rechtsom roteren"
 ruler = "Liniaal / Meten"
+rulerSettings = "Schaalinstellingen"
 save = "Opslaan"
 saveAll = "Alles opslaan"
 saveAs = "Opslaan als"

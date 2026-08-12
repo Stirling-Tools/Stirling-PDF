@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.engine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -312,7 +313,11 @@ class PolicyExecutorTest {
                                         definition(new PipelineStep(compress, Map.of())),
                                         PolicyInputs.of(List.of(pdf("img", "image.png"))),
                                         PolicyProgressListener.NOOP));
-        assertTrue(ex.getMessage().contains("image.png"));
+        // Names the rejected extension, never the document. This message becomes the run's error
+        // and
+        // is persisted on the failure record, which holds no document name.
+        assertTrue(ex.getMessage().contains("png"));
+        assertFalse(ex.getMessage().contains("image.png"));
         // Type check happens before any dispatch.
         verify(internalApiClient, never()).post(anyString(), any());
     }

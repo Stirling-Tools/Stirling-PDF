@@ -32,6 +32,7 @@ import {
   type PolicyToolId,
   type PolicyToolStep,
 } from "@app/policies/operations";
+import { resolveRunOn } from "@app/policies/runOn";
 import { useSources } from "@portal/queries/sources";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
@@ -350,8 +351,8 @@ function PolicySetupWizardBody({
   const [outputNamePosition, setOutputNamePosition] = useState<
     "prefix" | "suffix" | "auto-number"
   >(policy?.state.outputNamePosition ?? "suffix");
-  const [runOn, setRunOn] = useState<"upload" | "export">(
-    policy?.state.runOn ?? "upload",
+  const [runOn, setRunOn] = useState<"upload" | "export">(() =>
+    resolveRunOn(policy?.state.runOn, category.id),
   );
   // Policies run once; retry config has no UI. Preserve any saved values on
   // edit and default new policies to no retries (run once).
@@ -755,7 +756,7 @@ function PolicySetupWizardBody({
                     inputSize="sm"
                     value={runOn}
                     onChange={(value) =>
-                      setRunOn((value ?? "upload") as "upload" | "export")
+                      setRunOn(resolveRunOn(value, category.id))
                     }
                     options={[
                       {
