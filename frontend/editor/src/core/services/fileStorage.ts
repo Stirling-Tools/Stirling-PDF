@@ -430,7 +430,6 @@ class FileStorageService {
    */
   private reportIfUnreadable(record: StoredStirlingFileRecord): void {
     if (!(record.data instanceof Blob)) return;
-    if (this.unreadableRecords.has(record.id)) return;
     if (this.auditedRecords.has(record.id)) return;
     this.auditedRecords.add(record.id);
     void blobReadFailure(record.data).then((failure) => {
@@ -466,12 +465,6 @@ class FileStorageService {
       // Best-effort: a failed rescue leaves the record exactly as it was.
       console.warn(`[fileStorage] could not rescue ${fileId}:`, error);
     }
-  }
-
-  /** Whether this session has proven a record's bytes unreadable. Synchronous on
-   *  purpose: stub listings consult it while building rows. */
-  isRecordUnreadable(id: FileId): boolean {
-    return this.unreadableRecords.has(id);
   }
 
   /** One console error and one toast per dead record: every consumer of the file
@@ -1128,8 +1121,6 @@ class FileStorageService {
       const db = await this.getDatabase();
       const record = await this.readRecord(db, id);
       if (!record) return null;
-      // Same as getStirlingFile: report, never gate. See reportIfUnreadable.
-      this.reportIfUnreadable(record);
 
       // Stored blobs are handed straight to createObjectURL — re-wrapping
       // one can cost WebKit the backing handle. See fileFromRecord.

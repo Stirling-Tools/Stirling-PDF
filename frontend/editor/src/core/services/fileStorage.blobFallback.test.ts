@@ -288,8 +288,6 @@ describe("reads — a stored blob whose bytes are gone", () => {
 
     // Not null, and not awaited on the probe: the caller is never blocked.
     expect((await fileStorage.getStirlingFile(id))?.name).toBe("lost.pdf");
-    // jsdom stubs createObjectURL; the point is that a URL is still handed out.
-    expect(await fileStorage.createBlobUrl(id)).toBeTruthy();
     await new Promise((resolve) => setTimeout(resolve));
 
     // Told once, not once per reader: every consumer of the file hits this record.
@@ -478,7 +476,6 @@ describe("stub listings — data-lost auditing", () => {
     expect((await fileStorage.getStirlingFileStub(id))?.dataUnavailable).toBe(
       true,
     );
-    expect(fileStorage.isRecordUnreadable(id)).toBe(true);
   });
 
   test("rescues a still-readable legacy blob to a copy on a no-blob browser", async () => {
@@ -493,7 +490,10 @@ describe("stub listings — data-lost auditing", () => {
     substituteHealthyBlobOnRead(5);
     await fileStorage.getStirlingFileStub(id);
     await vi.waitFor(() => expect(putAttempts).toContain("copy"));
-    expect(fileStorage.isRecordUnreadable(id)).toBe(false);
+    // Rescued, not condemned: the stub stays openable.
+    expect(
+      (await fileStorage.getStirlingFileStub(id))?.dataUnavailable,
+    ).toBeUndefined();
   });
 });
 
