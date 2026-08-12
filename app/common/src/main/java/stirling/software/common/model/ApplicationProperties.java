@@ -1047,6 +1047,8 @@ public class ApplicationProperties {
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
         private boolean enableMobileScanner = true; // Enable mobile phone QR code upload feature
+        private boolean enableMobileSignature =
+                true; // Enable drawing signatures on a phone via QR code
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
         private ServerCertificate serverCertificate = new ServerCertificate();
 
@@ -1105,6 +1107,13 @@ public class ApplicationProperties {
         @Data
         public static class Encryption {
             private boolean enabled = false;
+
+            /**
+             * Emit an audit event for every decrypt of an encrypted blob. Compliance reviewers
+             * (HIPAA) expect read audit, so it defaults on; busy multi-user installs can disable.
+             * Denied decrypts and key lifecycle events are always audited regardless.
+             */
+            private boolean auditReads = true;
         }
 
         @Data

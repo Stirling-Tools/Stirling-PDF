@@ -258,6 +258,8 @@ export type ToolArity = ${union(vocabulary.arities as string[])};
 export interface ToolIOWhen {
   param: string;
   matches: string[];
+  /** The value the endpoint uses when this parameter is absent; omitted when it has none. */
+  default?: string;
 }
 
 /** An output that applies when every condition in \`when\` holds. */

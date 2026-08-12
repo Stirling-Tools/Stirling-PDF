@@ -181,11 +181,13 @@ const humanizeLabel = (s) =>
 
 const pageTitles = {
   "/login": "Sign In",
-  "/signup": "Sign Up",
   "/mobile-scanner": "Mobile Scanner",
   "/files": "Files",
   "/settings": "Settings",
 };
+
+// Routes only the SaaS build serves - self-hosted has no signup page.
+const SAAS_ONLY_PAGE_TITLES = { "/signup": "Sign Up" };
 for (const key of navKeys)
   pageTitles[`/settings/${key}`] = `${humanizeLabel(key)} Settings`;
 
@@ -215,6 +217,14 @@ const saasManifest = {
   byTool: { ...byTool },
   byPath: { ...byPath },
 };
+for (const [routePath, label] of Object.entries(SAAS_ONLY_PAGE_TITLES)) {
+  saasManifest.byTool[routePath] = {
+    image: `/og_images/${DEFAULT_IMAGE_BASENAME}.png`,
+    title: `${label} - ${SITE_NAME}`,
+    description: SITE_DESC,
+  };
+  saasManifest.byPath[routePath] = routePath;
+}
 for (const [routePath, entry] of Object.entries(SAAS_ROUTE_OVERRIDES)) {
   saasManifest.byTool[routePath] = entry;
   saasManifest.byPath[routePath] = routePath;

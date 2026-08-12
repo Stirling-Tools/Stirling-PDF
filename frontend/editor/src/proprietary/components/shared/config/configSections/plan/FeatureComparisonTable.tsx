@@ -85,7 +85,7 @@ const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({
                     style={{ textAlign: "center", padding: "0.75rem" }}
                   >
                     {plan.features[featureIndex]?.included ? (
-                      <Text c="green" fw={600} size="lg">
+                      <Text c="var(--color-green-dark)" fw={600} size="lg">
                         ✓
                       </Text>
                     ) : (

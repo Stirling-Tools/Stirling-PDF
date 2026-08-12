@@ -2933,12 +2933,16 @@ text = "To make these permissions unchangeable, use the Add Password tool to set
 [chat.actions]
 copy = "Copy message"
 
+[chat.emptyState]
+text = "Ask a question about your documents or get help with PDF tools."
+
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling agent options"
+assistant = "AI Assistant"
 clearChat = "Clear chat"
 
 [chat.input]
@@ -3001,18 +3005,22 @@ tooltip = "This operation will use your cloud credits"
 tooltip = "Pick color from screen"
 
 [colorPicker]
+hue = "Hue"
+saturation = "Saturation and brightness"
 title = "Choose color"
 
 [common]
 back = "Back"
 cancel = "Cancel"
 close = "Close"
+codeSample = "Code sample"
 collapse = "Collapse"
 confirm = "Confirm"
 continue = "Continue"
 copied = "Copied!"
 copy = "Copy"
 done = "Done"
+enterValue = "Enter value"
 error = "Error"
 expand = "Expand"
 loading = "Loading..."
@@ -3023,6 +3031,7 @@ refresh = "Refresh"
 remaining = "Remaining"
 retry = "Retry"
 save = "Save"
+stepOf = "Step {{current}} of {{total}}"
 
 [compare]
 clearSelected = "Clear selected"
@@ -3185,6 +3194,7 @@ title = "Compression Method"
 [compress.settings]
 desiredSize = "Desired File Size"
 desiredSizePlaceholder = "Enter size"
+desiredSizeUnit = "Size unit"
 
 [compress.tooltip.description]
 text = "Compression is an easy way to reduce your file size. Pick File Size to enter a target size and have us adjust quality for you. Pick Quality to set compression strength manually."
@@ -3565,7 +3575,11 @@ tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 
 [dropdownList]
+noItems = "No items available"
+noResults = "No results found"
 searchPlaceholder = "Search..."
+selectLanguages = "Select languages"
+selectOption = "Select an option"
 
 [editableSecretField]
 edit = "Edit"
@@ -3824,11 +3838,13 @@ shareSelected = "Share Files"
 sharing = "Sharing"
 showAll = "Show All"
 showHistory = "Show History"
+sortBy = "Sort files"
 sortByDate = "Sort by Date"
 sortByName = "Sort by Name"
 sortBySize = "Sort by Size"
 storage = "Storage"
 storageState = "Storage"
+storageUsed = "Storage used"
 synced = "Synced"
 title = "Upload PDF Files"
 toolChain = "Tools Applied"
@@ -4168,6 +4184,7 @@ noFilesInStorageOpen = "No files available in storage. Open some files first."
 open = "Open"
 openFile = "Open File"
 openFiles = "Open Files"
+selectFile = "Select {{name}}"
 selectFromStorage = "Select from Storage"
 upload = "Upload"
 uploadFile = "Upload File"
@@ -4241,9 +4258,14 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "All saved"
+analyzingFields = "Analysing form fields..."
 extractCsvError = "Failed to extract CSV"
 extractXlsxError = "Failed to extract XLSX"
+filled = "filled"
 flattenAfterFilling = "Flatten after filling"
+noFields = "No fillable form fields found in this PDF."
+placeholderEnter = "Enter"
+placeholderSelect = "Select"
 requiredAbbreviation = "req"
 requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Re-scan fields"
@@ -4869,12 +4891,10 @@ enterUsername = "Enter username"
 failedToSignIn = "Failed to sign in with {{provider}}: {{message}}"
 forgotPassword = "Forgot your password?"
 loggingIn = "Logging In..."
-logIn = "Log In"
 login = "Login"
 magicLinkSent = "Magic link sent to {{email}}! Check your email and click the link to sign in."
 mfaCode = "Authentication Code"
 mfaRequired = "Two-factor code required"
-noAccount = "Don't have an account?"
 or = "Or"
 password = "Password"
 passwordChangedSuccess = "Password changed successfully! Please sign in with your new password."
@@ -4980,6 +5000,34 @@ uploading = "Uploading..."
 uploadSuccess = "Upload Successful!"
 uploadSuccessMessage = "Your images have been transferred."
 validating = "Validating session..."
+
+[mobileSign]
+clear = "Clear"
+invalidSession = "Session expired"
+invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
+penSizeLabel = "Pen size"
+send = "Send to computer"
+sendAnother = "Send another signature"
+sendError = "Could not send the signature. Check the connection and try again."
+sentMessage = "Signature sent to your computer. You can send another or close this page."
+tabsLabel = "Signature source"
+undo = "Undo"
+validating = "Checking session…"
+
+[mobileSign.photo]
+fromGallery = "From gallery"
+hint = "Photograph a signature on white paper, or choose an existing image."
+invalidType = "Please choose an image file."
+takePhoto = "Take a photo"
+
+[mobileSign.tab]
+draw = "Draw"
+photo = "Photo"
+type = "Type"
+
+[mobileSign.type]
+placeholder = "Your name"
+previewPlaceholder = "Signature preview"
 
 [mobileUpload]
 description = "Scan to upload photos. Images auto-convert to PDF."
@@ -5129,6 +5177,7 @@ activeFiles = "The <strong>Active Files</strong> view shows all of the PDFs you 
 allTools = "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Close"
 cropSettings = "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to."
+dialogLabel = "Onboarding"
 fileCheckbox = "Files on the workbench are selected for processing. You can select multiple files for batch operations using the left files sidebar."
 fileReplacement = "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools."
 filesButton = "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on."
@@ -5565,6 +5614,7 @@ freeBody = "View, edit, merge, split, sign, watermark, compress, convert and man
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
+barAria = "Free PDFs used"
 capSuffix = "/ {{limit}} free PDFs"
 metaCategories = "Automation · AI · API requests"
 
@@ -5644,6 +5694,7 @@ automation = "automations"
 default = "this feature"
 
 [payg.spendCapMeter]
+barAria = "Spend against cap"
 capSuffix = "/ {{amount}} cap"
 metaCategories = "Automation · AI · API spend"
 resets = "Resets each billing period"
@@ -6047,6 +6098,7 @@ small = "500 Credits"
 xsmall = "100 Credits"
 
 [plan.availablePlans]
+currency = "Billing currency"
 subtitle = "Choose the plan that fits your needs"
 title = "Available Plans"
 
@@ -6282,6 +6334,7 @@ revoked = "Revoked"
 unnamed = "Unnamed instance"
 
 [portal.accountLink.instances.columns]
+actions = "Actions"
 instance = "Instance"
 lastSeen = "Last seen"
 linked = "Linked"
@@ -6626,6 +6679,7 @@ reachedTitle = "Monthly spend limit reached"
 title = "Couldn't open Stripe portal"
 
 [portal.billing.walletMeter]
+barAria = "Free PDFs used"
 capSuffix_one = "of {{allowance}} free PDFs used"
 capSuffix_other = "of {{allowance}} free PDFs used"
 eyebrow = "Processor trial"
@@ -7186,6 +7240,7 @@ sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
 action = "Pipeline / Action"
+actions = "Actions"
 document = "Document"
 product = "Product"
 status = "Status"
@@ -7275,6 +7330,41 @@ running = "Running"
 description = "This view hit an unexpected error. Try again, or pick another section from the sidebar."
 retry = "Try again"
 title = "Something went wrong on this page"
+
+[portal.failures]
+occurrences = "{{count}} occurrences"
+runReference = "Run {{runId}}"
+subtitle = "Failures recorded from your policy runs, with the actions you can take."
+title = "Failures"
+
+[portal.failures.action]
+acknowledge = "Acknowledge"
+confirm = "Are you sure?"
+dismiss = "Dismiss"
+dismissSkipFile = "Skip this file"
+
+[portal.failures.disabled]
+closed = "This failure is already closed."
+unavailable = "Not available for this failure."
+
+[portal.failures.empty]
+description = "Policy runs that fail will appear here with the actions you can take."
+title = "No failures recorded"
+
+[portal.failures.kind.inputPasswordProtected]
+description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
+title = "Password-protected document"
+
+[portal.failures.kind.unknown]
+description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
+title = "Unrecognised failure"
+
+[portal.failures.stage]
+blocked = "Blocked"
+input = "Input"
+internal = "Internal"
+never_ran = "Never ran"
+output = "Output"
 
 [portal.home.download]
 back = "Back"
@@ -7483,6 +7573,7 @@ rolledBack = "Rolled back"
 rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
+loadAria = "Load for {{name}}"
 msValue = "{{value}} ms"
 throughputValue = "{{value}}/min"
 
@@ -7528,6 +7619,7 @@ disabled = "Disabled"
 
 [portal.infrastructure.models]
 heading = "Models"
+loadAria = "Load for {{name}}"
 msValue = "{{value}} ms"
 subheading = "The model catalogue and routing that powers document processing across your workspace."
 
@@ -7786,7 +7878,6 @@ title = "Pipelines"
 newPipeline = "New pipeline"
 
 [portal.pipelines.builder]
-addStep = "Add tool"
 back = "Back to pipelines"
 cannotFollow = "Can't take {{produced}}"
 chooseAccount = "Choose an account"
@@ -7799,58 +7890,63 @@ inputs = "Input"
 inputSource = "Input source"
 inputTrigger = "Trigger"
 keepEditing = "Keep editing"
+moreActions = "More actions"
 needsConfiguring = "Needs setting up"
+needsDestination = "No destination chosen"
+needsSource = "No source chosen"
 needsUpload = "Needs an uploaded file"
-noSources = "No sources connected yet. Create one to use it as an input."
 noToolMatches = "No tools match your search."
-pipelineSettings = "Pipeline settings"
 searchTools = "Search tools"
-selectToolBody = "Add a tool to build your pipeline."
-selectToolTitle = "No tools yet"
 sendToSystem = "Send to another system"
 stepsIncompatible = "These steps can't run on what their prior step produces: {{tools}}."
 stepsNeedSetup = "These steps still need setting up before saving: {{tools}}."
-toolSettings = "Tool settings"
+testRun = "Test with a file"
 unknownStep = "Unrecognized operation, kept as-is."
 unsavedBody = "You have unsaved changes. Save them before leaving, or discard them?"
 unsavedTitle = "Unsaved changes"
 uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
 usesDefaults = "Runs with default settings"
+viewDefinition = "View definition"
 
 [portal.pipelines.builder.diagnostic]
-fan-in = "Combines every file from the previous step"
-fan-out = "Runs once per file from the previous step"
-format-mismatch = "Needs {{accepts}}, but the previous step produces {{produced}}"
-output-uncertain = "May not run: the previous step's output depends on how it's set up"
-source-mismatch = "Needs {{accepts}}, but this pipeline's input is {{produced}}"
+fan-in = "Combines every incoming file"
+fan-out = "Runs once per incoming file"
+format-mismatch = "Sends {{produced}}, needs {{accepts}}"
+output-uncertain = "May not run: output depends on setup"
+source-mismatch = "Input is {{produced}}, needs {{accepts}}"
 undeclared-operation = "Can't check what this step accepts"
 
 [portal.pipelines.composer]
-addTool = "Add tool"
+addTool = "Add a tool"
 cancel = "Cancel"
-chainEmpty = "Add a tool to start building your pipeline."
 create = "Create pipeline"
 editingUnsupported = "Displaying these tool params for editing is not supported yet."
-moveDown = "Move down"
-moveUp = "Move up"
+editSource = "Edit source"
 name = "Name"
 namePlaceholder = "e.g. Redaction sweep"
 noToolSettings = "This tool has no configurable settings."
-operations_one = "Operation ({{count}})"
-operations_other = "Operations ({{count}})"
 output = "Destination"
-removeStep = "Remove operation"
 save = "Save changes"
 scheduleEvery = "Run every"
-sources = "Sources"
-sourcesLoading = "Loading sources..."
 trigger = "Trigger"
 triggerManual = "Manual only"
+
+[portal.pipelines.composer.runsEvery]
+days_one = "Runs every day"
+days_other = "Runs every {{count}} days"
+hours_one = "Runs every hour"
+hours_other = "Runs every {{count}} hours"
+minutes_one = "Runs every minute"
+minutes_other = "Runs every {{count}} minutes"
 
 [portal.pipelines.composer.unit]
 days = "days"
 hours = "hours"
 minutes = "minutes"
+
+[portal.pipelines.definition]
+subtitle = "The pipeline as it would be saved."
+title = "Definition"
 
 [portal.pipelines.delete]
 body = "Delete \"{{name}}\"? This can't be undone."
@@ -7868,6 +7964,37 @@ action = "Create a pipeline"
 connectSource = "Connect a source"
 description = "Create your first pipeline: pick the sources it runs over, chain the operations, and choose where output goes."
 title = "No pipelines yet"
+
+[portal.pipelines.graph]
+addFirstTool = "Add a tool"
+dragHint = "Drop on a line to move it"
+insertHere = "Add a tool here"
+removeNode = "Remove {{name}}"
+showError = "Show why {{name}} failed"
+
+[portal.pipelines.graph.add]
+input = "Add a source"
+output = "Add a destination"
+
+[portal.pipelines.graph.run]
+done = "Done"
+failed = "Failed"
+running = "Running"
+
+[portal.pipelines.inspector]
+multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
+multipleSelected_one = "{{count}} step selected"
+multipleSelected_other = "{{count}} steps selected"
+noSelectionBody = "Pick a node in the graph to change what it does."
+noSelectionTitle = "Nothing selected"
+
+[portal.pipelines.inspector.status]
+completed_one = "Finished the only step"
+completed_other = "Finished all {{count}} steps"
+failed_one = "Failed on the only step"
+failed_other = "Failed after {{done}} of {{count}} steps"
+running_one = "Running the only step"
+running_other = "Running step {{done}} of {{count}}"
 
 [portal.pipelines.kpi]
 active = "Active"
@@ -7894,6 +8021,7 @@ paused = "Paused"
 
 [portal.pipelines.table]
 name = "Pipeline"
+open = "Open"
 sources = "Sources"
 status = "Status"
 steps = "Steps"
@@ -8785,6 +8913,7 @@ unused = "Unused"
 
 [portal.sources.table]
 documents = "Documents"
+open = "Open"
 source = "Source"
 status = "Status"
 usedBy = "Policies"
@@ -10130,6 +10259,7 @@ last = "Last page"
 maintainRatio = "Toggle maintain aspect ratio"
 next = "Next page"
 noSavedSigs = "No saved signatures found"
+penSizePlaceholder = "Type or select pen size (1-200)"
 personalSigs = "Personal Signatures"
 previous = "Previous page"
 redo = "Redo"
@@ -10168,6 +10298,7 @@ backgroundRemovalFailedTitle = "Background removal failed"
 hint = "Upload a PNG or JPG image of your signature"
 label = "Upload signature image"
 placeholder = "Select image file"
+previewAlt = "Current image signature"
 processing = "Processing image..."
 removeBackground = "Remove white background (make transparent)"
 
@@ -10180,6 +10311,17 @@ resumeHint = "Resume placement to click and add your signature."
 saved = "Select a saved signature above, then click anywhere on the PDF to place it."
 text = "After entering your name above, click anywhere on the PDF to place your signature."
 title = "How to add signature"
+
+[sign.mobile]
+createFromPhone = "Mobile upload"
+description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
+error = "Connection Error"
+expiryWarning = "QR Code Expiring Soon"
+expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
+pollingError = "Error checking for the signature"
+sessionCreateError = "Failed to create session"
+title = "Draw on your phone"
 
 [sign.mode]
 move = "Move Signature"
@@ -10830,6 +10972,9 @@ removal = "Removal"
 signing = "Signing"
 verification = "Verification"
 
+[toolRenderer]
+notFound = "Tool not found: {{tool}}"
+
 [tools]
 noSearchResults = "No tools found"
 noTools = "No tools available"
@@ -11245,12 +11390,15 @@ searchPlaceholder = "Search attachments"
 title = "Attachments"
 
 [viewer.bookmarks]
+addBookmark = "Add bookmark"
 bookmarkTitle = "Bookmark title"
 bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Close bookmarks sidebar"
 collapseAll = "Collapse all bookmarks"
+empty = "No bookmarks in this document"
 expandAll = "Expand all bookmarks"
 searchPlaceholder = "Search bookmarks"
+title = "Bookmarks"
 
 [viewer.comments]
 addComment = "Add comment"
@@ -11272,10 +11420,12 @@ locateAnnotation = "Locate in document"
 moreActions = "More actions"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
+noMatch = "No comments match your search"
 pageLabel = "Page {{page}}"
 placingHint = "Click a page to place… (cancel)"
 removeCommentOnly = "Remove comment only"
 saveReply = "Save reply"
+searchPlaceholder = "Search comments"
 title = "Comments"
 typeComment = "Comment"
 typeInsertText = "Insert Text"
@@ -11298,6 +11448,7 @@ unsavedDesc = "You have unsaved changes"
 closeSidebar = "Close layers sidebar"
 hideAll = "Hide all layers"
 showAll = "Show all layers"
+title = "Layers"
 
 [viewer.link]
 delete = "Delete link"

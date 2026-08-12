@@ -10,6 +10,8 @@ import {
 
 /** The en-US `[toolFormat]` block, read straight from the locale file. */
 function toolFormatLabels(): Record<string, string> {
+  // fileURLToPath, not URL.pathname: on Windows the latter yields "/C:/..." and
+  // resolving against it produces a "C:\C:\..." path that never matches.
   let current = dirname(fileURLToPath(import.meta.url));
   for (let i = 0; i < 12; i++) {
     try {
