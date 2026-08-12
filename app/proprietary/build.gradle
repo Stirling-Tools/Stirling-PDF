@@ -3,6 +3,14 @@ repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
+configurations {
+    h2Migration
+}
+
+def h2RuntimeVersion = '2.4.240'
+def h2MigrationVersion = '2.3.232'
+def h2VersionsLockFile = rootProject.file('gradle/h2-versions.lock')
+
 bootRun {
     enabled = false
 }
@@ -58,7 +66,8 @@ dependencies {
     api "io.jsonwebtoken:jjwt-api:${jwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
-    runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
+    runtimeOnly "com.h2database:h2:${h2RuntimeVersion}"
+    h2Migration "com.h2database:h2:${h2MigrationVersion}"
     runtimeOnly 'org.postgresql:postgresql:42.7.13'
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
@@ -87,6 +96,69 @@ dependencies {
     testImplementation "org.testcontainers:localstack:${testcontainersMinioVersion}"
     testImplementation "org.testcontainers:postgresql:${testcontainersMinioVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersMinioVersion}"
+}
+
+tasks.named('processResources') {
+    from(configurations.h2Migration) {
+        into 'h2-migration'
+    }
+}
+
+tasks.named('processTestResources') {
+    from(h2VersionsLockFile)
+}
+
+tasks.register('verifyH2VersionsLocked') {
+    group = 'verification'
+    description = 'Verifies that the resolved H2 versions match the reviewed compatibility lock.'
+    inputs.file(h2VersionsLockFile)
+    inputs.property('runtimeVersion', h2RuntimeVersion)
+    inputs.property('migrationVersion', h2MigrationVersion)
+
+    doLast {
+        if (!h2VersionsLockFile.isFile()) {
+            throw new GradleException("Missing H2 compatibility lock: ${h2VersionsLockFile}")
+        }
+
+        Map<String, String> lockedVersions = h2VersionsLockFile.readLines('UTF-8')
+                .findAll { line -> !line.isBlank() && !line.startsWith('#') }
+                .collectEntries { line ->
+                    def parts = line.split('=', 2)
+                    if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+                        throw new GradleException("Invalid H2 compatibility lock entry: ${line}")
+                    }
+                    [(parts[0]): parts[1]]
+                }
+
+        Map<String, String> declaredVersions = [
+            runtime: h2RuntimeVersion,
+            migration: h2MigrationVersion,
+        ]
+        if (lockedVersions != declaredVersions) {
+            throw new GradleException(
+                    "H2 dependency versions changed without updating ${h2VersionsLockFile}. "
+                    + "Run the H2 migration tests and explicitly review the compatibility lock. "
+                    + "Expected ${lockedVersions}, declared ${declaredVersions}.")
+        }
+
+        Map<String, String> resolvedVersions = [
+            runtime: configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts
+                    .find { artifact -> artifact.moduleVersion.id.group == 'com.h2database' && artifact.name == 'h2' }
+                    ?.moduleVersion?.id?.version,
+            migration: configurations.h2Migration.resolvedConfiguration.resolvedArtifacts
+                    .find { artifact -> artifact.moduleVersion.id.group == 'com.h2database' && artifact.name == 'h2' }
+                    ?.moduleVersion?.id?.version,
+        ]
+        if (resolvedVersions != declaredVersions) {
+            throw new GradleException(
+                    "Resolved H2 versions do not match the reviewed compatibility lock. "
+                    + "Expected ${declaredVersions}, resolved ${resolvedVersions}.")
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn(tasks.named('verifyH2VersionsLocked'))
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}

@@ -34,6 +34,7 @@ class DatabaseServiceTest {
 
     private DatabaseService databaseService;
     private ApplicationProperties.Datasource datasourceProps;
+    private DataSource dataSource;
 
     @BeforeEach
     void setUp() {
@@ -43,7 +44,7 @@ class DatabaseServiceTest {
         datasourceProps.setCustomDatabaseUrl("jdbc:h2:mem:test");
         datasourceProps.setEnableCustomDatabase(false);
 
-        DataSource dataSource =
+        dataSource =
                 new DriverManagerDataSource(
                         "jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
 
@@ -83,9 +84,40 @@ class DatabaseServiceTest {
         assertThat(result).isTrue();
         assertThat(Files.exists(script)).isFalse();
         try (var stream = Files.list(tempDir)) {
-            assertThat(stream.toList()).isNotEmpty();
+            assertThat(stream.map(path -> path.getFileName().toString()).toList())
+                    .anyMatch(name -> name.startsWith("backup_before_restore_"));
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    void importDatabaseFromUIRestoresTheActiveDatabaseWhenImportFails() throws Exception {
+        try (var connection = dataSource.getConnection();
+                var statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE ORIGINAL(ID INT PRIMARY KEY)");
+            statement.execute("INSERT INTO ORIGINAL VALUES(7)");
+            statement.execute("CREATE TABLE CONFLICT(ID INT PRIMARY KEY)");
+        }
+        Path script = Files.createTempFile("broken-import", ".sql");
+        Files.writeString(
+                script,
+                "DROP TABLE IF EXISTS ORIGINAL; CREATE TABLE CONFLICT(ID INT PRIMARY KEY);");
+
+        assertThatThrownBy(() -> databaseService.importDatabaseFromUI(script))
+                .isInstanceOf(IOException.class)
+                .hasMessageContaining("restored");
+
+        try (var connection = dataSource.getConnection();
+                var statement = connection.prepareStatement("SELECT ID FROM ORIGINAL")) {
+            try (var result = statement.executeQuery()) {
+                assertThat(result.next()).isTrue();
+                assertThat(result.getInt(1)).isEqualTo(7);
+            }
+        }
+        try (var stream = Files.list(tempDir)) {
+            assertThat(stream.map(path -> path.getFileName().toString()).toList())
+                    .anyMatch(name -> name.startsWith("backup_before_restore_"));
         }
     }
 
