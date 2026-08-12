@@ -13,12 +13,14 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 
 /**
- * Reads and acts on incidents for the calling user's team.
+ * Reads and acts on the incidents the calling user is allowed to see, which is where that decision
+ * is made: a leader reads and closes the whole team's failures, everyone else their own. Keeping it
+ * here rather than on the endpoints means the read and the triage cannot drift apart.
  *
  * <p>Team scoping mirrors {@code PolicyAccessGuard}: everyone sees only their own team's rows, the
  * team always comes from the authenticated principal, and scoping applies only when login is
  * enabled so single-user deployments keep working. When the team cannot be resolved the caller
- * reads nothing; see {@link #scope()}.
+ * reads nothing; see {@link #readScope()}.
  */
 @Slf4j
 @Service
@@ -41,7 +43,9 @@ public class FileRunEventService {
      */
     public List<FileRunEvent> report(EditorFailureReport report) {
         FailureKind kind = FailureKind.byErrorCode(report.errorCode()).orElse(FailureKind.UNKNOWN);
-        Long teamId = scope().teamId();
+        // The caller's team, not their read scope: recording is open to everyone, and a reader who
+        // may see nothing still has their failure filed under the team it happened in.
+        Long teamId = currentTeamId();
         String actor = currentActor();
         String detail = detailFor(report);
 
@@ -79,10 +83,14 @@ public class FileRunEventService {
      * cleared cache or another device never will. Rows left open that way are retention's problem,
      * not this method's.
      *
+     * <p>Narrowed to the caller's own rows however senior they are, which is why it passes {@link
+     * #currentActor()} rather than the read scope's actor: file ids are minted by each client, so a
+     * leader reading with a null actor would match every unattributed row in the team.
+     *
      * @return how many incidents were closed
      */
     public int forgetFiles(List<String> fileIds) {
-        TeamScope scope = scope();
+        ReadScope scope = readScope();
         if (!scope.permitted()) {
             return 0;
         }
@@ -90,13 +98,16 @@ public class FileRunEventService {
         return store.markFilesRemoved(scope.teamId(), currentActor(), named);
     }
 
-    /** The calling user's events, newest first. Empty when their team cannot be resolved. */
+    /**
+     * The events the caller may read, newest first: the team's for a leader, their own for everyone
+     * else. Empty when their team cannot be resolved.
+     */
     public List<FileRunEvent> list(FileRunEventStatus status, String kindId, int limit) {
-        TeamScope scope = scope();
+        ReadScope scope = readScope();
         if (!scope.permitted()) {
             return List.of();
         }
-        return store.list(scope.teamId(), status, kindId, limit);
+        return store.list(scope.teamId(), status, kindId, scope.actor(), limit);
     }
 
     /**
@@ -106,7 +117,13 @@ public class FileRunEventService {
      *     event's kind does not declare the action, or the event is already closed
      */
     public FileRunEvent dispatch(String eventId, String actionId, Map<String, String> inputs) {
-        TeamScope scope = scope();
+        // Whoever can see it can close it: a leader for the whole team, everyone else for the
+        // failures they caused. Someone who fixes their own problem should not have to ask a leader
+        // to clear the row.
+        //
+        // Closing the row is all this covers. Acting on the document behind it, such as supplying a
+        // password for a retry, would need its own permission, and no such action exists yet.
+        ReadScope scope = readScope();
         if (!scope.permitted()) {
             // Reported as "no such event", the same as an id from another team, so the response
             // does
@@ -116,6 +133,12 @@ public class FileRunEventService {
         }
         FileRunEvent event =
                 store.find(eventId, scope.teamId())
+                        // Reported as "no such event" rather than a refusal, so a member cannot
+                        // learn that a colleague's incident exists by trying to close it.
+                        .filter(
+                                found ->
+                                        scope.actor() == null
+                                                || scope.actor().equals(found.actor()))
                         .orElseThrow(
                                 () ->
                                         new FailureActionException(
@@ -177,31 +200,55 @@ public class FileRunEventService {
     }
 
     /**
-     * Which rows the caller may touch, since a null team id means two different things. Login
-     * disabled is the self-hosted setup with no users or teams, where unteamed rows are everyone's,
-     * as {@code PolicyAccessGuard} also treats them. Login enabled with no resolvable team reads
-     * nothing, because unteamed rows there are shared by every team's ad-hoc runs.
+     * Which rows the caller may read. A leader reviews the whole team's, as before. Everyone else
+     * reads the failures they caused themselves: a member can already report one, so letting them
+     * see their own back is what makes telling them about it worth anything, and it exposes nothing
+     * of a colleague's.
+     *
+     * <p>A null team id means two different things. Login disabled is the self-hosted setup with no
+     * users or teams, where unteamed rows are everyone's, as {@code PolicyAccessGuard} also treats
+     * them. Login enabled with no resolvable team reads nothing, because unteamed rows there are
+     * shared by every team's ad-hoc runs.
      */
-    private TeamScope scope() {
+    private ReadScope readScope() {
         if (!enforced()) {
-            return TeamScope.of(null);
+            return ReadScope.wholeTeam(null);
         }
-        Long teamId = policyManagementAuthority.currentUserTeamId();
-        return teamId == null ? TeamScope.denied() : TeamScope.of(teamId);
+        Long teamId = currentTeamId();
+        if (teamId == null) {
+            return ReadScope.denied();
+        }
+        if (policyManagementAuthority.canEditPolicies()) {
+            return ReadScope.wholeTeam(teamId);
+        }
+        // Narrowing to "mine" needs a name to narrow by. Without one the filter would be dropped
+        // and a member would read the whole team, so refuse rather than widen.
+        String actor = currentActor();
+        return actor == null ? ReadScope.denied() : ReadScope.mine(teamId, actor);
     }
 
     /**
-     * The caller's readable team, or a refusal. {@code teamId} is only meaningful when permitted.
+     * What the caller may read. {@code actor} is the person to narrow to, or null for the whole
+     * team; both are only meaningful when permitted.
      */
-    private record TeamScope(boolean permitted, Long teamId) {
+    private record ReadScope(boolean permitted, Long teamId, String actor) {
 
-        static TeamScope of(Long teamId) {
-            return new TeamScope(true, teamId);
+        static ReadScope wholeTeam(Long teamId) {
+            return new ReadScope(true, teamId, null);
         }
 
-        static TeamScope denied() {
-            return new TeamScope(false, null);
+        static ReadScope mine(Long teamId, String actor) {
+            return new ReadScope(true, teamId, actor);
         }
+
+        static ReadScope denied() {
+            return new ReadScope(false, null, null);
+        }
+    }
+
+    /** The team a row belongs to, which is nobody's when there are no teams to belong to. */
+    private Long currentTeamId() {
+        return enforced() ? policyManagementAuthority.currentUserTeamId() : null;
     }
 
     private String currentActor() {

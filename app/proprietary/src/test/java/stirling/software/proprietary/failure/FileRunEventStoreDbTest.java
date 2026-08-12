@@ -74,12 +74,12 @@ class FileRunEventStoreDbTest {
         store.record(failure(FailureKind.UNKNOWN, OTHER_TEAM, "theirs"));
         store.record(failure(FailureKind.UNKNOWN, null, "unteamed"));
 
-        assertThat(store.list(TEAM, null, null, 10))
+        assertThat(store.list(TEAM, null, null, null, 10))
                 .extracting(FileRunEvent::fileId)
                 .containsExactly("ours");
         // A plain `e.teamId = :teamId` would return nothing here: SQL equality against NULL is
         // never true, which is what the explicit null branch in the JPQL exists for.
-        assertThat(store.list(null, null, null, 10))
+        assertThat(store.list(null, null, null, null, 10))
                 .extracting(FileRunEvent::fileId)
                 .containsExactly("unteamed");
     }
@@ -170,7 +170,7 @@ class FileRunEventStoreDbTest {
 
         assertThat(replacement.id()).isNotEqualTo(first.id());
         assertThat(replacement.occurrences()).isEqualTo(1);
-        assertThat(store.list(TEAM, null, null, 10)).hasSize(1);
+        assertThat(store.list(TEAM, null, null, null, 10)).hasSize(1);
     }
 
     @Test
@@ -188,7 +188,7 @@ class FileRunEventStoreDbTest {
         FileRunEvent folded = store.record(secondSweep);
 
         assertThat(folded.occurrences()).isEqualTo(2);
-        assertThat(store.list(TEAM, null, null, 10))
+        assertThat(store.list(TEAM, null, null, null, 10))
                 .as("one incident per document, however many runs it failed in")
                 .extracting(FileRunEvent::fileId)
                 .containsExactlyInAnyOrder("file-hash-a", "file-hash-b");
@@ -267,7 +267,7 @@ class FileRunEventStoreDbTest {
             store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "newer-" + i));
         }
 
-        assertThat(store.list(TEAM, null, "UNKNOWN", 1))
+        assertThat(store.list(TEAM, null, "UNKNOWN", null, 1))
                 .extracting(FileRunEvent::fileId)
                 .containsExactly("old-unknown");
     }

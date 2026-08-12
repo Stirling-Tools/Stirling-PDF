@@ -416,11 +416,8 @@ class FileRunEventHttpIntegrationTest {
         }
 
         @Bean
-        FileRunEventController fileRunEventController(
-                FileRunEventService service,
-                PolicyManagementAuthority authority,
-                ApplicationProperties props) {
-            return new FileRunEventController(service, authority, props);
+        FileRunEventController fileRunEventController(FileRunEventService service) {
+            return new FileRunEventController(service);
         }
     }
 }
