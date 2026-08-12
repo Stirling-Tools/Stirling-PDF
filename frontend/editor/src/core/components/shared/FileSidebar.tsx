@@ -383,7 +383,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           setDeleteTarget(stub);
           return;
         }
-        await fileActions.removeFiles([fileId], true);
+        // Its superseded versions go too - see orphanedAncestorIds.
+        const orphans = await fileStorage.orphanedAncestorIds([fileId]);
+        await fileActions.removeFiles([fileId, ...orphans], true);
         await refreshStubs();
       },
       [allFileStubs, fileActions, refreshStubs],
@@ -401,7 +403,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await deleteServerFile(stub.remoteStorageId);
         }
         if (scope === "device" || scope === "everywhere") {
-          await fileActions.removeFiles([stub.id], true);
+          const orphans = await fileStorage.orphanedAncestorIds([stub.id]);
+          await fileActions.removeFiles([stub.id, ...orphans], true);
         } else if (scope === "cloud") {
           // Local copy kept - drop the dead remote pointer so the cloud badge
           // clears (the sidebar doesn't reconcile with the server itself).
