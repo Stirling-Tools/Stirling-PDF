@@ -31,7 +31,7 @@
 }
 
 :where(.processor-scope) a {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   text-decoration: none;
 }
 

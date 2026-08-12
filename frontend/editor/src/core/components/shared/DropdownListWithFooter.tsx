@@ -135,7 +135,11 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
         zIndex={zIndex}
       >
         <Popover.Target>
+          {/* A real button: Popover.Target stamps aria-haspopup/aria-expanded on
+              its child, and those are only permitted on an actual control. */}
           <Box
+            component="button"
+            type="button"
             style={{
               border:
                 "light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))",
@@ -143,6 +147,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
               padding: "8px 12px",
               backgroundColor:
                 "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
+              color: "inherit",
+              textAlign: "left",
+              width: "100%",
               opacity: disabled ? 0.6 : 1,
               cursor: disabled ? "not-allowed" : "pointer",
               minHeight: "36px",

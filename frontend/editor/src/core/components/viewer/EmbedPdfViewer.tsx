@@ -1174,7 +1174,7 @@ const EmbedPdfViewerContent = ({
 
       {!effectiveFile ? (
         <Center style={{ flex: 1 }}>
-          <Text c="red">
+          <Text c="var(--color-red-dark)">
             {t(
               "viewer.error.noFileProvided",
               "Error: No file provided to viewer",

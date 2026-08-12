@@ -19,7 +19,7 @@ export function SkillsSection({ skills }: { skills: AgentSkill[] }) {
               <span className="processor-docs__skill-glyph" aria-hidden>
                 ✷
               </span>
-              <h3 className="processor-docs__skill-name">{s.name}</h3>
+              <h2 className="processor-docs__skill-name">{s.name}</h2>
             </div>
             <p className="processor-docs__skill-blurb">{s.blurb}</p>
             <code className="processor-docs__skill-ops">{s.ops}</code>

@@ -124,7 +124,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
       )}
 
       {error && (
-        <Text size="xs" c="red">
+        <Text size="xs" c="var(--color-red-dark)">
           {error}
         </Text>
       )}

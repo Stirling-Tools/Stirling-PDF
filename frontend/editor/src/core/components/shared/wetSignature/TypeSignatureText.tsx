@@ -118,6 +118,12 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
           max={80}
           step={2}
           disabled={disabled}
+          // The thumb is a div, so the heading above cannot name it.
+          thumbLabel={t(
+            "certSign.collab.signRequest.fontSize",
+            "Font Size: {{size}}px",
+            { size: fontSize },
+          )}
           marks={[
             { value: 20, label: "20" },
             { value: 50, label: "50" },
@@ -130,7 +136,18 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
         <Text size="sm" mb={4}>
           {t("certSign.collab.signRequest.textColor", "Text Color")}
         </Text>
-        <ColorPicker value={color} onChange={onColorChange} format="hex" />
+        <ColorPicker
+          value={color}
+          onChange={onColorChange}
+          format="hex"
+          // The saturation area and hue bar are role="slider" divs; these are
+          // their only accessible names.
+          saturationLabel={t(
+            "colorPicker.saturation",
+            "Saturation and brightness",
+          )}
+          hueLabel={t("colorPicker.hue", "Hue")}
+        />
       </div>
 
       {/* Preview */}

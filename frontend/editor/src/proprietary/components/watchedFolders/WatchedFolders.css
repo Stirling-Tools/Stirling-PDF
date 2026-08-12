@@ -177,7 +177,7 @@
 
 .wf-new-tile:hover {
   border-color: var(--c-primary);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   background: color-mix(in srgb, var(--c-primary) 6%, var(--c-surface));
 }
 
@@ -189,7 +189,7 @@
   height: 3rem;
   border-radius: 50%;
   background: color-mix(in srgb, var(--c-primary) 12%, transparent);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .wf-empty {
@@ -211,7 +211,7 @@
   height: 5rem;
   border-radius: 50%;
   background: color-mix(in srgb, var(--c-primary) 12%, transparent);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   margin-bottom: 0.25rem;
 }
 

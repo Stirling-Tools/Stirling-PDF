@@ -32,7 +32,7 @@ export function SdksSection({ sdks }: { sdks: Sdk[] }) {
                 <span className="processor-docs__sdk-icon" aria-hidden>
                   {sdk.icon}
                 </span>
-                <h3 className="processor-docs__sdk-name">{sdk.name}</h3>
+                <h2 className="processor-docs__sdk-name">{sdk.name}</h2>
                 {badge && (
                   <StatusBadge tone={badge.tone} size="sm">
                     {t(badge.labelKey)}

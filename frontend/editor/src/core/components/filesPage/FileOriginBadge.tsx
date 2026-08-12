@@ -32,12 +32,12 @@ const styles = {
   },
   cloud: {
     background: "color-mix(in srgb, var(--c-primary) 16%, transparent)",
-    color: "var(--c-primary)",
+    color: "var(--c-accent-text)",
   },
   shared: {
     background:
       "color-mix(in srgb, var(--mantine-color-orange-6) 16%, transparent)",
-    color: "var(--mantine-color-orange-6)",
+    color: "var(--color-amber-dark)",
   },
 };
 

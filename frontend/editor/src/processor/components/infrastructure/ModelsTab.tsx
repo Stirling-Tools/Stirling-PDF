@@ -77,7 +77,14 @@ export function ModelsTab() {
       width: "9rem",
       render: (m) => (
         <div className="processor-infra__load">
-          <ProgressBar value={m.load} thresholded height={6} />
+          <ProgressBar
+            value={m.load}
+            thresholded
+            height={6}
+            label={t("processor.infrastructure.models.loadAria", {
+              name: m.name,
+            })}
+          />
           <span className="processor-infra__load-pct">{pct(m.load)}</span>
         </div>
       ),

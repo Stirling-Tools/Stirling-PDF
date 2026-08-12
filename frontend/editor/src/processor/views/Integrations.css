@@ -66,7 +66,7 @@
 
 .processor-integrations__filter.is-active {
   background: var(--c-primary-tint);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .processor-integrations__filter-count {
@@ -243,7 +243,7 @@ button.processor-integrations__row[aria-expanded="true"] {
   gap: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 
 .processor-integrations__status-dot {

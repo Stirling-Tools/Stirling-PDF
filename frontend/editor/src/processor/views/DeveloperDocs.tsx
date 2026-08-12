@@ -106,9 +106,10 @@ export function DeveloperDocs() {
         {t("processor.docs.browse")}
       </Button>
 
-      <aside
-        className={"processor-docs__sidebar" + (navOpen ? " is-open" : "")}
-      >
+      {/* Layout columns, not landmarks: the search and the two <nav>s inside them
+          already carry their own named landmarks, and a pair of unlabelled
+          complementary regions is indistinguishable to assistive tech. */}
+      <div className={"processor-docs__sidebar" + (navOpen ? " is-open" : "")}>
         <DocsSearch
           query={query}
           onQueryChange={setQuery}
@@ -118,7 +119,7 @@ export function DeveloperDocs() {
         {!searching && (
           <DocsNav sections={nav} active={activeId ?? ""} onSelect={onSelect} />
         )}
-      </aside>
+      </div>
 
       <main className="processor-docs__content" ref={contentRef}>
         <div className="processor-docs__content-inner">
@@ -139,9 +140,9 @@ export function DeveloperDocs() {
       </main>
 
       {hasToc && (
-        <aside className="processor-docs__toc-col">
+        <div className="processor-docs__toc-col">
           <DocsToc headings={headings} scrollRef={contentRef} />
-        </aside>
+        </div>
       )}
     </div>
   );

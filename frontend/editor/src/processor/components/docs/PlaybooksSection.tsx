@@ -15,7 +15,7 @@ export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
       <div className="processor-docs__playbook-grid">
         {playbooks.map((p) => (
           <Card key={p.title} accent={p.accent} padding="loose" interactive>
-            <h3 className="processor-docs__playbook-title">{p.title}</h3>
+            <h2 className="processor-docs__playbook-title">{p.title}</h2>
             <p className="processor-docs__playbook-blurb">{p.blurb}</p>
             <div className="processor-docs__playbook-flow">
               {p.steps.map((step, i) => (
