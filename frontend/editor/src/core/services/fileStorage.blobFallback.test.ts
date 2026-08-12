@@ -396,3 +396,31 @@ describe("orphanedAncestorIds", () => {
     ).toEqual(["split-root"]);
   });
 });
+
+/** Handing dead bytes over is only safe if whoever holds them is told to let go -
+ *  otherwise the viewer renders a document that never loads (an endless spinner). */
+describe("confirmed-unreadable records", () => {
+  test("notifies listeners and refuses to hand the same file out twice", async () => {
+    expectConsole.warn(/could not read its bytes back/);
+    expectConsole.error(/cannot be read/);
+    const { fileStorage, store } = await freshFileStorage();
+    const { onRecordUnreadable } = await import("@app/services/fileStorage");
+    instrumentAdd({ rejectBlobs: false });
+    const id = await store("doomed.pdf");
+
+    const dropped: string[] = [];
+    const unsubscribe = onRecordUnreadable((fileId) => dropped.push(fileId));
+
+    loseBackingStoreOnRead(5);
+    // First read still hands the file over: the probe is out of band.
+    expect(await fileStorage.getStirlingFile(id)).not.toBeNull();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    // The holder is told, so the workbench can drop it instead of spinning.
+    expect(dropped).toEqual([id]);
+    // And a second consumer never gets the same dead bytes.
+    expect(await fileStorage.getStirlingFile(id)).toBeNull();
+
+    unsubscribe();
+  });
+});

@@ -108,6 +108,17 @@ async function blobReadFailure(data: Blob): Promise<unknown> {
   }
 }
 
+/** Notified when a record's bytes are proven unreadable, so whoever is holding the
+ *  file can drop it instead of rendering a document that never arrives. */
+const unreadableListeners = new Set<(fileId: FileId) => void>();
+
+export function onRecordUnreadable(
+  listener: (fileId: FileId) => void,
+): () => void {
+  unreadableListeners.add(listener);
+  return () => unreadableListeners.delete(listener);
+}
+
 /** The probe read itself can hang in WebKit, so anything that awaits it needs a
  *  deadline. Distinct from a failure: nothing was proven either way. */
 const PROBE_UNANSWERED = { unanswered: true } as const;
@@ -411,6 +422,9 @@ class FileStorageService {
   ): void {
     if (this.unreadableRecords.has(record.id)) return;
     this.unreadableRecords.add(record.id);
+    // Whoever is holding it needs to let go, or the viewer renders a document
+    // whose bytes never arrive - a spinner with no terminal state.
+    for (const listener of unreadableListeners) listener(record.id);
     console.error(
       `[fileStorage] stored data for "${record.name}" (${record.id}) cannot be read; ` +
         "the browser no longer has the blob's backing store",
@@ -546,6 +560,9 @@ class FileStorageService {
   /** Get StirlingFile with full data - for loading into workbench. Null covers
    *  both no such record and bytes gone; neither is a file callers can use. */
   async getStirlingFile(id: FileId): Promise<StirlingFile | null> {
+    // Already proven unreadable this session: don't hand the same dead bytes to
+    // another consumer that will spin on them. Session-scoped, so a reload retries.
+    if (this.unreadableRecords.has(id)) return null;
     const db = await this.getDatabase();
     const record = await this.readRecord(db, id);
     if (!record) return null;
