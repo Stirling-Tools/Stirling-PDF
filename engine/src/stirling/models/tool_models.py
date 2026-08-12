@@ -253,8 +253,7 @@ class DetectionMode(StrEnum):
 
 class AutoSplitPdfParams(ApiModel):
     duplex_mode: bool = Field(
-        False,
-        description="Flag indicating if the duplex mode is active, where the page after the divider also gets removed.",
+        False, description="Flag indicating if the duplex mode is active, where the page after the divider also gets removed."
     )
 
 
@@ -295,8 +294,7 @@ class BookletImpositionParams(ApiModel):
     )
     gutter_size: float = Field(12, description="Gutter margin size in points (used when addGutter is true)")
     pages_per_sheet: PagesPerSheet = Field(
-        PagesPerSheet.number_2,
-        description="The number of pages per side for booklet printing (always 2 for proper booklet).",
+        PagesPerSheet.number_2, description="The number of pages per side for booklet printing (always 2 for proper booklet)."
     )
     spine_location: SpineLocation = Field(SpineLocation.left, description="The spine location for the booklet.")
 
@@ -460,21 +458,13 @@ class EditTextParams(ApiModel):
 
 
 class EmlToPdfParams(ApiModel):
-    download_html: bool | None = Field(
-        None, description="Download HTML intermediate file instead of PDF", examples=[False]
-    )
+    download_html: bool | None = Field(None, description="Download HTML intermediate file instead of PDF", examples=[False])
     include_all_recipients: bool | None = Field(
         None, description="Include CC and BCC recipients in header (if available)", examples=[True]
     )
-    include_attachments: bool | None = Field(
-        None, description="Include email attachments in the PDF output", examples=[False]
-    )
+    include_attachments: bool | None = Field(None, description="Include email attachments in the PDF output", examples=[False])
     max_attachment_size_mb: int | None = Field(
-        None,
-        description="Maximum attachment size in MB to include (default 10MB, range: 1-100)",
-        examples=[10],
-        ge=1,
-        le=100,
+        None, description="Maximum attachment size in MB to include (default 10MB, range: 1-100)", examples=[10], ge=1, le=100
     )
 
 
@@ -554,13 +544,9 @@ class FitOption(StrEnum):
 
 
 class ImgToPdfParams(ApiModel):
-    auto_rotate: bool = Field(
-        False, description="Whether to automatically rotate the images to better fit the PDF page"
-    )
+    auto_rotate: bool = Field(False, description="Whether to automatically rotate the images to better fit the PDF page")
     color_type: ColorType = Field(ColorType.color, description="The color type of the output image(s)")
-    fit_option: FitOption = Field(
-        FitOption.fill_page, description="Option to determine how the image will fit onto the page"
-    )
+    fit_option: FitOption = Field(FitOption.fill_page, description="Option to determine how the image will fit onto the page")
 
 
 class MarkdownToPdfParams(ApiModel):
@@ -663,9 +649,7 @@ class MultiPageLayoutParams(ApiModel):
     left_margin: float = Field(
         0, description="Left margin (in points) to apply to the output pages when merging", examples=[200], ge=0.0
     )
-    mode: Mode = Field(
-        Mode.default, description="Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols x rows."
-    )
+    mode: Mode = Field(Mode.default, description="Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols x rows.")
     orientation: Orientation = Field(Orientation.portrait, description="The orientation of the output PDF pages")
     pages_per_sheet: PagesPerSheet1 | None = Field(
         None, description="The number of pages to fit onto a single sheet in the output PDF."
@@ -848,9 +832,7 @@ class OutputFormat1(StrEnum):
 
 class PdfToPdfaParams(ApiModel):
     output_format: OutputFormat1 = Field(..., description="The output format type (PDF/A or PDF/X)")
-    strict: bool | None = Field(
-        None, description="If true, the conversion will fail if the output is not perfectly compliant"
-    )
+    strict: bool | None = Field(None, description="If true, the conversion will fail if the output is not perfectly compliant")
 
 
 class OutputFormat2(StrEnum):
@@ -1150,8 +1132,7 @@ class PageSize(StrEnum):
 
 class ScalePagesParams(ApiModel):
     orientation: Orientation1 = Field(
-        Orientation1.portrait,
-        description="Orientation to apply to the target page size. Ignored when pageSize is KEEP.",
+        Orientation1.portrait, description="Orientation to apply to the target page size. Ignored when pageSize is KEEP."
     )
     page_size: PageSize = Field(
         ..., description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP."
@@ -1209,12 +1190,8 @@ class ScannerEffectParams(ApiModel):
 
 
 class SplitBySizeOrCountParams(ApiModel):
-    split_type: int = Field(
-        0, description="Determines the type of split: 0 for size, 1 for page count, 2 for document count"
-    )
-    split_value: str = Field(
-        "10MB", description="Value for split: size in MB (e.g., '10MB') or number of pages (e.g., '5')"
-    )
+    split_type: int = Field(0, description="Determines the type of split: 0 for size, 1 for page count, 2 for document count")
+    split_value: str = Field("10MB", description="Value for split: size in MB (e.g., '10MB') or number of pages (e.g., '5')")
 
 
 class PageSize1(StrEnum):
