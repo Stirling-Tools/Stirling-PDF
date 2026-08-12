@@ -13,16 +13,10 @@ runs:
       shell: bash
       env:
         TASK_VERSION: ${{ inputs.version }}
-        CACHE_SCOPE: setup-task-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}
       run: |
         set -euo pipefail
-        image="stirling-pdf-ci:task-${TASK_VERSION}"
-        docker buildx build --load --quiet \
-          --build-arg "TASK_VERSION=${TASK_VERSION}" \
-          --cache-from "type=gha,scope=${CACHE_SCOPE}" \
-          --cache-to "type=gha,mode=max,scope=${CACHE_SCOPE}" \
-          --tag "${image}" \
-          docker/ci
+        image="ghcr.io/stirling-tools/stirling-pdf-ci:task-${TASK_VERSION}"
+        docker pull "${image}"
         container_id="$(docker create "${image}")"
         cleanup() { docker rm "${container_id}" >/dev/null; }
         trap cleanup EXIT
