@@ -13,6 +13,7 @@ import {
 import { firePixel } from "@app/utils/scarfTracking";
 import { URL_TO_TOOL_MAP } from "@app/utils/urlMapping";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 /**
  * Parse the current URL to extract tool routing information
@@ -115,13 +116,13 @@ export function updateToolRoute(
 }
 
 /**
- * Clear tool routing and return to home page
+ * Clear tool routing and return to the editor home ("/" is the role router).
  */
 export function clearToolRoute(replace: boolean = false): void {
   const searchParams = new URLSearchParams(window.location.search);
   searchParams.delete("tool");
 
-  updateUrl(withBasePath("/"), searchParams, replace);
+  updateUrl(withBasePath(EDITOR_BASENAME), searchParams, replace);
 }
 
 /**

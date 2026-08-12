@@ -4,14 +4,10 @@ const h = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@app/services/apiClient", () => ({ default: { get: h.get } }));
 
 import {
-  LOGIN_LANDING_PENDING_KEY,
-  consumeLoginLandingPending,
-  fetchLandsOnProcessor,
-  hasLoginLandingPending,
+  fetchRootDestination,
   isProcessorAvailable,
   leadsRealTeam,
   loginLandingMode,
-  markLoginLandingPending,
   type LandingTeam,
 } from "@app/utils/loginLanding";
 
@@ -20,7 +16,7 @@ function team(o: Partial<LandingTeam>): LandingTeam {
 }
 
 // Axios-error-shaped plain object (not an Error instance) so the harness's
-// uncaught-Error tracking doesn't flag the rejection that fetchLandsOnProcessor
+// uncaught-Error tracking doesn't flag the rejection that fetchRootDestination
 // deliberately catches.
 function httpError(status: number) {
   return { isAxiosError: true, message: "http", response: { status } };
@@ -42,20 +38,6 @@ describe("leadsRealTeam", () => {
       false,
     );
     expect(leadsRealTeam([])).toBe(false);
-  });
-});
-
-describe("login-landing pending flag", () => {
-  beforeEach(() => window.sessionStorage.clear());
-
-  it("marks, peeks, and consumes once", () => {
-    expect(hasLoginLandingPending()).toBe(false);
-    markLoginLandingPending();
-    expect(window.sessionStorage.getItem(LOGIN_LANDING_PENDING_KEY)).toBe("1");
-    expect(hasLoginLandingPending()).toBe(true);
-    expect(consumeLoginLandingPending()).toBe(true);
-    expect(hasLoginLandingPending()).toBe(false);
-    expect(consumeLoginLandingPending()).toBe(false);
   });
 });
 
@@ -81,23 +63,23 @@ describe("isProcessorAvailable", () => {
   });
 });
 
-describe("fetchLandsOnProcessor", () => {
+describe("fetchRootDestination", () => {
   beforeEach(() => h.get.mockReset());
 
-  // fetchLandsOnProcessor calls /me first, then /team/my. mockRejectedValueOnce
+  // fetchRootDestination calls /me first, then /team/my. mockRejectedValueOnce
   // is vitest's rejection helper (tracks the rejection so it isn't flagged).
   it("self-hosted (no /team/my): uses processorAccess = true", async () => {
     h.get
       .mockResolvedValueOnce(mockMe("USER", true))
       .mockRejectedValueOnce(httpError(404));
-    expect(await fetchLandsOnProcessor()).toBe(true);
+    expect(await fetchRootDestination()).toBe("processor");
   });
 
   it("self-hosted (no /team/my): processorAccess false → editor", async () => {
     h.get
       .mockResolvedValueOnce(mockMe("USER", false))
       .mockRejectedValueOnce(httpError(404));
-    expect(await fetchLandsOnProcessor()).toBe(false);
+    expect(await fetchRootDestination()).toBe("editor");
   });
 
   it("saas: admin → processor even with only a personal team", async () => {
@@ -108,7 +90,7 @@ describe("fetchLandsOnProcessor", () => {
         data: [team({ isLeader: true, isPersonal: true })],
       });
     });
-    expect(await fetchLandsOnProcessor()).toBe(true);
+    expect(await fetchRootDestination()).toBe("processor");
   });
 
   it("saas: non-admin real lead → processor", async () => {
@@ -119,7 +101,7 @@ describe("fetchLandsOnProcessor", () => {
         data: [team({ isLeader: true, isPersonal: false })],
       });
     });
-    expect(await fetchLandsOnProcessor()).toBe(true);
+    expect(await fetchRootDestination()).toBe("processor");
   });
 
   it("saas: member → editor (ignores polluted processorAccess)", async () => {
@@ -133,18 +115,18 @@ describe("fetchLandsOnProcessor", () => {
         ],
       });
     });
-    expect(await fetchLandsOnProcessor()).toBe(false);
+    expect(await fetchRootDestination()).toBe("editor");
   });
 
-  it("editor when /me fails", async () => {
+  it("signedOut when /me fails - not authenticated", async () => {
     h.get.mockRejectedValueOnce(httpError(401));
-    expect(await fetchLandsOnProcessor()).toBe(false);
+    expect(await fetchRootDestination()).toBe("signedOut");
   });
 
   it("editor when /team/my fails with a non-404 (ambiguous)", async () => {
     h.get
       .mockResolvedValueOnce(mockMe("USER", true))
       .mockRejectedValueOnce(httpError(500));
-    expect(await fetchLandsOnProcessor()).toBe(false);
+    expect(await fetchRootDestination()).toBe("editor");
   });
 });

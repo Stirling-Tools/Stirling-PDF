@@ -647,10 +647,8 @@ test.describe("Files page", () => {
       await card.getByRole("button", { name: /File actions/i }).click();
       await page.getByRole("menuitem", { name: /Add to workspace/i }).click();
       // The materializer should have hit the download endpoint and
-      // routed the user to the viewer (/).
-      await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?(\?|$)/, {
-        timeout: 5_000,
-      });
+      // routed the user to the viewer (the editor).
+      await expect(page).toHaveURL(/\/editor(\?|$)/, { timeout: 5_000 });
       expect(downloadHit).toBe(true);
     });
 
@@ -703,9 +701,7 @@ test.describe("Files page", () => {
       // Open the card and confirm the share-link download endpoint fires.
       await card.getByRole("button", { name: /File actions/i }).click();
       await page.getByRole("menuitem", { name: /Add to workspace/i }).click();
-      await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?(\?|$)/, {
-        timeout: 5_000,
-      });
+      await expect(page).toHaveURL(/\/editor(\?|$)/, { timeout: 5_000 });
       expect(shareDownloadHit).toBe(true);
     });
 

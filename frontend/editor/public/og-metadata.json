@@ -305,6 +305,11 @@
       "title": "Air-gapped Setup - Stirling PDF",
       "description": "Link to air-gapped setup guide"
     },
+    "/editor": {
+      "image": "/og_images/home.png",
+      "title": "Editor - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/login": {
       "image": "/og_images/home.png",
       "title": "Sign In - Stirling PDF",
@@ -645,6 +650,7 @@
     "/overlay-pdf": "overlayPdfs",
     "/split-pdf-by-sections": "split",
     "/split-pdf-by-chapters": "split",
+    "/editor": "/editor",
     "/login": "/login",
     "/mobile-scanner": "/mobile-scanner",
     "/files": "/files",
