@@ -45,7 +45,9 @@ jobs:
         with:
           context: .
           file: docker/ci/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          # GitHub-hosted Linux jobs in this repository run on amd64. Avoid
+          # QEMU/arm64 here because the image is only consumed by those jobs.
+          platforms: linux/amd64
           push: true
           build-args: |
             TASK_VERSION=${{ steps.version.outputs.value }}
