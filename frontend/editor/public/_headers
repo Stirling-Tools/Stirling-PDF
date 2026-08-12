@@ -1,0 +1,30 @@
+# Cloudflare Pages headers. Hashed assets under /assets/ are immutable; the
+# unversioned static copies (pdfium/cmaps/fonts/logos) change on upgrades, so
+# they get a short TTL with revalidation instead. HTML and the service worker
+# are always revalidated.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/sw-folder-retry.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/pdfium/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/pdfjs/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/vendor/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/modern-logo/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/classic-logo/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/*.wasm
+  Content-Type: application/wasm

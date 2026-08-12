@@ -13,12 +13,25 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 
+// Let the two precompression passes saturate more than the default 4 libuv
+// threads. Must be set before zlib first uses the threadpool, so it lives at
+// the top of the config module.
+process.env.UV_THREADPOOL_SIZE ??= "64";
+
+function resolveBase(runSubpath: string): string {
+  if (runSubpath) return `/${runSubpath}/`;
+  return process.env.VITE_BUILD_FOR_PREVIEW === "1" ? "/" : "./";
+}
+
 // Extensions never precompressed by either compression pass. Both
 // vite-plugin-compression2 (regex) and compressStaticCopyPlugin (Set) derive
-// from this single list.
+// from this single list. wasm is excluded: it is already internally compressed
+// and precompressed copies can break WebAssembly.instantiateStreaming if the
+// host serves the .br/.gz with a wrong Content-Type.
 const COMPRESSION_EXCLUDED_EXTENSIONS = [
   ".gz",
   ".br",
+  ".wasm",
   ".png",
   ".jpg",
   ".jpeg",
@@ -46,19 +59,23 @@ async function compressOne(file: string, root: string) {
   const content = await fs.readFile(resolved);
   if (content.length < 1024) return;
 
-  await fs.writeFile(
-    `${resolved}.gz`,
-    await gzipPromise(content, { level: 9 }),
-  );
-
+  // Run both encoders concurrently. With UV_THREADPOOL_SIZE raised above they
+  // share the libuv pool and parallelize across cores instead of serializing
+  // gzip then brotli per file.
   const brotliQuality = content.length > 1_000_000 ? 10 : 11;
-  const brotlied = await brotliPromise(content, {
-    params: {
-      [constants.BROTLI_PARAM_QUALITY]: brotliQuality,
-      [constants.BROTLI_PARAM_SIZE_HINT]: content.length,
-    },
-  });
-  await fs.writeFile(`${resolved}.br`, brotlied);
+  const [gz, br] = await Promise.all([
+    gzipPromise(content, { level: 9 }),
+    brotliPromise(content, {
+      params: {
+        [constants.BROTLI_PARAM_QUALITY]: brotliQuality,
+        [constants.BROTLI_PARAM_SIZE_HINT]: content.length,
+      },
+    }),
+  ]);
+  await Promise.all([
+    fs.writeFile(`${resolved}.gz`, gz),
+    fs.writeFile(`${resolved}.br`, br),
+  ]);
 }
 
 // Emit pdf.js's hashed .mjs worker assets as .js. Cloudflare caches by file
@@ -439,6 +456,9 @@ export default defineConfig(async ({ mode, command }) => {
       // The build already precompresses for real and ships a visualizer; the
       // per-chunk gzip measurement Vite does for the log is wasted CI time.
       reportCompressedSize: false,
+      // Vite 7 defaults cssMinify to esbuild; lightningcss (Rust) minifies in
+      // one pass and can drop prefixes for browsers esnext already excludes.
+      cssMinify: "lightningcss" as const,
       rollupOptions: {
         output: {
           assetFileNames: mjsToJsAssetFileNames,
@@ -502,10 +522,6 @@ export default defineConfig(async ({ mode, command }) => {
     // an absolute base so deep-route asset paths resolve to /assets/...
     // Trailing slash required: it becomes `<base href>`, and browsers resolve
     // relative URLs (manifest.json, favicon) against the base's *directory*.
-    base: runSubpath
-      ? `/${runSubpath}/`
-      : process.env.VITE_BUILD_FOR_PREVIEW === "1"
-        ? "/"
-        : "./",
+    base: resolveBase(runSubpath),
   };
 });
