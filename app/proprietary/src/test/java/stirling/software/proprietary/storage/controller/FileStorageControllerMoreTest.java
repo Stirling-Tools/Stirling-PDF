@@ -31,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.egress.ShareEgressDecision;
 import stirling.software.proprietary.storage.egress.ShareEgressProcessor;
 import stirling.software.proprietary.storage.model.FileShare;
@@ -51,6 +52,7 @@ class FileStorageControllerMoreTest {
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
     @Mock private ShareEgressProcessor shareEgressProcessor;
+    @Mock private AuditService auditService;
 
     private FileStorageController controller;
 
@@ -58,7 +60,7 @@ class FileStorageControllerMoreTest {
     void setUp() {
         controller =
                 new FileStorageController(
-                        fileStorageService, storageProvider, shareEgressProcessor);
+                        fileStorageService, storageProvider, shareEgressProcessor, auditService);
     }
 
     private User user() {

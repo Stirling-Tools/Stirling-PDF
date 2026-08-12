@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Center, Loader, Modal, Text } from "@mantine/core";
+import HistoryIcon from "@mui/icons-material/History";
+import { Center, Group, Loader, Modal, Text } from "@mantine/core";
 
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
@@ -99,7 +100,17 @@ export function VersionHistoryModal({
       onClose={onClose}
       centered
       size="md"
-      title={t("filesPage.field.versionHistory", "Version journey")}
+      title={
+        <Group gap="xs" align="center">
+          <HistoryIcon
+            fontSize="small"
+            style={{ color: "var(--c-accent-fg, var(--c-primary))" }}
+          />
+          <Text fw={600} size="md" c="var(--c-text)">
+            {t("filesPage.field.versionHistory", "Version journey")}
+          </Text>
+        </Group>
+      }
     >
       {loading ? (
         <Center py="lg">
@@ -111,6 +122,7 @@ export function VersionHistoryModal({
           currentId={file.id}
           onAddToWorkspace={handleAddToWorkspace}
           onRemove={handleRemove}
+          hideHeader
         />
       ) : (
         <Text size="sm" c="dimmed" py="sm">

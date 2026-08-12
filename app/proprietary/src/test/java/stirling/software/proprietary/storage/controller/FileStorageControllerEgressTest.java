@@ -32,6 +32,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.egress.ShareEgressDecision;
 import stirling.software.proprietary.storage.egress.ShareEgressProcessor;
 import stirling.software.proprietary.storage.model.FileShare;
@@ -51,6 +52,7 @@ class FileStorageControllerEgressTest {
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
     @Mock private ShareEgressProcessor shareEgressProcessor;
+    @Mock private AuditService auditService;
 
     private FileStorageController controller;
     private StoredFile file;
@@ -61,7 +63,7 @@ class FileStorageControllerEgressTest {
     void setUp() {
         controller =
                 new FileStorageController(
-                        fileStorageService, storageProvider, shareEgressProcessor);
+                        fileStorageService, storageProvider, shareEgressProcessor, auditService);
         file = storedFile();
         share = new FileShare();
         share.setFile(file);

@@ -12,6 +12,7 @@
 import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
+import { resolveRunOn } from "@app/policies/runOn";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
 import {
   policyStep,
@@ -725,7 +726,7 @@ export function buildWireFromState(
       scopeTypes: s.scopeTypes,
       reviewerEmail: s.reviewerEmail,
       fieldValues: s.fieldValues,
-      runOn: s.runOn ?? "upload",
+      runOn: resolveRunOn(s.runOn, entry.category.id),
       outputMode: s.outputMode ?? "new_version",
       outputName: s.outputName ?? "",
       outputNamePosition: s.outputNamePosition ?? "suffix",
