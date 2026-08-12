@@ -50,7 +50,7 @@ export default function AnalyticsChoiceSlide({
           </Button>
         </div>
         {analyticsError && (
-          <div style={{ color: "var(--mantine-color-red-6)", marginTop: 12 }}>
+          <div style={{ color: "var(--color-red-dark)", marginTop: 12 }}>
             {analyticsError}
           </div>
         )}

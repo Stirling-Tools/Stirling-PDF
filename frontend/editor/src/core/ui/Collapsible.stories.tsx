@@ -22,7 +22,12 @@ export const Default: Story = {
           header={<strong>Section title</strong>}
           aside={<span style={{ fontSize: "0.75rem" }}>3 items</span>}
         >
-          <div style={{ padding: "0.875rem", borderTop: "1px solid #eee" }}>
+          <div
+            style={{
+              padding: "0.875rem",
+              borderTop: "1px solid var(--c-border)",
+            }}
+          >
             Body content revealed when the section is open.
           </div>
         </Collapsible>
@@ -52,7 +57,12 @@ export const Accordion: Story = {
             onToggle={() => setOpen(open === i ? null : i)}
             header={<strong>{label}</strong>}
           >
-            <div style={{ padding: "0.875rem", borderTop: "1px solid #eee" }}>
+            <div
+              style={{
+                padding: "0.875rem",
+                borderTop: "1px solid var(--c-border)",
+              }}
+            >
               {label} details.
             </div>
           </Collapsible>

@@ -4,7 +4,7 @@
  * The cloud/ layer is the SHARED hosted experience consumed by BOTH the saas
  * (web) and desktop (Tauri) leaves, so it must stay platform-portable: it can't
  * read {@code import.meta.env}, {@code window.location} or web storage directly
- * (the cloud ESLint guardrail enforces this). The PAYG dev-preview route
+ * (the cloud oxlint guardrail enforces this). The PAYG dev-preview route
  * ({@code /dev/payg-preview}) is a saas-only local-design affordance that
  * synthesises a wallet from {@code localStorage} when the real backend isn't
  * mounted — all three of those banned reads. {@link useWallet} reaches that

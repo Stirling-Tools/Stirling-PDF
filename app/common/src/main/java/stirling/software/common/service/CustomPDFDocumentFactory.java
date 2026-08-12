@@ -30,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.util.DeletingRandomAccessFile;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFileManager;
 

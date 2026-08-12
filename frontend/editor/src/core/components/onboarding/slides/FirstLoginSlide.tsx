@@ -125,7 +125,7 @@ function FirstLoginForm({
                 icon="info-rounded"
                 width={20}
                 height={20}
-                style={{ color: "var(--c-primary)", flexShrink: 0 }}
+                style={{ color: "var(--c-accent-text)", flexShrink: 0 }}
               />
               <span>
                 {t(

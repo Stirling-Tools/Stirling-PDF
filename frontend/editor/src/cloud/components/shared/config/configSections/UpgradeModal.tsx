@@ -25,9 +25,9 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBackRounded";
 import ShieldIcon from "@mui/icons-material/ShieldOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircleRounded";
 import { useTranslation } from "react-i18next";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import "./UpgradeModal.css";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import SpendCapControl from "./SpendCapControl";
 
 /**
