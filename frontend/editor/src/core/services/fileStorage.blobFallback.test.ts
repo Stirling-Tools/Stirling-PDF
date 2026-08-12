@@ -6,15 +6,23 @@ import { expectConsole } from "@app/tests/failOnConsole";
  * WebKit refuses blob values when it can't write the blob's backing file, so
  * every upload silently failed to persist after #7175. Retried as a copy now.
  *
- * fake-indexeddb never returns a Blob from a read, so round-trips can't be
- * modelled here - `engine-capabilities.spec.ts` covers those on a real engine.
+ * It can also accept one and then lose the backing store. fake-indexeddb returns no
+ * Blob, so that loss is injected at the read; real round-trips: the e2e spec.
  */
+
+const alertMock = vi.hoisted(() => vi.fn());
+vi.mock("@app/components/toast", () => ({
+  alert: (options: unknown) => alertMock(options),
+}));
 
 const nativeAdd = IDBObjectStore.prototype.add;
 const nativePut = IDBObjectStore.prototype.put;
+const nativeGet = IDBObjectStore.prototype.get;
 
 /** What each `add` attempt carried in `data`: blob path or copy path. */
 let attempts: Array<"blob" | "copy"> = [];
+/** The same, for `put` - the rewrite path a lost backing store recovers through. */
+let putAttempts: Array<"blob" | "copy"> = [];
 
 /** An IDBRequest that fails asynchronously, the way WebKit rejects blob puts. */
 class FailingRequest extends EventTarget {
@@ -50,6 +58,70 @@ function instrumentAdd(options: { rejectBlobs: boolean }) {
   } as typeof IDBObjectStore.prototype.add;
 }
 
+/** Record every put, so the copy-rewrite recovery can be observed. */
+function instrumentPut() {
+  IDBObjectStore.prototype.put = function (
+    this: IDBObjectStore,
+    value: unknown,
+    key?: IDBValidKey,
+  ) {
+    putAttempts.push(
+      (value as { data?: unknown } | null)?.data instanceof Blob
+        ? "blob"
+        : "copy",
+    );
+    return key === undefined
+      ? nativePut.call(this, value)
+      : nativePut.call(this, value, key);
+  } as typeof IDBObjectStore.prototype.put;
+}
+
+/** A stored blob whose backing store the engine has lost: it still reports a name,
+ *  type and size, and every read of its bytes fails the way WebKit's does. */
+function blobWithLostBackingStore(): Blob {
+  const lost = () => {
+    throw new DOMException(
+      "The object can not be found here.",
+      "NotFoundError",
+    );
+  };
+  return Object.assign(
+    new Blob(["%PDF-1.7 stirling"], { type: "application/pdf" }),
+    { slice: lost, arrayBuffer: lost, text: lost, stream: lost },
+  );
+}
+
+/** The next `deadReads` reads come back with a lost backing store, later ones
+ *  untouched - so a repaired record can still be read normally. */
+function loseBackingStoreOnRead(deadReads: number) {
+  let remaining = deadReads;
+  IDBObjectStore.prototype.get = function (
+    this: IDBObjectStore,
+    key: IDBValidKey | IDBKeyRange,
+  ) {
+    const request = nativeGet.call(this, key as IDBValidKey);
+    // One substitution per request, however often `result` is read.
+    let injected = false;
+    return new Proxy(request, {
+      get(target, prop) {
+        // Receiver must be the real request: IDBRequest's accessors are branded.
+        const value = Reflect.get(target, prop, target);
+        if (prop !== "result") {
+          return typeof value === "function" ? value.bind(target) : value;
+        }
+        if (!value || injected || remaining === 0) return value;
+        injected = true;
+        remaining--;
+        return { ...(value as object), data: blobWithLostBackingStore() };
+      },
+      set(target, prop, value) {
+        Reflect.set(target, prop, value, target);
+        return true;
+      },
+    });
+  } as typeof IDBObjectStore.prototype.get;
+}
+
 /** A fresh service per test: the blob decision is remembered by design, so
  *  tests must not inherit it from each other. */
 async function freshFileStorage() {
@@ -75,11 +147,16 @@ async function freshFileStorage() {
 
 beforeEach(() => {
   attempts = [];
+  putAttempts = [];
+  alertMock.mockClear();
+  // The blob verdict is deliberately durable, so each test must start undecided.
+  localStorage.clear();
 });
 
 afterEach(() => {
   IDBObjectStore.prototype.add = nativeAdd;
   IDBObjectStore.prototype.put = nativePut;
+  IDBObjectStore.prototype.get = nativeGet;
 });
 
 /** Abort the transaction the moment a write is issued over it. */
@@ -163,6 +240,27 @@ describe("storeStirlingFile — blob-value fallback", () => {
     expect((await fileStorage.getStirlingFile(id))?.name).toBe("second.pdf");
   });
 
+  /** Committing is not evidence the bytes survived, and by the next reload the
+   *  source File is gone: without this the upload looks fine and the file is dead. */
+  test("repairs a record whose stored blob loses its backing store", async () => {
+    expectConsole.warn(/could not read its bytes back/);
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    instrumentPut();
+    loseBackingStoreOnRead(1); // only the store's own read-back is dead
+
+    const id = await store("dead-on-arrival.pdf");
+
+    // Accepted as a blob, then rewritten from the file still in hand.
+    expect(attempts).toEqual(["blob"]);
+    expect(putAttempts).toEqual(["copy"]);
+    expect((await fileStorage.getStirlingFile(id))?.name).toBe(
+      "dead-on-arrival.pdf",
+    );
+    // Self-healed, so nothing to tell the user about.
+    expect(alertMock).not.toHaveBeenCalled();
+  });
+
   test("does not retry a failure a copy can't fix (quota)", async () => {
     const { store } = await freshFileStorage();
     IDBObjectStore.prototype.add = function (this: IDBObjectStore) {
@@ -172,5 +270,129 @@ describe("storeStirlingFile — blob-value fallback", () => {
 
     await expect(store("too-big.pdf")).rejects.toThrow(/no space left/);
     expect(attempts).toEqual(["blob"]);
+  });
+});
+
+/** An earlier session's record can't be repaired, and the user has to be told - but
+ *  the telling must never gate the open. Awaiting the probe stalled every file in
+ *  Safari, where the probe read of a lost backing store never settles. */
+describe("reads — a stored blob whose bytes are gone", () => {
+  test("hands the file over and reports the loss out of band", async () => {
+    expectConsole.warn(/could not read its bytes back/);
+    expectConsole.error(/cannot be read/);
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    const id = await store("lost.pdf");
+
+    loseBackingStoreOnRead(5); // every read from here on
+
+    // Not null, and not awaited on the probe: the caller is never blocked.
+    expect((await fileStorage.getStirlingFile(id))?.name).toBe("lost.pdf");
+    // jsdom stubs createObjectURL; the point is that a URL is still handed out.
+    expect(await fileStorage.createBlobUrl(id)).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    // Told once, not once per reader: every consumer of the file hits this record.
+    expect(alertMock).toHaveBeenCalledTimes(1);
+    expect(alertMock.mock.calls[0][0]).toMatchObject({
+      alertType: "warning",
+      body: expect.stringContaining("lost.pdf"),
+    });
+  });
+
+  /** The loop this closes: a reload re-decides optimistically, writes blobs the
+   *  engine loses again, and the browser never settles on a shape that works. */
+  test("remembers across reloads that this browser loses blob values", async () => {
+    expectConsole.warn(/could not read its bytes back/);
+    expectConsole.error(/cannot be read/);
+    const first = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    const id = await first.store("lost.pdf");
+    loseBackingStoreOnRead(1);
+    expect(await first.fileStorage.getStirlingFile(id)).not.toBeNull();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    // A new page load: a fresh service, same browser profile.
+    const next = await freshFileStorage();
+    attempts = [];
+    const later = await next.store("after-reload.pdf");
+
+    expect(attempts).toEqual(["copy"]);
+    expect((await next.fileStorage.getStirlingFile(later))?.name).toBe(
+      "after-reload.pdf",
+    );
+  });
+
+  test("stops offering blob values for the rest of the session", async () => {
+    expectConsole.warn(/could not read its bytes back/);
+    expectConsole.error(/cannot be read/);
+    const { fileStorage, store } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    const first = await store("lost.pdf");
+
+    loseBackingStoreOnRead(1);
+    expect(await fileStorage.getStirlingFile(first)).not.toBeNull();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    // An engine that loses a blob it accepted can't be trusted with the next one,
+    // so the read failure degrades writes too.
+    attempts = [];
+    const second = await store("later.pdf");
+    expect(attempts).toEqual(["copy"]);
+    expect((await fileStorage.getStirlingFile(second))?.name).toBe("later.pdf");
+  });
+});
+
+/** Deleting a file used to leave its superseded versions in storage forever,
+ *  invisible (listings filter on isLeaf) and still holding their full bytes. */
+describe("orphanedAncestorIds", () => {
+  const store = async (
+    fileStorage: { storeStirlingFile: (f: never, s: never) => Promise<void> },
+    id: string,
+    parentFileId: string | undefined,
+    isLeaf: boolean,
+  ) => {
+    const { createStirlingFile, createNewStirlingFileStub } =
+      await import("@app/types/fileContext");
+    const file = new File(["%PDF-1.7"], `${id}.pdf`, {
+      type: "application/pdf",
+    });
+    const base = createNewStirlingFileStub(file);
+    await fileStorage.storeStirlingFile(
+      createStirlingFile(file, id as never) as never,
+      { ...base, id, isLeaf, parentFileId, originalFileId: "v1" } as never,
+    );
+  };
+
+  test("takes the superseded versions with the leaf", async () => {
+    const { fileStorage } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    await store(fileStorage as never, "v1", undefined, false);
+    await store(fileStorage as never, "v2", "v1", true);
+
+    expect(await fileStorage.orphanedAncestorIds(["v2" as never])).toEqual([
+      "v1",
+    ]);
+  });
+
+  test("leaves a split sibling's history alone", async () => {
+    const { fileStorage } = await freshFileStorage();
+    instrumentAdd({ rejectBlobs: false });
+    // Distinct ids: the fake database outlives the module reset between tests.
+    await store(fileStorage as never, "split-root", undefined, false);
+    await store(fileStorage as never, "split-a", "split-root", true);
+    await store(fileStorage as never, "split-b", "split-root", true);
+
+    // `split-b` still descends from the root, so deleting `split-a` can't strip it.
+    expect(await fileStorage.orphanedAncestorIds(["split-a" as never])).toEqual(
+      [],
+    );
+    // Once both leaves go, the shared ancestor is genuinely unreachable.
+    expect(
+      await fileStorage.orphanedAncestorIds([
+        "split-a" as never,
+        "split-b" as never,
+      ]),
+    ).toEqual(["split-root"]);
   });
 });

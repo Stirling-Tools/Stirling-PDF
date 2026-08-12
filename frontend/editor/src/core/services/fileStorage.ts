@@ -15,6 +15,7 @@ import {
   indexedDBManager,
   DATABASE_CONFIGS,
 } from "@app/services/indexedDBManager";
+import { alert } from "@app/components/toast";
 
 /**
  * Storage record - single source of truth
@@ -75,6 +76,54 @@ function isBlobValueRejection(error: unknown): boolean {
   return name === "UnknownError" || name === "DataCloneError";
 }
 
+/** This engine loses Blob values, remembered per browser: session-scoped, each
+ *  reload re-decides optimistically and writes more files it will lose. */
+const BLOB_VALUES_UNSUPPORTED_KEY = "stirling.indexeddb.blobValuesUnsupported";
+
+function readBlobValuesSupported(): boolean {
+  try {
+    return localStorage.getItem(BLOB_VALUES_UNSUPPORTED_KEY) !== "true";
+  } catch {
+    // Storage unavailable (private mode): decide fresh each session.
+    return true;
+  }
+}
+
+function persistBlobValuesUnsupported(): void {
+  try {
+    localStorage.setItem(BLOB_VALUES_UNSUPPORTED_KEY, "true");
+  } catch {
+    // Storage unavailable: the session-scoped flag still degrades this session.
+  }
+}
+
+/** WebKit loses backing stores for blobs it accepted, and only a real read shows
+ *  it. One byte is enough: what fails is opening the store, not the length. */
+async function blobReadFailure(data: Blob): Promise<unknown> {
+  try {
+    await data.slice(0, 1).arrayBuffer();
+    return null;
+  } catch (error) {
+    return error ?? new Error("Reading a stored blob's bytes failed");
+  }
+}
+
+/** The probe read itself can hang in WebKit, so anything that awaits it needs a
+ *  deadline. Distinct from a failure: nothing was proven either way. */
+const PROBE_UNANSWERED = { unanswered: true } as const;
+const PROBE_DEADLINE_MS = 3000;
+
+function withProbeDeadline(
+  probe: Promise<unknown>,
+): Promise<unknown | typeof PROBE_UNANSWERED> {
+  return Promise.race([
+    probe,
+    new Promise<typeof PROBE_UNANSWERED>((resolve) =>
+      setTimeout(() => resolve(PROBE_UNANSWERED), PROBE_DEADLINE_MS),
+    ),
+  ]);
+}
+
 /**
  * The File for a stored record. Re-wrapping a stored blob can cost WebKit the
  * backing handle, so hand it back untouched when its identity fields match.
@@ -113,15 +162,18 @@ function settleOnAbort(
 class FileStorageService {
   private readonly dbConfig = DATABASE_CONFIGS.FILES;
   private readonly storeName = "files";
-  /**
-   * Whether this engine accepts Blob/File values in IndexedDB. Optimistic: the
-   * blob path avoids copying multi-GB files into JS memory, so we try it and
-   * remember the answer, rather than pre-emptively degrading everywhere.
-   */
-  private blobValuesSupported = true;
+  /** Whether this engine takes Blob/File values, which avoid copying multi-GB
+   *  files into JS memory. Optimistic; a No outlives the session (see the key). */
+  private blobValuesSupported = readBlobValuesSupported();
+  /** Whether a stored blob's bytes have come back yet. Until they have, each
+   *  store proves it: accepting the write is no evidence the bytes survived. */
+  private blobReadbackVerified = false;
   /** Ids whose TTL write failed. Without this the swallowed failure repeats a
    *  whole-file rewrite on every listing. Session-scoped on purpose. */
   private readonly unwritableRecords = new Set<FileId>();
+  /** Ids already reported as unreadable, so one dead record is surfaced once
+   *  rather than on every read of it. Session-scoped on purpose. */
+  private readonly unreadableRecords = new Set<FileId>();
 
   /**
    * Get database connection using centralized manager
@@ -253,22 +305,126 @@ class FileStorageService {
       }
       record.data = await record.data.arrayBuffer();
       await this.addFileRecord(db, record);
+      return;
+    }
+
+    // Committed is not retrievable. Prove the round-trip while the source File is
+    // still in hand; after a reload there is nothing left to repair from.
+    if (record.data instanceof Blob && !this.blobReadbackVerified) {
+      await this.verifyStoredBlobReadable(db, record, stirlingFile);
     }
   }
 
-  /** Refused a Blob value? Stop offering blobs this session. Any write can flip
-   *  this: WebKit refuses per-operation, not per-engine. */
-  private noteBlobRefusal(error: unknown): boolean {
-    if (!isBlobValueRejection(error)) return false;
-    if (this.blobValuesSupported) {
-      this.blobValuesSupported = false;
+  /** Read one stored blob back, rewriting the record from {@code source} if its
+   *  bytes don't come with it. Runs until one round-trip succeeds. */
+  private async verifyStoredBlobReadable(
+    db: IDBDatabase,
+    record: StoredStirlingFileRecord,
+    source: File,
+  ): Promise<void> {
+    // A record we can't read back at all is the caller's problem, not the probe's.
+    const stored = await this.readRecord(db, record.id).catch(() => undefined);
+    if (!(stored?.data instanceof Blob)) return;
+
+    const failure = await withProbeDeadline(blobReadFailure(stored.data));
+    if (!failure) {
+      this.blobReadbackVerified = true;
+      return;
+    }
+    if (failure === PROBE_UNANSWERED) {
+      // Nothing proven, and an upload must never wait on a probe. Leave the record
+      // as written; the read path reports it if the bytes really are gone.
       console.warn(
-        "IndexedDB rejected a Blob value; falling back to in-memory copies for this session. " +
-          "Very large files may now exhaust renderer memory.",
+        `[fileStorage] readability probe for ${record.id} did not answer in ${PROBE_DEADLINE_MS}ms`,
+      );
+      return;
+    }
+
+    this.noteBlobUnreadable(failure);
+    try {
+      record.data = await source.arrayBuffer();
+      await this.putRecord(db, record);
+    } catch (error) {
+      // The record is unusable either way, and the read path reports that to the
+      // user. Don't turn a write that already committed into a failure.
+      console.warn(
+        `[fileStorage] could not rewrite ${record.id} as an in-memory copy:`,
         error,
       );
     }
+  }
+
+  /** Refused a Blob value? Stop offering blobs on this browser. Any write can flip
+   *  this: WebKit refuses per-operation, not per-engine. */
+  private noteBlobRefusal(error: unknown): boolean {
+    if (!isBlobValueRejection(error)) return false;
+    this.disableBlobValues(
+      "IndexedDB rejected a Blob value; falling back to in-memory copies on this browser. " +
+        "Very large files may now exhaust renderer memory.",
+      error,
+    );
     return true;
+  }
+
+  /** A stored blob whose bytes won't read back means blob values can't be trusted
+   *  on this engine either, even though it accepted the write. */
+  private noteBlobUnreadable(error: unknown): void {
+    this.disableBlobValues(
+      "IndexedDB accepted a Blob value but could not read its bytes back; " +
+        "falling back to in-memory copies on this browser. " +
+        "Very large files may now exhaust renderer memory.",
+      error,
+    );
+  }
+
+  private disableBlobValues(message: string, error: unknown): void {
+    if (!this.blobValuesSupported) return;
+    this.blobValuesSupported = false;
+    persistBlobValuesUnsupported();
+    console.warn(message, error);
+  }
+
+  /**
+   * Tell the user (once) when a record's bytes are gone, WITHOUT gating anything on
+   * the answer. Awaiting this was a mistake: in Safari the probe read of a lost
+   * backing store can stay pending forever, so it stalled every file open instead
+   * of the one consumer that would have failed anyway.
+   */
+  private reportIfUnreadable(record: StoredStirlingFileRecord): void {
+    if (!(record.data instanceof Blob)) return;
+    if (this.unreadableRecords.has(record.id)) return;
+    void blobReadFailure(record.data).then((failure) => {
+      if (!failure) {
+        this.blobReadbackVerified = true;
+        return;
+      }
+      this.noteBlobUnreadable(failure);
+      this.reportUnreadableRecord(record, failure);
+    });
+  }
+
+  /** One console error and one toast per dead record: every consumer of the file
+   *  hits the same record, and the user needs the reason once, not per reader. */
+  private reportUnreadableRecord(
+    record: StoredStirlingFileRecord,
+    failure: unknown,
+  ): void {
+    if (this.unreadableRecords.has(record.id)) return;
+    this.unreadableRecords.add(record.id);
+    console.error(
+      `[fileStorage] stored data for "${record.name}" (${record.id}) cannot be read; ` +
+        "the browser no longer has the blob's backing store",
+      failure,
+    );
+    alert({
+      alertType: "warning",
+      title: "File data is unavailable",
+      body:
+        `"${record.name}" is saved in this browser but its contents can no longer be read. ` +
+        "Upload the file again to keep working on it.",
+      expandable: false,
+      durationMs: 8000,
+    });
   }
 
   /** Read-modify-write one record in one transaction, resolving on COMMIT. Split
@@ -387,34 +543,18 @@ class FileStorageService {
     });
   }
 
-  /**
-   * Get StirlingFile with full data - for loading into workbench
-   */
+  /** Get StirlingFile with full data - for loading into workbench. Null covers
+   *  both no such record and bytes gone; neither is a file callers can use. */
   async getStirlingFile(id: FileId): Promise<StirlingFile | null> {
     const db = await this.getDatabase();
+    const record = await this.readRecord(db, id);
+    if (!record) return null;
+    // Reporting only, and NEVER awaited: WebKit can leave a read of a lost backing
+    // store pending forever, and this is the path every file open goes through.
+    this.reportIfUnreadable(record);
 
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction([this.storeName], "readonly");
-      settleOnAbort(transaction, reject);
-      const store = transaction.objectStore(this.storeName);
-      const request = store.get(id);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        const record = request.result as StoredStirlingFileRecord | undefined;
-        if (!record) {
-          resolve(null);
-          return;
-        }
-
-        // Convert to StirlingFile with preserved IDs
-        const stirlingFile = createStirlingFile(
-          fileFromRecord(record),
-          record.fileId,
-        );
-        resolve(stirlingFile);
-      };
-    });
+    // Convert to StirlingFile with preserved IDs
+    return createStirlingFile(fileFromRecord(record), record.fileId);
   }
 
   /**
@@ -740,6 +880,46 @@ class FileStorageService {
   }
 
   /**
+   * Superseded versions that nothing else needs once {@code deleting} goes.
+   *
+   * Deleting a file removes one record; its older versions keep their full bytes
+   * and are invisible (listings filter on isLeaf), so they accumulate forever.
+   * Only for user-facing "delete this file" - deleting ONE version from the
+   * history journey must leave the rest of the chain alone.
+   */
+  async orphanedAncestorIds(deleting: FileId[]): Promise<FileId[]> {
+    if (deleting.length === 0) return [];
+    const stubs = await this.getAllStirlingFileStubs();
+    const byId = new Map(stubs.map((s) => [s.id as string, s]));
+    const doomed = new Set(deleting.map(String));
+
+    // Anything a surviving record descends from has to stay: split siblings
+    // share a lineage, so one leaf's delete must not strip another's history.
+    const keep = new Set<string>();
+    for (const stub of stubs) {
+      if (doomed.has(stub.id as string)) continue;
+      let cursor = stub.parentFileId as string | undefined;
+      while (cursor && !keep.has(cursor)) {
+        keep.add(cursor);
+        cursor = byId.get(cursor)?.parentFileId as string | undefined;
+      }
+    }
+
+    const orphans: FileId[] = [];
+    for (const id of deleting) {
+      let cursor = byId.get(String(id))?.parentFileId as string | undefined;
+      while (cursor) {
+        if (!keep.has(cursor) && !doomed.has(cursor) && byId.has(cursor)) {
+          doomed.add(cursor);
+          orphans.push(cursor as FileId);
+        }
+        cursor = byId.get(cursor)?.parentFileId as string | undefined;
+      }
+    }
+    return orphans;
+  }
+
+  /**
    * Delete StirlingFile - single operation, no sync issues
    */
   async deleteStirlingFile(id: FileId): Promise<void> {
@@ -747,11 +927,12 @@ class FileStorageService {
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");
-      const store = transaction.objectStore(this.storeName);
-      const request = store.delete(id);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      // On commit, not on the request: callers refresh their list from storage as
+      // soon as this resolves, and an aborted delete would put the row back.
+      settleOnAbort(transaction, reject);
+      transaction.onerror = () => reject(transaction.error);
+      transaction.oncomplete = () => resolve();
+      transaction.objectStore(this.storeName).delete(id);
     });
   }
 
@@ -852,30 +1033,18 @@ class FileStorageService {
   async createBlobUrl(id: FileId): Promise<string | null> {
     try {
       const db = await this.getDatabase();
+      const record = await this.readRecord(db, id);
+      if (!record) return null;
+      // Same as getStirlingFile: report, never gate. See reportIfUnreadable.
+      this.reportIfUnreadable(record);
 
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction([this.storeName], "readonly");
-        settleOnAbort(transaction, reject);
-        const store = transaction.objectStore(this.storeName);
-        const request = store.get(id);
-
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-          const record = request.result as StoredStirlingFileRecord | undefined;
-          if (record) {
-            // Stored blobs are handed straight to createObjectURL — re-wrapping
-            // one can cost WebKit the backing handle. See fileFromRecord.
-            const blob =
-              record.data instanceof Blob
-                ? record.data
-                : new Blob([record.data], { type: record.type });
-            const url = URL.createObjectURL(blob);
-            resolve(url);
-          } else {
-            resolve(null);
-          }
-        };
-      });
+      // Stored blobs are handed straight to createObjectURL — re-wrapping
+      // one can cost WebKit the backing handle. See fileFromRecord.
+      const blob =
+        record.data instanceof Blob
+          ? record.data
+          : new Blob([record.data], { type: record.type });
+      return URL.createObjectURL(blob);
     } catch (error) {
       console.warn(`Failed to create blob URL for ${id}:`, error);
       return null;
