@@ -74,6 +74,13 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsStaticResource_mobileSignPath() {
+        // The phone-side signature drawing page, reached from the Sign tool QR code.
+        assertTrue(RequestUriUtils.isStaticResource("/mobile-sign"));
+        assertTrue(RequestUriUtils.isStaticResource("/app", "/app/mobile-sign"));
+    }
+
+    @Test
     void testIsStaticResource_portalShell() {
         // The admin portal SPA shell (/processor) is served pre-auth so it's directly navigable.
         assertTrue(RequestUriUtils.isStaticResource("/processor"));

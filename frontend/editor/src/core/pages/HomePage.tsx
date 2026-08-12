@@ -30,6 +30,7 @@ import AppConfigModal, {
   preloadAppConfigModal,
 } from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import {
   FilesPageProvider,
@@ -104,6 +105,26 @@ export default function HomePage() {
   const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
     readPersistedSidebarCollapsed,
   );
+
+  // Open the config modal whenever the URL is /settings/* (e.g. from the admin
+  // tour's openConfigModal action which navigates to /settings/overview).
+  useEffect(() => {
+    const isSettings = location.pathname.startsWith("/settings");
+    setConfigModalOpen(isSettings);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handler = () => setConfigModalOpen(true);
+    window.addEventListener("appConfig:open", handler);
+    return () => window.removeEventListener("appConfig:open", handler);
+  }, []);
+
+  const handleCloseConfig = useCallback(() => {
+    setConfigModalOpen(false);
+    if (location.pathname.startsWith("/settings")) {
+      navigate(EDITOR_BASENAME, { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
@@ -505,7 +526,7 @@ export default function HomePage() {
               }
               onToggleCollapse={() => {
                 if (navigationState.workbench === "myFiles") {
-                  navigate("/");
+                  navigate(EDITOR_BASENAME);
                   return;
                 }
                 setFileSidebarCollapsed((c) => {
