@@ -6,14 +6,15 @@ batch processing, quality checks, and integration helpers.
 TOML format only.
 """
 
-import json
-from pathlib import Path
-from typing import Dict, List, Any
 import argparse
-import re
-from datetime import datetime
 import csv
+import json
+import re
 import tomllib
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
 import tomli_w
 
 
@@ -22,7 +23,7 @@ class AITranslationHelper:
         self.locales_dir = Path(locales_dir)
         self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
 
-    def _load_translation_file(self, file_path: Path) -> Dict:
+    def _load_translation_file(self, file_path: Path) -> dict:
         """Load TOML translation file."""
         try:
             with open(file_path, "rb") as f:
@@ -31,14 +32,14 @@ class AITranslationHelper:
             print(f"Error loading {file_path}: {e}")
             return {}
 
-    def _save_translation_file(self, data: Dict, file_path: Path) -> None:
+    def _save_translation_file(self, data: dict, file_path: Path) -> None:
         """Save TOML translation file."""
         with open(file_path, "wb") as f:
             tomli_w.dump(data, f)
 
     def create_ai_batch_file(
         self,
-        languages: List[str],
+        languages: list[str],
         output_file: Path,
         max_entries_per_language: int = 50,
     ) -> None:
@@ -74,14 +75,9 @@ class AITranslationHelper:
             untranslated = self._find_untranslated_entries(golden_truth, lang_data)
 
             # Limit entries if specified
-            if (
-                max_entries_per_language
-                and len(untranslated) > max_entries_per_language
-            ):
+            if max_entries_per_language and len(untranslated) > max_entries_per_language:
                 # Prioritize by key importance
-                untranslated = self._prioritize_translation_keys(
-                    untranslated, max_entries_per_language
-                )
+                untranslated = self._prioritize_translation_keys(untranslated, max_entries_per_language)
 
             batch_data["translations"][lang] = {}
             for key, value in untranslated.items():
@@ -94,15 +90,11 @@ class AITranslationHelper:
         # Always save batch files as JSON for compatibility
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(batch_data, f, indent=2, ensure_ascii=False)
-        total_entries = sum(
-            len(lang_data) for lang_data in batch_data["translations"].values()
-        )
+        total_entries = sum(len(lang_data) for lang_data in batch_data["translations"].values())
         print(f"Created AI batch file: {output_file}")
         print(f"Total entries to translate: {total_entries}")
 
-    def _find_untranslated_entries(
-        self, golden_truth: Dict, lang_data: Dict
-    ) -> Dict[str, str]:
+    def _find_untranslated_entries(self, golden_truth: dict, lang_data: dict) -> dict[str, str]:
         """Find entries that need translation."""
         golden_flat = self._flatten_dict(golden_truth)
         lang_flat = self._flatten_dict(lang_data)
@@ -112,19 +104,14 @@ class AITranslationHelper:
             if (
                 key not in lang_flat
                 or lang_flat[key] == value
-                or (
-                    isinstance(lang_flat[key], str)
-                    and lang_flat[key].startswith("[UNTRANSLATED]")
-                )
+                or (isinstance(lang_flat[key], str) and lang_flat[key].startswith("[UNTRANSLATED]"))
             ):
                 if not self._is_expected_identical(key, value):
                     untranslated[key] = value
 
         return untranslated
 
-    def _flatten_dict(
-        self, d: Dict, parent_key: str = "", separator: str = "."
-    ) -> Dict[str, Any]:
+    def _flatten_dict(self, d: dict, parent_key: str = "", separator: str = ".") -> dict[str, Any]:
         """Flatten nested dictionary."""
         items = []
         for k, v in d.items():
@@ -141,9 +128,7 @@ class AITranslationHelper:
             return True
         return "language.direction" in key.lower()
 
-    def _prioritize_translation_keys(
-        self, untranslated: Dict[str, str], max_count: int
-    ) -> Dict[str, str]:
+    def _prioritize_translation_keys(self, untranslated: dict[str, str], max_count: int) -> dict[str, str]:
         """Prioritize which keys to translate first based on importance."""
         # Define priority order (higher score = higher priority)
         priority_patterns = [
@@ -191,19 +176,17 @@ class AITranslationHelper:
 
         if len(parts) > 0:
             main_section = parts[0]
-            context = contexts.get(
-                main_section, f"Part of {main_section} functionality"
-            )
+            context = contexts.get(main_section, f"Part of {main_section} functionality")
             if len(parts) > 1:
                 context += f", specifically for {parts[-1]}"
             return context
 
         return "General application text"
 
-    def validate_ai_translations(self, batch_file: Path) -> Dict[str, List[str]]:
+    def validate_ai_translations(self, batch_file: Path) -> dict[str, list[str]]:
         """Validate AI translations for common issues."""
         # Batch files are always JSON
-        with open(batch_file, "r", encoding="utf-8") as f:
+        with open(batch_file, encoding="utf-8") as f:
             batch_data = json.load(f)
         issues = {"errors": [], "warnings": []}
 
@@ -227,29 +210,21 @@ class AITranslationHelper:
                     )
 
                 # Check if translation is identical to original (might be untranslated)
-                if translated == original and not self._is_expected_identical(
-                    key, original
-                ):
-                    issues["warnings"].append(
-                        f"{lang}.{key}: Translation identical to original"
-                    )
+                if translated == original and not self._is_expected_identical(key, original):
+                    issues["warnings"].append(f"{lang}.{key}: Translation identical to original")
 
                 # Check for common AI translation artifacts
                 artifacts = ["[TRANSLATE]", "[TODO]", "UNTRANSLATED", "{{", "}}"]
                 for artifact in artifacts:
                     if artifact in translated:
-                        issues["errors"].append(
-                            f"{lang}.{key}: Contains translation artifact: {artifact}"
-                        )
+                        issues["errors"].append(f"{lang}.{key}: Contains translation artifact: {artifact}")
 
         return issues
 
-    def apply_ai_batch_translations(
-        self, batch_file: Path, validate: bool = True
-    ) -> Dict[str, Any]:
+    def apply_ai_batch_translations(self, batch_file: Path, validate: bool = True) -> dict[str, Any]:
         """Apply translations from AI batch file to individual language files."""
         # Batch files are always JSON
-        with open(batch_file, "r", encoding="utf-8") as f:
+        with open(batch_file, encoding="utf-8") as f:
             batch_data = json.load(f)
         results = {"applied": {}, "errors": [], "warnings": []}
 
@@ -291,7 +266,7 @@ class AITranslationHelper:
 
         return results
 
-    def _set_nested_value(self, data: Dict, key_path: str, value: Any) -> None:
+    def _set_nested_value(self, data: dict, key_path: str, value: Any) -> None:
         """Set value in nested dict using dot notation."""
         keys = key_path.split(".")
         current = data
@@ -300,24 +275,18 @@ class AITranslationHelper:
                 current[key] = {}
             elif not isinstance(current[key], dict):
                 # If the current value is not a dict, we can't nest into it
-                print(
-                    f"Warning: Converting non-dict value at '{key}' to dict to allow nesting"
-                )
+                print(f"Warning: Converting non-dict value at '{key}' to dict to allow nesting")
                 current[key] = {}
             current = current[key]
         current[keys[-1]] = value
 
-    def export_for_external_translation(
-        self, languages: List[str], output_format: str = "csv"
-    ) -> None:
+    def export_for_external_translation(self, languages: list[str], output_format: str = "csv") -> None:
         """Export translations for external translation services."""
         golden_truth = self._load_translation_file(self.golden_truth_file)
         golden_flat = self._flatten_dict(golden_truth)
 
         if output_format == "csv":
-            output_file = Path(
-                f"translations_export_{datetime.now().strftime('%Y%m%d')}.csv"
-            )
+            output_file = Path(f"translations_export_{datetime.now().strftime('%Y%m%d')}.csv")
 
             with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
                 fieldnames = ["key", "context", "en_US"] + languages
@@ -353,9 +322,7 @@ class AITranslationHelper:
             print(f"Exported to {output_file}")
 
         elif output_format == "json":
-            output_file = Path(
-                f"translations_export_{datetime.now().strftime('%Y%m%d')}.json"
-            )
+            output_file = Path(f"translations_export_{datetime.now().strftime('%Y%m%d')}.json")
             export_data = {"languages": languages, "translations": {}}
 
             for key, en_value in golden_flat.items():
@@ -386,9 +353,7 @@ class AITranslationHelper:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="AI Translation Helper", epilog="Works with TOML translation files."
-    )
+    parser = argparse.ArgumentParser(description="AI Translation Helper", epilog="Works with TOML translation files.")
     parser.add_argument(
         "--locales-dir",
         default="frontend/editor/public/locales",
@@ -398,40 +363,24 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Create batch command
-    batch_parser = subparsers.add_parser(
-        "create-batch", help="Create AI translation batch file"
-    )
-    batch_parser.add_argument(
-        "--languages", nargs="+", required=True, help="Language codes to include"
-    )
+    batch_parser = subparsers.add_parser("create-batch", help="Create AI translation batch file")
+    batch_parser.add_argument("--languages", nargs="+", required=True, help="Language codes to include")
     batch_parser.add_argument("--output", required=True, help="Output batch file")
-    batch_parser.add_argument(
-        "--max-entries", type=int, default=100, help="Max entries per language"
-    )
+    batch_parser.add_argument("--max-entries", type=int, default=100, help="Max entries per language")
 
     # Validate command
     validate_parser = subparsers.add_parser("validate", help="Validate AI translations")
     validate_parser.add_argument("batch_file", help="Batch file to validate")
 
     # Apply command
-    apply_parser = subparsers.add_parser(
-        "apply-batch", help="Apply AI batch translations"
-    )
+    apply_parser = subparsers.add_parser("apply-batch", help="Apply AI batch translations")
     apply_parser.add_argument("batch_file", help="Batch file with translations")
-    apply_parser.add_argument(
-        "--skip-validation", action="store_true", help="Skip validation before applying"
-    )
+    apply_parser.add_argument("--skip-validation", action="store_true", help="Skip validation before applying")
 
     # Export command
-    export_parser = subparsers.add_parser(
-        "export", help="Export for external translation"
-    )
-    export_parser.add_argument(
-        "--languages", nargs="+", required=True, help="Language codes to export"
-    )
-    export_parser.add_argument(
-        "--format", choices=["csv", "json"], default="csv", help="Export format"
-    )
+    export_parser = subparsers.add_parser("export", help="Export for external translation")
+    export_parser.add_argument("--languages", nargs="+", required=True, help="Language codes to export")
+    export_parser.add_argument("--format", choices=["csv", "json"], default="csv", help="Export format")
 
     args = parser.parse_args()
 
@@ -464,9 +413,7 @@ def main():
 
     elif args.command == "apply-batch":
         batch_file = Path(args.batch_file)
-        results = helper.apply_ai_batch_translations(
-            batch_file, validate=not args.skip_validation
-        )
+        results = helper.apply_ai_batch_translations(batch_file, validate=not args.skip_validation)
 
         total_applied = sum(results["applied"].values())
         print(f"Total translations applied: {total_applied}")

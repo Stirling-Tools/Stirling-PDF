@@ -665,7 +665,6 @@ export function BundleCheckoutModal({
           {t("portal.billing.prepaid.buy.cancel", "Cancel")}
         </Button>
         <Button
-          accent="premium"
           disabled={!canContinue || pdfBusy}
           onClick={handleContinue}
           rightSection={<span aria-hidden>›</span>}
@@ -686,7 +685,7 @@ export function BundleCheckoutModal({
         >
           {t("portal.billing.prepaid.buy.cancelPurchase", "Cancel purchase")}
         </Button>
-        <Button accent="premium" disabled={busy || pdfBusy} onClick={payOnline}>
+        <Button disabled={busy || pdfBusy} onClick={payOnline}>
           {t("portal.billing.prepaid.pay.payOnline", "Pay online")}
         </Button>
       </div>
@@ -701,7 +700,6 @@ export function BundleCheckoutModal({
           {t("portal.billing.prepaid.buy.back", "Back")}
         </Button>
         <Button
-          accent="premium"
           disabled={!canAccept || busy || pdfBusy}
           onClick={handleFinalise}
         >

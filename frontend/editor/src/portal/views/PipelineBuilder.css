@@ -1,3 +1,13 @@
+/**
+ * The builder claims the shell's view rather than lengthening it, so a long chain scrolls *inside*
+ * the graph while the header and the inspector stay put. A chain grows 112px per step, so it passes
+ * a typical viewport at around five steps - and if the page scrolled instead, clicking a node near
+ * the bottom would put the inspector (and Save) off-screen, which is the one interaction this whole
+ * layout exists to serve.
+ *
+ * The shell already makes .portal-shell__view the scroll container, so height here resolves against
+ * a definite box; capping the columns is what stops that view scrolling at all.
+ */
 .portal-builder {
   display: flex;
   flex-direction: column;
@@ -5,6 +15,14 @@
   padding: 1.5rem;
   max-width: 84rem;
   margin: 0 auto;
+  height: 100%;
+  min-height: 0;
+}
+
+/* The header and any banners keep their own size; only the grid absorbs (or gives up) space. Left
+   to the flex default they would all shrink together and squash on a short viewport. */
+.portal-builder > *:not(.portal-builder__grid) {
+  flex: none;
 }
 
 .portal-builder__loading {
@@ -13,254 +31,38 @@
   padding: 4rem 0;
 }
 
-/* Header */
-.portal-builder__head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--c-border-subtle);
-}
-
-.portal-builder__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 0.8125rem;
-  color: var(--c-text-subtle);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.portal-builder__back:hover {
-  color: var(--c-text);
-}
-
-.portal-builder__head-main {
-  flex: 1;
-  min-width: 12rem;
-}
-
-.portal-builder__head-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 /* Two-pane layout */
 .portal-builder__grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 1.25rem;
+  /* Takes whatever the header leaves, and pins the row to exactly that. `minmax(0, 1fr)` rather
+     than the implicit `auto` row is what makes the columns' `max-height: 100%` mean anything: an
+     auto row is sized BY its tallest item, so a long settings form would size the row to itself and
+     then resolve its own 100% against it - capping nothing, and clipping the form with no scrollbar.
+     `align-items: start` still lets a short column hug its content inside the bounded row. */
+  grid-template-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
   align-items: start;
 }
 
+/* Stacked, the inspector sits below the graph, so there is nothing to hold in view - and capping
+   here would nest a scroll region inside a scrolling page, which is worse than a long page. Let the
+   builder grow and hand scrolling back to the shell. */
 @media (max-width: 60rem) {
+  .portal-builder {
+    height: auto;
+  }
+
   .portal-builder__grid {
     grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    flex: none;
   }
 }
 
-.portal-builder__flow {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.portal-builder__section-label {
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--c-text-subtle);
-  font-weight: 600;
-}
-
-.portal-builder__empty {
-  font-size: 0.8125rem;
-  color: var(--c-text-subtle);
-  margin: 0;
-  padding: 0.5rem 0;
-}
-
-/* Step cards */
-.portal-builder__steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.portal-builder__step {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 0.5rem 0.625rem;
-  transition:
-    border-color var(--motion-fast),
-    background var(--motion-fast);
-}
-
-.portal-builder__step--active {
-  border-color: var(--c-primary);
-  background: var(--c-primary-tint);
-}
-
-.portal-builder__step-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  border: none;
-  background: none;
-  padding: 0.25rem;
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
-}
-
-.portal-builder__step-index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.375rem;
-  height: 1.375rem;
-  flex-shrink: 0;
-  border-radius: 50%;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  background: var(--c-primary-tint);
-  color: var(--c-primary);
-}
-
-.portal-builder__step--active .portal-builder__step-index {
-  background: var(--c-primary);
-  color: #fff;
-}
-
-.portal-builder__step-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.portal-builder__step-name {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--c-text);
-}
-
-.portal-builder__step-note {
-  font-size: 0.6875rem;
-  color: var(--c-text-subtle);
-}
-
-/* A step that cannot run on what the one before it produces. */
-.portal-builder__step-note--danger {
-  color: var(--c-danger);
-}
-
-/* A picker entry that cannot run on what the chain currently produces. */
-.portal-pipelines__picker-note {
-  margin-left: auto;
-  padding-left: 0.5rem;
-  font-size: 0.6875rem;
-  color: var(--c-text-subtle);
-}
-
-.portal-builder__step-actions {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.portal-builder__step-actions button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--c-border);
-  background: var(--c-surface);
-  color: var(--c-text-subtle);
-  cursor: pointer;
-  transition:
-    background var(--motion-fast),
-    color var(--motion-fast);
-}
-
-.portal-builder__step-actions button:hover:not(:disabled) {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-
-.portal-builder__step-actions button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.portal-builder__add-step {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  width: 100%;
-  padding: 0.625rem;
-  border: 1px dashed var(--c-border);
-  border-radius: var(--radius-lg);
-  background: none;
-  color: var(--c-text-subtle);
-  font-size: 0.8125rem;
-  cursor: pointer;
-  transition:
-    border-color var(--motion-fast),
-    color var(--motion-fast);
-}
-
-.portal-builder__add-step:hover {
-  border-color: var(--c-primary);
-  color: var(--c-primary);
-}
-
-/* Pipeline settings (above the operation list) */
-.portal-builder__settings {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 1.125rem;
-}
-
-.portal-builder__settings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 1.25rem;
-}
-
-.portal-builder__settings-col {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* Input and destination each span the full settings width so their row has room. */
-.portal-builder__inputs-col {
-  grid-column: 1 / -1;
-}
-
-/* The input row (source + trigger + optional schedule) and the destination row. */
+/* The input's source dropdown and its edit affordance, in the inspector. */
 .portal-builder__input-row {
   display: flex;
   flex-wrap: wrap;
@@ -273,58 +75,23 @@
   min-width: 10rem;
 }
 
-/* The connect-source button trails to the end of the row. */
-.portal-builder__input-row > button:last-child {
-  margin-left: auto;
-}
-
-/* Inspector: heading sits outside the card so it aligns with the operations heading. */
-.portal-builder__inspector-col {
-  position: sticky;
-  top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-/* Once the grid stacks (60rem), a sticky inspector would ride over content */
-@media (max-width: 60rem) {
-  .portal-builder__inspector-col {
-    position: static;
-  }
-}
-
-.portal-builder__inspector {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: 1.125rem;
-}
-
 /* Tool picker */
-.portal-pipelines__picker {
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-lg);
-  background: var(--c-surface);
-  overflow: hidden;
+/* The picker fills the modal hosting it rather than sitting in a card of its own: same surface,
+   same radius, so a bordered box in here would frame nothing. Its rows carry the structure, and
+   they run to the panel's edges - which is what lets the search divider span the full width. */
+.portal-pipelines__picker-modal .sui-modal__body {
+  padding: 0;
 }
 
+/* Holds the shared Input, which brings its own border/focus ring; the row just insets it and rules
+   it off from the list below. */
 .portal-pipelines__picker-search {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 0.75rem 0.625rem;
   border-bottom: 1px solid var(--c-border-subtle);
 }
 
-.portal-pipelines__picker-search input {
-  flex: 1;
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 0.875rem;
-  color: var(--c-text);
-  outline: none;
+.portal-pipelines__picker-search .sui-input {
+  width: 100%;
 }
 
 .portal-pipelines__picker-list {
@@ -334,7 +101,7 @@
 }
 
 .portal-pipelines__picker-group-label {
-  padding: 0.5rem 0.75rem 0.25rem;
+  padding: 0.5rem 1.125rem 0.25rem;
   font-size: 0.6875rem;
   color: var(--c-text-subtle);
 }
@@ -346,7 +113,7 @@
   width: 100%;
   border: none;
   background: none;
-  padding: 0.4375rem 0.75rem;
+  padding: 0.4375rem 1.125rem;
   text-align: left;
   cursor: pointer;
   color: var(--c-text);
@@ -368,63 +135,52 @@
   display: block;
 }
 
+/* Name over its optional note - a two-line item, so the note reads as a sub-line rather than
+   running straight on from the name. */
+.portal-pipelines__picker-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+}
+
 .portal-pipelines__picker-name {
   font-size: 0.8125rem;
 }
 
+/* Why this tool cannot follow the step before it. Advisory: the item is still pickable, just dimmed
+   and captioned so the reason is clear without shouting. */
+.portal-pipelines__picker-note {
+  font-size: 0.6875rem;
+  color: var(--c-text-muted);
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* Muted via a token, not opacity: opacity on text drops the contrast below the floor. The name
+   still reads as de-emphasised, and the icon (not text) can take the opacity. */
+.portal-pipelines__picker-item.is-incompatible .portal-pipelines__picker-name {
+  color: var(--c-text-muted);
+}
+
+.portal-pipelines__picker-item.is-incompatible .portal-pipelines__picker-icon {
+  opacity: 0.55;
+}
+
 .portal-pipelines__picker-empty {
-  padding: 1rem 0.75rem;
+  padding: 1rem 1.125rem;
   font-size: 0.8125rem;
   color: var(--c-text-subtle);
   margin: 0;
 }
 
-/* The back link, step row, add-step affordance, tool-picker item and step
-   actions are the shared Button/ActionIcon carrying bespoke styling. Re-assert
-   their original look over the design-system button base (which otherwise
-   imposes a fixed height, its own padding/border and accent text colour). */
-.portal-builder__back.sui-btn {
-  height: auto;
-  min-height: 0;
-  padding: 0;
-  font-weight: 400;
-  font-size: 0.8125rem;
-  color: var(--c-text-subtle);
-}
-
-.portal-builder__back.sui-btn:hover {
-  color: var(--c-text);
-}
-
-.portal-builder__step-main.sui-btn {
-  flex: 1;
-  height: auto;
-  min-height: 0;
-  padding: 0.25rem;
-  font-weight: 400;
-  color: inherit;
-}
-
-.portal-builder__add-step.sui-btn {
-  height: auto;
-  min-height: 0;
-  padding: 0.625rem;
-  border: 1px dashed var(--c-border);
-  background: none;
-  font-weight: 400;
-  font-size: 0.8125rem;
-  color: var(--c-text-subtle);
-}
-
-.portal-builder__add-step.sui-btn:hover {
-  border-color: var(--c-primary);
-  color: var(--c-primary);
-}
-
+/* The tool-picker item is the shared Button carrying bespoke styling, so re-assert its look over
+   the design-system base (which otherwise imposes a fixed height, its own padding and an accent
+   text colour). */
 .portal-pipelines__picker-item.sui-btn {
   height: auto;
   min-height: 0;
-  padding: 0.4375rem 0.75rem;
+  padding: 0.4375rem 1.125rem;
   font-weight: 400;
   color: var(--c-text);
 }
@@ -433,9 +189,39 @@
   background: var(--c-hover);
 }
 
-.portal-builder__step-actions .sui-ai {
-  width: 1.5rem;
-  height: 1.5rem;
-  min-width: 1.5rem;
-  min-height: 1.5rem;
+/* A quiet way into the chosen source's own settings, beside its dropdown. */
+.portal-builder__input-row .portal-builder__source-edit {
+  color: var(--c-text-subtle);
+}
+
+.portal-builder__input-row .portal-builder__source-edit:hover:not(:disabled) {
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+/* The input's schedule row, its number field, and a builder-owned muted line. These lived in
+   Pipelines.css and only rendered because the router bundles both views together; a code-split (or
+   any Storybook story of the builder alone) left them unstyled. Kept here so the builder is
+   self-contained. */
+.portal-builder__schedule {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-builder__schedule-count {
+  width: 5rem;
+}
+
+.portal-builder__muted {
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+  margin: 0;
+}
+
+/* The space-between button row shared by the builder's modal footers. */
+.portal-builder__composer-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
 }

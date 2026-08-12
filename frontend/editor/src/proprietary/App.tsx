@@ -1,5 +1,5 @@
-import { Suspense } from "react";
-import { Routes, Route, useParams } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
@@ -7,14 +7,15 @@ import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
-import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import InviteAccept from "@app/routes/InviteAccept";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import ParticipantView from "@app/components/workflow/ParticipantView";
-import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
+
+const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import { LoginLandingRedirect } from "@app/components/LoginLandingRedirect";
@@ -59,6 +60,16 @@ export default function App() {
           }
         />
 
+        {/* Mobile signature drawing - reached from the Sign tool QR code */}
+        <Route
+          path="/mobile-sign"
+          element={
+            <PublicRouteProviders>
+              <MobileSignPage />
+            </PublicRouteProviders>
+          }
+        />
+
         {/* Participant signing — public, token-gated, no auth required */}
         <Route
           path="/workflow/sign/:token"
@@ -82,7 +93,12 @@ export default function App() {
                 <LoginLandingRedirect />
                 <Routes>
                   <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
+                  {/* Self-hosted has no signup - accounts are created by an
+                      admin. Old links land on login instead. */}
+                  <Route
+                    path="/signup"
+                    element={<Navigate to="/login" replace />}
+                  />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/invite/:token" element={<InviteAccept />} />
                   <Route path="/share/:token" element={<ShareLinkPage />} />

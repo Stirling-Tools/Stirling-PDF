@@ -113,7 +113,7 @@
 .portal-infra__export-error {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--c-danger);
+  color: var(--color-red-dark);
 }
 
 .portal-infra__export-actions {
@@ -373,7 +373,7 @@
 .portal-infra__attestation-link {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   text-decoration: none;
 }
 
@@ -429,7 +429,7 @@
   height: 1.75rem;
   border-radius: var(--radius-md);
   background: var(--c-primary-tint);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   font-size: 0.875rem;
 }
 

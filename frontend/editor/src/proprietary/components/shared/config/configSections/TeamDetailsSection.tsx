@@ -350,7 +350,7 @@ export default function TeamDetailsSection({
   if (!team) {
     return (
       <Stack align="center" py="xl">
-        <Text size="sm" c="red">
+        <Text size="sm" c="var(--color-red-dark)">
           {t("workspace.teams.teamNotFound", "Team not found")}
         </Text>
         <Button variant="secondary" onClick={onBack}>
@@ -408,32 +408,20 @@ export default function TeamDetailsSection({
       </Group>
 
       {/* Members Table */}
-      <Table
-        horizontalSpacing="md"
-        verticalSpacing="sm"
-        withRowBorders
-        style={
-          {
-            "--table-border-color": "var(--mantine-color-gray-3)",
-          } as React.CSSProperties
-        }
-      >
+      <Table horizontalSpacing="md" verticalSpacing="sm" withRowBorders>
         <Table.Thead>
-          <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
-            <Table.Th
-              style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }}
-              fz="sm"
-            >
+          <Table.Tr>
+            <Table.Th style={{ fontWeight: 600 }} fz="sm">
               {t("workspace.people.user")}
             </Table.Th>
-            <Table.Th
-              style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }}
-              fz="sm"
-              w={100}
-            >
+            <Table.Th style={{ fontWeight: 600 }} fz="sm" w={100}>
               {t("workspace.people.role")}
             </Table.Th>
-            <Table.Th w={50}></Table.Th>
+            <Table.Th w={50}>
+              <span className="sr-only">
+                {t("workspace.people.memberActions", "Member actions")}
+              </span>
+            </Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -496,7 +484,9 @@ export default function TeamDetailsSection({
                               maw={200}
                               style={{
                                 lineHeight: 1.3,
-                                opacity: user.enabled ? 1 : 0.6,
+                                color: user.enabled
+                                  ? undefined
+                                  : "var(--c-text-muted)",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
@@ -765,7 +755,7 @@ export default function TeamDetailsSection({
               availableUsersForTeam.find(
                 (u) => u.id.toString() === selectedUserId,
               )?.team && (
-                <Text size="xs" c="orange">
+                <Text size="xs" c="var(--color-amber-dark)">
                   {t("workspace.teams.addMemberToTeam.willBeMoved")}
                 </Text>
               )}

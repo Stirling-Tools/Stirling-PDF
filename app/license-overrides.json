@@ -1,0 +1,12 @@
+{
+    "com.hubspot.immutables:immutables-exceptions:1.9": {
+        "name": "The Apache License, Version 2.0",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0.txt",
+        "projectUrl": "https://github.com/HubSpot/hubspot-immutables/tree/58628096ac99b286fe4f8bfe12aa3cff0f0589d3"
+    },
+    "com.hubspot:algebra:1.5": {
+        "name": "The Apache License, Version 2.0",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0.txt",
+        "projectUrl": "https://github.com/HubSpot/algebra/tree/5d42983fd3a26539df9ba2cbeac32a1bddce0494"
+    }
+}

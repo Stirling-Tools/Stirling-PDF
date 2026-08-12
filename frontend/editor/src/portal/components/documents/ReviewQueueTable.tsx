@@ -71,8 +71,11 @@ export function ReviewQueueTable({
                 </Chip>
               )}
               {d.sensitive && (
+                // role="img" so the label is allowed and the icon reads as one thing: aria-label
+                // is ignored on a bare span, leaving the padlock silent.
                 <span
                   className="portal-documents__lock"
+                  role="img"
                   title={t("portal.documents.table.sensitiveTitle")}
                   aria-label={t("portal.documents.table.sensitiveLabel")}
                 >
@@ -136,7 +139,8 @@ export function ReviewQueueTable({
       },
       {
         key: "actions",
-        header: "",
+        header: t("portal.documents.table.columns.actions"),
+        headerHidden: true,
         width: "3rem",
         render: (d) => (
           <Button
@@ -163,6 +167,8 @@ export function ReviewQueueTable({
       rows={documents}
       rowKey={(d) => d.id}
       onRowClick={onRowClick}
+      // Every row carries its own actions button, which opens the same document.
+      rowsContainControls
       empty={t("portal.documents.table.empty")}
     />
   );

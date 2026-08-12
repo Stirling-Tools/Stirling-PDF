@@ -46,6 +46,7 @@ export interface SelectProps {
   id?: string;
   name?: string;
   "aria-label"?: string;
+  "aria-labelledby"?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
   required?: boolean;
@@ -74,6 +75,7 @@ type PassthroughProps = Omit<
     | "id"
     | "name"
     | "aria-label"
+    | "aria-labelledby"
     | "aria-describedby"
     | "required"
     | "disabled"
@@ -106,6 +108,7 @@ export function Select({
   id,
   name,
   "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
   required,
@@ -128,6 +131,7 @@ export function Select({
     id,
     name,
     "aria-label": ariaLabel,
+    "aria-labelledby": ariaLabelledBy,
     "aria-describedby": ariaDescribedBy,
     required,
     disabled,

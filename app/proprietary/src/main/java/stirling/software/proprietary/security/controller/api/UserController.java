@@ -199,7 +199,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "usernameExists", "message", "Username already exists"));
         }
-        if (newUsername != null && newUsername.length() > 0) {
+        if (newUsername != null && !newUsername.isEmpty()) {
             try {
                 userService.changeUsername(user, newUsername);
             } catch (IllegalArgumentException e) {

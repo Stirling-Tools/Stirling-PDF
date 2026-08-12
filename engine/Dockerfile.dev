@@ -2,13 +2,13 @@
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:531f855bda2c73cd6ef67d56b733b357cea384185b3022bd09f05e002cd144ca
 WORKDIR /app
 
-COPY pyproject.toml uv.lock ./
+COPY engine/pyproject.toml engine/uv.lock ./engine/
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen
+    cd engine && uv sync --frozen --group engine --group engine-dev
 
-ENV PATH="/app/.venv/bin:$PATH"
+ENV PATH="/app/engine/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 5001
 
-CMD ["uv", "run", "uvicorn", "stirling.api.app:app", "--host", "0.0.0.0", "--port", "5001", "--reload"]
+CMD ["uv", "run", "--project", "/app/engine", "--frozen", "--group", "engine", "uvicorn", "stirling.api.app:app", "--host", "0.0.0.0", "--port", "5001", "--reload"]

@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import DragDropGrid from "@app/components/pageEditor/DragDropGrid";
+import DragDropGrid, {
+  type DragHandleProps,
+} from "@app/components/pageEditor/DragDropGrid";
 
 interface MockGridItem {
   id: string;
@@ -22,7 +24,7 @@ const renderItem = (
   clearBoxSelection: () => void,
   activeDragIds: string[],
   justMoved: boolean,
-  dragHandleProps?: any,
+  dragHandleProps?: DragHandleProps,
   zoomLevel?: number,
 ) => {
   const { ref: dndRef, ...restDragProps } = dragHandleProps ?? {};

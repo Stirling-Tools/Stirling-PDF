@@ -183,6 +183,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   // 2-4: 300px/2 cols, 5-9: 400px/3 cols, 10+: 600px/4 cols
   const dropdownWidth =
     languageOptions.length <= 4 ? 300 : languageOptions.length <= 9 ? 400 : 600;
+  const responsiveDropdownWidth = `min(${dropdownWidth}px, calc(100vw - 24px))`;
 
   const gridColumns =
     languageOptions.length <= 4 ? 2 : languageOptions.length <= 9 ? 3 : 4;
@@ -236,7 +237,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       <Menu
         opened={opened}
         onChange={setOpened}
-        width={dropdownWidth}
+        width={responsiveDropdownWidth}
         position={position}
         offset={offset}
         zIndex={Z_INDEX_CONFIG_MODAL}
@@ -276,6 +277,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <Menu.Dropdown
           style={{
             padding: "12px",
+            maxHeight: "min(360px, calc(100vh - 160px))",
+            overflowY: "auto",
+            maxWidth: "calc(100vw - 24px)",
             borderRadius: "8px",
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
             backgroundColor:
@@ -286,7 +290,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         >
           <div
             className={styles.languageGrid}
-            style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+            style={
+              {
+                "--language-grid-columns": gridColumns,
+              } as React.CSSProperties
+            }
           >
             {languageOptions.map((option, index) => (
               <LanguageItem

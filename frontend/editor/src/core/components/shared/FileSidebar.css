@@ -129,14 +129,14 @@
 }
 
 .file-sidebar-drop-overlay-icon {
-  color: var(--mantine-color-blue-6, var(--c-primary)) !important;
+  color: var(--c-accent-text) !important;
   font-size: 28px !important;
 }
 
 .file-sidebar-drop-overlay-text {
   font-size: 13px;
   font-weight: 600;
-  color: var(--mantine-color-blue-6, var(--c-primary));
+  color: var(--c-accent-text);
 }
 
 /* ---- Search row ---- */
@@ -605,7 +605,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background-color: var(--mantine-color-blue-6, var(--c-primary));
+  background-color: var(--c-accent-text);
   color: var(--c-text-on-primary);
   font-size: 12px;
   font-weight: 600;

@@ -314,6 +314,10 @@ function check() {
   const violations = [];
   const primitiveValues = new Map();
   const lineOf = (text, index) => text.slice(0, index).split("\n").length;
+  // path.relative emits backslashes on Windows; normalize so the PRIMITIVES
+  // comparison below matches and printed paths stay POSIX-style.
+  const posixRel = (name) =>
+    relative(process.cwd(), join(THEME, name)).replaceAll("\\", "/");
 
   // Fail if a theme .css exists that isn't registered above (readdir is only
   // compared here — never used to build a path passed to readFileSync).
@@ -321,7 +325,7 @@ function check() {
   for (const name of readdirSync(THEME)) {
     if (name.endsWith(".css") && !known.has(name)) {
       violations.push({
-        file: relative(process.cwd(), join(THEME, name)),
+        file: posixRel(name),
         line: 1,
         msg: `unregistered theme CSS — add "${name}" to THEME_FILES in theme-lint.mjs`,
       });
@@ -628,7 +632,9 @@ const CODE_EXEMPT_PATH = [
   /\/onboarding\//,
   /addStamp|addWatermark|\/tooltips\//,
   /UpgradeBanner|AdminPlanSection/,
-  /\.test\.[jt]sx?$|\.stories\.[jt]sx?$|\/types\//,
+  // Stories are checked like app code; colour-as-data lines opt out with
+  // `theme-allow-color`.
+  /\.test\.[jt]sx?$|\/types\//,
 ];
 const CODE_HEX =
   /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g;

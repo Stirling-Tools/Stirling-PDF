@@ -22,6 +22,9 @@ pipeline/
 customFiles/
 configs/
 watchedFolders/
+# The rule above targets the app's runtime watched-folders working dir, but it
+# also matches this frontend source component dir; keep the source tracked.
+!frontend/editor/src/proprietary/components/watchedFolders/
 clientWebUI/
 # Scratch dir used by local fixture-regeneration runs (see
 # app/proprietary/src/test/resources/db-migration-fixtures/README.md).

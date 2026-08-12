@@ -19,7 +19,8 @@ import {
 } from "@app/components/filesPage/filesPageReturnRoute";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import {
-  useFileState,
+  useAllFiles,
+  useFileSelectors,
   useFileSelection,
   useFileActions,
 } from "@app/contexts/FileContext";
@@ -121,10 +122,10 @@ export default function WorkbenchBar({
   const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
 
-  const { selectors } = useFileState();
+  const selectors = useFileSelectors();
   const { selectedFiles, selectedFileIds } = useFileSelection();
   const { actions: fileActions } = useFileActions();
-  const activeFiles = selectors.getFiles();
+  const { files: activeFiles } = useAllFiles();
   const { activeFileId, setActiveFileId } = useViewer();
   const policyFileBadges = usePolicyFileBadges();
   // Block print/export while any file the export would touch is under active

@@ -176,7 +176,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
             isCurrentTier &&
             currentLicenseInfo &&
             currentLicenseInfo.maxUsers > 0 && (
-              <Text size="sm" c="green" fw={500} ta="center">
+              <Text size="sm" c="var(--color-green-dark)" fw={500} ta="center">
                 {t("plan.licensedSeats", "Licensed: {{count}} seats", {
                   count: currentLicenseInfo.maxUsers,
                 })}

@@ -17,6 +17,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { PDFPage, PDFDocument } from "@app/types/pageEditor";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { getFileColorWithOpacity } from "@app/components/pageEditor/fileColors";
+import { type DragHandleProps } from "@app/components/pageEditor/DragDropGrid";
 import styles from "@app/components/pageEditor/PageEditor.module.css";
 import HoverActionMenu, {
   HoverAction,
@@ -38,7 +39,7 @@ interface PageThumbnailProps {
   activeDragIds: string[];
   justMoved?: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
-  dragHandleProps?: any;
+  dragHandleProps?: DragHandleProps;
   onReorderPages: (
     sourcePageNumber: number,
     targetIndex: number,

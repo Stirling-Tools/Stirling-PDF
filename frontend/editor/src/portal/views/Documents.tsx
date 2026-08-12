@@ -8,6 +8,8 @@ import {
   type ReviewDocument,
 } from "@portal/api/documents";
 import { ReviewQueue } from "@portal/components/documents/ReviewQueue";
+import { FileRunEventList } from "@portal/components/failures/FileRunEventList";
+import "@portal/components/failures/failures.css";
 import "@portal/views/Documents.css";
 
 function DownloadIcon() {
@@ -104,6 +106,11 @@ export function Documents() {
       </header>
 
       <ReviewQueue documents={documents} loading={state.loading} />
+
+      {/* Recorded policy-run failures. Not mounted outside dev: the endpoints are live and
+          gated, but the surface itself is unfinished (no polling, no paging, no filters).
+          Vite folds this to false in a build, so neither the view nor its fetch ships. */}
+      {import.meta.env.DEV && <FileRunEventList />}
     </div>
   );
 }

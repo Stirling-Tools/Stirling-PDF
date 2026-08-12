@@ -33,13 +33,13 @@ import LockIcon from "@mui/icons-material/LockOutlined";
 import { useTranslation } from "react-i18next";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import { useWallet } from "@app/hooks/useWallet";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import "./Payg.css";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import "./PaygFree.css";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import UpgradeModal from "./UpgradeModal";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import { DocHelp } from "./Payg";
 import {
   FreeMeterPanel,

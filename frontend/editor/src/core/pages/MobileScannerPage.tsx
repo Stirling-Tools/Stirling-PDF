@@ -1107,7 +1107,7 @@ export default function MobileScannerPage() {
                 <PhotoCameraRoundedIcon
                   style={{
                     fontSize: "3rem",
-                    color: "var(--mantine-color-blue-6)",
+                    color: "var(--c-accent-text)",
                   }}
                 />
                 <Text size="lg" fw={600}>

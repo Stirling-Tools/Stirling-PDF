@@ -8,6 +8,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { useTranslation } from "react-i18next";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -34,7 +35,7 @@ interface GroupedFormatDropdownProps {
 
 const GroupedFormatDropdown = ({
   value,
-  placeholder = "Select an option",
+  placeholder,
   options,
   onChange,
   disabled = false,
@@ -43,6 +44,8 @@ const GroupedFormatDropdown = ({
   withinPortal = true,
   zIndex = Z_INDEX_AUTOMATE_DROPDOWN,
 }: GroupedFormatDropdownProps) => {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("dropdownList.selectOption");
   const [dropdownOpened, setDropdownOpened] = useState(false);
   const theme = useMantineTheme();
 
@@ -60,12 +63,12 @@ const GroupedFormatDropdown = ({
   }, [options]);
 
   const selectedLabel = useMemo(() => {
-    if (!value) return placeholder;
+    if (!value) return resolvedPlaceholder;
     const selected = options.find((opt) => opt.value === value);
     return selected
       ? `${selected.group} (${selected.label})`
       : value.toUpperCase();
-  }, [value, options, placeholder]);
+  }, [value, options, resolvedPlaceholder]);
 
   const handleOptionSelect = (selectedValue: string) => {
     onChange(selectedValue);

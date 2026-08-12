@@ -59,9 +59,10 @@ jobs:
   # the story itself — a shared component, a theme token — still surfaces within
   # a day.
   a11y-all-stories:
-    name: a11y (every story)
+    name: a11y (every story, light + dark)
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # Two full sweeps (one per theme), each ~30 minutes of browser time.
+    timeout-minutes: 120
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -81,7 +82,7 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
-      - name: a11y gate (every story)
+      - name: a11y gate (every story, light + dark)
         run: task frontend:storybook:a11y
 
       - name: Upload scan reports

@@ -16,6 +16,11 @@ updates:
     cooldown:
       default-days: 7
     rebase-strategy: "auto"
+    groups:
+      simple-java-mail:
+        patterns:
+          - "org.simplejavamail:simple-java-mail"
+          - "org.simplejavamail:outlook-module"
 
   - package-ecosystem: "docker"
     directories:
@@ -73,14 +78,6 @@ updates:
           - "react-dom"
           - "@types/react"
           - "@types/react-dom"
-      typescript-eslint:
-        patterns:
-          - "@typescript-eslint/*"
-          - "typescript-eslint"
-      eslint:
-        patterns:
-          - "eslint"
-          - "@eslint/*"
       vite:
         patterns:
           - "vite"

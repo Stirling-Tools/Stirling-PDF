@@ -404,6 +404,7 @@ export function FileSelectorPicker({
             }}
             aria-expanded={isOpen}
             aria-haspopup="listbox"
+            aria-disabled={disabled || undefined}
           >
             <Text
               size="sm"

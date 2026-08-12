@@ -475,41 +475,6 @@ class SpringAuthClient {
   }
 
   /**
-   * Sign up new user
-   */
-  async signUp(credentials: {
-    email: string;
-    password: string;
-    options?: { data?: { full_name?: string }; emailRedirectTo?: string };
-  }): Promise<AuthResponse> {
-    try {
-      const response = await http().post(
-        "/api/v1/user/register",
-        {
-          username: credentials.email,
-          password: credentials.password,
-        },
-        {
-          withCredentials: true,
-        },
-      );
-
-      const data = response.data;
-
-      // Note: Spring backend auto-confirms users (no email verification)
-      // Return user but no session (user needs to login)
-      return { user: data.user, session: null, error: null };
-    } catch (error: unknown) {
-      console.error("[SpringAuth] signUp error:", error);
-      return {
-        user: null,
-        session: null,
-        error: { message: getErrorMessage(error, "Registration failed") },
-      };
-    }
-  }
-
-  /**
    * Sign in with OAuth/SAML provider (GitHub, Google, Authentik, etc.)
    * This redirects to the Spring OAuth2/SAML2 authorization endpoint
    *

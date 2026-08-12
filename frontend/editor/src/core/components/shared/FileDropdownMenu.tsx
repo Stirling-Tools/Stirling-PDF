@@ -34,7 +34,12 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
   return (
     <Menu trigger="click" position="bottom" width="30rem">
       <Menu.Target>
+        {/* Menu.Target stamps aria-haspopup/aria-expanded on its child; those are
+            only permitted once the element declares a control role. It stays a
+            div because it renders inside the workbench SegmentedControl's
+            <label>, which may not contain interactive content. */}
         <div
+          role="button"
           style={{ ...viewOptionStyle, cursor: "pointer", maxWidth: "100%" }}
         >
           {switchingTo === "viewer" ? (

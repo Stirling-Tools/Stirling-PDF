@@ -11,7 +11,6 @@ import { Policies } from "@portal/views/Policies";
 import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { Infrastructure } from "@portal/views/Infrastructure";
 import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
-import { Procurement } from "@portal/views/Procurement";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 
 // Lazy so the generated docs manifest (bundled JSON) lands in its own chunk.
@@ -62,7 +61,6 @@ export function ViewRouter() {
         element={<Infrastructure />}
       />
       <Route path={rel(VIEW_PATHS.usage)} element={<PortalBillingGate />} />
-      <Route path={rel(VIEW_PATHS.procurement)} element={<Procurement />} />
       <Route
         path={rel(VIEW_PATHS.docs)}
         element={

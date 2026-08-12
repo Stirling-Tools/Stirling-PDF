@@ -95,7 +95,7 @@
   margin-bottom: 8px;
 }
 .payg-planhead__lbl--free {
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 .payg-planhead__lbl--meter {
   color: var(--payg-accent);
@@ -242,7 +242,7 @@
   background: color-mix(in srgb, var(--c-success) 14%, transparent);
 }
 [data-mantine-color-scheme="dark"] .payg-hero__credit {
-  color: var(--c-success);
+  color: var(--color-green-dark);
   background: color-mix(in srgb, var(--c-success) 18%, transparent);
 }
 
@@ -459,11 +459,11 @@
 }
 .payg-gate[data-enabled="true"] .payg-gate__chip {
   background: color-mix(in srgb, var(--c-success) 16%, transparent);
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 .payg-gate[data-enabled="false"] .payg-gate__chip {
   background: color-mix(in srgb, var(--c-danger) 16%, transparent);
-  color: var(--c-danger);
+  color: var(--color-red-dark);
 }
 .payg-gate__label {
   font-size: 0.8125rem;
@@ -486,11 +486,11 @@
   background: var(--c-surface-sunken);
 }
 .payg-gate__tag[data-variant="pause"] {
-  color: var(--c-danger);
+  color: var(--color-red-dark);
   background: color-mix(in srgb, var(--c-danger) 12%, transparent);
 }
 [data-mantine-color-scheme="dark"] .payg-gate__tag[data-variant="pause"] {
-  color: var(--c-danger);
+  color: var(--color-red-dark);
   background: color-mix(in srgb, var(--c-danger) 18%, transparent);
 }
 

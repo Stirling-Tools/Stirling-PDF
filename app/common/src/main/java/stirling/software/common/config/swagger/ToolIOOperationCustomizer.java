@@ -1,5 +1,6 @@
 package stirling.software.common.config.swagger;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.model.tool.ToolIOCase;
 import stirling.software.common.model.tool.ToolIOWhen;
+import stirling.software.common.service.ToolIOParameterDefaults;
 
 /**
  * Publishes each {@link ToolIO} into the spec as {@code x-stirling-io}, which is how the frontend
@@ -49,40 +51,42 @@ public class ToolIOOperationCustomizer
         if (declaration == null) {
             return operation;
         }
-        operation.addExtension(EXTENSION_NAME, toExtension(declaration));
+        operation.addExtension(EXTENSION_NAME, toExtension(declaration, handlerMethod.getMethod()));
         operation.setDescription(appendSummaryLine(operation.getDescription(), declaration));
         return operation;
     }
 
-    private static Map<String, Object> toExtension(ToolIO declaration) {
+    private static Map<String, Object> toExtension(ToolIO declaration, Method handler) {
         Map<String, Object> extension = new LinkedHashMap<>();
         extension.put("accepts", names(declaration.accepts()));
         extension.put("produces", declaration.produces().name());
         extension.put("arity", declaration.arity().name());
         if (declaration.cases().length > 0) {
-            extension.put("cases", cases(declaration));
+            extension.put("cases", cases(declaration, handler));
         }
         return extension;
     }
 
-    private static List<Map<String, Object>> cases(ToolIO declaration) {
-        return Arrays.stream(declaration.cases()).map(ToolIOOperationCustomizer::toCase).toList();
+    private static List<Map<String, Object>> cases(ToolIO declaration, Method handler) {
+        return Arrays.stream(declaration.cases()).map(rule -> toCase(rule, handler)).toList();
     }
 
-    private static Map<String, Object> toCase(ToolIOCase rule) {
+    private static Map<String, Object> toCase(ToolIOCase rule, Method handler) {
         Map<String, Object> entry = new LinkedHashMap<>();
-        entry.put(
-                "when",
-                Arrays.stream(rule.when()).map(ToolIOOperationCustomizer::toCondition).toList());
+        entry.put("when", Arrays.stream(rule.when()).map(c -> toCondition(c, handler)).toList());
         entry.put("produces", rule.produces().name());
         entry.put("arity", rule.arity().name());
         return entry;
     }
 
-    private static Map<String, Object> toCondition(ToolIOWhen condition) {
+    private static Map<String, Object> toCondition(ToolIOWhen condition, Method handler) {
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("param", condition.param());
         entry.put("matches", List.of(condition.matches()));
+        // The default the endpoint uses when this parameter is absent, so a step that never sends
+        // it still resolves. Omitted when the parameter is required with none.
+        ToolIOParameterDefaults.resolve(handler, condition.param())
+                .ifPresent(value -> entry.put("default", value));
         return entry;
     }
 

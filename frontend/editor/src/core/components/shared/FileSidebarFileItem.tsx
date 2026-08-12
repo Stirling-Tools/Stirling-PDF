@@ -167,7 +167,9 @@ export interface FileItemProps {
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
 
-export function FileItem({
+// Memoized: sidebar rows bail out unless THEIR props change, so one file's
+// update (e.g. a new version landing) re-renders one row, not the whole list.
+export const FileItem = React.memo(function FileItem({
   fileId,
   name,
   size,
@@ -509,4 +511,4 @@ export function FileItem({
         )}
     </>
   );
-}
+});

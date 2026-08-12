@@ -81,9 +81,10 @@ const EXPANDED_WIDTH = "16.25rem"; // ~260px
 const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
 const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
 
-// Stable empty props for rows without folders, so the memoized FileItem
-// isn't re-rendered by a fresh `?? []` identity on every list render.
+// Stable empty props for rows without folders/policies, so the memoized
+// FileItem isn't re-rendered by a fresh `?? []` identity on every list render.
 const NO_FOLDERS: never[] = [];
+const NO_POLICIES: never[] = [];
 
 /** Only surface the "Adding files…" progress row for drops big enough that the
  *  pre-dispatch scan is user-visible; small adds finish before it would paint. */
@@ -790,7 +791,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onDragStart={handleWatchedFolderDragStart}
           folders={memberFolders}
           onFolderClick={openWatchedFolder}
-          policies={policyFileBadges.get(stub.id as string) ?? []}
+          policies={policyFileBadges.get(stub.id as string) ?? NO_POLICIES}
           onDelete={isWatchedFoldersActive ? undefined : handleSidebarDelete}
           onSaveToCloud={isWatchedFoldersActive ? undefined : handleSaveToCloud}
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}

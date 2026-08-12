@@ -1,0 +1,68 @@
+package stirling.software.proprietary.failure;
+
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Resolves a {@link FailureActionId} to the bean that implements it. The startup check is the
+ * point: because kinds declare action ids as data, one could name an action nobody implements,
+ * which would otherwise show up as a button that 400s rather than as a failed boot.
+ */
+@Slf4j
+@Service
+public class FailureActionRegistry {
+
+    private final Map<FailureActionId, FailureAction> byId = new EnumMap<>(FailureActionId.class);
+
+    public FailureActionRegistry(List<FailureAction> actions) {
+        for (FailureAction action : actions) {
+            FailureAction clash = byId.put(action.id(), action);
+            if (clash != null) {
+                throw new IllegalStateException(
+                        "Two handlers registered for action "
+                                + action.id()
+                                + ": "
+                                + clash.getClass().getName()
+                                + " and "
+                                + action.getClass().getName());
+            }
+        }
+    }
+
+    /**
+     * Fail fast if any kind declares an action with no handler, naming every gap rather than the
+     * first, so one boot tells you everything that is missing.
+     */
+    @PostConstruct
+    void verifyEveryDeclaredActionHasAHandler() {
+        List<String> gaps =
+                Arrays.stream(FailureKind.values())
+                        .flatMap(
+                                kind ->
+                                        kind.getActions().stream()
+                                                .filter(action -> !byId.containsKey(action))
+                                                .map(action -> kind.getId() + " -> " + action))
+                        .toList();
+        if (!gaps.isEmpty()) {
+            throw new IllegalStateException(
+                    "Failure kinds declare actions with no registered handler: " + gaps);
+        }
+        log.debug(
+                "Failure action registry initialised with {} handler(s) for {} kind(s)",
+                byId.size(),
+                FailureKind.values().length);
+    }
+
+    public Optional<FailureAction> find(FailureActionId id) {
+        return Optional.ofNullable(byId.get(id));
+    }
+}

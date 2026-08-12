@@ -20,8 +20,9 @@
     "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "charliermarsh.ruff"
   },
+  "ruff.configuration": "${workspaceFolder}/engine/pyproject.toml",
   "[gradle-kotlin-dsl]": {
     "editor.defaultFormatter": "vscjava.vscode-gradle"
   },

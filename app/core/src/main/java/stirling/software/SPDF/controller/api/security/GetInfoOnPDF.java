@@ -61,7 +61,6 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -267,25 +266,6 @@ public class GetInfoOnPDF {
             return zonedDateTime.format(formatter);
         } else {
             return null;
-        }
-    }
-
-    private static void validatePdfFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("PDF file is required");
-        }
-
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.fileSizeLimit",
-                    "File size ({0} bytes) exceeds maximum allowed size ({1} bytes)",
-                    file.getSize(),
-                    MAX_FILE_SIZE);
-        }
-
-        String contentType = file.getContentType();
-        if (contentType != null && !"application/pdf".equals(contentType)) {
-            log.warn("File content type is {}, expected application/pdf", contentType);
         }
     }
 
@@ -1103,14 +1083,6 @@ public class GetInfoOnPDF {
             description = "Extracts all available information from a PDF file.")
     public ResponseEntity<byte[]> getPdfInfo(@ModelAttribute PDFFile request) throws IOException {
         MultipartFile inputFile = request.getFileInput();
-
-        // Validate input
-        try {
-            validatePdfFile(inputFile);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid PDF file: {}", e.getMessage());
-            return createErrorResponse("Invalid PDF file: " + e.getMessage());
-        }
 
         List<PDFVerificationResult> verificationResults = null;
         try {

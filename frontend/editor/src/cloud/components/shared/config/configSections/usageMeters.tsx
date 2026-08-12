@@ -60,6 +60,7 @@ export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
     <MeterBar
       state={state}
       pct={pct}
+      barLabel={t("payg.free.hero.barAria", "Free PDFs used")}
       figure={snap.billableUsed.toLocaleString()}
       capSuffix={t("payg.free.hero.capSuffix", "/ {{limit}} free PDFs", {
         limit: snap.billableLimit.toLocaleString(),
@@ -122,6 +123,7 @@ export function SpendCapMeterPanel({ snap }: { snap: SpendCapSnapshot }) {
     <MeterBar
       state={state}
       pct={pct}
+      barLabel={t("payg.spendCapMeter.barAria", "Spend against cap")}
       figure={`${symbol}${snap.spent.toLocaleString()}`}
       capSuffix={t("payg.spendCapMeter.capSuffix", "/ {{amount}} cap", {
         amount: `${symbol}${snap.cap.toLocaleString()}`,
@@ -193,6 +195,7 @@ export function PrepaidCapacityMeterPanel({ snap }: { snap: PrepaidSnapshot }) {
     <MeterBar
       state={state}
       pct={pct}
+      barLabel={t("payg.prepaid.card.title", "Prepaid capacity")}
       figure={snap.remaining.toLocaleString()}
       capSuffix={t(
         "payg.prepaid.meter.capSuffix",

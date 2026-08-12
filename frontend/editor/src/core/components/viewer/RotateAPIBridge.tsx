@@ -21,13 +21,26 @@ export function RotateAPIBridge() {
 
 function RotateAPIBridgeInner({ documentId }: { documentId: string }) {
   const { provides: rotate, rotation } = useRotate(documentId);
-  const { registerBridge } = useViewer();
+  const { registerBridge, triggerImmediateRotationUpdate } = useViewer();
+  const isRotateAvailable = rotate !== null;
 
   // Keep rotate ref updated to avoid re-running effect when object reference changes
   const rotateRef = useRef(rotate);
   useEffect(() => {
     rotateRef.current = rotate;
   }, [rotate]);
+
+  // Use the plugin event directly so overlays can update in the same turn as
+  // the page rotation, instead of waiting for this bridge to re-render.
+  useEffect(() => {
+    const currentRotate = rotateRef.current;
+    if (!currentRotate) return;
+
+    triggerImmediateRotationUpdate(currentRotate.getRotation());
+    return currentRotate.onRotateChange((nextRotation) => {
+      triggerImmediateRotationUpdate(nextRotation);
+    });
+  }, [documentId, isRotateAvailable, triggerImmediateRotationUpdate]);
 
   useEffect(() => {
     const currentRotate = rotateRef.current;
@@ -52,7 +65,7 @@ function RotateAPIBridgeInner({ documentId }: { documentId: string }) {
     return () => {
       registerBridge("rotation", null);
     };
-  }, [rotation, registerBridge]);
+  }, [rotation, isRotateAvailable, registerBridge]);
 
   return null;
 }

@@ -76,6 +76,7 @@ export function WalletMeter({ wallet, unsynced, action }: Props) {
         <MeterBar
           state={state}
           pct={pct}
+          barLabel={t("portal.billing.walletMeter.barAria", "Free PDFs used")}
           figure={used.toLocaleString()}
           capSuffix={t(
             "portal.billing.walletMeter.capSuffix",

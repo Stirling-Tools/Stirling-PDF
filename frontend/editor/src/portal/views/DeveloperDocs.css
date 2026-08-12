@@ -171,7 +171,7 @@
 
 /* Subtle match emphasis — coloured text, not a filled block. */
 .portal-docs__hl {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   font-weight: 600;
   background: none;
 }
@@ -281,7 +281,7 @@
 
 .portal-docs__nav-link.is-active {
   background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   font-weight: 600;
 }
 
@@ -365,7 +365,7 @@
 }
 
 .portal-docs__toc-link.is-active {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   border-left-color: var(--c-primary);
   font-weight: 600;
 }
@@ -426,7 +426,7 @@
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .portal-docs__section-title {
@@ -496,7 +496,7 @@
   min-width: 0;
 }
 
-.portal-docs__step-body h3 {
+.portal-docs__step-body h2 {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
@@ -708,7 +708,7 @@
   font-family: var(--font-mono, monospace);
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-purple);
+  color: var(--color-purple-dark);
 }
 
 .portal-docs__component-blurb {
@@ -800,7 +800,7 @@
   height: 1.5rem;
   border-radius: var(--radius-sm);
   background: var(--color-purple-light);
-  color: var(--color-purple);
+  color: var(--color-purple-dark);
   font-size: 0.8125rem;
 }
 
@@ -871,7 +871,7 @@
 }
 
 .portal-docs__md a {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   text-decoration: none;
 }
 
@@ -977,6 +977,6 @@
 }
 
 .portal-docs__source a:hover {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   text-decoration: underline;
 }
