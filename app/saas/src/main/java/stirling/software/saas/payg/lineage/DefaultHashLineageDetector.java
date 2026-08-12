@@ -74,6 +74,21 @@ public class DefaultHashLineageDetector implements HashLineageDetector {
     }
 
     @Override
+    public Optional<LineageMatch> detect(
+            Long userId, String runId, Set<LineageSignature> signatures) {
+        Objects.requireNonNull(userId, "userId");
+        Objects.requireNonNull(signatures, "signatures");
+        if (runId == null) {
+            // No run context → standalone call; never lineage-joins (each is its own charge).
+            return Optional.empty();
+        }
+        if (signatures.isEmpty()) {
+            return Optional.empty();
+        }
+        return store.findOpenJobForSignatures(userId, signatures, workflowWindow, runId);
+    }
+
+    @Override
     public void record(UUID jobId, Path file, ArtifactKind kind) throws IOException {
         Objects.requireNonNull(file, "file");
         record(jobId, extractSignatures(file), kind);

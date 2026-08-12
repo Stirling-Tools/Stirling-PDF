@@ -1,0 +1,71 @@
+/* Fixed-height shell so the MAIN COLUMN scrolls, not the document. With
+   min-height:100vh the shell grows with content and the document scrolls, which
+   means .portal-shell__view's overflow-y never engages and any `position:sticky`
+   inside it (e.g. a page header) rides away with the document. Pinning the shell
+   to the viewport (+ min-height:0 on the flex descendants so they can shrink
+   below content) makes .portal-shell__view the scroll container, so sticky
+   page headers stick under the global header. */
+.portal-shell {
+  display: flex;
+  height: 100vh;
+  height: 100dvh; /* mobile browser chrome shrinks the viewport; dvh tracks it */
+  overflow: hidden;
+  background: var(--c-bg);
+  color: var(--c-text-muted);
+}
+
+.portal-shell__main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* prevent grid blowout on narrow content */
+  min-height: 0; /* allow the column to bound its children */
+}
+
+.portal-shell__view {
+  flex: 1 1 auto;
+  min-height: 0; /* scroll instead of growing past the viewport */
+  overflow-y: auto;
+  /* Hold the scrollbar's width whether or not it is showing. Without this, a page that grows past
+     the viewport (an editor panel filling in, say) makes the bar appear and shunts everything
+     sideways as it does. */
+  scrollbar-gutter: stable;
+  animation: fadeInUp var(--motion-enter) both;
+}
+
+/* Mobile topbar — hidden on desktop, where the sidebar is always visible.
+   Height matches the sidebar's logo row so the brand sits at the same level. */
+.portal-shell__topbar {
+  display: none;
+  height: 3.1875rem;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0 0.625rem;
+  background: var(--color-sidebar-bg);
+  border-bottom: 1px solid var(--color-sidebar-border);
+}
+
+.portal-shell__topbar-wordmark {
+  margin-right: auto;
+}
+
+/* Scrim behind the mobile nav drawer (below SUI modals at z-index 100). */
+.portal-shell__scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  background: var(--c-overlay);
+}
+
+@media (max-width: 48rem) {
+  .portal-shell__topbar {
+    display: flex;
+  }
+  .portal-shell__scrim {
+    display: block;
+    /* fadeIn keyframes come from core tokens.css */
+    animation: fadeIn var(--motion-fast) both;
+  }
+}

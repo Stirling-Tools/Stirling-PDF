@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Modal,
-  Button,
   Text,
   Alert,
   Loader,
@@ -9,6 +8,7 @@ import {
   Group,
   NumberInput,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
@@ -186,7 +186,7 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
         </Alert>
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="secondary" onClick={handleClose}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button

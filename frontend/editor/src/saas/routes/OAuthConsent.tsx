@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { List, Paper, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { withBasePath } from "@app/constants/app";
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 /**
  * OAuth 2.1 consent screen for the Supabase OAuth server (used by MCP clients
@@ -190,7 +193,7 @@ export default function OAuthConsent() {
   const logoBlock = (
     <div className="auth-logo-block">
       <img
-        src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+        src={loginHeader}
         alt="Stirling PDF"
         className="auth-logo-header auth-logo-header--light"
       />
@@ -223,25 +226,19 @@ export default function OAuthConsent() {
     return (
       <AuthLayout>
         {logoBlock}
-        <p
-          style={{
-            textAlign: "center",
-            marginBottom: "1.5rem",
-            color: "#374151",
-          }}
-        >
+        <Text ta="center" c="dimmed" mb="lg">
           {t(
             "oauthConsent.signInPrompt",
             "Sign in to your Stirling PDF account to continue connecting the app.",
           )}
-        </p>
-        <button
-          type="button"
+        </Text>
+        <Button
+          variant="secondary"
           className="oauth-button-fullwidth"
           onClick={() => navigate(`/login?next=${encodeURIComponent(next)}`)}
         >
           {t("oauthConsent.signInButton", "Sign in to continue")}
-        </button>
+        </Button>
       </AuthLayout>
     );
   }
@@ -250,11 +247,11 @@ export default function OAuthConsent() {
     return (
       <AuthLayout>
         {logoBlock}
-        <p style={{ textAlign: "center", color: "#6b7280" }}>
+        <Text ta="center" c="dimmed">
           {redirecting
             ? t("oauthConsent.redirecting", "Returning you to the app...")
             : t("oauthConsent.loading", "Loading authorization request...")}
-        </p>
+        </Text>
       </AuthLayout>
     );
   }
@@ -272,114 +269,64 @@ export default function OAuthConsent() {
     <AuthLayout>
       {logoBlock}
 
-      {/* AuthLayout forces light mode but text without explicit colors still
-          inherits dark-scheme values from the app CSS; pin them like the rest
-          of the auth pages do. */}
-      <h2
-        style={{
-          textAlign: "center",
-          fontSize: "1.25rem",
-          fontWeight: 700,
-          marginBottom: "0.5rem",
-          color: "#111827",
-        }}
-      >
+      <Text component="h2" ta="center" fw={700} fz="xl" mb="xs">
         {t("oauthConsent.title", "Authorize access")}
-      </h2>
-      <p
-        style={{
-          textAlign: "center",
-          marginBottom: "1.5rem",
-          color: "#374151",
-        }}
-      >
+      </Text>
+      <Text ta="center" c="dimmed" mb="lg">
         {t("oauthConsent.requesting", {
           app: appName,
           defaultValue: `${appName} wants to access your Stirling PDF account`,
         })}
-      </p>
+      </Text>
 
       {/* Be explicit about what connecting actually grants. The OAuth scopes
           (openid/email) only cover identity; the real power is that the issued
           token lets the app drive the MCP endpoint - i.e. run any Stirling PDF
           tool as this user, audited as them and counted against their usage. */}
-      <div
-        style={{
-          border: "1px solid #e5e7eb",
-          borderRadius: "0.5rem",
-          padding: "1rem 1.25rem",
-          marginBottom: "1.5rem",
-          background: "#ffffff",
-        }}
-      >
-        <p
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            margin: "0 0 0.5rem",
-            color: "#111827",
-          }}
-        >
+      <Paper withBorder p="md" mb="lg">
+        <Text fw={600} fz="sm" mb="xs">
           {t("oauthConsent.scopesIntro", {
             app: appName,
             defaultValue: `This will allow ${appName} to:`,
           })}
-        </p>
-        <ul
-          style={{
-            margin: 0,
-            paddingLeft: "1.25rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.25rem",
-          }}
-        >
-          <li style={{ fontSize: "0.875rem", color: "#374151" }}>
+        </Text>
+        <List size="sm" spacing={4} c="dimmed">
+          <List.Item>
             {t("oauthConsent.access.tools", {
               app: appName,
               defaultValue: `Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents`,
             })}
-          </li>
-          <li style={{ fontSize: "0.875rem", color: "#374151" }}>
+          </List.Item>
+          <List.Item>
             {t("oauthConsent.access.actAsYou", {
               app: appName,
               defaultValue: `Act as you - everything ${appName} does runs under your account and counts towards your usage`,
             })}
-          </li>
+          </List.Item>
           {scopes.map((scope) => (
-            <li key={scope} style={{ fontSize: "0.875rem", color: "#374151" }}>
-              {scopeDescription(scope)}
-            </li>
+            <List.Item key={scope}>{scopeDescription(scope)}</List.Item>
           ))}
-        </ul>
-      </div>
+        </List>
+      </Paper>
 
       <ErrorMessage error={error} />
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-        <button
-          type="button"
+      <div className="oauth-container-fullwidth">
+        <Button
+          fullWidth
+          size="lg"
+          fontSize="sm"
+          accent="brand"
+          className="auth-submit"
           disabled={deciding !== null}
           onClick={() => decide("approve")}
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            borderRadius: "0.5rem",
-            border: "none",
-            background: "#000000",
-            color: "#ffffff",
-            fontWeight: 700,
-            fontSize: "1rem",
-            cursor: deciding ? "default" : "pointer",
-            opacity: deciding && deciding !== "approve" ? 0.6 : 1,
-          }}
         >
           {deciding === "approve"
             ? t("oauthConsent.approving", "Allowing...")
             : t("oauthConsent.approve", "Allow access")}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="secondary"
           disabled={deciding !== null}
           onClick={() => decide("deny")}
           className="oauth-button-fullwidth"
@@ -387,23 +334,16 @@ export default function OAuthConsent() {
           {deciding === "deny"
             ? t("oauthConsent.denying", "Denying...")
             : t("oauthConsent.deny", "Deny")}
-        </button>
+        </Button>
       </div>
 
       {displayName && (
-        <p
-          style={{
-            textAlign: "center",
-            fontSize: "0.8125rem",
-            color: "#9ca3af",
-            marginTop: "1.25rem",
-          }}
-        >
+        <Text size="sm" c="dimmed" ta="center" mt="lg">
           {t("oauthConsent.signedInAs", {
             name: displayName,
             defaultValue: `Signed in as ${displayName}`,
           })}
-        </p>
+        </Text>
       )}
     </AuthLayout>
   );

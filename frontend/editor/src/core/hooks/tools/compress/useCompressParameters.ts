@@ -32,13 +32,26 @@ export const defaultParameters: CompressParameters = {
 
 export type CompressParametersHook = BaseParametersHook<CompressParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateCompressParameters(
+  params: CompressParameters,
+): boolean {
+  if (params.compressionLevel < 1 || params.compressionLevel > 9) {
+    return false;
+  }
+  // Filesize mode needs a target size; without one the request omits
+  // expectedOutputSize and the backend silently does a quality compression.
+  if (params.compressionMethod === "filesize") {
+    return params.fileSizeValue.trim() !== "";
+  }
+  return true;
+}
+
 export const useCompressParameters = (): CompressParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "compress-pdf",
-    validateFn: (params) => {
-      // For compression, we only need to validate that compression level is within range
-      return params.compressionLevel >= 1 && params.compressionLevel <= 9;
-    },
+    validateFn: validateCompressParameters,
   });
 };

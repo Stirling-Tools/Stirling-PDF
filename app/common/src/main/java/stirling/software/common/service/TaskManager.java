@@ -48,6 +48,10 @@ public class TaskManager {
     @Value("${stirling.jobResultExpiryMinutes:30}")
     private int jobResultExpiryMinutes = 30;
 
+    /** Maximum age of a task that never reached a terminal state. */
+    @Value("${stirling.job.pendingExpiryMinutes:1440}")
+    private int pendingJobExpiryMinutes = 1440;
+
     private final FileStorage fileStorage;
     private final JobStore jobStore;
     private final ClusterBackplane clusterBackplane;
@@ -230,6 +234,18 @@ public class TaskManager {
         return false;
     }
 
+    /** Attach metadata to a job and write it through to the shared store for cluster peers. */
+    public boolean putMetadata(String jobId, String key, String value) {
+        JobResult jobResult = jobResults.get(jobId);
+        if (jobResult != null) {
+            jobResult.putMetadata(key, value);
+            writeThrough(jobId, jobResult);
+            return true;
+        }
+        log.warn("Attempted to set metadata on non-existent job ID: {}", jobId);
+        return false;
+    }
+
     /**
      * Get statistics about all jobs in the system
      *
@@ -320,19 +336,32 @@ public class TaskManager {
         }
         LocalDateTime expiryThreshold =
                 LocalDateTime.now().minus(jobResultExpiryMinutes, ChronoUnit.MINUTES);
+        LocalDateTime pendingExpiryThreshold =
+                LocalDateTime.now().minus(pendingJobExpiryMinutes, ChronoUnit.MINUTES);
         int removedCount = 0;
 
         try {
             for (Map.Entry<String, JobResult> entry : jobResults.entrySet()) {
                 JobResult result = entry.getValue();
 
-                // Remove completed jobs that are older than the expiry threshold
-                if (result.isComplete()
-                        && result.getCompletedAt() != null
-                        && result.getCompletedAt().isBefore(expiryThreshold)) {
+                boolean expiredCompletedJob =
+                        result.isComplete()
+                                && result.getCompletedAt() != null
+                                && result.getCompletedAt().isBefore(expiryThreshold);
+                boolean abandonedPendingJob =
+                        !result.isComplete()
+                                && result.getCreatedAt() != null
+                                && result.getCreatedAt().isBefore(pendingExpiryThreshold);
+
+                // Remove old terminal results and abandoned pending jobs. Without the second
+                // branch, a client that starts a task and never completes it keeps its result in
+                // memory forever.
+                if (expiredCompletedJob || abandonedPendingJob) {
 
                     // Clean up file results
-                    cleanupJobFiles(result, entry.getKey());
+                    if (expiredCompletedJob) {
+                        cleanupJobFiles(result, entry.getKey());
+                    }
 
                     // Remove the job result
                     jobResults.remove(entry.getKey());
@@ -378,7 +407,7 @@ public class TaskManager {
                 fileIds.add(rf.getFileId());
             }
         }
-        Map<String, String> meta = new HashMap<>();
+        Map<String, String> meta = new HashMap<>(result.getMetadata());
         if (result.getNotes() != null && !result.getNotes().isEmpty()) {
             meta.put("notesCount", Integer.toString(result.getNotes().size()));
         }

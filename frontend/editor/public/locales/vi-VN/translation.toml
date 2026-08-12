@@ -1,4 +1,3 @@
-accessInvite = "Mời"
 alphabet = "Bảng chữ cái"
 apply = "Áp dụng"
 applyAndContinue = "Lưu và rời đi"
@@ -8,6 +7,7 @@ black = "Đen"
 blue = "Xanh dương"
 cancel = "Hủy"
 chooseFile = "Chọn tệp"
+clear = "Xóa"
 close = "Đóng"
 comingSoon = "Sắp ra mắt"
 confirm = "Xác nhận"
@@ -46,19 +46,20 @@ filesSelected = "tệp đã chọn"
 font = "Phông chữ"
 fontSizeTooltip = "Kích thước chữ số trang theo point. Số lớn hơn sẽ tạo chữ lớn hơn."
 fontTypeTooltip = "Họ phông chữ cho số trang. Chọn theo phong cách tài liệu của bạn."
-genericSubmit = "Gửi"
 green = "Xanh lá"
 help = "Trợ giúp"
-imgPrompt = "Chọn (các) hình ảnh"
 incorrectPasswordMessage = "Mật khẩu hiện tại không chính xác."
 info = "Thông tin"
 invalidUndoData = "Không thể hoàn tác: dữ liệu thao tác không hợp lệ"
 keepWorking = "Tiếp tục làm việc"
 loading = "Đang tải..."
+loginAgreementAccept = "Chấp nhận"
+loginAgreementDecline = "Từ chối"
+loginAgreementProvider = "Thông báo này do quản trị viên của bạn cung cấp, không phải Stirling PDF Inc."
+loginAgreementTitle = "Thỏa thuận đăng nhập"
 logOut = "Đăng xuất"
 marginTooltip = "Khoảng cách giữa số trang và mép trang."
 moreOptions = "Tùy chọn khác"
-multiPdfPrompt = "Chọn các tệp PDF (2+)"
 never = "Không bao giờ"
 no = "Không"
 noFileSelected = "Chưa chọn tệp. Vui lòng tải lên một tệp."
@@ -76,7 +77,6 @@ pageOrderPrompt = "Thứ tự trang tùy chỉnh (Nhập danh sách số trang �
 pages = "Trang"
 pageSelectionPrompt = "Lựa chọn trang tùy chỉnh (Nhập danh sách số trang được phân tách bằng dấu phẩy 1,5,6 hoặc Các hàm như 2n+1) :"
 password = "Mật khẩu"
-pdfPrompt = "Chọn (các) tệp PDF"
 pin = "Ghim tệp (giữ hoạt động sau khi chạy công cụ)"
 pro = "Pro"
 processingComplete = "Tệp của bạn đã sẵn sàng."
@@ -84,6 +84,7 @@ processingCompleteMultiple = "{{count}} tệp đã sẵn sàng."
 property = "Thuộc tính"
 quickPosition = "Vị trí nhanh"
 red = "Đỏ"
+remove = "Xóa"
 reset = "Đặt lại"
 review = "Xem lại"
 save = "Lưu"
@@ -177,6 +178,7 @@ addMoreFiles = "Thêm tệp..."
 attachments = "Chọn tệp đính kèm"
 info = "Chọn tệp để đính kèm vào PDF của bạn. Các tệp này sẽ được nhúng và truy cập qua bảng đính kèm của PDF."
 placeholder = "Chọn tệp..."
+removeFile = "Xóa tệp"
 selectedFiles = "Các tệp đã chọn"
 submit = "Thêm tệp đính kèm"
 
@@ -350,6 +352,7 @@ text = "Các quyền này kiểm soát những gì người dùng có thể làm
 title = "Thay đổi quyền"
 
 [addStamp]
+preview = "Xem trước Dấu đóng"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -685,6 +688,165 @@ manualLinks = "Tải xuống thủ công: nhấp vào các liên kết và đặ
 noLanguages = "Không tìm thấy ngôn ngữ tessdata trong thư mục đã cấu hình."
 permissionNotice = "Đường dẫn tessdata không thể ghi. Tệp tải xuống sẽ được mở trong trình duyệt; vui lòng lưu các tệp .traineddata thủ công vào thư mục tessdata."
 
+[admin.settings.ai.documents]
+description = "Cấu hình mô hình embedding và cài đặt truy xuất dùng để trả lời câu hỏi trên tài liệu. Được áp dụng cho AI engine khi lưu."
+title = "Tài liệu & RAG"
+
+[admin.settings.ai.documents.embeddingApiKey]
+description = "Để trống để dùng thông tin xác thực môi trường riêng của engine. Áp dụng cho các triển khai tự lưu trữ một engine."
+generic = "Embedding API key"
+openai = "OpenAI API key"
+setPlaceholder = "Đã lưu - để trống để giữ key hiện tại"
+voyageai = "VoyageAI API key"
+
+[admin.settings.ai.documents.embeddingBaseUrl]
+description = "Base URL của endpoint embedding tương thích OpenAI / Ollama, ví dụ http://ollama:11434/v1. Phải trỏ tới endpoint nội bộ đáng tin cậy (nhạy cảm với SSRF)."
+label = "Embedding base URL"
+
+[admin.settings.ai.documents.embeddingModel]
+description = "Tên mô hình embedding. Văn bản tự do; gợi ý chỉ mang tính tham khảo."
+label = "Mô hình embedding"
+
+[admin.settings.ai.documents.embeddingProvider]
+description = "Nhà cung cấp dùng để chuyển văn bản tài liệu thành vector embedding."
+label = "Nhà cung cấp embedding"
+
+[admin.settings.ai.documents.maxSearches]
+description = "Số lần tìm kiếm truy xuất tối đa mà agent có thể chạy cho mỗi yêu cầu."
+label = "Số tìm kiếm tối đa"
+
+[admin.settings.ai.documents.reindexNote]
+body = "Việc thay đổi mô hình embedding có hiệu lực ngay lập tức, nhưng các tài liệu đã được lập chỉ mục bằng mô hình trước đó phải được lập chỉ mục lại để tìm kiếm trả về kết quả chính xác."
+title = "Cần lập chỉ mục lại"
+
+[admin.settings.ai.documents.saved]
+reindexNote = "Nếu bạn đã thay đổi mô hình embedding, hãy lập chỉ mục lại các tài liệu hiện có để tìm kiếm dùng mô hình mới."
+
+[admin.settings.ai.documents.topK]
+description = "Số đoạn liên quan nhất được truy xuất cho mỗi lần tìm kiếm."
+label = "Top K"
+
+[admin.settings.ai.general]
+description = "Kết nối Stirling với Python AI engine và chọn các khả năng AI được hiển thị. Thay đổi áp dụng khi khởi động lại."
+title = "AI Engine"
+
+[admin.settings.ai.general.capabilities]
+description = "Bật hoặc tắt từng tính năng AI. Các tính năng bị tắt sẽ bị ẩn trong ứng dụng."
+title = "Khả năng"
+
+[admin.settings.ai.general.enabled]
+description = "Công tắc chính. Khi tắt, không có công cụ AI, agent hoặc lệnh gọi engine nào khả dụng."
+label = "Bật AI"
+
+[admin.settings.ai.general.features.chat]
+description = "Trợ lý hội thoại để làm việc với PDF."
+label = "Trợ lý chat"
+
+[admin.settings.ai.general.features.classify]
+description = "Tự động phân loại tài liệu theo loại hoặc nội dung."
+label = "Phân loại tài liệu"
+
+[admin.settings.ai.general.features.createPdf]
+description = "Tạo PDF mới (ví dụ từ HTML) thông qua AI agent."
+label = "Tạo PDF từ prompt"
+
+[admin.settings.ai.general.features.documentQuestions]
+description = "Đặt câu hỏi và nhận câu trả lời dựa trên tài liệu đã tải lên."
+label = "Câu hỏi về tài liệu"
+
+[admin.settings.ai.general.features.mathAuditor]
+description = "Rà soát tài liệu để tìm lỗi toán học và số liệu."
+label = "Kiểm toán toán học"
+
+[admin.settings.ai.general.features.pdfComment]
+description = "Thêm nhận xét đánh giá và chú thích do AI viết vào PDF."
+label = "PDF comment agent"
+
+[admin.settings.ai.general.longRunningTimeoutSeconds]
+description = "Thời gian chờ cho các thao tác agent nặng hơn như tạo tài liệu."
+label = "Thời gian chờ tác vụ dài (giây)"
+
+[admin.settings.ai.general.note]
+body = "AI engine chạy như một dịch vụ riêng biệt. Bí mật dùng chung của nó"
+body2 = "được đặt qua biến môi trường container. Provider API key có thể được nhập trên các trang này hoặc cung cấp dưới dạng biến môi trường của engine; các key nhập tại đây sẽ được đẩy tới engine khi lưu."
+title = "Giới thiệu về AI engine"
+
+[admin.settings.ai.general.streamTimeoutSeconds]
+description = "Thời gian chờ cho phản hồi chat được stream (từng token)."
+label = "Thời gian chờ stream (giây)"
+
+[admin.settings.ai.general.test]
+button = "Kiểm tra kết nối"
+failBody = "AI engine không phản hồi. Kiểm tra URL, đảm bảo container engine đang chạy và AI đã được bật (cần khởi động lại sau khi bật)."
+failTitle = "Không thể truy cập AI engine"
+okBody = "AI engine đã phản hồi kiểm tra trạng thái."
+okTitle = "Có thể truy cập AI engine"
+
+[admin.settings.ai.general.timeoutSeconds]
+description = "Thời gian chờ cho các yêu cầu AI tiêu chuẩn tới engine."
+label = "Thời gian chờ yêu cầu (giây)"
+
+[admin.settings.ai.general.url]
+description = "URL nội bộ của Python AI engine, ví dụ http://stirling-pdf-engine:5001."
+label = "AI engine URL"
+
+[admin.settings.ai.limits]
+description = "Giới hạn bảo vệ cho khối lượng công việc mà yêu cầu AI có thể thực hiện và số lượng chạy đồng thời. Được áp dụng cho AI engine khi lưu."
+title = "Giới hạn & Hiệu năng"
+
+[admin.settings.ai.limits.maxCharacters]
+description = "Giới hạn bảo vệ: từ chối yêu cầu AI nếu văn bản được trích xuất vượt quá độ dài này."
+label = "Số ký tự tối đa mỗi yêu cầu"
+
+[admin.settings.ai.limits.maxPages]
+description = "Giới hạn bảo vệ: từ chối yêu cầu AI vượt quá số trang PDF này."
+label = "Số trang tối đa mỗi yêu cầu"
+
+[admin.settings.ai.limits.modelMaxConcurrency]
+description = "Số lệnh gọi mô hình đang xử lý đồng thời tối đa trên toàn bộ engine."
+label = "Số đồng thời tối đa của mô hình"
+
+[admin.settings.ai.models]
+description = "Chọn nhà cung cấp LLM và các mô hình thông minh/nhanh mà AI engine sử dụng. Được áp dụng cho AI engine khi lưu."
+title = "Mô hình & Nhà cung cấp"
+
+[admin.settings.ai.models.apiKey]
+anthropic = "Anthropic API key"
+description = "Để trống để dùng thông tin xác thực môi trường riêng của engine. Áp dụng cho các triển khai tự lưu trữ một engine."
+generic = "API key"
+openai = "OpenAI API key"
+setPlaceholder = "Đã lưu - để trống để giữ key hiện tại"
+
+[admin.settings.ai.models.baseUrl]
+description = "Base URL của endpoint tương thích OpenAI / Ollama, ví dụ http://ollama:11434/v1."
+label = "Provider base URL"
+warning = "Base URL phải trỏ tới endpoint nội bộ đáng tin cậy. Engine sẽ thực hiện các yêu cầu phía máy chủ tới đó, vì vậy giá trị không đáng tin cậy sẽ nhạy cảm với SSRF."
+
+[admin.settings.ai.models.fastMaxTokens]
+description = "Số token đầu ra tối đa cho mô hình nhanh."
+label = "Số token tối đa của mô hình nhanh"
+
+[admin.settings.ai.models.fastModel]
+description = "Mô hình rẻ hơn, nhanh hơn cho các tác vụ nhẹ. Văn bản tự do; gợi ý chỉ mang tính tham khảo."
+label = "Mô hình nhanh"
+
+[admin.settings.ai.models.provider]
+description = "Nhà cung cấp LLM mà engine giao tiếp."
+label = "Nhà cung cấp"
+
+[admin.settings.ai.models.smartMaxTokens]
+description = "Số token đầu ra tối đa cho mô hình thông minh."
+label = "Số token tối đa của mô hình thông minh"
+
+[admin.settings.ai.models.smartModel]
+description = "Mô hình năng lực cao cho suy luận phức tạp. Văn bản tự do; gợi ý chỉ mang tính tham khảo."
+label = "Mô hình thông minh"
+
+[admin.settings.ai.saved]
+body = "Thay đổi được tự động đẩy tới AI engine."
+bodyNoPush = "Đã lưu cài đặt. Chúng sẽ được áp dụng vào lần tới khi AI engine nhận cấu hình."
+title = "Đã lưu cài đặt AI"
+
 [admin.settings.badge]
 clickToUpgrade = "Nhấp để xem chi tiết gói"
 
@@ -932,6 +1094,25 @@ label = "Tạo lại khi khởi động"
 description = "Số ngày chứng chỉ còn hiệu lực"
 label = "Hiệu lực chứng chỉ (ngày)"
 
+[admin.settings.folderAccess]
+description = "Các thư mục mà nguồn thư mục và đầu ra thư mục được phép đọc và ghi. Đây là ranh giới bảo mật: tự động hóa không bao giờ có thể được trỏ tới đường dẫn máy chủ nằm ngoài danh sách này."
+securityNote = "Để trống mục này để tắt hoàn toàn nguồn thư mục và đầu ra thư mục. Thư mục cấu hình riêng của Stirling luôn bị cấm truy cập."
+title = "Quyền truy cập thư mục"
+
+[admin.settings.folderAccess.implied]
+description = "Các thư mục do Stirling quản lý này luôn được phép và không thể thay đổi tại đây."
+serverStorage = "Lưu trữ tệp máy chủ"
+title = "Luôn được phép"
+watchedFolder = "Thư mục được Pipeline theo dõi"
+
+[admin.settings.folderAccess.roots]
+add = "Thêm"
+empty = "Không có thư mục nào được phép. Nguồn thư mục và đầu ra hiện đang bị tắt."
+hint = "Nhập đường dẫn tuyệt đối, ví dụ /data/inbox."
+label = "Gốc thư mục được phép"
+placeholder = "/data/inbox"
+remove = "Xóa gốc thư mục"
+
 [admin.settings.general]
 description = "Cấu hình cài đặt hệ thống cho ứng dụng, bao gồm thương hiệu và hành vi mặc định."
 system = "Hệ thống"
@@ -1071,6 +1252,30 @@ title = "Cảnh báo trách nhiệm pháp lý"
 [admin.settings.legal.impressum]
 description = "URL hoặc tên tệp cho impressum (bắt buộc ở một số khu vực pháp lý)"
 label = "Impressum"
+
+[admin.settings.legal.loginAgreement]
+defaultLocaleHint = "— được dùng làm phương án dự phòng khi một ngôn ngữ không có tệp."
+defaultLocaleLink = "Cấu hình ngôn ngữ mặc định"
+description = "Hiển thị tuyên bố miễn trừ mà người dùng phải chấp nhận sau khi đăng nhập. Văn bản sẽ theo ngôn ngữ của từng người dùng."
+discardConfirm = "Bạn có thay đổi chưa lưu sẽ bị mất. Vẫn chuyển đổi ngôn ngữ?"
+editLabel = "Markdown"
+emptyPreview = "Chưa có nội dung để xem trước."
+language = "Ngôn ngữ"
+languageHelp = "Mỗi ngôn ngữ có tệp riêng. Nếu ngôn ngữ của người dùng không có tệp, thỏa thuận sẽ quay về tệp của ngôn ngữ mặc định, sau đó là văn bản dự phòng."
+loadError = "Không tải được thỏa thuận cho {{locale}}. Hãy chuyển sang ngôn ngữ khác rồi quay lại để thử lại."
+previewLabel = "Xem trước"
+restartNote = "Việc bật hoặc tắt thỏa thuận áp dụng sau khi khởi động lại, giống các cài đặt khác. Chỉnh sửa văn bản bên dưới có hiệu lực ngay."
+save = "Lưu văn bản"
+saved = "Đã lưu"
+savedBody = "Đã cập nhật thỏa thuận đăng nhập cho {{locale}}"
+textDescription = "Được lưu vào customFiles/disclaimer/{{locale}}.md và sẽ hiển thị trực tiếp ở lần đăng nhập tiếp theo. Để trống để xóa ngôn ngữ này."
+title = "Thỏa thuận đăng nhập"
+
+[admin.settings.legal.loginAgreement.anonymous]
+label = "Hiển thị ở chế độ ẩn danh (không đăng nhập)"
+
+[admin.settings.legal.loginAgreement.enabled]
+label = "Bật thỏa thuận đăng nhập"
 
 [admin.settings.legal.privacyPolicy]
 description = "URL hoặc tên tệp cho chính sách quyền riêng tư"
@@ -1601,6 +1806,9 @@ title = "Bạn muốn giúp cải thiện Stirling PDF không?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "Căn giữa"
+alignLeft = "Căn trái"
+alignRight = "Căn phải"
 annotationStyle = "Kiểu chú thích"
 backgroundColor = "Màu nền"
 borderOff = "Viền: Tắt"
@@ -1609,6 +1817,17 @@ changeColor = "Đổi màu"
 chooseColor = "Chọn màu"
 circle = "Hình tròn"
 clearBackground = "Xóa nền"
+clearDocumentAnnotations = "Xóa tất cả chú thích"
+clearDocumentAnnotationsConfirm = "Xóa tất cả"
+clearDocumentAnnotationsDescription = "Điều này sẽ xóa tất cả chú thích hiện đang được tải trong trình chỉnh sửa. Vui lòng lưu các thay đổi để lưu lại vào PDF."
+clearDocumentAnnotationsEmptyBody = "Hiện không có chú thích nào được tải trong trình chỉnh sửa."
+clearDocumentAnnotationsEmptyTitle = "Không có chú thích để xóa"
+clearDocumentAnnotationsErrorTitle = "Không thể xóa chú thích"
+clearDocumentAnnotationsSuccessBody = "Vui lòng lưu các thay đổi để áp dụng việc xóa chú thích vào PDF."
+clearDocumentAnnotationsSuccessTitle = "Đã xóa tất cả chú thích"
+clearDocumentAnnotationsTitle = "Xóa tất cả chú thích?"
+clearDocumentAnnotationsUnavailableBody = "Lớp chú thích vẫn đang tải. Hãy thử lại sau một lúc."
+clearDocumentAnnotationsUnavailableTitle = "Chú thích chưa sẵn sàng"
 color = "Màu"
 comment = "Bình luận"
 comments = "Bình luận"
@@ -1626,6 +1845,7 @@ imagePreview = "Xem trước"
 insertText = "Chèn văn bản"
 line = "Đường thẳng"
 lineArrow = "Mũi tên"
+moreActions = "Thao tác khác"
 noBackground = "Không nền"
 note = "Ghi chú"
 notesStamps = "Ghi chú & Dấu"
@@ -1797,6 +2017,15 @@ export = "Xuất"
 accessDenied = "Từ chối truy cập"
 insufficientPermissions = "Bạn không có quyền thực hiện thao tác này."
 
+[auth.callback]
+completing = "Đang hoàn tất xác thực"
+invalidToken = "Đăng nhập OAuth thất bại - token không hợp lệ."
+missingToken = "Đăng nhập OAuth thất bại - không nhận được token."
+oauthFailed = "Đăng nhập OAuth thất bại. Vui lòng thử lại."
+pleaseWait = "Vui lòng chờ trong khi chúng tôi hoàn tất đăng nhập cho bạn."
+signedOut = "Bạn đã đăng xuất. Vui lòng đăng nhập lại."
+windowMayClose = "Bạn có thể đóng cửa sổ này khi hoàn tất."
+
 [auth.displayName]
 guest = "Khách"
 user = "Người dùng"
@@ -1941,6 +2170,73 @@ secureWorkflowDesc = "Bảo vệ tài liệu PDF bằng cách loại bỏ nội 
 [autoRename]
 description = "Công cụ này sẽ tự động đổi tên tệp PDF dựa trên nội dung của chúng. Nó phân tích tài liệu để tìm tiêu đề phù hợp nhất từ văn bản."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+
+[autoRotate]
+submit = "Tự động xoay"
+tags = "auto rotate,sửa hướng,bị lộn ngược,nằm ngang,làm thẳng,định hướng,phát hiện hướng,sửa xoay,tự động định hướng,đã quét,OSD"
+
+[autoRotate.confidenceThreshold]
+title = "Ngưỡng tin cậy"
+
+[autoRotate.detectionMode]
+auto = "Tự động"
+osd = "Chỉ OCR"
+text = "Chỉ văn bản"
+title = "Phương pháp phát hiện"
+
+[autoRotate.error]
+failed = "Đã xảy ra lỗi khi tự động xoay PDF."
+
+[autoRotate.inferUndetected]
+title = "Xoay các trang có độ tin cậy thấp để khớp"
+
+[autoRotate.report]
+applied = "{{degrees}}° theo chiều kim đồng hồ"
+confidenceValue = "Độ tin cậy {{value}}"
+noChange = "Không thay đổi"
+pageLabel = "Trang {{number}}"
+summary = "Đã xoay {{rotated}} trên {{total}} trang, giữ nguyên {{unchanged}} trang"
+title = "Báo cáo phát hiện"
+
+[autoRotate.report.method]
+inferred = "Đã khớp"
+none = "Đã bỏ qua"
+osd = "OCR"
+text = "Văn bản"
+
+[autoRotate.report.note]
+belowThreshold = "Dưới ngưỡng"
+blankPage = "Trang trống"
+inferredFromDocument = "Giống các trang khác"
+noDominantDirection = "Hướng văn bản hỗn hợp"
+osdFailed = "Không tìm thấy văn bản đọc được"
+osdNoVerdict = "Không xác định được chiều đúng"
+tesseractUnavailable = "OCR chưa được cài đặt"
+tooFewGlyphs = "Quá ít văn bản"
+
+[autoRotate.results]
+title = "Kết quả tự động xoay"
+
+[autoRotate.settings]
+title = "Cài đặt"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "Mức độ chắc chắn cần có trước khi xoay một trang. Giảm để xoay nhiều trang hơn, tăng để giữ nguyên nhiều trang hơn."
+title = "Ngưỡng tin cậy"
+
+[autoRotate.tooltip.description]
+text = "Xác định chiều đúng của từng trang và xoay về đúng hướng. Các trang đã đúng chiều sẽ được giữ nguyên."
+
+[autoRotate.tooltip.detectionMode]
+text = "Tự động đọc văn bản trên trang trước, sau đó xem trang như hình ảnh nếu chưa đủ. Chỉ văn bản bỏ qua kiểm tra hình ảnh, nhanh nhất cho tài liệu chưa từng được quét. Chỉ OCR xử lý mọi trang như hình ảnh."
+title = "Phương pháp phát hiện"
+
+[autoRotate.tooltip.header]
+title = "Tự động xoay"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Các trang trống hoặc gần như trống không thể tự kiểm tra. Khi mọi trang đọc được đều cần xoay cùng một hướng, các trang này sẽ được xoay để khớp với chúng."
+title = "Xoay các trang có độ tin cậy thấp để khớp"
 
 [autoSizeSplitPDF]
 tags = "pdf,chia,tài liệu,tổ chức"
@@ -2144,33 +2440,6 @@ keywords = "Từ khóa: odd, even"
 numbers = "Số/khoảng: 5, 10-20"
 progressions = "Cấp số: 3n, 4n+1"
 
-[certificateChoice.tooltip]
-header = "Các loại chứng chỉ"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "Được quản lý bởi quản trị viên hệ thống"
-bullet2 = "Chia sẻ cho người dùng được ủy quyền"
-bullet3 = "Đại diện cho danh tính công ty, không phải cá nhân"
-bullet4 = "Phù hợp cho: Tài liệu chính thức, chữ ký nhóm"
-description = "Chứng chỉ dùng chung do tổ chức của bạn cung cấp. Dùng cho quyền ký ở cấp độ toàn công ty."
-title = "Chứng chỉ tổ chức"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "Tự động tạo khi lần đầu sử dụng"
-bullet2 = "Gắn với tài khoản người dùng của bạn"
-bullet3 = "Không thể chia sẻ với người dùng khác"
-bullet4 = "Phù hợp cho: Tài liệu cá nhân, trách nhiệm cá nhân"
-description = "Chứng chỉ được tự động tạo, duy nhất cho tài khoản của bạn. Phù hợp với chữ ký cá nhân."
-title = "Chứng chỉ cá nhân"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "Yêu cầu tệp P12/PFX và mật khẩu"
-bullet2 = "Có thể do Tổ chức cấp Chứng chỉ bên ngoài cấp"
-bullet3 = "Mức độ tin cậy cao hơn cho tài liệu pháp lý"
-bullet4 = "Phù hợp cho: Hợp đồng có giá trị pháp lý, xác thực bên ngoài"
-description = "Sử dụng tệp chứng chỉ PKCS#12 của bạn. Cung cấp toàn quyền kiểm soát thuộc tính chứng chỉ."
-title = "Tải lên P12 tùy chỉnh"
-
 [certSign]
 awaitingSignatures = "Đang chờ chữ ký"
 chooseCertificate = "Chọn tệp chứng chỉ"
@@ -2185,10 +2454,11 @@ location = "Vị trí"
 logoTitle = "Logo"
 name = "Tên"
 noLogo = "Không logo"
-notified = "Đang chờ"
 pageNumber = "Số trang"
 password = "Nhập mật khẩu Keystore hoặc Private Key của bạn (Nếu có):"
 passwordOptional = "Để trống nếu không có mật khẩu"
+pemCertificateLabel = "Chứng chỉ (.pem / .crt)"
+pemPrivateKeyLabel = "Khóa riêng (.pem / .key)"
 pending = "Đang chờ"
 readyToFinalize = "Sẵn sàng hoàn tất"
 reason = "Lý do"
@@ -2279,7 +2549,6 @@ addParticipants = "Thêm người tham gia"
 addParticipantsError = "Không thể thêm người tham gia"
 backToList = "Quay lại Các phiên"
 deleteConfirm = "Bạn có chắc không? Thao tác này không thể hoàn tác."
-deleted = "Đã xóa phiên"
 deleteError = "Không thể xóa phiên"
 deleteSession = "Xóa phiên"
 dueDate = "Ngày đến hạn"
@@ -2295,7 +2564,6 @@ removeParticipant = "Xóa"
 removeParticipantError = "Không thể xóa người tham gia"
 selectUsers = "Chọn người dùng..."
 sessionInfo = "Thông tin phiên"
-workbenchTitle = "Quản lý phiên"
 
 [certSign.collab.sessionList]
 active = "Đang hoạt động"
@@ -2355,11 +2623,7 @@ usePersonalCert = "Chứng chỉ cá nhân"
 usePersonalCertDesc = "Tự động tạo cho tài khoản của bạn"
 useServerCert = "Chứng chỉ tổ chức"
 useServerCertDesc = "Chứng chỉ tổ chức dùng chung"
-workbenchTitle = "Yêu cầu ký"
-
-[certSign.collab.signRequest.canvas]
-colorPickerTitle = "Chọn màu nét vẽ"
-continue = "Tiếp tục"
+useSignature = "Sử dụng chữ ký"
 
 [certSign.collab.signRequest.certModal]
 certInvalid = "Chứng chỉ không hợp lệ: {{error}}"
@@ -2383,8 +2647,8 @@ image = "Tải lên"
 text = "Nhập"
 
 [certSign.collab.signRequest.preview]
+create = "Thêm chữ ký"
 imageAlt = "Chữ ký đã chọn"
-missing = "Không có xem trước"
 textFallback = "Chữ ký"
 
 [certSign.collab.signRequest.saved]
@@ -2422,15 +2686,6 @@ visibility = "Mức hiển thị:"
 visible = "Hiển thị"
 yourSignatures = "Chữ ký của bạn ({{count}})"
 
-[certSign.collab.signRequest.text]
-colorLabel = "Màu"
-fontLabel = "Phông chữ"
-fontSizeLabel = "Cỡ"
-fontSizePlaceholder = "16"
-label = "Văn bản chữ ký"
-modalHint = "Nhập tên của bạn, sau đó nhấp Tiếp tục để đặt nó lên PDF."
-placeholder = "Nhập tên của bạn..."
-
 [certSign.collab.userSelector]
 inviteUsers = "Thêm người dùng"
 loadError = "Không tải được danh sách người dùng"
@@ -2438,13 +2693,38 @@ noTeam = "Không có Nhóm"
 noUsers = "Không tìm thấy người dùng nào khác."
 placeholder = "Chọn người dùng..."
 
+[certSign.device]
+stepTitle = "Thiết bị này"
+
 [certSign.error]
 failed = "Đã xảy ra lỗi khi xử lý chữ ký."
 
-[certSign.mobile]
-panelActions = "Hành động"
-panelDocument = "Tài liệu"
-panelPeople = "Mọi người"
+[certSign.format]
+pkcs11 = "USB Token"
+windowsStore = "Kho chứng chỉ Windows"
+
+[certSign.hardware]
+certificate = "Chứng chỉ"
+customLibrary = "Đường dẫn trình điều khiển tùy chỉnh…"
+driver = "Trình điều khiển PKCS#11"
+driverPath = "Đường dẫn thư viện trình điều khiển"
+driverPathPlaceholder = "Đường dẫn đầy đủ tới trình điều khiển PKCS#11 của bạn (.dll, .so hoặc .dylib)"
+expired = "đã hết hạn"
+expires = "hết hạn vào"
+listCerts = "Liệt kê chứng chỉ"
+loading = "Đang đọc chứng chỉ…"
+noCerts = "Không tìm thấy chứng chỉ ký"
+noDriver = "Không phát hiện trình điều khiển PKCS#11. Hãy cài đặt trình điều khiển cho token của bạn (ví dụ: OpenSC), sau đó mở lại phần này - hoặc nhập thủ công đường dẫn trình điều khiển bên dưới."
+notYetValid = "chưa có hiệu lực"
+pin = "PIN của token"
+pkcs11Hint = "Chọn trình điều khiển PKCS#11 của token, nhập PIN, rồi liệt kê các chứng chỉ trên token."
+pkcs11LoadError = "Không thể đọc chứng chỉ từ token. Hãy kiểm tra PIN và trình điều khiển."
+refresh = "Làm mới"
+selectCert = "Chọn chứng chỉ"
+selectDriver = "Chọn trình điều khiển"
+slot = "Khe (tùy chọn)"
+windowsHint = "Chọn một chứng chỉ từ kho chứng chỉ Windows của bạn. Việc ký sử dụng khóa trên thẻ/token của bạn - Windows sẽ yêu cầu nhập PIN."
+windowsLoadError = "Không thể đọc kho chứng chỉ Windows"
 
 [certSign.sessions]
 deleted = "Đã xóa phiên"
@@ -2457,9 +2737,6 @@ pdfNotReadyDesc = "PDF đã ký đang được tạo. Vui lòng thử lại sau.
 [certSign.sign]
 results = "PDF đã ký"
 submit = "Ký PDF"
-
-[certSign.signMode]
-stepTitle = "Chế độ ký"
 
 [certSign.signMode.tooltip.auto]
 text = "Ký bằng chứng chỉ <b>tự ký</b> của máy chủ. Cùng <b>niêm phong phát hiện can thiệp</b> và <b>bản ghi kiểm toán</b>; thường hiển thị <b>Chưa xác minh</b> trong trình xem."
@@ -2482,33 +2759,12 @@ title = "Cách chữ ký hoạt động"
 text = "Cần trạng thái <b>Đã tin cậy</b> ở phía người nhận? <b>Thủ công</b>. Cần niêm phong phát hiện can thiệp và kiểm toán nhanh, không cần thiết lập? <b>Tự động</b>."
 title = "Nguyên tắc chung"
 
-[certSign.tooltip.header]
-title = "Giới thiệu về quản lý chữ ký"
-
-[certSign.tooltip.overview]
-bullet1 = "Kiểm tra chữ ký hiện có và tính hợp lệ của chúng"
-bullet2 = "Xem thông tin chi tiết về người ký và chứng chỉ"
-bullet3 = "Thêm chữ ký số mới để bảo vệ tài liệu của bạn"
-bullet4 = "Hỗ trợ nhiều tệp với điều hướng dễ dàng"
-text = "Công cụ này cho phép bạn kiểm tra PDF có được ký số không và thêm chữ ký số mới. Chữ ký số chứng minh ai đã tạo hoặc phê duyệt tài liệu và cho thấy tài liệu có bị thay đổi sau khi ký không."
-title = "Công cụ này làm gì?"
-
-[certSign.tooltip.signing]
-bullet1 = "Hỗ trợ định dạng PEM, PKCS12, JKS và chứng chỉ máy chủ"
-bullet2 = "Tùy chọn hiển thị hoặc ẩn chữ ký trên PDF"
-bullet3 = "Thêm lý do, địa điểm và tên người ký"
-bullet4 = "Chọn trang để đặt chữ ký hiển thị"
-bullet5 = "Dùng chứng chỉ máy chủ cho tùy chọn 'Sign with Stirling-PDF' đơn giản"
-text = "Để ký PDF, bạn cần chứng chỉ số (như PEM, PKCS12 hoặc JKS). Bạn có thể chọn hiển thị chữ ký trên tài liệu hoặc giữ ẩn chỉ vì mục đích bảo mật."
-title = "Thêm chữ ký"
-
-[certSign.tooltip.validation]
-bullet1 = "Hiển thị chữ ký hợp lệ hoặc không hợp lệ"
-bullet2 = "Hiển thị thông tin người ký và ngày ký"
-bullet3 = "Kiểm tra tài liệu có bị chỉnh sửa sau khi ký không"
-bullet4 = "Có thể dùng chứng chỉ tùy chỉnh để xác minh"
-text = "Khi bạn kiểm tra chữ ký, công cụ sẽ cho biết chúng có hợp lệ không, ai đã ký tài liệu, khi nào ký và liệu tài liệu có bị thay đổi sau khi ký không."
-title = "Kiểm tra chữ ký"
+[certSign.source]
+device = "Thiết bị này"
+noOtherSources = "Không có nguồn chứng chỉ nào khác."
+server = "Máy chủ"
+stepTitle = "Nguồn chứng chỉ"
+upload = "Tải lên"
 
 [changeCreds]
 changeUsername = "Cập nhật tên người dùng. Bạn sẽ bị đăng xuất sau khi cập nhật."
@@ -2752,6 +3008,7 @@ back = "Quay lại"
 cancel = "Hủy"
 close = "Đóng"
 collapse = "Thu gọn"
+confirm = "Xác nhận"
 continue = "Tiếp tục"
 copied = "Đã sao chép!"
 copy = "Sao chép"
@@ -2763,6 +3020,7 @@ next = "Tiếp"
 preview = "Xem trước"
 previous = "Trước"
 refresh = "Làm mới"
+remaining = "Còn lại"
 retry = "Thử lại"
 save = "Lưu"
 
@@ -3203,24 +3461,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits.modal]
-advancedMonitoring = "Giám sát nâng cao"
-allInOneWorkspace = "Không gian làm việc PDF tất cả trong một (viewer, tools & agent)"
-apiSandbox = "API sandbox"
-dedicatedSupportSlas = "Hỗ trợ riêng & SLA"
-fasterThroughput = "Tốc độ xử lý nhanh gấp 10 lần"
-fullyPrivateFiles = "Tệp hoàn toàn riêng tư"
-largeFileProcessing = "Xử lý tệp lớn"
-orgWideAccess = "Kiểm soát truy cập toàn tổ chức"
-premiumAiModels = "Mô hình AI cao cấp"
-prioritySupport = "Hỗ trợ ưu tiên"
-privateDocCloud = "Đám mây tài liệu riêng tư"
-ragFineTuning = "RAG + fine-tuning"
-secureApiAccess = "Truy cập API an toàn"
-standardThroughput = "Tốc độ xử lý tiêu chuẩn"
-unlimitedApiAccess = "Truy cập API không giới hạn"
-unlimitedSeats = "Số ghế không giới hạn"
-
 [crop]
 autoCrop = "Tự động cắt khoảng trắng"
 noFileSelected = "Chọn một tệp PDF để bắt đầu cắt xén"
@@ -3285,6 +3525,7 @@ message = "Không thể đặt trình xử lý PDF mặc định"
 title = "Lỗi"
 
 [defaultApp.prompt]
+dontRemind = "Đừng nhắc lại"
 message = "Đặt Stirling PDF làm ứng dụng mặc định để mở tệp PDF."
 
 [defaultApp.settingsOpened]
@@ -3542,7 +3783,9 @@ makeCopy = "Tạo bản sao"
 mobileShort = "Di động"
 mobileUpload = "Tải lên từ di động"
 mobileUploadNotAvailable = "Tải lên từ di động chưa được bật"
+moreOptions = "Tùy chọn khác"
 myFiles = "Tệp của tôi"
+nextFile = "Tệp tiếp theo"
 noFiles = "Không có tệp nào"
 noFilesFound = "Không tìm thấy tệp khớp với tìm kiếm của bạn"
 noRecentFiles = "Không tìm thấy tệp gần đây"
@@ -3552,6 +3795,7 @@ openInFileEditor = "Mở trong Trình chỉnh sửa tệp"
 openInPageEditor = "Mở trong Trình chỉnh sửa trang"
 owner = "Chủ sở hữu"
 ownerUnknown = "Không xác định"
+previousFile = "Tệp trước"
 recent = "Gần đây"
 removeBoth = "Xóa ở cả hai nơi"
 removeFilePrompt = "Tệp này được lưu trên thiết bị này và trên máy chủ của bạn. Bạn muốn xóa khỏi đâu?"
@@ -3627,21 +3871,26 @@ workbench = "Bàn làm việc"
 
 [fileSidebar]
 addFiles = "Thêm tệp"
+addingFiles = "Đang thêm tệp…"
 collapse = "Thu gọn thanh bên"
+customizeGroups = "Tùy chỉnh nhóm"
 dropHint = "Mở tệp để bắt đầu"
 dropToAdd = "Drop files to add"
 expand = "Mở rộng thanh bên"
-files = "Tệp"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive chưa được cấu hình"
 leaveMyFiles = "Rời Tệp của tôi"
+library = "Thư viện PDF"
 myFiles = "Tệp của tôi"
 noFiles = "Chưa có tệp nào"
 openFileManager = "Mở trình quản lý tệp"
 openFromComputer = "Mở từ máy tính"
 openSettings = "Mở cài đặt"
+other = "Khác"
+recent = "Gần đây"
 search = "Tìm kiếm"
 searchPlaceholder = "Tìm kiếm tệp..."
+viewAll = "Xem tất cả {{count}} tệp"
 
 [fileSidebar.fileItem]
 closeViewer = "Đóng trình xem"
@@ -3653,6 +3902,12 @@ updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
+[fileSidebar.groupsModal]
+done = "Xong"
+reset = "Đặt lại về mặc định"
+subtitle = "Nhóm các tệp của bạn vào danh mục cha. Thêm nhãn hiện có hoặc nhãn mới vào danh mục, đổi tên danh mục hoặc tự tạo danh mục riêng. Các tệp không thuộc danh mục nào của bạn sẽ xuất hiện trong “Khác”."
+title = "Danh mục thanh bên"
+
 [filesPage]
 addToWorkspace = "Thêm vào không gian làm việc"
 addToWorkspaceCount = "Thêm {{count}} vào không gian làm việc"
@@ -3662,6 +3917,7 @@ backToFolder = "Quay lại {{folder}}"
 backToMyFiles = "Quay lại Tệp của tôi"
 breadcrumbs = "Đường dẫn thư mục"
 cancel = "Hủy"
+classification = "Phân loại"
 clearSearch = "Xóa tìm kiếm"
 clearSelection = "Bỏ chọn"
 closeDetails = "Đóng chi tiết"
@@ -3721,6 +3977,7 @@ refresh = "Làm mới từ máy chủ"
 remove = "Xóa"
 removeVersion = "Xóa phiên bản này"
 rename = "Đổi tên"
+renamed = "Đã đổi tên"
 renameFolder = "Đổi tên thư mục"
 resizeFolderTree = "Thay đổi kích thước cây thư mục (phím mũi tên, Shift cho bước lớn hơn; nhấp đúp để tự khớp)"
 save = "Lưu"
@@ -3821,11 +4078,9 @@ uploadFilesFailedDetail = "Không thể tải tệp lên: {{message}}"
 added = "Đã thêm"
 count = "Tệp"
 folder = "Thư mục"
+labels = "Nhãn"
 modified = "Sửa đổi"
-name = "Tên"
 size = "Kích thước"
-toolHistory = "Lịch sử công cụ"
-toolHistoryAtVersion = "Chuỗi công cụ tích lũy"
 totalSize = "Tổng kích thước"
 type = "Loại"
 versionHistory = "Hành trình phiên bản"
@@ -3985,10 +4240,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "Đã lưu tất cả"
+extractCsvError = "Không thể trích xuất CSV"
+extractXlsxError = "Không thể trích xuất XLSX"
 flattenAfterFilling = "Làm phẳng sau khi điền"
+requiredAbbreviation = "bắt buộc"
+requiredFieldsError = "Vui lòng điền tất cả các trường bắt buộc"
 rescanFields = "Quét lại trường"
 rescanFormFields = "Quét lại trường biểu mẫu"
 save = "Lưu"
+saveShortcut = "Ctrl+S để lưu"
+unsavedChanges = "Thay đổi chưa lưu"
 
 [formFill.sidebar]
 close = "Đóng thanh bên"
@@ -4221,6 +4483,11 @@ title = "Tự động hóa"
 desc = "Tự động đổi tên tệp PDF dựa trên tiêu đề được phát hiện"
 tags = "tự động phát hiện,dựa trên tiêu đề,tổ chức,đổi nhãn"
 title = "Tự động đổi tên tệp PDF"
+
+[home.autoRotate]
+desc = "Phát hiện hướng của từng trang và tự động xoay cho thẳng."
+tags = "auto rotate,sửa hướng,bị lộn ngược,nằm ngang,làm thẳng,định hướng,phát hiện hướng,sửa xoay,tự động định hướng,đã quét,OSD"
+title = "Tự động xoay"
 
 [home.autoSizeSplitPDF]
 tags = "tự động,chia,kích thước"
@@ -4457,6 +4724,10 @@ desc = "Phát hiện và chia ảnh đã quét thành các trang riêng"
 tags = "phát hiện,chia,ảnh"
 title = "Phát hiện & Chia ảnh đã quét"
 
+[home.sharedSign]
+desc = "Yêu cầu người khác ký và theo dõi các phiên ký"
+title = "Ký cộng tác"
+
 [home.showJS]
 desc = "Tìm kiếm và hiển thị bất kỳ JS nào được chèn vào PDF"
 tags = "javascript,mã,script"
@@ -4517,12 +4788,12 @@ hint = "Tải lên PNG, JPG, SVG hoặc tệp hình ảnh khác để đặt lê
 label = "Tải ảnh lên"
 placeholder = "Chọn tệp ảnh"
 
-[imageToPdf]
-tags = "chuyển đổi,img,jpg,hình ảnh,ảnh"
-
 [imageToPDF]
 header = "Hình ảnh sang PDF"
 title = "Hình ảnh sang PDF"
+
+[imageToPdf]
+tags = "chuyển đổi,img,jpg,hình ảnh,ảnh"
 
 [infoBanner]
 dismiss = "Bỏ qua"
@@ -4556,8 +4827,6 @@ welcomeTitle = "Bạn đã được mời!"
 
 [landing]
 addFiles = "Thêm tệp"
-heroSubtitle = "Kéo thả hoặc thêm một PDF hiện có để bắt đầu."
-heroTitle = "Stirling PDF"
 mobileUpload = "Tải lên từ Di động"
 openFromComputer = "Mở từ máy tính"
 uploadFromComputer = "Tải lên từ máy tính"
@@ -4600,7 +4869,6 @@ enterUsername = "Nhập tên người dùng"
 failedToSignIn = "Không thể đăng nhập bằng {{provider}}: {{message}}"
 forgotPassword = "Quên mật khẩu?"
 loggingIn = "Đang đăng nhập..."
-logIn = "Đăng nhập"
 login = "Đăng nhập"
 magicLinkSent = "Magic link đã được gửi tới {{email}}! Hãy kiểm tra email và nhấp vào liên kết để đăng nhập."
 mfaCode = "Mã xác thực"
@@ -4624,25 +4892,9 @@ signInWith = "Đăng nhập với"
 title = "Đăng nhập"
 unexpectedError = "Lỗi không mong muốn: {{message}}"
 updatePassword = "Cập nhật mật khẩu"
-useEmailInstead = "Đăng nhập bằng email"
 useMagicLink = "Thay vào đó dùng magic link"
 username = "Tên người dùng"
 youAreLoggedIn = "Bạn đã đăng nhập!"
-
-[login.slides.edit]
-alt = "Chỉnh sửa PDF"
-subtitle = "Với hơn chục công cụ giúp bạn ẩn/xóa, ký, đọc và thao tác với PDF, bạn chắc chắn sẽ tìm được thứ mình cần."
-title = "Chỉnh sửa PDF để hiển thị/bảo vệ thông tin bạn muốn"
-
-[login.slides.overview]
-alt = "Tổng quan Stirling PDF"
-subtitle = "Bộ công cụ đám mây ưu tiên quyền riêng tư cho PDF cho phép bạn chuyển đổi, ký, ẩn/xóa thông tin và quản lý tài liệu, cùng hơn 50 công cụ mạnh mẽ khác."
-title = "Giải pháp tất cả trong một cho mọi nhu cầu PDF của bạn."
-
-[login.slides.secure]
-alt = "Bảo mật PDF"
-subtitle = "Thêm mật khẩu, che nội dung và quản lý chứng chỉ dễ dàng."
-title = "Bảo vệ thông tin nhạy cảm trong PDF của bạn"
 
 [margin]
 large = "Lớn"
@@ -4873,6 +5125,7 @@ title = "Đầu ra"
 [onboarding]
 activeFiles = "Chế độ xem <strong>Tệp đang hoạt động</strong> hiển thị tất cả PDF bạn đã nạp vào công cụ và cho phép chọn tệp để xử lý."
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "Đóng"
 cropSettings = "Bây giờ chúng ta đã chọn tệp muốn cắt, có thể cấu hình công cụ Cắt xén để chọn vùng cần cắt PDF."
 fileCheckbox = "Nhấp vào một tệp sẽ chọn nó để xử lý. Bạn có thể chọn nhiều tệp cho các thao tác hàng loạt."
 fileReplacement = "Tệp đã chỉnh sửa sẽ tự động thay thế tệp gốc trong Bàn làm việc, giúp bạn dễ dàng chạy thêm các công cụ khác."
@@ -4884,6 +5137,7 @@ pinButton = "Bạn có thể dùng nút <strong>Ghim</strong> nếu muốn tệp
 results = "Sau khi công cụ chạy xong, bước <strong>Đánh giá</strong> sẽ hiển thị bản xem trước kết quả trong bảng này, và cho phép bạn hoàn tác thao tác hoặc tải tệp xuống."
 runButton = "Khi công cụ đã được cấu hình, nút này cho phép chạy công cụ trên tất cả PDF đã chọn."
 selectCropTool = "Hãy chọn công cụ <strong>Cắt xén</strong> để minh họa cách sử dụng một công cụ."
+stepOf = "Bước {{current}} trên {{total}}"
 toolInterface = "Đây là giao diện công cụ <strong>Cắt xén</strong>. Như bạn thấy, chưa có nhiều vì chúng ta chưa thêm tệp PDF nào để làm việc."
 workbench = "Đây là <strong>Bàn làm việc</strong> - khu vực chính nơi bạn xem và chỉnh sửa PDF."
 wrapUp = "Bạn đã sẵn sàng! Bạn đã biết về các khu vực chính của ứng dụng và cách sử dụng chúng. Nhấp nút <strong>Trợ giúp</strong> bất cứ lúc nào để xem lại chuyến tham quan này."
@@ -4896,14 +5150,49 @@ showMeAround = "Hướng dẫn nhanh"
 skipForNow = "Bỏ qua tạm thời"
 skipTheTour = "Bỏ qua hướng dẫn"
 
+[onboarding.checklist]
+dismiss = "Bỏ qua"
+title = "Thiết lập Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Chạy Stirling nguyên bản trên máy của bạn"
+title = "Tải xuống Stirling cho Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Cộng tác với đội ngũ của bạn"
+title = "Mời thành viên đội ngũ"
+
+[onboarding.checklist.shareAnalytics]
+description = "Giúp cải thiện Stirling"
+title = "Chia sẻ dữ liệu sử dụng ẩn danh"
+
+[onboarding.checklist.takeTour]
+description = "Xem cách Stirling hoạt động qua hướng dẫn nhanh"
+title = "Tham quan nhanh"
+
 [onboarding.desktopInstall]
 body = "Stirling hoạt động tốt nhất như ứng dụng desktop. Bạn có thể dùng offline, truy cập tài liệu nhanh hơn và chỉnh sửa trực tiếp trên máy."
+selectOs = "Chọn hệ điều hành"
 title = "Tải xuống"
 titleWithOs = "Tải cho {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Mã xác thực"
+description = "Bảo mật tài khoản của bạn bằng cách liên kết ứng dụng xác thực. Quét mã QR hoặc nhập khóa thiết lập, sau đó xác nhận mã 6 chữ số để hoàn tất."
+enable = "Bật MFA"
+enableError = "Không thể bật xác thực hai yếu tố. Kiểm tra mã và thử lại."
+enterCode = "Nhập mã 6 chữ số từ ứng dụng của bạn."
+enterCodeError = "Nhập mã xác thực để tiếp tục."
+logout = "Đăng xuất"
+openAuthenticator = "Mở Google Authenticator, Authy hoặc 1Password."
 qrCodeLoading = "Đang tạo mã QR của bạn…"
+regenerateQrCode = "Tạo lại mã QR"
+scanQrCode = "Quét mã QR hoặc nhập khóa thiết lập bên dưới."
+setupError = "Không thể bắt đầu thiết lập hai yếu tố. Vui lòng thử lại."
+setupKey = "Khóa thiết lập (nhập thủ công)"
+stepByStep = "Từng bước"
+success = "MFA đã được bật. Bây giờ bạn có thể tiếp tục."
+title = "Thiết lập xác thực đa yếu tố"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Khi bật chế độ đăng nhập, bạn có thể quản lý người dùng, cấu hình cài đặt và theo dõi tình trạng server. <strong>{{freeTierLimit}}</strong> người đầu tiên trên server của bạn được dùng Stirling miễn phí."
@@ -4911,6 +5200,11 @@ adminBodyLoginEnabled = "Là admin, bạn có thể quản lý người dùng, c
 adminTitle = "Tổng quan Admin"
 userBody = "Mời đồng đội, gán vai trò và quản lý tài liệu gọn gàng trong một không gian làm việc an toàn. Bật chế độ đăng nhập khi bạn sẵn sàng vượt qua chế độ dùng cá nhân."
 userTitle = "Tổng quan gói"
+
+[onboarding.processorIntro]
+body = "Stirling hiện chạy <strong>Chính sách</strong> — các quy tắc tự động phân loại, bảo mật và xử lý mọi tài liệu khi tài liệu đến. Thiết lập và theo dõi các lần chạy trong <strong>Processor</strong>."
+cta = "Xem Processor"
+title = "Khám phá Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5308,6 +5602,28 @@ docs = "PDFs"
 subtitle = "Billable PDFs each teammate has processed this period."
 title = "Team member usage"
 
+[payg.prepaid]
+chip = "Năm trả trước"
+
+[payg.prepaid.banner]
+exhausted = "Dung lượng trả trước của bạn đã dùng hết; tính phí theo mức sử dụng đã tiếp tục. Nạp thêm để giữ ưu đãi."
+expiring_one = "Năm trả trước của bạn kết thúc sau {{count}} ngày. Dung lượng chưa dùng sẽ hết hạn — nạp thêm để bắt đầu một năm mới."
+expiring_other = "Năm trả trước của bạn kết thúc sau {{count}} ngày. Dung lượng chưa dùng sẽ hết hạn — nạp thêm để bắt đầu một năm mới."
+low = "Bạn chỉ còn {{pct}}% dung lượng trả trước. Nạp thêm bất cứ lúc nào để tiếp tục xử lý không gián đoạn."
+
+[payg.prepaid.card]
+subtitle = "Được dùng trước tính phí theo mức sử dụng và ngoài giới hạn chi tiêu của bạn."
+title = "Dung lượng trả trước"
+
+[payg.prepaid.meter]
+capSuffix = "trên {{total}} tín dụng trả trước"
+expires = "Hết hạn {{date}}"
+
+[payg.prepaid.state]
+exhausted = "Đã dùng hết"
+healthy = "Còn nhiều"
+low = "Sắp hết"
+
 [payg.role]
 leader = "Team owner"
 member = "Member"
@@ -5509,7 +5825,9 @@ viewLabel = "Trình chỉnh sửa PDF"
 
 [pdfTextEditor.actions]
 applyChanges = "Áp dụng thay đổi"
+clearText = "Xóa văn bản"
 downloadCopy = "Tải bản sao"
+moreOptions = "Tùy chọn khác"
 reset = "Đặt lại thay đổi"
 
 [pdfTextEditor.badges]
@@ -5842,108 +6160,2817 @@ keyDescription = "Dán khóa giấy phép từ email của bạn"
 success = "Đã kích hoạt giấy phép!"
 successMessage = "Giấy phép của bạn đã được kích hoạt thành công. Bạn có thể đóng cửa sổ này."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
+[policies.activity]
+outputsUnavailable = "Đầu ra của chính sách không còn khả dụng để tải xuống."
+partialOutputsUnavailable = "Một số đầu ra của chính sách không còn khả dụng để tải xuống."
+runNotFound = "Không còn tìm thấy lần thực thi."
+timedOut = "Thực thi đã hết thời gian chờ trước khi hoàn tất."
 
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
+[policies.enforcement]
+applying = "Đang áp dụng {{names}}"
+applyingProgress = "Đang áp dụng {{names}} ({{done}} trong {{total}})"
+exportFailureBody = "Không thể áp dụng các chính sách bảo mật. Các tệp đã được xuất nguyên trạng."
+exportFailureTitle = "Đã xuất mà không thực thi"
+failureBody = "Không thể xử lý {{failures}} trong số {{total}} tệp và đã xuất nguyên trạng."
+failureTitle = "Đã xuất mà không thực thi đầy đủ"
+printPolicyAppliedBody = "PDF này đã được cập nhật để đáp ứng một chính sách. Hãy xem lại các thay đổi, rồi in lại."
+printPolicyAppliedTitle = "Đã áp dụng chính sách trước khi in"
+successTitle = "Đã áp dụng {{names}}"
+summaryMore = "{{first}}, {{second}} và còn {{more}} nữa"
+summaryTwo = "{{first}} và {{second}}"
 
-[policies.detail]
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
+[policies.labels]
+categoryCount = "danh mục"
+hideCategory = "Ẩn danh mục"
+labelCount = "nhãn"
+sharedNote = "Các nhãn này được tích hợp sẵn và chia sẻ trên toàn bộ đội ngũ của bạn."
+showCategory = "Hiển thị danh mục"
 
 [policies.pii]
+account = "Số tài khoản (được gắn nhãn)"
+card = "Thẻ tín dụng / thẻ ghi nợ"
+email = "Địa chỉ email"
 fieldLabel = "PII to redact"
+iban = "IBAN"
+phone = "Số điện thoại"
 placeholder = "Select PII types"
+routing = "Số routing của Mỹ (ABA)"
+ssn = "Số An sinh Xã hội"
 
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoAriaLabel = "What is a policy?"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
+[policy]
+badgeEnforcing = "Đang thực thi {{name}}..."
+badgeRan = "Chính sách {{name}} đã chạy trên tệp này"
+badgeRunning = "{{name}} đang chạy..."
+blockingAction = "{{action}} bị chặn trong khi thực thi chính sách, vui lòng chờ..."
+dismiss = "Đóng lớp phủ"
+enforcingTitle = "Đang thực thi chính sách..."
+viewAnyway = "Xem tệp (chính sách vẫn đang thực thi)"
 
-[policies.status]
+[policyOption]
+autoRedactPhi = "Tự động che PHI"
+blockExport = "Chặn xuất"
+ccpa = "CCPA"
+contracts = "Hợp đồng"
+documents = "Tài liệu"
+fedramp = "FedRAMP"
+financialReports = "Báo cáo tài chính"
+flagForReview = "Đánh dấu để xem xét"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "Giữ lại"
+hrRecords = "Hồ sơ nhân sự"
+indefinite = "Vô thời hạn"
+insurance = "Bảo hiểm"
+invoices = "Hóa đơn"
+iso27001 = "ISO 27001"
+legalFilings = "Hồ sơ pháp lý"
+medicalPhi = "Y tế / PHI"
+never = "Không bao giờ"
+ninetyDays = "90 ngày"
+oneYear = "1 năm"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "Cách ly tài liệu"
+routeToBucket = "Định tuyến đến bucket"
+s3Bucket = "S3 bucket"
+sevenYears = "7 năm"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "Tài liệu thuế"
+thirtyDays = "30 ngày"
+threeYears = "3 năm"
+webhook = "Webhook"
+
+[portal]
+comingSoon = "Sắp ra mắt"
+
+[portal.accountLink.card]
+billingNote = "Xử lý không giám sát được tính phí vào ví tổ chức của bạn."
+eyebrow = "Liên kết tài khoản"
+linkButton = "Liên kết tài khoản Stirling của bạn"
+linked = "Đã liên kết"
+linkedAs = "Đã liên kết dưới tên {{name}}."
+linkedGeneric = "Phiên bản này đã được liên kết."
+notLinked = "Chưa liên kết"
+title = "Liên kết tổ chức này với tài khoản Stirling của tổ chức"
+unlink = "Hủy liên kết"
+
+[portal.accountLink.card.error]
+title = "Không thể liên kết"
+
+[portal.accountLink.card.loginNotConfigured]
+after = "để bật liên kết tài khoản với tài khoản Stirling được lưu trữ. Trong môi trường dev, bạn có thể mô phỏng đăng nhập từ hộp thoại liên kết."
+before = "Đặt"
+title = "Chưa cấu hình đăng nhập SaaS"
+
+[portal.accountLink.gate]
+action = "Liên kết tài khoản"
+description = "Liên kết tài khoản Stirling của tổ chức này để dùng các tính năng tính phí."
+title = "Liên kết để mở khóa"
+titleFeature = "Liên kết để mở khóa {{feature}}"
+
+[portal.accountLink.instances]
+active = "Đang hoạt động"
+revoke = "Thu hồi"
+revoked = "Đã thu hồi"
+unnamed = "Phiên bản chưa đặt tên"
+
+[portal.accountLink.instances.columns]
+instance = "Phiên bản"
+lastSeen = "Lần thấy gần nhất"
+linked = "Đã liên kết"
+status = "Trạng thái"
+
+[portal.accountLink.instances.empty]
+description = "Liên kết tài khoản của tổ chức này, sau đó đăng ký các phiên bản tự lưu trữ của bạn để xem chúng tại đây."
+title = "Không có phiên bản đã liên kết"
+
+[portal.accountLink.instances.time]
+daysAgo_one = "{{count}} ngày trước"
+daysAgo_other = "{{count}} ngày trước"
+hoursAgo_one = "{{count}} giờ trước"
+hoursAgo_other = "{{count}} giờ trước"
+justNow = "vừa xong"
+minutesAgo_one = "{{count}} phút trước"
+minutesAgo_other = "{{count}} phút trước"
+never = "chưa bao giờ"
+
+[portal.accountLink.modal]
+linkSubtitle = "Đăng nhập vào tài khoản mà máy chủ này sẽ tính phí."
+linkTitle = "Liên kết tài khoản Stirling của bạn"
+reauthSubtitle = "Phiên của bạn đã hết hạn — hãy đăng nhập lại vào tài khoản Stirling của bạn. Phiên bản của bạn vẫn được liên kết."
+reauthTitle = "Đăng nhập lại"
+simulateSignIn = "Mô phỏng đăng nhập (dev)"
+
+[portal.accountLink.modal.loginNotConfigured]
+after = "để bật liên kết trong ứng dụng với tài khoản Stirling được lưu trữ."
+and = "và"
+before = "Đặt"
+title = "Chưa cấu hình đăng nhập SaaS"
+
+[portal.accountLink.panel]
+instancesSub = "Mọi phiên bản tự lưu trữ đã đăng ký với tổ chức này. Thu hồi thông tin xác thực để ngay lập tức cắt quyền truy cập không giám sát của phiên bản đó."
+instancesTitle = "Phiên bản đã liên kết"
+revokeError = "Không thể thu hồi phiên bản"
+sub = "Liên kết tổ chức tự lưu trữ này với tài khoản Stirling của tổ chức để xử lý không giám sát được tính phí vào ví tổ chức của bạn."
+
+[portal.accountLink.panel.loadError]
+forbidden = "Chỉ chủ sở hữu nhóm mới có thể xem các phiên bản đã liên kết của tổ chức."
+generic = "Không thể tải các phiên bản đã liên kết của nhóm. Hãy thử lại sau giây lát."
+title = "Không thể tải phiên bản đã liên kết"
+
+[portal.accountLink.state]
+free = "Gói Editor"
+subscribed = "Gói Processor"
+unlinked = "Chưa liên kết"
+
+[portal.assistant]
+close = "Đóng trợ lý"
+error = "Không thể kết nối với trợ lý."
+errorWithDetail = "Không thể kết nối với trợ lý: {{detail}}"
+inputAriaLabel = "Hỏi trợ lý"
+inputPlaceholder = "Hỏi về Stirling…"
+open = "Mở trợ lý"
+send = "Gửi"
+title = "Trợ lý"
+tryAsking = "Thử hỏi"
+typing = "Đang nhập"
+
+[portal.auth]
+loading = "Đang tải"
+redirectingToEditor = "Đang chuyển hướng đến trình chỉnh sửa..."
+
+[portal.billing.activation]
+maybeLater = "Để sau"
+title = "Bật Processor"
+
+[portal.billing.activation.payg]
+sub = "Đặt giới hạn hàng tháng. Trả tiền cho những gì bạn chạy."
+title = "Trả theo mức sử dụng"
+
+[portal.billing.activation.prepay]
+badge = "Miễn phí 2 tháng"
+sub = "Một hóa đơn, thẻ hoặc chuyển khoản ngân hàng."
+title = "Trả trước một năm"
+
+[portal.billing.checkout]
+noClientSecret = "Edge function không trả về client_secret."
+title = "Bật gói Processor"
+
+[portal.billing.checkout.activationSlow]
+body = "Thanh toán của bạn đã thành công, nhưng việc kích hoạt đang lâu hơn bình thường một chút. Nó sẽ tự động bật - hãy đóng phần này và nó sẽ xuất hiện tại đây trong chốc lát."
+close = "Đóng"
+title = "Sắp xong"
+
+[portal.billing.checkout.cap]
+amountAria = "Giới hạn chi tiêu hàng tháng"
+back = "Quay lại"
+continue = "Tiếp tục đến thanh toán"
+error = "Không thể đặt giới hạn chi tiêu của bạn"
+finePrint = "Hóa đơn được lập hàng tháng. Hủy bất cứ lúc nào."
+noLimit = "Không giới hạn"
+note = "Bạn không bao giờ bị tính phí vượt quá giới hạn. Xử lý chỉ tạm dừng."
+perMonth = "/ tháng"
+title = "Đặt giới hạn chi tiêu của bạn"
+
+[portal.billing.checkout.card]
+fields = "Số thẻ · MM / YY · CVC · ZIP"
+label = "Chi tiết thẻ"
+note = "Chi tiết thẻ do Stripe thu thập. Stirling không bao giờ lưu PAN hoặc CVC."
+
+[portal.billing.checkout.error]
+title = "Không thể bắt đầu thanh toán"
+
+[portal.billing.checkout.finalizing]
+body = "Thanh toán của bạn đã hoàn tất. Chúng tôi đang bật xử lý tính theo mức sử dụng trên các phiên bản đã liên kết của bạn - việc này thường mất vài giây."
+hint = "Vui lòng giữ cửa sổ này mở."
+title = "Đang kích hoạt gói Processor của bạn..."
+
+[portal.billing.checkout.pay]
+limit = "Giới hạn chi tiêu hàng tháng {{amount}}/tháng. Xử lý tạm dừng khi đạt giới hạn."
+limitNoCap = "Không có giới hạn chi tiêu. Xử lý sẽ không tạm dừng. Hóa đơn được lập hàng tháng."
+
+[portal.billing.enterpriseUpsell]
+cta = "Tạo báo giá Enterprise của bạn"
+description = "Chiết khấu theo khối lượng cam kết, triển khai air-gapped, MSA tùy chỉnh và đánh giá bảo mật, cùng quan hệ đối tác nhà phân phối bên thứ 3."
+eyebrow = "Chiết khấu khối lượng · 1M+ PDF"
+title = "Stirling Enterprise"
+
+[portal.billing.freeEditors]
+activeThisMonth = "Hoạt động trong tháng này"
+cost = "Chi phí"
+editorsDeployed = "Trình chỉnh sửa đã triển khai"
+inviteTeammates = "Mời đồng đội"
+pdfsEdited = "PDF đã chỉnh sửa"
+subtitle = "Triển khai ở bất kỳ đâu, cho toàn bộ nhóm của bạn."
+title = "Trình chỉnh sửa PDF miễn phí"
+
+[portal.billing.freePlan]
+checkoutErrorTitle = "Không thể bắt đầu thanh toán"
+currentPlan = "Gói hiện tại"
+freeForever = "Miễn phí mãi mãi"
+noTeamResolved = "Chưa xác định được nhóm nào trên ví của bạn — hãy làm mới và thử lại."
+ownerOnly = "Chỉ chủ sở hữu nhóm mới có thể bật gói Processor."
+payInvoice = "Thanh toán hóa đơn để hoàn tất"
+planName = "Editor"
+ssoIncluded = "Bao gồm SSO"
+switchOnProcessor = "Bật Processor →"
+unlimitedUsers = "Người dùng không giới hạn"
+viewQuote = "Xem báo giá"
+
+[portal.billing.invoices]
+columnAmount = "Số tiền"
+columnDate = "Ngày"
+columnDescription = "Mô tả"
+columnPdfsProcessed = "PDF đã xử lý"
+columnStatus = "Trạng thái"
+descriptionFallback = "Hóa đơn"
+downloadAriaLabel = "Tải hóa đơn {{number}} xuống dưới dạng PDF"
+emptyDescription = "Khi nhóm của bạn đăng ký và chu kỳ đầu tiên kết thúc, hóa đơn của bạn sẽ xuất hiện tại đây."
+emptyTitle = "Chưa có hóa đơn"
+fetchLimitNote_one = "Đang hiển thị {{count}} hóa đơn gần đây nhất của bạn. Hóa đơn cũ hơn có trong portal Stripe."
+fetchLimitNote_other = "Đang hiển thị {{count}} hóa đơn gần đây nhất của bạn. Hóa đơn cũ hơn có trong portal Stripe."
+loadError = "Không thể tải hóa đơn: {{error}}"
+pdfLink = "PDF ↓"
+showAll_one = "Hiển thị tất cả {{count}}"
+showAll_other = "Hiển thị tất cả {{count}}"
+showFewer_one = "Hiển thị ít hơn ({{count}} đầu)"
+showFewer_other = "Hiển thị ít hơn ({{count}} đầu)"
+showMostRecent_one = "Hiển thị {{count}} gần đây nhất"
+showMostRecent_other = "Hiển thị {{count}} gần đây nhất"
+title = "Lịch sử hóa đơn"
+viewAriaLabel = "Xem hóa đơn {{number}} trong Stripe"
+viewLink = "Xem ↗"
+
+[portal.billing.linkPrompt]
+cta = "Liên kết tài khoản Stirling"
+description = "Chỉnh sửa PDF thủ công — xem, ký, hợp nhất, tách, watermark, nén, chuyển đổi, OCR thủ công — luôn miễn phí, dù có liên kết hay không. Liên kết để nhận 500 PDF miễn phí cho xử lý tính theo mức sử dụng (tự động hóa, AI và API); khi cần thêm, hãy bật gói Processor và chỉ trả tiền cho những gì bạn dùng."
+title = "Liên kết tài khoản Stirling của bạn"
+
+[portal.billing.paymentMethod]
+billedMonthly = "Tính phí hàng tháng"
+cardEnding = "{{brand}} kết thúc bằng {{last4}}"
+cardFallback = "Thẻ"
+expiresBilledMonthly = "Hết hạn {{expiry}} · tính phí hàng tháng"
+eyebrow = "Phương thức thanh toán"
+managedSub = "Thẻ và thông tin thanh toán của bạn được lưu giữ an toàn trong portal khách hàng của Stripe."
+managedTitle = "Được quản lý trong Stripe"
+update = "Cập nhật"
+
+[portal.billing.pdfsProcessed]
+emptyPeriod = "Chưa có xử lý tính theo mức sử dụng trong kỳ này."
+eyebrow = "PDF đã xử lý trong kỳ này"
+legendValue_one = "{{formatted}} PDF"
+legendValue_other = "{{formatted}} PDF"
+segbarAriaLabel = "PDF tính theo mức sử dụng được chia theo danh mục"
+segmentAgentsDesc = "Hành động của agent AI"
+segmentAgentsLabel = "Agent"
+segmentApiDesc = "Yêu cầu API trực tiếp"
+segmentApiLabel = "API"
+segmentAutomationDesc = "Tự động hóa & pipeline"
+segmentAutomationLabel = "Tự động hóa"
+sizeMultiplier = "{{formatted}} PDF đã dùng hệ số kích thước"
+summary = "{{unique}} duy nhất · {{units}} đơn vị đo · trung bình {{avg}} mỗi PDF"
+summaryNoRate = "{{unique}} duy nhất · {{units}} đơn vị đo"
+unit = "PDF tính theo mức sử dụng"
+unitsPending_one = "{{units}} đơn vị đo đang chờ đồng bộ từ các phiên bản được liên kết"
+unitsPending_other = "{{units}} đơn vị đo đang chờ đồng bộ từ các phiên bản được liên kết"
+
+[portal.billing.prepaid]
+capSuffix = "trên {{total}} tín dụng trả trước"
+expires = "Hết hạn {{date}}"
+eyebrow = "Dung lượng trả trước"
+note = "Được dùng trước tính phí theo mức sử dụng và ngoài giới hạn chi tiêu của bạn."
+topUp = "Nạp thêm"
+
+[portal.billing.prepaid.buy]
+back = "Quay lại"
+calcTitle = "Tính khoản thanh toán hằng năm của bạn"
+cancel = "Hủy"
+cancelPurchase = "Hủy giao dịch mua"
+close = "Đóng"
+continueToPayment = "Tiếp tục đến thanh toán"
+finalise = "Hoàn tất"
+invoiceErrorTitle = "Không thể tạo hóa đơn"
+loadingTitle = "Đang tải báo giá của bạn"
+payTitle = "Thanh toán cho năm của bạn"
+step = "Bước {{current}} trên {{total}}"
+
+[portal.billing.prepaid.calc]
+change = "Thay đổi"
+deployRow = "Triển khai"
+done = "Xong"
+enterpriseHint = "Đây là quy mô doanh nghiệp. Ở mức này, giá doanh nghiệp tốt hơn mọi ưu đãi tự phục vụ. Khóa giá, điều khoản và báo giá trong vài phút."
+governanceRow = "Quản trị"
+governanceValue = "{{label}} · {{count}} chính sách"
+handlesLabel = "Processor của bạn"
+handlesValue = "xử lý {{volume}} tín dụng / tháng"
+pipelinesLabel = "Pipelines"
+policiesMeta = "{{count}} chính sách"
+poolCaption = "Một nhóm {{credits}} tín dụng cho cả năm. Tháng dùng nhiều mượn từ tháng dùng ít."
+priceLabel = "Năm của bạn · 12 tháng với giá của 10 tháng"
+rateUnknown = "Chúng tôi sẽ hiển thị giá chính xác khi thanh toán."
+savings = "Bạn tiết kiệm {{amount}} · miễn phí 2 tháng."
+sizingRow = "Quy mô"
+sizingValue = "{{label}} · {{desc}}"
+usersLabel = "Tổng số người dùng"
+
+[portal.billing.prepaid.consent]
+label = "Tôi hiểu rằng khi dung lượng trả trước của tôi được dùng hết hoặc hết hạn sau 12 tháng, quá trình xử lý sẽ tự động tiếp tục theo mức giá trả theo mức sử dụng tiêu chuẩn (tối đa đến giới hạn chi tiêu của tôi) trừ khi tôi hủy, và tôi có thể hủy bất cứ lúc nào từ cổng thanh toán."
+
+[portal.billing.prepaid.deploy]
+cloud = "Stirling Cloud"
+cloudDesc = "Do Stirling quản lý. Hoạt động trong vài phút."
+cloudValue = "Stirling Cloud · Được quản lý"
+selfhost = "Tự lưu trữ"
+selfhostDesc = "Chạy trên hạ tầng riêng. Cùng mức giá."
+selfhostValue = "Tự lưu trữ · Hạ tầng riêng"
+
+[portal.billing.prepaid.offer]
+cta = "Xem ưu đãi"
+subtitle = "Trả trước một năm xử lý PDF và nhận miễn phí hai tháng, được dùng trước tính phí theo mức sử dụng, ngoài giới hạn chi tiêu của bạn."
+title = "Nhận 12 tháng với giá của 10 tháng"
+
+[portal.billing.prepaid.pay]
+accountName = "Tên chủ tài khoản"
+accountNamePlaceholder = "ví dụ Jane Smith"
+companyName = "Tên công ty (tùy chọn)"
+companyNamePlaceholder = "ví dụ Acme Inc."
+downloadInvoice = "Tải xuống hóa đơn"
+payOnline = "Thanh toán trực tuyến"
+poNumber = "Số PO (tùy chọn)"
+poNumberPlaceholder = "ví dụ PO-2026-0142"
+
+[portal.billing.prepaid.pipelines]
+advanced = "Nâng cao"
+advancedDesc = "Pipelines thúc đẩy phần lớn quá trình xử lý của bạn."
+none = "Không có"
+noneDesc = "Chưa chạy pipelines. Bật chúng bất cứ lúc nào."
+standard = "Tiêu chuẩn"
+standardDesc = "Một vài pipelines xử lý lại các PDF đến."
+
+[portal.billing.prepaid.posture]
+essentials = "Cơ bản"
+essentialsDesc = "Phân loại, mặc định, cộng với Chia sẻ"
+governed = "Được quản trị"
+governedDesc = "Thêm Bảo mật và Định tuyến"
+regulated = "Được quản lý theo quy định"
+regulatedDesc = "Mọi danh mục, bao gồm Tuân thủ, Lưu giữ, Tiếp nhận"
+
+[portal.billing.prepaid.review]
+download = "Tải xuống báo giá (PDF)"
+downloading = "Đang chuẩn bị…"
+share = "chia sẻ để phê duyệt"
+
+[portal.billing.prepaid.size]
+compact = "Gọn nhẹ"
+compactDesc = "Tệp dưới 25 MB, không tính phí dữ liệu"
+heavy = "Nặng"
+heavyDesc = "Đã quét hoặc nhiều hình ảnh, thường xuyên 50 MB+"
+standard = "Tiêu chuẩn"
+standardDesc = "Chủ yếu nhỏ, một số bản quét vượt 25 MB"
+
+[portal.billing.prepaid.state]
+exhausted = "Đã dùng hết"
+healthy = "Còn nhiều"
+low = "Sắp hết"
+
+[portal.billing.spendLimit]
+adjustLimit = "Điều chỉnh giới hạn"
+cancel = "Hủy"
+capControlNote = "Thay đổi có hiệu lực ngay lập tức — tăng hoặc giảm mức trần bất kỳ lúc nào."
+capSuffix = "/ tháng"
+capSuffixWithDocs = "/ tháng · ≈ {{documents}} tài liệu"
+displaySub = "Bạn chỉ bị tính phí cho những gì xử lý tự động — không bao giờ vượt quá mức trần."
+editTitle = "Đặt mức trần hàng tháng của bạn"
+eyebrow = "Giới hạn chi tiêu"
+guardrailBody = "một mức trần cứng — bạn không bao giờ bị tính phí vượt quá mức này. Khi chạm trần, xử lý tính theo mức sử dụng sẽ tạm dừng (chỉnh sửa PDF không giới hạn vẫn hoạt động) cho đến khi bạn tăng giới hạn hoặc chu kỳ đặt lại. Không có gì bị mất."
+guardrailLabel = "Lan can bảo vệ của bạn:"
+noCap = "không giới hạn"
+pctUsed = "Đã dùng {{pct}}%"
+remaining = "Còn {{amount}}"
+save = "Lưu giới hạn"
+saveError = "Không thể lưu giới hạn"
+thisPeriodUncapped = "{{amount}} kỳ này · không giới hạn"
+usedThisMonth = "Đã dùng {{amount}} trong tháng này"
+useSuggested = "Dùng đề xuất · {{amount}} / tháng"
+
+[portal.billing.spendLimit.projection]
+body_one = "Với {{rate}}/ngày, bạn đạt mức trần sau ~{{count}} ngày (~cuối tháng {{monthEnd}}). Giới hạn đề xuất ~{{suggested}}."
+body_other = "Với {{rate}}/ngày, bạn đạt mức trần sau ~{{count}} ngày (~cuối tháng {{monthEnd}}). Giới hạn đề xuất ~{{suggested}}."
+label = "Dự kiến sẽ vượt."
+
+[portal.billing.spendThisMonth]
+eyebrow = "Chi tiêu tháng này"
+freeRemaining_one = "Còn {{formatted}} PDF miễn phí"
+freeRemaining_other = "Còn {{formatted}} PDF miễn phí"
+processed_one = "Đã xử lý {{formattedCount}} PDF."
+processed_other = "Đã xử lý {{formattedCount}} PDF."
+processedWithRate_one = "Đã xử lý {{formattedCount}} PDF, với {{rate}} mỗi PDF."
+processedWithRate_other = "Đã xử lý {{formattedCount}} PDF, với {{rate}} mỗi PDF."
+
+[portal.billing.subscribedPlan.capWarn]
+approachingBody = "Tăng ngay để xử lý tự động không bao giờ tạm dừng."
+approachingTitle = "Bạn đã dùng {{pct}}% giới hạn chi tiêu hàng tháng"
+raiseLimit = "Tăng giới hạn"
+reachedBody = "Xử lý tính theo mức sử dụng đang tạm dừng cho đến khi bạn tăng giới hạn hoặc chu kỳ đặt lại. Chỉnh sửa PDF không giới hạn vẫn hoạt động."
+reachedTitle = "Đã đạt giới hạn chi tiêu hàng tháng"
+
+[portal.billing.subscribedPlan.portalError]
+title = "Không thể mở portal Stripe"
+
+[portal.billing.walletMeter]
+capSuffix_one = "trong {{allowance}} PDF miễn phí đã dùng"
+capSuffix_other = "trong {{allowance}} PDF miễn phí đã dùng"
+eyebrow = "Dùng thử Processor"
+statusLabel_one = "Còn {{remaining}}"
+statusLabel_other = "Còn {{remaining}}"
+sub = "Dùng Trình chỉnh sửa PDF miễn phí. Trả phí để xử lý PDF tự động."
+title_one = "Xử lý {{allowance}} PDF miễn phí"
+title_other = "Xử lý {{allowance}} PDF miễn phí"
+titleWithRate_one = "Xử lý {{allowance}} PDF miễn phí, sau đó {{rate}}/PDF"
+titleWithRate_other = "Xử lý {{allowance}} PDF miễn phí, sau đó {{rate}}/PDF"
+
+[portal.components.billingUnit]
+approval = "phê duyệt"
+check = "kiểm tra"
+event = "sự kiện"
+render = "render"
+review = "xem xét"
+session = "phiên"
+signature = "chữ ký"
+
+[portal.components.maturity]
+beta = "Beta"
+ga = "GA"
+
+[portal.connections]
+createTitle = "Kết nối mới"
+createTitleFor = "Kết nối {{name}}"
+delete = "Xóa"
+edit = "Chỉnh sửa"
+editTitle = "Chỉnh sửa kết nối"
+unsupportedType = "Không thể chỉnh sửa loại kết nối này tại đây."
+
+[portal.connections.categories.advanced]
+description = "Cho một dịch vụ mà chúng tôi chưa hỗ trợ."
+label = "Nâng cao"
+
+[portal.connections.categories.audit]
+description = "Ghi lại những gì đã xảy ra với tài liệu, nơi kiểm toán viên của bạn đang xem."
+label = "Ghi nhật ký kiểm toán & tuân thủ"
+
+[portal.connections.categories.notify]
+description = "Thông báo cho hệ thống khác rằng có điều gì đó đã xảy ra."
+label = "Thông báo & quy trình làm việc"
+
+[portal.connections.categories.security]
+description = "Quét hoặc gắn nhãn tài liệu trước khi tài liệu tiếp tục di chuyển."
+label = "Bảo mật & phân loại"
+
+[portal.connections.categories.signing]
+description = "Gửi tài liệu đi để ký hoặc công chứng."
+label = "Chữ ký điện tử & công chứng"
+
+[portal.connections.categories.storage]
+description = "Nơi tài liệu đã xử lý kết thúc - bucket, drive, ticket hoặc page."
+label = "Tệp & đính kèm"
+
+[portal.connections.commonFields.accessToken]
+helperText = "Stirling lưu trữ mục này ở dạng mã hóa và không bao giờ hiển thị lại."
+label = "Access token"
+
+[portal.connections.commonFields.apiKey]
+label = "API key"
+
+[portal.connections.commonFields.apiToken]
+label = "API token"
+
+[portal.connections.commonFields.baseUrl]
+helperText = "Các bước dùng kết nối này chỉ có thể gọi các đường dẫn dưới URL này, không bao giờ gọi host khác."
+label = "Server URL"
+
+[portal.connections.commonFields.email]
+label = "Email"
+
+[portal.connections.commonFields.host]
+label = "Host"
+
+[portal.connections.commonFields.password]
+label = "Mật khẩu"
+
+[portal.connections.commonFields.port]
+label = "Port"
+
+[portal.connections.commonFields.username]
+label = "Tên người dùng"
+
+[portal.connections.commonFields.webhookUrl]
+helperText = "Dán URL mà dịch vụ đã cung cấp cho bạn. Chỉ các đường dẫn dưới URL đó mới có thể được gọi."
+label = "Webhook URL"
+
+[portal.connections.fields]
+name = "Tên kết nối"
+namePlaceholder = "ví dụ Production"
+
+[portal.connections.picker]
+cancel = "Hủy"
+createNew = "Kết nối mới..."
+placeholder = "Chọn một kết nối"
+save = "Lưu kết nối"
+
+[portal.connections.picker2]
+back = "Đổi tích hợp"
+heading = "Bạn muốn kết nối gì?"
+noResultsBody = "Chúng tôi chưa hỗ trợ mục này - hãy cho chúng tôi biết và chúng tôi sẽ xem xét thêm vào."
+noResultsTitle = "Không có kết quả khớp với \"{{query}}\""
+searchPlaceholder = "Tìm kiếm tích hợp - thử \"sign\", \"ocr\" hoặc tên sản phẩm"
+
+[portal.connections.types.api]
+description = "Gọi bất kỳ HTTP API nào từ một chính sách. Bạn chọn URL, xác thực và payload."
+label = "API tùy chỉnh"
+
+[portal.connections.types.api.fields.authType]
+label = "Xác thực"
+
+[portal.connections.types.api.fields.authType.options.basic]
+label = "Tên người dùng và mật khẩu"
+
+[portal.connections.types.api.fields.authType.options.bearer]
+label = "Bearer token"
+
+[portal.connections.types.api.fields.authType.options.header]
+label = "Token trong header tùy chỉnh"
+
+[portal.connections.types.api.fields.authType.options.none]
+label = "Không có"
+
+[portal.connections.types.api.fields.authType.options.tokenLogin]
+label = "Đăng nhập để lấy token"
+
+[portal.connections.types.api.fields.baseUrl]
+helperText = "Các bước dùng kết nối này chỉ có thể gọi các đường dẫn dưới URL này, không bao giờ gọi host khác."
+label = "Base URL"
+placeholder = "https://api.example.com/v1"
+
+[portal.connections.types.api.fields.headerName]
+label = "Tên header"
+placeholder = "X-API-Key"
+
+[portal.connections.types.api.fields.loginPath]
+label = "Đường dẫn đăng nhập"
+placeholder = "/auth/login"
+
+[portal.connections.types.api.fields.password]
+label = "Mật khẩu"
+
+[portal.connections.types.api.fields.resultUrlHosts]
+helperText = "Nếu API phản hồi bằng liên kết tải xuống, chỉ các host này có thể được truy xuất. Phân tách bằng dấu phẩy. Để trống để chỉ cho phép host riêng của base URL."
+label = "Host kết quả được phép"
+
+[portal.connections.types.api.fields.token]
+label = "Token"
+
+[portal.connections.types.api.fields.tokenHeaderName]
+label = "Gửi token dưới dạng header này"
+
+[portal.connections.types.api.fields.tokenResponseHeader]
+helperText = "Header phản hồi mà lệnh gọi đăng nhập trả về token, ví dụ X-Auth-Token."
+label = "Header phản hồi token"
+
+[portal.connections.types.api.fields.username]
+label = "Tên người dùng"
+
+[portal.connections.types.clamav]
+baseUrlPlaceholder = "http://clamav-rest:9000"
+description = "Quét tài liệu để tìm malware trên máy chủ bạn vận hành - không có gì rời khỏi mạng của bạn."
+label = "ClamAV (tự lưu trữ)"
+
+[portal.connections.types.cloudmersive]
+description = "Quét virus và nội dung cho tài liệu trong một chính sách."
+label = "Cloudmersive"
+
+[portal.connections.types.cloudmersiveadvanced]
+description = "Chặn tài liệu chứa macro, tệp thực thi, script hoặc đối tượng nhúng - không chỉ malware đã biết."
+label = "Cloudmersive Advanced Scan"
+
+[portal.connections.types.confluence]
+baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
+description = "Đính kèm tài liệu đã xử lý vào một trang Confluence."
+label = "Confluence"
+
+[portal.connections.types.consigno]
+description = "Gửi tài liệu tới ConsignO Cloud (Notarius) để ký điện tử và công chứng."
+label = "ConsignO Cloud"
+
+[portal.connections.types.consigno.fields.baseUrl]
+helperText = "Môi trường ConsignO Cloud của bạn, bao gồm /api/v1."
+label = "Server URL"
+placeholder = "https://your-org.consignocloud.com/api/v1"
+
+[portal.connections.types.consigno.fields.clientId]
+label = "API key"
+
+[portal.connections.types.consigno.fields.clientSecret]
+label = "API secret"
+
+[portal.connections.types.consigno.fields.password]
+label = "Mật khẩu"
+
+[portal.connections.types.consigno.fields.tenantId]
+helperText = "Chỉ cần nếu tổ chức của bạn dùng tenants."
+label = "Tenant"
+
+[portal.connections.types.consigno.fields.username]
+label = "Tên người dùng"
+
+[portal.connections.types.discord]
+baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
+description = "Đăng tin nhắn lên Discord khi một chính sách xử lý tài liệu."
+label = "Discord"
+
+[portal.connections.types.elastic]
+baseUrlPlaceholder = "https://your-cluster:9200"
+description = "Lập chỉ mục một sự kiện kiểm toán trong Elasticsearch mỗi khi một chính sách xử lý tài liệu."
+label = "Elasticsearch"
+
+[portal.connections.types.ftp]
+description = "Thăm dò máy chủ FTP hoặc FTPS để tìm tài liệu mới."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Chế độ kết nối"
+
+[portal.connections.types.ftp.fields.passive.options]
 active = "Active"
-paused = "Paused"
-setup = "Set up"
+passive = "Passive (khuyến nghị)"
 
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
+[portal.connections.types.ftp.fields.security]
+helperText = "FTP thường gửi thông tin xác thực và tệp không được mã hóa; chọn FTPS nếu máy chủ hỗ trợ."
+label = "Mã hóa"
 
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (explicit / AUTH TLS)"
+implicit = "FTPS (implicit)"
+none = "Không có (FTP thường)"
+
+[portal.connections.types.googlechat]
+baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
+description = "Đăng tin nhắn lên một Google Chat space khi một chính sách chạy."
+label = "Google Chat"
+
+[portal.connections.types.jira]
+baseUrlPlaceholder = "https://your-site.atlassian.net"
+description = "Đính kèm tài liệu đã xử lý vào một Jira issue."
+label = "Jira"
+
+[portal.connections.types.mailgun]
+description = "Gửi email tài liệu hoặc thông báo khi một chính sách chạy."
+label = "Mailgun"
+
+[portal.connections.types.nextcloud]
+baseUrlPlaceholder = "https://your-server/remote.php/dav"
+description = "Lưu tài liệu đã xử lý vào Nextcloud."
+label = "Nextcloud"
+
+[portal.connections.types.nextcloud.fields.appPassword]
+label = "App password"
+
+[portal.connections.types.presidio]
+baseUrlPlaceholder = "http://presidio-analyzer:3000"
+description = "Phát hiện dữ liệu cá nhân trong văn bản tài liệu bằng máy chủ Presidio bạn vận hành."
+label = "Presidio (tự lưu trữ)"
+
+[portal.connections.types.purview]
+description = "Đọc và áp dụng nhãn độ nhạy Microsoft Purview trên PDF."
+label = "Microsoft Purview"
+
+[portal.connections.types.purview.fields.clientId]
+helperText = "Tùy chọn. Chỉ cần để chọn nhãn theo tên; việc gắn nhãn vẫn hoạt động khi không có."
+label = "Application (client) ID"
+
+[portal.connections.types.purview.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.purview.fields.tenantId]
+helperText = "Được đóng dấu lên mọi nhãn dưới dạng SiteId của nhãn, để các công cụ nhận biết Purview biết tổ chức nào đã áp dụng nhãn đó."
+label = "Directory (tenant) ID"
+placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
+
+[portal.connections.types.s3]
+description = "Một S3 bucket mà nguồn có thể đọc và đầu ra pipeline có thể ghi vào."
+label = "S3 storage"
+
+[portal.connections.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.connections.types.s3.fields.bucket]
+label = "Bucket"
+
+[portal.connections.types.s3.fields.endpoint]
+helperText = "Để trống cho AWS. Đặt mục này cho MinIO hoặc kho lưu trữ tương thích S3 khác."
+label = "Endpoint"
+
+[portal.connections.types.s3.fields.region]
+label = "Region"
+
+[portal.connections.types.s3.fields.secretAccessKey]
+label = "Secret access key"
+
+[portal.connections.types.sendgrid]
+description = "Gửi email tài liệu hoặc thông báo khi một chính sách chạy."
+label = "SendGrid"
+
+[portal.connections.types.sftp]
+description = "Thăm dò máy chủ SFTP (SSH) để tìm tài liệu mới."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "Tùy chọn. Dấu vân tay SHA-256 host key của máy chủ (từ `ssh-keyscan host | ssh-keygen -lf -`). Khi đặt, chỉ máy chủ xuất trình key này mới được chấp nhận; khi để trống, key được thấy ở lần kết nối đầu tiên sẽ được ghim và các thay đổi sau đó bị từ chối."
+label = "Dấu vân tay host key"
+placeholder = "SHA256:..."
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Key passphrase"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Để trống nếu bạn xác thực bằng private key thay thế."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "Tùy chọn. Dán OpenSSH private key để xác thực bằng key thay vì mật khẩu."
+label = "Private key"
+
+[portal.connections.types.slack]
+description = "Đăng tin nhắn lên Slack khi một chính sách xử lý tài liệu."
+label = "Slack"
+
+[portal.connections.types.smb]
+description = "Theo dõi một SMB / CIFS network share (Windows hoặc Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Network share"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "Tùy chọn. Windows domain hoặc workgroup, nếu máy chủ của bạn dùng."
+label = "Domain"
+
+[portal.connections.types.smb.fields.share]
+label = "Share"
+placeholder = "documents"
+
+[portal.connections.types.splunk]
+baseUrlPlaceholder = "https://your-splunk:8088"
+description = "Gửi một sự kiện kiểm toán tới Splunk mỗi khi một chính sách xử lý tài liệu."
+label = "Splunk"
+
+[portal.connections.types.sumologic]
+baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
+description = "Gửi một sự kiện kiểm toán tới Sumo Logic HTTP collector."
+label = "Sumo Logic"
+
+[portal.connections.types.teams]
+baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
+description = "Đăng tin nhắn lên một kênh Teams khi một chính sách chạy."
+label = "Microsoft Teams"
+
+[portal.connections.types.webhook]
+baseUrlPlaceholder = "https://example.com/hooks/documents"
+description = "Đăng từng tài liệu, hoặc chỉ chi tiết, tới URL bạn chọn."
+label = "Webhook"
+
+[portal.connections.types.zapier]
+baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
+description = "Kích hoạt một Zap hoặc Make scenario từ một chính sách."
+label = "Zapier & Make"
+
+[portal.docs]
+browse = "Duyệt tài liệu"
+viewSource = "Xem mã nguồn trên GitHub"
+
+[portal.docs.authentication]
+codeCaption = "mọi yêu cầu"
+eyebrow = "BẮT ĐẦU"
+lead = "Tất cả yêu cầu xác thực bằng bearer token. Khóa được giới hạn theo môi trường và không bao giờ hết hạn trừ khi được xoay vòng."
+liveKey = "Khóa production — có tính phí, giới hạn tốc độ theo gói của bạn."
+testKey = "Khóa Sandbox — miễn phí, trả về fixture tổng hợp."
+title = "Xác thực"
+
+[portal.docs.components]
+codeCaption = "nhúng trình xem"
+eyebrow = "THÀNH PHẦN"
+lead = "UI có thể nhúng cho hàng đợi xem xét và kiểm tra tài liệu. Dùng kiểu của riêng bạn hoặc dùng theme đi kèm."
+title = "Trình xem thả vào dùng ngay"
+
+[portal.docs.endpoints]
+eyebrow = "THAM CHIẾU API"
+fieldCount_one = "{{count}} trường"
+fieldCount_other = "{{count}} trường"
+filterAll = "Tất cả"
+filterAriaLabel = "Lọc endpoint theo ngành dọc"
+lead = "Mỗi loại tài liệu là một endpoint có kiểu. POST một tệp, nhận JSON đã xác thực schema. Lọc theo ngành dọc bên dưới."
+title = "Endpoint"
+
+[portal.docs.errors]
+codeCaption = "422 Unprocessable Entity"
+eyebrow = "THAM CHIẾU API"
+lead = "Lỗi trả về một mã ổn định, máy đọc được cùng thông báo cho người dùng. Phần thân 4xx luôn bao gồm request_id để hỗ trợ."
+title = "Lỗi"
+
+[portal.docs.nav]
+ariaLabel = "Tài liệu"
+
+[portal.docs.nav.empty]
+description = "Không thể tải chỉ mục tài liệu."
+title = "Tài liệu không khả dụng"
+
+[portal.docs.quickstart]
+eyebrow = "BẮT ĐẦU"
+lead = "Gửi tài liệu đầu tiên của bạn đến một endpoint có kiểu và nhận JSON có cấu trúc chỉ trong ba bước. Không cần huấn luyện mô hình, không cần prompt engineering."
+title = "Bắt đầu nhanh"
+
+[portal.docs.quickstart.callout]
+bodyAfterLink = "để có công thức sao chép-dán."
+bodyBeforeLink = "đấu nối cùng lệnh gọi vào một pipeline để nối chuỗi xác thực, che dữ liệu và gửi đi — hoặc cung cấp nó cho agent qua MCP. Xem"
+label = "Tiếp theo:"
+link = "Playbooks"
+
+[portal.docs.quickstart.step1]
+body = "Tạo khóa có phạm vi từ tab Hạ tầng. Khóa mang theo giới hạn tốc độ và danh sách IP được phép tùy chọn. Xuất nó vào shell của bạn:"
+title = "Cấp khóa API"
+
+[portal.docs.quickstart.step2]
+body = "POST một tệp đến bất kỳ endpoint có kiểu nào. Endpoint xác định schema bạn nhận lại — ở đây là trình trích xuất hóa đơn."
+snippetCaption = "trích xuất hóa đơn"
+title = "Gửi tài liệu"
+
+[portal.docs.quickstart.step3]
+body = "Mọi phản hồi được xác thực theo schema của endpoint, với điểm tin cậy và nguồn gốc theo từng trường."
+codeCaption = "200 OK"
+title = "Đọc kết quả có cấu trúc"
+
+[portal.docs.rateLimits]
+burst = "Burst"
+codeCaption = "429 Too Many Requests"
+concurrency = "Đồng thời"
+eyebrow = "BẮT ĐẦU"
+lead = "Giới hạn mở rộng theo gói của bạn. Phản hồi 429 bao gồm header Retry-After; SDK tự động lùi lại."
+requestsPerMinute = "Yêu cầu / phút"
+title = "Giới hạn tốc độ & hạn mức"
+
+[portal.docs.recipes]
+cloneButton = "Sao chép recipe"
+eyebrow = "PLAYBOOKS"
+lead = "Các mẫu end-to-end nối chuỗi nguồn, thao tác và đích đến. Mỗi mẫu ánh xạ đến một pipeline mà bạn có thể sao chép."
+title = "Recipe"
+
+[portal.docs.sdks]
+eyebrow = "SDKS"
+lead = "Client chính chủ với phản hồi có kiểu, tự động thử lại và tải lên streaming. Tất cả theo dõi cùng catalogue endpoint."
+title = "SDK chính thức"
+
+[portal.docs.sdks.status]
+beta = "Beta"
+deprecated = "Không còn dùng"
+
+[portal.docs.search]
+empty = "Không có tài liệu phù hợp"
+placeholder = "Tìm kiếm tài liệu"
+results = "{{count}} kết quả"
+
+[portal.docs.skills]
+eyebrow = "KỸ NĂNG"
+lead = "Các năng lực đi kèm, có tên, mà agent của bạn gọi như một công cụ duy nhất. Mỗi kỹ năng là một chuỗi thao tác xác định với đánh giá đính kèm."
+title = "Kỹ năng agent"
+
+[portal.docs.toc]
+title = "Trên trang này"
+
+[portal.docs.webhooks]
+codeCaption = "document.processed"
+eyebrow = "THAM CHIẾU API"
+lead = "Đăng ký các sự kiện document.processed, pipeline.completed và quota.threshold. Payload được ký bằng HMAC-SHA256."
+title = "Webhooks"
+
+[portal.docs.webhooks.callout]
+afterHelper = "helper."
+beforeHelper = "header với bí mật ký của bạn trước khi tin tưởng một payload. SDK đi kèm một"
+beforeSignature = "Xác minh"
+
+[portal.documents]
+exportCsv = "Xuất CSV"
+search = "Tìm kiếm theo tên tệp, ID..."
+subtitle = "Mọi tài liệu mà tổ chức của bạn đã xử lý, kèm bản ghi xử lý đầy đủ. Quyền truy cập nội dung cần được yêu cầu."
+title = "Tài liệu"
+
+[portal.documents.audit]
+approved = "Đã phê duyệt"
+archived = "Đã lưu trữ"
+elevation = "Nâng quyền"
+empty = "Chưa có sự kiện nào được ghi lại."
+extracted = "Đã xử lý"
+flagged = "Cần xem xét"
+ingested = "Đã tiếp nhận"
+reviewed = "Đang xem xét"
+
+[portal.documents.drawer]
+sectionsAriaLabel = "Các phần chi tiết tài liệu"
+
+[portal.documents.drawer.tabs]
+audit = "Kiểm tra"
+extractions = "Trích xuất"
+overview = "Tổng quan"
+
+[portal.documents.elevation]
+requestAccess = "Yêu cầu quyền truy cập"
+
+[portal.documents.elevation.active]
+description = "Cấp quyền tạm thời — quyền truy cập được ghi nhật ký và giới hạn thời gian."
+descriptionFourEyes = "Cấp quyền tạm thời — người đánh giá ngang hàng đã được thông báo (nguyên tắc bốn mắt)."
+title = "Quyền truy cập hết hạn sau {{time}}"
+
+[portal.documents.elevation.gated]
+description = "Nội dung được bảo vệ bằng chính sách không có quyền truy cập thường trực. Việc yêu cầu sẽ bắt đầu cấp quyền có giới hạn thời gian."
+descriptionFourEyes = "Nội dung được bảo vệ bằng chính sách không có quyền truy cập thường trực. Việc yêu cầu sẽ bắt đầu cấp quyền có giới hạn thời gian và thông báo cho người đánh giá ngang hàng (nguyên tắc bốn mắt)."
+title = "Tài liệu nhạy cảm"
+
+[portal.documents.extractions]
+empty = "Không có trường nào được trích xuất từ tài liệu này."
+masked = "Các trường đã trích xuất đang bị ẩn. Yêu cầu quyền truy cập có thời hạn để xem nội dung của tài liệu này."
+
+[portal.documents.extractions.columns]
+confidence = "Độ tin cậy"
+field = "Trường"
+value = "Giá trị"
+
+[portal.documents.filters]
+all = "Tất cả"
+ariaLabel = "Lọc tài liệu theo trạng thái"
+flagged = "Đã gắn cờ"
+inReview = "Đang xem xét"
+processed = "Đã xử lý"
+
+[portal.documents.overview]
+action = "Pipeline / Hành động"
+product = "Sản phẩm"
+received = "Thời gian"
+status = "Trạng thái"
+type = "Loại"
+user = "Người dùng"
+
+[portal.documents.queue.empty]
+connectSource = "Kết nối nguồn"
+createPipeline = "Tạo pipeline"
+description = "Khi các nguồn đưa tài liệu vào pipeline của bạn, chúng sẽ xuất hiện ở đây để xem xét."
+title = "Không có tài liệu trong hàng đợi"
+
+[portal.documents.status]
+error = "Lỗi"
+flagged = "Cần xem xét"
+inReview = "Đang xem xét"
+processed = "Đã xử lý"
+
+[portal.documents.table]
+auto = "Tự động"
+editorAction = "Trình chỉnh sửa"
+empty = "Không có tài liệu nào khớp với bộ lọc này."
+rowActions = "Hành động hàng"
+sensitiveLabel = "Nhạy cảm"
+sensitiveTitle = "Nhạy cảm — yêu cầu quyền truy cập"
+
+[portal.documents.table.columns]
+action = "Pipeline / Hành động"
+document = "Tài liệu"
+product = "Sản phẩm"
+status = "Trạng thái"
+time = "Thời gian"
+user = "Người dùng"
+
+[portal.editorAdmin]
+subtitle = "Triển khai Stirling PDF Editor, ghép nối các phiên bản self-hosted với tổ chức của bạn và vận hành đội hình đang chạy — mục tiêu, tình trạng, thông tin xác thực và kích hoạt offline tại một nơi."
+title = "Triển khai Editor"
+
+[portal.editorAdmin.health.columns]
+activeUsers = "Người dùng đang hoạt động"
+host = "Host"
+lastSeen = "Lần thấy gần nhất"
+region = "Khu vực"
+status = "Trạng thái"
+version = "Phiên bản"
+
+[portal.editorAdmin.health.empty]
+description = "Triển khai một mục tiêu và ghép nối để xem tình trạng phiên bản trực tiếp tại đây."
+title = "Không có phiên bản nào đang báo cáo"
+
+[portal.editorAdmin.offlineActivation]
+enterpriseTag = "Enterprise"
+generateButton = "Tạo gói offline"
+lockCopy = "Kích hoạt offline và on-prem là một phần của Enterprise."
+subtitle = "Tạo gói kích hoạt đã ký cho bản cài đặt offline hoặc on-prem không có đường mạng ra ngoài. Chuyển gói đó sang phiên bản và áp dụng trong quá trình thiết lập lần chạy đầu tiên."
+talkToSales = "Liên hệ bộ phận bán hàng"
+title = "Kích hoạt air-gapped"
+
+[portal.editorAdmin.offlineActivation.readyBanner]
+description = "{{file}} đã được ký và sẵn sàng để chuyển. Gói này kích hoạt một phiên bản và hết hạn sau 14 ngày."
+title = "Gói đã sẵn sàng"
+
+[portal.editorAdmin.pairing]
+generated = "Đã tạo ✓"
+generateNewCode = "Tạo mã mới"
+lockCopy = "Cấp phát IaC là một phần của Enterprise."
+rotate = "Xoay vòng"
+talkToSales = "Liên hệ bộ phận bán hàng"
+
+[portal.editorAdmin.sections.health]
+sub = "Mọi phiên bản Editor đang báo cáo — phiên bản, khu vực, trạng thái, lần thấy gần nhất và người dùng đang hoạt động."
+title = "Tình trạng phiên bản"
+
+[portal.editorAdmin.sections.pairing]
+sub = "Kết nối một editor self-hosted với tổ chức này. Tạo token, chuyển giao mã ngắn hoặc nối qua IaC."
+title = "Ghép nối"
+
+[portal.editorAdmin.sections.targets]
+sub = "Nơi Editor chạy. Sao chép một đoạn mã để dựng phiên bản self-hosted, hoặc dùng Managed Cloud không cần vận hành."
+title = "Mục tiêu triển khai"
+
+[portal.editorAdmin.serviceToken]
+currentToken = "Token hiện tại"
+lastRotated = "Lần xoay vòng gần nhất"
+rotateButton = "Xoay vòng service token"
+subtitle = "Các phiên bản xác thực với tổ chức bằng thông tin xác thực này. Xoay vòng theo lịch hoặc ngay sau khi nghi ngờ bị rò rỉ."
+title = "Service token"
+
+[portal.editorAdmin.serviceToken.rotatedBanner]
+description = "Một token mới đã được phát hành. Cập nhật STIRLING_SERVICE_TOKEN của từng phiên bản self-hosted trong thời gian ân hạn 24 giờ, nếu không chúng sẽ offline."
+title = "Xoay vòng các phiên bản đang chạy"
+
+[portal.editorAdmin.status]
+degraded = "Suy giảm"
+healthy = "Khỏe mạnh"
+offline = "Offline"
+pairing = "Đang ghép nối"
+
+[portal.editorAdmin.targets]
+instanceCount_one = "{{count}} phiên bản"
+instanceCount_other = "{{count}} phiên bản"
+talkToSales = "Liên hệ bộ phận bán hàng"
+upgradePlan = "Nâng cấp gói"
+
+[portal.editorAdmin.targets.lock]
+enterprise = "Self-hosting on-prem và Kubernetes là một phần của Enterprise."
+paid = "Self-hosting với Docker và Kubernetes được mở khóa trên gói trả phí."
+
+[portal.editorAdmin.targets.state]
+available = "Khả dụng"
+locked = "Bị khóa"
+running = "Đang chạy"
+
+[portal.errorBoundary]
+description = "Chế độ xem này gặp lỗi không mong muốn. Hãy thử lại hoặc chọn phần khác từ thanh bên."
+retry = "Thử lại"
+title = "Đã xảy ra lỗi trên trang này"
+
+[portal.home.download]
+back = "Quay lại"
+body = "Tải xuống ứng dụng desktop hoặc tự lưu trữ máy chủ."
+done = "Xong"
+guide = "Mở hướng dẫn {{name}}"
+openInBrowser = "Mở trong trình duyệt thay thế"
+sectionDesktop = "Ứng dụng desktop"
+sectionSelfHosted = "Tự lưu trữ"
+title = "Cài đặt Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Chạy image chính thức trên máy chủ của bạn."
+note = "Mở tại :8080. Đăng nhập mặc định: admin / stirling."
+tagline = "Chạy máy chủ trong container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Cài đặt Helm chart chính thức."
+note = "Thêm PVC cho /configs để duy trì cài đặt."
+tagline = "Triển khai lên cluster bằng Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Bản build gốc cho bản phân phối của bạn."
+guideBtn = "Xem các tùy chọn cài đặt Linux"
+note = "Các bản build AppImage, .deb và .rpm có sẵn cho các distro phổ biến."
+tagline = "Ứng dụng desktop gốc cho distro của bạn"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Hoặc qua Homebrew"
+detailBody = "Chạy trình cài đặt, hoặc dùng Homebrew."
+downloadBtn = "Tải xuống cho macOS"
+tagline = "Ứng dụng gốc cho Apple silicon và Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Chạy .jar trên máy chủ bare metal."
+downloadBtn = "Tải xuống .jar"
+note = "Yêu cầu Java 21+. Mở tại :8080; đăng nhập mặc định admin / stirling."
+runLabel = "Sau đó chạy lệnh"
+tagline = "Chạy .jar trên máy chủ bare metal"
+title = "Thiết lập máy chủ thủ công"
+
+[portal.home.download.windows]
+altLabel = "Hoặc qua winget"
+detailBody = "Chạy trình cài đặt, hoặc dùng trình quản lý gói."
+downloadBtn = "Tải xuống trình cài đặt"
+tagline = "Ứng dụng gốc cho Microsoft Windows"
+title = "Windows"
+
+[portal.home.editor]
+activeOfDeployed = "{{active}} trong {{total}} hoạt động tháng này"
+name = "Stirling PDF Editor"
+open = "Mở trong trình duyệt"
+updated = "đã cập nhật {{time}}"
+
+[portal.home.editor.deploy]
+finish = "Hoàn tất triển khai"
+options = "Xem tùy chọn triển khai"
+start = "Triển khai Editor"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "Self-hosted · Docker"
+kubernetes = "Self-hosted · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "Chào buổi chiều"
+evening = "Chào buổi tối"
+morning = "Chào buổi sáng"
+
+[portal.infrastructure]
+manageEditorDeployment = "Quản lý triển khai Editor"
+sectionsAriaLabel = "Các phần hạ tầng"
+subtitle = "Triển khai, thông tin xác thực, tư thế bảo mật, lưu trữ và dấu vết kiểm tra cho workspace Stirling của bạn."
+title = "Hạ tầng"
+
+[portal.infrastructure.apiKeys]
+createKey = "Tạo khóa"
+heading = "Khóa API"
+subheading = "Thông tin xác thực có phạm vi với giới hạn tốc độ theo từng khóa, quyền và danh sách cho phép IP."
+
+[portal.infrastructure.apiKeys.card]
+created = "Đã tạo"
+lastUsed = "Lần dùng gần nhất"
+revoke = "Thu hồi khóa"
+usageMonth = "Sử dụng tháng này"
+usageToday = "Sử dụng hôm nay"
+
+[portal.infrastructure.apiKeys.empty]
+description = "Tạo khóa có phạm vi để bắt đầu gọi Stirling API."
+title = "Chưa có khóa API"
+
+[portal.infrastructure.apiKeys.error]
+load = "Không thể tải API key của bạn. Vui lòng thử lại."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "Thu hồi \"{{name}}\"? Mọi tích hợp vẫn đang dùng khóa này sẽ ngay lập tức bắt đầu nhận lỗi 401. Không thể hoàn tác thao tác này."
+cancel = "Hủy"
+confirm = "Thu hồi khóa"
+title = "Thu hồi API key"
+
+[portal.infrastructure.attestationLabel]
+attested = "Đã chứng thực"
+inScope = "Trong phạm vi"
+notApplicable = "N/A"
+
+[portal.infrastructure.audit]
+filterAriaLabel = "Lọc sự kiện kiểm tra theo danh mục"
+heading = "Nhật ký kiểm tra"
+latencyValue = "{{value}} ms"
+noEventsInCategory = "Không có sự kiện trong danh mục này."
+subheading = "Mọi sự kiện xác thực, cấu hình và xử lý trên toàn workspace của bạn."
+
+[portal.infrastructure.audit.columns]
+actor = "Tác nhân"
+event = "Sự kiện"
+latency = "Độ trễ"
+status = "Trạng thái"
+target = "Tài nguyên"
+timestamp = "Dấu thời gian"
+
+[portal.infrastructure.audit.empty]
+description = "Hoạt động workspace sẽ xuất hiện tại đây khi diễn ra."
+title = "Không có sự kiện kiểm tra"
+
+[portal.infrastructure.audit.export]
+cancel = "Hủy"
+error = "Xuất thất bại. Vui lòng thử lại."
+exportButton = "Xuất"
+exporting = "Đang xuất…"
+fieldsLegend = "Cột"
+format = "Định dạng"
+open = "Xuất"
+subtitle = "Tải xuống sự kiện kiểm tra dưới dạng CSV hoặc JSON. Chọn các cột cần bao gồm."
+title = "Xuất nhật ký kiểm tra"
+
+[portal.infrastructure.audit.export.fields]
+date = "Ngày"
+documentName = "Tên tài liệu"
+ipAddress = "Địa chỉ IP"
+outcome = "Kết quả"
+tool = "Công cụ"
+username = "Tên người dùng"
+
+[portal.infrastructure.audit.filters]
+all = "Tất cả"
+auth = "Xác thực"
+config = "Cấu hình"
+elevation = "Nâng quyền"
+policy = "Chính sách"
+processing = "Xử lý"
+security = "Bảo mật"
+
+[portal.infrastructure.audit.forbidden]
+description = "Nhật ký kiểm tra dành cho trưởng nhóm và quản trị viên. Hãy yêu cầu trưởng nhóm hoặc quản trị viên cấp quyền truy cập."
+title = "Bạn không có quyền truy cập"
+
+[portal.infrastructure.audit.metrics]
+config = "Cấu hình"
+policy = "Chính sách"
+processing = "Xử lý"
+totalEvents = "Tổng sự kiện · 24 giờ"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Xác thực"
+config = "Cấu hình"
+elevation = "Nâng quyền"
+policy = "Chính sách"
+processing = "Xử lý"
+security = "Bảo mật"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Lỗi"
+info = "Thông tin"
+success = "Thành công"
+warning = "Cảnh báo"
+
+[portal.infrastructure.certLabel]
+certified = "Đã chứng nhận"
+inProgress = "Đang tiến hành"
+notStarted = "Chưa bắt đầu"
+
+[portal.infrastructure.createKey]
+cancel = "Hủy"
+createKey = "Tạo khóa"
+done = "Xong"
+keyNameLabel = "Tên khóa"
+keyNamePlaceholder = "ví dụ: Production · ingest"
+secretKeyCaption = "Khóa bí mật"
+secretWarning = "Lưu khóa này trong trình quản lý bí mật. Stirling chỉ lưu hash — không có cách nào khôi phục lại sau này."
+subtitle = "Giới hạn phạm vi khóa ở mức tối thiểu cần thiết. Bạn có thể xoay vòng hoặc thu hồi bất cứ lúc nào."
+subtitleCreated = "Sao chép bí mật này ngay — nó sẽ không được hiển thị lại."
+title = "Tạo khóa API"
+titleCreated = "Đã tạo khóa"
+
+[portal.infrastructure.deployLabel]
+live = "Đang chạy"
+queued = "Đang xếp hàng"
+rolledBack = "Đã rollback"
+rolling = "Đang triển khai"
+
+[portal.infrastructure.deployments]
+msValue = "{{value}} ms"
+throughputValue = "{{value}}/phút"
+
+[portal.infrastructure.deployments.deployColumns]
+deployedBy = "Được triển khai bởi"
+environment = "Môi trường"
+product = "Sản phẩm"
+status = "Trạng thái"
+version = "Phiên bản"
+when = "Thời điểm"
+
+[portal.infrastructure.deployments.recent]
+heading = "Triển khai gần đây"
+subheading = "Các đợt phát hành mới nhất trên các sản phẩm và môi trường."
+
+[portal.infrastructure.deployments.regionColumns]
+instances = "Phiên bản"
+latency = "Độ trễ"
+load = "Tải"
+p99 = "P99"
+region = "Khu vực"
+status = "Trạng thái"
+throughput = "Thông lượng"
+uptime = "Thời gian hoạt động"
+version = "Phiên bản"
+
+[portal.infrastructure.deployments.regions]
+heading = "Khu vực"
+subheading = "Tình trạng trực tiếp cho từng khu vực Stirling đã triển khai — độ trễ, tải và phiên bản phát hành."
+
+[portal.infrastructure.deployments.regions.empty]
+description = "Các khu vực đã triển khai sẽ xuất hiện tại đây sau khi workspace của bạn được cấp phát."
+title = "Chưa triển khai khu vực nào"
+
+[portal.infrastructure.keyLabel]
+active = "Đang hoạt động"
+revoked = "Đã thu hồi"
+
+[portal.infrastructure.modelLabel]
+active = "Đang hoạt động"
+degraded = "Suy giảm"
+disabled = "Đã tắt"
+
+[portal.infrastructure.models]
+heading = "Mô hình"
+msValue = "{{value}} ms"
+subheading = "Danh mục mô hình và định tuyến hỗ trợ xử lý tài liệu trên toàn workspace của bạn."
+
+[portal.infrastructure.models.byom]
+description = "Đăng ký một mô hình on-prem hoặc self-hosted và ghim nó vào một khu vực để xử lý theo ràng buộc lưu trú dữ liệu."
+title = "Mang mô hình của riêng bạn"
+
+[portal.infrastructure.models.catalogue]
+heading = "Danh mục"
+sub = "Các mô hình được quản lý khả dụng cho workspace của bạn, với độ trễ và chi phí trực tiếp."
+subEnterprise = "Các mô hình được quản lý, mang theo của riêng bạn và on-prem — có thể ghim theo từng khu vực."
+
+[portal.infrastructure.models.catalogue.empty]
+description = "Các mô hình trong danh mục của workspace sẽ xuất hiện tại đây."
+title = "Không có mô hình khả dụng"
+
+[portal.infrastructure.models.columns]
+cost = "Chi phí"
+latency = "Độ trễ"
+load = "Tải"
+model = "Mô hình"
+status = "Trạng thái"
+type = "Loại"
+version = "Phiên bản"
+
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/lần gọi"
+perThousand = "{{price}}/1k"
+
+[portal.infrastructure.models.metrics]
+activeModels = "Mô hình đang hoạt động"
+avgLatency = "Độ trễ trung bình"
+included = "Đã bao gồm"
+monthlySpend = "Chi tiêu mô hình hàng tháng"
+
+[portal.infrastructure.models.routing]
+empty = "Chưa cấu hình quy tắc định tuyến nào."
+heading = "Quy tắc định tuyến"
+sub = "Mô hình nào xử lý từng thao tác. Mặc định áp dụng khi không có quy tắc hẹp hơn khớp."
+subLocked = "Định tuyến thao tác đến các mô hình cụ thể — khả dụng trên gói trả phí."
+
+[portal.infrastructure.models.routing.lockedBanner]
+description = "Nâng cấp lên Pro để kiểm soát mô hình nào xử lý từng thao tác và loại tài liệu."
+title = "Định tuyến mô hình là tính năng trả phí"
+
+[portal.infrastructure.models.routingColumns]
+default = "Mặc định"
+docType = "Loại tài liệu"
+modelForAria = "Mô hình cho {{operation}}"
+operation = "Thao tác"
+routedTo = "Định tuyến đến"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Phân loại"
+extraction = "Trích xuất"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Suy giảm"
+down = "Ngừng hoạt động"
+healthy = "Khỏe mạnh"
+
+[portal.infrastructure.security.access.byok]
+description = "Cung cấp khóa từ KMS của riêng bạn. Stirling mã hóa bằng khóa đó nhưng vẫn có thể đọc."
+label = "Mang khóa của riêng bạn (BYOK)"
+
+[portal.infrastructure.security.access.hyok]
+description = "Khóa không bao giờ rời khỏi KMS của bạn. Stirling chỉ giữ ciphertext."
+label = "Giữ khóa của riêng bạn (HYOK)"
+
+[portal.infrastructure.security.access.stirling]
+description = "Stirling quản lý khóa mã hóa. Đơn giản nhất — phía bạn không cần vận hành khóa."
+label = "Khóa do Stirling giữ"
+
+[portal.infrastructure.security.accessPolicy]
+heading = "Chính sách truy cập tài liệu"
+subheading = "Kiểm soát ai có thể giải mã tài liệu đã xử lý khi lưu trữ."
+
+[portal.infrastructure.security.attestations]
+heading = "Chứng nhận tuân thủ"
+noReport = "Không có báo cáo"
+subheading = "Tư thế kiểm tra theo từng framework, với báo cáo khả dụng cho các kiểm soát đã được chứng nhận."
+viewReport = "Xem báo cáo →"
+
+[portal.infrastructure.security.compliance]
+heading = "Tuân thủ"
+subheading = "Chứng nhận và chứng chỉ bao phủ nền tảng Stirling."
+
+[portal.infrastructure.security.empty]
+description = "Cấu hình bảo mật của workspace sẽ xuất hiện tại đây."
+title = "Không có tư thế bảo mật"
+
+[portal.infrastructure.security.hyokBanner]
+description = "Với HYOK, khóa mã hóa không bao giờ rời khỏi KMS của bạn. Stirling chỉ lưu trữ và xử lý ciphertext mà bạn có thể thu hồi bất cứ lúc nào."
+title = "Stirling không thể giải mã tài liệu của bạn"
+
+[portal.infrastructure.security.ipAllowlist]
+empty = "Chưa cấu hình dải IP nào — tất cả IP đều được phép."
+heading = "Danh sách cho phép IP"
+sub = "Quyền truy cập API bị giới hạn trong các dải CIDR này."
+subLocked = "Giới hạn quyền truy cập API vào các dải IP đã biết — khả dụng trên gói trả phí."
+
+[portal.infrastructure.security.ipAllowlist.lockedBanner]
+description = "Nâng cấp lên Pro để giới hạn quyền truy cập API vào các mạng cụ thể."
+title = "Danh sách cho phép IP là tính năng trả phí"
+
+[portal.infrastructure.security.ipColumns]
+added = "Đã thêm"
+addedBy = "Được thêm bởi"
+cidr = "CIDR"
+label = "Nhãn"
+
+[portal.infrastructure.security.keyManagement]
+algorithm = "Algorithm"
+heading = "Quản lý khóa mã hóa"
+keyId = "Mã định danh khóa"
+lastRotated = "Lần xoay vòng gần nhất"
+rotateKey = "Xoay vòng khóa"
+rotationPolicy = "Chính sách xoay vòng"
+subheading = "Quyền lưu giữ các khóa mã hóa tài liệu khi lưu trữ — ai có thể giải mã và cách khóa được xoay vòng."
+
+[portal.infrastructure.security.managedBanner]
+description = "Quyền lưu giữ bring-your-own-key (BYOK) và hold-your-own-key (HYOK) khả dụng trên Enterprise. Nâng cấp để cung cấp khóa từ KMS của riêng bạn."
+title = "Khóa được Stirling quản lý trên gói của bạn"
+
+[portal.infrastructure.security.residency.apac]
+description = "ap-southeast-1"
+label = "Châu Á - Thái Bình Dương"
+
+[portal.infrastructure.security.residency.eu]
+description = "eu-west-1 · ranh giới dữ liệu GDPR"
+label = "Liên minh Châu Âu"
+
+[portal.infrastructure.security.residency.us]
+description = "us-east-1 · us-west-2"
+label = "Hoa Kỳ"
+
+[portal.infrastructure.security.residencyHeader]
+heading = "Lưu trú dữ liệu"
+subheading = "Nơi tài liệu được lưu trữ và xử lý."
+
+[portal.infrastructure.storage]
+gbValue = "{{value}} GB"
+percentUsed = "Đã dùng {{value}}"
+
+[portal.infrastructure.storage.empty]
+description = "Lưu trữ đã kết nối và mức sử dụng sẽ xuất hiện tại đây."
+title = "Chưa cấu hình lưu trữ"
+
+[portal.infrastructure.storage.lifecycle]
+active = "Đang hoạt động"
+activeRange = "0–{{value}} ngày"
+archived = "Đã lưu trữ"
+coldStorage = "lưu trữ lạnh"
+deleted = "Đã xóa"
+never = "không bao giờ"
+purged = "đã xóa vĩnh viễn"
+
+[portal.infrastructure.storage.providers]
+connect = "Kết nối"
+connected = "Đã kết nối"
+heading = "Nhà cung cấp đã kết nối"
+subheading = "Nơi các artifact đã xử lý được ghi."
+
+[portal.infrastructure.storage.retention]
+heading = "Lưu giữ"
+subheading = "Thời gian giữ artifact trước khi xóa theo vòng đời."
+windowLabel = "Khoảng thời gian lưu giữ mặc định"
+
+[portal.infrastructure.storage.retentionOption]
+days_one = "{{count}} ngày"
+days_other = "{{count}} ngày"
+never = "Không bao giờ xóa"
+
+[portal.infrastructure.storage.totalUsage]
+heading = "Tổng mức sử dụng"
+progressLabel = "Dung lượng đã dùng"
+subheading = "Dung lượng đã tiêu thụ trên tất cả nhà cung cấp đã kết nối."
+
+[portal.infrastructure.tabs]
+apiKeys = "Khóa API"
+audit = "Nhật ký kiểm tra"
+deployments = "Triển khai"
+models = "Mô hình"
+security = "Bảo mật"
+storage = "Lưu trữ"
+
+[portal.integrations]
+addAnother = "Thêm mục khác"
+availableHeading = "Có sẵn"
+comingSoonHeading = "Sắp ra mắt"
+connect = "Kết nối"
+connectedHeading = "Đã kết nối"
+connectionCount_one = "{{count}} kết nối"
+connectionCount_other = "{{count}} kết nối"
+customApi = "API tùy chỉnh"
+searchPlaceholder = "Tìm kiếm tích hợp"
+subtitle = "Mọi thứ Stirling có thể giao tiếp. Thông tin xác thực được tạo một lần tại đây, rồi được tham chiếu bởi nguồn, chính sách và pipeline."
+title = "Tích hợp"
+typedName = "Tên {{tool}}"
+
+[portal.integrations.filters]
+all = "Tất cả"
+audit = "Kiểm toán"
+connected = "Đã kết nối"
+notify = "Thông báo"
+security = "Bảo mật"
+signing = "Ký"
+storage = "Lưu trữ"
+
+[portal.integrations.status]
+connected = "Đã kết nối"
+
+[portal.integrations.table]
+integration = "Tích hợp"
+worksWith = "Hoạt động với"
+
+[portal.integrations.worksWith]
+pipelines = "Pipeline"
+policies = "Chính sách"
+sources = "Nguồn"
+
+[portal.legal]
+draft = "{{label}} · bản nháp"
+loadError = "Không thể tải tài liệu này. Vui lòng thử lại."
+loading = "Đang tải…"
+title = "Tài liệu pháp lý"
+
+[portal.nav]
+agent-builder = "Trình tạo Agent"
+components = "Thành phần"
+docs = "Tài liệu Developer"
+documents = "Tài liệu"
+editor = "Editor"
+home = "Trang chủ"
+infrastructure = "Hạ tầng"
+integrations = "Tích hợp"
+pipelines = "Pipeline"
+policies = "Chính sách"
+procurement = "Mua sắm"
+settings = "Cài đặt"
+sources = "Nguồn"
+usage = "Sử dụng & Thanh toán"
+users = "Người dùng"
+
+[portal.nav.section]
+platform = "Nền tảng PDF"
+processor = "Bộ xử lý PDF"
+
+[portal.pipelines]
+subtitle = "Mọi pipeline tài liệu tự động trên backend: một chuỗi thao tác có thứ tự trên một tập nguồn, chạy theo trigger. Nhấp vào một hàng để xem các bước và nguồn của nó."
+title = "Pipeline"
+
+[portal.pipelines.actions]
+newPipeline = "Pipeline mới"
+
+[portal.pipelines.builder]
+addStep = "Thêm công cụ"
+back = "Quay lại pipeline"
+cannotFollow = "Không thể nhận {{produced}}"
+chooseAccount = "Chọn tài khoản"
+chooseDestination = "Chọn đích đến"
+chooseOperation = "Chọn việc bước này thực hiện"
+chooseSource = "Chọn nguồn"
+discard = "Hủy thay đổi"
+enabled = "Đã bật"
+inputs = "Đầu vào"
+inputSource = "Nguồn đầu vào"
+inputTrigger = "Kích hoạt"
+keepEditing = "Tiếp tục chỉnh sửa"
+needsConfiguring = "Cần thiết lập"
+needsUpload = "Cần một file đã upload"
+noSources = "Chưa có nguồn nào được kết nối. Tạo một nguồn để dùng làm đầu vào."
+noToolMatches = "Không có công cụ nào khớp với tìm kiếm của bạn."
+pipelineSettings = "Cài đặt pipeline"
+searchTools = "Tìm kiếm công cụ"
+selectToolBody = "Thêm công cụ để xây dựng pipeline của bạn."
+selectToolTitle = "Chưa có công cụ"
+sendToSystem = "Gửi đến hệ thống khác"
+stepsIncompatible = "Các bước này không thể chạy trên kết quả mà bước trước tạo ra: {{tools}}."
+stepsNeedSetup = "Các bước này vẫn cần thiết lập trước khi lưu: {{tools}}."
+toolSettings = "Cài đặt công cụ"
+unknownStep = "Thao tác không được nhận dạng, giữ nguyên."
+unsavedBody = "Bạn có thay đổi chưa lưu. Lưu trước khi rời đi hay hủy chúng?"
+unsavedTitle = "Thay đổi chưa lưu"
+uploadUnsupported = "File đã upload chưa được hỗ trợ trong pipeline, vì vậy không thể lưu các bước này: {{tools}}."
+usesDefaults = "Chạy với cài đặt mặc định"
+
+[portal.pipelines.builder.diagnostic]
+fan-in = "Kết hợp mọi file từ bước trước"
+fan-out = "Chạy một lần cho mỗi file từ bước trước"
+format-mismatch = "Cần {{accepts}}, nhưng bước trước tạo ra {{produced}}"
+output-uncertain = "Có thể không chạy: đầu ra của bước trước phụ thuộc vào cách thiết lập"
+source-mismatch = "Cần {{accepts}}, nhưng đầu vào của pipeline này là {{produced}}"
+undeclared-operation = "Không thể kiểm tra bước này chấp nhận gì"
+
+[portal.pipelines.composer]
+addTool = "Thêm công cụ"
+cancel = "Hủy"
+chainEmpty = "Thêm công cụ để bắt đầu xây dựng pipeline của bạn."
+create = "Tạo pipeline"
+editingUnsupported = "Chưa hỗ trợ hiển thị các tham số công cụ này để chỉnh sửa."
+moveDown = "Di chuyển xuống"
+moveUp = "Di chuyển lên"
+name = "Tên"
+namePlaceholder = "ví dụ: Quét che giấu"
+noToolSettings = "Công cụ này không có cài đặt có thể cấu hình."
+operations_one = "Thao tác ({{count}})"
+operations_other = "Thao tác ({{count}})"
+output = "Đầu ra"
+removeStep = "Xóa thao tác"
+save = "Lưu thay đổi"
+scheduleEvery = "Chạy mỗi"
+sources = "Nguồn"
+sourcesLoading = "Đang tải nguồn..."
+trigger = "Trigger"
+triggerManual = "Chỉ thủ công"
+
+[portal.pipelines.composer.unit]
+days = "ngày"
+hours = "giờ"
+minutes = "phút"
+
+[portal.pipelines.delete]
+body = "Xóa \"{{name}}\"? Không thể hoàn tác thao tác này."
+cancel = "Hủy"
+confirm = "Xóa"
+title = "Xóa pipeline?"
+
+[portal.pipelines.detail]
+clearHistory = "Xóa lịch sử"
+delete = "Xóa pipeline"
+run = "Chạy ngay"
+
+[portal.pipelines.empty]
+action = "Tạo pipeline"
+connectSource = "Kết nối một nguồn"
+description = "Tạo pipeline đầu tiên của bạn: chọn các nguồn mà nó chạy, nối chuỗi các thao tác và chọn nơi đầu ra sẽ đến."
+title = "Chưa có pipeline"
+
+[portal.pipelines.kpi]
+active = "Đang hoạt động"
+paused = "Đã tạm dừng"
+total = "Pipeline"
+
+[portal.pipelines.run]
+allProcessed_one = "Không có gì để chạy: {{count}} tài liệu của nguồn đã được xử lý."
+allProcessed_other = "Không có gì để chạy: tất cả {{count}} tài liệu trong các nguồn đã được xử lý."
+completed_one = "Lượt chạy đã hoàn tất."
+completed_other = "Tất cả {{count}} lượt chạy đã hoàn tất."
+empty = "Không có gì để chạy: các nguồn không có tài liệu để xử lý."
+failed = "Lượt chạy thất bại: {{error}}"
+historyCleared = "Đã xóa lịch sử. Lần chạy tiếp theo sẽ xử lý lại mọi thứ hiện có trong các nguồn."
+inFlight = "Không có gì mới để chạy: tài liệu vẫn đang được xử lý từ một lần chạy trước đó."
+parked_one = "Không có gì để chạy: {{count}} tài liệu đã thất bại trước đó và đang được tạm dừng. Khắc phục nguyên nhân, rồi xóa lịch sử để thử lại."
+parked_other = "Không có gì để chạy: {{count}} tài liệu đã thất bại trước đó và đang được tạm dừng. Khắc phục nguyên nhân, rồi xóa lịch sử để thử lại."
+running = "Lượt chạy đã bắt đầu; vẫn đang tiến hành."
+timeout = "Lượt chạy mất nhiều thời gian hơn dự kiến; nó có thể vẫn hoàn tất trong nền."
+
+[portal.pipelines.status]
+active = "Đang hoạt động"
+paused = "Đã tạm dừng"
+
+[portal.pipelines.table]
+name = "Pipeline"
+sources = "Nguồn"
+status = "Trạng thái"
+steps = "Bước"
+
+[portal.pipelines.trigger]
+folder-watch = "Theo dõi thư mục"
+manual = "Thủ công"
+schedule = "Theo lịch"
+
+[portal.policies]
+defaultName = "Chính sách {{category}}"
+subtitle = "Các tự động hóa thường trực áp dụng một pipeline công cụ trên mọi tài liệu. Mỗi chính sách kích hoạt khi upload hoặc export, chạy chuỗi công cụ của nó và lưu phiên bản đã áp dụng cùng với bản gốc."
+title = "Chính sách"
+
+[portal.policies.card]
+comingSoon = "Nâng cấp lên Enterprise"
+notSetUp = "Chưa thiết lập"
+requiresAiEngine = "Yêu cầu AI engine"
+
+[portal.policies.categories.classification]
+desc = "Xác định loại của từng tài liệu khi tải lên và gắn thẻ metadata để lưu trữ và tìm kiếm."
+label = "Phân loại"
+
+[portal.policies.categories.compliance]
+desc = "Áp dụng các yêu cầu HIPAA, GDPR, SOC 2 hoặc FedRAMP trên mọi tài liệu."
+label = "Tuân thủ"
+
+[portal.policies.categories.ingestion]
+desc = "Phân loại tài liệu, trích xuất dữ liệu có cấu trúc, áp dụng quy ước đặt tên và chuẩn hóa trang."
+label = "Tiếp nhận"
+
+[portal.policies.categories.retention]
+desc = "Đặt thời gian giữ tài liệu, khi nào lưu trữ và khi nào xóa."
+label = "Lưu giữ"
+
+[portal.policies.categories.routing]
+desc = "Tự động định tuyến tài liệu đến đúng nhóm, thư mục hoặc hệ thống."
+label = "Định tuyến"
+
+[portal.policies.categories.security]
+desc = "Phát hiện PII, che giấu, loại bỏ nội dung hoạt động và đóng dấu tài liệu."
+label = "Bảo mật"
+
+[portal.policies.config]
+scopeAll = "Tất cả tài liệu"
+
+[portal.policies.config.classification]
+summary = "Phân loại mọi tài liệu đã tải lên theo nhãn của nhóm bạn và gắn thẻ metadata của tài liệu."
+
+[portal.policies.config.classification.rules]
+0 = "Phân loại"
+1 = "Gắn thẻ metadata"
+
+[portal.policies.config.compliance]
+summary = "Xác thực tài liệu theo các framework quy định trước khi chúng rời khỏi hệ thống."
+
+[portal.policies.config.compliance.fields]
+accessLog = "Nhật ký truy cập"
+auditTrail = "Dấu vết kiểm tra"
+frameworks = "Framework"
+onViolation = "Khi không tuân thủ"
+
+[portal.policies.config.compliance.rules]
+0 = "Quét framework"
+1 = "Áp dụng hành động"
+2 = "Dấu vết kiểm tra"
+
+[portal.policies.config.ingestion]
+summary = "Phân loại tài liệu, trích xuất dữ liệu có cấu trúc, áp dụng đặt tên và chuẩn hóa trang."
+
+[portal.policies.config.ingestion.fields]
+belowThreshold = "Dưới ngưỡng"
+minConfidence = "Độ tin cậy tối thiểu"
+
+[portal.policies.config.ingestion.rules]
+0 = "Phân loại"
+1 = "Trích xuất"
+2 = "Đặt tên"
+3 = "Chuẩn hóa"
+
+[portal.policies.config.purview]
+label = "Áp dụng nhãn độ nhạy Microsoft Purview"
+
+[portal.policies.config.purview.fields]
+connection = "Purview tenant"
+labelId = "Label ID"
+labelIdHelp = "GUID của nhãn, từ cổng Purview. Việc áp dụng nhãn ghi metadata của nhãn vào PDF; nó không thể mã hóa, việc này cần Microsoft client."
+labelName = "Tên nhãn (tùy chọn)"
+labelNameHelp = "Được ghi cùng ID để người dùng và công cụ có thể nhận diện nhãn."
+
+[portal.policies.config.purview.fields.method]
+help = "Purview phân biệt nhãn do chính sách áp dụng với nhãn do một người chọn."
+label = "Cách ghi nhãn"
+privileged = "Như được một người chọn"
+standard = "Như được áp dụng tự động"
+
+[portal.policies.config.purviewRead]
+label = "Đọc nhãn Microsoft Purview"
+
+[portal.policies.config.purviewRead.fields]
+connection = "Purview tenant"
+connectionHelp = "Đọc nhãn mà tài liệu đã có, để các bước sau có thể hành động dựa trên đó."
+
+[portal.policies.config.retention]
+summary = "Áp dụng thời gian giữ tài liệu, khi nào lưu trữ và khi nào xóa."
+
+[portal.policies.config.retention.fields]
+archiveAfter = "Lưu trữ sau"
+immutableHold = "Giữ bất biến"
+keepFor = "Giữ trong"
+
+[portal.policies.config.retention.rules]
+0 = "Giữ lưu giữ"
+1 = "Tự động lưu trữ"
+2 = "Chặn xóa"
+
+[portal.policies.config.routing]
+summary = "Định tuyến tài liệu đến đúng đích dựa trên loại và phân loại."
+
+[portal.policies.config.routing.fields]
+destination = "Đích"
+notify = "Thông báo khi định tuyến"
+webhookUrl = "Webhook URL"
+
+[portal.policies.config.routing.rules]
+0 = "Tự động phân loại"
+1 = "Định tuyến đến thư mục"
+2 = "Thông báo webhook"
+
+[portal.policies.config.security]
+summary = "Phát hiện và che giấu PII, loại bỏ nội dung hoạt động (JavaScript) và đóng dấu tài liệu."
+
+[portal.policies.config.security.rules]
+0 = "Che giấu PII"
+1 = "Xóa JavaScript"
+2 = "Đóng dấu"
+
+[portal.policies.detail]
+enforces = "Áp dụng"
+onEveryExport = "Khi mỗi lần export"
+onEveryUpload = "Khi mỗi lần upload"
+outputAsNewFile = "dưới dạng file mới"
+outputAsNewVersion = "dưới dạng phiên bản mới"
+recentActivity = "Hoạt động gần đây"
+retry = "Thử lại"
+showLess = "Hiển thị ít hơn"
+showMore = "Hiển thị thêm"
+sources = "Nguồn"
+
+[portal.policies.detail.actions]
+clearHistory = "Xóa lịch sử đã xử lý"
+delete = "Xóa"
+editSettings = "Chỉnh sửa cài đặt"
+pause = "Tạm dừng"
+resume = "Tiếp tục"
+runNow = "Chạy ngay"
+
+[portal.policies.detail.clearHistory]
+body = "Chính sách này sẽ quên mọi file đã xử lý và xử lý lại mọi thứ hiện có trong các nguồn của nó ở lần chạy tiếp theo. Bản thân các file không bị thay đổi. Không thể hoàn tác thao tác này."
+cancel = "Hủy"
+confirm = "Xóa lịch sử"
+title = "Xóa lịch sử đã xử lý?"
+
+[portal.policies.detail.emptyActivity]
+description = "Tài liệu sẽ xuất hiện ở đây sau khi chính sách này chạy."
+title = "Chưa có hoạt động"
+
+[portal.policies.endpoints]
+addWatermark = "Hình mờ"
+autoRedact = "Che PII"
+classifyAndLabel = "Phân loại"
+compressPdf = "Nén"
+flatten = "Làm phẳng"
+ocrPdf = "OCR"
+sanitizePdf = "Xóa JavaScript"
+
+[portal.policies.offline]
+description = "Các chính sách của bạn đã được lưu và sẽ xuất hiện sau khi kết nối được khôi phục."
+retry = "Thử lại"
+title = "Backend không khả dụng"
+
+[portal.policies.operations]
+change = "Thay đổi việc bước này thực hiện"
+noResults = "Không có bước nào khớp. Hãy thử tên sản phẩm, hoặc \"scan\", \"notify\", \"attach\"."
+searchPlaceholder = "Tìm kiếm bước - thử \"scan\", \"attach\" hoặc tên sản phẩm"
+
+[portal.policies.operations.bodyMode]
+binary = "Byte file thô"
+json = "Bên trong payload JSON"
+multipart = "Dưới dạng file upload (multipart)"
+
+[portal.policies.operations.clamavScan]
+description = "Máy chủ ClamAV của bạn kiểm tra tài liệu; không có gì rời khỏi mạng của bạn."
+label = "Quét virus (self-hosted)"
+
+[portal.policies.operations.cloudmersiveAdvancedScan]
+description = "Từ chối tài liệu chứa macro, file thực thi, script hoặc đối tượng nhúng."
+label = "Chặn nội dung hoạt động"
+
+[portal.policies.operations.cloudmersiveScan]
+description = "Cloudmersive kiểm tra tài liệu và lần chạy sẽ dừng nếu tài liệu không sạch."
+label = "Quét virus"
+
+[portal.policies.operations.confluenceAttach]
+description = "Lưu tài liệu đã xử lý vào một trang."
+label = "Đính kèm vào trang Confluence"
+
+[portal.policies.operations.consignoSubmit]
+description = "Gửi tài liệu đến ConsignO Cloud để ký."
+label = "Gửi để ký (ConsignO)"
+note = "Gửi tài liệu. Hiện chưa hỗ trợ truy xuất bản đã ký, vì một bước không thể chuyển kết quả cho bước sau."
+
+[portal.policies.operations.customApiCall]
+description = "Tự tạo lệnh gọi: đường dẫn, phương thức, body và xử lý phản hồi."
+label = "Gọi API tùy chỉnh"
+
+[portal.policies.operations.discordNotify]
+description = "Thông báo cho một kênh rằng chính sách đã xử lý một tài liệu."
+label = "Đăng tin nhắn lên Discord"
+
+[portal.policies.operations.elasticIndex]
+description = "Ghi lại việc chính sách đã làm dưới dạng tài liệu có thể tìm kiếm."
+label = "Lập chỉ mục sự kiện kiểm toán trong Elasticsearch"
+
+[portal.policies.operations.fields.bodyMode]
+helperText = "Multipart phù hợp với API upload; JSON phù hợp với API muốn file nằm trong payload; binary gửi byte thô."
+label = "Cách gửi tài liệu"
+
+[portal.policies.operations.fields.bodyTemplate]
+helperText = "Body JSON được gửi nguyên trạng. {{document.base64}} chứa file; {{document.*}} và {{run.*}} được điền cho từng tài liệu."
+label = "Body JSON"
+
+[portal.policies.operations.fields.connection]
+label = "Tài khoản"
+
+[portal.policies.operations.fields.domain]
+label = "Mailgun domain"
+placeholder = "mg.acme.com"
+
+[portal.policies.operations.fields.fileFieldName]
+helperText = "Trường form mà API mong đợi chứa tài liệu."
+label = "Tên trường file"
+placeholder = "file"
+
+[portal.policies.operations.fields.from]
+label = "Từ"
+placeholder = "processor@acme.com"
+
+[portal.policies.operations.fields.headers]
+helperText = "Một đối tượng JSON gồm các cặp tên/giá trị header. Thông tin xác thực của kết nối được thêm sẵn cho bạn."
+label = "Headers"
+
+[portal.policies.operations.fields.index]
+label = "Index"
+placeholder = "stirling-audit"
+
+[portal.policies.operations.fields.issueKey]
+label = "Issue key"
+placeholder = "OPS-42"
+
+[portal.policies.operations.fields.message]
+helperText = "Được gửi làm nội dung tin nhắn. {{document.*}} và {{run.*}} được điền cho từng tài liệu."
+label = "Tin nhắn"
+
+[portal.policies.operations.fields.method]
+label = "Method"
+
+[portal.policies.operations.fields.pageId]
+label = "Page ID"
+placeholder = "66186"
+
+[portal.policies.operations.fields.path]
+helperText = "Được nối vào URL cơ sở của kết nối. Nó không bao giờ có thể truy cập host khác."
+label = "Đường dẫn"
+placeholder = "/v1/scan"
+
+[portal.policies.operations.fields.remotePath]
+helperText = "Vị trí trong drive để ghi. {{document.filename}} được điền cho từng tài liệu."
+label = "Đường dẫn đích"
+placeholder = "Processed/{{document.filename}}"
+
+[portal.policies.operations.fields.responseMode]
+helperText = "Báo cáo giữ nguyên tài liệu. Thay thế sẽ đổi tài liệu bằng bất kỳ nội dung nào trả về."
+label = "Làm gì với phản hồi"
+
+[portal.policies.operations.fields.signerEmail]
+label = "Email của người ký"
+placeholder = "signer@acme.com"
+
+[portal.policies.operations.fields.subject]
+label = "Chủ đề"
+placeholder = "Processed: {{document.filename}}"
+
+[portal.policies.operations.fields.text]
+helperText = "Presidio phân tích văn bản này. Dùng {{document.title}} hoặc dán văn bản bạn muốn kiểm tra."
+label = "Văn bản cần kiểm tra"
+
+[portal.policies.operations.fields.to]
+label = "Đến"
+placeholder = "records@acme.com"
+
+[portal.policies.operations.fields.username]
+label = "Tên người dùng Nextcloud"
+placeholder = "svc-stirling"
+
+[portal.policies.operations.googlechatNotify]
+description = "Thông báo cho một space rằng chính sách đã xử lý một tài liệu."
+label = "Đăng tin nhắn lên Google Chat"
+
+[portal.policies.operations.jiraAttach]
+description = "Lưu tài liệu đã xử lý vào một issue."
+label = "Đính kèm vào Jira issue"
+
+[portal.policies.operations.mailgunEmail]
+description = "Gửi tài liệu đã xử lý dưới dạng tệp đính kèm."
+label = "Gửi tài liệu qua email (Mailgun)"
+
+[portal.policies.operations.nextcloudUpload]
+description = "Ghi tài liệu đã xử lý vào một thư mục."
+label = "Tải lên Nextcloud"
+
+[portal.policies.operations.presidioAnalyze]
+description = "Máy chủ Presidio của bạn báo cáo dữ liệu cá nhân mà nó tìm thấy."
+label = "Phát hiện dữ liệu cá nhân"
+note = "Presidio đọc văn bản, không đọc file. Cung cấp văn bản bạn muốn kiểm tra — bản thân tài liệu không được tải lên."
+
+[portal.policies.operations.responseMode]
+replace = "Thay thế tài liệu bằng phản hồi"
+report = "Giữ tài liệu, ghi lại phản hồi"
+
+[portal.policies.operations.sendgridEmail]
+description = "Gửi tài liệu đã xử lý dưới dạng tệp đính kèm."
+label = "Gửi tài liệu qua email (SendGrid)"
+
+[portal.policies.operations.slackNotify]
+description = "Thông báo cho một kênh rằng chính sách đã xử lý một tài liệu."
+label = "Đăng tin nhắn lên Slack"
+
+[portal.policies.operations.splunkEvent]
+description = "Ghi lại việc chính sách đã làm, nơi kiểm toán viên của bạn đã xem."
+label = "Gửi sự kiện kiểm toán đến Splunk"
+
+[portal.policies.operations.sumologicEvent]
+description = "Ghi lại việc chính sách đã làm vào một HTTP collector."
+label = "Gửi sự kiện kiểm toán đến Sumo Logic"
+
+[portal.policies.operations.teamsNotify]
+description = "Thông báo cho một kênh rằng chính sách đã xử lý một tài liệu."
+label = "Đăng tin nhắn lên Teams"
+
+[portal.policies.operations.webhookPost]
+description = "Gửi chính tài liệu đến URL bạn chọn."
+label = "Post tài liệu đến webhook"
+
+[portal.policies.operations.zapierNotify]
+description = "Chuyển chi tiết lần chạy cho automation của bạn."
+label = "Kích hoạt Zap hoặc Make scenario"
+
+[portal.policies.stats]
+activeFor = "Hoạt động"
+dataProcessed = "Dữ liệu đã xử lý"
+docsEnforced = "Tài liệu đã áp dụng"
+
+[portal.policies.status]
+active = "Hoạt động"
+paused = "Đã tạm dừng"
+
+[portal.policies.summary.active]
+description = "Áp dụng khi tải lên/xuất"
+label = "Chính sách đang hoạt động"
+
+[portal.policies.summary.categories]
+description = "Có sẵn để cấu hình"
+label = "Danh mục"
+
+[portal.policies.summary.docsEnforced]
+description = "Trên các chính sách đang hoạt động"
+label = "Tài liệu đã áp dụng"
+
+[portal.policies.summary.paused]
+description = "Đã cấu hình nhưng không kích hoạt"
+label = "Đã tạm dừng"
+
+[portal.policies.table]
+appliesTo = "Áp dụng cho"
+docs = "Tài liệu đã thực thi"
+enforces = "Thực thi"
+policy = "Chính sách"
+status = "Trạng thái"
+
+[portal.policies.wizard.actions]
+back = "Quay lại"
+cancel = "Hủy"
+continue = "Tiếp tục"
+enablePolicy = "Bật chính sách"
+saveChanges = "Lưu thay đổi"
+
+[portal.policies.wizard.capability.classify]
+desc = "Xác định loại tài liệu từ nhãn của nhóm bạn và gắn thẻ cho tài liệu, để tài liệu được lưu và tìm kiếm theo danh mục."
+label = "Phân loại tài liệu"
+
+[portal.policies.wizard.capability.compress]
+desc = "Nén tài liệu thành kích thước file nhỏ hơn."
+label = "Giảm kích thước file"
+
+[portal.policies.wizard.capability.flatten]
+desc = "Gộp các trường biểu mẫu và chú thích vào trang để không thể chỉnh sửa."
+label = "Làm phẳng tài liệu"
+
+[portal.policies.wizard.capability.ocr]
+desc = "Chạy OCR để các trang được quét trở thành văn bản có thể chọn và tìm kiếm."
+label = "Làm cho văn bản có thể tìm kiếm"
+
+[portal.policies.wizard.capability.redact]
+desc = "Tìm và bôi đen các chi tiết nhạy cảm — như số An sinh Xã hội và số thẻ — để không thể đọc được."
+label = "Che thông tin nhạy cảm"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "Xóa JavaScript ẩn để không có gì có thể tự động chạy khi tài liệu được mở."
+label = "Loại bỏ nội dung hoạt động"
+
+[portal.policies.wizard.capability.timestampPdf]
+desc = "Chứng minh tài liệu đã tồn tại đúng ở dạng này tại một thời điểm, bằng cách dùng cơ quan timestamp độc lập. Chỉ hash được gửi - tài liệu không bao giờ rời khỏi máy chủ của bạn."
+label = "Thêm timestamp tin cậy"
+
+[portal.policies.wizard.capability.watermark]
+desc = "Đóng dấu một dấu hiển thị (ví dụ: “Bảo mật”) trên mọi trang."
+label = "Áp dụng hình mờ"
+
+[portal.policies.wizard.classification]
+description = "Mọi tài liệu đã tải lên được phân loại theo các nhãn tích hợp và được gắn thẻ với các loại phù hợp. Bộ nhãn được chia sẻ trong toàn bộ nhóm của bạn."
+labelsHeading = "Nhãn phân loại"
+
+[portal.policies.wizard.errors]
+noTools = "Trước tiên hãy bật ít nhất một công cụ trong workflow."
+saveFailed = "Không thể lưu chính sách. Vui lòng thử lại."
+
+[portal.policies.wizard.output]
+heading = "Đầu ra & chạy"
+
+[portal.policies.wizard.output.filenameRule]
+autoNumber = "Tự động đánh số"
+label = "Quy tắc tên file"
+placeholder = "Văn bản để thêm (tùy chọn)"
+prefix = "Tiền tố"
+suffix = "Hậu tố"
+
+[portal.policies.wizard.output.outputAs]
+label = "Xuất dưới dạng"
+newFile = "File mới"
+newVersion = "Phiên bản mới"
+
+[portal.policies.wizard.output.runOn]
+export = "Xuất"
+helper = "Khi chính sách kích hoạt: khi tải lên hoặc trước khi xuất."
+label = "Chạy khi"
+upload = "Tải lên"
+
+[portal.policies.wizard.settings]
+heading = "Cài đặt"
+
+[portal.policies.wizard.sources]
+heading = "Nguồn"
+loading = "Đang tải nguồn…"
+
+[portal.policies.wizard.tabs]
+ariaLabel = "Các bước thiết lập"
+settings = "Cài đặt"
+workflow = "Hành động"
+
+[portal.policies.wizard.title]
+edit = "Chỉnh sửa chính sách {{category}}"
+setUp = "Thiết lập chính sách {{category}}"
+
+[portal.policies.wizard.workflow]
+description = "Chọn những gì chính sách này thực hiện với mỗi tài liệu mà nó xử lý."
+
+[portal.policySummary.action]
+setUp = "Thiết lập"
+
+[portal.processorFlow]
+footnote = "Số đếm trong 24 giờ qua. Tốc độ luồng chỉ mang tính minh họa."
+liveBadge = "Trực tiếp"
+stats = "{{connected}} đã kết nối · {{processed}} PDF đã xử lý"
+title = "Bộ xử lý PDF"
+
+[portal.processorFlow.lens]
+ariaLabel = "Chế độ xem"
+flow = "Luồng"
+sankey = "Sankey"
+
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Thất bại"
+heading = "Kết quả"
+success = "Đã gửi"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} đang hoạt động"
+count = "{{n}} · 24h"
+heading = "Chính sách"
+setUp = "Thiết lập"
+soon = "Sắp có"
+
+[portal.processorFlow.sankey]
+waist = "Chính sách · {{n}} đang hoạt động"
+
+[portal.processorFlow.sankey.empty]
+description = "Kết nối một nguồn và bật một chính sách để xem tài liệu chảy qua bộ xử lý."
+title = "Chưa có luồng"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Kết nối"
+editor = "Stirling PDF Editor"
+heading = "Nguồn"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Nhận Email"
+
+[portal.procurement]
+subtitle = "Giúp đội ngũ của bạn được đánh giá, ký hợp đồng và triển khai. Mọi tài liệu ở cùng một nơi."
+title = "Mua sắm"
+
+[portal.procurement.agreement]
+agreeCta = "Đồng ý & đăng ký"
+confidential = "Bảo mật"
+confirm = "Tôi đã đọc và đồng ý với Thỏa thuận Stirling Enterprise."
+docName = "Thỏa thuận Stirling Enterprise"
+docSub = "MSA, Order Form, EULA và DPA, kết hợp trong một chữ ký."
+download = "Tải xuống"
+downloadDraftError = "Không thể tạo PDF thỏa thuận - trình kết xuất tài liệu không khả dụng. Vui lòng thử lại sau hoặc liên hệ bộ phận hỗ trợ."
+downloadError = "Không thể tải xuống thỏa thuận đã ký. Vui lòng thử lại."
+legalName = "Tên pháp nhân"
+legalNamePlaceholder = "Pháp nhân sẽ ký"
+loadError = "Không thể tải thỏa thuận. Vui lòng thử lại."
+loading = "Đang tải thỏa thuận..."
+ref = "Ref {{ref}} · {{version}}"
+requestChanges = "Yêu cầu thay đổi"
+scrollHint = "Cuộn để xem lại"
+signatory = "Tên người ký"
+signatoryPlaceholder = "Họ và tên"
+signatoryTitle = "Chức danh người ký"
+signatoryTitlePlaceholder = "ví dụ: General Counsel"
+signError = "Không thể ghi nhận chữ ký của bạn. Vui lòng thử lại."
+
+[portal.procurement.builder]
+addons = "Tiện ích bổ sung"
+addressLine1 = "Địa chỉ dòng 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Địa chỉ dòng 2"
+addressLine2Placeholder = "Suite, tầng, tòa nhà"
+back = "Quay lại"
+businessName = "Tên doanh nghiệp"
+businessNamePlaceholder = "Công ty của bạn"
+city = "Thành phố"
+cityPlaceholder = "San Francisco"
+completeRequired = "Vui lòng hoàn tất các trường bắt buộc (đánh dấu *) với email hợp lệ trước khi tạo báo giá."
+contactEmail = "Email liên hệ"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Tên liên hệ"
+contactNamePlaceholder = "Jane Doe"
+continue = "Tiếp tục"
+done = "Xong"
+eula = "Tôi đã đọc và đồng ý với Stirling Enterprise EULA. EULA này điều chỉnh thỏa thuận được tạo từ báo giá này."
+generate = "Tạo báo giá"
+indemnification = "Bồi thường IP"
+indemnificationSub = "Chúng tôi bảo vệ các khiếu nại IP đủ điều kiện, theo EULA"
+paperEyebrow = "Báo giá Enterprise"
+paperFor = "Chuẩn bị cho"
+pdfSize = "Kích thước PDF"
+poNumber = "Số PO"
+poNumberPlaceholder = "Tùy chọn"
+postalCode = "Mã bưu chính"
+postalCodePlaceholder = "94105"
+posture = "Quản trị"
+posture_count = "~{{count}} chính sách"
+posture_essentials = "Thiết yếu"
+posture_essentialsSub = "Phân loại + Chia sẻ — mặc định"
+posture_governed = "Được quản trị"
+posture_governedSub = "Thêm Bảo mật và Định tuyến"
+posture_regulated = "Được quản lý theo quy định"
+posture_regulatedSub = "Mọi danh mục — Tuân thủ, Lưu giữ, Nạp dữ liệu"
+qbr = "Đánh giá kinh doanh hàng quý"
+qbrSub = "SE của bạn xem xét việc sử dụng và lộ trình mỗi quý"
+region = "Tiểu bang / vùng"
+regionPlaceholder = "California"
+running = "{{annual}} / năm · {{years}} năm {{tcv}}"
+s1Sub = "Đội ngũ của bạn và số PDF bạn dự kiến xử lý mỗi năm."
+s1Title = "Bạn sẽ xử lý bao nhiêu?"
+s2Sub = "Thời hạn dài hơn được giảm giá; cấp dịch vụ của bạn xác định hỗ trợ."
+s2Title = "Cam kết và dịch vụ"
+s3Sub = "Cho báo giá và thỏa thuận mà nó tạo ra."
+s3Title = "Thông tin của bạn"
+serviceLevel = "Cấp dịch vụ"
+size_compact = "Gọn nhẹ"
+size_compactSub = "Chủ yếu là văn bản, dưới 1 MB"
+size_heavy = "Nặng"
+size_heavySub = "Đã quét hoặc nhiều hình ảnh, 5 MB+"
+size_standard = "Tiêu chuẩn"
+size_standardSub = "Kết hợp văn bản và hình ảnh, 1 đến 5 MB"
+slDedicated = "Chuyên trách"
+slDedicatedSub = "4 giờ làm việc · quản lý tài khoản chuyên trách · +30%"
+slPriority = "Ưu tiên"
+slPrioritySub = "Cùng ngày làm việc · CSM được chỉ định · +15%"
+slStandard = "Tiêu chuẩn"
+slStandardSub = "Ngày làm việc tiếp theo · CSM dùng chung · đã bao gồm"
+stepOf = "Bước {{n}} trên {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Tùy chọn"
+term = "Thời hạn"
+termDiscount = "Đã áp dụng giảm giá {{pct}}% cho cam kết nhiều năm"
+title = "Tạo báo giá của bạn"
+training = "Triển khai & đào tạo"
+trainingSub = "Các phiên trực tiếp để giúp đội ngũ của bạn bắt đầu"
+users = "Tổng số người dùng"
+usersPlaceholder = "ví dụ: 250"
+viewEula = "Đọc"
+volEstimated = "Ước tính từ {{count}} người dùng (~2.000 PDF mỗi người, bao gồm tự động hóa). Chỉnh sửa nếu bạn biết rõ hơn."
+volManual = "Đang dùng số liệu của bạn. Ước tính lại từ quy mô đội ngũ bất cứ lúc nào."
+volNoUsers = "Không chắc? Nhập quy mô đội ngũ của bạn và chúng tôi sẽ ước tính."
+volume = "Số lượng PDF hàng năm"
+volumePlaceholder = "ví dụ: 1.000.000"
+years_one = "{{count}} năm"
+years_other = "{{count}} năm"
+
+[portal.procurement.documents]
+agreement = "Thỏa thuận Enterprise"
+agreementSub = "MSA, Order Form và DPA trong một chữ ký."
+download = "Tải xuống"
+eula = "EULA & Điều khoản thương mại"
+eulaSub = "Điều khoản phần mềm và thương mại tự phục vụ."
+invoice = "Hóa đơn"
+invoiceSub = "Hóa đơn đăng ký đầu tiên của bạn."
+laterInvoice = "Có sẵn sau khi bạn chấp nhận"
+laterQuote = "Có sẵn khi báo giá của bạn được phát hành"
+quote = "Báo giá"
+quoteSub = "Báo giá enterprise chi tiết của bạn."
+sla = "Phụ lục SLA"
+slaSub = "Các cấp hỗ trợ và mục tiêu phản hồi."
+subprocessors = "Subprocessors"
+subprocessorsSub = "Bên thứ ba xử lý dữ liệu thay mặt bạn."
+subtitle = "Giấy tờ giao dịch của bạn, có sẵn bất cứ lúc nào."
+title = "Tài liệu"
+view = "Xem"
+
+[portal.procurement.error]
+title = "Đã xảy ra lỗi"
+
+[portal.procurement.hero]
+barAria = "Giai đoạn {{current}} trong {{total}}"
+ctaAgreement = "Xem lại & ký thỏa thuận"
+ctaExploring = "Thiết lập bản dùng thử của bạn"
+ctaQuote = "Xem lại báo giá của bạn"
+ctaReviewQuote = "Xem lại báo giá"
+ctaTrial = "Tạo báo giá của bạn"
+documents = "Tài liệu"
+eyebrow = "Mua sắm Enterprise"
+eyebrowCompany = "{{company}} Enterprise"
+inviteTeammates = "Mời đồng đội"
+licenseKey = "Khóa giấy phép"
+liveSub = "Tổ chức của bạn đã được cấp phát và giấy phép của bạn đang hoạt động."
+liveTitle = "Bạn đang chạy Stirling Enterprise"
+next = "Tiếp theo: {{stage}}"
+open = "Mở mua sắm"
+scheduleCall = "Lên lịch cuộc gọi"
+sentenceAgreement = "xem lại và ký thỏa thuận"
+sentenceLive = "cấp phát và triển khai"
+sentencePayment = "đơn đặt hàng và thanh toán"
+sentenceQuote = "xem lại và chấp nhận báo giá của bạn"
+sentenceTrial = "thiết lập không gian làm việc dùng thử của bạn"
+
+[portal.procurement.journey]
+daysLeft_one = "Còn {{count}} ngày"
+daysLeft_other = "Còn {{count}} ngày"
+
+[portal.procurement.journeySteps.agreement]
+blurb = "Một chữ ký bao gồm MSA, order form, EULA và DPA."
+gatingAction = "Xem lại và ký thỏa thuận của bạn"
+label = "Thỏa thuận"
+
+[portal.procurement.journeySteps.implementation]
+blurb = "Cấp phát workspace của bạn và chạy playbook go-live."
+gatingAction = "Đang cấp phát workspace của bạn"
+label = "Triển khai"
+
+[portal.procurement.journeySteps.payment]
+blurb = "Thanh toán bằng thẻ, chuyển khoản ngân hàng hoặc theo purchase order."
+gatingAction = "Xác nhận thanh toán"
+label = "Thanh toán"
+
+[portal.procurement.journeySteps.quote]
+blurb = "Xem lại giá theo khối lượng cam kết và thời hạn hợp đồng."
+gatingAction = "Chấp nhận báo giá của bạn"
+label = "Báo giá"
+
+[portal.procurement.journeySteps.trial]
+blurb = "Đánh giá Stirling với tài liệu và workflow của bạn."
+gatingAction = "Tạo báo giá của bạn"
+label = "Dùng thử"
+
+[portal.procurement.license]
+copied = "Đã sao chép"
+copy = "Sao chép khóa"
+downloadError = "Chưa thể tạo file giấy phép offline — vui lòng thử lại sau giây lát."
+downloadOffline = "Tải xuống giấy phép offline (.lic)"
+hint = "Dán khóa này vào một phiên bản tự host để kích hoạt, hoặc lưu lại cho hồ sơ của bạn. Hãy giữ an toàn."
+label = "Khóa giấy phép của bạn"
+subtitle = "Kích hoạt một phiên bản self-hosted bằng khóa này, hoặc giữ lại để lưu hồ sơ."
+title = "Khóa giấy phép của bạn"
+trialFileHint = "Đây là file giấy phép dùng thử của bạn. Khi thỏa thuận của bạn đã hoàn tất, hãy quay lại và tải xuống lần nữa — khác với khóa giấy phép trực tuyến, file .lic sẽ không tự cập nhật."
+
+[portal.procurement.link]
+cta = "Liên kết tài khoản"
+description = "Mua sắm chạy trên tài khoản Stirling được liên kết của bạn: đó là cách chúng tôi cấp phát bản dùng thử, định giá báo giá và bắt đầu lập hóa đơn. Liên kết một tài khoản để bắt đầu."
+eyebrow = "Enterprise"
+title = "Liên kết tài khoản của bạn để bắt đầu"
+
+[portal.procurement.live]
+description = "Đăng ký của bạn đang hoạt động và giấy phép của bạn đã được cấp. Đội ngũ của bạn đã được cấp phát và việc lập hóa đơn đã bắt đầu."
+eyebrow = "Hoạt động"
+title = "Bạn đã hoạt động trên Stirling Enterprise"
+
+[portal.procurement.milestone]
+downloadError = "Chưa thể tải xuống PDF báo giá — vui lòng thử lại sau giây lát."
+
+[portal.procurement.payment]
+description = "Báo giá của bạn đã được chấp nhận và giấy phép của bạn đã hoạt động — đội ngũ của bạn có thể bắt đầu ngay. Thanh toán hóa đơn đầu tiên khi bạn sẵn sàng; bạn có thể thanh toán hoặc tải xuống tại đây, không cần email."
+downloadAgreement = "Tải xuống thỏa thuận đã ký"
+downloadInvoice = "Tải xuống hóa đơn"
+eyebrow = "Thanh toán"
+title = "Đã tạo đăng ký"
+viewInvoice = "Xem & thanh toán hóa đơn"
+
+[portal.procurement.review]
+acceptCta = "Chấp nhận báo giá"
+annual = "Phí hằng năm (năm 1)"
+downloadCta = "Tải xuống báo giá"
+poNumber = "Đơn đặt hàng: {{po}}"
+renewal = "Gia hạn ở mức {{amount}}/năm sau thời hạn (+{{pct}}% CPI)"
+tcv = "Thời hạn {{years}} năm, trả trước toàn bộ: {{tcv}}"
+validUntil = "Có hiệu lực đến {{date}}"
+
+[portal.procurement.schedule]
+fallback = "Không thể tải trình lên lịch."
+fallbackLink = "Mở lên lịch trong tab mới"
+loading = "Đang tải trình đặt lịch..."
+subtitle = "Kỹ sư giải pháp của bạn sẽ hướng dẫn đội ngũ của bạn qua quá trình triển khai. Chọn thời gian phù hợp với bạn."
+title = "Lên lịch cuộc gọi"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Kín, không có kết nối outbound"
+back = "Quay lại"
+businessName = "Tên doanh nghiệp"
+businessNamePlaceholder = "Acme Corp"
+cloud = "Stirling Cloud"
+cloudSub = "Được quản lý, bắt đầu nhanh nhất"
+continue = "Tiếp tục"
+deployment = "Nên triển khai ở đâu?"
+eula = "Tôi đồng ý với Stirling EULA & Điều khoản thương mại."
+fullName = "Họ và tên"
+fullNamePlaceholder = "Tên của bạn"
+invites = "Mời đồng đội · tùy chọn"
+invitesPlaceholder = "sam@acme.com, lee@acme.com"
+scheduleCall = "Lên lịch cuộc gọi"
+seats = "Người dùng thử"
+seatsPlaceholder = "ví dụ: 15"
+selfhost = "Self-hosted"
+selfhostSub = "Docker hoặc Kubernetes"
+start = "Bắt đầu dùng thử"
+stepOf = "Bước {{n}} trong {{total}}"
+subtitle = "Miễn phí trong 14 ngày, không cần thẻ."
+subtitleDetails = "Một vài thông tin cho báo giá và thỏa thuận của bạn."
+talkFirst = "Muốn trao đổi trước?"
+title = "Thiết lập bản dùng thử của bạn"
+viewEula = "Đọc"
+workEmail = "Email công việc"
+workEmailPlaceholder = "you@company.com"
+
+[portal.procurement.trial]
+body = "Gia hạn sẽ thêm 7 ngày và thông báo cho kỹ sư giải pháp của bạn."
+bodyMaxed = "Bạn đã dùng hết mọi lần gia hạn — hãy trao đổi với kỹ sư giải pháp nếu bạn cần thêm thời gian."
+cancel = "Hủy dùng thử"
+extend = "Gia hạn 7 ngày"
+maxed = "Đã đạt giới hạn"
+subtitle = "Bản dùng thử miễn phí của bạn kéo dài đến {{date}}. Không cần thẻ."
+title = "Dùng thử Enterprise"
+
+[portal.search]
+ariaLabel = "Tìm kiếm"
+placeholder = "Tìm kiếm Stirling — endpoint, pipeline, tài liệu…"
+
+[portal.search.empty]
+noActionsDescription = "Hành động nhanh sẽ xuất hiện ở đây khi có sẵn."
+noActionsTitle = "Không có hành động nhanh"
+noMatches = "Không có kết quả cho \"{{query}}\""
+noMatchesDescription = "Thử từ khóa khác hoặc duyệt catalogue."
+
+[portal.settings.groups]
+admin = "Quản trị"
+
+[portal.settings.sections]
+account-link = "Liên kết tài khoản"
+
+[portal.shell.sidebar]
+appEditor = "Trình chỉnh sửa"
+appProcessor = "Trình xử lý"
+linkAccount = "Liên kết tài khoản Stirling"
+primaryNav = "Điều hướng chính"
+switchApp = "Chuyển ứng dụng"
+
+[portal.shell.topbar]
+closeNav = "Đóng điều hướng"
+openNav = "Mở điều hướng"
+search = "Tìm kiếm"
+
+[portal.sources]
+subtitle = "Các kết nối đầu vào có thể tái sử dụng để đưa tài liệu vào Stirling. Cấu hình một kết nối một lần, sau đó tham chiếu nó từ bất kỳ số lượng chính sách nào. Nhấp vào một hàng để xem cấu hình và những chính sách sử dụng nó."
+title = "Nguồn"
+
+[portal.sources.actions]
+connectSource = "Kết nối nguồn"
+
+[portal.sources.builder]
+back = "Quay lại nguồn"
+backToTypes = "Tất cả loại nguồn"
+cancel = "Hủy"
+chooseHint = "Chọn nơi tài liệu đến từ. Các connector bị làm mờ đang được phát triển."
+comingSoon = "Sắp ra mắt"
+comingSoonHeading = "Sắp ra mắt"
+create = "Tạo nguồn"
+createTitle = "Kết nối một nguồn"
+delete = "Xóa"
+editTitle = "Chỉnh sửa nguồn"
+enabled = "Đã bật"
+save = "Lưu thay đổi"
+
+[portal.sources.builder.folderAccess]
+description = "Tự động hóa thư mục chỉ có thể dùng các thư mục mà quản trị viên đã cho phép. Thêm thư mục trong cài đặt Quyền truy cập thư mục, rồi thử lại."
+openSettings = "Cài đặt Quyền truy cập thư mục"
+title = "Thư mục này không được phép"
+
+[portal.sources.delete]
+body = "Xóa \"{{name}}\"? Không thể hoàn tác. Các chính sách tham chiếu đến nguồn này sẽ cần được cập nhật."
+cancel = "Hủy"
+confirm = "Xóa"
+title = "Xóa nguồn?"
+
+[portal.sources.empty]
+description = "Kết nối một thư mục (và sắp tới là cloud storage) để chính sách của bạn có nơi lấy tài liệu."
+title = "Chưa kết nối nguồn nào"
+
+[portal.sources.kpi]
+inUse = "Đang sử dụng"
+total = "Kết nối"
+unused = "Chưa dùng"
+
+[portal.sources.networkFields.connection]
+helperText = "Kết nối đã lưu với địa chỉ máy chủ và thông tin xác thực. Được tái sử dụng bởi mọi nguồn tham chiếu đến nó."
+label = "Kết nối"
+
+[portal.sources.networkFields.directory]
+helperText = "Thư mục trên máy chủ để thăm dò, tương đối với thư mục home đăng nhập hoặc gốc share. Để trống cho thư mục gốc."
+label = "Thư mục"
+placeholder = "incoming/"
+
+[portal.sources.networkFields.mode]
+helperText = "Consume xóa từng file khỏi máy chủ sau khi mọi chính sách đã xử lý file đó."
+label = "Chế độ đọc"
+
+[portal.sources.networkFields.mode.options]
+consume = "Consume: xử lý mỗi file một lần"
+snapshot = "Snapshot: đọc lại thư mục mỗi lần chạy"
+
+[portal.sources.networkFields.recursive]
+label = "Độ sâu thư mục"
+
+[portal.sources.networkFields.recursive.options]
+all = "Bao gồm thư mục con"
+top = "Chỉ cấp trên cùng"
+
+[portal.sources.status]
+active = "Hoạt động"
+disabled = "Đã tắt"
+unused = "Chưa dùng"
+
+[portal.sources.table]
+documents = "Tài liệu"
+source = "Nguồn"
+status = "Trạng thái"
+usedBy = "Chính sách"
+
+[portal.sources.types.box]
+description = "Kéo tài liệu từ các thư mục Box mà nhóm bạn đã chia sẻ."
+label = "Box"
+
+[portal.sources.types.dropbox]
+description = "Kéo tài liệu từ một thư mục Dropbox được chia sẻ."
+label = "Dropbox"
+
+[portal.sources.types.editor]
+description = "Tài liệu mà nhóm bạn đã xử lý trong editor, qua các lần chạy chính sách và AI."
+label = "Trình chỉnh sửa"
+noPolicies = "Chưa có chính sách nào chạy từ editor."
+
+[portal.sources.types.email]
+description = "Biến tệp đính kèm gửi đến một hộp thư chuyên dụng thành tài liệu."
+label = "Hộp thư Email"
+
+[portal.sources.types.folder]
+description = "Theo dõi một thư mục trên server để phát hiện tài liệu mới."
+label = "Thư mục"
+
+[portal.sources.types.folder.fields.directory]
+helperText = "Đường dẫn tuyệt đối mà Stirling theo dõi để xử lý file."
+label = "Đường dẫn thư mục"
+placeholder = "/data/incoming"
+
+[portal.sources.types.folder.fields.identity]
+helperText = "Kiểm tra nội dung đọc từng file đã thay đổi, vì vậy đổi tên và chạm file mà không thay đổi nội dung sẽ không được xử lý lại."
+label = "Phát hiện thay đổi"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "Kích thước, ngày và kiểm tra nội dung"
+stat = "Kích thước và ngày sửa đổi"
+
+[portal.sources.types.folder.fields.mode]
+label = "Chế độ đọc"
+
+[portal.sources.types.folder.fields.mode.options]
+consume = "Consume: xử lý mỗi file một lần"
+snapshot = "Snapshot: đọc lại thư mục ở mỗi lần chạy"
+
+[portal.sources.types.folder.fields.recursive]
+label = "Độ sâu thư mục"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "Bao gồm thư mục con"
+top = "Chỉ cấp cao nhất"
+
+[portal.sources.types.ftp]
+description = "Thăm dò một thư mục máy chủ FTP hoặc FTPS để tìm tài liệu mới."
+label = "FTP"
+
+[portal.sources.types.googledrive]
+description = "Kéo tài liệu từ các thư mục Google Drive được chia sẻ."
+label = "Google Drive"
+
+[portal.sources.types.network]
+description = "Theo dõi một SMB network share để tìm tài liệu mới."
+label = "Network drive"
+
+[portal.sources.types.onedrive]
+description = "Theo dõi các thư mục OneDrive để tìm tài liệu mới."
+label = "OneDrive"
+
+[portal.sources.types.s3]
+description = "Kéo tài liệu từ Amazon S3 hoặc bucket tương thích S3."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "Kết nối đã lưu chứa bucket và thông tin xác thực. Được tái sử dụng bởi mọi nguồn và đầu ra pipeline tham chiếu đến nó."
+label = "Kết nối"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume xóa từng object khỏi bucket sau khi mọi chính sách đã xử lý nó."
+label = "Chế độ đọc"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: xử lý mỗi object một lần"
+snapshot = "Snapshot: đọc lại bucket mỗi lần chạy"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Chỉ xử lý các object có key bắt đầu bằng prefix này."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.sftp]
+description = "Thăm dò thư mục drop SFTP để tìm tài liệu mới."
+label = "SFTP"
+
+[portal.sources.types.sharepoint]
+description = "Kéo tài liệu từ các thư viện tài liệu SharePoint."
+label = "SharePoint"
+
+[portal.sources.types.unknown]
+label = "Nguồn"
+
+[portal.sources.types.webhook]
+createNote = "Delivery URL và signing secret được tạo khi bạn tạo webhook này. Người gửi POST tài liệu đến URL đó và các chính sách tham chiếu sẽ chạy khi nhận được."
+description = "Nhận tài liệu bằng HTTP POST đã ký từ bất kỳ hệ thống bên ngoài nào."
+label = "Webhook"
+
+[portal.sources.types.webhook.detail]
+deliveryUrl = "Delivery URL"
+secretNote = "Signing secret được hiển thị một lần, khi webhook được tạo. Tạo lại nguồn để xoay secret."
+
+[portal.sources.types.webhook.reveal]
+copy = "Sao chép"
+done = "Xong"
+secret = "Signing secret"
+secretHelp = "Ký raw body của mỗi lần gửi bằng khóa này (HMAC-SHA256) và gửi dưới dạng header X-Stirling-Signature."
+secretWarning = "Sao chép signing secret ngay bây giờ. Vì bảo mật của bạn, nó chỉ được hiển thị một lần và không thể truy xuất sau."
+title = "Webhook đã được tạo"
+url = "Delivery URL"
+usage = "POST từng tài liệu dưới dạng raw request body đến delivery URL với binary content type (application/pdf hoặc application/octet-stream). Các chính sách tham chiếu sẽ tự động chạy khi nhận được."
+
+[portal.sources.wizard]
+name = "Tên"
+namePlaceholder = "ví dụ: Tiếp nhận yêu cầu bồi thường"
+type = "Loại"
+
+[portal.stepModal]
+close = "Đóng"
+
+[portal.usage]
+managePayment = "Quản lý thanh toán"
+subtitle = "Tiêu thụ, hóa đơn và quản lý gói cho mọi PDF Stirling đã lập hóa đơn, trong một bảng điều khiển."
+title = "Sử dụng & thanh toán"
+
+[portal.usage.error]
+loadWallet = "Không thể tải ví"
+openStripePortal = "Không thể mở portal Stripe"
+walletUnavailable = "Ví không khả dụng: {{status}} {{statusText}}"
+
+[portal.usage.sessionExpired]
+action = "Đăng nhập lại"
+body = "Phiên tài khoản Stirling của bạn đã hết hạn. Đăng nhập lại để xem thanh toán — phiên bản của bạn vẫn được liên kết."
+title = "Phiên đã hết hạn"
+
+[portal.users]
+title = "Người dùng"
+
+[portal.users.roles.admin]
+label = "Quản trị viên (Chủ sở hữu tổ chức)"
+summary = "Toàn quyền quản trị workspace, cài đặt và thành viên."
+
+[portal.users.roles.admin.permissions]
+0 = "Quản lý người dùng, đội và vai trò"
+1 = "Quản lý tất cả tích hợp bao gồm kết nối S3"
+2 = "Cấp hoặc thu hồi quyền truy cập portal"
+3 = "Mọi thứ Team Owner có thể làm"
+
+[portal.users.roles.guest]
+label = "Khách"
+summary = "Quyền truy cập hạn chế hoặc chỉ trên web; không thể có cấu hình cá nhân."
+
+[portal.users.roles.guest.permissions]
+0 = "Sử dụng chỉ trên web / demo"
+1 = "Không có API key hoặc tích hợp"
+2 = "Không có quyền truy cập portal"
+3 = "Chỉ đọc ở nơi được chia sẻ"
+
+[portal.users.roles.member]
+label = "Thành viên"
+summary = "Người dùng thông thường — làm việc với tài nguyên dùng chung và cấu hình của riêng họ."
+
+[portal.users.roles.member.permissions]
+0 = "Sử dụng trình chỉnh sửa và tích hợp dùng chung"
+1 = "Tạo cấu hình API & MCP cá nhân"
+2 = "Xem cấu hình đội được chia sẻ với họ"
+3 = "Không quản lý S3 hoặc workspace"
+
+[portal.users.roles.team_owner]
+label = "Chủ sở hữu đội"
+summary = "Sở hữu một đội — quản lý tài nguyên và cấu hình dùng chung của thành viên trong đội."
+
+[portal.users.roles.team_owner.permissions]
+0 = "Tạo & quản lý kết nối S3 của đội"
+1 = "Quản lý cấu hình tích hợp thuộc sở hữu của đội"
+2 = "Quyền truy cập portal qua chính sách mặc định"
+3 = "Mọi thứ Thành viên có thể làm"
+
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Không giới hạn"
 
 [printFile]
 title = "In tệp"
@@ -6150,80 +9177,10 @@ description = "Tên người dùng để xác thực SMTP"
 label = "SMTP Username"
 
 [quickAccess]
-access = "Truy cập"
-accessAddPerson = "Thêm người khác"
-accessBack = "Quay lại"
-accessCopyLink = "Sao chép liên kết"
-accessEmail = "Địa chỉ email"
-accessEmailPlaceholder = "name@company.com"
-accessFileLabel = "Tệp"
-accessGeneral = "Quyền truy cập chung"
-accessInviteTitle = "Mời mọi người"
-accessOwner = "Chủ sở hữu"
-accessPanel = "Quyền truy cập tài liệu"
-accessPeople = "Người có quyền truy cập"
-accessRemove = "Xóa"
-accessRestricted = "Bị hạn chế"
-accessRestrictedHint = "Chỉ những người có quyền truy cập mới có thể mở"
-accessRole = "Vai trò"
-accessRoleCommenter = "Người bình luận"
-accessRoleEditor = "Người chỉnh sửa"
-accessRoleViewer = "Người xem"
-accessSelectedFile = "Tệp đã chọn"
-accessSendInvite = "Gửi lời mời"
-accessTitle = "Quyền truy cập tài liệu"
-accessYou = "Bạn"
-activeSessions = "Phiên đang hoạt động"
-activeTab = "Đang hoạt động"
-activity = "Hoạt động"
 allTools = "All Tools"
 automate = "Tự động hóa"
-back = "Quay lại"
-backToAllTools = "Quay lại tất cả công cụ"
-certSign = "Ký bằng chứng chỉ"
-completedSessions = "Phiên đã hoàn tất"
-completedTab = "Đã hoàn tất"
 config = "Cấu hình"
-createSession = "Tạo yêu cầu ký"
-dueDate = "Ngày đến hạn (tùy chọn)"
 files = "Tệp"
-filterDeclined = "Đã từ chối"
-filterMine = "Của tôi"
-filterOverdue = "Quá hạn"
-filterSigned = "Đã ký"
-help = "Trợ giúp"
-newRequest = "Yêu cầu mới"
-noActiveSessions = "Không có yêu cầu ký đang chờ hoặc phiên đang hoạt động"
-noCompletedSessions = "Không có phiên đã hoàn tất"
-noFile = "Chưa chọn tệp"
-read = "Đọc"
-reader = "Trình đọc"
-refresh = "Làm mới"
-requestSignatures = "Yêu cầu chữ ký"
-searchDocuments = "Tìm kiếm tài liệu…"
-selectedFile = "Tệp đã chọn"
-selectSingleFileToRequest = "Chọn một tệp PDF duy nhất để yêu cầu chữ ký"
-selectUsers = "Chọn người dùng để ký"
-selectUsersPlaceholder = "Chọn người tham gia..."
-sendingRequest = "Đang gửi..."
-settings = "Cài đặt"
-sign = "Ký"
-signatureRequests = "Yêu cầu ký"
-signYourself = "Tự ký"
-tours = "Hướng dẫn"
-wetSign = "Thêm chữ ký"
-
-[quickAccess.helpMenu]
-adminTour = "Hướng dẫn quản trị"
-adminTourDesc = "Khám phá cài đặt & tính năng quản trị"
-toolsTour = "Hướng dẫn công cụ"
-toolsTourDesc = "Tìm hiểu công cụ có thể làm gì"
-whatsNewTour = "Xem có gì mới trong V2"
-whatsNewTourDesc = "Tham quan bố cục đã cập nhật"
-
-[quickAccess.toursTooltip]
-admin = "Xem video hướng dẫn tại đây: Tour công cụ, tour bố cục V2 mới và tour Quản trị."
-user = "Xem video hướng dẫn tại đây: Tour công cụ và tour bố cục V2 mới."
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
@@ -6596,6 +9553,14 @@ text = "Xoay các trang PDF theo chiều kim đồng hồ hoặc ngược chiề
 [rotate.tooltip.header]
 title = "Tổng quan cài đặt xoay"
 
+[ruler]
+clearAll = "Xóa tất cả"
+hideAllLabels = "Ẩn tất cả nhãn"
+hideSmallLabels = "Ẩn nhãn nhỏ"
+physicalValues = "Vật lý"
+scaled = "Đã chia tỷ lệ"
+showAllLabels = "Hiển thị tất cả nhãn"
+
 [sanitize]
 desc = "Loại bỏ các thành phần có thể gây hại khỏi tệp PDF."
 sanitizationResults = "Kết quả làm sạch"
@@ -6637,30 +9602,44 @@ label = "Xóa siêu dữ liệu XMP"
 [sanitize.steps]
 settings = "Cài đặt"
 
-[sanitizePdf]
-tags = "làm sạch,bảo mật,an toàn,loại bỏ mối đe dọa"
-
 [sanitizePDF]
 title = "Làm sạch PDF"
+
+[sanitizePdf]
+tags = "làm sạch,bảo mật,an toàn,loại bỏ mối đe dọa"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Điều chỉnh tỷ lệ trang"
 
+[scaleSettings]
+activeScale = "Tỷ lệ đang hoạt động"
+apply = "Áp dụng tỷ lệ"
+applyCalibration = "Áp dụng hiệu chuẩn"
+calculatedScale = "Tỷ lệ đã tính"
+calibrate = "Hiệu chuẩn"
+calibrating = "Đang hiệu chỉnh"
+calibrationDistanceRequired = "Nhập khoảng cách thực tế lớn hơn 0"
+calibrationInvalid = "Không thể tính tỷ lệ từ phép đo này"
+calibrationPaperDistance = "Khoảng cách trang đã đo: {{distance}}"
+calibrationTitle = "Hiệu chỉnh tỷ lệ"
+calibrationTooltip = "Đo một khoảng cách đã biết để tự động tính tỷ lệ"
+customScale = "Tỷ lệ tùy chỉnh"
+noneSet = "Chưa đặt tỷ lệ tùy chỉnh"
+presets = "Tỷ lệ đặt sẵn"
+ratio = "Tỷ lệ"
+ratioHelp = "Tỷ lệ: 1 đơn vị trang = X đơn vị thực tế"
+ratioPlaceholder = "ví dụ: 100"
+ratioPositive = "Tỷ lệ phải lớn hơn 0"
+ratioRequired = "Bắt buộc nhập tỷ lệ"
+realDistance = "Khoảng cách thực tế"
+realDistancePlaceholder = "ví dụ: 5"
+reset = "Đặt lại về mặc định"
+unit = "Đơn vị"
+unitInvalid = "Đơn vị không hợp lệ: {{scaleUnit}}"
+
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-
-[ScannerImageSplit.selectText]
-1 = "Ngưỡng góc:"
-10 = "Đặt kích thước của viền được thêm vào và loại bỏ để ngăn chặn viền trắng trong đầu ra (mặc định: 1)."
-2 = "Đặt góc tuyệt đối tối thiểu cần thiết để xoay hình ảnh (mặc định: 10)."
-3 = "Dung sai:"
-4 = "Xác định phạm vi biến đổi màu sắc xung quanh màu nền ước tính (mặc định: 30)."
-5 = "Diện tích tối thiểu:"
-6 = "Đặt ngưỡng diện tích tối thiểu cho một ảnh (mặc định: 10000)."
-7 = "Diện tích đường viền tối thiểu:"
-8 = "Đặt ngưỡng diện tích đường viền tối thiểu cho một ảnh"
-9 = "Kích thước viền:"
 
 [scannerImageSplit]
 submit = "Trích xuất ảnh quét"
@@ -6693,6 +9672,18 @@ whatThisDoes = "Tính năng"
 whatThisDoesDesc = "Tự động tìm và trích xuất từng ảnh từ một trang quét hoặc ảnh tổng hợp—không cần cắt thủ công."
 whenToUse = "Khi nào dùng"
 
+[ScannerImageSplit.selectText]
+1 = "Ngưỡng góc:"
+10 = "Đặt kích thước của viền được thêm vào và loại bỏ để ngăn chặn viền trắng trong đầu ra (mặc định: 1)."
+2 = "Đặt góc tuyệt đối tối thiểu cần thiết để xoay hình ảnh (mặc định: 10)."
+3 = "Dung sai:"
+4 = "Xác định phạm vi biến đổi màu sắc xung quanh màu nền ước tính (mặc định: 30)."
+5 = "Diện tích tối thiểu:"
+6 = "Đặt ngưỡng diện tích tối thiểu cho một ảnh (mặc định: 10000)."
+7 = "Diện tích đường viền tối thiểu:"
+8 = "Đặt ngưỡng diện tích đường viền tối thiểu cho một ảnh"
+9 = "Kích thước viền:"
+
 [search]
 noResults = "Không tìm thấy kết quả"
 placeholder = "Nhập từ khóa tìm kiếm..."
@@ -6710,46 +9701,22 @@ toolNotAvailableLocally = "Máy chủ Stirling-PDF của bạn đang ngoại tuy
 [session]
 expired = "Phiên của bạn đã hết hạn. Vui lòng làm mới trang và thử lại."
 
-[sessionManagement.tooltip]
-header = "Quản lý phiên ký"
-
-[sessionManagement.tooltip.addParticipants]
-bullet1 = "Người tham gia mới được thêm vào cuối thứ tự ký"
-bullet2 = "Không thể thêm người tham gia sau khi phiên đã hoàn tất"
-bullet3 = "Mỗi người tham gia sẽ nhận thông báo khi đến lượt"
-description = "Bạn có thể thêm nhiều người tham gia vào phiên đang hoạt động bất kỳ lúc nào trước khi hoàn tất."
-title = "Thêm người tham gia"
-
-[sessionManagement.tooltip.finalization]
-bullet1 = "<b>Hoàn tất đầy đủ</b>: Tất cả người tham gia đã ký"
-bullet2 = "<b>Hoàn tất một phần</b>: Một số người tham gia chưa ký"
-bullet3 = "Những người chưa ký sẽ bị loại khỏi tài liệu cuối cùng"
-bullet4 = "Sau khi hoàn tất, bạn có thể tải PDF đã ký vào các tệp đang hoạt động"
-description = "Việc hoàn tất kết hợp tất cả chữ ký thành một PDF đã ký duy nhất. Hành động này không thể hoàn tác."
-title = "Hoàn tất phiên"
-
-[sessionManagement.tooltip.participantRemoval]
-bullet1 = "Không thể xóa người tham gia đã ký"
-bullet2 = "Người tham gia bị xóa sẽ không còn nhận thông báo"
-bullet3 = "Thứ tự ký sẽ tự động điều chỉnh"
-description = "Có thể xóa người tham gia khỏi phiên trước khi họ ký."
-title = "Xóa người tham gia"
-
-[sessionManagement.tooltip.signatureOrder]
-bullet1 = "Mỗi chữ ký được áp dụng tuần tự lên PDF"
-bullet2 = "Người ký sau có thể thấy các chữ ký trước"
-bullet3 = "Quan trọng cho quy trình phê duyệt và chuỗi lưu ký pháp lý"
-description = "Thứ tự bạn chỉ định khi tạo phiên quyết định ai ký trước."
-title = "Thứ tự chữ ký"
-
 [settings]
 close = "Đóng"
+
+[settings.ai]
+documents = "Tài liệu & RAG"
+general = "Chung"
+limits = "Giới hạn & hiệu suất"
+models = "Mô hình & nhà cung cấp"
+title = "AI"
 
 [settings.configuration]
 advanced = "Nâng cao"
 database = "Cơ sở dữ liệu"
 endpoints = "Endpoints"
 features = "Tính năng"
+folderAccess = "Quyền truy cập thư mục"
 mcp = "MCP Server"
 storageSharing = "Lưu trữ & Chia sẻ Tệp"
 systemSettings = "Cài đặt hệ thống"
@@ -6783,6 +9750,8 @@ defaultPdfEditor = "Trình chỉnh sửa PDF mặc định"
 defaultPdfEditorActive = "Stirling PDF là trình chỉnh sửa PDF mặc định của bạn"
 defaultPdfEditorChecking = "Đang kiểm tra..."
 defaultPdfEditorInactive = "Ứng dụng khác đang được đặt mặc định"
+defaultPdfEditorRemind = "Nhắc tôi đặt làm mặc định"
+defaultPdfEditorRemindDescription = "Hiển thị biểu ngữ khi Stirling PDF không phải là ứng dụng PDF mặc định của bạn."
 defaultPdfEditorSet = "Đã là mặc định"
 defaultStartupView = "Chế độ xem mặc định khi khởi chạy"
 defaultStartupViewDescription = "Chọn tab sẽ hoạt động trong cột bên trái khi ứng dụng khởi động"
@@ -6800,9 +9769,18 @@ languageDescription = "Chọn ngôn ngữ hiển thị"
 logout = "Đăng xuất"
 setAsDefault = "Đặt làm mặc định"
 theme = "Chủ đề"
+themeAccent = "Màu nhấn"
+themeAccentCustom = "Màu tùy chỉnh"
+themeAccentCustomHint = "Tùy chỉnh (khuyến nghị dùng mặc định)"
+themeAccentDark = "Màu nhấn chế độ tối"
+themeAccentDefault = "Mặc định"
+themeAccentDefaultHint = "Giao diện mặc định (khuyến nghị)"
+themeAccentDescription = "Các nút, liên kết và phần tô sáng sẽ theo màu này, đồng thời tạo sắc thái nhẹ cho ứng dụng. Chế độ sáng và tối có màu riêng. Hệ thống sử dụng màu đang hoạt động."
+themeAccentLight = "Màu nhấn chế độ sáng"
 themeDark = "Tối"
 themeDescription = "Chuyển giữa chế độ sáng và tối"
 themeLight = "Sáng"
+themeReset = "Khôi phục giao diện về mặc định"
 themeSystem = "System"
 title = "Chung"
 user = "Người dùng"
@@ -6815,6 +9793,12 @@ dismiss = "Bỏ qua"
 intro = "Bật xác thực người dùng, quản lý nhóm và các tính năng không gian làm việc cho tổ chức của bạn."
 learnMore = "Tìm hiểu thêm trong tài liệu"
 title = "Dành cho Quản trị viên Hệ thống"
+
+[settings.general.loginLanding]
+description = "Chọn ứng dụng sẽ mở khi bạn đăng nhập vào Stirling Cloud."
+editor = "Trình chỉnh sửa"
+processor = "Bộ xử lý"
+title = "Sau khi đăng nhập"
 
 [settings.general.mode]
 fullscreen = "Toàn màn hình"
@@ -6900,6 +9884,21 @@ manage = "Manage"
 [settings.legal.documents]
 description = "Policies and legal information for this service."
 title = "Legal Documents"
+
+[settings.licenses]
+backendDescription = "Giấy phép cho các phụ thuộc backend được đóng gói với server này."
+backendLabel = "Giấy phép Backend"
+backendTitle = "Giấy phép bên thứ ba Backend"
+empty = "Không tìm thấy phụ thuộc nào."
+frontendDescription = "Giấy phép cho các phụ thuộc frontend được đóng gói vào bản dựng phát hành."
+frontendLabel = "Giấy phép Frontend"
+frontendTitle = "Giấy phép bên thứ ba Frontend"
+license = "Giấy phép"
+listDescription = "Danh sách được hiển thị trực tiếp trong UI từ gói phát hành hoặc endpoint backend."
+listTitle = "Phụ thuộc được đóng gói"
+loadError = "Không tải được giấy phép bên thứ ba"
+module = "Module"
+version = "Phiên bản"
 
 [settings.licensingAnalytics]
 audit = "Audit"
@@ -7009,6 +10008,11 @@ security = "Bảo mật"
 telegram = "Telegram"
 title = "Bảo mật & Xác thực"
 
+[settings.signOut]
+confirm = "Bạn có chắc chắn muốn đăng xuất không?"
+submit = "Đăng xuất"
+title = "Đăng xuất"
+
 [settings.team]
 title = "Nhóm"
 
@@ -7077,6 +10081,28 @@ title = "Chưa bật đăng nhập"
 description = "Nhập URL đầy đủ của server Stirling PDF tự lưu trữ"
 label = "URL server"
 
+[sharedSign]
+backToSessions = "Quay lại các phiên"
+createdOn = "Đã tạo {{date}}"
+disabledBody = "Tính năng ký cộng tác không được bật trên máy chủ này."
+disabledTitle = "Chưa bật"
+due = "Đến hạn {{date}}"
+filterDeclined = "Từ chối"
+filterMine = "Của tôi"
+filterOverdue = "Quá hạn"
+filterSigned = "Đã ký"
+fromOwner = "Từ {{owner}}"
+newRequest = "Yêu cầu ký"
+signedCount = "{{signed}}/{{total}} đã ký"
+
+[sharedSign.empty]
+active = "Không có yêu cầu ký đang chờ hoặc phiên đang hoạt động"
+completed = "Không có phiên đã hoàn tất"
+
+[sharedSign.tab]
+active = "Đang hoạt động"
+completed = "Đã hoàn tất"
+
 [showJS]
 done = "Đã trích xuất JavaScript"
 processing = "Đang trích xuất JavaScript..."
@@ -7106,6 +10132,9 @@ personalSigs = "Chữ ký cá nhân"
 previous = "Trang trước"
 redo = "Làm lại"
 save = "Lưu chữ ký"
+sharedSigningOpen = "Mở ký cộng tác"
+sharedSigningRequest = "Yêu cầu ký"
+sharedSigningStepDesc = "Gửi tài liệu này cho người khác ký thay vì tự bạn ký."
 sharedSigs = "Chữ ký dùng chung"
 submit = "Ký tài liệu"
 tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
@@ -7545,7 +10574,6 @@ noLinks = "Chưa có liên kết chia sẻ đang hoạt động."
 noSharedUsers = "Chưa có người dùng nào có quyền truy cập."
 openInApp = "Mở trong Stirling PDF"
 ownerLabel = "Chủ sở hữu"
-ownerOnly = "Chỉ chủ sở hữu mới có thể quản lý chia sẻ."
 ownerUnknown = "Không xác định"
 removeLink = "Xóa liên kết"
 removeUser = "Xóa"
@@ -7556,7 +10584,12 @@ roleCommenter = "Người bình luận"
 roleEditor = "Người chỉnh sửa"
 roleLabel = "Vai trò"
 roleViewer = "Người xem"
-selectSingleFile = "Chọn một tệp để quản lý chia sẻ."
+saveAndShare = "Lưu lên máy chủ & chia sẻ"
+saveFailed = "Không thể lưu tệp lên máy chủ. Vui lòng thử lại."
+saveFailedTitle = "Không thể lưu lên máy chủ"
+saveFirstBody = "Chia sẻ chỉ hoạt động với các tệp đã lưu trên máy chủ. Chúng tôi sẽ lưu nó vào tệp của bạn, sau đó tiếp tục chia sẻ."
+saveFirstHeading = "Lưu tệp này lên máy chủ để chia sẻ"
+saveFirstTitle = "Chia sẻ tệp"
 sharedUsersTitle = "Người dùng được chia sẻ"
 shareHeading = "Tệp được chia sẻ"
 sharingDisabled = "Chia sẻ đã bị tắt."
@@ -7596,6 +10629,9 @@ uploadButton = "Tải lên máy chủ"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "nhấp vào đây"
+fallback = "Nếu không tự động mở,"
+opening = "Đang mở Swagger UI trong tab mới..."
 tags = "api,tài liệu,swagger,điểm cuối,phát triển"
 title = "Tài liệu API"
 
@@ -7624,7 +10660,9 @@ memberRemoved = "Đã xóa thành viên thành công"
 namePlaceholder = "Nhập tên nhóm"
 personal = "Cá nhân"
 removeError = "Xóa thành viên không thành công"
+renameCancel = "Hủy đổi tên"
 renameError = "Đổi tên nhóm không thành công"
+renameSubmit = "Lưu tên đội"
 renameSuccess = "Đã đổi tên nhóm thành công"
 
 [team.invitationBanner]
@@ -7640,6 +10678,7 @@ sendButton = "Gửi lời mời"
 title = "Mời thành viên nhóm"
 
 [team.members]
+actions = "Hành động thành viên"
 emailColumn = "Email"
 empty = "Chưa có thành viên nhóm"
 nameColumn = "Tên"
@@ -7700,14 +10739,42 @@ selectFilesHint = "Chọn tệp trong Tệp đang hoạt động để chạy c�
 singleFileScope = "Chỉ áp dụng cho: {{fileName}}"
 viewerMode = "Chuyển sang trình chỉnh sửa tệp để chọn nhiều tệp."
 
+[toolFormat]
+ANY = "bất kỳ file nào"
+CBR = "kho truyện tranh (CBR)"
+CBZ = "kho truyện tranh (CBZ)"
+CSV = "file CSV"
+EBOOK = "sách điện tử"
+EMAIL = "email"
+EXCEL = "bảng tính"
+HTML = "trang web"
+IMAGE = "hình ảnh"
+JAVASCRIPT = "file JavaScript"
+JSON = "file JSON"
+MARKDOWN = "file Markdown"
+NONE = "không có file"
+PCL = "file in PCL"
+PDF = "PDF"
+PDF_ENCRYPTED = "PDF được bảo vệ bằng mật khẩu"
+POSTSCRIPT = "file PostScript"
+PPT = "bản trình bày"
+TEXT = "file văn bản"
+VIDEO = "video"
+WORD = "tài liệu Word"
+XML = "file XML"
+XPS = "tài liệu XPS"
+ZIP = "kho lưu trữ ZIP"
+
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "Quay lại tất cả công cụ"
 collapse = "Thu gọn bảng"
 expand = "Mở rộng bảng"
 goBack = "Quay lại"
+pdfTools = "Công cụ PDF"
 placeholder = "Chọn một công cụ để bắt đầu"
 premiumFeature = "Tính năng Premium:"
+searchTools = "Tìm kiếm công cụ"
 toolsHeader = "Công cụ"
 viewAllTools = "Xem tất cả công cụ"
 
@@ -7741,11 +10808,6 @@ allTools = "TẤT CẢ CÔNG CỤ"
 noToolsFound = "Không tìm thấy công cụ"
 quickAccess = "TRUY CẬP NHANH"
 searchPlaceholder = "Tìm kiếm công cụ..."
-
-[toolPicker.categories]
-advancedTools = "Công cụ nâng cao"
-recommendedTools = "Công cụ đề xuất"
-standardTools = "Công cụ tiêu chuẩn"
 
 [toolPicker.subcategories]
 advancedFormatting = "Định dạng nâng cao"
@@ -7784,8 +10846,6 @@ allReleases = "Tất cả bản phát hành"
 breaking = "Thay đổi phá vỡ"
 breakingChanges = "Thay đổi phá vỡ"
 breakingChangesDefault = "Phiên bản này có thay đổi phá vỡ."
-breakingChangesDetected = "Phát hiện thay đổi phá vỡ"
-breakingChangesMessage = "Một số phiên bản có thay đổi phá vỡ. Vui lòng xem hướng dẫn chuyển đổi bên dưới trước khi cập nhật."
 close = "Đóng"
 closeModal = "Đóng cửa sổ cập nhật"
 current = "Phiên bản hiện tại"
@@ -7873,6 +10933,174 @@ title = "Thống kê chi tiết"
 unknownEndpoint = "Điểm cuối không xác định"
 visits = "Lượt truy cập"
 
+[users]
+lastActive = "Hoạt động lần cuối"
+learnMore = "Tìm hiểu thêm về vai trò và quyền truy cập."
+locked = "Đã khóa"
+roleFor = "Vai trò cho {{name}}"
+rowActions = "Hành động cho {{name}}"
+showAll = "Hiển thị tất cả {{count}}"
+showLess = "Hiển thị ít hơn"
+subtitle2 = "Con người, đội và cấp truy cập của bạn."
+suspended = "Đã đình chỉ"
+teamActions = "Hành động đội"
+title = "Người dùng"
+you = "(bạn)"
+
+[users.action]
+cancelInvite = "Hủy lời mời"
+deleteTeam = "Xóa đội"
+disableMfa = "Đặt lại MFA"
+move = "Chuyển sang đội"
+reinstate = "Khôi phục"
+remove = "Xóa khỏi tổ chức"
+removeTeam = "Xóa khỏi nhóm"
+rename = "Đổi tên đội"
+resetPw = "Đặt lại mật khẩu"
+suspend = "Đình chỉ"
+unlock = "Mở khóa tài khoản"
+
+[users.activity]
+daysAgo = "{{count}} ngày trước"
+hoursAgo = "{{count}} giờ trước"
+justNow = "Vừa xong"
+minutesAgo = "{{count}} phút trước"
+monthsAgo_one = "{{count}} tháng trước"
+monthsAgo_other = "{{count}} tháng trước"
+never = "Chưa bao giờ"
+weeksAgo_one = "{{count}} tuần trước"
+weeksAgo_other = "{{count}} tuần trước"
+yearsAgo_one = "{{count}} năm trước"
+yearsAgo_other = "{{count}} năm trước"
+
+[users.cap]
+addProcessor = "+ Processor"
+approver = "Phê duyệt chính sách"
+editor = "Editor"
+processor = "Processor"
+
+[users.confirm]
+cancelInviteBody = "Hủy lời mời đến {{email}}? Họ sẽ không thể tham gia bằng liên kết hiện tại."
+cancelInviteTitle = "Hủy lời mời"
+deleteTeamBody = "Xóa đội {{name}}? Trước tiên đội phải trống - hãy chuyển thành viên sang đội khác, và đội không được còn sở hữu bất kỳ cấu hình tích hợp nào."
+deleteTeamTitle = "Xóa đội"
+disableMfaBody = "Xóa đăng ký MFA của {{name}}? Họ sẽ thiết lập lại vào lần đăng nhập tiếp theo nếu được yêu cầu."
+disableMfaTitle = "Đặt lại MFA"
+removeBody = "Xóa vĩnh viễn {{name}} khỏi tổ chức? Không thể hoàn tác thao tác này."
+removeTeamBody = "Xóa {{name}} khỏi nhóm? Họ vẫn giữ tài khoản nhưng mất quyền truy cập vào tài nguyên của nhóm này."
+removeTitle = "Xóa thành viên"
+
+[users.empty]
+description = "Mời đội ngũ của bạn để bắt đầu cộng tác."
+title = "Chưa có thành viên"
+
+[users.group]
+addToTeam = "Thêm vào đội"
+guestCount = "{{count}} khách"
+guests = "Khách"
+guestsDesc = "Cộng tác viên bên ngoài, giới hạn trong những gì bạn chia sẻ. Chỉ Editor."
+ledBy = "do {{owner}} dẫn dắt"
+org = "Tổ chức"
+orgDesc = "Chủ sở hữu có quyền hạn toàn tổ chức và phê duyệt chính sách"
+owners = "{{count}} chủ sở hữu"
+team = "Đội {{name}}"
+teamMeta = "{{count}} người"
+
+[users.invite]
+access = "Quyền truy cập"
+action = "Mời người dùng"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "Phương thức đăng nhập"
+authWeb = "Mật khẩu"
+create = "Tạo tài khoản"
+createSubtitle = "Tạo tài khoản tự host bằng mật khẩu hoặc SSO."
+createTitle = "Tạo tài khoản"
+editorDesc = "Chỉnh sửa PDF trong Stirling PDF Editor. Mọi người đều có quyền này."
+email = "Địa chỉ email"
+emailError = "Nhập địa chỉ email hợp lệ"
+emailPlaceholder2 = "name@company.com"
+forceChange = "Yêu cầu đổi mật khẩu khi đăng nhập lần đầu"
+forceMfa = "Yêu cầu thiết lập MFA khi đăng nhập lần đầu"
+method = "Cách thêm họ"
+methodDirect = "Tạo tài khoản trực tiếp"
+methodEmail = "Mời qua email"
+password = "Mật khẩu"
+passwordError = "Mật khẩu phải có ít nhất 8 ký tự"
+processorDeferred = "Đã gửi lời mời, nhưng chưa thể cấp quyền truy cập Processor - hãy đặt quyền này từ danh sách sau khi họ tham gia."
+processorDesc = "Bề mặt quản trị, chạy pipeline, agent và API."
+role = "Vai trò"
+send2 = "Gửi lời mời"
+subtitle2 = "Họ sẽ nhận được email để tham gia không gian làm việc Stirling của bạn."
+team = "Nhóm"
+title = "Mời mọi người"
+username = "Tên người dùng"
+usernameError = "Tên người dùng phải có ít nhất 3 ký tự"
+usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Được mời bởi {{who}}"
+cancel = "Hủy"
+count = "{{count}} đang chờ"
+desc = "Những người đã được mời nhưng chưa tham gia. Họ giữ một chỗ cho đến khi chấp nhận."
+expiresInDays_one = "Hết hạn sau {{count}} ngày"
+expiresInDays_other = "Hết hạn sau {{count}} ngày"
+expiresToday = "Hết hạn hôm nay"
+title = "Lời mời đang chờ"
+
+[users.loadError]
+description = "Đã xảy ra lỗi khi kết nối tới backend, hoặc bạn không có quyền truy cập. Hãy thử lại."
+title = "Không thể tải thành viên"
+
+[users.moveTeam]
+apply = "Di chuyển"
+team = "Nhóm"
+title = "Di chuyển đến nhóm"
+
+[users.newTeam]
+action = "+ Nhóm mới"
+create = "Tạo nhóm"
+emailError = "Nhập địa chỉ email hợp lệ"
+name = "Tên nhóm"
+namePlaceholder = "ví dụ: Tài chính"
+nameRequired = "Tên nhóm là bắt buộc"
+owner = "Chủ sở hữu nhóm"
+ownerFailed = "Nhóm đã được tạo, nhưng không thể mời chủ sở hữu. Hãy chỉ định một người từ danh sách thành viên."
+ownerHelper = "Mỗi nhóm có một trưởng nhóm. Họ sẽ được mời với vai trò Chủ sở hữu nhóm, được bật Processor và có thể thêm những người còn lại. Bạn có thể chỉ định lại sau."
+ownerPlaceholder = "owner@company.com"
+subtitle = "Nhóm mọi người dưới một Chủ sở hữu nhóm, người quản lý quyền truy cập của họ."
+title = "Nhóm mới"
+
+[users.renameTeam]
+apply = "Đổi tên"
+name = "Tên nhóm"
+title = "Đổi tên nhóm"
+
+[users.resetPw]
+apply = "Đặt lại mật khẩu"
+confirm = "Xác nhận mật khẩu"
+copied = "Đã sao chép vào clipboard"
+copyHint = "Hãy sao chép ngay bây giờ - mật khẩu sẽ không được hiển thị lại."
+email = "Gửi email cho người dùng về việc đặt lại"
+forceChange = "Yêu cầu đổi mật khẩu trong lần đăng nhập tiếp theo"
+generate = "Tạo mật khẩu an toàn"
+includePw = "Bao gồm mật khẩu mới trong email"
+mismatch = "Mật khẩu không khớp"
+newPassword = "Mật khẩu mới"
+regen = "Tạo lại"
+title = "Đặt lại mật khẩu"
+tooShort = "Mật khẩu phải có ít nhất 8 ký tự"
+
+[users.role]
+guest = "Khách"
+member = "Thành viên"
+orgOwner = "Chủ sở hữu tổ chức"
+teamOwner = "Chủ sở hữu nhóm"
+
+[users.team]
+grantProcessor = "Cấp Processor cho nhóm"
+revokeProcessor = "Thu hồi Processor khỏi nhóm"
+
 [validateSignature]
 date = "Ngày"
 downloadCsv = "Tải CSV"
@@ -7924,6 +11152,9 @@ certExpired = "Chứng chỉ hết hạn"
 certRevocationUnknown = "Không rõ trạng thái thu hồi chứng chỉ"
 certRevoked = "Chứng chỉ bị thu hồi"
 chainInvalid = "Chuỗi chứng chỉ không hợp lệ"
+documentModified = "Tài liệu đã bị sửa đổi sau khi ký - nội dung đã được thêm ngoài vùng đã ký"
+revocationNotChecked = "Chưa kiểm tra trạng thái thu hồi"
+selfSigned = "Tự ký - danh tính người ký chưa được xác minh"
 signatureInvalid = "Kiểm tra mật mã chữ ký thất bại"
 trustInvalid = "Chứng chỉ không được tin cậy"
 
@@ -7931,7 +11162,8 @@ trustInvalid = "Chứng chỉ không được tin cậy"
 continued = "Còn tiếp"
 downloads = "Tải xuống"
 entryLabel = "Tóm tắt chữ ký"
-filesEvaluated = "Đã đánh giá {{count}} tệp"
+filesEvaluated_one = "{{count}} tệp đã được đánh giá"
+filesEvaluated_other = "{{count}} tệp đã được đánh giá"
 footer = "Xác thực qua Stirling PDF"
 generatedAt = "Đã tạo"
 noPdf = "Báo cáo PDF sẽ khả dụng sau khi xác thực thành công."
@@ -7941,6 +11173,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} không hợp lệ"
+signaturesUnverified_one = "{{count}} cần xem xét"
+signaturesUnverified_other = "{{count}} cần xem xét"
 signaturesValid = "{{count}} hợp lệ hoàn toàn"
 title = "Báo cáo xác thực chữ ký"
 
@@ -7960,7 +11195,9 @@ _value = "Chữ ký"
 [validateSignature.status]
 complete = "Hoàn tất xác thực"
 invalid = "Không hợp lệ"
+untrustedShort = "Chưa xác minh"
 valid = "Hợp lệ"
+validUntrusted = "Hợp lệ, người ký chưa được xác minh"
 
 [viewer]
 cannotPreviewFile = "Không thể xem trước tệp"
@@ -7976,7 +11213,8 @@ nextPage = "Trang tiếp"
 onlyPdfSupported = "Trình xem chỉ hỗ trợ tệp PDF. Tệp này có vẻ là định dạng khác."
 pageNavigation = "Điều hướng trang"
 previousPage = "Trang trước"
-resetZoom = "Đặt lại thu phóng"
+saveChangesErrorBody = "Không thể lưu tài liệu. Vui lòng thử lại."
+saveChangesErrorTitle = "Không thể lưu thay đổi"
 singlePageView = "Chế độ xem trang đơn"
 unknownFile = "Tệp không xác định"
 view = "Xem"
@@ -7985,19 +11223,38 @@ zoomIn = "Phóng to"
 zoomOut = "Thu nhỏ"
 
 [viewer.attachments]
+addAttachment = "Thêm tệp đính kèm"
+close = "Đóng tệp đính kèm"
+closeSidebar = "Đóng thanh bên tệp đính kèm"
+download = "Tải xuống tệp đính kèm"
 empty = "Không có tệp đính kèm trong tài liệu này"
 loading = "Đang tải tệp đính kèm..."
 noDocument = "Mở một PDF để xem các tệp đính kèm của nó."
 noMatch = "Không có tệp đính kèm nào khớp với tìm kiếm của bạn"
 noSupport = "Trình xem này không hỗ trợ tệp đính kèm."
+retry = "Thử lại"
 searchPlaceholder = "Tìm kiếm tệp đính kèm"
 title = "Tệp đính kèm"
+
+[viewer.bookmarks]
+bookmarkTitle = "Tiêu đề dấu trang"
+bookmarkTitleRequired = "Bắt buộc nhập tiêu đề dấu trang"
+closeSidebar = "Đóng thanh bên dấu trang"
+collapseAll = "Thu gọn tất cả dấu trang"
+expandAll = "Mở rộng tất cả dấu trang"
+searchPlaceholder = "Tìm kiếm dấu trang"
 
 [viewer.comments]
 addComment = "Thêm bình luận"
 addCommentPlaceholder = "Thêm bình luận..."
 addLink = "Thêm liên kết"
 addReplyPlaceholder = "Thêm trả lời..."
+cancelClearAll = "Hủy"
+clearAll = "Xóa tất cả bình luận"
+clearAllDescription = "Việc này xóa bình luận và trả lời khỏi thanh bên nhưng giữ lại mọi chú thích đính kèm trong tài liệu."
+clearAllTitle = "Xóa tất cả bình luận?"
+close = "Đóng bình luận"
+closeSidebar = "Đóng thanh bên bình luận"
 deleteAnnotationAndComment = "Xóa chú thích & bình luận"
 deleteDescription = "Chú thích này có kèm một bình luận. Bạn có thể chỉ gỡ bình luận khỏi thanh bên và giữ lại chú thích, hoặc xóa tất cả."
 deleteTitle = "Gỡ chú thích khỏi phần bình luận?"
@@ -8008,6 +11265,7 @@ moreActions = "Thao tác khác"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Trang {{page}}"
+placingHint = "Nhấp vào một trang để đặt… (hủy)"
 removeCommentOnly = "Chỉ gỡ bình luận"
 saveReply = "Lưu trả lời"
 title = "Bình luận"
@@ -8027,6 +11285,11 @@ hasFieldsDesc = "PDF này chứa các trường có thể điền"
 title = "Trường biểu mẫu"
 unsavedBadge = "Chưa lưu"
 unsavedDesc = "Bạn có các thay đổi chưa được lưu"
+
+[viewer.layers]
+closeSidebar = "Đóng thanh bên lớp"
+hideAll = "Ẩn tất cả lớp"
+showAll = "Hiển thị tất cả lớp"
 
 [viewer.link]
 delete = "Xóa liên kết"
@@ -8057,6 +11320,9 @@ resultsOf = "trong {{total}}"
 
 [viewer.signature]
 delete = "Xóa chữ ký"
+
+[viewer.thumbnails]
+closeSidebar = "Đóng thanh bên hình thu nhỏ"
 
 [viewPdf]
 tags = "xem,đọc,chú thích,văn bản,hình ảnh"
@@ -8367,30 +11633,6 @@ title = "Văn bản hình mờ"
 image = "Hình ảnh"
 text = "Văn bản"
 
-[wetSignature.tooltip]
-header = "Phương thức tạo chữ ký"
-
-[wetSignature.tooltip.draw]
-bullet1 = "Tùy chỉnh màu và độ dày bút"
-bullet2 = "Xóa và vẽ lại cho đến khi hài lòng"
-bullet3 = "Hoạt động trên thiết bị cảm ứng (máy tính bảng, điện thoại)"
-description = "Tạo chữ ký viết tay bằng chuột hoặc màn hình cảm ứng của bạn. Phù hợp nhất cho chữ ký cá nhân, chân thực."
-title = "Vẽ chữ ký"
-
-[wetSignature.tooltip.type]
-bullet1 = "Chọn từ nhiều phông chữ"
-bullet2 = "Tùy chỉnh kích thước và màu chữ"
-bullet3 = "Lý tưởng cho chữ ký tiêu chuẩn hóa"
-description = "Tạo chữ ký từ văn bản nhập. Nhanh và nhất quán, phù hợp cho tài liệu doanh nghiệp."
-title = "Nhập chữ ký"
-
-[wetSignature.tooltip.upload]
-bullet1 = "Hỗ trợ PNG, JPG và các định dạng ảnh khác"
-bullet2 = "Khuyến nghị nền trong suốt để có kết quả tốt nhất"
-bullet3 = "Hình ảnh sẽ được đổi kích thước để vừa vùng chữ ký"
-description = "Tải lên hình ảnh chữ ký đã tạo sẵn. Lý tưởng nếu bạn có chữ ký quét hoặc logo công ty."
-title = "Tải lên hình ảnh chữ ký"
-
 [workbenchBar]
 activeFiles = "Tệp đang mở"
 annotations = "Chú thích"
@@ -8414,6 +11656,7 @@ redact = "Bôi đen"
 rotateLeft = "Xoay trái"
 rotateRight = "Xoay phải"
 ruler = "Thước / Đo"
+rulerSettings = "Cài đặt tỷ lệ"
 save = "Lưu"
 saveAll = "Lưu tất cả"
 saveAs = "Lưu dưới dạng"
@@ -8422,6 +11665,7 @@ search = "Tìm kiếm trong PDF"
 selectAll = "Chọn tất cả"
 selectByNumber = "Chọn theo số trang"
 selectLanguage = "Chọn ngôn ngữ"
+share = "Chia sẻ"
 toggleAnnotations = "Bật/Tắt hiển thị chú thích"
 toggleAttachments = "Bật/Tắt tệp đính kèm"
 toggleBookmarks = "Bật/Tắt dấu trang"
@@ -8483,6 +11727,7 @@ loading = "Đang tải danh sách..."
 locked = "đã khóa"
 lockedBadge = "Đã khóa"
 loginRequired = "Hãy bật chế độ đăng nhập trước"
+memberActions = "Hành động thành viên"
 noMembersFound = "Không tìm thấy thành viên"
 role = "Vai trò"
 searchMembers = "Tìm thành viên..."
@@ -8492,6 +11737,7 @@ unlockAccount = "Mở khóa tài khoản"
 unlockUserError = "Mở khóa tài khoản người dùng không thành công"
 unlockUserSuccess = "Đã mở khóa tài khoản người dùng thành công"
 user = "Người dùng"
+userInfo = "Thông tin người dùng"
 
 [workspace.people.actions]
 upgrade = "Nâng cấp"
@@ -8606,6 +11852,7 @@ disableByAdmin = "Tắt MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Có thể quản lý cài đặt và mời thành viên, với quyền quản trị đầy đủ."
+currentRole = "Vai trò hiện được gán."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
@@ -8636,6 +11883,7 @@ removeMemberError = "Không thể xóa người dùng khỏi nhóm"
 removeMemberSuccess = "Đã xóa người dùng khỏi nhóm"
 renameTeamLabel = "Đổi tên nhóm"
 system = "Hệ thống"
+teamActions = "Hành động nhóm"
 teamName = "Tên nhóm"
 teamNotFound = "Không tìm thấy nhóm"
 title = "Nhóm"

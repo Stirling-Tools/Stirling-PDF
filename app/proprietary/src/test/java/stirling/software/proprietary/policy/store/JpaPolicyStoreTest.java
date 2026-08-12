@@ -18,10 +18,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 
 import tools.jackson.databind.ObjectMapper;
@@ -54,8 +55,9 @@ class JpaPolicyStoreTest {
                                 "compress incoming",
                                 "alice",
                                 true,
-                                new TriggerConfig("schedule", Map.of()),
-                                List.of(InputSpec.folder("/in")),
+                                List.of(
+                                        new PipelineInput(
+                                                "src-in", new TriggerConfig("schedule", Map.of()))),
                                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                                 OutputSpec.inline()));
 
@@ -64,7 +66,6 @@ class JpaPolicyStoreTest {
         verify(repository).save(captor.capture());
         PolicyEntity entity = captor.getValue();
         assertEquals(saved.id(), entity.getId());
-        assertEquals("schedule", entity.getTriggerType());
         assertTrue(entity.isEnabled());
         // The stored JSON round-trips back to an equal policy.
         assertEquals(saved, objectMapper.readValue(entity.getPolicyJson(), Policy.class));
@@ -78,7 +79,7 @@ class JpaPolicyStoreTest {
                         "rotate",
                         "alice",
                         true,
-                        null, // manual-only: no automatic trigger
+                        List.of(), // no inputs: run on demand only
                         List.of(
                                 new PipelineStep(
                                         "/api/v1/general/rotate-pdf", Map.of("angle", 90))),
@@ -89,23 +90,90 @@ class JpaPolicyStoreTest {
     }
 
     @Test
-    void findByTriggerTypeUsesTheEnabledQuery() {
+    void getUpgradesLegacyTriggerAndSourceIdsToPerInputTriggers() {
+        // A blob written before triggers moved onto inputs: one policy-level trigger + sourceIds.
+        String legacyJson =
+                "{\"id\":\"p1\",\"name\":\"legacy\",\"owner\":\"alice\",\"enabled\":true,"
+                        + "\"trigger\":{\"type\":\"schedule\",\"options\":{}},"
+                        + "\"sourceIds\":[\"s1\",\"s2\"],\"steps\":[],"
+                        + "\"output\":{\"type\":\"inline\",\"options\":{}}}";
+        PolicyEntity entity = new PolicyEntity();
+        entity.setId("p1");
+        entity.setName("legacy");
+        entity.setEnabled(true);
+        entity.setPolicyJson(legacyJson);
+        when(repository.findById("p1")).thenReturn(Optional.of(entity));
+
+        Policy upgraded = store.get("p1").orElseThrow();
+
+        assertEquals(
+                List.of(
+                        new PipelineInput("s1", new TriggerConfig("schedule", Map.of())),
+                        new PipelineInput("s2", new TriggerConfig("schedule", Map.of()))),
+                upgraded.inputs());
+    }
+
+    @Test
+    void saveDenormalizesTeamIdForScopedQueries() {
+        store.save(
+                new Policy(
+                        "p1",
+                        "scoped",
+                        "alice",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        9L));
+
+        ArgumentCaptor<PolicyEntity> captor = ArgumentCaptor.forClass(PolicyEntity.class);
+        verify(repository).save(captor.capture());
+        assertEquals(Long.valueOf(9L), captor.getValue().getTeamId());
+    }
+
+    @Test
+    void findByTeamDelegatesToTheScopedQuery() {
+        Policy policy =
+                new Policy(
+                        "p1",
+                        "ours",
+                        "alice",
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        9L);
+        when(repository.findByTeam(9L)).thenReturn(List.of(entityFor(policy)));
+
+        List<Policy> mine = store.findByTeam(9L);
+
+        assertEquals(1, mine.size());
+        assertEquals("p1", mine.get(0).id());
+    }
+
+    @Test
+    void findBindingsByTriggerTypeScansEnabledPoliciesForMatchingInputs() {
         Policy policy =
                 new Policy(
                         "p1",
                         "watch",
                         "alice",
                         true,
-                        new TriggerConfig("schedule", Map.of()),
+                        List.of(
+                                new PipelineInput(
+                                        "src-in", new TriggerConfig("schedule", Map.of())),
+                                PipelineInput.manual("src-manual")),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline());
-        when(repository.findByTriggerTypeAndEnabledTrue("schedule"))
-                .thenReturn(List.of(entityFor(policy)));
+        when(repository.findByEnabledTrue()).thenReturn(List.of(entityFor(policy)));
 
-        List<Policy> scheduled = store.findByTriggerType("schedule");
+        List<PolicyBinding> scheduled = store.findBindingsByTriggerType("schedule");
 
+        // Only the scheduled input yields a binding; the manual input on the same policy does not.
         assertEquals(1, scheduled.size());
-        assertEquals("p1", scheduled.get(0).id());
+        assertEquals("p1", scheduled.get(0).policy().id());
+        assertEquals("src-in", scheduled.get(0).input().sourceId());
+        assertEquals("schedule", scheduled.get(0).input().trigger().type());
     }
 
     @Test
@@ -124,7 +192,7 @@ class JpaPolicyStoreTest {
         entity.setName(policy.name());
         entity.setOwner(policy.owner());
         entity.setEnabled(policy.enabled());
-        entity.setTriggerType(policy.trigger() == null ? null : policy.trigger().type());
+        entity.setTeamId(policy.teamId());
         entity.setPolicyJson(objectMapper.writeValueAsString(policy));
         return entity;
     }

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Anchor, Group, Stack, Text, Button, Paper } from "@mantine/core";
+import { Anchor, Group, Stack, Text, Paper } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import ApiKeySection from "@app/components/shared/config/configSections/apiKeys/ApiKeySection";
 import RefreshModal from "@app/components/shared/config/configSections/apiKeys/RefreshModal";
 import useApiKey from "@app/components/shared/config/configSections/apiKeys/hooks/useApiKey";
@@ -73,8 +74,8 @@ export default function ApiKeys() {
           radius="md"
           p={18}
           style={{
-            background: "var(--api-keys-card-bg)",
-            border: "1px solid var(--api-keys-card-border)",
+            background: "var(--c-surface)",
+            border: "1px solid var(--c-border)",
             boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
           }}
         >
@@ -110,8 +111,8 @@ export default function ApiKeys() {
             style={{
               padding: 18,
               borderRadius: 12,
-              background: "var(--api-keys-card-bg)",
-              border: "1px solid var(--api-keys-card-border)",
+              background: "var(--c-surface)",
+              border: "1px solid var(--c-border)",
               boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
             }}
           >

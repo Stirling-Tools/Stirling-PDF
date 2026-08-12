@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,21 @@ public class JobExecutorService {
         this.effectiveTimeoutMs = Math.min(asyncRequestTimeoutMs, sessionTimeoutMs);
         log.debug(
                 "Job executor configured with effective timeout of {} ms", this.effectiveTimeoutMs);
+    }
+
+    /** Stop the service-owned executor when the application context is closed or restarted. */
+    @PreDestroy
+    public void shutdown() {
+        log.debug("Shutting down job executor");
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            executor.shutdownNow();
+        }
     }
 
     public ResponseEntity<?> runJobGeneric(boolean async, Supplier<Object> work) {

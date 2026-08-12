@@ -358,7 +358,7 @@ const UpgradeBanner: React.FC = () => {
           textColor="#fff"
           iconColor="#fff"
           closeIconColor="#fff"
-          buttonVariant="white"
+          buttonVariant="filled"
           buttonColor="blue"
           minHeight={48}
           compact
