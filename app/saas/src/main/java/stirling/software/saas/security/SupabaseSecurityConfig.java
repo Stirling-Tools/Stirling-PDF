@@ -65,6 +65,14 @@ import stirling.software.saas.service.SupabaseUserService;
 @RequiredArgsConstructor
 public class SupabaseSecurityConfig {
 
+    // CORS applies to API and API-docs endpoints only. Registering `/**` would also decorate
+    // static assets and the SPA HTML with Access-Control-Allow-Origin and Vary: Origin, which
+    // fragments CDN and browser caches per origin (and intermediaries often strip the CORS
+    // header from cached copies).
+    private static final String[] CORS_PATH_PATTERNS = {
+        "/api/**", "/v1/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
+    };
+
     private final UserService userService;
     private final TeamService teamService;
     private final SupabaseUserService supabaseUserService;
@@ -320,7 +328,9 @@ public class SupabaseSecurityConfig {
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
+        for (String pathPattern : CORS_PATH_PATTERNS) {
+            source.registerCorsConfiguration(pathPattern, cfg);
+        }
         return source;
     }
 

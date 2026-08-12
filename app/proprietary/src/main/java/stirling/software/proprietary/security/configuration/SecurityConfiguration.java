@@ -73,6 +73,14 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 @Profile("!saas")
 public class SecurityConfiguration {
 
+    // CORS applies to API and API-docs endpoints only. Registering `/**` would also decorate
+    // static assets and the SPA HTML with Access-Control-Allow-Origin and Vary: Origin, which
+    // fragments CDN and browser caches per origin (and intermediaries often strip the CORS
+    // header from cached copies).
+    private static final String[] CORS_PATH_PATTERNS = {
+        "/api/**", "/v1/api-docs/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
+    };
+
     private final CustomUserDetailsService userDetailsService;
     private final UserService userService;
     private final boolean loginEnabledValue;
@@ -219,7 +227,9 @@ public class SecurityConfiguration {
         cfg.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cfg);
+        for (String pathPattern : CORS_PATH_PATTERNS) {
+            source.registerCorsConfiguration(pathPattern, cfg);
+        }
         return source;
     }
 

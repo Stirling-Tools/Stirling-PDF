@@ -123,6 +123,14 @@ class WebMvcConfigTest {
     @DisplayName("addCorsMappings")
     class AddCorsMappings {
 
+        private static final List<String> EXPECTED_CORS_PATTERNS =
+                List.of(
+                        "/api/**",
+                        "/v1/api-docs/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html");
+
         private CorsRegistry registry;
         private CorsRegistration registration;
 
@@ -133,8 +141,14 @@ class WebMvcConfigTest {
             when(registry.addMapping(anyString())).thenReturn(registration);
         }
 
+        private List<String> capturedMappings() {
+            ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+            verify(registry, atLeastOnce()).addMapping(captor.capture());
+            return captor.getAllValues();
+        }
+
         @Test
-        @DisplayName("Tauri mode adds a mapping with Tauri origin patterns")
+        @DisplayName("Tauri mode registers CORS for API paths with Tauri origin patterns")
         void tauriModeBranch() {
             System.setProperty(TAURI_PROP, "true");
             // hasConfiguredOrigins is evaluated before the Tauri check, so getSystem() is
@@ -144,7 +158,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            verify(registry).addMapping("/**");
+            assertThat(capturedMappings()).containsExactlyElementsOf(EXPECTED_CORS_PATTERNS);
         }
 
         @Test
@@ -156,7 +170,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            verify(registry).addMapping("/**");
+            assertThat(capturedMappings()).containsExactlyElementsOf(EXPECTED_CORS_PATTERNS);
             // origins consulted twice (presence check + value use)
             verify(system, atLeastOnce()).getCorsAllowedOrigins();
         }
@@ -175,7 +189,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            verify(registry).addMapping("/**");
+            assertThat(capturedMappings()).containsExactlyElementsOf(EXPECTED_CORS_PATTERNS);
         }
 
         @Test
@@ -186,7 +200,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            verify(registry).addMapping("/**");
+            assertThat(capturedMappings()).containsExactlyElementsOf(EXPECTED_CORS_PATTERNS);
         }
 
         @Test
@@ -196,7 +210,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            verify(registry).addMapping("/**");
+            assertThat(capturedMappings()).containsExactlyElementsOf(EXPECTED_CORS_PATTERNS);
         }
     }
 }
