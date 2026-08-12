@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
-import { FolderRecord } from "@app/types/folder";
+import { FOLDER_COLOR_PALETTE, FolderRecord } from "@app/types/folder";
 
 const folder: FolderRecord = {
   id: "folder-1" as FolderRecord["id"],
   name: "Contracts",
   parentFolderId: null,
-  color: "#3b82f6",
+  color: FOLDER_COLOR_PALETTE[0],
   icon: "star",
   createdAt: Date.now(),
   updatedAt: Date.now(),

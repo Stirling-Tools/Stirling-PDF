@@ -80,7 +80,8 @@ start_shard() {
     local assigned=("$@")
     (
         cd "$SHARD_DIR" || exit 1
-        python -m behave "${assigned[@]}" \
+        uv run --project "$CUCUMBER_DIR/../../engine" --locked --group cucumber \
+            python -m behave "${assigned[@]}" \
             --junit --junit-directory "$REPORT_DIR/shard-$shard" \
             --no-capture -f plain "${BEHAVE_EXTRA[@]}" \
             >"$REPORT_DIR/shard-$shard.log" 2>&1

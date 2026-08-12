@@ -5,6 +5,12 @@ export interface TableColumn<T> {
   /** Stable column id. */
   key: string;
   header: ReactNode;
+  /**
+   * Hides the header visually but keeps it for assistive tech. For a trailing column of controls
+   * or chevrons, where a visible heading would be noise but a blank one leaves the cells below it
+   * unlabelled.
+   */
+  headerHidden?: boolean;
   /** Cell renderer for a row. */
   render: (row: T) => ReactNode;
   align?: "left" | "right" | "center";
@@ -25,6 +31,13 @@ export interface TableProps<T> {
    * all rows interactive.
    */
   isRowInteractive?: (row: T) => boolean;
+  /**
+   * Set when rows render controls of their own. The row keeps its click as a mouse shortcut but
+   * stops announcing itself as a button, because a button may not contain other controls and a
+   * {@code <tr role="button">} is no longer a row to a screen reader. That row control is then the
+   * keyboard path to the same action, so nothing is lost by leaving the row itself inert.
+   */
+  rowsContainControls?: boolean;
   /** Rendered in place of the body when there are no rows. */
   empty?: ReactNode;
   className?: string;
@@ -42,6 +55,7 @@ export function Table<T>({
   rowKey,
   onRowClick,
   isRowInteractive,
+  rowsContainControls = false,
   empty,
   className,
 }: TableProps<T>) {
@@ -60,7 +74,11 @@ export function Table<T>({
                 className={`sui-table__th sui-table__th--${c.align ?? "left"}`}
                 style={c.width ? { width: c.width } : undefined}
               >
-                {c.header}
+                {c.headerHidden ? (
+                  <span className="sui-table__th-sr">{c.header}</span>
+                ) : (
+                  c.header
+                )}
               </th>
             ))}
           </tr>
@@ -76,6 +94,9 @@ export function Table<T>({
             rows.map((row) => {
               const rowInteractive =
                 interactive && (isRowInteractive?.(row) ?? true);
+              // Only a row that owns the whole interaction takes the button role and the keyboard
+              // handling that goes with it; see rowsContainControls.
+              const rowIsControl = rowInteractive && !rowsContainControls;
               return (
                 <tr
                   key={rowKey(row)}
@@ -85,10 +106,10 @@ export function Table<T>({
                       : "sui-table__row"
                   }
                   onClick={rowInteractive ? () => onRowClick?.(row) : undefined}
-                  tabIndex={rowInteractive ? 0 : undefined}
-                  role={rowInteractive ? "button" : undefined}
+                  tabIndex={rowIsControl ? 0 : undefined}
+                  role={rowIsControl ? "button" : undefined}
                   onKeyDown={
-                    rowInteractive
+                    rowIsControl
                       ? (e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
