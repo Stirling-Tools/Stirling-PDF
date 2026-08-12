@@ -35,13 +35,18 @@ const COMPRESSION_EXCLUDE_REGEX = new RegExp(
 // Write .gz and .br siblings for a file. Brotli quality 11 is 10-100x slower
 // than gzip, so back off to quality 10 above 1 MB and hint the input size so
 // the encoder can size its window up front.
-async function compressOne(file: string) {
-  const ext = path.extname(file).toLowerCase();
+async function compressOne(file: string, root: string) {
+  // Only ever read inside the build output dir. All inputs derive from
+  // fs.readdir(distDir), but this guard keeps any stray path from escaping it.
+  const resolved = path.resolve(file);
+  if (!resolved.startsWith(`${path.resolve(root)}${path.sep}`)) return;
+
+  const ext = path.extname(resolved).toLowerCase();
   if (EXCLUDED_EXTENSION_SET.has(ext)) return;
-  const content = await fs.readFile(file);
+  const content = await fs.readFile(resolved);
   if (content.length < 1024) return;
 
-  await fs.writeFile(`${file}.gz`, await gzipPromise(content, { level: 9 }));
+  await fs.writeFile(`${resolved}.gz`, await gzipPromise(content, { level: 9 }));
 
   const brotliQuality = content.length > 1_000_000 ? 10 : 11;
   const brotlied = await brotliPromise(content, {
@@ -50,7 +55,7 @@ async function compressOne(file: string) {
       [constants.BROTLI_PARAM_SIZE_HINT]: content.length,
     },
   });
-  await fs.writeFile(`${file}.br`, brotlied);
+  await fs.writeFile(`${resolved}.br`, brotlied);
 }
 
 // Emit pdf.js's hashed .mjs worker assets as .js. Cloudflare caches by file
@@ -94,7 +99,7 @@ function compressStaticCopyPlugin(): PluginOption {
 
       const POOL = 8;
       for (let i = 0; i < files.length; i += POOL) {
-        await Promise.all(files.slice(i, i + POOL).map(compressOne));
+        await Promise.all(files.slice(i, i + POOL).map((f) => compressOne(f, distDir)));
       }
     },
   };
@@ -164,7 +169,7 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
             e.isFile() && e.name.endsWith(".html") && e.name !== "index.html",
         )
         .map((e) => path.join(distDir, e.name));
-      await Promise.all(routeHtml.map(compressOne));
+      await Promise.all(routeHtml.map((f) => compressOne(f, distDir)));
     },
   };
 }
