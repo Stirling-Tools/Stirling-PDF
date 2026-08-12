@@ -8,11 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
-import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
-import org.springframework.boot.security.autoconfigure.actuate.web.servlet.ManagementWebSecurityAutoConfiguration;
-import org.springframework.boot.security.autoconfigure.web.servlet.SecurityFilterAutoConfiguration;
-import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,14 +27,8 @@ import stirling.software.common.model.ApplicationProperties;
  */
 @WebMvcTest(
         controllers = CorsPreflightIntegrationTest.CorsProbeController.class,
-        useDefaultFilters = false,
-        excludeAutoConfiguration = {
-            SecurityAutoConfiguration.class,
-            UserDetailsServiceAutoConfiguration.class,
-            ManagementWebSecurityAutoConfiguration.class,
-            SecurityFilterAutoConfiguration.class,
-            ServletWebSecurityAutoConfiguration.class
-        })
+        useDefaultFilters = false)
+@AutoConfigureMockMvc(addFilters = false)
 @Import({WebMvcConfig.class, CorsPreflightIntegrationTest.MockInterceptorsConfig.class})
 class CorsPreflightIntegrationTest {
 
