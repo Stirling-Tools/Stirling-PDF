@@ -243,7 +243,7 @@ export default function Signup() {
             border: "none",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: "var(--c-primary)",
+            color: "var(--c-accent-text)",
           }}
         >
           {t("signup.alreadyHaveAccount", "I already have an account")}

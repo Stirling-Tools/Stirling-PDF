@@ -1,4 +1,4 @@
-import { Suspense, type ReactNode } from "react";
+import { Suspense, lazy, type ReactNode } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
@@ -16,12 +16,14 @@ import AuthCallback from "@app/routes/AuthCallback";
 import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
-import MobileScannerPage from "@app/pages/MobileScannerPage";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 import { LoginLandingRedirect } from "@app/components/LoginLandingRedirect";
+
+const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -78,6 +80,16 @@ export default function App() {
           element={
             <PublicRouteProviders>
               <MobileScannerPage />
+            </PublicRouteProviders>
+          }
+        />
+
+        {/* Mobile signature drawing - reached from the Sign tool QR code */}
+        <Route
+          path="/mobile-sign"
+          element={
+            <PublicRouteProviders>
+              <MobileSignPage />
             </PublicRouteProviders>
           }
         />

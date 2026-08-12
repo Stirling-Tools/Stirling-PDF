@@ -1,0 +1,26 @@
+/* The code is this modal's entire content, so it *is* the body rather than a window sitting inside
+   one. Framed, it drew a second box inside the panel's box - and the panel's own header already
+   says what the code is, which the code window's chrome was repeating. */
+.portal-definition__modal .sui-modal__body {
+  padding: 0;
+}
+
+.portal-definition__code {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Traffic-light dots imitate a window frame; this code already sits in a real one. */
+.portal-definition__code .sui-code__dots {
+  display: none;
+}
+
+/* Line the toolbar and the code up with the modal header's text. */
+.portal-definition__code .sui-code__chrome {
+  padding: 0.5rem 1.125rem;
+}
+
+.portal-definition__code .sui-code__pre {
+  padding: 0.875rem 1.125rem;
+}

@@ -4,7 +4,7 @@ import { Button } from "@app/ui/Button";
 import ArticleIcon from "@mui/icons-material/Article";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
@@ -126,8 +126,7 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
 // ─── Wrapper that resolves the active file from FileContext ───────────────────
 
 export function NonPdfViewerWrapper(props: ViewerProps) {
-  const { selectors } = useFileState();
-  const activeFiles = selectors.getFiles();
+  const { files: activeFiles } = useAllFiles();
   const { activeFileIndex } = useViewer();
 
   const file =
