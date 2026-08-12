@@ -46,10 +46,8 @@ filesSelected = "fitxers seleccionats"
 font = "Tipus de lletra"
 fontSizeTooltip = "Mida del text del número de pàgina en punts. Valors més alts generen text més gran."
 fontTypeTooltip = "Família del tipus de lletra per als números de pàgina. Tria-la segons l'estil del teu document."
-genericSubmit = "Envia"
 green = "Verd"
 help = "Ajuda"
-imgPrompt = "Selecciona Imatge(s)"
 incorrectPasswordMessage = "La contrasenya actual és incorrecta."
 info = "Informació"
 invalidUndoData = "No es pot desfer: dades d’operació no vàlides"
@@ -62,7 +60,6 @@ loginAgreementTitle = "Acord d'inici de sessió"
 logOut = "Tanca la sessió"
 marginTooltip = "Distància entre el número de pàgina i la vora de la pàgina."
 moreOptions = "Més opcions"
-multiPdfPrompt = "Selecciona PDFs (2+)"
 never = "Mai"
 no = "No"
 noFileSelected = "No s'ha seleccionat cap fitxer. Puja'n un."
@@ -80,7 +77,6 @@ pageOrderPrompt = "Ordre de Pàgines (Llista separada per comes) :"
 pages = "Pàgines"
 pageSelectionPrompt = "Selecció de pàgines personalitzada (Introdueix una llista separada per comes de números de pàgina, 1,5,6 o funcions com 2n+1):"
 password = "Contrasenya"
-pdfPrompt = "Selecciona PDF(s)"
 pin = "Fixa el fitxer (mantén-lo actiu després d'executar l'eina)"
 pro = "Pro"
 processingComplete = "El fitxer està llest."
@@ -356,6 +352,7 @@ text = "Aquests permisos controlen què poden fer els usuaris amb el PDF. Són m
 title = "Canviar Permissos"
 
 [addStamp]
+preview = "Previsualitza el segell"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -691,6 +688,165 @@ manualLinks = "Descàrregues manuals: feu clic als enllaços i col·loqueu els f
 noLanguages = "No s'ha trobat cap idioma de tessdata al directori configurat."
 permissionNotice = "El camí de tessdata no té permisos d'escriptura. Les descàrregues s'obriran al navegador; deseu manualment els fitxers .traineddata a la carpeta tessdata."
 
+[admin.settings.ai.documents]
+description = "Configura el model d'embeddings i els paràmetres de recuperació utilitzats per respondre preguntes sobre documents. S'aplica al motor d'IA en desar."
+title = "Documents i RAG"
+
+[admin.settings.ai.documents.embeddingApiKey]
+description = "Deixa-ho en blanc per utilitzar la credencial d'entorn pròpia del motor. S'aplica a desplegaments autoallotjats d'un sol motor."
+generic = "Clau API d'embeddings"
+openai = "Clau API d'OpenAI"
+setPlaceholder = "Desada - deixa-ho en blanc per conservar la clau actual"
+voyageai = "Clau API de VoyageAI"
+
+[admin.settings.ai.documents.embeddingBaseUrl]
+description = "URL base de l'endpoint d'embeddings compatible amb OpenAI / Ollama, p. ex. http://ollama:11434/v1. Ha d'apuntar a un endpoint intern de confiança (sensible a SSRF)."
+label = "URL base d'embeddings"
+
+[admin.settings.ai.documents.embeddingModel]
+description = "Nom del model d'embeddings. Text lliure; els suggeriments només són orientatius."
+label = "Model d'embeddings"
+
+[admin.settings.ai.documents.embeddingProvider]
+description = "Proveïdor utilitzat per convertir el text del document en embeddings vectorials."
+label = "Proveïdor d'embeddings"
+
+[admin.settings.ai.documents.maxSearches]
+description = "Nombre màxim de cerques de recuperació que l'agent pot executar per sol·licitud."
+label = "Cerques màximes"
+
+[admin.settings.ai.documents.reindexNote]
+body = "Canviar el model d'embeddings té efecte immediatament, però els documents indexats amb el model anterior s'han de tornar a indexar perquè la cerca retorni resultats correctes."
+title = "Cal tornar a indexar"
+
+[admin.settings.ai.documents.saved]
+reindexNote = "Si has canviat el model d'embeddings, torna a indexar els documents existents perquè la cerca utilitzi el nou model."
+
+[admin.settings.ai.documents.topK]
+description = "Nombre de fragments més rellevants recuperats per cerca."
+label = "Top K"
+
+[admin.settings.ai.general]
+description = "Connecta Stirling al motor d'IA de Python i tria quines capacitats d'IA s'exposen. Els canvis s'apliquen en reiniciar."
+title = "Motor d'IA"
+
+[admin.settings.ai.general.capabilities]
+description = "Activa o desactiva funcions d'IA individuals. Les funcions desactivades s'amaguen a l'aplicació."
+title = "Capacitats"
+
+[admin.settings.ai.general.enabled]
+description = "Interruptor principal. Quan està desactivat, no hi ha eines d'IA, agents ni crides al motor disponibles."
+label = "Activa la IA"
+
+[admin.settings.ai.general.features.chat]
+description = "Assistent conversacional per treballar amb PDFs."
+label = "Assistent de xat"
+
+[admin.settings.ai.general.features.classify]
+description = "Categoritza automàticament els documents per tipus o contingut."
+label = "Classificació de documents"
+
+[admin.settings.ai.general.features.createPdf]
+description = "Genera un PDF nou (p. ex. des d'HTML) mitjançant un agent d'IA."
+label = "Crea un PDF a partir d'una indicació"
+
+[admin.settings.ai.general.features.documentQuestions]
+description = "Fes preguntes i obtén respostes basades en un document pujat."
+label = "Preguntes sobre documents"
+
+[admin.settings.ai.general.features.mathAuditor]
+description = "Revisa documents per detectar errors matemàtics i numèrics."
+label = "Auditor matemàtic"
+
+[admin.settings.ai.general.features.pdfComment]
+description = "Afegeix comentaris de revisió i anotacions escrits per IA a un PDF."
+label = "Agent de comentaris PDF"
+
+[admin.settings.ai.general.longRunningTimeoutSeconds]
+description = "Temps d'espera per a operacions d'agent més pesades, com ara la generació de documents."
+label = "Temps d'espera d'operacions llargues (segons)"
+
+[admin.settings.ai.general.note]
+body = "El motor d'IA s'executa com un servei separat. El seu secret compartit"
+body2 = "s'estableix mitjançant una variable d'entorn del contenidor. Les claus API del proveïdor es poden introduir en aquestes pàgines o proporcionar com a variables d'entorn del motor; les claus introduïdes aquí s'envien al motor en desar."
+title = "Sobre el motor d'IA"
+
+[admin.settings.ai.general.streamTimeoutSeconds]
+description = "Temps d'espera per a respostes de xat en streaming (token per token)."
+label = "Temps d'espera de streaming (segons)"
+
+[admin.settings.ai.general.test]
+button = "Prova la connexió"
+failBody = "El motor d'IA no ha respost. Comprova la URL, que el contenidor del motor estigui en execució i que la IA estigui activada (cal reiniciar després d'activar-la)."
+failTitle = "Motor d'IA inaccessible"
+okBody = "El motor d'IA ha respost a una comprovació d'estat."
+okTitle = "Motor d'IA accessible"
+
+[admin.settings.ai.general.timeoutSeconds]
+description = "Temps d'espera per a sol·licituds d'IA estàndard al motor."
+label = "Temps d'espera de sol·licitud (segons)"
+
+[admin.settings.ai.general.url]
+description = "URL interna del motor d'IA de Python, p. ex. http://stirling-pdf-engine:5001."
+label = "URL del motor d'IA"
+
+[admin.settings.ai.limits]
+description = "Límits de seguretat per a la quantitat de feina que poden fer les sol·licituds d'IA i quantes s'executen simultàniament. S'apliquen al motor d'IA en desar."
+title = "Límits i rendiment"
+
+[admin.settings.ai.limits.maxCharacters]
+description = "Límit de seguretat: rebutja les sol·licituds d'IA el text extret de les quals superi aquesta longitud."
+label = "Caràcters màxims per sol·licitud"
+
+[admin.settings.ai.limits.maxPages]
+description = "Límit de seguretat: rebutja les sol·licituds d'IA amb més d'aquest nombre de pàgines PDF."
+label = "Pàgines màximes per sol·licitud"
+
+[admin.settings.ai.limits.modelMaxConcurrency]
+description = "Nombre màxim de crides simultànies al model en curs a tot el motor."
+label = "Concurrència màxima del model"
+
+[admin.settings.ai.models]
+description = "Tria el proveïdor LLM i els models intel·ligent/ràpid que utilitza el motor d'IA. S'aplica al motor d'IA en desar."
+title = "Models i proveïdors"
+
+[admin.settings.ai.models.apiKey]
+anthropic = "Clau API d'Anthropic"
+description = "Deixa-ho en blanc per utilitzar la credencial d'entorn pròpia del motor. S'aplica a desplegaments autoallotjats d'un sol motor."
+generic = "Clau API"
+openai = "Clau API d'OpenAI"
+setPlaceholder = "Desada - deixa-ho en blanc per conservar la clau actual"
+
+[admin.settings.ai.models.baseUrl]
+description = "URL base de l'endpoint compatible amb OpenAI / Ollama, p. ex. http://ollama:11434/v1."
+label = "URL base del proveïdor"
+warning = "La URL base ha d'apuntar a un endpoint intern de confiança. El motor hi farà sol·licituds del costat del servidor, de manera que un valor no fiable és sensible a SSRF."
+
+[admin.settings.ai.models.fastMaxTokens]
+description = "Tokens de sortida màxims per al model ràpid."
+label = "Tokens màxims del model ràpid"
+
+[admin.settings.ai.models.fastModel]
+description = "Model més barat i ràpid per a tasques lleugeres. Text lliure; els suggeriments només són orientatius."
+label = "Model ràpid"
+
+[admin.settings.ai.models.provider]
+description = "Amb quin proveïdor LLM es comunica el motor."
+label = "Proveïdor"
+
+[admin.settings.ai.models.smartMaxTokens]
+description = "Tokens de sortida màxims per al model intel·ligent."
+label = "Tokens màxims del model intel·ligent"
+
+[admin.settings.ai.models.smartModel]
+description = "Model d'alta capacitat per a raonaments complexos. Text lliure; els suggeriments només són orientatius."
+label = "Model intel·ligent"
+
+[admin.settings.ai.saved]
+body = "Els canvis s'envien automàticament al motor d'IA."
+bodyNoPush = "Configuració desada. S'aplicarà la propera vegada que el motor d'IA reculli la seva configuració."
+title = "Configuració d'IA desada"
+
 [admin.settings.badge]
 clickToUpgrade = "Fes clic per veure els detalls del pla"
 
@@ -937,6 +1093,25 @@ label = "Regenera a l'arrencada"
 [admin.settings.features.serverCertificate.validity]
 description = "Nombre de dies que el certificat serà vàlid"
 label = "Validesa del certificat (dies)"
+
+[admin.settings.folderAccess]
+description = "Directoris des dels quals les fonts de carpetes i les sortides de carpetes poden llegir i als quals poden escriure. Això és un límit de seguretat: les automatitzacions mai no poden apuntar a una ruta del servidor fora d'aquesta llista."
+securityNote = "Deixa-ho buit per desactivar completament les fonts i sortides de carpetes. El directori de configuració propi de Stirling sempre està fora de límits."
+title = "Accés a carpetes"
+
+[admin.settings.folderAccess.implied]
+description = "Aquests directoris gestionats per Stirling sempre estan permesos i no es poden canviar aquí."
+serverStorage = "Emmagatzematge de fitxers del servidor"
+title = "Sempre permès"
+watchedFolder = "Carpeta vigilada de pipeline"
+
+[admin.settings.folderAccess.roots]
+add = "Afegeix"
+empty = "No hi ha carpetes permeses. Les fonts i sortides de carpetes estan desactivades actualment."
+hint = "Introdueix rutes absolutes, per exemple /data/inbox."
+label = "Arrels de carpeta permeses"
+placeholder = "/data/inbox"
+remove = "Elimina l'arrel de carpeta"
 
 [admin.settings.general]
 description = "Configureu els paràmetres de l'aplicació a nivell de sistema, incloent-hi la marca i el comportament per defecte."
@@ -1842,6 +2017,15 @@ export = "Exporta"
 accessDenied = "Accés denegat"
 insufficientPermissions = "No tens permís per fer aquesta acció."
 
+[auth.callback]
+completing = "S'està completant l'autenticació"
+invalidToken = "L'inici de sessió OAuth ha fallat - token no vàlid."
+missingToken = "L'inici de sessió OAuth ha fallat - no s'ha rebut cap token."
+oauthFailed = "L'inici de sessió OAuth ha fallat. Torna-ho a provar."
+pleaseWait = "Espera mentre acabem d'iniciar la sessió."
+signedOut = "S'ha tancat la sessió. Torna a iniciar-la."
+windowMayClose = "Pots tancar aquesta finestra un cop es completi."
+
 [auth.displayName]
 guest = "Convidat"
 user = "Usuari"
@@ -1986,6 +2170,73 @@ secureWorkflowDesc = "Assegura els documents PDF eliminant contingut potencialme
 [autoRename]
 description = "Aquesta eina canviarà automàticament el nom dels fitxers PDF segons el seu contingut. Analitza el document per trobar el títol més adequat a partir del text."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+
+[autoRotate]
+submit = "Gira automàticament"
+tags = "gir automàtic,corregir orientació,cap per avall,de costat,redreçar,orientar,detectar orientació,corregir rotació,orientació automàtica,escanejat,OSD"
+
+[autoRotate.confidenceThreshold]
+title = "Llindar de confiança"
+
+[autoRotate.detectionMode]
+auto = "Automàtic"
+osd = "Només OCR"
+text = "Només text"
+title = "Mètode de detecció"
+
+[autoRotate.error]
+failed = "S'ha produït un error en girar automàticament el PDF."
+
+[autoRotate.inferUndetected]
+title = "Gira les pàgines de baixa confiança perquè coincideixin"
+
+[autoRotate.report]
+applied = "{{degrees}}° en sentit horari"
+confidenceValue = "Confiança {{value}}"
+noChange = "Sense canvis"
+pageLabel = "Pàgina {{number}}"
+summary = "{{rotated}} de {{total}} pàgines girades, {{unchanged}} deixades tal com estan"
+title = "Informe de detecció"
+
+[autoRotate.report.method]
+inferred = "Coincident"
+none = "Omesa"
+osd = "OCR"
+text = "Text"
+
+[autoRotate.report.note]
+belowThreshold = "Per sota del llindar"
+blankPage = "La pàgina és en blanc"
+inferredFromDocument = "Igual que les altres pàgines"
+noDominantDirection = "Direccions de text mixtes"
+osdFailed = "No s'ha trobat text llegible"
+osdNoVerdict = "No s'ha pogut determinar l'orientació"
+tesseractUnavailable = "OCR no instal·lat"
+tooFewGlyphs = "Massa poc text"
+
+[autoRotate.results]
+title = "Resultats del gir automàtic"
+
+[autoRotate.settings]
+title = "Configuració"
+
+[autoRotate.tooltip.confidenceThreshold]
+text = "Com de segura ha de ser la comprovació abans de girar una pàgina. Redueix-lo per girar més pàgines, augmenta'l per deixar-ne més sense tocar."
+title = "Llindar de confiança"
+
+[autoRotate.tooltip.description]
+text = "Determina quina orientació hauria de tenir cada pàgina i la gira correctament. Les pàgines que ja estan dretes es deixen igual."
+
+[autoRotate.tooltip.detectionMode]
+text = "Automàtic llegeix primer el text de la pàgina i després mira la pàgina com a imatge si no n'hi ha prou. Només text omet la comprovació d'imatge, que és més ràpida per a documents que mai no s'han escanejat. Només OCR tracta cada pàgina com una imatge."
+title = "Mètode de detecció"
+
+[autoRotate.tooltip.header]
+title = "Gir automàtic"
+
+[autoRotate.tooltip.inferUndetected]
+text = "Les pàgines en blanc o gairebé en blanc no es poden comprovar per si soles. Quan totes les pàgines que es poden llegir necessiten el mateix gir, aquestes pàgines es giren perquè coincideixin."
+title = "Gira les pàgines de baixa confiança perquè coincideixin"
 
 [autoSizeSplitPDF]
 tags = "pdf,dividir,document,organització"
@@ -2188,33 +2439,6 @@ title = "Conceptes bàsics de sintaxi"
 keywords = "Paraules clau: odd, even"
 numbers = "Números/intervals: 5, 10-20"
 progressions = "Progressions: 3n, 4n+1"
-
-[certificateChoice.tooltip]
-header = "Tipus de certificat"
-
-[certificateChoice.tooltip.organization]
-bullet1 = "Gestionat pels administradors del sistema"
-bullet2 = "Compartit entre els usuaris autoritzats"
-bullet3 = "Representa la identitat de l'empresa, no la individual"
-bullet4 = "Ideal per a: documents oficials, signatures d'equip"
-description = "Un certificat compartit proporcionat per la teva organització. S'utilitza per a la signatura a nivell d'empresa."
-title = "Certificat de l'organització"
-
-[certificateChoice.tooltip.personal]
-bullet1 = "Es genera automàticament en el primer ús"
-bullet2 = "Vinculat al teu compte d'usuari"
-bullet3 = "No es pot compartir amb altres usuaris"
-bullet4 = "Ideal per a: documents personals, responsabilitat individual"
-description = "Un certificat generat automàticament i únic per al teu compte d'usuari. Adequat per a signatures individuals."
-title = "Certificat personal"
-
-[certificateChoice.tooltip.upload]
-bullet1 = "Requereix fitxer P12/PFX i contrasenya"
-bullet2 = "Pot ser emès per Autoritats de Certificació externes"
-bullet3 = "Nivell de confiança més alt per a documents legals"
-bullet4 = "Ideal per a: contractes legalment vinculants, validació externa"
-description = "Utilitza el teu propi fitxer de certificat PKCS#12. Proporciona control total sobre les propietats del certificat."
-title = "Puja P12 personalitzat"
 
 [certSign]
 awaitingSignatures = "En espera de signatures"
@@ -2542,34 +2766,6 @@ server = "Servidor"
 stepTitle = "Origen del certificat"
 upload = "Puja"
 
-[certSign.tooltip.header]
-title = "Sobre la gestió de signatures"
-
-[certSign.tooltip.overview]
-bullet1 = "Comprova les signatures existents i la seva validesa"
-bullet2 = "Mostra informació detallada sobre signants i certificats"
-bullet3 = "Afegeix noves signatures digitals per protegir els documents"
-bullet4 = "S'admeten múltiples fitxers amb navegació senzilla"
-text = "Aquesta eina us permet comprovar si els vostres PDFs estan signats digitalment i afegir noves signatures digitals. Les signatures digitals proven qui ha creat o aprovat un document i indiquen si ha estat modificat des que es va signar."
-title = "Què pot fer aquesta eina?"
-
-[certSign.tooltip.signing]
-bullet1 = "Admet formats PEM, PKCS12, JKS i certificats de servidor"
-bullet2 = "Opció per mostrar o amagar la signatura al PDF"
-bullet3 = "Afegeix motiu, ubicació i nom del signant"
-bullet4 = "Trieu en quina pàgina col·locar les signatures visibles"
-bullet5 = "Utilitza el certificat del servidor per a l'opció senzilla 'Sign with Stirling-PDF'"
-text = "Per signar un PDF, necessiteu un certificat digital (com PEM, PKCS12 o JKS). Podeu triar fer visible la signatura al document o mantenir-la invisible només per a seguretat."
-title = "Afegir signatures"
-
-[certSign.tooltip.validation]
-bullet1 = "Mostra si les signatures són vàlides o no vàlides"
-bullet2 = "Mostra la informació del signant i la data de signatura"
-bullet3 = "Comprova si el document s'ha modificat després de signar"
-bullet4 = "Pot usar certificats personalitzats per a la verificació"
-text = "Quan comproveu les signatures, l'eina us indica si són vàlides, qui ha signat el document, quan es va signar i si el document s'ha modificat des de la signatura."
-title = "Comprovació de signatures"
-
 [changeCreds]
 changeUsername = "Actualitza el nom d'usuari. Es tancarà la sessió després d’actualitzar."
 credsUpdated = "Compte actualitzat"
@@ -2824,6 +3020,7 @@ next = "Següent"
 preview = "Vista prèvia"
 previous = "Anterior"
 refresh = "Actualitza"
+remaining = "Restant"
 retry = "Reintenta"
 save = "Desa"
 
@@ -3264,24 +3461,6 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits.modal]
-advancedMonitoring = "Monitoratge avançat"
-allInOneWorkspace = "Espai de treball PDF tot en un (visualitzador, eines i agent)"
-apiSandbox = "API sandbox"
-dedicatedSupportSlas = "Suport dedicat i SLA"
-fasterThroughput = "Rendiment 10x més ràpid"
-fullyPrivateFiles = "Fitxers totalment privats"
-largeFileProcessing = "Processament de fitxers grans"
-orgWideAccess = "Controls d'accés per a tota l'organització"
-premiumAiModels = "Models d'IA premium"
-prioritySupport = "Suport prioritari"
-privateDocCloud = "Núvol de documents privat"
-ragFineTuning = "RAG + afinament"
-secureApiAccess = "Accés d'API segur"
-standardThroughput = "Rendiment estàndard"
-unlimitedApiAccess = "Accés d'API il·limitat"
-unlimitedSeats = "Usuaris il·limitats"
-
 [crop]
 autoCrop = "Retalla automàticament els espais en blanc"
 noFileSelected = "Seleccioneu un fitxer PDF per començar a retallar"
@@ -3345,6 +3524,7 @@ message = "No s'ha pogut establir el gestor PDF per defecte"
 title = "Error"
 
 [defaultApp.prompt]
+dontRemind = "No m'ho tornis a recordar"
 message = "Fes que Stirling PDF sigui l'aplicació per defecte per obrir fitxers PDF."
 
 [defaultApp.settingsOpened]
@@ -3696,10 +3876,10 @@ customizeGroups = "Personalitza els grups"
 dropHint = "Obre fitxers per començar"
 dropToAdd = "Drop files to add"
 expand = "Amplia la barra lateral"
-files = "Fitxers"
 googleDrive = "Google Drive"
 googleDriveDisabled = "Google Drive no està configurat"
 leaveMyFiles = "Surt de Els meus fitxers"
+library = "Biblioteca de PDF"
 myFiles = "Els meus fitxers"
 noFiles = "Encara no hi ha fitxers"
 openFileManager = "Obre el gestor de fitxers"
@@ -3722,19 +3902,8 @@ uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
-add = "Afegeix"
-addLabel = "Afegeix una etiqueta…"
-categoryIconAria = "Tria una icona per a {{name}}"
-createCategory = "Crea una categoria"
-delete = "Elimina la categoria"
 done = "Fet"
-hide = "Amaga la categoria"
-newCategory = "Nom de la categoria nova…"
-removeLabel = "Elimina {{name}}"
-rename = "Canvia el nom"
 reset = "Restableix els valors predeterminats"
-search = "Cerca etiquetes…"
-show = "Mostra la categoria"
 subtitle = "Agrupa els teus fitxers en categories principals. Afegeix etiquetes existents o noves a una categoria, canvia'n el nom o crea'n una de pròpia. Els fitxers que no pertanyen a cap de les teves categories apareixen a “Altres”."
 title = "Categories de la barra lateral"
 
@@ -3807,6 +3976,7 @@ refresh = "Actualitza des del servidor"
 remove = "Suprimeix"
 removeVersion = "Suprimeix aquesta versió"
 rename = "Canvia el nom"
+renamed = "Reanomenat"
 renameFolder = "Canvia el nom de la carpeta"
 resizeFolderTree = "Canvia la mida de l'arbre de carpetes (tecles de fletxa, Maj per a passos més grans; doble clic per ajustar automàticament)"
 save = "Desa"
@@ -3909,9 +4079,7 @@ count = "Fitxers"
 folder = "Carpeta"
 labels = "Etiquetes"
 modified = "Modificat"
-name = "Nom"
 size = "Mida"
-toolHistoryAtVersion = "Cadena d'eines acumulada"
 totalSize = "Mida total"
 type = "Tipus"
 versionHistory = "Recorregut de versions"
@@ -4071,10 +4239,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "Tot desat"
+extractCsvError = "No s'ha pogut extreure el CSV"
+extractXlsxError = "No s'ha pogut extreure l'XLSX"
 flattenAfterFilling = "Aplana després d'emplenar"
+requiredAbbreviation = "obl."
+requiredFieldsError = "Emplena tots els camps obligatoris"
 rescanFields = "Torna a analitzar els camps"
 rescanFormFields = "Torna a analitzar els camps del formulari"
 save = "Desa"
+saveShortcut = "Ctrl+S per desar"
+unsavedChanges = "Canvis no desats"
 
 [formFill.sidebar]
 close = "Tanca la barra lateral"
@@ -4307,6 +4482,11 @@ title = "Automatitza"
 desc = "Canvia automàticament el nom d'un fitxer PDF en funció de la capçalera detectada"
 tags = "detecció automàtica,basat en capçalera,organitza,reenomena"
 title = "Reanomena PDF automàticament"
+
+[home.autoRotate]
+desc = "Detecta l'orientació de cada pàgina i la gira automàticament perquè quedi dreta."
+tags = "gir automàtic,corregir orientació,cap per avall,de costat,redreçar,orientar,detectar orientació,corregir rotació,orientació automàtica,escanejat,OSD"
+title = "Gir automàtic"
 
 [home.autoSizeSplitPDF]
 tags = "automàtic,separa,mida"
@@ -4607,12 +4787,12 @@ hint = "Puja un PNG, JPG, SVG o un altre fitxer d'imatge per col·locar-lo al PD
 label = "Puja imatge"
 placeholder = "Selecciona el fitxer d'imatge"
 
-[imageToPdf]
-tags = "conversió,img,jpg,imatge,foto"
-
 [imageToPDF]
 header = "Imatge a PDF"
 title = "Imatge a PDF"
+
+[imageToPdf]
+tags = "conversió,img,jpg,imatge,foto"
 
 [infoBanner]
 dismiss = "Descarta"
@@ -4646,11 +4826,9 @@ welcomeTitle = "Heu estat convidats!"
 
 [landing]
 addFiles = "Afegeix fitxers"
-heroSubtitle = "Arrossega i deixa anar o afegeix un PDF existent per començar."
 mobileUpload = "Puja des del mòbil"
 openFromComputer = "Obre des de l'ordinador"
 uploadFromComputer = "Puja des de l'ordinador"
-workbenchEmptyStateHero = "Deixa anar un PDF a qualsevol lloc"
 
 [language]
 direction = "ltr"
@@ -4690,7 +4868,6 @@ enterUsername = "Introduïu el nom d'usuari"
 failedToSignIn = "No s'ha pogut iniciar sessió amb {{provider}}: {{message}}"
 forgotPassword = "Heu oblidat la contrasenya?"
 loggingIn = "Iniciant sessió..."
-logIn = "Inicia sessió"
 login = "Inicia sessió"
 magicLinkSent = "Enllaç màgic enviat a {{email}}! Reviseu el vostre correu i feu clic a l'enllaç per iniciar sessió."
 mfaCode = "Codi d'autenticació"
@@ -4714,25 +4891,9 @@ signInWith = "Inicia sessió amb"
 title = "Accedir"
 unexpectedError = "Error inesperat: {{message}}"
 updatePassword = "Actualitza la contrasenya"
-useEmailInstead = "Inicia sessió amb correu"
 useMagicLink = "Utilitza un enllaç màgic"
 username = "Nom d'usuari"
 youAreLoggedIn = "Heu iniciat sessió!"
-
-[login.slides.edit]
-alt = "Edita PDF"
-subtitle = "Amb més d'una dotzena d'eines per censurar, signar, llegir i manipular PDF, segur que hi trobaràs el que busques."
-title = "Edita PDF per mostrar/protegir la informació que vulguis"
-
-[login.slides.overview]
-alt = "Visió general de Stirling PDF"
-subtitle = "Una suite al núvol centrada en la privadesa per a PDF que et permet convertir, signar, censurar i gestionar documents, amb més de 50 eines potents."
-title = "Tot el que necessites per als teus PDF en un sol lloc."
-
-[login.slides.secure]
-alt = "Protegeix PDF"
-subtitle = "Afegeix contrasenyes, censura contingut i gestiona certificats amb facilitat."
-title = "Protegeix la informació sensible dels teus PDF"
 
 [margin]
 large = "Gran"
@@ -4975,6 +5136,7 @@ pinButton = "Podeu utilitzar el botó de <strong>Fixar</strong> si preferiu que 
 results = "Després que l’eina hagi acabat d’executar-se, el pas de <strong>Revisió</strong> mostrarà una previsualització dels resultats en aquest panell i us permetrà desfer l’operació o descarregar el fitxer. "
 runButton = "Un cop configurada l’eina, aquest botó us permet executar-la en tots els PDF seleccionats."
 selectCropTool = "Seleccionem l’eina de <strong>Retalla</strong> per demostrar com utilitzar una de les eines."
+stepOf = "Pas {{current}} de {{total}}"
 toolInterface = "Aquesta és la interfície de l’eina de <strong>Retalla</strong>. Com podeu veure, no hi ha gaire res perquè encara no hem afegit cap fitxer PDF per treballar-hi."
 workbench = "Aquesta és la <strong>Taula de treball</strong> - l’àrea principal on visualitzeu i editeu els vostres PDF."
 wrapUp = "Ja està tot! Heu après les àrees principals de l’aplicació i com utilitzar-les. Feu clic al botó <strong>Ajuda</strong> quan vulgueu per tornar a veure aquesta visita."
@@ -4987,6 +5149,26 @@ showMeAround = "Fes-me un recorregut"
 skipForNow = "Omet per ara"
 skipTheTour = "Omet la visita guiada"
 
+[onboarding.checklist]
+dismiss = "Descarta"
+title = "Configura Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Executa Stirling de manera nativa al teu equip"
+title = "Baixa Stirling per a escriptori"
+
+[onboarding.checklist.inviteTeam]
+description = "Col·labora amb el teu equip"
+title = "Convida membres de l'equip"
+
+[onboarding.checklist.shareAnalytics]
+description = "Ajuda a millorar Stirling"
+title = "Comparteix dades d'ús anònimes"
+
+[onboarding.checklist.takeTour]
+description = "Mira com funciona Stirling en una visita guiada ràpida"
+title = "Fes la visita guiada"
+
 [onboarding.desktopInstall]
 body = "Stirling funciona millor com a aplicació d'escriptori. Pots usar-la fora de línia, accedir als documents més ràpid i fer edicions localment a l'ordinador."
 selectOs = "Selecciona el sistema operatiu"
@@ -4995,7 +5177,21 @@ titleWithOs = "Baixa per a {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Codi d'autenticació"
+description = "Protegeix el teu compte enllaçant una aplicació d'autenticació. Escaneja el codi QR o introdueix la clau de configuració i després confirma el codi de 6 dígits per acabar."
+enable = "Activa MFA"
+enableError = "No s'ha pogut activar l'autenticació de dos factors. Comprova el codi i torna-ho a provar."
+enterCode = "Introdueix el codi de 6 dígits de la teva aplicació."
+enterCodeError = "Introdueix el codi d'autenticació per continuar."
+logout = "Tanca la sessió"
+openAuthenticator = "Obre Google Authenticator, Authy o 1Password."
 qrCodeLoading = "Generant el codi QR…"
+regenerateQrCode = "Regenera el codi QR"
+scanQrCode = "Escaneja el codi QR o introdueix la clau de configuració de sota."
+setupError = "No s'ha pogut iniciar la configuració de dos factors. Torna-ho a provar."
+setupKey = "Clau de configuració (entrada manual)"
+stepByStep = "Pas a pas"
+success = "MFA s'ha activat. Ara pots continuar."
+title = "Configuració de l'autenticació multifactor"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Quan habilitis el mode d'inici de sessió, podràs gestionar usuaris, configurar paràmetres i supervisar la salut del servidor. Les primeres <strong>{{freeTierLimit}}</strong> persones del teu servidor poden usar Stirling gratuïtament."
@@ -5003,6 +5199,11 @@ adminBodyLoginEnabled = "Com a administrador, pots gestionar usuaris, configurar
 adminTitle = "Resum d'administració"
 userBody = "Convida companys, assigna rols i mantén els documents organitzats en un espai de treball segur. Habilita el mode d'inici de sessió quan estiguis llest per anar més enllà de l'ús individual."
 userTitle = "Resum del pla"
+
+[onboarding.processorIntro]
+body = "Stirling ara executa <strong>Polítiques</strong> — regles automatitzades que classifiquen, protegeixen i processen cada document quan arriba. Configura-les i supervisa les execucions al <strong>Processador</strong>."
+cta = "Consulta el Processador"
+title = "Consulta el Processador de Stirling"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5399,6 +5600,28 @@ askLeader = "Only your team owner can change the cap."
 docs = "PDFs"
 subtitle = "Billable PDFs each teammate has processed this period."
 title = "Team member usage"
+
+[payg.prepaid]
+chip = "Any prepagat"
+
+[payg.prepaid.banner]
+exhausted = "La teva capacitat prepagada s'ha esgotat; la facturació per ús s'ha reprès. Recarrega per mantenir el descompte."
+expiring_one = "El teu any prepagat acaba d'aquí a {{count}} dia. La capacitat no utilitzada caduca — recarrega per començar un any nou."
+expiring_other = "El teu any prepagat acaba d'aquí a {{count}} dies. La capacitat no utilitzada caduca — recarrega per començar un any nou."
+low = "Et queda el {{pct}}% de la teva capacitat prepagada. Recarrega en qualsevol moment per mantenir el processament sense interrupcions."
+
+[payg.prepaid.card]
+subtitle = "S'utilitza abans de la facturació per ús i fora del teu límit de despesa."
+title = "Capacitat prepagada"
+
+[payg.prepaid.meter]
+capSuffix = "de {{total}} crèdits prepagats"
+expires = "Caduca el {{date}}"
+
+[payg.prepaid.state]
+exhausted = "Esgotada"
+healthy = "En queda força"
+low = "S'està esgotant"
 
 [payg.role]
 leader = "Team owner"
@@ -5936,48 +6159,11 @@ keyDescription = "Enganxa la clau de llicència del correu electrònic"
 success = "Llicència activada!"
 successMessage = "La llicència s'ha activat correctament. Ara pots tancar aquesta finestra."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "aplicada"
-enforcing = "Aplicant..."
-failed = "Ha fallat l'aplicació"
 outputsUnavailable = "Els resultats de la política ja no estan disponibles per a descarregar."
 partialOutputsUnavailable = "Alguns resultats de la política ja no estan disponibles per a descarregar."
-retrying = "Ocupat, reintentant..."
 runNotFound = "Ja no s'ha pogut trobar l'execució de l'aplicació."
-step = "pas {{current}}/{{total}}"
 timedOut = "S'ha esgotat el temps d'aplicació abans que l'execució pogués finalitzar."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Tanca"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "Aplicant {{names}}"
@@ -5988,61 +6174,16 @@ failureBody = "{{failures}} de {{total}} fitxer(s) no s'han pogut processar i s'
 failureTitle = "Exportat sense aplicació completa"
 printPolicyAppliedBody = "S'ha actualitzat aquest PDF per complir una política. Reviseu els canvis i torneu a imprimir."
 printPolicyAppliedTitle = "Política aplicada abans d'imprimir"
-queued = "+{{count}} en cua"
 successTitle = "S'ha aplicat {{names}}"
 summaryMore = "{{first}}, {{second}} i {{more}} més"
 summaryTwo = "{{first}} i {{second}}"
 
-[policies.enforcement.triggerVerb]
-convert = "Aplicant abans de convertir"
-default = "Aplicant"
-export = "Aplicant abans d'exportar"
-input = "Aplicant en importar"
-print = "Aplicant abans d'imprimir"
-
-[policies.field]
-accessLog = "Registre d'accés"
-archiveAfter = "Arxiva després de"
-auditTrail = "Traça d'auditoria"
-belowThreshold = "Per sota del llindar"
-destination = "Destinació"
-frameworks = "Frameworks"
-immutableHold = "Retenció immutable"
-keepFor = "Conserva durant"
-minConfidence = "Confiança mínima"
-notify = "Notifica en encaminar"
-onViolation = "Quan no compleix"
-webhookUrl = "URL del webhook"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
-
 [policies.labels]
-add = "Afegeix"
-addPlaceholder = "Afegeix una etiqueta…"
-customNote = "Personalitzat per al teu equip."
-defaultNote = "S'està utilitzant el valor predeterminat integrat, compartit amb el teu equip."
-duplicate = "\"{{name}}\" ja existeix."
-edit = "Edita les etiquetes"
-empty = "Encara no hi ha etiquetes."
-export = "Exporta JSON"
-iconAria = "Tria una icona per a {{name}}"
-import = "Importa JSON"
-importError = "No s'ha pogut importar aquest fitxer."
-managedNote = "Les etiquetes d'equip les gestiona el líder de l'equip."
-modalSubtitle = "Compartides amb tot l'equip. El classificador tria les etiquetes que s'ajusten a cada document."
-modalTitle = "Etiquetes de classificació"
-pickIcon = "Utilitza la icona {{label}}"
-removeAria = "Elimina {{name}}"
-resetToDefault = "Restableix el valor predeterminat"
-saveForTeam = "Desa per a l'equip"
-saving = "S'està desant…"
-sectionLabel = "Etiquetes de classificació"
-startFromScratch = "Comença des de zero"
-teamCount = "etiquetes d'equip"
-tooLong = "Les etiquetes poden tenir com a màxim {{max}} caràcters."
-ungrouped = "Sense agrupar"
-view = "Mostra les etiquetes"
+categoryCount = "categories"
+hideCategory = "Amaga la categoria"
+labelCount = "etiquetes"
+sharedNote = "Aquestes etiquetes són integrades i compartides amb tot el teu equip."
+showCategory = "Mostra la categoria"
 
 [policies.pii]
 account = "Números de compte (etiquetats)"
@@ -6055,93 +6196,10 @@ placeholder = "Select PII types"
 routing = "Números d'encaminament bancari dels EUA (ABA)"
 ssn = "Números de la Seguretat Social"
 
-[policies.settings]
-noneExport = "Actualment no s'executa cap política en exportar."
-noneUpload = "Actualment no s'executa cap política en carregar."
-onExport = "En exportar"
-onUpload = "En carregar"
-reorderHandle = "Arrossega per reordenar"
-runOrderDesc = "Quan s'executa més d'una política amb el mateix activador, s'executen en aquest ordre: cadascuna sobre la sortida de la política anterior. Arrossega per reordenar."
-title = "Configuració de polítiques"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Opcions de política"
-policySettings = "Configuració de polítiques"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Torna a intentar les polítiques fallides ({{count}})"
-rowProgress = "{{completed}} de {{total}} fitxers processats"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "Què és una política?"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Troba i ennegreix automàticament detalls sensibles — com números de la Seguretat Social i de targetes — perquè no es puguin llegir al document."
-sanitize = "Elimina JavaScript ocult del fitxer, perquè no s'executi res automàticament quan algú l'obri."
-watermark = "Estampa una marca visible (p. ex., \"Confidencial\") a cada pàgina."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Tanca"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "S'està aplicant {{name}}..."
 badgeRan = "La política {{name}} s'ha executat en aquest fitxer"
+badgeRunning = "{{name}} s'està executant..."
 blockingAction = "{{action}} bloquejat mentre s'aplica la política; espera, si us plau..."
 dismiss = "Descarta la superposició"
 enforcingTitle = "S'està aplicant la política..."
@@ -6150,6 +6208,7 @@ viewAnyway = "Mostra el fitxer (la política encara s'està aplicant)"
 [policyOption]
 autoRedactPhi = "Oculta automàticament PHI"
 blockExport = "Bloqueja l'exportació"
+ccpa = "CCPA"
 contracts = "Contractes"
 documents = "Documents"
 fedramp = "FedRAMP"
@@ -6268,86 +6327,6 @@ free = "Pla Editor"
 subscribed = "Pla Processor"
 unlinked = "No enllaçat"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "Inicialitza des d'un document"
-sectionsAriaLabel = "Seccions del constructor d'agents"
-selectorAriaLabel = "Agents"
-subtitle = "Dissenya, prova i publica agents d'AI que classifiquen, extreuen informació i encaminen els teus documents. Defineix escenaris, limita l'accés a eines, executa un conjunt de referència i publica'n una versió."
-title = "Agent Builder"
-
-[portal.agentBuilder.bootstrap]
-cancel = "Cancel·la"
-dropzoneText = "Tria un document de mostra (PDF o imatge)"
-lead = "Deixa anar un document de mostra i proposarem escenaris i un esquema d'extracció que podràs refinar. No es publica res fins que ho revisis."
-submit = "Inicialitza l'agent"
-subtitle = "Crea la base d'un agent nou a partir d'un fitxer representatiu"
-title = "Inicialitza des d'un document"
-
-[portal.agentBuilder.empty]
-description = "Inicialitza un agent a partir d'un document de mostra per crear la base dels seus escenaris i l'esquema d'extracció, i després refina'l i publica'l."
-title = "Encara no hi ha agents"
-
-[portal.agentBuilder.evals]
-casesPassing = "Casos aprovats"
-columnCase = "Cas d'avaluació"
-columnLatency = "Latència"
-columnResult = "Resultat"
-fail = "fallida"
-goldenSetPassRate = "Percentatge d'aprovació del conjunt de referència"
-latencyMs = "{{ms}} ms"
-notRun = "no executat"
-pass = "aprovat"
-passRate = "Percentatge d'aprovació"
-runEvals = "Executa avaluacions"
-
-[portal.agentBuilder.evals.empty]
-description = "Les avaluacions converteixen els escenaris en un conjunt de referència repetible. Actualitza per capturar el percentatge d'aprovació al llarg del temps i condicionar-hi les publicacions."
-title = "Encara no hi ha cap conjunt de referència"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "entre conjunts de referència"
-activeAgents = "Agents actius"
-avgPassRate = "Percentatge mitjà d'aprovació d'avaluacions"
-fleetWide = "a tota la flota"
-latestPublished = "Darrer publicat"
-scenarios = "Escenaris"
-testCases = "casos de prova"
-totalDescription_one = "{{count}} en total"
-totalDescription_other = "{{count}} en total"
-
-[portal.agentBuilder.scenarios]
-add = "Afegeix"
-addScenario = "Afegeix un escenari"
-enable = "Activa"
-expectationLabel = "Comportament esperat"
-expectationPlaceholder = "Què hauria de fer l'agent"
-inEval = "en avaluació"
-mute = "Silencia"
-muted = "silenciat"
-nameLabel = "Nom"
-namePlaceholder = "p. ex. Escalada de compliment"
-
-[portal.agentBuilder.tabs]
-evals = "Avaluacions"
-scenarios = "Escenaris"
-tools = "Eines"
-versions = "Versions"
-
-[portal.agentBuilder.tools]
-broadAccess = "Accés ampli"
-deniedHint = "Les eines seleccionades estan bloquejades. Tota la resta continua disponible per cridar."
-deniedTools = "Eines denegades"
-governanceGate = "La governança d'eines està disponible al pla Enterprise."
-restricted = "Restringit"
-restrictedAccess = "Accés restringit a eines"
-restrictedDescription = "Permet totes les eines excepte les que deneguis a continuació."
-
-[portal.agentBuilder.versions]
-current = "actual"
-historyGate = "L'historial complet de versions i la reversió estan disponibles al pla Enterprise."
-publish = "Publica"
-rollBack = "Reverteix"
-
 [portal.assistant]
 close = "Tanca l'assistent"
 error = "No s'ha pogut contactar amb l'assistent."
@@ -6364,15 +6343,43 @@ typing = "Escrivint"
 loading = "S'està carregant"
 redirectingToEditor = "S'està redirigint a l'editor..."
 
+[portal.billing.activation]
+maybeLater = "Potser més tard"
+title = "Activa el Processador"
+
+[portal.billing.activation.payg]
+sub = "Estableix un límit mensual. Paga pel que executis."
+title = "Paga per ús"
+
+[portal.billing.activation.prepay]
+badge = "2 mesos gratis"
+sub = "Una factura, targeta o transferència bancària."
+title = "Prepaga un any"
+
 [portal.billing.checkout]
 noClientSecret = "La funció Edge no ha retornat cap client_secret."
-subtitle = "Afegeix una targeta per continuar més enllà de la concessió gratuïta del pla Editor. Stripe s'encarrega de la resta."
 title = "Activa el pla Processor"
 
 [portal.billing.checkout.activationSlow]
 body = "El pagament s'ha efectuat correctament, però l'activació triga una mica més de l'habitual. S'activarà automàticament: tanca això i apareixerà aquí d'aquí a poc."
 close = "Tanca"
 title = "Ja gairebé hi som"
+
+[portal.billing.checkout.cap]
+amountAria = "Límit de despesa mensual"
+back = "Enrere"
+continue = "Continua al pagament"
+error = "No s'ha pogut establir el teu límit de despesa"
+finePrint = "Les factures s'emeten mensualment. Cancel·la en qualsevol moment."
+noLimit = "Sense límit"
+note = "Mai no se't factura més enllà del teu límit. El processament simplement es pausa."
+perMonth = "/ mes"
+title = "Estableix el teu límit de despesa"
+
+[portal.billing.checkout.card]
+fields = "Número de targeta · MM / YY · CVC · ZIP"
+label = "Dades de la targeta"
+note = "Les dades de la targeta les recull Stripe. Stirling mai no emmagatzema PAN ni CVC."
 
 [portal.billing.checkout.error]
 title = "No s'ha pogut iniciar el pagament"
@@ -6382,10 +6389,9 @@ body = "El pagament s'ha efectuat. Estem activant el processament mesurat a tote
 hint = "Mantén aquesta finestra oberta."
 title = "S'està activant el pla Processor..."
 
-[portal.billing.checkout.notConfigured]
-bodyAfter = "a l'env del portal per habilitar el pagament dins de l'aplicació."
-bodyBefore = "Defineix"
-title = "Stripe no està configurat"
+[portal.billing.checkout.pay]
+limit = "Límit de despesa mensual {{amount}}/mes. El processament es pausa en arribar al límit."
+limitNoCap = "Sense límit de despesa. El processament no es pausarà. Les factures s'emeten mensualment."
 
 [portal.billing.enterpriseUpsell]
 cta = "Crea el teu pressupost Enterprise"
@@ -6408,10 +6414,12 @@ currentPlan = "Pla actual"
 freeForever = "Gratuït per sempre"
 noTeamResolved = "Encara no s'ha resolt cap equip al teu moneder: actualitza i torna-ho a provar."
 ownerOnly = "Només el propietari de l'equip pot activar el pla Processor."
+payInvoice = "Paga la factura per completar"
 planName = "Editor"
 ssoIncluded = "SSO inclòs"
 switchOnProcessor = "Activa el Processor →"
 unlimitedUsers = "Usuaris il·limitats"
+viewQuote = "Mostra el pressupost"
 
 [portal.billing.invoices]
 columnAmount = "Import"
@@ -6464,7 +6472,111 @@ segmentApiDesc = "Sol·licituds directes a l'API"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automatitzacions i pipelines"
 segmentAutomationLabel = "Automatització"
+sizeMultiplier = "{{formatted}} PDFs han utilitzat un multiplicador de mida"
+summary = "{{unique}} únics · {{units}} unitats de mesurador · {{avg}} mitjana per PDF"
+summaryNoRate = "{{unique}} únics · {{units}} unitats de mesurador"
 unit = "PDF mesurats"
+unitsPending_one = "{{units}} unitat de mesurador pendent de sincronització des d'instàncies enllaçades"
+unitsPending_other = "{{units}} unitats de mesurador pendents de sincronització des d'instàncies enllaçades"
+
+[portal.billing.prepaid]
+capSuffix = "de {{total}} crèdits prepagats"
+expires = "Caduca el {{date}}"
+eyebrow = "Capacitat prepagada"
+note = "S'utilitza abans de la facturació per ús i fora del teu límit de despesa."
+topUp = "Recarrega"
+
+[portal.billing.prepaid.buy]
+back = "Enrere"
+calcTitle = "Calcula el teu pagament anual"
+cancel = "Cancel·la"
+cancelPurchase = "Cancel·la la compra"
+close = "Tanca"
+continueToPayment = "Continua al pagament"
+finalise = "Finalitza"
+invoiceErrorTitle = "No s'ha pogut generar la factura"
+loadingTitle = "S'està carregant el teu pressupost"
+payTitle = "Paga el teu any"
+step = "Pas {{current}} de {{total}}"
+
+[portal.billing.prepaid.calc]
+change = "Canvia"
+deployRow = "Desplegament"
+done = "Fet"
+enterpriseHint = "Això és escala empresarial. Amb aquest volum, les tarifes empresarials superen qualsevol descompte d'autoservei. Bloqueig de tarifa, condicions i un pressupost en minuts."
+governanceRow = "Governança"
+governanceValue = "{{label}} · {{count}} polítiques"
+handlesLabel = "El teu Processador"
+handlesValue = "gestiona {{volume}} crèdits / mes"
+pipelinesLabel = "Pipelines"
+policiesMeta = "{{count}} polítiques"
+poolCaption = "Un sol fons de {{credits}} crèdits per a l'any. Els mesos intensius prenen crèdits dels més lleugers."
+priceLabel = "El teu any · 12 mesos pel preu de 10"
+rateUnknown = "Mostrarem el preu exacte en finalitzar la compra."
+savings = "Estalvies {{amount}} · 2 mesos gratis."
+sizingRow = "Dimensionament"
+sizingValue = "{{label}} · {{desc}}"
+usersLabel = "Usuaris totals"
+
+[portal.billing.prepaid.consent]
+label = "Entenc que quan la meva capacitat prepagada s'esgoti o caduqui al cap de 12 mesos, el processament continuarà automàticament a la tarifa estàndard per ús mesurat (fins al meu límit de despesa) tret que cancel·li, i que puc cancel·lar en qualsevol moment des del portal de facturació."
+
+[portal.billing.prepaid.deploy]
+cloud = "Stirling Cloud"
+cloudDesc = "Gestionat per Stirling. Actiu en minuts."
+cloudValue = "Stirling Cloud · Gestionat"
+selfhost = "Autoallotjat"
+selfhostDesc = "S'executa en infraestructura privada. Mateixa tarifa."
+selfhostValue = "Autoallotjat · Infraestructura privada"
+
+[portal.billing.prepaid.offer]
+cta = "Revisa l'oferta"
+subtitle = "Prepaga un any de processament de PDF i obtén dos mesos gratis, utilitzats abans de la facturació per ús i fora del teu límit de despesa."
+title = "Aconsegueix 12 mesos pel preu de 10"
+
+[portal.billing.prepaid.pay]
+accountName = "Nom del titular del compte"
+accountNamePlaceholder = "p. ex. Jane Smith"
+companyName = "Nom de l'empresa (opcional)"
+companyNamePlaceholder = "p. ex. Acme Inc."
+downloadInvoice = "Baixa la factura"
+payOnline = "Paga en línia"
+poNumber = "Número de comanda (opcional)"
+poNumberPlaceholder = "p. ex. PO-2026-0142"
+
+[portal.billing.prepaid.pipelines]
+advanced = "Avançat"
+advancedDesc = "Els pipelines impulsen la major part del teu processament."
+none = "Cap"
+noneDesc = "Encara no executes pipelines. Activa'ls en qualsevol moment."
+standard = "Estàndard"
+standardDesc = "Alguns pipelines tornen a processar els PDFs entrants."
+
+[portal.billing.prepaid.posture]
+essentials = "Essencials"
+essentialsDesc = "Classificació, per defecte, més Compartició"
+governed = "Governat"
+governedDesc = "Afegeix Seguretat i Encaminament"
+regulated = "Regulat"
+regulatedDesc = "Totes les categories, incl. Compliment, Retenció, Ingestió"
+
+[portal.billing.prepaid.review]
+download = "Baixa el pressupost (PDF)"
+downloading = "S'està preparant…"
+share = "comparteix per a aprovació"
+
+[portal.billing.prepaid.size]
+compact = "Compacte"
+compactDesc = "Fitxers de menys de 25 MB, sense càrrecs per dades"
+heavy = "Pesat"
+heavyDesc = "Escanejat o amb moltes imatges, habitualment 50 MB+"
+standard = "Estàndard"
+standardDesc = "Majoritàriament petit, alguns escanejos per sobre de 25 MB"
+
+[portal.billing.prepaid.state]
+exhausted = "Esgotada"
+healthy = "En queda força"
+low = "S'està esgotant"
 
 [portal.billing.spendLimit]
 adjustLimit = "Ajusta el límit"
@@ -6493,6 +6605,8 @@ label = "Es preveu que se superi."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Despesa aquest mes"
+freeRemaining_one = "{{formatted}} PDF gratuït restant"
+freeRemaining_other = "{{formatted}} PDFs gratuïts restants"
 processed_one = "{{formattedCount}} PDF processat."
 processed_other = "{{formattedCount}} PDF processats."
 processedWithRate_one = "{{formattedCount}} PDF processat, a {{rate}} cadascun."
@@ -6532,6 +6646,350 @@ signature = "signatura"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
+
+[portal.connections]
+createTitle = "Connexió nova"
+createTitleFor = "Connecta {{name}}"
+delete = "Suprimeix"
+edit = "Edita"
+editTitle = "Edita la connexió"
+unsupportedType = "Aquest tipus de connexió no es pot editar aquí."
+
+[portal.connections.categories.advanced]
+description = "Per a un servei que encara no admetem."
+label = "Avançat"
+
+[portal.connections.categories.audit]
+description = "Registra què ha passat a un document, on els teus auditors ja ho consulten."
+label = "Registre d'auditoria i compliment"
+
+[portal.connections.categories.notify]
+description = "Informa un altre sistema que ha passat alguna cosa."
+label = "Notificació i workflow"
+
+[portal.connections.categories.security]
+description = "Escaneja o etiqueta un document abans que continuï."
+label = "Seguretat i classificació"
+
+[portal.connections.categories.signing]
+description = "Envia un document perquè se signi o es notaritzi."
+label = "Signatura electrònica i notarització"
+
+[portal.connections.categories.storage]
+description = "On acaben els documents processats - un bucket, una unitat, un tiquet o una pàgina."
+label = "Fitxer i adjunt"
+
+[portal.connections.commonFields.accessToken]
+helperText = "Stirling ho emmagatzema xifrat i no ho torna a mostrar mai."
+label = "Token d'accés"
+
+[portal.connections.commonFields.apiKey]
+label = "Clau API"
+
+[portal.connections.commonFields.apiToken]
+label = "Token API"
+
+[portal.connections.commonFields.baseUrl]
+helperText = "Els passos que utilitzen aquesta connexió només poden cridar rutes sota aquesta URL, mai un altre host."
+label = "URL del servidor"
+
+[portal.connections.commonFields.email]
+label = "Correu electrònic"
+
+[portal.connections.commonFields.host]
+label = "Host"
+
+[portal.connections.commonFields.password]
+label = "Contrasenya"
+
+[portal.connections.commonFields.port]
+label = "Port"
+
+[portal.connections.commonFields.username]
+label = "Nom d'usuari"
+
+[portal.connections.commonFields.webhookUrl]
+helperText = "Enganxa la URL que t'ha donat el servei. Només es poden cridar rutes sota aquesta URL."
+label = "URL de Webhook"
+
+[portal.connections.fields]
+name = "Nom de la connexió"
+namePlaceholder = "p. ex. Producció"
+
+[portal.connections.picker]
+cancel = "Cancel·la"
+createNew = "Connexió nova..."
+placeholder = "Selecciona una connexió"
+save = "Desa la connexió"
+
+[portal.connections.picker2]
+back = "Canvia la integració"
+heading = "Què vols connectar?"
+noResultsBody = "Encara no ho admetem - explica'ns-ho i mirarem d'afegir-ho."
+noResultsTitle = "No coincideix res amb \"{{query}}\""
+searchPlaceholder = "Cerca integracions - prova \"sign\", \"ocr\" o el nom d'un producte"
+
+[portal.connections.types.api]
+description = "Crida qualsevol HTTP API des d'una política. Tries la URL, l'autenticació i la càrrega útil."
+label = "API personalitzada"
+
+[portal.connections.types.api.fields.authType]
+label = "Autenticació"
+
+[portal.connections.types.api.fields.authType.options.basic]
+label = "Nom d'usuari i contrasenya"
+
+[portal.connections.types.api.fields.authType.options.bearer]
+label = "Bearer token"
+
+[portal.connections.types.api.fields.authType.options.header]
+label = "Token en una capçalera personalitzada"
+
+[portal.connections.types.api.fields.authType.options.none]
+label = "Cap"
+
+[portal.connections.types.api.fields.authType.options.tokenLogin]
+label = "Inicia sessió per obtenir un token"
+
+[portal.connections.types.api.fields.baseUrl]
+helperText = "Els passos que utilitzen aquesta connexió només poden cridar rutes sota aquesta URL, mai un altre host."
+label = "URL base"
+placeholder = "https://api.example.com/v1"
+
+[portal.connections.types.api.fields.headerName]
+label = "Nom de la capçalera"
+placeholder = "X-API-Key"
+
+[portal.connections.types.api.fields.loginPath]
+label = "Ruta d'inici de sessió"
+placeholder = "/auth/login"
+
+[portal.connections.types.api.fields.password]
+label = "Contrasenya"
+
+[portal.connections.types.api.fields.resultUrlHosts]
+helperText = "Si l'API respon amb un enllaç de baixada, només es poden obtenir aquests hosts. Separa'ls amb comes. Deixa-ho en blanc per permetre només el host propi de la URL base."
+label = "Hosts de resultat permesos"
+
+[portal.connections.types.api.fields.token]
+label = "Token"
+
+[portal.connections.types.api.fields.tokenHeaderName]
+label = "Envia el token com aquesta capçalera"
+
+[portal.connections.types.api.fields.tokenResponseHeader]
+helperText = "La capçalera de resposta en què la crida d'inici de sessió retorna el token, p. ex. X-Auth-Token."
+label = "Capçalera de resposta del token"
+
+[portal.connections.types.api.fields.username]
+label = "Nom d'usuari"
+
+[portal.connections.types.clamav]
+baseUrlPlaceholder = "http://clamav-rest:9000"
+description = "Escaneja documents per detectar malware en un servidor que executes - res no surt de la teva xarxa."
+label = "ClamAV (autoallotjat)"
+
+[portal.connections.types.cloudmersive]
+description = "Escaneig de virus i contingut per a documents en una política."
+label = "Cloudmersive"
+
+[portal.connections.types.cloudmersiveadvanced]
+description = "Bloqueja documents que contenen macros, executables, scripts o objectes incrustats - no només malware conegut."
+label = "Cloudmersive Advanced Scan"
+
+[portal.connections.types.confluence]
+baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
+description = "Adjunta documents processats a una pàgina de Confluence."
+label = "Confluence"
+
+[portal.connections.types.consigno]
+description = "Envia documents a ConsignO Cloud (Notarius) per a signatura electrònica i notarització."
+label = "ConsignO Cloud"
+
+[portal.connections.types.consigno.fields.baseUrl]
+helperText = "El teu entorn ConsignO Cloud, incloent /api/v1."
+label = "URL del servidor"
+placeholder = "https://your-org.consignocloud.com/api/v1"
+
+[portal.connections.types.consigno.fields.clientId]
+label = "Clau API"
+
+[portal.connections.types.consigno.fields.clientSecret]
+label = "Secret API"
+
+[portal.connections.types.consigno.fields.password]
+label = "Contrasenya"
+
+[portal.connections.types.consigno.fields.tenantId]
+helperText = "Només cal si la teva organització utilitza tenants."
+label = "Tenant"
+
+[portal.connections.types.consigno.fields.username]
+label = "Nom d'usuari"
+
+[portal.connections.types.discord]
+baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
+description = "Publica un missatge a Discord quan una política processi un document."
+label = "Discord"
+
+[portal.connections.types.elastic]
+baseUrlPlaceholder = "https://your-cluster:9200"
+description = "Indexa un esdeveniment d'auditoria a Elasticsearch cada vegada que una política gestiona un document."
+label = "Elasticsearch"
+
+[portal.connections.types.ftp]
+description = "Consulta un servidor FTP o FTPS per trobar documents nous."
+hostPlaceholder = "ftp.example.com"
+label = "FTP / FTPS"
+
+[portal.connections.types.ftp.fields.passive]
+label = "Mode de connexió"
+
+[portal.connections.types.ftp.fields.passive.options]
+active = "Actiu"
+passive = "Passiu (recomanat)"
+
+[portal.connections.types.ftp.fields.security]
+helperText = "FTP sense xifrar envia credencials i fitxers sense xifratge; tria FTPS si el servidor ho admet."
+label = "Xifratge"
+
+[portal.connections.types.ftp.fields.security.options]
+explicit = "FTPS (explícit / AUTH TLS)"
+implicit = "FTPS (implícit)"
+none = "Cap (FTP sense xifrar)"
+
+[portal.connections.types.googlechat]
+baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
+description = "Publica un missatge en un espai de Google Chat quan s'executi una política."
+label = "Google Chat"
+
+[portal.connections.types.jira]
+baseUrlPlaceholder = "https://your-site.atlassian.net"
+description = "Adjunta documents processats a una incidència de Jira."
+label = "Jira"
+
+[portal.connections.types.mailgun]
+description = "Envia un document o una notificació per correu electrònic quan s'executi una política."
+label = "Mailgun"
+
+[portal.connections.types.nextcloud]
+baseUrlPlaceholder = "https://your-server/remote.php/dav"
+description = "Arxiva documents processats a Nextcloud."
+label = "Nextcloud"
+
+[portal.connections.types.nextcloud.fields.appPassword]
+label = "Contrasenya de l'aplicació"
+
+[portal.connections.types.presidio]
+baseUrlPlaceholder = "http://presidio-analyzer:3000"
+description = "Detecta dades personals en el text del document utilitzant un servidor Presidio que executes."
+label = "Presidio (autoallotjat)"
+
+[portal.connections.types.purview]
+description = "Llegeix i aplica etiquetes de sensibilitat de Microsoft Purview als PDFs."
+label = "Microsoft Purview"
+
+[portal.connections.types.purview.fields.clientId]
+helperText = "Opcional. Només cal per triar etiquetes pel nom; l'etiquetatge funciona sense això."
+label = "ID d'aplicació (client)"
+
+[portal.connections.types.purview.fields.clientSecret]
+label = "Secret de client"
+
+[portal.connections.types.purview.fields.tenantId]
+helperText = "Estampat a cada etiqueta com el seu SiteId, perquè les eines compatibles amb Purview sàpiguen quina organització l'ha aplicat."
+label = "ID de directori (tenant)"
+placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
+
+[portal.connections.types.s3]
+description = "Un bucket S3 del qual les fonts poden llegir i al qual les sortides de pipeline poden escriure."
+label = "Emmagatzematge S3"
+
+[portal.connections.types.s3.fields.accessKeyId]
+label = "ID de clau d'accés"
+
+[portal.connections.types.s3.fields.bucket]
+label = "Bucket"
+
+[portal.connections.types.s3.fields.endpoint]
+helperText = "Deixa-ho en blanc per a AWS. Estableix-ho per a MinIO o un altre emmagatzematge compatible amb S3."
+label = "Endpoint"
+
+[portal.connections.types.s3.fields.region]
+label = "Regió"
+
+[portal.connections.types.s3.fields.secretAccessKey]
+label = "Clau d'accés secreta"
+
+[portal.connections.types.sendgrid]
+description = "Envia un document o una notificació per correu electrònic quan s'executi una política."
+label = "SendGrid"
+
+[portal.connections.types.sftp]
+description = "Consulta un servidor SFTP (SSH) per trobar documents nous."
+hostPlaceholder = "sftp.example.com"
+label = "SFTP"
+
+[portal.connections.types.sftp.fields.hostKeyFingerprint]
+helperText = "Opcional. L'empremta digital SHA-256 de la clau de host del servidor (de `ssh-keyscan host | ssh-keygen -lf -`). Quan s'estableix, només s'accepta un servidor que presenti aquesta clau; quan és en blanc, la clau vista a la primera connexió queda fixada i es rebutgen canvis posteriors."
+label = "Empremta digital de la clau de host"
+placeholder = "SHA256:..."
+
+[portal.connections.types.sftp.fields.passphrase]
+label = "Frase de pas de la clau"
+
+[portal.connections.types.sftp.fields.password]
+helperText = "Deixa-ho en blanc si t'autentiques amb una clau privada."
+
+[portal.connections.types.sftp.fields.privateKey]
+helperText = "Opcional. Enganxa una clau privada OpenSSH per autenticar-te amb una clau en lloc d'una contrasenya."
+label = "Clau privada"
+
+[portal.connections.types.slack]
+description = "Publica un missatge a Slack quan una política processi un document."
+label = "Slack"
+
+[portal.connections.types.smb]
+description = "Vigila un recurs compartit de xarxa SMB / CIFS (Windows o Samba)."
+hostPlaceholder = "fileserver.example.com"
+label = "SMB / Recurs compartit de xarxa"
+
+[portal.connections.types.smb.fields.domain]
+helperText = "Opcional. El domini o grup de treball de Windows, si el teu servidor n'utilitza un."
+label = "Domini"
+
+[portal.connections.types.smb.fields.share]
+label = "Recurs compartit"
+placeholder = "documents"
+
+[portal.connections.types.splunk]
+baseUrlPlaceholder = "https://your-splunk:8088"
+description = "Envia un esdeveniment d'auditoria a Splunk cada vegada que una política gestiona un document."
+label = "Splunk"
+
+[portal.connections.types.sumologic]
+baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
+description = "Envia un esdeveniment d'auditoria a un col·lector HTTP de Sumo Logic."
+label = "Sumo Logic"
+
+[portal.connections.types.teams]
+baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
+description = "Publica un missatge en un canal de Teams quan s'executi una política."
+label = "Microsoft Teams"
+
+[portal.connections.types.webhook]
+baseUrlPlaceholder = "https://example.com/hooks/documents"
+description = "Publica cada document, o només els detalls, a una URL que triïs."
+label = "Webhook"
+
+[portal.connections.types.zapier]
+baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
+description = "Activa un escenari de Zap o Make des d'una política."
+label = "Zapier i Make"
+
+[portal.docs]
+browse = "Explora la documentació"
+viewSource = "Mostra el codi font a GitHub"
 
 [portal.docs.authentication]
 codeCaption = "cada sol·licitud"
@@ -6618,10 +7076,18 @@ title = "SDK oficials"
 beta = "Beta"
 deprecated = "Obsolet"
 
+[portal.docs.search]
+empty = "No hi ha documentació coincident"
+placeholder = "Cerca a la documentació"
+results = "{{count}} resultats"
+
 [portal.docs.skills]
 eyebrow = "HABILITATS"
 lead = "Capacitats incloses i amb nom que el teu agent invoca com una sola eina. Cada habilitat és una cadena d'operacions determinista amb avaluacions associades."
 title = "Habilitats d'agent"
+
+[portal.docs.toc]
+title = "En aquesta pàgina"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -6696,6 +7162,8 @@ type = "Tipus"
 user = "Usuari"
 
 [portal.documents.queue.empty]
+connectSource = "Connecta una font"
+createPipeline = "Crea un pipeline"
 description = "Quan les fonts introdueixin documents a les teves canalitzacions, apareixeran aquí per revisar-los."
 title = "No hi ha documents a la cua"
 
@@ -6805,12 +7273,70 @@ description = "Aquesta vista ha trobat un error inesperat. Torna-ho a provar o t
 retry = "Torna-ho a provar"
 title = "Alguna cosa ha anat malament en aquesta pàgina"
 
+[portal.home.download]
+back = "Enrere"
+body = "Baixa l'aplicació d'escriptori o autoallotja el servidor."
+done = "Fet"
+guide = "Obre la guia de {{name}}"
+openInBrowser = "Obre al navegador en lloc d'això"
+sectionDesktop = "Aplicació d'escriptori"
+sectionSelfHosted = "Autoallotjat"
+title = "Instal·la l'editor Stirling PDF"
+
+[portal.home.download.docker]
+detailBody = "Executa la imatge oficial al teu servidor."
+note = "S'obre a :8080. Inici de sessió predeterminat: admin / stirling."
+tagline = "Executa el servidor en un contenidor"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Estàndard"
+
+[portal.home.download.kubernetes]
+detailBody = "Instal·la el chart oficial de Helm."
+note = "Afegeix un PVC per a /configs per conservar la configuració."
+tagline = "Desplega en un clúster amb Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Compilacions natives per a la teva distribució."
+guideBtn = "Mostra les opcions d'instal·lació de Linux"
+note = "Hi ha compilacions AppImage, .deb i .rpm disponibles per a distribucions habituals."
+tagline = "Aplicació d'escriptori nativa per a la teva distribució"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "O mitjançant Homebrew"
+detailBody = "Executa l'instal·lador o utilitza Homebrew."
+downloadBtn = "Descarrega per a macOS"
+tagline = "Aplicació nativa per a Apple silicon i Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Executa el .jar en un servidor físic."
+downloadBtn = "Descarrega el .jar"
+note = "Requereix Java 21+. S'obre a :8080; inici de sessió predeterminat admin / stirling."
+runLabel = "Després executa'l"
+tagline = "Executa el .jar en un servidor físic"
+title = "Configuració manual del servidor"
+
+[portal.home.download.windows]
+altLabel = "O mitjançant winget"
+detailBody = "Executa l'instal·lador o utilitza un gestor de paquets."
+downloadBtn = "Descarrega l'instal·lador"
+tagline = "Aplicació nativa per a Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
-activeUsers = "{{n}} actius"
-invite = "Convida companys d'equip"
+activeOfDeployed = "{{active}} de {{total}} actius aquest mes"
 name = "Stirling PDF Editor"
 open = "Obre al navegador"
 updated = "actualitzat {{time}}"
+
+[portal.home.editor.deploy]
+finish = "Finalitza el desplegament"
+options = "Mostra les opcions de desplegament"
+start = "Desplega l'Editor"
 
 [portal.home.editor.target]
 cloud = "Managed Cloud"
@@ -6821,49 +7347,6 @@ kubernetes = "Self-hosted · Kubernetes"
 afternoon = "Bona tarda"
 evening = "Bon vespre"
 morning = "Bon dia"
-
-[portal.home.onboarding]
-dismiss = "Descarta la configuració"
-notStarted = "No iniciat"
-progress = "{{done}} de {{total}} fet"
-title = "Acaba la configuració"
-
-[portal.home.onboarding.enterprise]
-body = "SSO + SCIM + RBAC a tota l'organització, preus per volum compromès i desplegament air-gapped."
-cta = "Inicia la prova"
-ctaQuote = "Obtén un pressupost"
-lead = "Per a més de 250 empleats."
-tag = "Enterprise"
-
-[portal.home.onboarding.steps.editor]
-blurb = "Desplega l'aplicació d'escriptori, gratuïta per sempre."
-title = "Descarrega l'Editor PDF"
-
-[portal.home.onboarding.steps.policies]
-blurb = "{{active}} actives · {{recommended}} recomanades"
-chip = "{{active}} actives"
-title = "Activa les polítiques"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} connectades · cada PDF governat allà on arriba"
-chip = "{{connected}} connectades"
-title = "Connecta les teves fonts"
-
-[portal.home.quickActions]
-subtitle = "Tasques principals per a avui"
-title = "Accions ràpides"
-
-[portal.home.quickActions.buildPipeline]
-blurb = "Compositor de 3 passos sobre la biblioteca d'operacions tipades"
-title = "Crea una canalització"
-
-[portal.home.quickActions.connectSource]
-blurb = "S3, agents, webhooks, carpetes supervisades"
-title = "Connecta una font"
-
-[portal.home.quickActions.issueApiKey]
-blurb = "Clau amb abast amb límits de velocitat i llista d'IP permeses"
-title = "Emet una clau API"
 
 [portal.infrastructure]
 manageEditorDeployment = "Gestiona el desplegament de l'Editor"
@@ -6877,19 +7360,29 @@ heading = "Claus API"
 subheading = "Credencials amb abast amb límits de velocitat per clau, permisos i llistes d'IP permeses."
 
 [portal.infrastructure.apiKeys.card]
-allowedIps = "IP permeses"
-anyIp = "Qualsevol IP (sense llista de permeses)"
 created = "Creada"
 lastUsed = "Utilitzada per última vegada"
-permissions = "Permisos"
-rateLimit = "Límit de velocitat"
-rateLimitValue = "{{value}} req/min"
+revoke = "Revoca la clau"
 usageMonth = "Ús aquest mes"
 usageToday = "Ús avui"
 
 [portal.infrastructure.apiKeys.empty]
 description = "Crea una clau amb abast per començar a cridar la Stirling API."
 title = "Encara no hi ha claus API"
+
+[portal.infrastructure.apiKeys.error]
+load = "No s'han pogut carregar les teves claus API. Torna-ho a provar."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "Vols revocar \"{{name}}\"? Qualsevol integració que encara utilitzi aquesta clau començarà a rebre errors 401 immediatament. Això no es pot desfer."
+cancel = "Cancel·la"
+confirm = "Revoca la clau"
+title = "Revoca la clau API"
+
+[portal.infrastructure.attestationLabel]
+attested = "Atestat"
+inScope = "Dins de l'abast"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filtra esdeveniments d'auditoria per categoria"
@@ -6934,6 +7427,7 @@ all = "Tots"
 auth = "Autenticació"
 config = "Configuració"
 elevation = "Elevació"
+policy = "Política"
 processing = "Processament"
 security = "Seguretat"
 
@@ -6943,25 +7437,47 @@ title = "No tens accés"
 
 [portal.infrastructure.audit.metrics]
 config = "Configuració"
-elevation = "Elevació"
+policy = "Política"
 processing = "Processament"
 totalEvents = "Esdeveniments totals · 24 h"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Autenticació"
+config = "Configuració"
+elevation = "Elevació"
+policy = "Política"
+processing = "Processament"
+security = "Seguretat"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Correcte"
+warning = "Advertiment"
+
+[portal.infrastructure.certLabel]
+certified = "Certificat"
+inProgress = "En curs"
+notStarted = "No iniciat"
 
 [portal.infrastructure.createKey]
 cancel = "Cancel·la"
 createKey = "Crea una clau"
 done = "Fet"
-ipAllowlistHelper = "Intervals CIDR separats per comes. Deixa-ho en blanc per permetre qualsevol IP."
-ipAllowlistLabel = "Llista d'IP permeses"
 keyNameLabel = "Nom de la clau"
 keyNamePlaceholder = "p. ex. Producció · ingestió"
-permissionsLabel = "Permisos"
 secretKeyCaption = "Clau secreta"
 secretWarning = "Desa-ho en un gestor de secrets. Stirling només emmagatzema un hash — no hi ha manera de recuperar-ho més tard."
 subtitle = "Limita la clau al mínim que necessita. La pots rotar o revocar en qualsevol moment."
 subtitleCreated = "Copia aquest secret ara — no es tornarà a mostrar."
 title = "Crea una clau API"
 titleCreated = "Clau creada"
+
+[portal.infrastructure.deployLabel]
+live = "En directe"
+queued = "A la cua"
+rolledBack = "Revertit"
+rolling = "Desplegant"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -6998,6 +7514,15 @@ subheading = "Salut en directe de cada regió Stirling desplegada — latència,
 description = "Les regions desplegades apareixen aquí un cop s'hagi proveït el teu espai de treball."
 title = "No hi ha regions desplegades"
 
+[portal.infrastructure.keyLabel]
+active = "Activa"
+revoked = "Revocada"
+
+[portal.infrastructure.modelLabel]
+active = "Actiu"
+degraded = "Degradat"
+disabled = "Desactivat"
+
 [portal.infrastructure.models]
 heading = "Models"
 msValue = "{{value}} ms"
@@ -7025,6 +7550,10 @@ status = "Estat"
 type = "Tipus"
 version = "Versió"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/crida"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Models actius"
 avgLatency = "Latència mitjana"
@@ -7047,6 +7576,17 @@ docType = "Tipus de document"
 modelForAria = "Model per a {{operation}}"
 operation = "Operació"
 routedTo = "Encaminat a"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classificació"
+extraction = "Extracció"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degradat"
+down = "Caigut"
+healthy = "Correcte"
 
 [portal.infrastructure.security.access.byok]
 description = "Proporciona una clau del teu propi KMS. Stirling hi xifra però encara pot llegir."
@@ -7173,6 +7713,47 @@ models = "Models"
 security = "Seguretat"
 storage = "Emmagatzematge"
 
+[portal.integrations]
+addAnother = "Afegeix-ne una altra"
+availableHeading = "Disponibles"
+comingSoonHeading = "Properament"
+connect = "Connecta"
+connectedHeading = "Connectades"
+connectionCount_one = "{{count}} connexió"
+connectionCount_other = "{{count}} connexions"
+customApi = "API personalitzada"
+searchPlaceholder = "Cerca integracions"
+subtitle = "Tot allò amb què Stirling es pot comunicar. Les credencials es creen aquí una sola vegada i després es referencien des de fonts, polítiques i pipelines."
+title = "Integracions"
+typedName = "Nom de {{tool}}"
+
+[portal.integrations.filters]
+all = "Totes"
+audit = "Auditoria"
+connected = "Connectades"
+notify = "Notifica"
+security = "Seguretat"
+signing = "Signatura"
+storage = "Emmagatzematge"
+
+[portal.integrations.status]
+connected = "Connectada"
+
+[portal.integrations.table]
+integration = "Integració"
+worksWith = "Funciona amb"
+
+[portal.integrations.worksWith]
+pipelines = "Pipelines"
+policies = "Polítiques"
+sources = "Fonts"
+
+[portal.legal]
+draft = "{{label}} · esborrany"
+loadError = "No s'ha pogut carregar aquest document. Torna-ho a provar."
+loading = "S'està carregant…"
+title = "Document legal"
+
 [portal.nav]
 agent-builder = "Constructor d'agents"
 components = "Components"
@@ -7181,6 +7762,7 @@ documents = "Documents"
 editor = "Editor"
 home = "Inici"
 infrastructure = "Infraestructura"
+integrations = "Integracions"
 pipelines = "Canalitzacions"
 policies = "Polítiques"
 procurement = "Compres"
@@ -7189,25 +7771,9 @@ sources = "Fonts"
 usage = "Ús i facturació"
 users = "Usuaris"
 
-[portal.notifications]
-markAllRead = "Marca-ho tot com a llegit"
-title = "Notificacions"
-viewAll = "Mostra-ho tot"
-
-[portal.notifications.ariaLabel]
-none = "Notificacions, cap sense llegir"
-unread_one = "Notificacions, {{count}} sense llegir"
-unread_other = "Notificacions, {{count}} sense llegir"
-
-[portal.notifications.count]
-allRead = "tot llegit"
-loading = "carregant"
-new_one = "{{count}} nova"
-new_other = "{{count}} noves"
-
-[portal.notifications.empty]
-description = "No hi ha notificacions noves."
-title = "Estàs al dia"
+[portal.nav.section]
+platform = "Plataforma PDF"
+processor = "Processador PDF"
 
 [portal.pipelines]
 subtitle = "Cada canalització de documents automatitzada al backend: una cadena ordenada d'operacions sobre un conjunt de fonts, executada amb un disparador. Fes clic en una fila per veure'n els passos i les fonts."
@@ -7219,15 +7785,28 @@ newPipeline = "Canalització nova"
 [portal.pipelines.builder]
 addStep = "Afegeix una eina"
 back = "Torna a les canalitzacions"
+cannotFollow = "No es pot prendre {{produced}}"
+chooseAccount = "Tria un compte"
+chooseDestination = "Tria una destinació"
+chooseOperation = "Tria què fa aquest pas"
+chooseSource = "Tria una font"
 discard = "Descarta els canvis"
 enabled = "Activat"
+inputs = "Entrada"
+inputSource = "Font d'entrada"
+inputTrigger = "Activador"
 keepEditing = "Continua editant"
+needsConfiguring = "Cal configurar-ho"
 needsUpload = "Cal un fitxer pujat"
+noSources = "Encara no hi ha cap font connectada. Crea'n una per utilitzar-la com a entrada."
 noToolMatches = "Cap eina coincideix amb la cerca."
 pipelineSettings = "Configuració de la canalització"
 searchTools = "Cerca eines"
 selectToolBody = "Afegeix una eina per construir la teva canalització."
 selectToolTitle = "Encara no hi ha eines"
+sendToSystem = "Envia a un altre sistema"
+stepsIncompatible = "Aquests passos no es poden executar amb el que produeix el pas anterior: {{tools}}."
+stepsNeedSetup = "Aquests passos encara s'han de configurar abans de desar: {{tools}}."
 toolSettings = "Configuració de l'eina"
 unknownStep = "Operació no reconeguda, conservada tal com està."
 unsavedBody = "Tens canvis sense desar. Desa'ls abans de sortir o els vols descartar?"
@@ -7235,19 +7814,24 @@ unsavedTitle = "Canvis sense desar"
 uploadUnsupported = "Els fitxers pujats encara no són compatibles amb les canalitzacions, així que aquests passos no es poden desar: {{tools}}."
 usesDefaults = "S'executa amb la configuració predeterminada"
 
+[portal.pipelines.builder.diagnostic]
+fan-in = "Combina tots els fitxers del pas anterior"
+fan-out = "S'executa una vegada per cada fitxer del pas anterior"
+format-mismatch = "Necessita {{accepts}}, però el pas anterior produeix {{produced}}"
+output-uncertain = "Pot ser que no s'executi: la sortida del pas anterior depèn de com estigui configurat"
+source-mismatch = "Necessita {{accepts}}, però l'entrada d'aquest pipeline és {{produced}}"
+undeclared-operation = "No es pot comprovar què accepta aquest pas"
+
 [portal.pipelines.composer]
 addTool = "Afegeix una eina"
 cancel = "Cancel·la"
 chainEmpty = "Afegeix una eina per començar a construir la teva canalització."
 create = "Crea una canalització"
-directory = "Carpeta de sortida"
-directoryHelp = "Camí absolut al servidor. Ha d'estar dins de les carpetes permeses configurades."
 editingUnsupported = "Encara no és compatible mostrar aquests paràmetres d'eina per editar-los."
 moveDown = "Mou avall"
 moveUp = "Mou amunt"
 name = "Nom"
 namePlaceholder = "p. ex. Revisió de redacció"
-noSources = "Encara no hi ha fonts connectades. La canalització encara es pot executar sobre fitxers proporcionats directament."
 noToolSettings = "Aquesta eina no té configuració ajustable."
 operations_one = "Operació ({{count}})"
 operations_other = "Operacions ({{count}})"
@@ -7272,11 +7856,13 @@ confirm = "Elimina"
 title = "Vols eliminar la canalització?"
 
 [portal.pipelines.detail]
+clearHistory = "Esborra l'historial"
 delete = "Elimina la canalització"
 run = "Executa ara"
 
 [portal.pipelines.empty]
 action = "Crea una canalització"
+connectSource = "Connecta una font"
 description = "Crea la teva primera canalització: tria les fonts sobre les quals s'executa, encadena les operacions i tria on va la sortida."
 title = "Encara no hi ha canalitzacions"
 
@@ -7285,15 +7871,17 @@ active = "Actives"
 paused = "En pausa"
 total = "Canalitzacions"
 
-[portal.pipelines.output]
-folder = "Escriu a la carpeta"
-inline = "Retorna fitxers"
-
 [portal.pipelines.run]
+allProcessed_one = "No hi ha res per executar: el document {{count}} de la font ja s'ha processat."
+allProcessed_other = "No hi ha res per executar: tots els {{count}} documents de les fonts ja s'han processat."
 completed_one = "Execució completada."
 completed_other = "Totes les {{count}} execucions completades."
 empty = "No hi ha res per executar: les fonts no tenien documents per processar."
 failed = "L'execució ha fallat: {{error}}"
+historyCleared = "Historial esborrat. La propera execució tornarà a processar tot el que hi hagi actualment a les fonts."
+inFlight = "No hi ha res nou per executar: encara s'estan processant documents d'una execució anterior."
+parked_one = "No hi ha res per executar: {{count}} document ha fallat anteriorment i està aparcat. Corregeix-ne la causa i després esborra l'historial per tornar-ho a provar."
+parked_other = "No hi ha res per executar: {{count}} documents han fallat anteriorment i estan aparcats. Corregeix-ne la causa i després esborra l'historial per tornar-ho a provar."
 running = "Execució iniciada; encara està en curs."
 timeout = "L'execució triga més del previst; pot ser que encara acabi en segon pla."
 
@@ -7313,12 +7901,18 @@ manual = "Manual"
 schedule = "Programat"
 
 [portal.policies]
+defaultName = "Política de {{category}}"
 subtitle = "Automatitzacions permanents que apliquen una canalització d'eines a cada document. Cada política s'activa en pujar o exportar, executa la seva cadena d'eines i desa la versió aplicada al costat de l'original."
 title = "Polítiques"
 
 [portal.policies.card]
 comingSoon = "Actualitza a Enterprise"
 notSetUp = "No configurat"
+requiresAiEngine = "Requereix motor d'IA"
+
+[portal.policies.categories.classification]
+desc = "Identifica el tipus de cada document en pujar-lo i etiqueta'n les metadades per arxivar-lo i cercar-lo."
+label = "Classificació"
 
 [portal.policies.categories.compliance]
 desc = "Aplica requisits HIPAA, GDPR, SOC 2 o FedRAMP a cada document."
@@ -7342,6 +7936,13 @@ label = "Seguretat"
 
 [portal.policies.config]
 scopeAll = "Tots els documents"
+
+[portal.policies.config.classification]
+summary = "Classifica cada document pujat segons les etiquetes del teu equip i n'etiqueta les metadades."
+
+[portal.policies.config.classification.rules]
+0 = "Classifica"
+1 = "Etiqueta les metadades"
 
 [portal.policies.config.compliance]
 summary = "Valida documents contra marcs reguladors abans que surtin del sistema."
@@ -7369,6 +7970,29 @@ minConfidence = "Confiança mínima"
 1 = "Extreu"
 2 = "Anomena"
 3 = "Normalitza"
+
+[portal.policies.config.purview]
+label = "Aplica una etiqueta de sensibilitat de Microsoft Purview"
+
+[portal.policies.config.purview.fields]
+connection = "Tenant de Purview"
+labelId = "ID de l'etiqueta"
+labelIdHelp = "El GUID de l'etiqueta, del portal de Purview. En aplicar una etiqueta, s'escriuen les seves metadades al PDF; no el pot xifrar, això requereix el client de Microsoft."
+labelName = "Nom de l'etiqueta (opcional)"
+labelNameHelp = "S'enregistra juntament amb l'ID perquè les persones i les eines puguin reconèixer l'etiqueta."
+
+[portal.policies.config.purview.fields.method]
+help = "Purview distingeix una etiqueta aplicada per una política d'una triada per una persona."
+label = "Com s'enregistra l'etiqueta"
+privileged = "Com a triada per una persona"
+standard = "Com a aplicada automàticament"
+
+[portal.policies.config.purviewRead]
+label = "Llegeix una etiqueta de Microsoft Purview"
+
+[portal.policies.config.purviewRead.fields]
+connection = "Tenant de Purview"
+connectionHelp = "Llegeix l'etiqueta que el document ja porta, perquè els passos posteriors hi puguin actuar."
 
 [portal.policies.config.retention]
 summary = "Aplica quant de temps es conserven els documents, quan s'arxiven i quan s'eliminen."
@@ -7437,6 +8061,7 @@ title = "Encara no hi ha activitat"
 [portal.policies.endpoints]
 addWatermark = "Marca d'aigua"
 autoRedact = "Censura PII"
+classifyAndLabel = "Classifica"
 compressPdf = "Comprimeix"
 flatten = "Aplana"
 ocrPdf = "OCR"
@@ -7446,6 +8071,183 @@ sanitizePdf = "Elimina JavaScript"
 description = "Les teves polítiques s'han desat i apareixeran quan es restableixi la connexió."
 retry = "Torna-ho a provar"
 title = "Backend no disponible"
+
+[portal.policies.operations]
+change = "Canvia què fa aquest pas"
+noResults = "Cap pas no coincideix amb això. Prova amb un nom de producte, o \"scan\", \"notify\", \"attach\"."
+searchPlaceholder = "Cerca passos: prova \"scan\", \"attach\" o un nom de producte"
+
+[portal.policies.operations.bodyMode]
+binary = "Bytes de fitxer en brut"
+json = "Dins d'una càrrega JSON"
+multipart = "Com a pujada de fitxer (multipart)"
+
+[portal.policies.operations.clamavScan]
+description = "El teu propi servidor ClamAV comprova el document; res no surt de la teva xarxa."
+label = "Escaneja per detectar virus (autoallotjat)"
+
+[portal.policies.operations.cloudmersiveAdvancedScan]
+description = "Rebutja documents que continguin macros, executables, scripts o objectes incrustats."
+label = "Bloqueja el contingut actiu"
+
+[portal.policies.operations.cloudmersiveScan]
+description = "Cloudmersive comprova el document i l'execució s'atura si no està net."
+label = "Escaneja per detectar virus"
+
+[portal.policies.operations.confluenceAttach]
+description = "Arxiva el document processat en una pàgina."
+label = "Adjunta a una pàgina de Confluence"
+
+[portal.policies.operations.consignoSubmit]
+description = "Envia el document a ConsignO Cloud per signar-lo."
+label = "Envia per a signatura (ConsignO)"
+note = "Envia el document. Encara no s'admet recuperar la còpia signada, perquè un pas no pot passar un resultat a un pas posterior."
+
+[portal.policies.operations.customApiCall]
+description = "Defineix tu mateix la crida: camí, mètode, cos i gestió de la resposta."
+label = "Crida una API personalitzada"
+
+[portal.policies.operations.discordNotify]
+description = "Indica a un canal que la política ha gestionat un document."
+label = "Publica un missatge a Discord"
+
+[portal.policies.operations.elasticIndex]
+description = "Enregistra el que ha fet la política com a document cercable."
+label = "Indexa un esdeveniment d'auditoria a Elasticsearch"
+
+[portal.policies.operations.fields.bodyMode]
+helperText = "Multipart és adient per a API de pujada; JSON és adient per a API que volen el fitxer dins d'una càrrega; binary envia els bytes en brut."
+label = "Com enviar el document"
+
+[portal.policies.operations.fields.bodyTemplate]
+helperText = "Un cos JSON enviat tal qual. {{document.base64}} porta el fitxer; {{document.*}} i {{run.*}} s'emplenen per document."
+label = "Cos JSON"
+
+[portal.policies.operations.fields.connection]
+label = "Compte"
+
+[portal.policies.operations.fields.domain]
+label = "Domini de Mailgun"
+placeholder = "mg.acme.com"
+
+[portal.policies.operations.fields.fileFieldName]
+helperText = "El camp del formulari sota el qual l'API espera el document."
+label = "Nom del camp de fitxer"
+placeholder = "file"
+
+[portal.policies.operations.fields.from]
+label = "De"
+placeholder = "processor@acme.com"
+
+[portal.policies.operations.fields.headers]
+helperText = "Un objecte JSON de parells nom/valor de capçaleres. La credencial de la connexió s'afegeix automàticament."
+label = "Capçaleres"
+
+[portal.policies.operations.fields.index]
+label = "Índex"
+placeholder = "stirling-audit"
+
+[portal.policies.operations.fields.issueKey]
+label = "Clau de la incidència"
+placeholder = "OPS-42"
+
+[portal.policies.operations.fields.message]
+helperText = "S'envia com a cos del missatge. {{document.*}} i {{run.*}} s'emplenen per document."
+label = "Missatge"
+
+[portal.policies.operations.fields.method]
+label = "Mètode"
+
+[portal.policies.operations.fields.pageId]
+label = "ID de pàgina"
+placeholder = "66186"
+
+[portal.policies.operations.fields.path]
+helperText = "S'afegeix a l'URL base de la connexió. Mai no pot arribar a un altre host."
+label = "Camí"
+placeholder = "/v1/scan"
+
+[portal.policies.operations.fields.remotePath]
+helperText = "On escriure'l a la unitat. {{document.filename}} s'emplena per document."
+label = "Camí de destinació"
+placeholder = "Processed/{{document.filename}}"
+
+[portal.policies.operations.fields.responseMode]
+helperText = "Report deixa el document intacte. Replace el substitueix pel que torni."
+label = "Què fer amb la resposta"
+
+[portal.policies.operations.fields.signerEmail]
+label = "Correu electrònic del signant"
+placeholder = "signer@acme.com"
+
+[portal.policies.operations.fields.subject]
+label = "Assumpte"
+placeholder = "Processat: {{document.filename}}"
+
+[portal.policies.operations.fields.text]
+helperText = "Presidio analitza aquest text. Utilitza {{document.title}} o enganxa el text que vols comprovar."
+label = "Text per comprovar"
+
+[portal.policies.operations.fields.to]
+label = "A"
+placeholder = "records@acme.com"
+
+[portal.policies.operations.fields.username]
+label = "Nom d'usuari de Nextcloud"
+placeholder = "svc-stirling"
+
+[portal.policies.operations.googlechatNotify]
+description = "Indica a un espai que la política ha gestionat un document."
+label = "Publica un missatge a Google Chat"
+
+[portal.policies.operations.jiraAttach]
+description = "Arxiva el document processat en una incidència."
+label = "Adjunta a una incidència de Jira"
+
+[portal.policies.operations.mailgunEmail]
+description = "Envia el document processat com a fitxer adjunt."
+label = "Envia el document per correu electrònic (Mailgun)"
+
+[portal.policies.operations.nextcloudUpload]
+description = "Escriu el document processat en una carpeta."
+label = "Puja a Nextcloud"
+
+[portal.policies.operations.presidioAnalyze]
+description = "El teu propi servidor Presidio informa de les dades personals que troba."
+label = "Detecta dades personals"
+note = "Presidio llegeix text, no fitxers. Dona-li el text que vols comprovar; el document en si no es puja."
+
+[portal.policies.operations.responseMode]
+replace = "Substitueix el document per la resposta"
+report = "Mantén el document, enregistra la resposta"
+
+[portal.policies.operations.sendgridEmail]
+description = "Envia el document processat com a fitxer adjunt."
+label = "Envia el document per correu electrònic (SendGrid)"
+
+[portal.policies.operations.slackNotify]
+description = "Indica a un canal que la política ha gestionat un document."
+label = "Publica un missatge a Slack"
+
+[portal.policies.operations.splunkEvent]
+description = "Enregistra el que ha fet la política on els teus auditors ja ho consulten."
+label = "Envia un esdeveniment d'auditoria a Splunk"
+
+[portal.policies.operations.sumologicEvent]
+description = "Enregistra el que ha fet la política en un col·lector HTTP."
+label = "Envia un esdeveniment d'auditoria a Sumo Logic"
+
+[portal.policies.operations.teamsNotify]
+description = "Indica a un canal que la política ha gestionat un document."
+label = "Publica un missatge a Teams"
+
+[portal.policies.operations.webhookPost]
+description = "Envia el document en si a una URL que triïs."
+label = "Publica el document en un webhook"
+
+[portal.policies.operations.zapierNotify]
+description = "Passa els detalls de l'execució a la teva automatització."
+label = "Activa un Zap o un escenari de Make"
 
 [portal.policies.stats]
 activeFor = "Activa"
@@ -7472,12 +8274,23 @@ label = "Documents aplicats"
 description = "Configurades però sense executar-se"
 label = "En pausa"
 
+[portal.policies.table]
+appliesTo = "S'aplica a"
+docs = "Docs aplicats"
+enforces = "Aplica"
+policy = "Política"
+status = "Estat"
+
 [portal.policies.wizard.actions]
 back = "Enrere"
 cancel = "Cancel·la"
 continue = "Continua"
 enablePolicy = "Activa la política"
 saveChanges = "Desa els canvis"
+
+[portal.policies.wizard.capability.classify]
+desc = "Identifica el tipus del document a partir de les etiquetes del teu equip i l'etiqueta, perquè s'arxivi i es cerqui per categoria."
+label = "Classifica el document"
 
 [portal.policies.wizard.capability.compress]
 desc = "Comprimeix el document per reduir la mida del fitxer."
@@ -7499,9 +8312,17 @@ label = "Censura informació sensible"
 desc = "Elimina JavaScript ocult perquè no es pugui executar res automàticament quan s'obri el document."
 label = "Elimina contingut actiu"
 
+[portal.policies.wizard.capability.timestampPdf]
+desc = "Demostra que el document existia exactament en aquesta forma en un moment determinat, utilitzant una autoritat de segell de temps independent. Només s'envia un hash: el document no surt mai del teu servidor."
+label = "Afegeix un segell de temps de confiança"
+
 [portal.policies.wizard.capability.watermark]
 desc = "Estampa una marca visible (p. ex. “Confidencial”) a totes les pàgines."
 label = "Aplica una marca d'aigua"
+
+[portal.policies.wizard.classification]
+description = "Cada document pujat es classifica segons les etiquetes integrades i s'etiqueta amb els tipus que hi encaixen. El conjunt d'etiquetes es comparteix amb tot el teu equip."
+labelsHeading = "Etiquetes de classificació"
 
 [portal.policies.wizard.errors]
 noTools = "Activa primer almenys una eina al flux de treball."
@@ -7547,73 +8368,118 @@ setUp = "Configura la política de {{category}}"
 [portal.policies.wizard.workflow]
 description = "Tria què fa aquesta política a cada document que processa."
 
-[portal.policySummary]
-activeSummary = "{{active}} / {{total}} actives"
-noRule = "Encara no s'ha aplicat cap regla"
-subtitle = "Automatitzacions permanents per les quals passa cada document, independentment de quin pipeline el gestioni."
-title = "Què s'executa als teus PDFs"
-
 [portal.policySummary.action]
-comingSoon = "Actualitza a Enterprise"
-configure = "Configura"
 setUp = "Configura"
 
-[portal.policySummary.column]
-activeRule = "Regla activa"
-policy = "Política"
-status = "Estat"
+[portal.processorFlow]
+footnote = "Els recomptes són de les darreres 24 hores. La velocitat del flux és il·lustrativa."
+liveBadge = "En directe"
+stats = "{{connected}} connectats · {{processed}} PDFs processats"
+title = "Processador PDF"
 
-[portal.policySummary.empty]
-description = "Quan es configurin les polítiques, les categories apareixeran aquí."
-title = "Encara no hi ha polítiques"
+[portal.processorFlow.lens]
+ariaLabel = "Mode de visualització"
+flow = "Flux"
+sankey = "Sankey"
 
-[portal.policySummary.state]
-active = "Activa"
-off = "Desactivada"
-soon = "Aviat"
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24 h"
+failed = "Fallits"
+heading = "Resultats"
+success = "Lliurats"
 
-[portal.processingStatus]
-managePlan = "Gestiona el pla"
-volumeSuffix = "PDFs processats · darrers 30 dies"
+[portal.processorFlow.policies]
+activeCount = "{{n}} actives"
+count = "{{n}} · 24 h"
+heading = "Polítiques"
+setUp = "Configura"
+soon = "Properament"
+
+[portal.processorFlow.sankey]
+waist = "Polítiques · {{n}} actives"
+
+[portal.processorFlow.sankey.empty]
+description = "Connecta una font i activa una política per veure com els documents flueixen pel processador."
+title = "Encara no hi ha flux"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Connecta"
+editor = "Editor de Stirling PDF"
+heading = "Fonts"
+perDay = "{{n}} / 24 h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Entrada de correu electrònic"
 
 [portal.procurement]
-reset = "Restableix la contractació (demo)"
 subtitle = "Aconsegueix que el teu equip sigui avaluat, contractat i incorporat. Tots els documents en un sol lloc."
 title = "Contractació"
 
-[portal.procurement.action]
-download = "Baixa"
-pay = "Paga ara"
-request = "Sol·licita"
-sign = "Revisa i signa"
-upload = "Carrega"
-
 [portal.procurement.agreement]
 agreeCta = "Accepta i subscriu-te"
+confidential = "Confidencial"
 confirm = "He llegit i accepto el Stirling Enterprise Agreement."
-eyebrow = "Acord"
-intro = "Un únic acord combinat cobreix el teu tracte: Master Service Agreement, Order Form, EULA i Data Processing Agreement. Revisa'l i després accepta per convertir el pressupost en una subscripció compromesa."
-title = "Revisa el teu acord enterprise"
+docName = "Acord de Stirling Enterprise"
+docSub = "MSA, formulari de comanda, EULA i DPA, combinats en una sola signatura."
+download = "Descarrega"
+downloadDraftError = "No s'ha pogut generar el PDF de l'acord: el renderitzador de documents no està disponible. Torna-ho a provar d'aquí a poc o contacta amb el suport."
+downloadError = "No s'ha pogut descarregar l'acord signat. Torna-ho a provar."
+legalName = "Nom de l'entitat legal"
+legalNamePlaceholder = "L'entitat legal que signarà"
+loadError = "No s'ha pogut carregar l'acord. Torna-ho a provar."
+loading = "S'està carregant l'acord..."
+ref = "Ref {{ref}} · {{version}}"
+requestChanges = "Sol·licita canvis"
+scrollHint = "Desplaça't per revisar"
+signatory = "Nom del signant"
+signatoryPlaceholder = "Nom complet"
+signatoryTitle = "Càrrec del signant"
+signatoryTitlePlaceholder = "p. ex. director jurídic"
+signError = "No s'ha pogut enregistrar la teva signatura. Torna-ho a provar."
 
 [portal.procurement.builder]
 addons = "Complements"
+addressLine1 = "Línia d'adreça 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Línia d'adreça 2"
+addressLine2Placeholder = "Suite, planta, edifici"
 back = "Enrere"
 businessName = "Nom de l'empresa"
 businessNamePlaceholder = "La teva empresa"
+city = "Ciutat"
+cityPlaceholder = "San Francisco"
+completeRequired = "Completa els camps obligatoris (marcats amb *) amb un correu electrònic vàlid abans de generar el pressupost."
+contactEmail = "Correu electrònic de contacte"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Nom de contacte"
+contactNamePlaceholder = "Jane Doe"
 continue = "Continua"
-country = "País"
-countryEuro = "Eurozona (EUR €)"
-countryUK = "Regne Unit (GBP £)"
-countryUS = "Estats Units (USD $)"
+done = "Fet"
 eula = "He llegit i accepto l'EULA de Stirling Enterprise. Regeix l'acord generat a partir d'aquest pressupost."
 generate = "Genera pressupost"
-included = "Inclòs"
 indemnification = "Indemnització de PI"
 indemnificationSub = "Defensem les reclamacions de PI que compleixin els requisits, segons l'EULA"
-offlineLicense = "Llicència offline / air-gapped"
-offlineLicenseSub = "Un fitxer de llicència descarregable per a una instància autoallotjada air-gapped"
+paperEyebrow = "Pressupost Enterprise"
+paperFor = "Preparat per a"
+pdfSize = "Mida del PDF"
+poNumber = "Número de PO"
+poNumberPlaceholder = "Opcional"
+postalCode = "Codi postal"
+postalCodePlaceholder = "94105"
+posture = "Governança"
+posture_count = "~{{count}} polítiques"
+posture_essentials = "Essencials"
+posture_essentialsSub = "Classificació + Compartició — els valors predeterminats"
+posture_governed = "Governat"
+posture_governedSub = "Afegeix Seguretat i Encaminament"
+posture_regulated = "Regulat"
+posture_regulatedSub = "Totes les categories — Compliment, Retenció, Ingesta"
 qbr = "Revisions empresarials trimestrals"
 qbrSub = "El teu SE revisa l'ús i el full de ruta cada trimestre"
+region = "Estat / regió"
+regionPlaceholder = "Califòrnia"
 running = "{{annual}} / any · {{years}} anys {{tcv}}"
 s1Sub = "El teu equip i els PDFs que preveus processar cada any."
 s1Title = "Quant processareu?"
@@ -7622,6 +8488,12 @@ s2Title = "Compromís i servei"
 s3Sub = "Per al pressupost i l'acord que genera."
 s3Title = "Les teves dades"
 serviceLevel = "Nivell de servei"
+size_compact = "Compacte"
+size_compactSub = "Principalment text, menys d'1 MB"
+size_heavy = "Pesant"
+size_heavySub = "Escanejat o amb moltes imatges, 5 MB+"
+size_standard = "Estàndard"
+size_standardSub = "Text i imatges barrejats, d'1 a 5 MB"
 slDedicated = "Dedicat"
 slDedicatedSub = "4 hores laborables · gestor de compte dedicat · +30%"
 slPriority = "Prioritari"
@@ -7629,6 +8501,8 @@ slPrioritySub = "Mateix dia laborable · CSM assignat · +15%"
 slStandard = "Estàndard"
 slStandardSub = "Següent dia laborable · CSM compartit · inclòs"
 stepOf = "Pas {{n}} de {{total}}"
+taxId = "IVA / ID fiscal"
+taxIdPlaceholder = "Opcional"
 term = "Termini"
 termDiscount = "S'ha aplicat un descompte del {{pct}}% per compromís multianual"
 title = "Crea el teu pressupost"
@@ -7636,6 +8510,7 @@ training = "Incorporació i formació"
 trainingSub = "Sessions en directe perquè el teu equip comenci a treballar"
 users = "Usuaris totals"
 usersPlaceholder = "p. ex. 250"
+viewEula = "Llegeix-ho"
 volEstimated = "Estimació a partir de {{count}} usuaris (~2,000 PDFs cadascun, incloent-hi automatització). Edita-ho si tens una dada millor."
 volManual = "S'utilitza la teva xifra. Pots tornar a estimar-ho a partir de la mida del teu equip en qualsevol moment."
 volNoUsers = "No n'estàs segur? Introdueix la mida del teu equip i ho estimarem."
@@ -7644,55 +8519,55 @@ volumePlaceholder = "p. ex. 1,000,000"
 years_one = "{{count}} any"
 years_other = "{{count}} anys"
 
-[portal.procurement.docs]
-count_one = "{{count}} doc"
-count_other = "{{count}} docs"
-done = "Fet"
-here = "Ets aquí"
-hide = "Amaga"
-optional = "Opcional"
-paidAddon = "Complement de pagament"
-show = "Mostra"
-subtitle = "Tot el que necessites a cada pas del recorregut, presentat a mesura que el tracte avança."
-supportingSubtitle = "SOC 2, revisions de seguretat, formularis fiscals i més, a punt quan el teu equip de seguretat o contractació els demani. Alguns tenen una tarifa única."
-supportingTitle = "Suport a la teva avaluació"
+[portal.procurement.documents]
+agreement = "Acord Enterprise"
+agreementSub = "MSA, formulari de comanda i DPA en una sola signatura."
+download = "Descarrega"
+eula = "EULA i termes comercials"
+eulaSub = "El programari i els termes comercials d'autoservei."
+invoice = "Factura"
+invoiceSub = "La factura de la teva primera subscripció."
+laterInvoice = "Disponible després que acceptis"
+laterQuote = "Disponible un cop s'emeti el teu pressupost"
+quote = "Pressupost"
+quoteSub = "El teu pressupost enterprise detallat."
+sla = "Annex SLA"
+slaSub = "Nivells de suport i objectius de resposta."
+subprocessors = "Subencarregats"
+subprocessorsSub = "Tercers que processen dades en nom teu."
+subtitle = "La documentació del teu acord, disponible en qualsevol moment."
 title = "Documents"
-upcoming = "Properament"
+view = "Mostra"
 
 [portal.procurement.error]
 title = "Alguna cosa ha anat malament"
 
 [portal.procurement.hero]
-company = "El teu tracte enterprise"
+barAria = "Etapa {{current}} de {{total}}"
 ctaAgreement = "Revisa i signa l'acord"
-ctaLive = "Ja estàs en producció"
-ctaPayment = "Afegeix pagament"
+ctaExploring = "Configura la teva prova"
 ctaQuote = "Revisa el teu pressupost"
+ctaReviewQuote = "Revisa el pressupost"
 ctaTrial = "Crea el teu pressupost"
+documents = "Documents"
 eyebrow = "Contractació enterprise"
+eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Convida companys d'equip"
-keyDocs = "Documents clau"
-nextStep = "Pas següent: {{action}}"
-notStarted = "No iniciat"
+licenseKey = "Clau de llicència"
+liveSub = "La teva organització està provisionada i la teva llicència és activa."
+liveTitle = "Ja estàs en directe a Stirling Enterprise"
+next = "Següent: {{stage}}"
 open = "Obre la contractació"
 scheduleCall = "Programa una trucada"
-setup1Sub = "Convida els teus companys d'equip"
-setup1Title = "Desplega l'editor PDF"
-setup2Sub = "Activa el processament en editors i altres fonts"
-setup2Title = "Connecta el processador PDF"
-setup3Sub = "Activa Seguretat, Compliment, Encaminament o Retenció quan els necessitis"
-setup3Title = "Afegeix polítiques recomanades"
+sentenceAgreement = "revisar i signar l'acord"
+sentenceLive = "provisionament i desplegament"
+sentencePayment = "ordre de compra i pagament"
+sentenceQuote = "revisar i acceptar el teu pressupost"
+sentenceTrial = "configurar el teu espai de prova"
 
 [portal.procurement.journey]
 daysLeft_one = "Queda {{count}} dia"
 daysLeft_other = "Queden {{count}} dies"
-engineerLabel = "El teu enginyer de solucions"
-eyebrow = "El teu desplegament"
-live = "Ja estàs en producció amb Stirling Enterprise"
-nextStep = "Pas següent: {{action}}"
-subtitle = "El teu enginyer de solucions és present en cada pas. Una acció següent cada vegada; la llista completa és a sota."
-title = "De la prova a producció, un camí guiat"
-trialTitle = "Prova Enterprise"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "Una signatura cobreix MSA, formulari de comanda, EULA i DPA."
@@ -7726,6 +8601,9 @@ downloadError = "Encara no s'ha pogut generar el fitxer de llicència offline �
 downloadOffline = "Baixa la llicència offline (.lic)"
 hint = "Enganxa aquesta clau en una instància autoallotjada per activar-la, o conserva-la per als teus registres. Guarda-la en un lloc segur."
 label = "La teva clau de llicència"
+subtitle = "Activa una instància autoallotjada amb aquesta clau o conserva-la per als teus registres."
+title = "La teva clau de llicència"
+trialFileHint = "Aquest és el teu fitxer de llicència de prova. Quan l'acord estigui en vigor, torna i descarrega'l de nou; a diferència de la clau de llicència en línia, el fitxer .lic no s'actualitzarà tot sol."
 
 [portal.procurement.link]
 cta = "Enllaça el compte"
@@ -7738,65 +8616,62 @@ description = "La teva subscripció és activa i la teva llicència s'ha emès. 
 eyebrow = "En producció"
 title = "Ja estàs en producció amb Stirling Enterprise"
 
-[portal.procurement.locked]
-description = "Les claus de prova, els pressupostos per volum compromès, l'acord d'una sola signatura, el pagament i el teu registre de documents seran aquí quan iniciïs una avaluació enterprise."
-eyebrow = "Només Enterprise"
-talkToSales = "Parla amb vendes"
-title = "El recorregut de contractació s'obre amb Enterprise"
-
 [portal.procurement.milestone]
-accept = "Accepta i continua"
-description = "Baixa el PDF per compartir-lo amb el teu equip, torna per acceptar-lo quan estiguis a punt o fes-hi canvis."
-download = "Baixa el PDF"
 downloadError = "Encara no s'ha pogut baixar el PDF del pressupost — torna-ho a provar d'aquí a un moment."
-edit = "Edita el pressupost"
-eyebrow = "Pressupost {{number}}"
-perYear = " / any"
-preparedFor = "Preparat per a {{company}}"
-tcv = "{{value}} de valor total del contracte"
-title = "El teu pressupost està a punt"
-
-[portal.procurement.modal]
-cancel = "Cancel·la"
-chooseFile = "Tria un fitxer"
-close = "Tanca"
-downloadBody = "La baixada començarà aviat."
-downloadCta = "Baixa"
-downloadTitle = "Baixa"
-noFile = "No s'ha seleccionat cap fitxer"
-payBody = "Paga el teu contracte compromès amb targeta o transferència bancària a través de Stripe. El teu espai de treball s'aprovisiona tan bon punt es liquida el pagament."
-payCta = "Continua a Stripe"
-payTitle = "Confirma el pagament"
-requestBodyFree = "Ho generem sota demanda. Confirma-ho i el teu enginyer de solucions t'ho enviarà aviat."
-requestBodyPaid = "Aquest és un complement de pagament. Confirma-ho i el teu enginyer de solucions el dimensionarà i t'enviarà la documentació."
-requestCta = "Sol·licita"
-requestTitle = "Sol·licita aquest document"
-signBody = "Obre el Stirling Enterprise Agreement per a signatura electrònica: una signatura cobreix l'MSA, el formulari de comanda, l'EULA i el DPA. Contrasignem automàticament i avances al pagament."
-signCta = "Obre per signar"
-signTitle = "Revisa i signa el teu acord"
-uploadBody = "Envia'ns la teva PO i emetrem la factura segons les teves condicions. Arrossega el PDF o tria un fitxer a sota."
-uploadCta = "Carrega l'ordre de compra"
-uploadTitle = "Carrega la teva ordre de compra"
 
 [portal.procurement.payment]
 description = "El teu pressupost s'ha acceptat i la teva llicència ja és activa — el teu equip pot començar de seguida. Paga la primera factura quan estiguis a punt; pots pagar-la o baixar-la aquí, sense correu electrònic."
+downloadAgreement = "Descarrega l'acord signat"
 downloadInvoice = "Baixa la factura"
-simulate = "Simula el pagament rebut (demo)"
+eyebrow = "Pagament"
 title = "Subscripció creada"
 viewInvoice = "Mostra i paga la factura"
+
+[portal.procurement.review]
+acceptCta = "Accepta el pressupost"
+annual = "Quota anual (any 1)"
+downloadCta = "Descarrega el pressupost"
+poNumber = "Ordre de compra: {{po}}"
+renewal = "Es renova a {{amount}}/any després del termini (+{{pct}}% IPC)"
+tcv = "Termini de {{years}} anys, pagat íntegrament per avançat: {{tcv}}"
+validUntil = "Vàlid fins a {{date}}"
 
 [portal.procurement.schedule]
 fallback = "No s'ha pogut carregar el planificador."
 fallbackLink = "Obre la programació en una pestanya nova"
+loading = "S'està carregant el planificador..."
 subtitle = "El teu enginyer de solucions guiarà el teu equip pel desplegament. Tria una hora que et vagi bé."
 title = "Programa una trucada"
 
-[portal.procurement.status]
-action = "Acció necessària"
-available = "Disponible"
-complete = "Complet"
-pending = "Pendent"
-request = "A petició"
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Segellat, sense sortida"
+back = "Enrere"
+businessName = "Nom de l'empresa"
+businessNamePlaceholder = "Acme Corp"
+cloud = "Stirling Cloud"
+cloudSub = "Gestionat, inici més ràpid"
+continue = "Continua"
+deployment = "On s'ha de desplegar?"
+eula = "Accepto l'EULA i els termes comercials de Stirling."
+fullName = "Nom complet"
+fullNamePlaceholder = "El teu nom"
+invites = "Convida companys d'equip · opcional"
+invitesPlaceholder = "sam@acme.com, lee@acme.com"
+scheduleCall = "Programa una trucada"
+seats = "Persones que ho provaran"
+seatsPlaceholder = "p. ex. 15"
+selfhost = "Autoallotjat"
+selfhostSub = "Docker o Kubernetes"
+start = "Inicia la prova"
+stepOf = "Pas {{n}} de {{total}}"
+subtitle = "Gratuït durant 14 dies, sense targeta."
+subtitleDetails = "Alguns detalls per al teu pressupost i acord."
+talkFirst = "Prefereixes parlar abans?"
+title = "Configura la teva prova"
+viewEula = "Llegeix-ho"
+workEmail = "Correu electrònic de feina"
+workEmailPlaceholder = "you@company.com"
 
 [portal.procurement.trial]
 body = "L'extensió afegeix 7 dies i notifica el teu enginyer de solucions."
@@ -7806,20 +8681,6 @@ extend = "Amplia 7 dies"
 maxed = "Límit assolit"
 subtitle = "La teva prova gratuïta dura fins al {{date}}. No cal targeta."
 title = "Prova Enterprise"
-
-[portal.procurement.upsell]
-homeBadge = "Enterprise"
-homeBody = "Preus per volum compromès, SSO + SCIM + RBAC per a tota l'organització, auditoria immutable de 90 dies i un SE dedicat."
-homeCta = "Inicia la prova →"
-homeHeadline = "Processa milions de PDFs."
-
-[portal.recentActivity]
-title = "Activitat recent"
-viewAll = "Mostra-ho tot"
-
-[portal.recentActivity.empty]
-description = "Les execucions de pipeline, els desplegaments i els esdeveniments d'agent apareixeran aquí."
-title = "Encara no hi ha res aquí"
 
 [portal.search]
 ariaLabel = "Cerca"
@@ -7837,57 +8698,49 @@ admin = "Administració"
 [portal.settings.sections]
 account-link = "Enllaç del compte"
 
-[portal.shell.header]
-accountFallback = "Compte"
-accountMenu = "Menú del compte"
-darkMode = "Mode fosc"
-lightMode = "Mode clar"
-search = "Cerca"
-searchPlaceholder = "Cerca…"
-signOut = "Tanca la sessió"
-switchToDark = "Canvia al tema fosc"
-switchToLight = "Canvia al tema clar"
-
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processador"
-brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} docs"
 linkAccount = "Enllaça el compte de Stirling"
-planEditor = "Pla Editor"
-planEnterprise = "Pla Enterprise"
-planProcessor = "Pla Processor"
 primaryNav = "Navegació principal"
 switchApp = "Canvia d'aplicació"
+
+[portal.shell.topbar]
+closeNav = "Tanca la navegació"
+openNav = "Obre la navegació"
+search = "Cerca"
 
 [portal.sources]
 subtitle = "Connexions d'entrada reutilitzables que alimenten documents a Stirling. Configura una connexió una vegada i després referencia-la des de qualsevol nombre de polítiques. Fes clic en una fila per veure'n la configuració i quines polítiques la utilitzen."
 title = "Fonts"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "Connecta una font"
+
+[portal.sources.builder]
+back = "Torna a les fonts"
+backToTypes = "Tots els tipus de font"
+cancel = "Cancel·la"
+chooseHint = "Tria d'on venen els documents. Els connectors en gris estan en camí."
+comingSoon = "Properament"
+comingSoonHeading = "Properament"
+create = "Crea una font"
+createTitle = "Connecta una font"
+delete = "Suprimeix"
+editTitle = "Edita la font"
+enabled = "Activada"
+save = "Desa els canvis"
+
+[portal.sources.builder.folderAccess]
+description = "Les automatitzacions de carpetes només poden utilitzar carpetes que un administrador hagi permès. Afegeix-la a la configuració d'accés a carpetes i torna-ho a provar."
+openSettings = "Configuració d'accés a carpetes"
+title = "Aquesta carpeta no està permesa"
 
 [portal.sources.delete]
 body = "Vols suprimir \"{{name}}\"? Això no es pot desfer. Les polítiques que hi fan referència s'haurien d'actualitzar."
 cancel = "Cancel·la"
 confirm = "Suprimeix"
 title = "Vols suprimir la font?"
-
-[portal.sources.detail]
-closeAriaLabel = "Tanca el detall"
-delete = "Suprimeix la font"
-docs24h = "Darreres 24 h"
-docs30d = "Darrers 30 dies"
-docsTotal = "Total vist"
-docsTrend = "Documents dels darrers 30 dies"
-documents = "Documents"
-edit = "Edita"
-notReferenced = "No la referencia cap política, així que és segur suprimir-la."
-pause = "Posa en pausa"
-resume = "Reprèn"
-subtitle = "{{type}} · {{status}}"
-usedBy = "Utilitzada per"
 
 [portal.sources.empty]
 description = "Connecta una carpeta (i, aviat, emmagatzematge al núvol) perquè les teves polítiques tinguin un lloc d'on obtenir documents."
@@ -7898,18 +8751,57 @@ inUse = "En ús"
 total = "Connexions"
 unused = "Sense utilitzar"
 
+[portal.sources.networkFields.connection]
+helperText = "La connexió desada amb l'adreça del servidor i les credencials. Es reutilitza per cada font que la referencia."
+label = "Connexió"
+
+[portal.sources.networkFields.directory]
+helperText = "Carpeta del servidor a consultar, relativa a l'inici de sessió o a l'arrel de la compartició. Deixa-ho en blanc per a l'arrel."
+label = "Carpeta"
+placeholder = "incoming/"
+
+[portal.sources.networkFields.mode]
+helperText = "Consume elimina cada fitxer del servidor un cop totes les polítiques l'han processat."
+label = "Mode de lectura"
+
+[portal.sources.networkFields.mode.options]
+consume = "Consume: processa cada fitxer una vegada"
+snapshot = "Snapshot: torna a llegir la carpeta a cada execució"
+
+[portal.sources.networkFields.recursive]
+label = "Profunditat de carpeta"
+
+[portal.sources.networkFields.recursive.options]
+all = "Inclou subcarpetes"
+top = "Només el nivell superior"
+
 [portal.sources.status]
 active = "Activa"
 disabled = "Desactivada"
 unused = "Sense utilitzar"
 
 [portal.sources.table]
+documents = "Documents"
 source = "Font"
 status = "Estat"
 usedBy = "Polítiques"
 
+[portal.sources.types.box]
+description = "Extreu documents de carpetes de Box que el teu equip ja comparteix."
+label = "Box"
+
+[portal.sources.types.dropbox]
+description = "Extreu documents d'una carpeta compartida de Dropbox."
+label = "Dropbox"
+
 [portal.sources.types.editor]
+description = "Documents que el teu equip ha processat a l'editor, entre polítiques i execucions d'IA."
 label = "Editor"
+noPolicies = "Encara no s'ha executat cap política des de l'editor."
+
+[portal.sources.types.email]
+description = "Converteix els adjunts enviats a una bústia dedicada en documents."
+label = "Safata d'entrada de correu electrònic"
 
 [portal.sources.types.folder]
 description = "Vigila un directori del servidor per detectar documents nous."
@@ -7942,25 +8834,80 @@ label = "Profunditat de carpeta"
 all = "Inclou subcarpetes"
 top = "Només nivell superior"
 
+[portal.sources.types.ftp]
+description = "Consulta una carpeta d'un servidor FTP o FTPS per detectar documents nous."
+label = "FTP"
+
+[portal.sources.types.googledrive]
+description = "Extreu documents de carpetes compartides de Google Drive."
+label = "Google Drive"
+
+[portal.sources.types.network]
+description = "Supervisa una compartició de xarxa SMB per detectar documents nous."
+label = "Unitat de xarxa"
+
+[portal.sources.types.onedrive]
+description = "Supervisa carpetes de OneDrive per detectar documents nous."
+label = "OneDrive"
+
+[portal.sources.types.s3]
+description = "Extreu documents d'un bucket Amazon S3 o compatible amb S3."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "La connexió desada que conté el bucket i les credencials. Es reutilitza per cada font i sortida de pipeline que la referencia."
+label = "Connexió"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume elimina cada objecte del bucket un cop totes les polítiques l'han processat."
+label = "Mode de lectura"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: processa cada objecte una vegada"
+snapshot = "Snapshot: torna a llegir el bucket a cada execució"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Només es processen els objectes les claus dels quals comencen amb aquest prefix."
+label = "Prefix de clau"
+placeholder = "incoming/"
+
+[portal.sources.types.sftp]
+description = "Consulta una carpeta de lliurament SFTP per detectar documents nous."
+label = "SFTP"
+
+[portal.sources.types.sharepoint]
+description = "Extreu documents de biblioteques de documents de SharePoint."
+label = "SharePoint"
+
 [portal.sources.types.unknown]
 label = "Font"
 
+[portal.sources.types.webhook]
+createNote = "Es generen una URL de lliurament i un secret de signatura quan crees aquest webhook. Els remitents fan POST de documents a aquesta URL i les polítiques que el referencien s'executen en arribar."
+description = "Rep documents mitjançant HTTP POST signat des de qualsevol sistema extern."
+label = "Webhook"
+
+[portal.sources.types.webhook.detail]
+deliveryUrl = "URL de lliurament"
+secretNote = "El secret de signatura es mostra una vegada, quan es crea el webhook. Torna a crear la font per renovar-lo."
+
+[portal.sources.types.webhook.reveal]
+copy = "Copia"
+done = "Fet"
+secret = "Secret de signatura"
+secretHelp = "Signa el cos en brut de cada lliurament amb aquesta clau (HMAC-SHA256) i envia'l com a capçalera X-Stirling-Signature."
+secretWarning = "Copia ara el secret de signatura. Per seguretat, es mostra només una vegada i no es podrà recuperar més endavant."
+title = "Webhook creat"
+url = "URL de lliurament"
+usage = "Fes POST de cada document com a cos de sol·licitud en brut a la URL de lliurament amb un tipus de contingut binari (application/pdf o application/octet-stream). Les polítiques que el referencien s'executen automàticament en arribar."
+
 [portal.sources.wizard]
-back = "Enrere"
-cancel = "Cancel·la"
-continue = "Continua"
-editTitle = "Edita la font"
 name = "Nom"
 namePlaceholder = "p. ex. Entrada de reclamacions"
-save = "Desa els canvis"
-subtitle = "Pas {{current}} de {{total}} · {{label}}"
-title = "Connecta una font"
 type = "Tipus"
 
-[portal.sources.wizard.steps]
-chooseType = "Tria el tipus"
-configure = "Configura"
-review = "Revisa i connecta"
+[portal.stepModal]
+close = "Tanca"
 
 [portal.usage]
 managePayment = "Gestiona el pagament"
@@ -8020,16 +8967,9 @@ summary = "Posseeix un equip — en gestiona els recursos dels membres i les con
 2 = "Accés al portal mitjançant la política predeterminada"
 3 = "Tot el que pot fer un membre"
 
-[portal.welcome]
-ariaLabel = "Benvingut a Stirling PDF"
-badge = "Open-source"
-installEditor = "Instal·la l'editor"
-inviteTeammates = "Convida companys d'equip"
-openInBrowser = "Obre al navegador"
-perks = "Gratuït per sempre · Autoallotjable"
-subtitle = "L'editor PDF més segur del món és gratuït per a equips de totes les mides. Inclou més de 60 operacions PDF i SSO."
-title = "Benvingut a"
-titleAccent = "Stirling PDF"
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Il·limitat"
 
 [printFile]
 title = "Imprimir Fitxer"
@@ -8612,6 +9552,14 @@ text = "Gira les pàgines del teu PDF en sentit horari o antihorari en increment
 [rotate.tooltip.header]
 title = "Resum de la configuració de rotació"
 
+[ruler]
+clearAll = "Esborra-ho tot"
+hideAllLabels = "Amaga totes les etiquetes"
+hideSmallLabels = "Amaga les etiquetes petites"
+physicalValues = "Físic"
+scaled = "Escalat"
+showAllLabels = "Mostra totes les etiquetes"
+
 [sanitize]
 desc = "Elimina elements potencialment nocius dels fitxers PDF."
 sanitizationResults = "Resultats de la sanitització"
@@ -8653,30 +9601,44 @@ label = "Elimina metadades XMP"
 [sanitize.steps]
 settings = "Opcions"
 
-[sanitizePdf]
-tags = "netejar,segur,sense riscos,eliminar amenaces"
-
 [sanitizePDF]
 title = "Neteja PDF"
+
+[sanitizePdf]
+tags = "netejar,segur,sense riscos,eliminar amenaces"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Ajusta l'escala de la pàgina"
 
+[scaleSettings]
+activeScale = "Escala activa"
+apply = "Aplica l'escala"
+applyCalibration = "Aplica la calibració"
+calculatedScale = "Escala calculada"
+calibrate = "Calibra"
+calibrating = "S'està calibrant"
+calibrationDistanceRequired = "Introdueix una distància real superior a zero"
+calibrationInvalid = "No s'ha pogut calcular l'escala a partir d'aquesta mesura"
+calibrationPaperDistance = "Distància mesurada a la pàgina: {{distance}}"
+calibrationTitle = "Calibra l'escala"
+calibrationTooltip = "Mesura una distància coneguda per calcular l'escala automàticament"
+customScale = "Escala personalitzada"
+noneSet = "No s'ha definit cap escala personalitzada"
+presets = "Escales predefinides"
+ratio = "Relació d'escala"
+ratioHelp = "Relació: 1 unitat de pàgina = X unitats reals"
+ratioPlaceholder = "p. ex., 100"
+ratioPositive = "La relació ha de ser superior a zero"
+ratioRequired = "La relació és obligatòria"
+realDistance = "Distància real"
+realDistancePlaceholder = "p. ex., 5"
+reset = "Restableix els valors predeterminats"
+unit = "Unitat"
+unitInvalid = "Unitat no vàlida: {{scaleUnit}}"
+
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-
-[ScannerImageSplit.selectText]
-1 = "Llindar d'angle:"
-10 = "Estableix la mida de la vora afegida i eliminada per evitar vores blanques a la sortida (per defecte: 1)."
-2 = "Estableix l'angle mínim absolut necessari perquè la imatge es giri (per defecte: 10)."
-3 = "Tolerància:"
-4 = "Determina l'interval de variació de color al voltant del color de fons estimat (per defecte: 30)."
-5 = "Àrea Mínima:"
-6 = "Estableix el llindar d'àrea mínima per a una foto (per defecte: 10000)."
-7 = "Àrea de contorn mínima:"
-8 = "Estableix el llindar mínim de l'àrea de contorn per a una foto"
-9 = "Mida de Vora:"
 
 [scannerImageSplit]
 submit = "Extreu escanejos d'imatge"
@@ -8709,6 +9671,18 @@ whatThisDoes = "Què fa"
 whatThisDoesDesc = "Troba i extreu automàticament cada foto d'una pàgina escanejada o d'una imatge composta, sense retall manual."
 whenToUse = "Quan utilitzar-lo"
 
+[ScannerImageSplit.selectText]
+1 = "Llindar d'angle:"
+10 = "Estableix la mida de la vora afegida i eliminada per evitar vores blanques a la sortida (per defecte: 1)."
+2 = "Estableix l'angle mínim absolut necessari perquè la imatge es giri (per defecte: 10)."
+3 = "Tolerància:"
+4 = "Determina l'interval de variació de color al voltant del color de fons estimat (per defecte: 30)."
+5 = "Àrea Mínima:"
+6 = "Estableix el llindar d'àrea mínima per a una foto (per defecte: 10000)."
+7 = "Àrea de contorn mínima:"
+8 = "Estableix el llindar mínim de l'àrea de contorn per a una foto"
+9 = "Mida de Vora:"
+
 [search]
 noResults = "No s'ha trobat cap resultat"
 placeholder = "Escriu el terme de cerca..."
@@ -8726,46 +9700,22 @@ toolNotAvailableLocally = "El teu servidor de Stirling-PDF és fora de línia i 
 [session]
 expired = "La teva sessió ha expirat. Si us plau, actualitza la pàgina i torna a intentar-ho."
 
-[sessionManagement.tooltip]
-header = "Gestió de sessions de signatura"
-
-[sessionManagement.tooltip.addParticipants]
-bullet1 = "Nous participants afegits al final de l'ordre de signatura"
-bullet2 = "No es poden afegir participants després que la sessió estigui finalitzada"
-bullet3 = "Cada participant rep una notificació quan és el seu torn"
-description = "Pots afegir més participants a una sessió activa en qualsevol moment abans de la finalització."
-title = "Afegir participants"
-
-[sessionManagement.tooltip.finalization]
-bullet1 = "<b>Finalització completa</b>: Tots els participants han signat"
-bullet2 = "<b>Finalització parcial</b>: Alguns participants encara no han signat"
-bullet3 = "Els participants sense signar s'exclouran del document final"
-bullet4 = "Un cop finalitzada, pots carregar el PDF signat als fitxers actius"
-description = "La finalització combina totes les signatures en un únic PDF signat. Aquesta acció no es pot desfer."
-title = "Finalització de la sessió"
-
-[sessionManagement.tooltip.participantRemoval]
-bullet1 = "No es poden eliminar participants que ja hagin signat"
-bullet2 = "Els participants eliminats ja no rebran notificacions"
-bullet3 = "L'ordre de signatura s'ajusta automàticament"
-description = "Els participants es poden eliminar de les sessions abans que signin."
-title = "Eliminació de participants"
-
-[sessionManagement.tooltip.signatureOrder]
-bullet1 = "Cada signatura s'aplica de manera seqüencial al PDF"
-bullet2 = "Els signants posteriors poden veure les signatures anteriors"
-bullet3 = "Crític per a fluxos d'aprovació i cadenes de custòdia legals"
-description = "L'ordre que especifiquis en crear la sessió determina qui signa primer."
-title = "Ordre de signatura"
-
 [settings]
 close = "Tanca"
+
+[settings.ai]
+documents = "Documents i RAG"
+general = "General"
+limits = "Límits i rendiment"
+models = "Models i proveïdors"
+title = "IA"
 
 [settings.configuration]
 advanced = "Avançat"
 database = "Base de dades"
 endpoints = "Endpoints"
 features = "Funcions"
+folderAccess = "Accés a carpetes"
 mcp = "MCP Server"
 storageSharing = "Emmagatzematge i compartició de fitxers"
 systemSettings = "Configuració del sistema"
@@ -8799,6 +9749,8 @@ defaultPdfEditor = "Editor PDF per defecte"
 defaultPdfEditorActive = "Stirling PDF és el teu editor PDF per defecte"
 defaultPdfEditorChecking = "Comprovant..."
 defaultPdfEditorInactive = "Una altra aplicació està establerta per defecte"
+defaultPdfEditorRemind = "Recorda'm que l'estableixi com a predeterminada"
+defaultPdfEditorRemindDescription = "Mostra un bàner quan Stirling PDF no sigui la teva aplicació PDF predeterminada."
 defaultPdfEditorSet = "Ja és per defecte"
 defaultStartupView = "Vista predeterminada en iniciar"
 defaultStartupViewDescription = "Tria quina pestanya està activa a la columna esquerra quan s'inicia l'aplicació"
@@ -8816,9 +9768,18 @@ languageDescription = "Tria l’idioma de visualització"
 logout = "Tanca la sessió"
 setAsDefault = "Estableix per defecte"
 theme = "Tema"
+themeAccent = "Color d'accent"
+themeAccentCustom = "Color personalitzat"
+themeAccentCustomHint = "Personalitzat (es recomanen els valors predeterminats)"
+themeAccentDark = "Color d'accent del mode fosc"
+themeAccentDefault = "Predeterminat"
+themeAccentDefaultHint = "Tema predeterminat (recomanat)"
+themeAccentDescription = "Els botons, els enllaços i els ressaltats el segueixen, i tenyeix subtilment l'aplicació. El mode clar i el mode fosc en tenen un de propi. El sistema fa servir el que estigui actiu."
+themeAccentLight = "Color d'accent del mode clar"
 themeDark = "Fosc"
 themeDescription = "Canvia entre el mode clar i el mode fosc"
 themeLight = "Clar"
+themeReset = "Restaura el tema predeterminat"
 themeSystem = "System"
 title = "General"
 user = "Usuari"
@@ -8831,6 +9792,12 @@ dismiss = "Tanca"
 intro = "Habilita l'autenticació d'usuaris, la gestió d'equips i funcions d'espai de treball per a la teva organització."
 learnMore = "Més informació a la documentació"
 title = "Per als administradors del sistema"
+
+[settings.general.loginLanding]
+description = "Tria quina aplicació s'obre quan inicies la sessió a Stirling Cloud."
+editor = "Editor"
+processor = "Processador"
+title = "Després d'iniciar la sessió"
 
 [settings.general.mode]
 fullscreen = "Pantalla completa"
@@ -9039,6 +10006,11 @@ connections = "Connexions"
 security = "Seguretat"
 telegram = "Telegram"
 title = "Seguretat i autenticació"
+
+[settings.signOut]
+confirm = "Segur que vols tancar la sessió?"
+submit = "Tanca la sessió"
+title = "Tanca la sessió"
 
 [settings.team]
 title = "Equip"
@@ -9656,6 +10628,9 @@ uploadButton = "Puja al servidor"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "fes clic aquí"
+fallback = "Si no s'ha obert automàticament,"
+opening = "S'està obrint Swagger UI en una pestanya nova..."
 tags = "api,documentació,swagger,endpoints,desenvolupament"
 title = "Documentació de l'API"
 
@@ -9763,14 +10738,42 @@ selectFilesHint = "Selecciona fitxers a Fitxers actius per executar aquesta eina
 singleFileScope = "S'aplica només a: {{fileName}}"
 viewerMode = "Canvia a l'editor de fitxers per seleccionar diversos fitxers."
 
+[toolFormat]
+ANY = "qualsevol fitxer"
+CBR = "un arxiu de còmic (CBR)"
+CBZ = "un arxiu de còmic (CBZ)"
+CSV = "un fitxer CSV"
+EBOOK = "un llibre electrònic"
+EMAIL = "un correu electrònic"
+EXCEL = "un full de càlcul"
+HTML = "una pàgina web"
+IMAGE = "imatges"
+JAVASCRIPT = "un fitxer JavaScript"
+JSON = "un fitxer JSON"
+MARKDOWN = "un fitxer Markdown"
+NONE = "cap fitxer"
+PCL = "un fitxer d'impressió PCL"
+PDF = "un PDF"
+PDF_ENCRYPTED = "un PDF protegit amb contrasenya"
+POSTSCRIPT = "un fitxer PostScript"
+PPT = "una presentació"
+TEXT = "un fitxer de text"
+VIDEO = "un vídeo"
+WORD = "un document Word"
+XML = "un fitxer XML"
+XPS = "un document XPS"
+ZIP = "un arxiu ZIP"
+
 [toolPanel]
 alpha = "Alfa"
 backToAllTools = "Torna a totes les eines"
 collapse = "Redueix el panell"
 expand = "Amplia el panell"
 goBack = "Torna enrere"
+pdfTools = "Eines PDF"
 placeholder = "Tria una eina per començar"
 premiumFeature = "Funció premium:"
+searchTools = "Cerca eines"
 toolsHeader = "Eines"
 viewAllTools = "Mostra totes les eines"
 
@@ -9804,11 +10807,6 @@ allTools = "TOTES LES EINES"
 noToolsFound = "No s'ha trobat cap eina"
 quickAccess = "ACCÉS RÀPID"
 searchPlaceholder = "Cerca eines..."
-
-[toolPicker.categories]
-advancedTools = "Eines avançades"
-recommendedTools = "Eines recomanades"
-standardTools = "Eines estàndard"
 
 [toolPicker.subcategories]
 advancedFormatting = "Formatació avançada"
@@ -9949,15 +10947,30 @@ title = "Usuaris"
 you = "(tu)"
 
 [users.action]
+cancelInvite = "Cancel·la la invitació"
 deleteTeam = "Suprimeix l'equip"
 disableMfa = "Restableix MFA"
 move = "Mou a l'equip"
 reinstate = "Restableix"
 remove = "Elimina de l'org"
+removeTeam = "Elimina de l'equip"
 rename = "Canvia el nom de l'equip"
 resetPw = "Restableix la contrasenya"
 suspend = "Suspèn"
 unlock = "Desbloqueja el compte"
+
+[users.activity]
+daysAgo = "fa {{count}} d"
+hoursAgo = "fa {{count}} h"
+justNow = "Ara mateix"
+minutesAgo = "fa {{count}} min"
+monthsAgo_one = "fa {{count}} mes"
+monthsAgo_other = "fa {{count}} mesos"
+never = "Mai"
+weeksAgo_one = "fa {{count}} setmana"
+weeksAgo_other = "fa {{count}} setmanes"
+yearsAgo_one = "fa {{count}} any"
+yearsAgo_other = "fa {{count}} anys"
 
 [users.cap]
 addProcessor = "+ Processador"
@@ -9966,11 +10979,14 @@ editor = "Editor"
 processor = "Processador"
 
 [users.confirm]
+cancelInviteBody = "Vols cancel·lar la invitació a {{email}}? No es podrà unir amb l'enllaç actual."
+cancelInviteTitle = "Cancel·la la invitació"
 deleteTeamBody = "Vols suprimir l'equip {{name}}? Primer l'equip ha d'estar buit: mou-ne els membres a un altre equip, i no pot continuar posseint cap configuració d'integració."
 deleteTeamTitle = "Suprimeix l'equip"
 disableMfaBody = "Vols eliminar la inscripció MFA de {{name}}? La tornarà a configurar en el proper inici de sessió si és necessari."
 disableMfaTitle = "Restableix MFA"
 removeBody = "Vols eliminar permanentment {{name}} de l'organització? Això no es pot desfer."
+removeTeamBody = "Vols eliminar {{name}} de l'equip? Mantindrà el compte, però perdrà l'accés als recursos d'aquest equip."
 removeTitle = "Elimina el membre"
 
 [users.empty]
@@ -10020,6 +11036,16 @@ title = "Convida persones"
 username = "Nom d'usuari"
 usernameError = "El nom d'usuari ha de tenir com a mínim 3 caràcters"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Convidat per {{who}}"
+cancel = "Cancel·la"
+count = "{{count}} pendents"
+desc = "Persones convidades que encara no s'han unit. Ocupen una plaça fins que acceptin."
+expiresInDays_one = "Caduca d'aquí a {{count}} dia"
+expiresInDays_other = "Caduca d'aquí a {{count}} dies"
+expiresToday = "Caduca avui"
+title = "Invitacions pendents"
 
 [users.loadError]
 description = "S'ha produït un error en contactar amb el backend, o no hi tens accés. Torna-ho a provar."
@@ -10211,9 +11237,11 @@ title = "Adjunts"
 
 [viewer.bookmarks]
 bookmarkTitle = "Títol del marcador"
+bookmarkTitleRequired = "El títol del marcador és obligatori"
 closeSidebar = "Tanca la barra lateral de marcadors"
 collapseAll = "Replega tots els marcadors"
 expandAll = "Desplega tots els marcadors"
+searchPlaceholder = "Cerca marcadors"
 
 [viewer.comments]
 addComment = "Afegeix un comentari"
@@ -10604,30 +11632,6 @@ title = "Text de la marca d'aigua"
 image = "Imatge"
 text = "Text"
 
-[wetSignature.tooltip]
-header = "Mètodes de creació de signatura"
-
-[wetSignature.tooltip.draw]
-bullet1 = "Personalitzeu el color i el gruix del traç"
-bullet2 = "Esborreu i torneu a dibuixar fins que estigueu satisfets"
-bullet3 = "Funciona en dispositius tàctils (tauletes, telèfons)"
-description = "Creeu una signatura manuscrita amb el ratolí o la pantalla tàctil. Ideal per a signatures personals i autèntiques."
-title = "Dibuixar la signatura"
-
-[wetSignature.tooltip.type]
-bullet1 = "Trieu entre diversos tipus de lletra"
-bullet2 = "Personalitzeu la mida i el color del text"
-bullet3 = "Perfecte per a signatures estandarditzades"
-description = "Genereu una signatura a partir de text teclejat. Ràpid i coherent, adequat per a documents empresarials."
-title = "Escriure la signatura"
-
-[wetSignature.tooltip.upload]
-bullet1 = "Admet PNG, JPG i altres formats d'imatge"
-bullet2 = "Es recomana fons transparents per obtenir els millors resultats"
-bullet3 = "La imatge es redimensionarà per ajustar-se a l'àrea de la signatura"
-description = "Pugeu una imatge de signatura ja creada. Ideal si teniu una signatura escanejada o el logotip de l'empresa."
-title = "Pujar imatge de la signatura"
-
 [workbenchBar]
 activeFiles = "Fitxers actius"
 annotations = "Anotacions"
@@ -10651,6 +11655,7 @@ redact = "Censura"
 rotateLeft = "Gira a l’esquerra"
 rotateRight = "Gira a la dreta"
 ruler = "Regle / Mesura"
+rulerSettings = "Configuració de l'escala"
 save = "Desa"
 saveAll = "Desa-ho tot"
 saveAs = "Desa com a"

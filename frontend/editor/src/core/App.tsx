@@ -9,6 +9,7 @@ import HomePage from "@app/pages/HomePage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
+const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -38,6 +39,16 @@ export default function App() {
           element={
             <PublicRouteProviders>
               <MobileScannerPage />
+            </PublicRouteProviders>
+          }
+        />
+
+        {/* Mobile signature drawing - reached from the Sign tool QR code */}
+        <Route
+          path="/mobile-sign"
+          element={
+            <PublicRouteProviders>
+              <MobileSignPage />
             </PublicRouteProviders>
           }
         />

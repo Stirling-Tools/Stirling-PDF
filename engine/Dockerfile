@@ -12,14 +12,12 @@ RUN apt-get update \
 
 # Source under /app/engine/ to match root Taskfile's `includes.engine.dir: engine`.
 WORKDIR /app/engine
-
-COPY pyproject.toml uv.lock .env ./
-COPY scripts/ ./scripts/
+COPY engine/pyproject.toml engine/uv.lock engine/.env ./
+COPY engine/scripts/ ./scripts/
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --group engine
 
-COPY src/ ./src/
-
+COPY engine/src/ ./src/
 WORKDIR /app
 COPY Taskfile.yml ./
 COPY .taskfiles/ ./.taskfiles/
