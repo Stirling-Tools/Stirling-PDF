@@ -36,13 +36,20 @@ class TauriFileOpenService implements FileOpenService {
       const fileData = await readFile(filePath);
       const fileName = filePath.split(/[\\/]/).pop() || "opened-file.pdf";
 
-      return {
-        fileName,
-        arrayBuffer: fileData.buffer.slice(
-          fileData.byteOffset,
-          fileData.byteOffset + fileData.byteLength,
-        ),
-      };
+      // readFile usually returns a tightly-packed buffer; in that case hand it
+      // over directly instead of slicing, which would copy the entire file
+      // (a transient 2x memory spike for large PDFs). Only slice when the view
+      // is a window over a larger ArrayBuffer.
+      const arrayBuffer =
+        fileData.byteOffset === 0 &&
+        fileData.byteLength === fileData.buffer.byteLength
+          ? fileData.buffer
+          : fileData.buffer.slice(
+              fileData.byteOffset,
+              fileData.byteOffset + fileData.byteLength,
+            );
+
+      return { fileName, arrayBuffer };
     } catch (error) {
       console.error("Failed to read file:", error);
       return null;

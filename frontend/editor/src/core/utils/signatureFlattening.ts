@@ -1,11 +1,15 @@
-// PDFium annotation subtype constants
 import {
-  FPDF_ANNOT_INK,
-  FPDF_ANNOT_LINE,
-  embedBitmapImageOnPage,
-  drawPlaceholderRect,
+  createBitmapImageObject,
   decodeImageDataUrl,
+  type DecodedImage,
 } from "@app/utils/pdfiumBitmapUtils";
+import {
+  closeDocAndFreeBuffer,
+  getPdfiumModule,
+  openRawDocumentSafe,
+  readEffectivePageBox,
+  saveRawDocument,
+} from "@app/services/pdfiumService";
 import { generateThumbnailWithMetadata } from "@app/utils/thumbnailUtils";
 import {
   createChildStub,
@@ -18,12 +22,6 @@ import {
   StirlingFileStub,
 } from "@app/types/fileContext";
 import type { SignatureAPI } from "@app/components/viewer/viewerTypes";
-import {
-  getPdfiumModule,
-  openRawDocumentSafe,
-  closeDocAndFreeBuffer,
-  saveRawDocument,
-} from "@app/services/pdfiumService";
 
 interface MinimalFileContextSelectors {
   getAllFileIds: () => FileId[];
@@ -75,23 +73,9 @@ export async function flattenSignatures(
           const pageAnnotations =
             await signatureApiRef.current.getPageAnnotations(pageIndex);
           if (pageAnnotations && pageAnnotations.length > 0) {
-            const sessionAnnotations = pageAnnotations.filter((annotation) => {
-              const hasStoredImageData =
-                annotation.id && getImageData(annotation.id);
-              const hasDirectImageData =
-                annotation.imageData ||
-                annotation.appearance ||
-                annotation.stampData ||
-                annotation.imageSrc ||
-                annotation.contents ||
-                annotation.data;
-              return (
-                hasStoredImageData ||
-                (hasDirectImageData &&
-                  typeof hasDirectImageData === "string" &&
-                  hasDirectImageData.startsWith("data:image"))
-              );
-            });
+            const sessionAnnotations = pageAnnotations.filter((annotation) =>
+              Boolean(getAnnotationImageData(annotation, getImageData)),
+            );
 
             if (sessionAnnotations.length > 0) {
               allAnnotations.push({
@@ -166,143 +150,23 @@ export async function flattenSignatures(
         type: "application/pdf",
       });
 
-      // Step 4: Manually render extracted annotations onto the PDF using PDFium WASM
+      // Step 4: Add signatures as locked, printable PDFium stamp annotations.
+      // FPDFAnnot_AppendObject creates the annotation appearance without asking
+      // PDFium to regenerate the page's existing content. GenerateContent would
+      // corrupt some Type3/vector content, including the issue #7083 logo.
       if (allAnnotations.length > 0) {
         try {
-          const pdfArrayBufferForFlattening = await signedFile.arrayBuffer();
-          const m = await getPdfiumModule();
-          const docPtr = await openRawDocumentSafe(pdfArrayBufferForFlattening);
-
-          try {
-            const pageCount = m.FPDF_GetPageCount(docPtr);
-
-            for (const pageData of allAnnotations) {
-              const { pageIndex, annotations } = pageData;
-
-              if (pageIndex < pageCount) {
-                const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
-                if (!pagePtr) continue;
-
-                const pageHeight = m.FPDF_GetPageHeightF(pagePtr);
-
-                for (const annotation of annotations) {
-                  try {
-                    const rect =
-                      annotation.rect ||
-                      annotation.bounds ||
-                      annotation.rectangle ||
-                      annotation.position;
-
-                    if (rect) {
-                      const originalX =
-                        rect.origin?.x || rect.x || rect.left || 0;
-                      const originalY =
-                        rect.origin?.y || rect.y || rect.top || 0;
-                      const width = rect.size?.width || rect.width || 100;
-                      const height = rect.size?.height || rect.height || 50;
-
-                      // Convert from CSS top-left to PDF bottom-left
-                      const pdfX = originalX;
-                      const pdfY = pageHeight - originalY - height;
-
-                      let imageDataUrl =
-                        annotation.imageData ||
-                        annotation.appearance ||
-                        annotation.stampData ||
-                        annotation.imageSrc ||
-                        annotation.contents ||
-                        annotation.data;
-
-                      if (!imageDataUrl && annotation.id) {
-                        const storedImageData = getImageData(annotation.id);
-                        if (storedImageData) {
-                          imageDataUrl = storedImageData;
-                        }
-                      }
-
-                      // Convert SVG to PNG first if needed
-                      if (
-                        imageDataUrl &&
-                        typeof imageDataUrl === "string" &&
-                        imageDataUrl.startsWith("data:image/svg+xml")
-                      ) {
-                        const pngBytes = await rasteriseSvgToPng(
-                          imageDataUrl,
-                          width * 2,
-                          height * 2,
-                        );
-                        if (pngBytes) {
-                          imageDataUrl = await uint8ArrayToPngDataUrl(pngBytes);
-                        } else {
-                          drawPlaceholderRect(
-                            m,
-                            pagePtr,
-                            pdfX,
-                            pdfY,
-                            width,
-                            height,
-                          );
-                          continue;
-                        }
-                      }
-
-                      if (
-                        imageDataUrl &&
-                        typeof imageDataUrl === "string" &&
-                        imageDataUrl.startsWith("data:image")
-                      ) {
-                        // Decode the image data URL to raw pixels via canvas
-                        const imageResult =
-                          await decodeImageDataUrl(imageDataUrl);
-                        if (imageResult) {
-                          embedBitmapImageOnPage(
-                            m,
-                            docPtr,
-                            pagePtr,
-                            imageResult,
-                            pdfX,
-                            pdfY,
-                            width,
-                            height,
-                          );
-                        }
-                      } else if (
-                        annotation.type === FPDF_ANNOT_INK ||
-                        annotation.type === FPDF_ANNOT_LINE
-                      ) {
-                        drawPlaceholderRect(
-                          m,
-                          pagePtr,
-                          pdfX,
-                          pdfY,
-                          width,
-                          height,
-                        );
-                      }
-                    }
-                  } catch (annotationError) {
-                    console.warn(
-                      "Failed to render annotation:",
-                      annotationError,
-                    );
-                  }
-                }
-
-                m.FPDFPage_GenerateContent(pagePtr);
-                m.FPDF_ClosePage(pagePtr);
-              }
-            }
-
-            const resultBuf = await saveRawDocument(docPtr);
-            signedFile = new File([resultBuf], currentFile.name, {
-              type: "application/pdf",
-            });
-          } finally {
-            closeDocAndFreeBuffer(m, docPtr);
-          }
+          const resultBytes = await embedSignatureImages(
+            await signedFile.arrayBuffer(),
+            allAnnotations,
+            getImageData,
+          );
+          signedFile = new File([resultBytes as BlobPart], currentFile.name, {
+            type: "application/pdf",
+          });
         } catch (renderError) {
-          console.error("Failed to manually render annotations:", renderError);
-          console.warn("Signatures may only show as annotations");
+          console.error("Failed to embed signature images:", renderError);
+          console.warn("Signatures may only remain as annotations");
         }
       }
 
@@ -343,16 +207,211 @@ export async function flattenSignatures(
   }
 }
 
-/**
- * Convert Uint8Array PNG bytes to a data URL for canvas decoding.
- */
-function uint8ArrayToPngDataUrl(pngBytes: Uint8Array): Promise<string> {
-  return new Promise((resolve) => {
-    const blob = new Blob([pngBytes as BlobPart], { type: "image/png" });
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.readAsDataURL(blob);
-  });
+type SignatureAnnotationsByPage = Array<{
+  pageIndex: number;
+  annotations: any[];
+}>;
+
+function extractImageDataUrl(
+  value: unknown,
+  depth = 0,
+  visited: Set<unknown> = new Set(),
+): string | undefined {
+  if (!value || depth > 6) return undefined;
+
+  if (typeof value === "string") {
+    return value.startsWith("data:image") ? value : undefined;
+  }
+
+  if (typeof value !== "object" || visited.has(value)) return undefined;
+  visited.add(value);
+
+  const entries = Array.isArray(value)
+    ? value
+    : Object.values(value as Record<string, unknown>);
+  for (const entry of entries) {
+    const imageDataUrl = extractImageDataUrl(entry, depth + 1, visited);
+    if (imageDataUrl) return imageDataUrl;
+  }
+
+  return undefined;
+}
+
+function getAnnotationImageData(
+  annotation: any,
+  getImageData: (id: string) => string | undefined,
+): string | undefined {
+  // EmbedPDF can replace fields such as imageData/appearance with an internal
+  // asset reference after placement. Prefer our persistent original and only
+  // accept values that actually contain an image data URL.
+  const candidates: unknown[] = [
+    annotation.id ? getImageData(annotation.id) : undefined,
+    annotation.imageSrc,
+    annotation.imageData,
+    annotation.appearance,
+    annotation.stampData,
+    annotation.contents,
+    annotation.data,
+    annotation.customData,
+    annotation.asset,
+  ];
+
+  for (const candidate of candidates) {
+    const imageDataUrl = extractImageDataUrl(candidate);
+    if (imageDataUrl) return imageDataUrl;
+  }
+
+  return undefined;
+}
+
+export async function embedSignatureImages(
+  pdfArrayBuffer: ArrayBuffer,
+  annotationsByPage: SignatureAnnotationsByPage,
+  getImageData: (id: string) => string | undefined,
+  imageDecoder: (
+    dataUrl: string,
+  ) => Promise<DecodedImage | null> = decodeImageDataUrl,
+): Promise<ArrayBuffer> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(pdfArrayBuffer);
+
+  try {
+    const pageCount = m.FPDF_GetPageCount(docPtr);
+
+    for (const { pageIndex, annotations } of annotationsByPage) {
+      if (pageIndex < 0 || pageIndex >= pageCount) continue;
+
+      const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
+      if (!pagePtr) continue;
+
+      try {
+        const pageBox = readEffectivePageBox(m, pagePtr);
+        const cropHeight = pageBox.top - pageBox.bottom;
+
+        for (const annotation of annotations) {
+          const rect =
+            annotation.rect ??
+            annotation.bounds ??
+            annotation.rectangle ??
+            annotation.position;
+          if (!rect) continue;
+
+          const originalX = rect.origin?.x ?? rect.x ?? rect.left ?? 0;
+          const originalY = rect.origin?.y ?? rect.y ?? rect.top ?? 0;
+          const width = rect.size?.width ?? rect.width ?? 100;
+          const height = rect.size?.height ?? rect.height ?? 50;
+          if (width <= 0 || height <= 0) continue;
+
+          let imageDataUrl = getAnnotationImageData(annotation, getImageData);
+          if (!imageDataUrl) continue;
+
+          if (imageDataUrl.startsWith("data:image/svg+xml")) {
+            const pngBytes = await rasteriseSvgToPng(
+              imageDataUrl,
+              width * 2,
+              height * 2,
+            );
+            if (!pngBytes) continue;
+            imageDataUrl = `data:image/png;base64,${uint8ArrayToBase64(pngBytes)}`;
+          }
+
+          const decodedImage = await imageDecoder(imageDataUrl);
+          if (!decodedImage) continue;
+
+          const pdfX = pageBox.left + originalX;
+          const pdfY = pageBox.bottom + cropHeight - originalY - height;
+          appendStampAnnotation(
+            m,
+            docPtr,
+            pagePtr,
+            decodedImage,
+            pdfX,
+            pdfY,
+            width,
+            height,
+          );
+        }
+      } finally {
+        m.FPDF_ClosePage(pagePtr);
+      }
+    }
+
+    return await saveRawDocument(docPtr);
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
+const FPDF_ANNOT_STAMP = 13;
+const FPDF_ANNOT_FLAG_PRINT = 1 << 2;
+const FPDF_ANNOT_FLAG_READONLY = 1 << 6;
+const FPDF_ANNOT_FLAG_LOCKED = 1 << 7;
+
+function appendStampAnnotation(
+  m: Awaited<ReturnType<typeof getPdfiumModule>>,
+  docPtr: number,
+  pagePtr: number,
+  image: DecodedImage,
+  pdfX: number,
+  pdfY: number,
+  width: number,
+  height: number,
+): boolean {
+  const annotationIndex = m.FPDFPage_GetAnnotCount(pagePtr);
+  const annotPtr = m.FPDFPage_CreateAnnot(pagePtr, FPDF_ANNOT_STAMP);
+  if (!annotPtr) return false;
+
+  let appended = false;
+  let imageObjPtr = 0;
+  const rectPtr = m.pdfium.wasmExports.malloc(4 * 4);
+
+  try {
+    // FS_RECTF layout: left, top, right, bottom.
+    m.pdfium.setValue(rectPtr, pdfX, "float");
+    m.pdfium.setValue(rectPtr + 4, pdfY + height, "float");
+    m.pdfium.setValue(rectPtr + 8, pdfX + width, "float");
+    m.pdfium.setValue(rectPtr + 12, pdfY, "float");
+    if (!m.FPDFAnnot_SetRect(annotPtr, rectPtr)) return false;
+
+    imageObjPtr =
+      createBitmapImageObject(
+        m,
+        docPtr,
+        pagePtr,
+        image,
+        pdfX,
+        pdfY,
+        width,
+        height,
+      ) ?? 0;
+    if (!imageObjPtr) return false;
+
+    if (!m.FPDFAnnot_AppendObject(annotPtr, imageObjPtr)) return false;
+    imageObjPtr = 0; // The annotation owns the object after a successful append.
+
+    m.FPDFAnnot_SetFlags(
+      annotPtr,
+      FPDF_ANNOT_FLAG_PRINT | FPDF_ANNOT_FLAG_READONLY | FPDF_ANNOT_FLAG_LOCKED,
+    );
+    appended = true;
+    return true;
+  } finally {
+    m.pdfium.wasmExports.free(rectPtr);
+    if (imageObjPtr) m.FPDFPageObj_Destroy(imageObjPtr);
+    m.FPDFPage_CloseAnnot(annotPtr);
+    if (!appended) m.FPDFPage_RemoveAnnot(pagePtr, annotationIndex);
+  }
+}
+
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(
+      ...bytes.subarray(offset, offset + chunkSize),
+    );
+  }
+  return btoa(binary);
 }
 
 /**

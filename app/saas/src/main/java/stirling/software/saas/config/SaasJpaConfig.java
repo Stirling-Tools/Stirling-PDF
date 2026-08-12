@@ -14,15 +14,22 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @Profile("saas")
 @EnableJpaRepositories(
         basePackages = {
+            "stirling.software.saas.accountlink",
             "stirling.software.saas.repository",
             "stirling.software.saas.billing.repository",
             "stirling.software.saas.ai.repository",
-            "stirling.software.saas.payg.repository"
+            "stirling.software.saas.payg.repository",
+            "stirling.software.saas.payg.bundle",
+            "stirling.software.saas.procurement.repository",
+            "stirling.software.saas.legal"
         })
 @EntityScan({
+    "stirling.software.saas.accountlink",
     "stirling.software.saas.model",
     "stirling.software.saas.billing.model",
     "stirling.software.saas.ai.model",
-    "stirling.software.saas.payg"
+    "stirling.software.saas.payg",
+    "stirling.software.saas.procurement.model",
+    "stirling.software.saas.legal"
 })
 public class SaasJpaConfig {}

@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  Before/After montage for a PR description. The ui-before-after skill replaces
+  the JSON in the window.__BA__ data block below with the captured manifest, then
+  screenshots each .tab-section (id="section-<tabId>") into a PNG to drag into the
+  PR description. Self-contained; images may be relative paths or data URIs.
+
+  Data shape:
+  {
+    "pr":"6552","title":"...","base":"main","head":"feat/x",
+    "cropSelector":"[data-sidebar=\"tool-panel\"]",
+    "tabs":[
+      { "id":"sign","title":"Sign tool","states":[
+        {"name":"Initial","before":"before/sign__initial.png","after":"after/sign__initial.png"},
+        {"name":"Cert selected","before":null,"after":"after/sign__cert.png","note":"New in this PR"}
+      ]}
+    ]
+  }
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Before / After</title>
+<style>
+  :root { --bg:#ffffff; --ink:#0b0c0e; --muted:#6b7280; --line:#e5e7eb;
+          --before:#6b7280; --after:#1f883d; --frame:#f3f4f6; --note:#b45309; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:14px/1.5 -apple-system,"Segoe UI",Roboto,system-ui,sans-serif; }
+  .wrap { max-width:1100px; margin:0 auto; padding:24px; }
+  .doc-head { margin-bottom:8px; }
+  .doc-head h1 { font-size:18px; margin:0 0 2px; }
+  .doc-head .sub { color:var(--muted); font-size:12.5px; }
+  .legend { display:flex; gap:14px; align-items:center; margin:10px 0 4px; font-size:12px; color:var(--muted); }
+  .chip { font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+          padding:2px 8px; border-radius:999px; color:#fff; }
+  .chip.before { background:var(--before); } .chip.after { background:var(--after); }
+
+  .tab-section { border:1px solid var(--line); border-radius:14px; padding:18px 18px 8px;
+                 margin:18px 0; background:var(--bg); }
+  .tab-section > h2 { font-size:16px; margin:0 0 2px; }
+  .tab-section > .ctx { color:var(--muted); font-size:12px; margin-bottom:14px; }
+  .state { margin-bottom:18px; }
+  .state .name { font-weight:600; font-size:13.5px; margin-bottom:8px; display:flex; gap:8px; align-items:center; }
+  .state .name .note { font-weight:500; color:var(--note); font-size:12px; }
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+  .cell { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--frame); }
+  .cell .cap { display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--line);
+               background:var(--bg); }
+  .cell .cap .meta { color:var(--muted); font-size:11px; }
+  .cell img { display:block; width:100%; height:auto; background:#fff; }
+  .cell.empty .ph { display:flex; align-items:center; justify-content:center; height:160px; color:var(--muted);
+                    font-size:12.5px; text-align:center; padding:0 16px; }
+  .single .pair { grid-template-columns:1fr; }
+  .empty-doc { color:var(--muted); padding:40px; text-align:center; }
+  @media (max-width:760px){ .pair{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="root"></div>
+
+<script id="data">
+window.__BA__ = /*__DATA__*/{"pr":"","title":"No data","base":"","head":"","cropSelector":"","tabs":[]}/*__END__*/;
+</script>
+<script>
+(function(){
+  var D = window.__BA__ || { tabs: [] };
+  var root = document.getElementById("root");
+  function el(html){ var t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstChild; }
+  function esc(s){ return (s==null?"":String(s)).replace(/[&<>]/g, function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
+
+  function cell(kind, src){
+    if (src) {
+      return '<div class="cell"><div class="cap"><span class="chip '+kind+'">'+kind+'</span></div>'+
+             '<img src="'+esc(src)+'" alt="'+kind+'"/></div>';
+    }
+    return '<div class="cell empty"><div class="cap"><span class="chip '+kind+'">'+kind+'</span>'+
+           '<span class="meta">not present</span></div><div class="ph">No '+kind+' screenshot for this state</div></div>';
+  }
+
+  var head = '<div class="doc-head"><h1>'+esc(D.title || ("PR #"+D.pr))+'</h1>'+
+    '<div class="sub">Before / after &nbsp;·&nbsp; base <code>'+esc(D.base)+'</code> → head <code>'+esc(D.head)+'</code>'+
+    (D.cropSelector ? ' &nbsp;·&nbsp; cropped to <code>'+esc(D.cropSelector)+'</code>' : '')+'</div></div>'+
+    '<div class="legend"><span class="chip before">Before</span> base branch'+
+    '<span class="chip after">After</span> this PR</div>';
+  root.appendChild(el('<div>'+head+'</div>'));
+
+  if (!D.tabs || !D.tabs.length){ root.appendChild(el('<div class="empty-doc">No tabs captured yet.</div>')); return; }
+
+  D.tabs.forEach(function(tab){
+    var states = (tab.states||[]).map(function(s){
+      var onlyOne = (!s.before || !s.after);
+      return '<div class="state'+(onlyOne?' ':'')+'">'+
+        '<div class="name">'+esc(s.name)+(s.note?'<span class="note">'+esc(s.note)+'</span>':'')+'</div>'+
+        '<div class="pair">'+cell("before", s.before)+cell("after", s.after)+'</div></div>';
+    }).join("");
+    var sec = '<section class="tab-section" id="section-'+esc(tab.id)+'">'+
+      '<h2>'+esc(tab.title)+'</h2>'+
+      (tab.ctx?'<div class="ctx">'+esc(tab.ctx)+'</div>':'')+
+      states+'</section>';
+    root.appendChild(el(sec));
+  });
+})();
+</script>
+</body>
+</html>

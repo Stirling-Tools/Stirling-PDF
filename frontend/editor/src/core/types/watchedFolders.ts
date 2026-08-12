@@ -25,6 +25,9 @@ export interface WatchedFolder {
   hasOutputDirectory?: boolean; // true when a local FS output folder is configured
   /** Where input files come from. Default: 'idb' (dropped/sidebar files stay in browser). */
   inputSource?: "idb" | "local-folder";
+  /** Set when this folder is the backing store for a Policy (its category id).
+   *  Policy-owned folders are filtered out of the Watched Folders UI. */
+  policyCategoryId?: string;
 }
 
 export interface FolderFileMetadata {

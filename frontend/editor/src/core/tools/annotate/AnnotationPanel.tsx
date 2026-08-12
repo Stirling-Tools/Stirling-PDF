@@ -4,15 +4,17 @@ import { useTranslation } from "react-i18next";
 import {
   Text,
   Group,
-  ActionIcon,
   Stack,
   Slider,
   Box,
   Tooltip as MantineTooltip,
-  Button,
   Tooltip,
   Paper,
+  Menu,
+  Modal,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   ColorPicker,
@@ -133,7 +135,8 @@ interface AnnotationPanelProps {
   undo: () => void;
   redo: () => void;
   historyAvailability: { canUndo: boolean; canRedo: boolean };
-  onApplyChanges: () => void;
+  onClearDocumentAnnotations: () => boolean | Promise<boolean>;
+  onApplyChanges: () => void | Promise<void>;
   applyDisabled: boolean;
 }
 
@@ -142,6 +145,11 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
   const { t } = useTranslation();
   const [colorPickerTarget, setColorPickerTarget] = useState<ColorTarget>(null);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [isClearDocumentModalOpen, setIsClearDocumentModalOpen] =
+    useState(false);
+  const [isClearingDocumentAnnotations, setIsClearingDocumentAnnotations] =
+    useState(false);
+  const [isApplyingChanges, setIsApplyingChanges] = useState(false);
 
   const {
     activeTool,
@@ -164,6 +172,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     undo,
     redo,
     historyAvailability,
+    onClearDocumentAnnotations,
     onApplyChanges,
     applyDisabled,
   } = props;
@@ -317,6 +326,37 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
 
   const annotationsVisible = viewerContext?.isAnnotationsVisible ?? true;
 
+  const handleConfirmClearDocumentAnnotations = async () => {
+    if (isClearingDocumentAnnotations || isApplyingChanges) {
+      return;
+    }
+
+    setIsClearingDocumentAnnotations(true);
+    try {
+      const didClear = await onClearDocumentAnnotations();
+      if (didClear) {
+        setIsClearDocumentModalOpen(false);
+      }
+    } finally {
+      setIsClearingDocumentAnnotations(false);
+    }
+  };
+
+  const handleApplyChangesClick = async () => {
+    if (isApplyingChanges || isClearingDocumentAnnotations || applyDisabled) {
+      return;
+    }
+
+    setIsApplyingChanges(true);
+    try {
+      await onApplyChanges();
+    } catch {
+      // The viewer-level save handler reports the failure to the user.
+    } finally {
+      setIsApplyingChanges(false);
+    }
+  };
+
   const renderToolButtons = (
     tools: { id: AnnotationToolId; label: string; icon: string }[],
   ) => (
@@ -325,12 +365,10 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         <MantineTooltip key={tool.id} label={tool.label} withArrow>
           <ActionIcon
             variant={
-              activeTool === tool.id && annotationsVisible ? "filled" : "subtle"
+              activeTool === tool.id && annotationsVisible
+                ? "primary"
+                : "tertiary"
             }
-            color={
-              activeTool === tool.id && annotationsVisible ? "blue" : undefined
-            }
-            radius="md"
             onClick={() => activateAnnotationTool(tool.id)}
             disabled={!annotationsVisible}
             aria-label={tool.label}
@@ -601,9 +639,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   </Text>
                   <Group gap="xs">
                     <ActionIcon
-                      variant={textAlignment === "left" ? "filled" : "default"}
+                      variant={
+                        textAlignment === "left" ? "primary" : "secondary"
+                      }
                       onClick={() => setTextAlignment("left")}
                       size="md"
+                      aria-label={t("annotation.alignLeft", "Align left")}
                     >
                       <LocalIcon
                         icon="format-align-left"
@@ -613,10 +654,11 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     </ActionIcon>
                     <ActionIcon
                       variant={
-                        textAlignment === "center" ? "filled" : "default"
+                        textAlignment === "center" ? "primary" : "secondary"
                       }
                       onClick={() => setTextAlignment("center")}
                       size="md"
+                      aria-label={t("annotation.alignCenter", "Align center")}
                     >
                       <LocalIcon
                         icon="format-align-center"
@@ -625,9 +667,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       />
                     </ActionIcon>
                     <ActionIcon
-                      variant={textAlignment === "right" ? "filled" : "default"}
+                      variant={
+                        textAlignment === "right" ? "primary" : "secondary"
+                      }
                       onClick={() => setTextAlignment("right")}
                       size="md"
+                      aria-label={t("annotation.alignRight", "Align right")}
                     >
                       <LocalIcon
                         icon="format-align-right"
@@ -651,8 +696,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       }}
                     />
                     <Button
-                      size="xs"
-                      variant={textBackgroundColor ? "light" : "default"}
+                      size="sm"
+                      variant="secondary"
                       onClick={() => {
                         setTextBackgroundColor("");
                         annotationApiRef?.current?.setAnnotationStyle?.(
@@ -699,8 +744,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     }}
                   />
                   <Button
-                    size="xs"
-                    variant={noteBackgroundColor ? "light" : "default"}
+                    size="sm"
+                    variant="secondary"
                     onClick={() => {
                       setNoteBackgroundColor("");
                       annotationApiRef?.current?.setAnnotationStyle?.(
@@ -774,8 +819,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                         />
                       </Box>
                       <Button
-                        size="xs"
-                        variant={shapeThickness === 0 ? "filled" : "light"}
+                        size="sm"
+                        variant={shapeThickness === 0 ? "primary" : "tertiary"}
                         onClick={() =>
                           setShapeThickness(shapeThickness === 0 ? 1 : 0)
                         }
@@ -1139,30 +1184,22 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         <Tooltip
           label={t("annotation.selectAndMove", "Select and edit annotations")}
         >
-          <ActionIcon
+          <Button
             variant={
               activeTool === "select" && annotationsVisible
-                ? "filled"
-                : "default"
+                ? "primary"
+                : "secondary"
             }
-            size="lg"
             disabled={!annotationsVisible}
             onClick={() => {
               activateAnnotationTool("select");
             }}
-            style={{
-              width: "auto",
-              paddingInline: "0.75rem",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4rem",
-            }}
+            leftSection={
+              <LocalIcon icon="touch-app-rounded" width={20} height={20} />
+            }
           >
-            <LocalIcon icon="touch-app-rounded" width={20} height={20} />
-            <Text component="span" size="sm" fw={500}>
-              {t("annotation.selectAndMove", "Select and Edit")}
-            </Text>
-          </ActionIcon>
+            {t("annotation.selectAndMove", "Select and Edit")}
+          </Button>
         </Tooltip>
 
         <DrawingControls
@@ -1171,7 +1208,37 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           canUndo={historyAvailability.canUndo}
           canRedo={historyAvailability.canRedo}
           showPlaceButton={false}
-          additionalControls={null}
+          additionalControls={
+            <Menu position="bottom-end" withArrow>
+              <Menu.Target>
+                <Tooltip label={t("annotation.moreActions", "More actions")}>
+                  <ActionIcon
+                    variant="tertiary"
+                    size="lg"
+                    disabled={isApplyingChanges}
+                    aria-label={t("annotation.moreActions", "More actions")}
+                  >
+                    <LocalIcon icon="more-horiz" width={20} height={20} />
+                  </ActionIcon>
+                </Tooltip>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  color="red"
+                  disabled={isClearingDocumentAnnotations || isApplyingChanges}
+                  leftSection={
+                    <LocalIcon icon="delete-rounded" width={18} height={18} />
+                  }
+                  onClick={() => setIsClearDocumentModalOpen(true)}
+                >
+                  {t(
+                    "annotation.clearDocumentAnnotations",
+                    "Clear all annotations",
+                  )}
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          }
         />
       </Group>
 
@@ -1217,17 +1284,59 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       <Button
         fullWidth
         size="md"
-        radius="md"
-        mt="sm"
-        variant="filled"
-        color="blue"
-        disabled={applyDisabled}
-        onClick={onApplyChanges}
+        disabled={
+          applyDisabled || isApplyingChanges || isClearingDocumentAnnotations
+        }
+        loading={isApplyingChanges}
+        onClick={() => void handleApplyChangesClick()}
+        style={{ marginTop: "0.75rem" }}
       >
         {t("annotation.saveChanges", "Save Changes")}
       </Button>
 
       <SuggestedToolsSection />
+
+      <Modal
+        opened={isClearDocumentModalOpen}
+        onClose={() => {
+          if (!isClearingDocumentAnnotations) {
+            setIsClearDocumentModalOpen(false);
+          }
+        }}
+        title={t(
+          "annotation.clearDocumentAnnotationsTitle",
+          "Clear all annotations?",
+        )}
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t(
+              "annotation.clearDocumentAnnotationsDescription",
+              "This removes all annotations currently loaded in the editor. Please save changes to persist this in the PDF.",
+            )}
+          </Text>
+          <Group justify="flex-end">
+            <Button
+              disabled={isClearingDocumentAnnotations}
+              onClick={() => setIsClearDocumentModalOpen(false)}
+            >
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              accent="danger"
+              loading={isClearingDocumentAnnotations}
+              disabled={isApplyingChanges}
+              leftSection={
+                <LocalIcon icon="delete-rounded" width={18} height={18} />
+              }
+              onClick={() => void handleConfirmClearDocumentAnnotations()}
+            >
+              {t("annotation.clearDocumentAnnotationsConfirm", "Clear all")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

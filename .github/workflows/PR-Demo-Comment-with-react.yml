@@ -34,12 +34,8 @@ permissions:
   pull-requests: read
 
 jobs:
-  pick:
-    uses: ./.github/workflows/_runner-pick.yml
-
   check-comment:
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ubuntu-latest
     permissions:
       issues: write
     if: |
@@ -58,7 +54,6 @@ jobs:
             github.event.comment.user.login == 'Ludy87' ||
             github.event.comment.user.login == 'balazs-szucs' ||
             github.event.comment.user.login == 'reecebrowne' ||
-            github.event.comment.user.login == 'DarioGii' ||
             github.event.comment.user.login == 'EthanHealy01' ||
             github.event.comment.user.login == 'jbrunton96' ||
             github.event.comment.user.login == 'ConnorYoh'
@@ -74,7 +69,7 @@ jobs:
       enable_prototypes: ${{ steps.check-prototypes-flag.outputs.enable_prototypes }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -179,19 +174,15 @@ jobs:
             }
 
   deploy-pr:
-    needs: [pick, check-comment]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    needs: check-comment
+    runs-on: ubuntu-latest
     permissions:
       issues: write
       pull-requests: write
-      id-token: write
-    env:
-      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' }}
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -214,18 +205,24 @@ jobs:
           token: ${{ steps.setup-bot.outputs.token }}
 
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+      - name: Cache Gradle User Home
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          gradle-version: 9.3.1
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
+            gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Run Gradle Command
         run: |
           if [ "${{ needs.check-comment.outputs.disable_security }}" == "true" ]; then
@@ -240,37 +237,17 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           STIRLING_PDF_DESKTOP_UI: false
 
-      - name: Set up Depot CLI
-        if: env.USE_DEPOT == 'true'
-        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
-
       - name: Set up Docker Buildx
-        if: env.USE_DEPOT != 'true'
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Login to Docker Hub
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
-      - name: Build and push PR-specific image (Depot)
-        if: env.USE_DEPOT == 'true'
-        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
-        with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
-          context: .
-          file: ./docker/embedded/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
-          build-args: |
-            VERSION_TAG=alpha
-            PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
-          platforms: linux/amd64
-
-      - name: Build and push PR-specific image (Docker fork fallback)
-        if: env.USE_DEPOT != 'true'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+      - name: Build and push PR-specific image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           file: ./docker/embedded/Dockerfile
@@ -283,22 +260,11 @@ jobs:
             PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
           platforms: linux/amd64
 
-      - name: Build and push engine image (Depot)
-        if: env.USE_DEPOT == 'true' && needs.check-comment.outputs.enable_prototypes == 'true'
-        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
+      - name: Build and push engine image
+        if: needs.check-comment.outputs.enable_prototypes == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
-          context: ./engine
-          file: ./engine/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
-          platforms: linux/amd64
-
-      - name: Build and push engine image (Docker fork fallback)
-        if: env.USE_DEPOT != 'true' && needs.check-comment.outputs.enable_prototypes == 'true'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
-        with:
-          context: ./engine
+          context: .
           file: ./engine/Dockerfile
           push: true
           cache-from: type=gha,scope=stirling-pdf-engine
@@ -388,7 +354,7 @@ jobs:
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "${DISABLE_ADDITIONAL_FEATURES}"
                 SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
-                SYSTEM_DEFAULTLOCALE: en-GB
+                SYSTEM_DEFAULTLOCALE: en-US
                 UI_APPNAME: "Stirling-PDF PR#${PR_NUMBER}"
                 UI_HOMEDESCRIPTION: "PR#${PR_NUMBER} for Stirling-PDF Latest"
                 UI_APPNAMENAVBAR: "PR#${PR_NUMBER}"
@@ -510,11 +476,10 @@ jobs:
 
   handle-label-commands:
     if: ${{ github.event.issue.pull_request != null }}
-    needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 

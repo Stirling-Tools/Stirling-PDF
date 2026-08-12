@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Menu, Button, ActionIcon } from "@mantine/core";
+import { Menu } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages, setUserLanguage } from "@app/i18n";
@@ -73,50 +75,26 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
       }}
     >
       <Button
-        variant="subtle"
+        variant="tertiary"
+        accent="neutral"
         size="sm"
         fullWidth
         onClick={disabled ? undefined : onClick}
         data-selected={isSelected}
         disabled={disabled}
-        styles={{
-          root: {
-            borderRadius: "4px",
-            minHeight: "32px",
-            padding: "4px 8px",
-            justifyContent: "flex-start",
-            position: "relative",
-            overflow: "hidden",
-            backgroundColor: isSelected
-              ? "light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))"
-              : "transparent",
-            color: disabled
-              ? "var(--text-muted)"
-              : isSelected
-                ? "light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-3))"
-                : "var(--text-primary)",
-            transition: "all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-            cursor: disabled ? "not-allowed" : "pointer",
-            "&:hover": !disabled
-              ? {
-                  backgroundColor: isSelected
-                    ? "light-dark(var(--mantine-color-blue-2), var(--mantine-color-blue-7))"
-                    : "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",
-                  transform: "translateY(-1px)",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                }
-              : {},
-          },
-          label: {
-            fontSize: "13px",
-            fontWeight: isSelected ? 600 : 400,
-            textAlign: "left",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            position: "relative",
-            zIndex: 2,
-          },
+        style={{
+          justifyContent: "flex-start",
+          position: "relative",
+          overflow: "hidden",
+          fontWeight: isSelected ? 600 : 400,
+          backgroundColor: isSelected
+            ? "light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))"
+            : undefined,
+          color: disabled
+            ? "var(--c-text-subtle)"
+            : isSelected
+              ? "light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-3))"
+              : "var(--c-text)",
         }}
       >
         {label}
@@ -205,6 +183,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   // 2-4: 300px/2 cols, 5-9: 400px/3 cols, 10+: 600px/4 cols
   const dropdownWidth =
     languageOptions.length <= 4 ? 300 : languageOptions.length <= 9 ? 400 : 600;
+  const responsiveDropdownWidth = `min(${dropdownWidth}px, calc(100vw - 24px))`;
 
   const gridColumns =
     languageOptions.length <= 4 ? 2 : languageOptions.length <= 9 ? 3 : 4;
@@ -243,7 +222,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   const currentLanguage =
     supportedLanguages[i18n.language as keyof typeof supportedLanguages] ||
-    supportedLanguages["en-GB"] ||
+    supportedLanguages["en-US"] ||
     "English"; // Fallback if supportedLanguages lookup fails
 
   // Hide the language selector if there's only one language option
@@ -258,7 +237,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       <Menu
         opened={opened}
         onChange={setOpened}
-        width={dropdownWidth}
+        width={responsiveDropdownWidth}
         position={position}
         offset={offset}
         zIndex={Z_INDEX_CONFIG_MODAL}
@@ -272,43 +251,23 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <Menu.Target>
           {compact ? (
             <ActionIcon
-              variant="subtle"
-              radius="md"
+              variant="tertiary"
+              accent="neutral"
               data-testid="language-selector-button"
               title={!opened && tooltip ? tooltip : undefined}
-              styles={{
-                root: {
-                  color: "var(--text-secondary)",
-                  "&:hover": {
-                    backgroundColor:
-                      "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",
-                  },
-                },
-              }}
+              aria-label={tooltip ?? currentLanguage}
             >
               <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
             </ActionIcon>
           ) : (
             <Button
-              variant="subtle"
+              variant="tertiary"
+              accent="neutral"
               size="sm"
               data-testid="language-selector-button"
               leftSection={
                 <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
               }
-              styles={{
-                root: {
-                  border: "none",
-                  color: "var(--text-primary)",
-                  transition:
-                    "background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                  "&:hover": {
-                    backgroundColor:
-                      "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",
-                  },
-                },
-                label: { fontSize: "12px", fontWeight: 500 },
-              }}
             >
               <span className={styles.languageText}>{currentLanguage}</span>
             </Button>
@@ -318,6 +277,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <Menu.Dropdown
           style={{
             padding: "12px",
+            maxHeight: "min(360px, calc(100vh - 160px))",
+            overflowY: "auto",
+            maxWidth: "calc(100vw - 24px)",
             borderRadius: "8px",
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
             backgroundColor:
@@ -328,7 +290,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         >
           <div
             className={styles.languageGrid}
-            style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+            style={
+              {
+                "--language-grid-columns": gridColumns,
+              } as React.CSSProperties
+            }
           >
             {languageOptions.map((option, index) => (
               <LanguageItem

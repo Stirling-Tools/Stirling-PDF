@@ -1,7 +1,9 @@
 package stirling.software.proprietary.policy.engine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -150,6 +152,40 @@ class PolicyExecutorTest {
     }
 
     @Test
+    void noInputGeneratorEndpointIsCalledOnceWithNoFile() throws IOException {
+        // A "create" workflow has no source documents: a generator tool (e.g.
+        // create-pdf-from-html-agent) produces its output purely from parameters. Per-file
+        // dispatch would skip it entirely (zero files = zero calls), so it must still run once.
+        String createPdf = "/api/v1/ai/tools/create-pdf-from-html-agent";
+        when(toolMetadataService.isMultiInput(createPdf)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(createPdf)).thenReturn(false);
+        stubEndpoint(createPdf, pdf("generated", "purchase-order.pdf"));
+
+        PolicyExecutionResult result =
+                executor.execute(
+                        definition(
+                                new PipelineStep(
+                                        createPdf,
+                                        Map.of(
+                                                "document",
+                                                "{\"title\":\"PO\",\"sections\":[]}",
+                                                "filename",
+                                                "purchase-order.pdf"))),
+                        PolicyInputs.of(List.of()),
+                        PolicyProgressListener.NOOP);
+
+        assertEquals(1, result.files().size());
+        assertEquals("purchase-order.pdf", result.files().get(0).getFilename());
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient, times(1)).post(eq(createPdf), bodyCaptor.capture());
+        // No document stream: the body carries only the generator's parameters, no fileInput.
+        assertNull(bodyCaptor.getValue().get("fileInput"));
+    }
+
+    @Test
     void zipResponseIsUnpackedIntoIndividualFiles() throws IOException {
         when(toolMetadataService.isMultiInput(SPLIT)).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(SPLIT)).thenReturn(true);
@@ -264,7 +300,11 @@ class PolicyExecutorTest {
                                         definition(new PipelineStep(compress, Map.of())),
                                         PolicyInputs.of(List.of(pdf("img", "image.png"))),
                                         PolicyProgressListener.NOOP));
-        assertTrue(ex.getMessage().contains("image.png"));
+        // Names the rejected extension, never the document. This message becomes the run's error
+        // and
+        // is persisted on the failure record, which holds no document name.
+        assertTrue(ex.getMessage().contains("png"));
+        assertFalse(ex.getMessage().contains("image.png"));
         // Type check happens before any dispatch.
         verify(internalApiClient, never()).post(anyString(), any());
     }

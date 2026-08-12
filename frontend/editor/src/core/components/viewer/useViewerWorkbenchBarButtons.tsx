@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { ActionIcon, Slider, Popover, Select } from "@mantine/core";
+import { Slider, Popover, Select } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@app/i18n";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -18,18 +19,26 @@ import {
   useNavigationState,
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
-import { BASE_PATH, withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import LayersIcon from "@mui/icons-material/Layers";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import StopIcon from "@mui/icons-material/Stop";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
+import { RulerScaleSettingsButton } from "@app/components/viewer/RulerScaleSettingsButton";
+import type { MeasureScale } from "@app/utils/measurementTypes";
 
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
   setIsRulerActive?: (v: boolean) => void,
+  customScale?: MeasureScale | null,
+  setCustomScale?: (scale: MeasureScale | null) => void,
+  isScaleCalibrationActive?: boolean,
+  startScaleCalibration?: () => void,
+  cancelScaleCalibration?: () => void,
 ) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
@@ -73,17 +82,10 @@ export function useViewerWorkbenchBarButtons(
     });
   }, [registerImmediatePanUpdate]);
 
-  const stripBasePath = useCallback((path: string) => {
-    if (BASE_PATH && path.startsWith(BASE_PATH)) {
-      return path.slice(BASE_PATH.length) || "/";
-    }
-    return path;
-  }, []);
-
   const isAnnotationsPath = useCallback(() => {
     const cleanPath = stripBasePath(window.location.pathname).toLowerCase();
     return cleanPath === "/annotations" || cleanPath.endsWith("/annotations");
-  }, [stripBasePath]);
+  }, []);
 
   const [isAnnotationsActive, setIsAnnotationsActive] = useState<boolean>(() =>
     isAnnotationsPath(),
@@ -127,10 +129,35 @@ export function useViewerWorkbenchBarButtons(
   const annotationsLabel = t("workbenchBar.annotations", "Annotations");
   const formFillLabel = t("workbenchBar.formFill", "Fill Form");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
+  const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
   const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
   const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");
 
   const isFormFillActive = (selectedTool as string) === "formFill";
+
+  const handleStartScaleCalibration = useCallback(() => {
+    startScaleCalibration?.();
+    setIsRulerActive?.(true);
+    if (isPanning) {
+      viewer.panActions.disablePan();
+      setIsPanning(false);
+    }
+  }, [isPanning, setIsRulerActive, startScaleCalibration, viewer.panActions]);
+
+  const handleCancelScaleCalibration = useCallback(() => {
+    cancelScaleCalibration?.();
+  }, [cancelScaleCalibration]);
+
+  const handleApplyRulerScale = useCallback(
+    (scale: MeasureScale) => {
+      setCustomScale?.(scale);
+    },
+    [setCustomScale],
+  );
+
+  const handleResetRulerScale = useCallback(() => {
+    setCustomScale?.(null);
+  }, [setCustomScale]);
 
   // Filter languages based on available voices
   const filteredLanguages = useMemo(
@@ -179,14 +206,13 @@ export function useViewerWorkbenchBarButtons(
               <Popover.Target>
                 <div style={{ display: "inline-flex" }}>
                   <ActionIcon
-                    variant="subtle"
-                    radius="md"
+                    variant="tertiary"
                     className="workbench-bar-action-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
                     onClick={viewer.searchInterfaceActions.toggle}
                   >
-                    <LocalIcon icon="search" width="1.25rem" height="1.25rem" />
+                    <LocalIcon icon="search" width="1rem" height="1rem" />
                   </ActionIcon>
                 </div>
               </Popover.Target>
@@ -204,9 +230,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-pan-mode",
-        icon: (
-          <LocalIcon icon="pan-tool-rounded" width="1.25rem" height="1.25rem" />
-        ),
+        icon: <LocalIcon icon="pan-tool-rounded" width="1rem" height="1rem" />,
         tooltip:
           !isPanning && pendingCount > 0 && redactionActiveType !== null
             ? applyRedactionsLabel
@@ -231,7 +255,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-ruler",
-        icon: <StraightenIcon sx={{ fontSize: "1.25rem" }} />,
+        icon: <StraightenIcon sx={{ fontSize: "1rem" }} />,
         tooltip: rulerLabel,
         ariaLabel: rulerLabel,
         section: "top" as const,
@@ -246,9 +270,35 @@ export function useViewerWorkbenchBarButtons(
           }
         },
       },
+      // Ruler scale settings button - only visible when ruler is active
+      ...(isRulerActive
+        ? [
+            {
+              id: "viewer-ruler-settings",
+              icon: <SettingsIcon sx={{ fontSize: "1.5rem" }} />,
+              tooltip: rulerSettingsLabel,
+              ariaLabel: rulerSettingsLabel,
+              section: "top" as const,
+              order: 25.5,
+              render: ({ disabled }: { disabled?: boolean }) => (
+                <RulerScaleSettingsButton
+                  disabled={disabled}
+                  label={rulerSettingsLabel}
+                  tooltipPosition={tooltipPosition}
+                  currentScale={customScale}
+                  onApplyScale={handleApplyRulerScale}
+                  onResetScale={handleResetRulerScale}
+                  onStartCalibration={handleStartScaleCalibration}
+                  onCancelCalibration={handleCancelScaleCalibration}
+                  isCalibrationActive={isScaleCalibrationActive}
+                />
+              ),
+            },
+          ]
+        : []),
       {
         id: "viewer-rotate-left",
-        icon: <LocalIcon icon="rotate-left" width="1.25rem" height="1.25rem" />,
+        icon: <LocalIcon icon="rotate-left" width="1rem" height="1rem" />,
         tooltip: rotateLeftLabel,
         ariaLabel: rotateLeftLabel,
         section: "top" as const,
@@ -259,9 +309,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-rotate-right",
-        icon: (
-          <LocalIcon icon="rotate-right" width="1.25rem" height="1.25rem" />
-        ),
+        icon: <LocalIcon icon="rotate-right" width="1rem" height="1rem" />,
         tooltip: rotateRightLabel,
         ariaLabel: rotateRightLabel,
         section: "top" as const,
@@ -272,7 +320,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-sidebar",
-        icon: <LocalIcon icon="view-list" width="1.25rem" height="1.25rem" />,
+        icon: <LocalIcon icon="view-list" width="1rem" height="1rem" />,
         tooltip: sidebarLabel,
         ariaLabel: sidebarLabel,
         section: "top" as const,
@@ -322,7 +370,7 @@ export function useViewerWorkbenchBarButtons(
         ? [
             {
               id: "viewer-toggle-layers",
-              icon: <LayersIcon sx={{ fontSize: "1.25rem" }} />,
+              icon: <LayersIcon sx={{ fontSize: "1rem" }} />,
               tooltip: layersLabel,
               ariaLabel: layersLabel,
               section: "top" as const,
@@ -336,7 +384,7 @@ export function useViewerWorkbenchBarButtons(
         : []),
       {
         id: "viewer-toggle-comments",
-        icon: <LocalIcon icon="comment" width="1.25rem" height="1.25rem" />,
+        icon: <LocalIcon icon="comment" width="1rem" height="1rem" />,
         tooltip: commentsLabel,
         ariaLabel: commentsLabel,
         section: "top" as const,
@@ -373,8 +421,7 @@ export function useViewerWorkbenchBarButtons(
                   portalTarget={document.body}
                 >
                   <ActionIcon
-                    variant={isReadingAloud ? "filled" : "subtle"}
-                    radius="md"
+                    variant={isReadingAloud ? "primary" : "tertiary"}
                     className="workbench-bar-action-icon"
                     disabled={
                       disabled ||
@@ -383,12 +430,11 @@ export function useViewerWorkbenchBarButtons(
                     }
                     aria-label={readAloudLabel}
                     onClick={handleReadAloud}
-                    color={isReadingAloud ? "blue" : undefined}
                   >
                     {isReadingAloud ? (
-                      <StopIcon sx={{ fontSize: "1.25rem" }} />
+                      <StopIcon sx={{ fontSize: "1rem" }} />
                     ) : (
-                      <VolumeUpIcon sx={{ fontSize: "1.25rem" }} />
+                      <VolumeUpIcon sx={{ fontSize: "1rem" }} />
                     )}
                   </ActionIcon>
                 </Tooltip>
@@ -461,8 +507,7 @@ export function useViewerWorkbenchBarButtons(
             portalTarget={document.body}
           >
             <ActionIcon
-              variant={isAnnotationsActive ? "filled" : "subtle"}
-              radius="md"
+              variant={isAnnotationsActive ? "primary" : "tertiary"}
               className="workbench-bar-action-icon"
               onClick={() => {
                 if (disabled || isAnnotationsActive) return;
@@ -489,9 +534,9 @@ export function useViewerWorkbenchBarButtons(
               }}
               disabled={disabled}
               aria-pressed={isAnnotationsActive}
-              color={isAnnotationsActive ? "blue" : undefined}
+              aria-label={annotationsLabel}
             >
-              <LocalIcon icon="edit" width="1.25rem" height="1.25rem" />
+              <LocalIcon icon="edit" width="1rem" height="1rem" />
             </ActionIcon>
           </Tooltip>
         ),
@@ -519,8 +564,7 @@ export function useViewerWorkbenchBarButtons(
             portalTarget={document.body}
           >
             <ActionIcon
-              variant={isFormFillActive ? "filled" : "subtle"}
-              radius="md"
+              variant={isFormFillActive ? "primary" : "tertiary"}
               className="workbench-bar-action-icon"
               onClick={() => {
                 if (disabled) return;
@@ -532,9 +576,9 @@ export function useViewerWorkbenchBarButtons(
               }}
               disabled={disabled}
               aria-pressed={isFormFillActive}
-              color={isFormFillActive ? "blue" : undefined}
+              aria-label={formFillLabel}
             >
-              <TextFieldsIcon sx={{ fontSize: "1.25rem" }} />
+              <TextFieldsIcon sx={{ fontSize: "1rem" }} />
             </ActionIcon>
           </Tooltip>
         ),
@@ -571,8 +615,15 @@ export function useViewerWorkbenchBarButtons(
     formFillLabel,
     isFormFillActive,
     rulerLabel,
+    rulerSettingsLabel,
     isRulerActive,
     setIsRulerActive,
+    handleStartScaleCalibration,
+    handleCancelScaleCalibration,
+    handleApplyRulerScale,
+    handleResetRulerScale,
+    customScale,
+    isScaleCalibrationActive,
     readAloudLabel,
     readAloudSpeedLabel,
     isReadingAloud,

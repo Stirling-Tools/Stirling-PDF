@@ -173,7 +173,7 @@ test.describe("Files page", () => {
       await gotoFilesPage(page);
       const cards = page.locator(".files-page-card:not(.is-folder)");
       await cards.nth(0).click();
-      await cards.nth(1).click({ modifiers: ["Control"] });
+      await cards.nth(1).click({ modifiers: ["ControlOrMeta"] });
       await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
 
       // In multi-select (2+), plain-click ADDS instead of replacing.
@@ -198,7 +198,7 @@ test.describe("Files page", () => {
       await expect(page.locator(".files-page-card-selector")).toHaveCount(0);
 
       // 2+ selected: checkboxes appear on every file card.
-      await cards.nth(1).click({ modifiers: ["Control"] });
+      await cards.nth(1).click({ modifiers: ["ControlOrMeta"] });
       await expect(
         page.locator(".files-page-card-selector").first(),
       ).toBeVisible();
@@ -488,7 +488,7 @@ test.describe("Files page", () => {
       const cards = page.locator(".files-page-card:not(.is-folder)");
       await cards.nth(0).click();
       // Drawer stays closed so the second click reaches the card.
-      await cards.nth(1).click({ modifiers: ["Control"] });
+      await cards.nth(1).click({ modifiers: ["ControlOrMeta"] });
       await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
     });
   });
@@ -539,7 +539,10 @@ test.describe("Files page", () => {
   });
 
   test.describe("Move dialog inline create-folder", () => {
-    test.use({ autoGoto: false });
+    // The inline create-folder affordance is gated on `serverReachable`, which
+    // only flips true once a confirmed, non-anonymous user triggers the folder
+    // pull (see FolderContext). Seed a JWT so the stubbed session is logged-in.
+    test.use({ autoGoto: false, seedJwt: true });
 
     test("Move dialog shows Create new folder affordance", async ({ page }) => {
       await stubStorageApis(page);
@@ -644,10 +647,8 @@ test.describe("Files page", () => {
       await card.getByRole("button", { name: /File actions/i }).click();
       await page.getByRole("menuitem", { name: /Add to workspace/i }).click();
       // The materializer should have hit the download endpoint and
-      // routed the user to the viewer (/).
-      await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?(\?|$)/, {
-        timeout: 5_000,
-      });
+      // routed the user to the viewer (the editor).
+      await expect(page).toHaveURL(/\/editor(\?|$)/, { timeout: 5_000 });
       expect(downloadHit).toBe(true);
     });
 
@@ -700,9 +701,7 @@ test.describe("Files page", () => {
       // Open the card and confirm the share-link download endpoint fires.
       await card.getByRole("button", { name: /File actions/i }).click();
       await page.getByRole("menuitem", { name: /Add to workspace/i }).click();
-      await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?(\?|$)/, {
-        timeout: 5_000,
-      });
+      await expect(page).toHaveURL(/\/editor(\?|$)/, { timeout: 5_000 });
       expect(shareDownloadHit).toBe(true);
     });
 
@@ -822,11 +821,10 @@ test.describe("Files page", () => {
       // and direct user shares.)
       await page.locator("#filesPage-tab-sharedByMe").click();
       const sharedByMeCards = page.locator(".files-page-card:not(.is-folder)");
-      await expect(sharedByMeCards).toHaveCount(2, { timeout: 3_000 });
-      await expect(sharedByMeCards).toContainText([
-        "link-shared.pdf",
-        "user-shared.pdf",
-      ]);
+      await expect(sharedByMeCards).toHaveCount(2, { timeout: 5_000 });
+      for (const name of ["link-shared.pdf", "user-shared.pdf"]) {
+        await expect(sharedByMeCards.filter({ hasText: name })).toHaveCount(1);
+      }
 
       // "Shared with me" -> only from-someone-else.pdf
       await page.locator("#filesPage-tab-shared").click();

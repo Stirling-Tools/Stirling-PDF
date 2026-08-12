@@ -4,132 +4,27 @@
   align-items: center;
   gap: 2px;
   padding: 4px 8px;
-  border-bottom: 1px solid var(--border-subtle);
-  background-color: var(--bg-toolbar);
+  border-bottom: 1px solid var(--c-border-subtle);
+  background-color: var(--c-bg-raised);
   flex-shrink: 0;
-}
-
-/* CSS Custom Properties for Fullscreen Mode */
-.tool-panel__fullscreen-surface-inner {
-  --fullscreen-bg-surface-1: color-mix(
-    in srgb,
-    var(--bg-toolbar) 96%,
-    transparent
-  );
-  --fullscreen-bg-surface-2: color-mix(
-    in srgb,
-    var(--bg-background) 90%,
-    transparent
-  );
-  --fullscreen-bg-header: var(--bg-toolbar);
-  --fullscreen-bg-controls-1: var(--bg-toolbar);
-  --fullscreen-bg-controls-2: color-mix(
-    in srgb,
-    var(--bg-toolbar) 95%,
-    var(--bg-background)
-  );
-  --fullscreen-bg-body-1: color-mix(
-    in srgb,
-    var(--bg-background) 86%,
-    transparent
-  );
-  --fullscreen-bg-body-2: color-mix(
-    in srgb,
-    var(--bg-toolbar) 78%,
-    transparent
-  );
-  --fullscreen-bg-group: color-mix(in srgb, var(--bg-toolbar) 82%, transparent);
-  --fullscreen-bg-item: color-mix(in srgb, var(--bg-toolbar) 88%, transparent);
-  --fullscreen-bg-list-item: color-mix(
-    in srgb,
-    var(--bg-toolbar) 86%,
-    transparent
-  );
-  --fullscreen-bg-icon-detailed: color-mix(
-    in srgb,
-    var(--bg-muted) 75%,
-    transparent
-  );
-  --fullscreen-bg-icon-compact: color-mix(
-    in srgb,
-    var(--bg-muted) 70%,
-    transparent
-  );
-  --fullscreen-border-subtle-75: color-mix(
-    in srgb,
-    var(--border-subtle) 75%,
-    transparent
-  );
-  --fullscreen-border-subtle-70: color-mix(
-    in srgb,
-    var(--border-subtle) 70%,
-    transparent
-  );
-  --fullscreen-border-subtle-65: color-mix(
-    in srgb,
-    var(--border-subtle) 65%,
-    transparent
-  );
-  --fullscreen-border-favorites: color-mix(
-    in srgb,
-    var(--special-color-favorites) 25%,
-    var(--border-subtle)
-  );
-  --fullscreen-border-recommended: color-mix(
-    in srgb,
-    var(--special-color-recommended) 25%,
-    var(--border-subtle)
-  );
-  --fullscreen-shadow-primary: color-mix(
-    in srgb,
-    var(--shadow-color, rgba(15, 23, 42, 0.55)) 25%,
-    transparent
-  );
-  --fullscreen-shadow-secondary: color-mix(
-    in srgb,
-    var(--shadow-color, rgba(15, 23, 42, 0.35)) 30%,
-    transparent
-  );
-  --fullscreen-shadow-group: color-mix(
-    in srgb,
-    var(--shadow-color, rgba(15, 23, 42, 0.45)) 18%,
-    transparent
-  );
-  --fullscreen-accent-hover: color-mix(
-    in srgb,
-    var(--text-primary) 20%,
-    var(--border-subtle)
-  );
-  --fullscreen-accent-selected: color-mix(
-    in srgb,
-    var(--text-primary) 30%,
-    var(--border-subtle)
-  );
-  --fullscreen-accent-ring: color-mix(
-    in srgb,
-    var(--text-primary) 15%,
-    transparent
-  );
-  --fullscreen-accent-list-bg: color-mix(
-    in srgb,
-    var(--text-primary) 8%,
-    var(--bg-toolbar)
-  );
-  --fullscreen-accent-list-border: color-mix(
-    in srgb,
-    var(--text-primary) 20%,
-    var(--border-subtle)
-  );
-  --fullscreen-text-icon: var(--text-primary);
-  --fullscreen-text-icon-compact: var(--text-primary);
 }
 
 .tool-panel {
   position: relative;
+  background: var(--c-surface);
   transition:
     width 0.3s ease,
     max-width 0.3s ease;
   view-transition-name: tool-rail;
+  user-select: none;
+}
+
+.tool-panel--floating {
+  margin: var(--nav-gutter) var(--nav-gutter) var(--nav-gutter) 0;
+  height: calc(100vh - (var(--nav-gutter) * 2));
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-nav);
 }
 
 .tool-panel__collapsed-strip {
@@ -152,7 +47,7 @@
 
 .tool-panel__collapsed-divider {
   height: 1px;
-  background: var(--border-subtle);
+  background: var(--c-border-subtle);
   margin: 0 0.5rem 8px;
 }
 
@@ -177,7 +72,7 @@
   border: 1px solid transparent;
   border-radius: 0.5rem;
   background: transparent;
-  color: var(--tools-text-and-icon-color);
+  color: var(--c-text);
   cursor: pointer;
   transition:
     background 120ms ease-out,
@@ -197,30 +92,37 @@
 
 .tool-panel__expand-btn {
   flex-shrink: 0;
-  color: var(--text-secondary) !important;
-  border-color: var(--border-subtle) !important;
+  color: var(--c-text-muted) !important;
+  border-color: var(--c-border-subtle) !important;
+}
+
+/* The collapse/expand toggle keeps a stable identity across the collapsed strip
+   and the expanded header, so a view transition translates it between the two
+   (same size) instead of cross-fading/scaling it ("big then small"). */
+.tool-panel__toggle-vt {
+  view-transition-name: sidebar-toggle;
 }
 
 .tool-panel__expand-btn svg {
-  color: var(--text-secondary) !important;
+  color: var(--c-text-muted) !important;
 }
 
 .tool-panel__expand-btn:hover {
-  color: var(--text-primary) !important;
+  color: var(--c-text) !important;
   border-color: var(--border) !important;
 }
 
 .tool-panel__collapsed-search-btn {
   flex-shrink: 0;
-  color: var(--text-secondary) !important;
+  color: var(--c-text-muted) !important;
 }
 
 .tool-panel__collapsed-search-btn svg {
-  color: var(--text-secondary) !important;
+  color: var(--c-text-muted) !important;
 }
 
 .tool-panel__collapsed-search-btn:hover {
-  color: var(--text-primary) !important;
+  color: var(--c-text) !important;
 }
 
 .tool-panel__back-btn {
@@ -229,7 +131,7 @@
 
 .tool-panel__back-bar {
   flex-shrink: 0;
-  border-bottom: 1px solid var(--border-subtle) !important;
+  border-bottom: 1px solid var(--c-border-subtle) !important;
 }
 
 .tool-panel--fullscreen-active {
@@ -258,8 +160,21 @@
   box-sizing: border-box;
 }
 
-.tool-panel__compact-header .tool-panel__expand-btn {
+.tool-panel__compact-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
+.tool-panel__compact-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 .tool-panel__compact-header-search {
@@ -271,65 +186,20 @@
   width: 100%;
 }
 
-.tool-panel__active-tool-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 0.35rem 0.75rem 0.35rem 0.4rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 9999px;
-  background: var(--mantine-color-body);
+/* Search that separates the Policies section from the Tools list below it. */
+.tool-panel__between-search {
+  padding: 0.5rem 0.75rem 0.25rem;
+  border-top: 1px solid var(--c-border-subtle, var(--c-border));
 }
 
-.tool-panel__active-tool-pill-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 9999px;
-  background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
-  flex-shrink: 0;
+.tool-panel__between-search .search-input-container {
+  width: 100%;
+  margin-bottom: 0;
 }
 
-[data-mantine-color-scheme="dark"] .tool-panel__active-tool-pill-icon {
-  background: color-mix(
-    in srgb,
-    var(--mantine-color-blue-filled) 18%,
-    transparent
-  );
-  color: var(--mantine-color-blue-3, var(--mantine-color-blue-filled));
-}
-
-/* The inner .tool-button-icon wrapper carries its own transform/margin; reset
-   them so the icon glyph sits dead-centre in the circular background. */
-.tool-panel__active-tool-pill-icon .tool-button-icon {
-  margin: 0 !important;
-  transform: none !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.tool-panel__active-tool-pill-icon svg {
-  font-size: 1rem;
-  width: 1rem;
-  height: 1rem;
-}
-
-.tool-panel__active-tool-pill-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--text-primary);
+/* Slightly recessed search field so it reads as distinct from the panel. */
+.tool-panel__between-search input {
+  background-color: var(--c-surface-sunken);
 }
 
 ::view-transition-old(tool-rail) {
@@ -362,15 +232,6 @@
   }
 }
 
-.tool-panel__section-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  line-height: 1;
-}
-
 .tool-panel__mode-toggle {
   transition: transform 0.2s ease;
 }
@@ -380,7 +241,7 @@
 }
 
 .tool-panel--fullscreen {
-  background: var(--bg-toolbar);
+  background: var(--c-bg-raised);
 }
 
 .tool-panel__placeholder {
@@ -388,7 +249,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-size: 0.9rem;
   padding: 1.5rem;
   text-align: center;
@@ -427,6 +288,110 @@
   --fullscreen-anim-out-duration: var(--fullscreen-anim-duration-out);
   animation: tool-panel-fullscreen-slide-in var(--fullscreen-anim-in-duration)
     ease forwards;
+
+  --fullscreen-bg-surface-1: color-mix(
+    in srgb,
+    var(--c-bg-raised) 96%,
+    transparent
+  );
+  --fullscreen-bg-surface-2: color-mix(in srgb, var(--c-bg) 90%, transparent);
+  --fullscreen-bg-header: var(--c-bg-raised);
+  --fullscreen-bg-controls-1: var(--c-bg-raised);
+  --fullscreen-bg-controls-2: color-mix(
+    in srgb,
+    var(--c-bg-raised) 95%,
+    var(--c-bg)
+  );
+  --fullscreen-bg-body-1: color-mix(in srgb, var(--c-bg) 86%, transparent);
+  --fullscreen-bg-body-2: color-mix(
+    in srgb,
+    var(--c-bg-raised) 78%,
+    transparent
+  );
+  --fullscreen-bg-group: color-mix(
+    in srgb,
+    var(--c-bg-raised) 82%,
+    transparent
+  );
+  --fullscreen-bg-item: color-mix(in srgb, var(--c-bg-raised) 88%, transparent);
+  --fullscreen-bg-list-item: color-mix(
+    in srgb,
+    var(--c-bg-raised) 86%,
+    transparent
+  );
+  --fullscreen-bg-icon-detailed: color-mix(
+    in srgb,
+    var(--c-surface-sunken) 75%,
+    transparent
+  );
+  --fullscreen-bg-icon-compact: color-mix(
+    in srgb,
+    var(--c-surface-sunken) 70%,
+    transparent
+  );
+  --fullscreen-border-subtle-75: color-mix(
+    in srgb,
+    var(--c-border-subtle) 75%,
+    transparent
+  );
+  --fullscreen-border-subtle-70: color-mix(
+    in srgb,
+    var(--c-border-subtle) 70%,
+    transparent
+  );
+  --fullscreen-border-subtle-65: color-mix(
+    in srgb,
+    var(--c-border-subtle) 65%,
+    transparent
+  );
+  --fullscreen-border-favorites: color-mix(
+    in srgb,
+    var(--special-color-favorites) 25%,
+    var(--c-border-subtle)
+  );
+  --fullscreen-border-recommended: color-mix(
+    in srgb,
+    var(--special-color-recommended) 25%,
+    var(--c-border-subtle)
+  );
+  --fullscreen-shadow-primary: color-mix(
+    in srgb,
+    var(--shadow-color, color-mix(in srgb, black 55%, transparent)) 25%,
+    transparent
+  );
+  --fullscreen-shadow-secondary: color-mix(
+    in srgb,
+    var(--shadow-color, color-mix(in srgb, black 35%, transparent)) 30%,
+    transparent
+  );
+  --fullscreen-shadow-group: color-mix(
+    in srgb,
+    var(--shadow-color, color-mix(in srgb, black 45%, transparent)) 18%,
+    transparent
+  );
+  --fullscreen-accent-hover: color-mix(
+    in srgb,
+    var(--c-text) 20%,
+    var(--c-border-subtle)
+  );
+  --fullscreen-accent-selected: color-mix(
+    in srgb,
+    var(--c-text) 30%,
+    var(--c-border-subtle)
+  );
+  --fullscreen-accent-ring: color-mix(in srgb, var(--c-text) 15%, transparent);
+  --fullscreen-accent-list-bg: color-mix(
+    in srgb,
+    var(--c-text) 8%,
+    var(--c-bg-raised)
+  );
+  --fullscreen-accent-list-border: color-mix(
+    in srgb,
+    var(--c-text) 20%,
+    var(--c-border-subtle)
+  );
+  --fullscreen-text-icon: var(--c-text);
+  --fullscreen-text-icon-compact: var(--c-text);
 }
 
 .tool-panel__fullscreen-surface-inner--exiting {
@@ -449,8 +414,8 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1.75rem;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
 }
 
 .tool-panel__fullscreen-brand {
@@ -474,16 +439,23 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1.75rem;
-  border-bottom: 1px solid var(--tool-panel-search-border-bottom);
-  background: var(--tool-panel-search-bg);
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface-sunken);
 }
 
 .tool-panel__fullscreen-controls .search-input-container {
   flex: 1 1 auto;
 }
 
+/* Used by both FullscreenToolSurface and DetailedToolItem. */
 .tool-panel__fullscreen-body {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+  /* Prevent long content (names, descriptions, shortcuts) from overflowing */
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
   background: transparent;
 }
@@ -557,7 +529,8 @@
   flex-direction: row;
   gap: 0.75rem;
   align-items: flex-start;
-  padding: 0.85rem 0.95rem;
+  --sui-btn-py: 1rem;
+  padding: 1rem 0.95rem;
   border: 1px solid var(--fullscreen-border-subtle-70);
   border-radius: 0.95rem;
   background: var(--fullscreen-bg-item);
@@ -570,6 +543,11 @@
   box-sizing: border-box;
   /* Allow flex children to shrink without forcing horizontal overflow */
   min-width: 0;
+}
+
+.tool-panel__fullscreen-item .mantine-Button-label {
+  gap: 1rem;
+  align-items: flex-start;
 }
 
 .tool-panel__fullscreen-item:focus-visible {
@@ -586,7 +564,10 @@
 .tool-panel__fullscreen-item:hover:not([aria-disabled="true"]):not(:disabled) {
   transform: translateY(-2px);
   border-color: var(--fullscreen-accent-hover);
-  box-shadow: var(--shadow-xl, 0 18px 34px rgba(15, 23, 42, 0.14));
+  box-shadow: var(
+    --shadow-xl,
+    0 18px 34px color-mix(in srgb, black 14%, transparent)
+  );
 }
 
 .tool-panel__fullscreen-item--selected {
@@ -659,8 +640,8 @@
   inset: 0;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--text-primary) 12%, transparent),
-    color-mix(in srgb, var(--text-primary) 4%, transparent)
+    color-mix(in srgb, var(--c-text) 12%, transparent),
+    color-mix(in srgb, var(--c-text) 4%, transparent)
   );
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -670,8 +651,7 @@
 .tool-panel__fullscreen-item:hover:not([aria-disabled="true"])
   .tool-panel__fullscreen-icon {
   transform: scale(1.08);
-  box-shadow: 0 4px 12px
-    color-mix(in srgb, var(--text-primary) 15%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--c-text) 15%, transparent);
 }
 
 .tool-panel__fullscreen-item:hover:not([aria-disabled="true"])
@@ -685,18 +665,8 @@
   z-index: var(--z-fullscreen-icon-svg);
 }
 
-.tool-panel__fullscreen-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  text-align: left;
-  /* Prevent long content (names, descriptions, shortcuts) from overflowing */
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
 .tool-panel__fullscreen-name {
-  color: var(--text-primary);
+  color: var(--c-text);
   font-size: 13px !important;
   font-weight: 500 !important;
 }
@@ -793,8 +763,8 @@
   inset: 0;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--text-primary) 10%, transparent),
-    color-mix(in srgb, var(--text-primary) 3%, transparent)
+    color-mix(in srgb, var(--c-text) 10%, transparent),
+    color-mix(in srgb, var(--c-text) 3%, transparent)
   );
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -804,7 +774,7 @@
 .tool-panel__fullscreen-list-item:hover:not([aria-disabled="true"])
   .tool-panel__fullscreen-list-icon {
   transform: scale(1.06);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-primary) 12%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--c-text) 12%, transparent);
 }
 
 .tool-panel__fullscreen-list-item:hover:not([aria-disabled="true"])
@@ -830,33 +800,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-/* Agents card lives in its own column above the tool grid. It uses the same
-   .tool-panel__fullscreen-group base styles but with a colourful gradient
-   border so it stands out as a distinct surface (and doesn't blend into the
-   neighbouring category cards). */
-.tool-panel__fullscreen-agents {
-  padding: 1.5rem 1.75rem 0;
-}
-
-.tool-panel__fullscreen-group--agents {
-  position: relative;
-  background:
-    linear-gradient(var(--fullscreen-bg-group), var(--fullscreen-bg-group))
-      padding-box,
-    linear-gradient(
-        135deg,
-        var(--mantine-color-blue-6) 0%,
-        var(--mantine-color-violet-6) 45%,
-        var(--mantine-color-pink-6) 100%
-      )
-      border-box;
-  border: 1.5px solid transparent;
-}
-
-.tool-panel__fullscreen-section-icon--agents {
-  color: var(--mantine-color-blue-6);
 }
 
 @keyframes tool-panel-fullscreen-slide-in {

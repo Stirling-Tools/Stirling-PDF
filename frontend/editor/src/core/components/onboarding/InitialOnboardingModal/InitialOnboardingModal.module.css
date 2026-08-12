@@ -22,7 +22,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
   animation: heroLogoScale 0.25s ease forwards;
 }
 
@@ -34,8 +34,8 @@
 }
 
 .standaloneIcon {
-  width: 96px;
-  height: 96px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
   animation: heroLogoScale 0.25s ease forwards;
 }
@@ -49,10 +49,10 @@
 .securityCard {
   width: 100%;
   max-width: 480px;
-  background: var(--bg-surface, #ffffff);
+  background: var(--c-surface);
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -65,7 +65,7 @@
   font-weight: 500;
   font-size: 15px;
   line-height: 1.5;
-  color: var(--onboarding-body, #1f2937);
+  color: var(--c-text-muted);
 }
 
 .mfaSlideContent {
@@ -77,10 +77,10 @@
 .mfaCard {
   width: 100%;
   max-width: 560px;
-  background: var(--bg-surface, #ffffff);
+  background: var(--c-surface);
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
 }
 
 .mfaSetupGrid {
@@ -94,7 +94,7 @@
   padding: 12px;
   background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
   display: flex;
   justify-content: center;
 }
@@ -102,7 +102,7 @@
 .mfaSteps {
   margin: 0;
   padding-left: 18px;
-  color: var(--onboarding-body, #1f2937);
+  color: var(--c-text-muted);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -124,8 +124,6 @@
   align-items: flex-start;
   justify-content: center;
   animation: heroLogoEnter 0.25s ease forwards;
-  position: relative;
-  top: 1rem;
 }
 
 .iconWrapper {
@@ -151,11 +149,7 @@
   padding: 4px;
   outline: none;
 }
-
-.iconButton:focus {
-  outline: none;
-}
-
+.iconButton:focus,
 .iconButton:focus-visible {
   outline: none;
 }
@@ -175,8 +169,8 @@
 }
 
 .downloadIcon {
-  width: 96px;
-  height: 96px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
   animation: heroLogoScale 0.25s ease forwards;
 }
@@ -196,15 +190,9 @@
   text-align: center;
   animation: heroLogoEnter 0.25s ease forwards;
 }
-
-.title {
-  text-align: center;
-  opacity: 0;
-  transform: translateX(24px);
-  animation: bodySlideIn 0.25s ease forwards;
-}
-
+.title,
 .bodyCopy {
+  text-align: center;
   opacity: 0;
   transform: translateX(24px);
   animation: bodySlideIn 0.25s ease forwards;
@@ -274,13 +262,13 @@
   opacity: 1;
   border: 1px solid rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.9);
-  color: #1f2933;
+  color: var(--c-text);
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
 }
 
 /* Modal content styles */
 .modalContent {
-  background: var(--bg-surface);
+  background: var(--c-surface);
   position: relative;
 }
 
@@ -300,7 +288,7 @@
     sans-serif;
   font-weight: 600;
   font-size: 22px;
-  color: var(--onboarding-title);
+  color: var(--c-text);
 }
 
 /* Body text styles */
@@ -314,7 +302,7 @@
     Arial,
     sans-serif;
   font-size: 16px;
-  color: var(--onboarding-body);
+  color: var(--c-text-muted);
   line-height: 1.5;
 }
 
@@ -331,20 +319,192 @@
 .welcomeTitleContainer {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
 }
 
 .v2Badge {
-  background: #dbefff;
-  color: #2a4bff;
-  padding: 4px 12px;
+  background: var(--c-primary-tint);
+  color: var(--c-accent-text);
+  padding: 3px 9px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
 }
 
 /* Icon styles */
 .heroIcon {
-  color: #000000;
+  color: var(--c-text);
+}
+
+/* ===================================================================== */
+/* Redesigned modal card — branded header, progress, hero panel, footer. */
+/* ===================================================================== */
+
+.card {
+  background: var(--c-surface);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- header: brand (left) + step pill / close (right) ---- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.brandLogo {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  object-fit: contain;
+}
+
+.wordmark {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepPill {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  background: var(--c-surface-sunken);
+  padding: 5px 11px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* ---- segmented progress bar ---- */
+.progressTrack {
+  display: flex;
+  gap: 6px;
+  padding: 0 20px 12px;
+}
+
+.progressSeg {
+  flex: 1;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--onboarding-step-inactive, var(--c-border));
+  transition: background 0.2s ease;
+}
+
+.progressSegDone {
+  background: var(--c-primary);
+}
+
+.divider {
+  height: 1px;
+  background: var(--c-border-subtle);
+}
+
+/* ---- content ---- */
+.content {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  max-height: calc(90vh - 120px);
+}
+
+/* ---- inset hero panel ---- */
+.heroPanel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 128px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--c-onboarding-hero);
+}
+
+.heroArt {
+  position: relative;
+  z-index: 1;
+  animation: heroLogoScale 0.25s ease forwards;
+}
+
+.heroAppIcon {
+  width: 62px;
+  height: 62px;
+  border-radius: 15px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.16));
+}
+
+.heroTile {
+  width: 62px;
+  height: 62px;
+  border-radius: 15px;
+  background: var(--c-onboarding-hero-tile);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+}
+
+/* ---- title + body (left-aligned, clean) ---- */
+.titleNew {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--c-text);
+  text-align: left;
+}
+
+.bodyNew {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+  text-align: left;
+}
+
+/* ---- footer actions ---- */
+.footer {
+  margin-top: 4px;
+}
+
+.footerGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footerEnd {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.footerBetween {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ---- dark theme surface tuning ----
+   Hero panel + tile colours flip via the themed --c-onboarding-hero* tokens;
+   only the tile's heavier dark shadow needs a per-scheme override. */
+:global([data-mantine-color-scheme="dark"]) .heroTile {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
 }

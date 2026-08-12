@@ -1,0 +1,298 @@
+<!doctype html>
+<!--
+  UI Walkthrough report template (self-contained, works from file://).
+  The ui-walkthrough skill replaces the JSON in the window.__WALKTHROUGH__ data
+  block below with the captured manifest. Do not add external CDN deps - it must open offline.
+
+  Data shape:
+  {
+    "feature": "Compress PDF tool",
+    "branch": "claude/...",
+    "generated": "2026-06-21",
+    "views": [
+      { "id": "01_empty", "title": "Empty state",
+        "light": "screenshots/compress/01_empty_light.png",
+        "dark":  "screenshots/compress/01_empty_dark.png",
+        "viewport": "1600x900",
+        "notes": ["Heading is centered", "Primary CTA below the fold on mobile"] }
+    ],
+    "findings": {
+      "visual": [ { "severity":"high", "view":"01_empty", "title":"...", "detail":"...", "fix":"..." } ],
+      "ux":     [ { "severity":"med",  "view":"03_dialog", "title":"...", "detail":"...", "fix":"..." } ]
+    }
+  }
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>UI Walkthrough</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --panel-2: #f0f2f5; --text: #1a1b1e;
+    --muted: #6b7280; --border: #e2e5ea; --accent: #2f6fed; --accent-weak: #e8f0fe;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.06);
+    --hi: #d92d20; --med: #d98e00; --low: #2f6fed; --stage: #0b0c0e;
+  }
+  html[data-theme="dark"] {
+    --bg: #0d0e10; --panel: #16181c; --panel-2: #1d2024; --text: #e6e8eb;
+    --muted: #9aa3ad; --border: #2a2e35; --accent: #5b8cff; --accent-weak: #1a2336;
+    --shadow: 0 1px 3px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4); --stage: #000;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+         background: var(--bg); color: var(--text); }
+  header { display: flex; align-items: center; gap: 16px; padding: 12px 20px;
+           background: var(--panel); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 15px; margin: 0; font-weight: 650; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  .spacer { flex: 1; }
+  .counter { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .tabs { display: flex; gap: 4px; }
+  .tab { border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+         padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Light/Dark slider */
+  .theme-toggle { display: flex; align-items: center; gap: 9px; user-select: none; }
+  .theme-toggle .lbl { font-size: 12px; color: var(--muted); }
+  .theme-toggle .lbl.on { color: var(--text); font-weight: 600; }
+  .switch { position: relative; width: 52px; height: 28px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; cursor: pointer; background: var(--panel-2);
+            border: 1px solid var(--border); border-radius: 999px; transition: .2s; }
+  .slider:before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px;
+                   background: #fbbf24; border-radius: 50%; transition: .2s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .switch input:checked + .slider { background: var(--accent); }
+  .switch input:checked + .slider:before { transform: translateX(24px); background: #c7d2fe; }
+
+  main { display: grid; grid-template-columns: 240px 1fr; height: calc(100vh - 53px); }
+  .rail { border-right: 1px solid var(--border); overflow-y: auto; background: var(--panel); padding: 8px; }
+  .rail .group-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+                       color: var(--muted); padding: 10px 8px 4px; }
+  .thumb { display: flex; gap: 9px; align-items: center; padding: 7px; border-radius: 8px;
+           cursor: pointer; border: 1px solid transparent; }
+  .thumb:hover { background: var(--panel-2); }
+  .thumb.active { background: var(--accent-weak); border-color: var(--accent); }
+  .thumb img { width: 64px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); background: var(--stage); }
+  .thumb .t { font-size: 12.5px; line-height: 1.3; }
+  .thumb .badge { font-size: 10px; color: var(--muted); }
+  .thumb .dot { width: 7px; height: 7px; border-radius: 50%; margin-left: auto; flex: none; }
+
+  .stagewrap { display: flex; flex-direction: column; min-width: 0; }
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 22px;
+           background: var(--stage); position: relative; min-height: 0; }
+  .stage img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;
+               box-shadow: 0 4px 30px rgba(0,0,0,.4); background: #fff; }
+  html[data-theme="dark"] .stage img { background: #16181c; }
+  .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px;
+             border-radius: 50%; border: 1px solid var(--border); background: var(--panel);
+             color: var(--text); cursor: pointer; font-size: 18px; opacity: .85; }
+  .nav-btn:hover { opacity: 1; } .nav-btn.prev { left: 16px; } .nav-btn.next { right: 16px; }
+  .nav-btn:disabled { opacity: .25; cursor: default; }
+  .missing { color: var(--muted); font-size: 13px; text-align: center; }
+
+  .detail { border-top: 1px solid var(--border); background: var(--panel); padding: 14px 20px;
+            max-height: 38vh; overflow-y: auto; }
+  .detail h2 { margin: 0 0 4px; font-size: 15px; }
+  .detail .meta { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  .notes { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .notes li { display: flex; gap: 8px; align-items: flex-start; }
+  .sev { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 999px;
+         color: #fff; flex: none; margin-top: 1px; }
+  .sev.high { background: var(--hi); } .sev.med { background: var(--med); } .sev.low { background: var(--low); }
+  .finding .fix { color: var(--muted); font-size: 12.5px; }
+  .finding .fix b { color: var(--text); font-weight: 600; }
+
+  /* Summary tab */
+  .summary { padding: 20px 28px; overflow-y: auto; }
+  .summary h2 { font-size: 16px; margin: 22px 0 8px; }
+  .summary .empty { color: var(--muted); }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+          padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--shadow); }
+  .card .head { display: flex; gap: 8px; align-items: center; }
+  .card a { color: var(--accent); text-decoration: none; cursor: pointer; }
+  .hide { display: none !important; }
+  kbd { font: 11px ui-monospace, monospace; background: var(--panel-2); border: 1px solid var(--border);
+        border-radius: 4px; padding: 1px 5px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1 id="feature-title">UI Walkthrough</h1>
+    <div class="sub" id="feature-sub"></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="tabs">
+    <button class="tab active" data-tab="viewer">Walkthrough</button>
+    <button class="tab" data-tab="summary">Findings</button>
+  </div>
+  <div class="counter" id="counter"></div>
+  <label class="theme-toggle" title="Toggle light / dark for every screenshot">
+    <span class="lbl" id="lbl-light">Light</span>
+    <span class="switch"><input type="checkbox" id="theme-switch" /><span class="slider"></span></span>
+    <span class="lbl" id="lbl-dark">Dark</span>
+  </label>
+</header>
+
+<main id="viewer-pane">
+  <aside class="rail" id="rail"></aside>
+  <section class="stagewrap">
+    <div class="stage">
+      <button class="nav-btn prev" id="prev" aria-label="Previous">&#8249;</button>
+      <img id="stage-img" alt="" />
+      <div class="missing hide" id="missing"></div>
+      <button class="nav-btn next" id="next" aria-label="Next">&#8250;</button>
+    </div>
+    <div class="detail">
+      <h2 id="view-title"></h2>
+      <div class="meta" id="view-meta"></div>
+      <ul class="notes" id="view-notes"></ul>
+    </div>
+  </section>
+</main>
+
+<section class="summary hide" id="summary-pane"></section>
+
+<script id="data">
+window.__WALKTHROUGH__ = /*__DATA__*/{"feature":"No data","branch":"","generated":"","views":[],"findings":{"visual":[],"ux":[]}}/*__END__*/;
+</script>
+<script>
+(function () {
+  var D = window.__WALKTHROUGH__ || { views: [], findings: { visual: [], ux: [] } };
+  var views = D.views || [];
+  var state = { i: 0, theme: localStorage.getItem("ui-wt-theme") || "light", tab: "viewer" };
+
+  var $ = function (id) { return document.getElementById(id); };
+  function sevClass(s) { return s === "high" ? "high" : s === "med" || s === "medium" ? "med" : "low"; }
+
+  function applyChrome() {
+    document.documentElement.setAttribute("data-theme", state.theme);
+    $("theme-switch").checked = state.theme === "dark";
+    $("lbl-light").classList.toggle("on", state.theme === "light");
+    $("lbl-dark").classList.toggle("on", state.theme === "dark");
+  }
+
+  function srcFor(v) { return state.theme === "dark" ? (v.dark || v.light) : (v.light || v.dark); }
+
+  function findingsForView(id) {
+    var all = (D.findings && D.findings.visual || []).concat(D.findings && D.findings.ux || []);
+    return all.filter(function (f) { return f.view === id; });
+  }
+
+  function renderRail() {
+    var rail = $("rail");
+    rail.innerHTML = "";
+    if (!views.length) { rail.innerHTML = '<div class="group-label">No views captured</div>'; return; }
+    views.forEach(function (v, idx) {
+      var fs = findingsForView(v.id);
+      var worst = fs.some(function (f){return sevClass(f.severity)==="high";}) ? "var(--hi)"
+                : fs.some(function (f){return sevClass(f.severity)==="med";}) ? "var(--med)"
+                : fs.length ? "var(--low)" : "transparent";
+      var el = document.createElement("div");
+      el.className = "thumb" + (idx === state.i ? " active" : "");
+      el.innerHTML = '<img src="' + srcFor(v) + '" alt="" />' +
+        '<div><div class="t">' + (v.title || v.id) + '</div>' +
+        '<div class="badge">' + (v.viewport || "") + '</div></div>' +
+        '<span class="dot" style="background:' + worst + '"></span>';
+      el.onclick = function () { state.i = idx; render(); };
+      rail.appendChild(el);
+    });
+  }
+
+  function render() {
+    applyChrome();
+    if (!views.length) {
+      $("missing").classList.remove("hide"); $("stage-img").classList.add("hide");
+      $("missing").textContent = "No screenshots in this report yet.";
+      $("counter").textContent = ""; return;
+    }
+    var v = views[state.i];
+    var src = srcFor(v);
+    var img = $("stage-img");
+    if (src) {
+      img.classList.remove("hide"); $("missing").classList.add("hide");
+      img.src = src; img.alt = v.title || v.id;
+    } else {
+      img.classList.add("hide"); $("missing").classList.remove("hide");
+      $("missing").textContent = "No " + state.theme + " screenshot for this view.";
+    }
+    $("counter").textContent = (state.i + 1) + " / " + views.length;
+    $("view-title").textContent = v.title || v.id;
+    $("view-meta").textContent = [v.viewport, state.theme + " mode"].filter(Boolean).join("  ·  ");
+    var notes = $("view-notes"); notes.innerHTML = "";
+    var fs = findingsForView(v.id);
+    (v.notes || []).forEach(function (n) {
+      var li = document.createElement("li"); li.textContent = "· " + n; notes.appendChild(li);
+    });
+    fs.forEach(function (f) {
+      var li = document.createElement("li"); li.className = "finding";
+      li.innerHTML = '<span class="sev ' + sevClass(f.severity) + '">' + (f.severity || "note") + '</span>' +
+        '<span><b>' + (f.title || "") + '</b> — ' + (f.detail || "") +
+        (f.fix ? ' <span class="fix"><b>Fix:</b> ' + f.fix + '</span>' : '') + '</span>';
+      notes.appendChild(li);
+    });
+    $("prev").disabled = state.i === 0;
+    $("next").disabled = state.i === views.length - 1;
+    renderRail();
+  }
+
+  function renderSummary() {
+    var pane = $("summary-pane");
+    function block(title, arr) {
+      var h = '<h2>' + title + ' (' + arr.length + ')</h2>';
+      if (!arr.length) return h + '<div class="empty">None found.</div>';
+      return h + arr.map(function (f) {
+        return '<div class="card"><div class="head">' +
+          '<span class="sev ' + sevClass(f.severity) + '">' + (f.severity || "note") + '</span>' +
+          '<b>' + (f.title || "") + '</b>' +
+          (f.view ? ' <a data-jump="' + f.view + '">' + f.view + '</a>' : '') + '</div>' +
+          '<div style="margin-top:6px">' + (f.detail || "") + '</div>' +
+          (f.fix ? '<div class="finding" style="margin-top:6px"><span class="fix"><b>Fix:</b> ' + f.fix + '</span></div>' : '') +
+          '</div>';
+      }).join("");
+    }
+    pane.innerHTML = block("Visual & consistency", (D.findings && D.findings.visual) || []) +
+                     block("UX & ease of use", (D.findings && D.findings.ux) || []);
+    pane.querySelectorAll("[data-jump]").forEach(function (a) {
+      a.onclick = function () {
+        var id = a.getAttribute("data-jump");
+        var idx = views.findIndex(function (v) { return v.id === id; });
+        if (idx >= 0) { state.i = idx; setTab("viewer"); }
+      };
+    });
+  }
+
+  function setTab(t) {
+    state.tab = t;
+    document.querySelectorAll(".tab").forEach(function (b) { b.classList.toggle("active", b.dataset.tab === t); });
+    $("viewer-pane").classList.toggle("hide", t !== "viewer");
+    $("summary-pane").classList.toggle("hide", t !== "summary");
+    if (t === "viewer") $("viewer-pane").style.display = "grid";
+    if (t === "summary") renderSummary();
+  }
+
+  // wiring
+  $("feature-title").textContent = D.feature || "UI Walkthrough";
+  $("feature-sub").textContent = [D.branch, D.generated].filter(Boolean).join("  ·  ");
+  $("theme-switch").onchange = function () {
+    state.theme = this.checked ? "dark" : "light";
+    localStorage.setItem("ui-wt-theme", state.theme);
+    render();
+  };
+  $("prev").onclick = function () { if (state.i > 0) { state.i--; render(); } };
+  $("next").onclick = function () { if (state.i < views.length - 1) { state.i++; render(); } };
+  document.addEventListener("keydown", function (e) {
+    if (state.tab !== "viewer") return;
+    if (e.key === "ArrowLeft") $("prev").click();
+    if (e.key === "ArrowRight") $("next").click();
+    if (e.key.toLowerCase() === "t") $("theme-switch").click();
+  });
+  document.querySelectorAll(".tab").forEach(function (b) { b.onclick = function () { setTab(b.dataset.tab); }; });
+
+  render();
+})();
+</script>
+</body>
+</html>

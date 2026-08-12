@@ -5,14 +5,14 @@ import AuthCallback from "@app/routes/AuthCallback";
 import {
   POST_LOGIN_REDIRECT_STORAGE_KEY,
   springAuth,
-} from "@app/auth/springAuthClient";
+} from "@app/auth/spring/springAuthClient";
 import { expectConsole } from "@app/tests/failOnConsole";
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@app/auth/springAuthClient", async () => {
+vi.mock("@app/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@app/auth/springAuthClient")
-  >("@app/auth/springAuthClient");
+    typeof import("@app/auth/spring/springAuthClient")
+  >("@app/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {
@@ -85,8 +85,8 @@ describe("AuthCallback", () => {
       // Verify getSession was called to validate token
       expect(springAuth.getSession).toHaveBeenCalled();
 
-      // Verify navigation to home
-      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+      // Verify it lands on the editor (no processor access in this build)
+      expect(mockNavigate).toHaveBeenCalledWith("/editor", { replace: true });
     });
   });
 
@@ -202,7 +202,7 @@ describe("AuthCallback", () => {
     expect(sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
   });
 
-  it("should fall back to home when the stored post-login path is unsafe", async () => {
+  it("should fall back to the editor when the stored post-login path is unsafe", async () => {
     const mockToken = "oauth-jwt-token";
     const mockUser = {
       id: "123",
@@ -234,7 +234,7 @@ describe("AuthCallback", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith("/editor", { replace: true });
     });
     expect(sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
   });
@@ -262,6 +262,6 @@ describe("AuthCallback", () => {
       </BrowserRouter>,
     );
 
-    expect(getByText("Completing authentication")).toBeInTheDocument();
+    expect(getByText("auth.callback.completing")).toBeInTheDocument();
   });
 });
