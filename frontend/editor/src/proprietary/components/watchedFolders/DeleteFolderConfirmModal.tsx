@@ -30,7 +30,7 @@ export function DeleteFolderConfirmModal({
     >
       <Stack gap="md">
         {folder.isDefault && (
-          <Text size="sm" c="orange">
+          <Text size="sm" c="var(--color-amber-dark)">
             {t(
               "watchedFolders.defaultFolderWarning",
               "This is a default folder and will be recreated on next reload.",

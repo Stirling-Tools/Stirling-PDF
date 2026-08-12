@@ -50,4 +50,5 @@ test-results
 /scripts/dev-update-test/screenshots/
 /editor/src-tauri/tauri.conf.dev-update.json
 .a11y-scan/
+.a11y-acc/
 /editor/src-tauri/*

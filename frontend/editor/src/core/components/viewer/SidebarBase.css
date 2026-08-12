@@ -40,7 +40,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
   font-size: 1.1rem;
 }
 
