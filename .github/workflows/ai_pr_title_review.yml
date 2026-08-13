@@ -41,35 +41,52 @@ jobs:
 
       - name: Check if actor is repo developer
         id: actor
+        env:
+          ACTOR: ${{ github.actor }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if [[ "${{ github.actor }}" == *"[bot]" ]]; then
-            echo "PR opened by a bot – skipping AI title review."
+          if [[ "$ACTOR" == *"[bot]" ]]; then
+            echo "PR opened by a bot - skipping AI title review."
             echo "is_repo_dev=false" >> $GITHUB_OUTPUT
             exit 0
           fi
-          if [ ! -f .github/config/repo_devs.json ]; then
-            echo "Error: .github/config/repo_devs.json not found" >&2
+          git fetch --quiet origin "$BASE_REF"
+          # Trust list must come from the base ref, never from the PR tree
+          if ! REPO_DEVS_JSON=$(git show "origin/$BASE_REF:.github/config/repo_devs.json" 2>/dev/null); then
+            echo "Error: .github/config/repo_devs.json not found on origin/$BASE_REF" >&2
             exit 1
           fi
           # Validate JSON and extract repo_devs
-          REPO_DEVS=$(jq -r '.repo_devs[]' .github/config/repo_devs.json 2>/dev/null || { echo "Error: Invalid JSON in repo_devs.json" >&2; exit 1; })
+          REPO_DEVS=$(jq -r '.repo_devs[]' <<< "$REPO_DEVS_JSON" 2>/dev/null || { echo "Error: Invalid JSON in repo_devs.json" >&2; exit 1; })
           # Convert developer list into Bash array
           mapfile -t DEVS_ARRAY <<< "$REPO_DEVS"
-          if [[ " ${DEVS_ARRAY[*]} " == *" ${{ github.actor }} "* ]]; then
+          if [[ " ${DEVS_ARRAY[*]} " == *" $ACTOR "* ]]; then
             echo "is_repo_dev=true" >> $GITHUB_OUTPUT
           else
             echo "is_repo_dev=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Load system prompt from base ref
+        if: steps.actor.outputs.is_repo_dev == 'true'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          # System prompt must come from the base ref, never from the PR tree
+          git show "origin/$BASE_REF:.github/config/system-prompt.txt" > "$RUNNER_TEMP/system-prompt.txt"
+
       - name: Get PR diff
         if: steps.actor.outputs.is_repo_dev == 'true'
         id: get_diff
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          git fetch origin ${{ github.base_ref }}
-          git diff origin/${{ github.base_ref }}...HEAD | head -n 10000 | grep -vP '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\x{202E}\x{200B}]' > pr.diff
-          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          git fetch origin "$BASE_REF"
+          git diff "origin/$BASE_REF...HEAD" | head -n 10000 | grep -vP '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\x{202E}\x{200B}]' > pr.diff
+          # Random delimiter so diff content cannot forge step outputs
+          DELIM="EOF_$(openssl rand -hex 16)"
+          echo "diff<<$DELIM" >> $GITHUB_OUTPUT
           cat pr.diff >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "$DELIM" >> $GITHUB_OUTPUT
 
       - name: Check and sanitize PR title
         if: steps.actor.outputs.is_repo_dev == 'true'
@@ -90,7 +107,7 @@ jobs:
         uses: actions/ai-inference@a7805884c80886efc241e94a5351df715968a0ad # v2.1.1
         with:
           model: openai/gpt-4o
-          system-prompt-file: ".github/config/system-prompt.txt"
+          system-prompt-file: ${{ runner.temp }}/system-prompt.txt
           prompt: |
             Based on the following input data:
 
@@ -108,10 +125,11 @@ jobs:
 
       - name: Validate and set SCRIPT_OUTPUT
         if: steps.actor.outputs.is_repo_dev == 'true'
+        env:
+          AI_RESPONSE: ${{ steps.ai-title-analysis.outputs.response }}
+          PR_TITLE: ${{ steps.sanitize_pr_title.outputs.pr_title }}
         run: |
-          cat <<EOF > ai_response.json
-          ${{ steps.ai-title-analysis.outputs.response }}
-          EOF
+          printf '%s\n' "$AI_RESPONSE" > ai_response.json
 
           # Validate JSON structure
           jq -e '
@@ -149,7 +167,7 @@ jobs:
           echo "### 🤖 AI PR Title Analysis" >> $GITHUB_STEP_SUMMARY
           echo "### Input PR Title" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.sanitize_pr_title.outputs.pr_title }}" >> $GITHUB_STEP_SUMMARY
+          echo "$PR_TITLE" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo '### AI Response (raw JSON)' >> $GITHUB_STEP_SUMMARY
           echo '```json' >> $GITHUB_STEP_SUMMARY
