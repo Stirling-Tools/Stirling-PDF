@@ -61,6 +61,12 @@ export interface StirlingFileStub extends BaseFileMetadata {
    * unclassified files / non-SaaS builds.
    */
   classificationLabels?: string[];
+  /**
+   * This session proved the stored bytes unreadable (WebKit losing a blob's
+   * backing store). The row renders as "data lost" instead of pretending the
+   * file can open; re-uploading is the only recovery.
+   */
+  dataUnavailable?: boolean;
   // Note: File object stored in provider ref, not in state
 }
 
