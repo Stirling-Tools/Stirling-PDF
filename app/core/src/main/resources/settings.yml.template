@@ -415,7 +415,7 @@ policies:
   # disabled in SaaS mode.
   allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
   scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
-  watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events
+  watchReconcileSeconds: 60 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events
   watchQuietPeriodMs: 500 # How long (ms) folder-watch coalesces a burst of file events into a single run
   streamTimeoutMs: 1800000 # SSE timeout (ms) for live run-progress streams
   runExpiryMinutes: 30 # How long (minutes) a finished run's in-memory state is kept before eviction

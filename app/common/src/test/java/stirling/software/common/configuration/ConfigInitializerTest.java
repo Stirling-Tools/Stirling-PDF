@@ -31,6 +31,47 @@ class ConfigInitializerTest {
             """;
 
     @Test
+    void migrateWatchReconcileDefault_lowersTheOldShippedDefault() {
+        YamlHelper existing =
+                new YamlHelper(
+                        LOAD_SETTINGS,
+                        """
+                        policies:
+                          scheduleSweepSeconds: 60
+                          watchReconcileSeconds: 300
+                        """);
+
+        new ConfigInitializer().migrateWatchReconcileDefault(existing);
+
+        assertEquals("60", existing.getValueByExactKeyPath("policies", "watchReconcileSeconds"));
+        // Untouched neighbours prove the rewrite is scoped to the one key.
+        assertEquals("60", existing.getValueByExactKeyPath("policies", "scheduleSweepSeconds"));
+    }
+
+    @Test
+    void migrateWatchReconcileDefault_keepsADeliberateValue() {
+        YamlHelper existing =
+                new YamlHelper(
+                        LOAD_SETTINGS,
+                        """
+                        policies:
+                          watchReconcileSeconds: 900
+                        """);
+
+        new ConfigInitializer().migrateWatchReconcileDefault(existing);
+
+        assertEquals("900", existing.getValueByExactKeyPath("policies", "watchReconcileSeconds"));
+    }
+
+    @Test
+    void migrateWatchReconcileDefault_toleratesAMissingKey() {
+        YamlHelper existing =
+                new YamlHelper(LOAD_SETTINGS, "policies:\n  scheduleSweepSeconds: 60\n");
+
+        assertDoesNotThrow(() -> new ConfigInitializer().migrateWatchReconcileDefault(existing));
+    }
+
+    @Test
     void migrateProFeaturesKeyCasing_carriesForwardLegacyPascalCaseValues() {
         // An existing install whose settings.yml still uses the old PascalCase keys.
         String legacy =
