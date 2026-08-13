@@ -245,6 +245,67 @@ test.describe("Super search — user without Processor access", () => {
   });
 });
 
+test.describe("Super search — portal access without admin", () => {
+  // Self-hosted grants portal access beyond admins (team owners, ACL
+  // grantees), but the users roster endpoint is admin-only — the Users lane
+  // must not be offered to a session the endpoint would always refuse.
+  test.use({
+    stubOptions: {
+      enableLogin: true,
+      user: {
+        id: 44,
+        username: "owner",
+        email: "owner@example.com",
+        role: "ROLE_USER",
+        portalAccess: true,
+      },
+    },
+    seedJwt: true,
+  });
+
+  test("sees Processor lanes but no Users chip and no roster fetch", async ({
+    page,
+  }) => {
+    const rosterRequests: string[] = [];
+    page.on("request", (request) => {
+      if (
+        request.url().includes("/api/v1/proprietary/ui-data/admin-settings")
+      ) {
+        rosterRequests.push(request.url());
+      }
+    });
+    for (const [pattern, json] of [
+      ["**/api/v1/policies", []],
+      ["**/api/v1/policies/runs", []],
+      ["**/api/v1/policies/overview", { pipelines: [] }],
+      ["**/api/v1/sources", { sources: [] }],
+    ] as const) {
+      await page.route(pattern, (route) => route.fulfill({ json }));
+    }
+
+    const input = await openSearch(page);
+    const portalShips =
+      (await page.getByRole("button", { name: "Pages", exact: true }).count()) >
+      0;
+    test.skip(!portalShips, "this build ships no portal — no lanes to gate");
+
+    for (const lane of ["Policies", "Pipelines", "Sources"]) {
+      await expect(
+        page.getByRole("button", { name: lane, exact: true }),
+      ).toBeVisible();
+    }
+    await expect(
+      page.getByRole("button", { name: "Users", exact: true }),
+    ).toHaveCount(0);
+
+    // A query that used to fire the doomed roster fetch once per TTL.
+    await input.fill("admin");
+    await expect(page.locator(".super-search-dropdown").first()).toBeVisible();
+    await page.waitForTimeout(1500);
+    expect(rosterRequests).toEqual([]);
+  });
+});
+
 test.describe("Super search — admin with Processor access", () => {
   test.use({
     stubOptions: {

@@ -15,6 +15,7 @@ export function useProcessorEntityGroups(
   _t: TFunction,
   _navigate: (path: string) => void,
   _scopeEnabled?: (scopeId: string) => boolean,
+  _isAdmin?: boolean,
 ): SuperSearchGroup[] {
   return NO_GROUPS;
 }

@@ -39,6 +39,7 @@ import {
 } from "@app/data/settingsContentSearch";
 import {
   PROCESSOR_SEARCH_INDEX,
+  isPortalEntityScopeAccessible,
   type ProcessorSearchEntry,
 } from "@app/data/processorSearchIndex";
 import { useProcessorEntityGroups } from "@app/data/processorEntitySearch";
@@ -149,8 +150,10 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
               label: t("superSearch.group.pages", "Pages"),
               aliases: ["page", "pages", "processor", "portal"],
             },
-            ...PORTAL_ENTITY_SCOPE_DEFS.filter((def) =>
-              visibleViewIds.has(def.viewId),
+            ...PORTAL_ENTITY_SCOPE_DEFS.filter(
+              (def) =>
+                visibleViewIds.has(def.viewId) &&
+                isPortalEntityScopeAccessible(def.id, gates?.isAdmin ?? false),
             ).map((def) => ({
               id: def.id,
               label: t(def.labelKey, def.labelFallback),
@@ -168,7 +171,7 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
           ]
         : []),
     ];
-  }, [t, processorAvailable]);
+  }, [t, processorAvailable, gates?.isAdmin]);
 }
 
 /**
@@ -596,6 +599,7 @@ export function useSuperSearch(
     t,
     navigate,
     scopeEnabled,
+    gates?.isAdmin ?? false,
   );
 
   const groups = useMemo<SuperSearchGroup[]>(() => {

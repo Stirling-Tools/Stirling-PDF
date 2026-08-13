@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getToolUrlPath } from "@app/data/toolsTaxonomy";
+import { isPortalEntityScopeAccessible } from "@app/data/processorSearchIndex";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { PORTAL_HIDDEN_SECTION_KEYS } from "@portal/components/PortalSettingsHost";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
@@ -68,15 +69,21 @@ function externalEditorHref(path: string): string {
 /**
  * The portal bar's filter chips — every lane the editor offers except Files
  * (files only open in the editor) and Pages (the sidebar covers navigation).
- * Ordered to match the dropdown's section priority.
+ * Ordered to match the dropdown's section priority. Lanes whose data source
+ * refuses this session (the users roster for non-admins on self-hosted) get
+ * no chip — an offered lane must be able to return results.
  */
 export function usePortalSearchScopes(): SuperSearchScope[] {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
+  const isAdmin = config?.isAdmin ?? false;
 
   return useMemo(
     () => [
-      ...PORTAL_ENTITY_SCOPE_DEFS.filter((def) =>
-        isVisiblePortalScope(def.id),
+      ...PORTAL_ENTITY_SCOPE_DEFS.filter(
+        (def) =>
+          isVisiblePortalScope(def.id) &&
+          isPortalEntityScopeAccessible(def.id, isAdmin),
       ).map((def) => ({
         id: def.id,
         label: t(def.labelKey, def.labelFallback),
@@ -102,7 +109,7 @@ export function usePortalSearchScopes(): SuperSearchScope[] {
         aliases: ["tool", "tools"],
       },
     ],
-    [t],
+    [t, isAdmin],
   );
 }
 
@@ -129,11 +136,11 @@ export function usePortalSearchResults(
   const { scopeEnabled } = useSearchScopeFilter(options);
   const requestedEntityScopes = useMemo(() => {
     if (!active || trimmed.length === 0) return new Set<string>();
-    const enabled = defaultPortalEntityScopes().filter((scopeId) =>
-      scopeEnabled(scopeId),
+    const enabled = defaultPortalEntityScopes(config?.isAdmin ?? false).filter(
+      (scopeId) => scopeEnabled(scopeId),
     );
     return new Set<string>(withPortalEntityDependencies(enabled));
-  }, [active, scopeEnabled, trimmed]);
+  }, [active, scopeEnabled, trimmed, config?.isAdmin]);
 
   // Entity data rides the portal's shared query layer — the same keys the
   // views use, so searching warms the view (and vice versa) and the client's

@@ -1,4 +1,7 @@
-import { PROCESSOR_SEARCH_INDEX } from "@app/data/processorSearchIndex";
+import {
+  PROCESSOR_SEARCH_INDEX,
+  isPortalEntityScopeAccessible,
+} from "@app/data/processorSearchIndex";
 import {
   PORTAL_ENTITY_SCOPE_DEFS,
   PORTAL_DOCS_SCOPE_ID,
@@ -139,11 +142,18 @@ export function withPortalEntityDependencies(
   return [...scopes, "portal-policies"];
 }
 
-/** Every entity scope the flavor ships, dependencies included — the request
+/** Every entity scope the flavor ships AND the session can actually query
+ * (see isPortalEntityScopeAccessible), dependencies included — the request
  * set for an unscoped search. */
-export function defaultPortalEntityScopes(): readonly PortalEntityScopeId[] {
+export function defaultPortalEntityScopes(
+  isAdmin: boolean,
+): readonly PortalEntityScopeId[] {
   return withPortalEntityDependencies(
-    PORTAL_ENTITY_SCOPE_IDS.filter((scopeId) => isVisiblePortalScope(scopeId)),
+    PORTAL_ENTITY_SCOPE_IDS.filter(
+      (scopeId) =>
+        isVisiblePortalScope(scopeId) &&
+        isPortalEntityScopeAccessible(scopeId, isAdmin),
+    ),
   );
 }
 

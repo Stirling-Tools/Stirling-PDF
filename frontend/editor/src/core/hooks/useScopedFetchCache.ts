@@ -50,6 +50,9 @@ export function useScopedFetchCache<K extends string, V>(
       fetcherRef.current = fetchKey;
       fetchedAtRef.current.clear();
       inFlightRef.current.clear();
+      // Values from the old world-view must not surface under the new one
+      // (e.g. a tier change altering what a payload contains).
+      setValues({});
     }
 
     if (requestedKeys.length === 0) {

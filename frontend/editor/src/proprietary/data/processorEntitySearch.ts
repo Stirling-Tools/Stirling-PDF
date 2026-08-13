@@ -37,6 +37,7 @@ export function useProcessorEntityGroups(
   t: TFunction,
   navigate: (path: string) => void,
   scopeEnabled: (scopeId: string) => boolean = () => true,
+  isAdmin = false,
 ): SuperSearchGroup[] {
   const [mod, setMod] = useState<EntitySearchModule | null>(null);
   const modRef = useRef<EntitySearchModule | null>(null);
@@ -60,10 +61,10 @@ export function useProcessorEntityGroups(
     if (!active || !hasQuery || !mod) return NO_SCOPES;
     return mod.withPortalEntityDependencies(
       mod
-        .defaultPortalEntityScopes()
+        .defaultPortalEntityScopes(isAdmin)
         .filter((scopeId) => scopeEnabled(scopeId)),
     );
-  }, [active, hasQuery, mod, scopeEnabled]);
+  }, [active, hasQuery, mod, scopeEnabled, isAdmin]);
 
   const fetchScope = useCallback(
     async (scopeId: PortalEntityScopeId): Promise<PortalEntityItems> => {

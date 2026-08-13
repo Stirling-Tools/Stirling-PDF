@@ -138,6 +138,9 @@ vi.mock("@app/data/processorSearchIndex", () => ({
       keywords: ["docs"],
     },
   ],
+  // Tests run as an org admin; per-scope access gating has its own coverage
+  // in the stubbed suite.
+  isPortalEntityScopeAccessible: () => true,
 }));
 
 // The roster is fetched through the flavor-resolved usersBackend (the same

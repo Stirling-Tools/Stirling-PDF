@@ -26,7 +26,13 @@ export function openExternalUrl(url: string): void {
   if (safe) window.open(safe.href, "_blank", "noopener,noreferrer");
 }
 
-/** Full-page navigation (window.location), dropped for non-web schemes. */
+/**
+ * Full-page navigation (window.location), dropped for non-web schemes. The
+ * guard is scheme-only: cross-origin http(s) targets pass by design (a
+ * separately-hosted editor is configured build-time via VITE_EDITOR_URL), so
+ * callers must pass build/config values — never user-supplied input, which
+ * could redirect anywhere on the web.
+ */
 export function assignLocation(url: string): void {
   const safe = toSafeWebUrl(url);
   if (safe) window.location.assign(safe.href);

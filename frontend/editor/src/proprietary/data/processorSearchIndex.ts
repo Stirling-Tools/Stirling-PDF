@@ -1,4 +1,7 @@
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+// A static leaf module (its portal import is type-only), so it doesn't pull
+// the lazy portal chunk into the main bundle the way @portal/* values would.
+import { usersCapabilities } from "@app/portal/usersCapabilities";
 import type { ProcessorSearchEntry } from "@core/data/processorSearchIndex";
 
 export type { ProcessorSearchEntry };
@@ -91,3 +94,18 @@ const VIEWS: ProcessorSearchEntry[] = [
 export const PROCESSOR_SEARCH_INDEX: ProcessorSearchEntry[] = includePortal
   ? VIEWS
   : [];
+
+/**
+ * Whether an entity scope's data source will serve the current session at
+ * all. The users roster is the one divergent case: portal access alone
+ * doesn't imply the roster endpoint will answer (see
+ * UsersCapabilities.listingRequiresAdmin) — offering the lane anyway renders
+ * a permanently-empty chip that fires a doomed request on every search.
+ */
+export function isPortalEntityScopeAccessible(
+  scopeId: string,
+  isAdmin: boolean,
+): boolean {
+  if (scopeId !== "portal-users") return true;
+  return isAdmin || !usersCapabilities.listingRequiresAdmin;
+}

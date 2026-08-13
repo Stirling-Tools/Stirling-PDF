@@ -4,4 +4,7 @@
  * search never offers Processor destinations that don't exist on desktop.
  */
 export type { ProcessorSearchEntry } from "@core/data/processorSearchIndex";
-export { PROCESSOR_SEARCH_INDEX } from "@core/data/processorSearchIndex";
+export {
+  PROCESSOR_SEARCH_INDEX,
+  isPortalEntityScopeAccessible,
+} from "@core/data/processorSearchIndex";
