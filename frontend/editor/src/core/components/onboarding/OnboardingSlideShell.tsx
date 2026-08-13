@@ -101,7 +101,10 @@ export default function OnboardingSlideShell({
   );
 
   return (
-    <Modal
+    // Composed rather than the plain <Modal>, because only Modal.Content lands
+    // props on the role="dialog" element — the slide draws its own title, so the
+    // dialog needs an aria-label to have an accessible name.
+    <Modal.Root
       opened={opened}
       onClose={onClose}
       closeOnClickOutside={false}
@@ -109,118 +112,133 @@ export default function OnboardingSlideShell({
       centered
       size="lg"
       radius={20}
-      withCloseButton={false}
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
       styles={{
         body: { padding: 0, maxHeight: "90vh", overflow: "hidden" },
         content: {
           overflow: "hidden",
           border: "none",
-          background: "var(--bg-surface)",
+          background: "var(--c-surface)",
           maxHeight: "90vh",
         },
       }}
     >
-      <div className={styles.card}>
-        <header className={styles.header}>
-          <div className={styles.brand}>
-            <img
-              src={stirlingMark}
-              alt=""
-              aria-hidden="true"
-              className={styles.brandLogo}
-            />
-            <span className={styles.wordmark}>Stirling</span>
-          </div>
-          <div className={styles.headerRight}>
-            {showProgress && (
-              <span className={styles.stepPill}>
-                {t("onboarding.stepOf", "Step {{current}} of {{total}}", {
-                  current: stepIndex + 1,
-                  total: stepCount,
-                })}
-              </span>
-            )}
-            {allowDismiss && (
-              <ActionIcon
-                onClick={onClose}
-                variant="tertiary"
-                accent="neutral"
-                size="md"
-                aria-label={t("common.close", "Close")}
-              >
-                <LocalIcon
-                  icon="close-rounded"
-                  width="1.1rem"
-                  height="1.1rem"
+      <Modal.Overlay />
+      <Modal.Content
+        radius={20}
+        aria-label={t("onboarding.dialogLabel", "Onboarding")}
+      >
+        <Modal.Body>
+          <div className={styles.card}>
+            <header className={styles.header}>
+              <div className={styles.brand}>
+                <img
+                  src={stirlingMark}
+                  alt=""
+                  aria-hidden="true"
+                  className={styles.brandLogo}
                 />
-              </ActionIcon>
-            )}
-          </div>
-        </header>
+                <span className={styles.wordmark}>Stirling</span>
+              </div>
+              <div className={styles.headerRight}>
+                {showProgress && (
+                  <span className={styles.stepPill}>
+                    {t("onboarding.stepOf", "Step {{current}} of {{total}}", {
+                      current: stepIndex + 1,
+                      total: stepCount,
+                    })}
+                  </span>
+                )}
+                {allowDismiss && (
+                  <ActionIcon
+                    onClick={onClose}
+                    variant="tertiary"
+                    accent="neutral"
+                    size="md"
+                    aria-label={t("common.close", "Close")}
+                  >
+                    <LocalIcon
+                      icon="close-rounded"
+                      width="1.1rem"
+                      height="1.1rem"
+                    />
+                  </ActionIcon>
+                )}
+              </div>
+            </header>
 
-        {showProgress && (
-          <div
-            className={styles.progressTrack}
-            role="progressbar"
-            aria-valuenow={stepIndex + 1}
-            aria-valuemin={1}
-            aria-valuemax={stepCount}
-          >
-            {Array.from({ length: stepCount }, (_, index) => (
-              <span
-                key={index}
-                className={`${styles.progressSeg} ${
-                  index <= stepIndex ? styles.progressSegDone : ""
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
-        <div className={styles.divider} />
-
-        <div className={styles.content}>
-          <div className={styles.heroPanel}>
-            <div className={styles.heroArt} key={`hero-${slideKey}`}>
-              {hero}
-            </div>
-          </div>
-
-          <div key={`title-${slideKey}`} className={styles.titleNew}>
-            {title}
-          </div>
-
-          <div key={`body-${slideKey}`} className={styles.bodyNew}>
-            {body}
-            <style>{`.${styles.bodyNew} strong{color: var(--onboarding-title); font-weight: 600;}`}</style>
-          </div>
-
-          <div className={styles.footer}>
-            {backButtons.length === 0 ? (
-              <div className={styles.footerEnd}>{actions}</div>
-            ) : (
-              <div className={styles.footerBetween}>
-                <div className={styles.footerGroup}>
-                  {backButtons.map((button) => (
-                    <ActionIcon
-                      key={button.key}
-                      onClick={() => onAction(button.action)}
-                      variant="tertiary"
-                      accent="neutral"
-                      disabled={button.disabled}
-                      aria-label={t("onboarding.buttons.back", "Back")}
-                    >
-                      <ChevronLeftIcon fontSize="small" />
-                    </ActionIcon>
-                  ))}
-                </div>
-                {actions}
+            {showProgress && (
+              <div
+                className={styles.progressTrack}
+                role="progressbar"
+                aria-valuenow={stepIndex + 1}
+                aria-valuemin={1}
+                aria-valuemax={stepCount}
+                aria-label={t(
+                  "onboarding.stepOf",
+                  "Step {{current}} of {{total}}",
+                  {
+                    current: stepIndex + 1,
+                    total: stepCount,
+                  },
+                )}
+              >
+                {Array.from({ length: stepCount }, (_, index) => (
+                  <span
+                    key={index}
+                    className={`${styles.progressSeg} ${
+                      index <= stepIndex ? styles.progressSegDone : ""
+                    }`}
+                  />
+                ))}
               </div>
             )}
+
+            <div className={styles.divider} />
+
+            <div className={styles.content}>
+              <div className={styles.heroPanel}>
+                <div className={styles.heroArt} key={`hero-${slideKey}`}>
+                  {hero}
+                </div>
+              </div>
+
+              <div key={`title-${slideKey}`} className={styles.titleNew}>
+                {title}
+              </div>
+
+              <div key={`body-${slideKey}`} className={styles.bodyNew}>
+                {body}
+                <style>{`.${styles.bodyNew} strong{color: var(--c-text); font-weight: 600;}`}</style>
+              </div>
+
+              <div className={styles.footer}>
+                {backButtons.length === 0 ? (
+                  <div className={styles.footerEnd}>{actions}</div>
+                ) : (
+                  <div className={styles.footerBetween}>
+                    <div className={styles.footerGroup}>
+                      {backButtons.map((button) => (
+                        <ActionIcon
+                          key={button.key}
+                          onClick={() => onAction(button.action)}
+                          variant="tertiary"
+                          accent="neutral"
+                          disabled={button.disabled}
+                          aria-label={t("onboarding.buttons.back", "Back")}
+                        >
+                          <ChevronLeftIcon fontSize="small" />
+                        </ActionIcon>
+                      ))}
+                    </div>
+                    {actions}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </Modal>
+        </Modal.Body>
+      </Modal.Content>
+    </Modal.Root>
   );
 }

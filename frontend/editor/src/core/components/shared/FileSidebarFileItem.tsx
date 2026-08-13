@@ -34,14 +34,6 @@ export type DateGroup =
   | "thisMonth"
   | "older";
 
-export const DATE_GROUP_ORDER: DateGroup[] = [
-  "today",
-  "yesterday",
-  "thisWeek",
-  "thisMonth",
-  "older",
-];
-
 export function getDateGroup(lastModified: number | undefined): DateGroup {
   if (!lastModified) return "older";
   const now = new Date();
@@ -175,7 +167,9 @@ export interface FileItemProps {
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
 
-export function FileItem({
+// Memoized: sidebar rows bail out unless THEIR props change, so one file's
+// update (e.g. a new version landing) re-renders one row, not the whole list.
+export const FileItem = React.memo(function FileItem({
   fileId,
   name,
   size,
@@ -517,4 +511,4 @@ export function FileItem({
         )}
     </>
   );
-}
+});

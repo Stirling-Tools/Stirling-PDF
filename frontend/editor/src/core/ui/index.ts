@@ -1,5 +1,6 @@
 export * from "@app/ui/Button";
 export * from "@app/ui/ActionIcon";
+export * from "@app/ui/Logo";
 export * from "@app/ui/FilePicker";
 export * from "@app/ui/SegmentedControl";
 export * from "@app/ui/StatusBadge";
@@ -7,7 +8,9 @@ export * from "@app/ui/MethodBadge";
 export * from "@app/ui/ToggleSwitch";
 export * from "@app/ui/ProgressBar";
 export * from "@app/ui/MetricCard";
+export * from "@app/ui/NodeCard";
 export * from "@app/ui/NavItem";
+export * from "@app/ui/NavSurface";
 export * from "@app/ui/PanelHeader";
 export * from "@app/ui/CodeBlock";
 export * from "@app/ui/SectionDivider";

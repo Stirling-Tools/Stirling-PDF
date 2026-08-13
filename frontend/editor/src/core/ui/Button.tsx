@@ -153,6 +153,13 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     const iconOnly =
       !hasLabel && !fullWidth && (!!leftSection || !!rightSection || loading);
 
+    // A button whose label is momentarily absent while loading still needs an
+    // accessible name; the spinner and any icon are decorative.
+    const fallbackLabel =
+      !hasLabel && loading && !rest["aria-label"] && !rest["aria-labelledby"]
+        ? "Loading"
+        : undefined;
+
     // px/py override p for their axis; each stays undefined (= size default) if unset.
     const padX = px ?? p;
     const padY = py ?? p;
@@ -190,18 +197,26 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
               "--button-bg": "transparent",
               "--button-hover": "transparent",
               "--button-color": "var(--_text)",
-              "--button-hover-color": "var(--color-text-1)",
+              "--button-hover-color": "var(--c-text)",
               "--button-bd": "1px solid transparent",
             }
-          : {
-              "--button-bg": "transparent",
-              "--button-hover": "var(--_tint)",
-              "--button-color": "var(--_text)",
-              "--button-bd":
-                variant === "secondary"
-                  ? "1px solid var(--_bd)"
-                  : "1px solid transparent",
-            };
+          : variant === "secondary"
+            ? {
+                // Filled when the accent defines --_solid-2 (default = inverse
+                // ink/snow); otherwise falls back to the outlined look.
+                "--button-bg": "var(--_solid-2, transparent)",
+                "--button-hover": "var(--_solid-2-hover, var(--_tint))",
+                "--button-color": "var(--_on-2, var(--_text))",
+                "--button-bd": "1px solid var(--_bd-2, var(--_bd))",
+              }
+            : {
+                // tertiary (ghost) — neutral text + hover when the accent
+                // defines --_tert-* (default); otherwise the accent link colour.
+                "--button-bg": "transparent",
+                "--button-hover": "var(--_tert-tint, var(--_tint))",
+                "--button-color": "var(--_tert-text, var(--_text))",
+                "--button-bd": "1px solid transparent",
+              };
 
     // Loosely-typed alias so the polymorphic `component={as}` doesn't fight Mantine's typing.
     const Comp = MantineButton as ElementType;
@@ -209,6 +224,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Comp
         {...rest}
+        aria-label={rest["aria-label"] ?? fallbackLabel}
         ref={ref}
         component={as}
         variant={MANTINE_VARIANT[variant]}

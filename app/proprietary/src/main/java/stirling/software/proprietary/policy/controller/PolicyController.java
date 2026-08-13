@@ -44,10 +44,13 @@ import stirling.software.common.cluster.JobStore;
 import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
+import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.service.JobOwnershipService;
+import stirling.software.common.service.ToolChainValidator;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.audit.AuditContext;
+import stirling.software.proprietary.policy.asset.PolicyAssetCleaner;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
@@ -59,6 +62,7 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
@@ -68,6 +72,7 @@ import stirling.software.proprietary.policy.overview.PoliciesOverviewResponse;
 import stirling.software.proprietary.policy.overview.PolicyOverviewService;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.EditorSource;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -100,6 +105,7 @@ public class PolicyController {
     private final PolicyManagementAuthority policyManagementAuthority;
     private final PolicyTriggerManager policyTriggerManager;
     private final PolicyOverviewService policyOverviewService;
+    private final PolicyAssetCleaner assetCleaner;
     private final ProcessedLedger processedLedger;
     private final List<PolicyTrigger> policyTriggers;
     private final ApplicationProperties applicationProperties;
@@ -123,7 +129,7 @@ public class PolicyController {
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
-        validateAdHocOutput(definition);
+        validateAdHocRun(definition);
         PolicyInputs inputs = toInputs(files);
         PolicyRunHandle handle =
                 policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP);
@@ -144,7 +150,7 @@ public class PolicyController {
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
-        validateAdHocOutput(definition);
+        validateAdHocRun(definition);
         PolicyInputs inputs = toInputs(files);
 
         SseEmitter emitter =
@@ -238,6 +244,23 @@ public class PolicyController {
 
     // --- Policy management ---
 
+    @PostMapping(value = "/validate", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Check whether a chain of steps can run",
+            description =
+                    "Reports which steps cannot accept what the step before them produces, without"
+                            + " running anything or storing anything. Saving already rejects a"
+                            + " chain whose steps cannot run; this answers the same question up"
+                            + " front, and also returns the warnings and fan-out notes that saving"
+                            + " does not.")
+    public PipelineValidation.Response validateChain(
+            @RequestBody PipelineValidation.Request request) {
+        List<ToolDiagnostic> diagnostics =
+                policyValidator.diagnoseChain(request.steps(), request.sourceFormat());
+        return new PipelineValidation.Response(
+                !ToolChainValidator.hasErrors(diagnostics), diagnostics);
+    }
+
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create or update a policy",
@@ -248,12 +271,20 @@ public class PolicyController {
         requirePolicyEditingAllowed();
         Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
         requireAccessibleSources(owned);
+        requireAccessibleOutput(owned);
         try {
             policyValidator.validate(owned);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
+        // Snapshot the previous version before saving so supporting files this edit dropped can
+        // be cleaned up once nothing references them.
+        Policy previous =
+                owned.id() == null || owned.id().isBlank()
+                        ? null
+                        : policyStore.get(owned.id()).orElse(null);
         Policy saved = policyStore.save(owned);
+        assetCleaner.cleanupAfterSave(previous, saved);
         // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
         // watched immediately instead of after the next reconcile sweep.
         policyTriggerManager.notifyPoliciesChanged();
@@ -291,6 +322,40 @@ public class PolicyController {
     }
 
     /**
+     * A policy's output destination is a {@link Source} used as a write target: it must resolve to
+     * a source in the caller's team, so a client can neither reference a non-existent location nor
+     * reach across teams to write to another team's. The editor is virtual and has no writable
+     * location, so it can't be a destination. The config is then validated on this (request) thread
+     * so an S3 destination's connection is authorization-checked against the caller - the async
+     * delivery worker has no principal. A policy with no reference (inline / editor / one-off) has
+     * nothing to check.
+     */
+    private void requireAccessibleOutput(Policy policy) {
+        for (String outputId : policy.outputIds()) {
+            Source destination =
+                    sourceStore
+                            .get(outputId)
+                            .filter(sourceAccessGuard::canAccess)
+                            .orElseThrow(
+                                    () ->
+                                            new ResponseStatusException(
+                                                    HttpStatus.BAD_REQUEST,
+                                                    "Unknown or inaccessible output source: "
+                                                            + outputId));
+            if (EditorSource.TYPE.equals(destination.type())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "The editor can't be used as an output destination");
+            }
+            try {
+                policyValidator.validateOutput(destination.toOutputSpec());
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+            }
+        }
+    }
+
+    /**
      * Assign owner + owning team server-side. Create stamps the current user and their team; update
      * preserves the existing owner and team after verifying the policy belongs to the caller's team
      * — so the client can neither forge ownership/team on create nor reach across teams on update
@@ -319,10 +384,10 @@ public class PolicyController {
                 policy.name(),
                 owner,
                 policy.enabled(),
-                policy.trigger(),
-                policy.sourceIds(),
+                policy.inputs(),
                 policy.steps(),
                 policy.output(),
+                policy.outputIds(),
                 teamId);
     }
 
@@ -358,16 +423,7 @@ public class PolicyController {
     }
 
     private static Policy withOutput(Policy policy, OutputSpec output) {
-        return new Policy(
-                policy.id(),
-                policy.name(),
-                policy.owner(),
-                policy.enabled(),
-                policy.trigger(),
-                policy.sourceIds(),
-                policy.steps(),
-                output,
-                policy.teamId());
+        return policy.withOutput(output);
     }
 
     /**
@@ -450,10 +506,10 @@ public class PolicyController {
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
         requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
-        boolean accessible =
-                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
-        if (accessible && policyStore.delete(policyId)) {
+        Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
+        if (policy != null && policyStore.delete(policyId)) {
             processedLedger.clearPolicy(policyId);
+            assetCleaner.cleanupAfterDelete(policy);
             // Cancel any now-orphaned folder watch promptly rather than leaving the WatchKey open
             // until the next reconcile sweep.
             policyTriggerManager.notifyPoliciesChanged();
@@ -487,8 +543,9 @@ public class PolicyController {
             description =
                     "Runs the stored policy's pipeline on the supplied files (primary documents"
                             + " under 'fileInput', supporting files under 'assets[i].key' /"
-                            + " 'assets[i].file'). Runs regardless of the policy's enabled flag,"
-                            + " which only gates automatic triggering. Returns a run id.")
+                            + " 'assets[i].file' - only for bindings the policy does not already"
+                            + " store). Runs regardless of the policy's enabled flag, which only"
+                            + " gates automatic triggering. Returns a run id.")
     public ResponseEntity<JobResponse<Void>> runStoredPolicy(
             @PathVariable String policyId, @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
@@ -560,18 +617,23 @@ public class PolicyController {
     }
 
     /**
-     * Authorization-check an ad-hoc run's output while the caller's principal is present (this
-     * request thread). The worker thread that later delivers carries no security context, so an S3
-     * output's connection-access check would be skipped there; without this gate a caller could
-     * reference another tenant's connection by id and write to it (confused deputy). Stored
-     * policies are covered by save-time {@link PolicyValidator#validate} instead.
+     * Authorization-check an ad-hoc run's steps and output while the caller's principal is present
+     * (this request thread). The worker thread that later runs and delivers carries no security
+     * context, so a connection-access check would be skipped there; without this gate a caller
+     * could reference another tenant's connection by id and write to it, or make the server call it
+     * with its stored credentials (confused deputy). Stored policies are covered by save-time
+     * {@link PolicyValidator#validate} instead.
      */
-    private void validateAdHocOutput(PipelineDefinition definition) {
-        if (definition.output() == null) {
-            return;
-        }
+    private void validateAdHocRun(PipelineDefinition definition) {
         try {
-            policyValidator.validateOutput(definition.output());
+            // Steps get the same treatment as the output, and for the same reason: an integration
+            // step dereferences its connection by id on a principal-less worker thread, so this
+            // request thread is the only place that reference can be checked against the caller.
+            policyValidator.validateSteps(definition.steps());
+            // Every destination is checked; an ad-hoc run with no destinations validates nothing.
+            for (OutputSpec output : definition.outputs()) {
+                policyValidator.validateOutput(output);
+            }
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }

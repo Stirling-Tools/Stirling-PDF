@@ -10,8 +10,9 @@ export interface ProgressBarProps {
   /** Optional override colour (CSS gradient or solid). Disables threshold behaviour. */
   color?: string;
   className?: string;
-  /** Accessible label for screen readers. */
-  label?: string;
+  /** Accessible name — describe what is being measured ("Storage used"), since
+   *  the bar carries no visible text of its own. */
+  label: string;
 }
 
 function clamp01(n: number) {
@@ -45,10 +46,10 @@ export function ProgressBar({
           ? "linear-gradient(90deg, var(--color-red), color-mix(in srgb, var(--color-red) 70%, white))"
           : v >= 0.8
             ? "linear-gradient(90deg, var(--color-amber), color-mix(in srgb, var(--color-amber) 70%, white))"
-            : "linear-gradient(90deg, var(--color-blue), color-mix(in srgb, var(--color-blue) 70%, white))";
+            : "linear-gradient(90deg, var(--c-primary), color-mix(in srgb, var(--c-primary) 70%, white))";
     } else {
       fill =
-        "linear-gradient(90deg, var(--color-blue), color-mix(in srgb, var(--color-blue) 70%, white))";
+        "linear-gradient(90deg, var(--c-primary), color-mix(in srgb, var(--c-primary) 70%, white))";
     }
   }
   return (

@@ -5,9 +5,9 @@
 :root,
 [data-theme="light"],
 html[data-app-theme="light"] {
-  --c-bg: var(--p-gray-50);
+  --c-bg: var(--p-paper);
   --c-bg-raised: var(--p-white);
-  --c-surface: var(--p-white);
+  --c-surface: var(--p-snow);
   --c-surface-raised: var(--p-white);
   --c-surface-sunken: var(--p-gray-100);
   --c-input-bg: var(--p-white);
@@ -15,12 +15,17 @@ html[data-app-theme="light"] {
   --c-active: var(--p-gray-100);
   --c-overlay: rgba(0, 0, 0, 0.5);
 
-  --c-text: var(--p-gray-900);
+  --c-text: var(--p-ink);
   --c-text-muted: var(--p-gray-600);
-  --c-text-subtle: var(--p-gray-500);
+  --c-text-subtle: var(--p-gray-550);
   --c-text-on-primary: var(--p-white);
 
-  --c-border: var(--p-gray-250);
+  --c-btn-solid: var(--c-text);
+  --c-btn-inverse: var(--p-snow);
+  --c-btn-secondary: var(--c-btn-inverse);
+  --c-btn-secondary-border: var(--c-border);
+
+  --c-border: var(--p-c-f0f0f0);
   --c-border-subtle: var(--p-gray-200);
   --c-border-strong: var(--p-gray-400);
 
@@ -30,14 +35,104 @@ html[data-app-theme="light"] {
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
+  --c-warning: var(--p-amber-600);
+  /* Solid fills that carry a white label. Deeper than the --c-<tone> values
+     above, which are picked for surfaces, borders and icons where the 3:1
+     non-text floor applies. Scheme-independent: a filled badge reads white on
+     either ground. */
+  --c-success-solid: var(--p-green-700);
+  --c-danger-solid: var(--p-red-600);
+  --c-warning-solid: var(--p-amber-700);
+  --c-neutral-solid: var(--p-gray-600);
+  --c-accent-solid: var(--p-blue-600);
+  /* Ink for surfaces that are white in both schemes — a rendered page, a
+     signature sheet. Scheme-independent for the same reason the fills above
+     are: the ground does not change, so the ink must not either. */
+  --c-text-on-light: var(--p-ink);
+  --c-accent-on-light: var(--p-blue-700);
+  /* Highlight/flash (search hits, compare jump-to) — same in both themes. */
+  --c-highlight: var(--p-flash-yellow);
+  /* Stirling brand red (auth CTAs) — a fixed brand colour, same in both themes. */
+  --c-brand: var(--p-brand-red);
+  --c-brand-hover: var(--p-brand-red-600);
+
+  --c-primary-tint: color-mix(in srgb, var(--c-primary) 14%, var(--c-surface));
+  --c-primary-border: color-mix(
+    in srgb,
+    var(--c-primary) 32%,
+    var(--c-surface)
+  );
+  --c-danger-subtle: color-mix(in srgb, var(--c-danger) 10%, var(--c-surface));
+  --c-success-subtle: color-mix(
+    in srgb,
+    var(--c-success) 10%,
+    var(--c-surface)
+  );
+
+  /* ── Decorative / brand / categorical palette ──────────────────────────
+     Fixed hues that intentionally do NOT follow the chosen accent: brand
+     marks, vendor colours, categorical avatar dots, static illustrations,
+     and the multi-hue gradients on feature/upgrade/onboarding surfaces.
+     Named here so components reference a --c-* token, never a raw --p-*. */
+  --c-brand-mark: var(--p-brand-red-650);
+  --c-brand-mark-soft: var(--p-brand-red-400); /* Stirling logo mark fill */
+  --c-accent-stripe: var(--p-periwinkle-500); /* Stripe "connect" CTA */
+
+  /* Feature-accent hues (fixed) used as stops in multi-hue gradients. */
+  --c-hue-blue: var(--p-blue-500);
+  --c-hue-indigo: var(--p-indigo-500);
+  --c-hue-violet: var(--p-violet-600);
+  --c-hue-purple: var(--p-purple-500);
+  --c-hue-pink: var(--p-pink-500);
+
+  /* Categorical avatar palette (per-user dot colour). */
+  --c-avatar-1: var(--p-azure-500);
+  --c-avatar-2: var(--p-violet-500);
+  --c-avatar-3: var(--p-pink-500);
+  --c-avatar-4: var(--p-emerald-500);
+  --c-avatar-5: var(--p-amber-500);
+  --c-avatar-6: var(--p-cyan-500);
+
+  /* Connection picker: muted categorical marks + brand-red accent. */
+  --c-conn-accent: var(--p-art-red-muted);
+  --c-conn-storage: var(--p-art-blue-muted);
+  --c-conn-signing: var(--p-art-green-muted);
+  --c-conn-notify: var(--p-art-amber-muted);
+  --c-conn-neutral: var(--p-gray-mid);
+
+  /* Always-dark marketing/product hero strip (portal). Same in both themes. */
+  --c-hero-dark: var(--p-zinc-950);
+  --c-hero-dark-cta-text: var(--p-navy-700);
+
+  /* Neutral solid badge fill (grey pill). */
+  --c-neutral-fill: var(--p-gray-500);
+
+  /* Static document illustration (theme-independent line work). */
+  --c-illustration-line: var(--p-gray-200);
+  --c-illustration-line-strong: var(--p-gray-300);
+
+  /* Viewer active file-tab tint base. */
+  --c-tab-active-tint: var(--p-blue-200);
+
+  /* Themed: file-card resting/unselected header (branded navy). */
+  --c-file-header-resting: var(--p-navy-500);
+
+  /* Themed: onboarding hero panel gradient + inset tile. */
+  --c-onboarding-hero: linear-gradient(
+    155deg,
+    var(--p-tint-blue) 0%,
+    var(--p-tint-violet) 55%,
+    var(--p-tint-pink) 100%
+  );
+  --c-onboarding-hero-tile: var(--p-white);
 }
 
 /* ── MIDNIGHT (original navy) — also the default portal/Storybook dark ────── */
 [data-theme="dark"],
 html[data-app-theme="midnight"] {
-  --c-bg: var(--p-zinc-900);
+  --c-bg: var(--p-c-141416);
   --c-bg-raised: var(--p-zinc-850);
-  --c-surface: var(--p-zinc-800);
+  --c-surface: var(--p-c-1a1a1d);
   --c-surface-raised: var(--p-zinc-650);
   --c-surface-sunken: var(--p-zinc-850);
   --c-input-bg: var(--p-zinc-650);
@@ -45,12 +140,16 @@ html[data-app-theme="midnight"] {
   --c-active: var(--p-gray-800);
   --c-overlay: rgba(0, 0, 0, 0.6);
 
-  --c-text: var(--p-zinc-100);
+  --c-text: var(--p-snow);
   --c-text-muted: var(--p-zinc-200);
-  --c-text-subtle: var(--p-zinc-300);
+  --c-text-subtle: var(--p-zinc-250);
   --c-text-on-primary: var(--p-white);
+  --c-btn-solid: var(--c-text);
+  --c-btn-inverse: var(--p-ink);
+  --c-btn-secondary: var(--p-c-1a1a1d);
+  --c-btn-secondary-border: var(--p-c-343439);
 
-  --c-border: var(--p-zinc-650);
+  --c-border: var(--p-c-28282d);
   --c-border-subtle: rgba(255, 255, 255, 0.05);
   --c-border-strong: var(--p-zinc-500);
 
@@ -60,20 +159,36 @@ html[data-app-theme="midnight"] {
 
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
+  --c-warning: var(--p-amber-500);
+
+  /* Themed decorative dark overrides (see :root for light + rationale). */
+  --c-file-header-resting: var(--p-navy-950);
+  --c-onboarding-hero: linear-gradient(
+    155deg,
+    var(--p-navy-850) 0%,
+    var(--p-navy-880) 55%,
+    var(--p-plum-900) 100%
+  );
+  --c-onboarding-hero-tile: var(--p-navy-900);
 }
 
 /* ── Base accent — fixed default (blue buttons); [data-accent="default"] blocks at the end keep surfaces neutral. LIGHT base here, DARK base next. ── */
 html[data-app-theme="custom"] {
   --c-primary: var(--p-blue-500);
-  --c-primary-hover: color-mix(in srgb, var(--c-primary) 85%, var(--p-black));
+  /* Also the accent text colour (--_text), so 80% keeps 4.5:1 on the canvas. */
+  --c-primary-hover: color-mix(in srgb, var(--c-primary) 80%, var(--p-black));
   --c-primary-subtle: color-mix(in srgb, var(--c-primary) 14%, transparent);
   --c-text-on-primary: var(--p-white);
   --c-accent-fg: var(--c-primary);
+  /* Accent used as TEXT: --c-primary and its 80% hover both land under
+     4.5:1 on the accent-tinted surfaces they appear on (chips, links,
+     outline buttons), so accent copy takes a deeper step of the hue. */
+  --c-accent-text: var(--p-blue-700);
 
   /* Primary-tinted surfaces (light base). Neutralised by the default override. */
-  --c-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-gray-50));
+  --c-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-paper));
   --c-bg-raised: color-mix(in srgb, var(--c-primary) 4%, var(--p-white));
-  --c-surface: color-mix(in srgb, var(--c-primary) 3%, var(--p-white));
+  --c-surface: color-mix(in srgb, var(--c-primary) 3%, var(--p-snow));
   --c-surface-raised: color-mix(in srgb, var(--c-primary) 4%, var(--p-white));
   --c-surface-sunken: color-mix(
     in srgb,
@@ -83,7 +198,7 @@ html[data-app-theme="custom"] {
   --c-input-bg: color-mix(in srgb, var(--c-primary) 2%, var(--p-white));
   --c-hover: color-mix(in srgb, var(--c-primary) 9%, var(--p-gray-50));
   --c-active: color-mix(in srgb, var(--c-primary) 13%, var(--p-gray-100));
-  --c-border: color-mix(in srgb, var(--c-primary) 14%, var(--p-gray-250));
+  --c-border: color-mix(in srgb, var(--c-primary) 14%, var(--p-c-f0f0f0));
   --c-border-subtle: color-mix(
     in srgb,
     var(--c-primary) 10%,
@@ -97,7 +212,11 @@ html[data-app-theme="custom"] {
   --color-primary-300: color-mix(in srgb, var(--c-primary) 55%, var(--p-white));
   --color-primary-400: color-mix(in srgb, var(--c-primary) 78%, var(--p-white));
   --color-primary-500: var(--c-primary);
-  --color-primary-600: color-mix(in srgb, var(--c-primary) 88%, var(--p-black));
+  /* Shade 600 is the ramp's text-capable step — Mantine maps it to shade 6,
+     which drives link colour and the tuple's default text. At 88% it lands
+     at 4.2:1 on the page, so it mixes further down. Filled surfaces read
+     from --mantine-primary-color-filled (= --c-primary) and are unaffected. */
+  --color-primary-600: color-mix(in srgb, var(--c-primary) 75%, var(--p-black));
   --color-primary-700: color-mix(in srgb, var(--c-primary) 74%, var(--p-black));
   --color-primary-800: color-mix(in srgb, var(--c-primary) 60%, var(--p-black));
   --color-primary-900: color-mix(in srgb, var(--c-primary) 46%, var(--p-black));
@@ -114,7 +233,9 @@ html[data-app-theme="custom"] {
     var(--c-primary) 18%,
     transparent
   );
-  --mantine-primary-color-light-color: var(--c-primary);
+  /* Text of the light/subtle variants — the fill value only reaches ~3:1 on
+     its own tint, so accent copy takes the deeper step. */
+  --mantine-primary-color-light-color: var(--c-accent-text);
 
   /* Brand-tint family — re-derived from --c-primary so legacy accents harmonise to the chosen hue. */
 
@@ -183,17 +304,40 @@ html[data-app-theme="custom"] {
 
 /* ── DARK — editor dark theme: neutral text/borders/icons + accent-tinted surfaces (default override opts out). After :root so it wins for dark. ── */
 html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
+  --c-accent-text: var(--p-blue-400);
+  /* Shade 600 is the ramp's text-capable step (Mantine's shade 6 — link colour
+     and the tuple's default text). The light theme reaches it by mixing toward
+     black; on a dark ground it has to travel the other way to stay readable. */
+  --color-primary-600: color-mix(in srgb, var(--c-primary) 85%, var(--p-white));
+  /* The accent's tint rungs, which back every light-variant surface. The light
+     theme builds them by mixing toward white; left unmixed for dark they stay a
+     pale blue and put dark-theme ink on a near-white ground. */
+  --color-primary-50: color-mix(in srgb, var(--c-primary) 12%, var(--c-bg));
+  --color-primary-100: color-mix(in srgb, var(--c-primary) 20%, var(--c-bg));
+  --color-primary-200: color-mix(in srgb, var(--c-primary) 35%, var(--c-bg));
+  --color-primary-300: color-mix(in srgb, var(--c-primary) 55%, var(--c-bg));
+  --color-primary-400: color-mix(in srgb, var(--c-primary) 78%, var(--c-bg));
+  /* The inks that sit on those tints. Mixing toward black is what makes them
+     readable on a pale ground; on the dark tints above they have to travel
+     toward white for the same reason. */
+  --color-primary-700: color-mix(in srgb, var(--c-primary) 70%, var(--p-white));
+  --color-primary-800: color-mix(in srgb, var(--c-primary) 55%, var(--p-white));
+  --color-primary-900: color-mix(in srgb, var(--c-primary) 40%, var(--p-white));
   /* Neutral text / borders / overlay (not accent-tinted). */
-  --c-text: var(--p-zinc-100);
+  --c-text: var(--p-snow);
   --c-text-muted: var(--p-zinc-200);
-  --c-text-subtle: var(--p-zinc-300);
+  --c-text-subtle: var(--p-zinc-250);
+  --c-btn-solid: var(--c-text);
+  --c-btn-inverse: var(--p-ink);
+  --c-btn-secondary: var(--p-c-1a1a1d);
+  --c-btn-secondary-border: var(--p-c-343439);
   --c-border-strong: var(--p-zinc-500);
   --c-overlay: rgba(0, 0, 0, 0.6);
 
   /* Accent-tinted surfaces (dark base). Neutralised by the default override. */
-  --c-bg: color-mix(in srgb, var(--c-primary) 8%, var(--p-zinc-950));
+  --c-bg: color-mix(in srgb, var(--c-primary) 8%, var(--p-c-141416));
   --c-bg-raised: color-mix(in srgb, var(--c-primary) 9%, var(--p-zinc-850));
-  --c-surface: color-mix(in srgb, var(--c-primary) 8%, var(--p-zinc-800));
+  --c-surface: color-mix(in srgb, var(--c-primary) 8%, var(--p-c-1a1a1d));
   --c-surface-raised: color-mix(
     in srgb,
     var(--c-primary) 9%,
@@ -207,7 +351,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   --c-input-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-zinc-900));
   --c-hover: color-mix(in srgb, var(--c-primary) 12%, var(--p-zinc-750));
   --c-active: color-mix(in srgb, var(--c-primary) 15%, var(--p-zinc-700));
-  --c-border: color-mix(in srgb, var(--c-primary) 14%, var(--p-zinc-650));
+  --c-border: color-mix(in srgb, var(--c-primary) 14%, var(--p-c-28282d));
   --c-border-subtle: color-mix(
     in srgb,
     var(--c-primary) 10%,
@@ -217,6 +361,17 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Dark-tuned status shades (lighter than the light-theme :root values). */
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-400);
+  --c-warning: var(--p-amber-500);
+
+  /* Themed decorative dark overrides (see :root for light + rationale). */
+  --c-file-header-resting: var(--p-navy-950);
+  --c-onboarding-hero: linear-gradient(
+    155deg,
+    var(--p-navy-850) 0%,
+    var(--p-navy-880) 55%,
+    var(--p-plum-900) 100%
+  );
+  --c-onboarding-hero-tile: var(--p-navy-900);
 
   /* Category icon chips → neutral. */
   --icon-tools-bg: var(--c-surface-raised);
@@ -238,27 +393,27 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
 
 /* ── DEFAULT (no tint) — surfaces opt out of the accent tint (neutral white/grey light, zinc dark); --c-primary stays for buttons. Extra [data-accent="default"] beats the tinted blocks. ── */
 html[data-app-theme="custom"][data-accent="default"] {
-  --c-bg: var(--p-gray-50);
+  --c-bg: var(--p-paper);
   --c-bg-raised: var(--p-white);
-  --c-surface: var(--p-white);
+  --c-surface: var(--p-snow);
   --c-surface-raised: var(--p-white);
   --c-surface-sunken: var(--p-gray-100);
   --c-input-bg: var(--p-white);
   --c-hover: var(--p-gray-50);
   --c-active: var(--p-gray-100);
-  --c-border: var(--p-gray-250);
+  --c-border: var(--p-c-f0f0f0);
   --c-border-subtle: var(--p-gray-200);
 }
 
 html[data-app-theme="custom"][data-accent="default"][data-mantine-color-scheme="dark"] {
-  --c-bg: var(--p-zinc-950);
+  --c-bg: var(--p-c-141416);
   --c-bg-raised: var(--p-zinc-850);
-  --c-surface: var(--p-zinc-800);
+  --c-surface: var(--p-c-1a1a1d);
   --c-surface-raised: var(--p-zinc-775);
   --c-surface-sunken: var(--p-zinc-900);
   --c-input-bg: var(--p-zinc-900);
   --c-hover: var(--p-zinc-750);
   --c-active: var(--p-zinc-700);
-  --c-border: var(--p-zinc-650);
+  --c-border: var(--p-c-28282d);
   --c-border-subtle: var(--p-zinc-700);
 }

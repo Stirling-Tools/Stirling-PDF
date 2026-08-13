@@ -1,6 +1,10 @@
 package stirling.software.common.util;
 
+import java.util.regex.Pattern;
+
 public class RequestUriUtils {
+
+    private static final Pattern SHARE_LINK_PATTERN = Pattern.compile("^/share/[^/]+/?$");
 
     public static boolean isStaticResource(String requestURI) {
         return isStaticResource("", requestURI);
@@ -52,8 +56,10 @@ public class RequestUriUtils {
             return true;
         }
 
-        // Mobile scanner page for QR code-based file uploads (peer-to-peer, no backend auth needed)
-        if (normalizedUri.startsWith("/mobile-scanner")) {
+        // Mobile pages reached by scanning a QR code (peer-to-peer, no backend auth
+        // needed): /mobile-scanner uploads photos, /mobile-sign draws a signature.
+        if (normalizedUri.startsWith("/mobile-scanner")
+                || normalizedUri.startsWith("/mobile-sign")) {
             return true;
         }
 
@@ -198,11 +204,12 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/readiness")
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
+                || trimmedUri.startsWith("/api/v1/webhooks/")
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
                 // Share-link SPA bootstrap; data APIs remain protected
-                || trimmedUri.matches("^/share/[^/]+/?$");
+                || SHARE_LINK_PATTERN.matcher(trimmedUri).matches();
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {

@@ -6,12 +6,11 @@ import { Documents } from "@portal/views/Documents";
 import { Pipelines } from "@portal/views/Pipelines";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
-import { SourceBuilder } from "@portal/views/SourceBuilder";
+import { Integrations } from "@portal/views/Integrations";
 import { Policies } from "@portal/views/Policies";
 import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { Infrastructure } from "@portal/views/Infrastructure";
 import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
-import { Procurement } from "@portal/views/Procurement";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 
 // Lazy so the generated docs manifest (bundled JSON) lands in its own chunk.
@@ -42,14 +41,18 @@ export function ViewRouter() {
         element={<PipelineBuilder />}
       />
       <Route path={rel(VIEW_PATHS.sources)} element={<Sources />} />
+      {/* Source create/edit is a modal on the list now; old deep links land there. */}
       <Route
         path={`${rel(VIEW_PATHS.sources)}/new`}
-        element={<SourceBuilder />}
+        element={
+          <Navigate to={`${toPortalPath(VIEW_PATHS.sources)}?new=1`} replace />
+        }
       />
       <Route
         path={`${rel(VIEW_PATHS.sources)}/:id`}
-        element={<SourceBuilder />}
+        element={<Navigate to={toPortalPath(VIEW_PATHS.sources)} replace />}
       />
+      <Route path={rel(VIEW_PATHS.integrations)} element={<Integrations />} />
       <Route path={rel(VIEW_PATHS.policies)} element={<Policies />} />
       <Route path={rel(VIEW_PATHS.documents)} element={<Documents />} />
       <Route path={rel(VIEW_PATHS.editor)} element={<EditorAdmin />} />
@@ -58,7 +61,6 @@ export function ViewRouter() {
         element={<Infrastructure />}
       />
       <Route path={rel(VIEW_PATHS.usage)} element={<PortalBillingGate />} />
-      <Route path={rel(VIEW_PATHS.procurement)} element={<Procurement />} />
       <Route
         path={rel(VIEW_PATHS.docs)}
         element={
