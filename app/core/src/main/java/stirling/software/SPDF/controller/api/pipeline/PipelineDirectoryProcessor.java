@@ -132,7 +132,7 @@ public class PipelineDirectoryProcessor {
                                 // Skip root directory and "processing" subdirectories
                                 if (!dir.equals(watchedFolderPath)
                                         && !"processing".equals(dirName)) {
-                                    handleDirectory(dir);
+                                    handleDirectory(dir, watchedFolderPath);
                                 }
                             } catch (Exception e) {
                                 log.error("Error handling directory: {}", dir, e);
@@ -155,7 +155,7 @@ public class PipelineDirectoryProcessor {
         }
     }
 
-    public void handleDirectory(Path dir) throws IOException {
+    public void handleDirectory(Path dir, Path watchedRoot) throws IOException {
         // Normalize path to absolute to prevent duplicate processing from different path
         // representations
         Path normalizedDir = dir.toAbsolutePath().normalize();
@@ -176,7 +176,7 @@ public class PipelineDirectoryProcessor {
         }
         Path jsonFile = jsonFileOptional.get();
         PipelineConfig config = readAndParseJson(jsonFile);
-        processPipelineOperations(dir, processingDir, jsonFile, config);
+        processPipelineOperations(dir, processingDir, jsonFile, config, watchedRoot);
     }
 
     private Path createProcessingDirectory(Path dir) throws IOException {
@@ -201,10 +201,11 @@ public class PipelineDirectoryProcessor {
     }
 
     private void processPipelineOperations(
-            Path dir, Path processingDir, Path jsonFile, PipelineConfig config) throws IOException {
+            Path dir, Path processingDir, Path jsonFile, PipelineConfig config, Path watchedRoot)
+            throws IOException {
         for (PipelineOperation operation : config.getOperations()) {
             validateOperation(operation);
-            File[] files = collectFilesForProcessing(dir, jsonFile, operation);
+            File[] files = collectFilesForProcessing(dir, jsonFile, operation, watchedRoot);
             if (files.length == 0) {
                 log.debug("No files detected for {} ", dir);
                 return;
@@ -229,7 +230,8 @@ public class PipelineDirectoryProcessor {
         }
     }
 
-    private File[] collectFilesForProcessing(Path dir, Path jsonFile, PipelineOperation operation)
+    private File[] collectFilesForProcessing(
+            Path dir, Path jsonFile, PipelineOperation operation, Path watchedRoot)
             throws IOException {
 
         List<String> inputExtensions =
@@ -289,7 +291,7 @@ public class PipelineDirectoryProcessor {
                                         return true;
                                     })
                             .map(Path::toAbsolutePath)
-                            .filter(path -> true)
+                            .filter(path -> isInsideWatchedRoot(path, dir, watchedRoot))
                             .map(Path::toFile)
                             .toArray(File[]::new);
             log.info(
@@ -297,6 +299,27 @@ public class PipelineDirectoryProcessor {
                     files.length,
                     dir.toAbsolutePath().toString());
             return files;
+        }
+    }
+
+    // Symlinks stay allowed, but only while their real target is still inside the watched root or
+    // the scanned folder itself, so a link to an arbitrary server file is never picked up.
+    boolean isInsideWatchedRoot(Path path, Path dir, Path watchedRoot) {
+        try {
+            Path realPath = path.toRealPath();
+            if (realPath.startsWith(watchedRoot.toRealPath())
+                    || realPath.startsWith(dir.toRealPath())) {
+                return true;
+            }
+            log.warn(
+                    "Skipping '{}': it resolves to '{}', outside the watched folder {}",
+                    path,
+                    realPath,
+                    watchedRoot);
+            return false;
+        } catch (IOException e) {
+            log.warn("Skipping unresolvable path '{}': {}", path, e.getMessage());
+            return false;
         }
     }
 
@@ -437,7 +460,7 @@ public class PipelineDirectoryProcessor {
         return outputFileName;
     }
 
-    private Path determineOutputPath(PipelineConfig config, Path dir) {
+    Path determineOutputPath(PipelineConfig config, Path dir) {
         String outputDir =
                 WATCHED_FOLDERS_PATTERN
                         .matcher(
@@ -445,7 +468,21 @@ public class PipelineDirectoryProcessor {
                                         .replace("{outputFolder}", finishedFoldersDir)
                                         .replace("{folderName}", dir.toString()))
                         .replaceAll("");
-        return Path.of(outputDir).isAbsolute() ? Path.of(outputDir) : Path.of(".", outputDir);
+        Path candidate = Path.of(outputDir);
+        if (candidate.isAbsolute()) {
+            return candidate;
+        }
+        // Anchor relative output dirs under the finished folders base so "../" cannot escape it
+        Path base = Path.of(finishedFoldersDir).toAbsolutePath().normalize();
+        Path resolved = base.resolve(candidate).normalize();
+        if (!resolved.startsWith(base)) {
+            log.warn(
+                    "Configured outputDir '{}' resolves outside '{}', writing to the base instead",
+                    outputDir,
+                    base);
+            return base;
+        }
+        return resolved;
     }
 
     private void deleteOriginalFiles(List<File> filesToProcess, Path processingDir)

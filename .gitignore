@@ -19,6 +19,10 @@ version.properties
 #### Stirling-PDF Files ###
 pipeline/
 !pipeline/.gitkeep
+# The rule above targets the app's runtime pipeline working dir, but it also
+# matches these Java source dirs; keep the source tracked.
+!app/core/src/main/java/stirling/software/SPDF/controller/api/pipeline/
+!app/core/src/test/java/stirling/software/SPDF/controller/api/pipeline/
 customFiles/
 configs/
 watchedFolders/
