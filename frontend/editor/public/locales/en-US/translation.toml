@@ -3351,6 +3351,37 @@ integration = "Integration Configuration"
 security = "Security Configuration"
 system = "System Configuration"
 
+[connect]
+loading = "Checking this request."
+redirecting = "Returning you to your server."
+
+[connect.confirm]
+approve = "Connect server"
+consequence = "Approving signs you in on that server and lets it use your team's plan. Do not approve an address you do not recognise."
+deny = "Decline"
+lead = "A Stirling server is asking to connect to your team. Check the address below is yours before you approve."
+nameLabel = "Name it reported"
+originLabel = "Address"
+title = "Connect this server?"
+
+[connect.confirm.insecure]
+body = "This address does not use HTTPS, so your sign-in will be sent over an unencrypted connection. Only approve it on a network you trust."
+title = "Not an encrypted address"
+
+[connect.declined]
+body = "Nothing was connected. You can close this page."
+title = "Request declined"
+
+[connect.error]
+failed = "That did not go through. Only a team owner can connect a server."
+
+[connect.meta]
+title = "Connect a server"
+
+[connect.notFound]
+body = "This connection request is not valid. It may have expired, or already been used. Start another one from your server."
+title = "Request not valid"
+
 [convert]
 autoRotate = "Auto Rotate"
 autoRotateDescription = "Automatically rotate images to better fit the PDF page"
@@ -6335,6 +6366,32 @@ title = "Couldn't link"
 after = "to enable account linking against the hosted Stirling account. In dev you can simulate sign-in from the link dialog."
 before = "Set"
 title = "SaaS login not configured"
+
+[portal.accountLink.connect.callback]
+continue = "Continue"
+retry = "Try again"
+signedInAnyway = "You are signed in to Stirling, so billing and usage will load. Only the server link is incomplete."
+working = "Finishing the connection."
+
+[portal.accountLink.connect.callback.expired]
+body = "Connection requests are short lived. Start another one."
+title = "Request expired"
+
+[portal.accountLink.connect.callback.linked]
+body = "This server is connected to your Stirling account."
+title = "Server connected"
+
+[portal.accountLink.connect.callback.malformed]
+body = "This page was opened without a valid connection response. Start the connection from settings."
+title = "Could not read the response"
+
+[portal.accountLink.connect.callback.rejected]
+body = "This request was declined or has already been used. Start another one if that was not intended."
+title = "Connection not completed"
+
+[portal.accountLink.connect.callback.unfinished]
+body = "Stirling did not confirm the connection. This is usually temporary."
+title = "Not finished yet"
 
 [portal.accountLink.gate]
 action = "Link account"

@@ -118,6 +118,71 @@ export async function triggerLocalSync(): Promise<void> {
 }
 
 /**
+ * Where a browser-mediated connect handshake has got to.
+ *
+ * NONE        nothing in flight, not linked
+ * PENDING     waiting for a team owner to approve on the Stirling site
+ * LINKED      done
+ * EXPIRED     the handshake outlived its window; start another
+ * REJECTED    declined, already used, or a callback we could not verify
+ * UNAVAILABLE Stirling was unreachable; the handshake still stands, so retry
+ */
+export type ConnectPhase =
+  | "NONE"
+  | "PENDING"
+  | "LINKED"
+  | "EXPIRED"
+  | "REJECTED"
+  | "UNAVAILABLE";
+
+export interface ConnectStatus {
+  phase: ConnectPhase;
+  /** Approval page to send the admin to. Only set while a handshake is open. */
+  authorizeUrl: string | null;
+  secondsRemaining: number | null;
+  teamId: number | null;
+}
+
+const CONNECT = `${BASE}/connect`;
+
+/**
+ * Open a handshake and get the approval URL to send the admin to.
+ *
+ * Supersedes {@link linkInstance}, which needed the admin's SaaS JWT to pass
+ * through this backend. Here the local backend only learns its own device
+ * credential; the admin's SaaS session is handed to their browser by the
+ * approval page instead.
+ */
+export async function startConnect(name?: string): Promise<ConnectStatus> {
+  return apiClient.local.json<ConnectStatus>(`${CONNECT}/start`, {
+    method: "POST",
+    body: { name },
+  });
+}
+
+/** Poll while waiting, so a second tab or a reload still shows the truth. */
+export async function fetchConnectStatus(): Promise<ConnectStatus> {
+  return apiClient.local.json<ConnectStatus>(`${CONNECT}/status`);
+}
+
+/**
+ * Finish a handshake using the nonce the approval page put in the callback
+ * fragment. The nonce is the only thing that authorises this, so a caller
+ * without it changes nothing.
+ */
+export async function completeConnect(nonce: string): Promise<ConnectStatus> {
+  return apiClient.local.json<ConnectStatus>(`${CONNECT}/complete`, {
+    method: "POST",
+    body: { nonce },
+  });
+}
+
+/** Abandon an open handshake. The SaaS-side row is left to expire. */
+export async function cancelConnect(): Promise<void> {
+  await apiClient.local.json<void>(`${CONNECT}/cancel`, { method: "POST" });
+}
+
+/**
  * Every linked instance for the team — SaaS-direct call with the admin's
  * Supabase JWT (no longer takes an accessToken parameter; the saas client
  * resolves the live session itself).
