@@ -75,7 +75,7 @@ const ToolPicker = ({
 
   const scrollableRef = useRef<HTMLDivElement>(null);
 
-  const { sections: visibleSections, dynamicRecommendations } =
+  const { sections: visibleSections, rankedRecommendationIds } =
     useToolSections(filteredTools);
   const { favoriteTools, toolRegistry } = useToolWorkflowData();
   const recommendationContext = useRecommendationContextTool();
@@ -117,14 +117,14 @@ const ToolPicker = ({
     [dismissRecommendation, recommendationContext, t],
   );
 
-  // Shared Signing is pinned by its badge rather than ranked, so dismissing it
-  // could never take effect - offer the control only on ranked entries.
+  // Only usage-ranked entries can be dismissed; on the curated top-up (and on
+  // Shared Signing, pinned by its badge) a dismissal could never take effect.
   const dismissHandlerFor = useCallback(
     (id: string, tool: ToolRegistryEntry) =>
-      dynamicRecommendations && id !== "sharedSign"
+      rankedRecommendationIds.has(id as ToolId) && id !== "sharedSign"
         ? () => handleDismissRecommendation(id as ToolId, tool.name)
         : undefined,
-    [dynamicRecommendations, handleDismissRecommendation],
+    [rankedRecommendationIds, handleDismissRecommendation],
   );
 
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);

@@ -10,7 +10,10 @@ import { useToolSections } from "@app/hooks/useToolSections";
 import { useToolRecommendations } from "@app/hooks/useToolRecommendations";
 import { ToolId } from "@app/types/toolId";
 
+// useToolSections imports the limit from here too, so the mock must supply it.
+const LIMIT = 8;
 vi.mock("@app/hooks/useToolRecommendations", () => ({
+  DEFAULT_RECOMMENDATION_LIMIT: 8,
   useToolRecommendations: vi.fn(),
 }));
 
@@ -73,6 +76,7 @@ const registryFixture = [
 
 type SectionsResult = {
   sections: { key: string; subcategories: { tools: { id: ToolId }[] }[] }[];
+  rankedRecommendationIds: Set<ToolId>;
 };
 
 function sectionIds(result: SectionsResult, key: string): ToolId[] {
@@ -84,6 +88,9 @@ function sectionIds(result: SectionsResult, key: string): ToolId[] {
 
 const quickIds = (result: SectionsResult) => sectionIds(result, "quick");
 const allIds = (result: SectionsResult) => sectionIds(result, "all");
+const rankedIds = (result: SectionsResult) => [
+  ...result.rankedRecommendationIds,
+];
 
 describe("useToolSections recommendations", () => {
   beforeEach(() => {
@@ -99,10 +106,10 @@ describe("useToolSections recommendations", () => {
     const { result } = renderHook(() => useToolSections(registryFixture));
 
     expect(quickIds(result.current)).toEqual(["compare", "merge"]);
-    expect(result.current.dynamicRecommendations).toBe(false);
+    expect(rankedIds(result.current)).toEqual([]);
   });
 
-  it("replaces the quick list with the usage ranking, preserving score order", () => {
+  it("leads with the usage ranking in score order, then tops up from the static list", () => {
     mockUseToolRecommendations.mockReturnValue({
       recommendedToolIds: ["split", "ocr", "merge"] as ToolId[],
       contextTool: null,
@@ -110,8 +117,14 @@ describe("useToolSections recommendations", () => {
 
     const { result } = renderHook(() => useToolSections(registryFixture));
 
-    expect(quickIds(result.current)).toEqual(["split", "ocr", "merge"]);
-    expect(result.current.dynamicRecommendations).toBe(true);
+    // 'compare' is the only curated entry the ranking did not already cover.
+    expect(quickIds(result.current)).toEqual([
+      "split",
+      "ocr",
+      "merge",
+      "compare",
+    ]);
+    expect(rankedIds(result.current)).toEqual(["split", "ocr", "merge"]);
   });
 
   it("drops recommended ids that are unknown or not ready", () => {
@@ -122,7 +135,8 @@ describe("useToolSections recommendations", () => {
 
     const { result } = renderHook(() => useToolSections(registryFixture));
 
-    expect(quickIds(result.current)).toEqual(["ocr"]);
+    expect(quickIds(result.current)).toEqual(["ocr", "compare", "merge"]);
+    expect(rankedIds(result.current)).toEqual(["ocr"]);
   });
 
   it("falls back to the static list when no recommended id survives filtering", () => {
@@ -134,7 +148,7 @@ describe("useToolSections recommendations", () => {
     const { result } = renderHook(() => useToolSections(registryFixture));
 
     expect(quickIds(result.current)).toEqual(["compare", "merge"]);
-    expect(result.current.dynamicRecommendations).toBe(false);
+    expect(rankedIds(result.current)).toEqual([]);
   });
 
   it("never lists a tool in both Quick Access and All Tools", () => {
@@ -147,24 +161,49 @@ describe("useToolSections recommendations", () => {
 
     const quick = quickIds(result.current);
     const all = allIds(result.current);
-    expect(quick).toEqual(["ocr", "merge"]);
+    expect(quick).toEqual(["ocr", "merge", "compare"]);
     expect(all.filter((id) => quick.includes(id))).toEqual([]);
   });
 
-  it("keeps statically recommended tools reachable when the ranking displaces them", () => {
-    // 'compare' and 'merge' are Recommended-category tools. With a dynamic list that
-    // omits them they must fall back into All Tools, not vanish from the UI entirely.
+  it("keeps the statically recommended tools in Quick Access when the ranking omits them", () => {
+    // The regression this guards: a couple of tool runs used to replace the whole
+    // curated list, collapsing Quick Access to one or two entries on a fresh install.
     mockUseToolRecommendations.mockReturnValue({
-      recommendedToolIds: ["ocr", "split"] as ToolId[],
+      recommendedToolIds: ["ocr"] as ToolId[],
       contextTool: null,
     });
 
     const { result } = renderHook(() => useToolSections(registryFixture));
 
-    expect(quickIds(result.current)).toEqual(["ocr", "split"]);
-    expect(allIds(result.current)).toEqual(
-      expect.arrayContaining(["compare", "merge"]),
+    expect(quickIds(result.current)).toEqual(["ocr", "compare", "merge"]);
+    expect(allIds(result.current)).not.toContain("merge");
+  });
+
+  it("tops the quick list up to the limit and no further", () => {
+    const curated = Array.from({ length: LIMIT }, (_, i) =>
+      entry(
+        `static${i}`,
+        makeTool({
+          name: `Static ${i}`,
+          categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
+          subcategoryId: SubcategoryId.GENERAL,
+        }),
+      ),
     );
+    mockUseToolRecommendations.mockReturnValue({
+      recommendedToolIds: ["ocr"] as ToolId[],
+      contextTool: null,
+    });
+
+    const { result } = renderHook(() =>
+      useToolSections([...curated, entry("ocr", makeTool({ name: "OCR" }))]),
+    );
+
+    // One ranked tool leads; the curated entries fill the remaining slots.
+    const quick = quickIds(result.current);
+    expect(quick).toHaveLength(LIMIT);
+    expect(quick[0]).toBe("ocr");
+    expect(quick).not.toContain(`static${LIMIT - 1}`);
   });
 
   it("still hides the static recommended tools from All Tools when no ranking exists", () => {

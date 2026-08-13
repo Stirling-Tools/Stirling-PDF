@@ -114,7 +114,9 @@
   z-index: var(--z-toolpicker-star);
 }
 
-.tool-button-container:hover .tool-button-dismiss {
+/* :focus-visible too, or the keyboard-reachable control stays invisible while focused. */
+.tool-button-container:hover .tool-button-dismiss,
+.tool-button-dismiss:focus-visible {
   opacity: 1;
 }
 

@@ -50,7 +50,9 @@ public class ToolRecommendationService {
     @Transactional(readOnly = true)
     public List<ToolRecommendation> getRecommendations(
             String principal, String currentTool, int limit) {
-        if (!applicationProperties.getToolRecommendations().isEnabled() || principal == null) {
+        // Serving a ranking built from tracked history needs the same consent that recorded it.
+        if (!ToolUsageTrackingService.isUsageDataAllowed(applicationProperties)
+                || principal == null) {
             return List.of();
         }
         long today = ToolUsageTrackingService.currentEpochDay();

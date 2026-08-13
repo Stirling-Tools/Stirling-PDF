@@ -108,4 +108,10 @@ public interface ToolUsageStatRepository extends JpaRepository<ToolUsageStat, To
     @Transactional
     @Query("DELETE FROM ToolUsageStat s WHERE s.epochDay < :cutoff")
     int deleteOlderThan(@Param("cutoff") long cutoff);
+
+    /** Erasure: rows key on the raw username, so a recreated name would inherit the ranking. */
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query("DELETE FROM ToolUsageStat s WHERE s.principal = :principal")
+    int deleteByPrincipal(@Param("principal") String principal);
 }

@@ -319,16 +319,26 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       />
     ) : null;
 
+  const handleDismiss = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onDismiss?.();
+  };
+
   const dismiss = onDismiss ? (
     <ActionIcon
+      // A span (no control nesting); role="button" makes the aria-label legal
+      // and tabIndex keeps it keyboard-reachable.
       as="span"
+      role="button"
+      tabIndex={0}
       variant="tertiary"
       shape="circle"
       size="sm"
-      onClick={(e: React.MouseEvent) => {
+      onClick={handleDismiss}
+      onKeyDown={(e: React.KeyboardEvent) => {
         e.stopPropagation();
-        e.preventDefault();
-        onDismiss();
+        if (e.key === "Enter" || e.key === " ") handleDismiss(e);
       }}
       onMouseDown={(e: React.MouseEvent) => e.stopPropagation()}
       className="tool-button-dismiss"

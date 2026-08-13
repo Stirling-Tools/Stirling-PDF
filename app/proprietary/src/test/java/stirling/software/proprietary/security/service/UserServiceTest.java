@@ -26,6 +26,8 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.repository.ToolRecommendationDismissalRepository;
+import stirling.software.proprietary.repository.ToolUsageStatRepository;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -72,6 +74,8 @@ class UserServiceTest {
 
     @Mock private TeamMembershipService teamMembershipService;
     @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
+    @Mock private ToolUsageStatRepository toolUsageStatRepository;
+    @Mock private ToolRecommendationDismissalRepository toolRecommendationDismissalRepository;
 
     @Spy @InjectMocks private UserService userService;
 
@@ -283,6 +287,24 @@ class UserServiceTest {
         // Storage blobs scheduled for physical deletion
         verify(storageCleanupEntryRepository, times(2)).save(any());
         verify(userService).invalidateUserSessions("target");
+    }
+
+    @Test
+    void deleteUser_erasesToolUsageAndDismissals() {
+        User user = new User();
+        user.setId(4L);
+        user.setUsername("tracked");
+
+        when(userRepository.findByUsernameIgnoreCase("tracked")).thenReturn(Optional.of(user));
+        when(workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(user)).thenReturn(List.of());
+        when(storedFileRepository.findAllByOwner(user)).thenReturn(List.of());
+        when(fileShareRepository.findBySharedWithUser(user)).thenReturn(List.of());
+
+        userService.deleteUser("tracked");
+
+        // Both tables key on the username, so a recreated name would inherit the old profile
+        verify(toolUsageStatRepository).deleteByPrincipal("tracked");
+        verify(toolRecommendationDismissalRepository).deleteByPrincipal("tracked");
     }
 
     @Test

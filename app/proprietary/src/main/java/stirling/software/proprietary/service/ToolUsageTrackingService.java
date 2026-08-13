@@ -34,12 +34,18 @@ public class ToolUsageTrackingService {
         return toolKey != null && TOOL_KEY_PATTERN.matcher(toolKey).matches();
     }
 
+    /** Per-principal usage is profiling, so admin analytics consent gates it too. */
+    static boolean isUsageDataAllowed(ApplicationProperties properties) {
+        return properties.getToolRecommendations().isEnabled()
+                && properties.getSystem().isAnalyticsEnabled();
+    }
+
     /**
      * Counts one completed run of {@code toolKey}, attributing it to the tool the user came from
      * when that is a different, valid tool. Never throws: recommendations must not break tools.
      */
     public void recordUsage(String principal, String toolKey, String previousToolKey) {
-        if (!applicationProperties.getToolRecommendations().isEnabled()
+        if (!isUsageDataAllowed(applicationProperties)
                 || principal == null
                 || !isValidToolKey(toolKey)) {
             return;

@@ -40,6 +40,7 @@ class ToolUsageTrackingServiceTest {
     @BeforeEach
     void setUp() {
         properties = new ApplicationProperties();
+        properties.getSystem().setEnableAnalytics(true);
         service = new ToolUsageTrackingService(usageRepository, properties);
     }
 
@@ -161,6 +162,19 @@ class ToolUsageTrackingServiceTest {
 
             service.recordUsage(PRINCIPAL, "compare", "merge");
 
+            verifyNoInteractions(usageRepository);
+        }
+
+        @Test
+        @DisplayName("no analytics consent records nothing, even with the feature enabled")
+        void withheldAnalyticsConsentRecordsNothing() {
+            properties.getSystem().setEnableAnalytics(null);
+            service.recordUsage(PRINCIPAL, "compare", "merge");
+
+            properties.getSystem().setEnableAnalytics(false);
+            service.recordUsage(PRINCIPAL, "compare", "merge");
+
+            assertThat(properties.getToolRecommendations().isEnabled()).isTrue();
             verifyNoInteractions(usageRepository);
         }
 

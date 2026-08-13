@@ -98,4 +98,28 @@ describe("ToolButton dismiss control", () => {
 
     expect(onSelect).toHaveBeenCalledWith("ocr");
   });
+
+  it("exposes the X as a keyboard-reachable button to assistive tech", () => {
+    renderButton({ onDismiss: vi.fn() });
+
+    // aria-label is ARIA-prohibited on a bare span, so role is what makes it nameable.
+    const dismissButton = screen.getByRole("button", {
+      name: "toolPicker.recommendations.dismiss",
+    });
+    expect(dismissButton).toHaveAttribute("tabindex", "0");
+  });
+
+  it.each(["Enter", " "])("pressing %s on the X fires onDismiss", (key) => {
+    const onDismiss = vi.fn();
+    const onSelect = vi.fn();
+    renderButton({ onDismiss, onSelect });
+
+    fireEvent.keyDown(
+      screen.getByLabelText("toolPicker.recommendations.dismiss"),
+      { key },
+    );
+
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+    expect(onSelect).not.toHaveBeenCalled();
+  });
 });

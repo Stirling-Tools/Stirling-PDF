@@ -196,6 +196,37 @@ class ToolRecommendationRepositoriesTest {
         assertThat(dismissalRepository.findByPrincipal("alice")).hasSize(2);
     }
 
+    @Test
+    @DisplayName("erasure removes a principal's usage rows and leaves everyone else's")
+    void deleteByPrincipalErasesUsage() {
+        usageRepository.save(new ToolUsageStat("alice", NONE, "ocr", DAY, 1));
+        usageRepository.save(new ToolUsageStat("alice", "compare", "merge", DAY - 5, 2));
+        usageRepository.save(new ToolUsageStat("bob", NONE, "ocr", DAY, 3));
+
+        assertThat(usageRepository.deleteByPrincipal("alice")).isEqualTo(2);
+
+        assertThat(usageRepository.findAll())
+                .extracting(ToolUsageStat::getPrincipal)
+                .containsExactly("bob");
+        assertThat(usageRepository.sumByPrincipal("alice", DAY - 30, DAY - 7)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("erasure removes a principal's dismissals and leaves everyone else's")
+    void deleteByPrincipalErasesDismissals() {
+        dismissalRepository.saveAndFlush(
+                new ToolRecommendationDismissal("alice", "compare", "ocr"));
+        dismissalRepository.saveAndFlush(
+                new ToolRecommendationDismissal(
+                        "alice", ToolRecommendationDismissal.ANY_CONTEXT, "merge"));
+        dismissalRepository.saveAndFlush(new ToolRecommendationDismissal("bob", "compare", "ocr"));
+
+        assertThat(dismissalRepository.deleteByPrincipal("alice")).isEqualTo(2);
+
+        assertThat(dismissalRepository.findByPrincipal("alice")).isEmpty();
+        assertThat(dismissalRepository.findByPrincipal("bob")).hasSize(1);
+    }
+
     @SpringBootConfiguration
     @EntityScan(
             basePackages = {

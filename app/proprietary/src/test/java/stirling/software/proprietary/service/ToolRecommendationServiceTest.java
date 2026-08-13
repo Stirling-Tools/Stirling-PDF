@@ -46,6 +46,7 @@ class ToolRecommendationServiceTest {
     @BeforeEach
     void setUp() {
         properties = new ApplicationProperties();
+        properties.getSystem().setEnableAnalytics(true);
         service = new ToolRecommendationService(signalService, dismissalRepository, properties);
         lenient().when(dismissalRepository.findByPrincipal(anyString())).thenReturn(List.of());
         lenient().when(signalService.resolveTeamScope(anyString())).thenReturn(TeamScope.none());
@@ -181,6 +182,15 @@ class ToolRecommendationServiceTest {
         @DisplayName("disabled feature returns empty without touching any signal")
         void disabledFeatureShortCircuits() {
             properties.getToolRecommendations().setEnabled(false);
+
+            assertThat(service.getRecommendations(PRINCIPAL, "compare", 6)).isEmpty();
+            verifyNoInteractions(signalService, dismissalRepository);
+        }
+
+        @Test
+        @DisplayName("no analytics consent returns empty without touching any signal")
+        void withheldAnalyticsConsentShortCircuits() {
+            properties.getSystem().setEnableAnalytics(null);
 
             assertThat(service.getRecommendations(PRINCIPAL, "compare", 6)).isEmpty();
             verifyNoInteractions(signalService, dismissalRepository);

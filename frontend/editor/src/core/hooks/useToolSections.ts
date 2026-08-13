@@ -7,7 +7,10 @@ import {
   ToolRegistryEntry,
 } from "@app/data/toolsTaxonomy";
 import { useTranslation } from "react-i18next";
-import { useToolRecommendations } from "@app/hooks/useToolRecommendations";
+import {
+  DEFAULT_RECOMMENDATION_LIMIT,
+  useToolRecommendations,
+} from "@app/hooks/useToolRecommendations";
 import { ToolId } from "@app/types/toolId";
 
 /** Tools that can actually open: have a component, an external link, or are navigational. */
@@ -68,11 +71,26 @@ export function useToolSections(
     return grouped;
   }, [filteredTools]);
 
-  const { sections, dynamicRecommendations } = useMemo(() => {
+  const { sections, rankedRecommendationIds } = useMemo(() => {
     const getOrderIndex = (id: SubcategoryId) => {
       const idx = SUBCATEGORY_ORDER.indexOf(id);
       return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
     };
+
+    const sortSubs = (obj: SubcategoryIdMap) =>
+      Object.entries(obj)
+        .sort(([a], [b]) => {
+          const aId = a as SubcategoryId;
+          const bId = b as SubcategoryId;
+          const ai = getOrderIndex(aId);
+          const bi = getOrderIndex(bId);
+          if (ai !== bi) return ai - bi;
+          return aId.localeCompare(bId);
+        })
+        .map(
+          ([subcategoryId, tools]) =>
+            ({ subcategoryId, tools }) as SubcategoryGroup,
+        );
 
     // Every tool starts in 'all'; whatever Quick Access ends up showing is removed
     // from it below, so a tool is never listed twice nor lost when the quick list changes.
@@ -96,9 +114,9 @@ export function useToolSections(
       });
     });
 
-    // Usage-ranked recommendations replace the static quick list when available.
-    // A single bucket preserves the backend's score order through subcategory sorting.
-    let usedDynamicQuick = false;
+    // Ranked tools lead, curated ones top the list back up - a couple of runs may
+    // reorder Quick Access but must never shrink it. One bucket keeps score order.
+    const ranked = new Set<ToolId>();
     if (recommendedToolIds) {
       const byId = new Map<ToolId, ToolRegistryEntry>();
       filteredTools.forEach(({ item: [id, tool] }) => byId.set(id, tool));
@@ -107,8 +125,16 @@ export function useToolSections(
         .map((id) => ({ id, tool: byId.get(id)! }))
         .filter(isReadyTool);
       if (dynamicTools.length > 0) {
-        quick = { [SubcategoryId.GENERAL]: dynamicTools } as SubcategoryIdMap;
-        usedDynamicQuick = true;
+        dynamicTools.forEach(({ id }) => ranked.add(id));
+        const topUp = sortSubs(quick)
+          .flatMap(({ tools }) => tools)
+          .filter(({ id }) => !ranked.has(id));
+        quick = {
+          [SubcategoryId.GENERAL]: [...dynamicTools, ...topUp].slice(
+            0,
+            Math.max(dynamicTools.length, DEFAULT_RECOMMENDATION_LIMIT),
+          ),
+        } as SubcategoryIdMap;
       }
     }
 
@@ -122,21 +148,6 @@ export function useToolSections(
       );
       if (all[subcategoryId].length === 0) delete all[subcategoryId];
     });
-
-    const sortSubs = (obj: SubcategoryIdMap) =>
-      Object.entries(obj)
-        .sort(([a], [b]) => {
-          const aId = a as SubcategoryId;
-          const bId = b as SubcategoryId;
-          const ai = getOrderIndex(aId);
-          const bi = getOrderIndex(bId);
-          if (ai !== bi) return ai - bi;
-          return aId.localeCompare(bId);
-        })
-        .map(
-          ([subcategoryId, tools]) =>
-            ({ subcategoryId, tools }) as SubcategoryGroup,
-        );
 
     const built: ToolSection[] = [
       {
@@ -155,7 +166,7 @@ export function useToolSections(
       sections: built.filter((section) =>
         section.subcategories.some((sc) => sc.tools.length > 0),
       ),
-      dynamicRecommendations: usedDynamicQuick,
+      rankedRecommendationIds: ranked,
     };
   }, [groupedTools, recommendedToolIds, filteredTools, t]);
 
@@ -206,5 +217,5 @@ export function useToolSections(
       );
   }, [filteredTools, searchQuery]);
 
-  return { sections, searchGroups, dynamicRecommendations };
+  return { sections, searchGroups, rankedRecommendationIds };
 }
