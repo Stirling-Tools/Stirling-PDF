@@ -393,7 +393,6 @@ jobs:
         env:
           SB_URL: ${{ steps.storybook.outputs.url }}
           SB_FILES: ${{ steps.sb-changes.outputs.storybook_files }}
-        env:
           NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
         with:
           github-token: ${{ github.token }}
