@@ -273,6 +273,7 @@ public class FileStorageController {
                         share.getAccessRole() != null
                                 ? share.getAccessRole().name().toLowerCase(Locale.ROOT)
                                 : null)
+                .canEdit(ownedByCurrentUser || fileStorageService.allowsWrite(share))
                 .version(file.contentVersionOrZero())
                 .createdAt(share.getCreatedAt())
                 .expiresAt(share.getExpiresAt())

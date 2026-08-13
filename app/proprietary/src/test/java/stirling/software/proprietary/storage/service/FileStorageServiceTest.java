@@ -1,11 +1,13 @@
 package stirling.software.proprietary.storage.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -21,6 +23,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronizationUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -105,6 +110,13 @@ class FileStorageServiceTest {
     }
 
     private FileShare shareFor(StoredFile file, User user, ShareAccessRole role) {
+        FileShare s = legacyShareFor(file, user, role);
+        s.setWriteEnabled(role == ShareAccessRole.EDITOR);
+        return s;
+    }
+
+    /** A share as it exists after upgrading: role set, write never explicitly granted. */
+    private FileShare legacyShareFor(StoredFile file, User user, ShareAccessRole role) {
         FileShare s = new FileShare();
         s.setFile(file);
         s.setSharedWithUser(user);
@@ -655,6 +667,7 @@ class FileStorageServiceTest {
         linkShare.setFile(existing);
         linkShare.setShareToken("token-1");
         linkShare.setAccessRole(ShareAccessRole.EDITOR);
+        linkShare.setWriteEnabled(true);
         when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
         when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         MockMultipartFile file =
@@ -681,6 +694,236 @@ class FileStorageServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
                 .isEqualTo(403);
+    }
+
+    // replaceFile - write is opt-in per share
+
+    @Test
+    void replaceFile_legacyEditorShare_withoutExplicitWriteGrant_forbidden() {
+        User owner = user(1L);
+        User editor = user(2L);
+        StoredFile existing = ownedFile(owner);
+        FileShare share = legacyShareFor(existing, editor, ShareAccessRole.EDITOR);
+        when(fileShareRepository.findByFileAndSharedWithUser(existing, editor))
+                .thenReturn(Optional.of(share));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        assertThatThrownBy(() -> service.replaceFile(editor, existing, file, null, null))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(403);
+        verify(storedFileRepository, never()).save(any());
+    }
+
+    @Test
+    void replaceFileViaShareLink_legacyEditorLink_withoutExplicitWriteGrant_forbidden() {
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        FileShare linkShare = new FileShare();
+        linkShare.setFile(existing);
+        linkShare.setShareToken("token-1");
+        linkShare.setAccessRole(ShareAccessRole.EDITOR);
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        assertThatThrownBy(() -> service.replaceFileViaShareLink(linkShare, file, null, null, null))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(403);
+        verify(storedFileRepository, never()).save(any());
+    }
+
+    @Test
+    void shareWithUser_editorRole_grantsWriteExplicitly() {
+        User owner = user(1L);
+        User target = user(2L);
+        StoredFile file = ownedFile(owner);
+        when(storedFileRepository.findByIdAndOwnerWithShares(100L, owner))
+                .thenReturn(Optional.of(file));
+        when(userRepository.findByUsernameIgnoreCase("user2")).thenReturn(Optional.of(target));
+        when(fileShareRepository.findByFileAndSharedWithUser(file, target))
+                .thenReturn(Optional.empty());
+        when(fileShareRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        FileShare created = service.shareWithUser(owner, file, "user2", ShareAccessRole.EDITOR);
+
+        assertThat(created.getWriteEnabled()).isTrue();
+    }
+
+    @Test
+    void shareWithUser_viewerRole_doesNotGrantWrite() {
+        User owner = user(1L);
+        User target = user(2L);
+        StoredFile file = ownedFile(owner);
+        when(storedFileRepository.findByIdAndOwnerWithShares(100L, owner))
+                .thenReturn(Optional.of(file));
+        when(userRepository.findByUsernameIgnoreCase("user2")).thenReturn(Optional.of(target));
+        when(fileShareRepository.findByFileAndSharedWithUser(file, target))
+                .thenReturn(Optional.empty());
+        when(fileShareRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        FileShare created = service.shareWithUser(owner, file, "user2", ShareAccessRole.VIEWER);
+
+        assertThat(created.getWriteEnabled()).isFalse();
+    }
+
+    // replaceFile - only the owner may replace history / audit artifacts
+
+    @Test
+    void replaceFile_editorShare_cannotReplaceHistoryBundle() {
+        User owner = user(1L);
+        User editor = user(2L);
+        StoredFile existing = ownedFile(owner);
+        existing.setHistoryStorageKey("owner-history");
+        FileShare share = shareFor(existing, editor, ShareAccessRole.EDITOR);
+        when(fileShareRepository.findByFileAndSharedWithUser(existing, editor))
+                .thenReturn(Optional.of(share));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+        MockMultipartFile history =
+                new MockMultipartFile("historyBundle", "h.zip", "application/zip", new byte[] {1});
+
+        assertThatThrownBy(() -> service.replaceFile(editor, existing, file, history, null))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(403);
+        // The owner's archive must survive an editor attempting to overwrite it.
+        assertThat(existing.getHistoryStorageKey()).isEqualTo("owner-history");
+        verifyNoInteractions(storageProvider);
+    }
+
+    @Test
+    void replaceFile_editorShare_cannotReplaceAuditLog() {
+        User owner = user(1L);
+        User editor = user(2L);
+        StoredFile existing = ownedFile(owner);
+        existing.setAuditLogStorageKey("owner-audit");
+        FileShare share = shareFor(existing, editor, ShareAccessRole.EDITOR);
+        when(fileShareRepository.findByFileAndSharedWithUser(existing, editor))
+                .thenReturn(Optional.of(share));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+        MockMultipartFile audit =
+                new MockMultipartFile("auditLog", "a.json", "application/json", new byte[] {1});
+
+        assertThatThrownBy(() -> service.replaceFile(editor, existing, file, null, audit))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(403);
+        assertThat(existing.getAuditLogStorageKey()).isEqualTo("owner-audit");
+        verifyNoInteractions(storageProvider);
+    }
+
+    @Test
+    void replaceFileViaShareLink_cannotReplaceHistoryBundle() {
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setHistoryStorageKey("owner-history");
+        FileShare linkShare = new FileShare();
+        linkShare.setFile(existing);
+        linkShare.setShareToken("token-1");
+        linkShare.setAccessRole(ShareAccessRole.EDITOR);
+        linkShare.setWriteEnabled(true);
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+        MockMultipartFile history =
+                new MockMultipartFile("historyBundle", "h.zip", "application/zip", new byte[] {1});
+
+        assertThatThrownBy(
+                        () -> service.replaceFileViaShareLink(linkShare, file, history, null, null))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(403);
+        assertThat(existing.getHistoryStorageKey()).isEqualTo("owner-history");
+    }
+
+    @Test
+    void replaceFile_owner_mayStillReplaceHistoryBundle() throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        existing.setHistoryStorageKey("old-history");
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+        MockMultipartFile history =
+                new MockMultipartFile("historyBundle", "h.zip", "application/zip", new byte[] {1});
+
+        assertThatCode(() -> service.replaceFile(owner, existing, file, history, null))
+                .doesNotThrowAnyException();
+    }
+
+    // replaceFile - the superseded blob outlives the transaction
+
+    @Test
+    void replaceFile_previousBlobIsDeletedOnlyAfterCommit() throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            service.replaceFile(owner, existing, file, null, null);
+            // Still uncommitted: a rollback here would restore the row pointing at old-key.
+            verify(storageProvider, never()).delete("old-key");
+
+            TransactionSynchronizationUtils.triggerAfterCommit();
+            verify(storageProvider).delete("old-key");
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    void replaceFile_previousBlobSurvivesWhenTheTransactionRollsBack() throws IOException {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setStorageKey("old-key");
+        when(storageProvider.store(any(), any())).thenReturn(storedObject("new-key"));
+        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            service.replaceFile(owner, existing, file, null, null);
+            TransactionSynchronizationUtils.triggerAfterCompletion(
+                    TransactionSynchronization.STATUS_ROLLED_BACK);
+
+            verify(storageProvider, never()).delete("old-key");
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    // replaceFile - a rejected write must not destroy the previous blob
+
+    @Test
+    void replaceFile_versionMismatch_leavesPreviousBlobIntact() {
+        when(storageProperties.getQuotas()).thenReturn(null);
+        User owner = user(1L);
+        StoredFile existing = ownedFile(owner);
+        existing.setContentVersion(5L);
+        existing.setStorageKey("old-key");
+        when(storedFileRepository.bumpContentVersionIfMatches(100L, 4L)).thenReturn(0);
+        MockMultipartFile file =
+                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+
+        assertThatThrownBy(() -> service.replaceFile(owner, existing, file, null, null, 4L))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(409);
+        assertThat(existing.getStorageKey()).isEqualTo("old-key");
+        verifyNoInteractions(storageProvider);
     }
 
     @Test

@@ -18,6 +18,7 @@ export interface ShareLinkMetadata {
   owner?: string | null;
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
+  canEdit?: boolean;
   version?: number | null;
   createdAt?: string;
   expiresAt?: string;
@@ -95,6 +96,10 @@ export async function importShareLinkToWorkbench(
         remoteOwnerUsername: shareMetadata?.owner ?? undefined,
         remoteOwnedByCurrentUser: false,
         remoteAccessRole: shareMetadata?.accessRole ?? undefined,
+        remoteCanEdit:
+          typeof shareMetadata?.canEdit === "boolean"
+            ? shareMetadata.canEdit
+            : undefined,
         remoteSharedViaLink: true,
         remoteHasShareLinks: false,
         remoteShareToken: shareMetadata?.shareToken || token,
@@ -166,6 +171,10 @@ export async function importShareLinkToWorkbench(
       remoteOwnerUsername: shareMetadata?.owner ?? undefined,
       remoteOwnedByCurrentUser: false,
       remoteAccessRole: shareMetadata?.accessRole ?? undefined,
+      remoteCanEdit:
+        typeof shareMetadata?.canEdit === "boolean"
+          ? shareMetadata.canEdit
+          : undefined,
       remoteSharedViaLink: true,
       remoteHasShareLinks: false,
       remoteShareToken: shareMetadata?.shareToken || token,

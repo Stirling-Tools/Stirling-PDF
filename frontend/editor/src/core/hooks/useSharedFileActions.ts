@@ -27,11 +27,14 @@ export function canEditSharedFile(file: StirlingFileStub): boolean {
     Boolean(file.remoteSharedViaLink);
   const hasServerRef = Boolean(file.remoteStorageId || file.remoteShareToken);
   const role = (file.remoteAccessRole ?? "viewer").toLowerCase();
+  // Server decides; role is the fallback for stubs cached before canEdit existed.
+  const writable = file.remoteCanEdit ?? role === "editor";
   return (
     isSharedWithUser &&
     hasServerRef &&
     file.remoteOwnedByCurrentUser !== true &&
-    role === "editor"
+    role === "editor" &&
+    writable
   );
 }
 
@@ -62,6 +65,7 @@ export function useSharedFileActions() {
             remoteOwnerUsername: file.remoteOwnerUsername,
             remoteOwnedByCurrentUser: file.remoteOwnedByCurrentUser,
             remoteAccessRole: file.remoteAccessRole,
+            remoteCanEdit: file.remoteCanEdit,
             remoteSharedViaLink: file.remoteSharedViaLink,
             remoteShareToken: file.remoteShareToken,
             remoteVersionBase: latestVersion ?? undefined,

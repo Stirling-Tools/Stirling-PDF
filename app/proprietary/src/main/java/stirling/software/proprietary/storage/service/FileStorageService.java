@@ -20,6 +20,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -192,16 +194,14 @@ public class FileStorageService {
             MultipartFile auditLog,
             Long expectedVersion) {
         ensureStorageEnabled();
-        if (!isOwner(existing, actor)) {
+        boolean owner = isOwner(existing, actor);
+        if (!owner) {
             // Collaborative write-back: shared EDITORs may replace content when sharing is on.
             ensureSharingEnabled();
-            ShareAccessRole role = resolveUserShareRole(existing, actor);
-            if (role != ShareAccessRole.EDITOR) {
-                throw new ResponseStatusException(
-                        HttpStatus.FORBIDDEN, "Editor access is required to update this file");
-            }
+            requireCollaborativeWriteAccess(
+                    fileShareRepository.findByFileAndSharedWithUser(existing, actor).orElse(null));
         }
-        return replaceFileContent(existing, file, historyBundle, auditLog, expectedVersion);
+        return replaceFileContent(existing, file, historyBundle, auditLog, expectedVersion, owner);
     }
 
     /** Content replace via an EDITOR share link; the actor is not the owner. */
@@ -213,8 +213,37 @@ public class FileStorageService {
             Long expectedVersion) {
         ensureStorageEnabled();
         ensureShareLinksEnabled();
-        requireEditorAccess(share);
-        return replaceFileContent(share.getFile(), file, historyBundle, auditLog, expectedVersion);
+        requireCollaborativeWriteAccess(share);
+        return replaceFileContent(
+                share.getFile(), file, historyBundle, auditLog, expectedVersion, false);
+    }
+
+    // Write is opt-in per share: the editor role alone is not enough, because every share that
+    // predates collaborative editing would otherwise become writable on upgrade.
+    private void requireCollaborativeWriteAccess(FileShare share) {
+        if (share == null || resolveShareRole(share) != ShareAccessRole.EDITOR) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Editor access is required to update this file");
+        }
+        if (!Boolean.TRUE.equals(share.getWriteEnabled())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "This share is read-only. The owner must re-grant editor access to enable"
+                            + " editing.");
+        }
+    }
+
+    public boolean allowsWrite(FileShare share) {
+        return share != null
+                && Boolean.TRUE.equals(share.getWriteEnabled())
+                && resolveShareRole(share) == ShareAccessRole.EDITOR;
+    }
+
+    private FileShare userShare(StoredFile file, User user) {
+        if (file == null || user == null) {
+            return null;
+        }
+        return fileShareRepository.findByFileAndSharedWithUser(file, user).orElse(null);
     }
 
     // Runs inside the transaction so lazy owner/share fields are still attached
@@ -243,6 +272,7 @@ public class FileStorageService {
                         share.getAccessRole() != null
                                 ? share.getAccessRole().name().toLowerCase(Locale.ROOT)
                                 : null)
+                .canEdit(ownedByCurrentUser || allowsWrite(share))
                 .version(updated.contentVersionOrZero())
                 .createdAt(share.getCreatedAt())
                 .expiresAt(share.getExpiresAt())
@@ -254,8 +284,16 @@ public class FileStorageService {
             MultipartFile file,
             MultipartFile historyBundle,
             MultipartFile auditLog,
-            Long expectedVersion) {
+            Long expectedVersion,
+            boolean ownerWrite) {
         validateMainUpload(file);
+        // The version history and audit bundle are the owner's record of the file; a collaborator
+        // replacing them would destroy evidence they never owned.
+        if (!ownerWrite && (isValidUpload(historyBundle) || isValidUpload(auditLog))) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only the owner can replace the version history or audit log");
+        }
         // Quotas and blob attribution always follow the file owner, not the acting editor.
         User owner = existing.getOwner();
 
@@ -301,12 +339,12 @@ public class FileStorageService {
                 cleanupStoredObject(auditObject);
                 throw saveError;
             }
-            cleanupStoredKey(oldStorageKey);
+            deleteAfterCommit(oldStorageKey);
             if (historyObject != null) {
-                cleanupStoredKey(oldHistoryKey);
+                deleteAfterCommit(oldHistoryKey);
             }
             if (auditObject != null) {
-                cleanupStoredKey(oldAuditKey);
+                deleteAfterCommit(oldAuditKey);
             }
 
             return updated;
@@ -459,19 +497,19 @@ public class FileStorageService {
 
     public List<StoredFileResponse> listAccessibleFileResponses(User user) {
         List<StoredFile> files = listAccessibleFiles(user);
-        Map<Long, ShareAccessRole> roleByFileId = new HashMap<>();
+        Map<Long, FileShare> shareByFileId = new HashMap<>();
         if (!files.isEmpty()) {
             List<FileShare> shares = fileShareRepository.findBySharedWithUserAndFileIn(user, files);
             for (FileShare share : shares) {
                 StoredFile sharedFile = share.getFile();
                 if (sharedFile != null && sharedFile.getId() != null) {
-                    roleByFileId.put(sharedFile.getId(), resolveShareRole(share));
+                    shareByFileId.put(sharedFile.getId(), share);
                 }
             }
         }
         return files.stream()
                 .sorted(Comparator.comparing(StoredFile::getCreatedAt).reversed())
-                .map(file -> buildResponse(file, user, roleByFileId.get(file.getId())))
+                .map(file -> buildResponse(file, user, shareByFileId.get(file.getId())))
                 .toList();
     }
 
@@ -492,16 +530,24 @@ public class FileStorageService {
         return buildResponse(file, currentUser, null);
     }
 
+    // knownShare is the caller's already-loaded share for this user, so the list path stays a
+    // single bulk query instead of one lookup per file.
     private StoredFileResponse buildResponse(
-            StoredFile file, User currentUser, ShareAccessRole accessRoleOverride) {
+            StoredFile file, User currentUser, FileShare knownShare) {
         boolean ownedByCurrentUser =
                 file.getOwner() != null
                         && Objects.equals(file.getOwner().getId(), currentUser.getId());
+        FileShare currentUserShare =
+                ownedByCurrentUser
+                        ? null
+                        : Optional.ofNullable(knownShare)
+                                .orElseGet(() -> userShare(file, currentUser));
         String accessRole =
                 ownedByCurrentUser
                         ? ShareAccessRole.EDITOR.name().toLowerCase(Locale.ROOT)
-                        : Optional.ofNullable(accessRoleOverride)
-                                .orElseGet(() -> resolveUserShareRole(file, currentUser))
+                        : (currentUserShare != null
+                                        ? resolveShareRole(currentUserShare)
+                                        : ShareAccessRole.VIEWER)
                                 .name()
                                 .toLowerCase(Locale.ROOT);
         List<String> sharedWithUsers =
@@ -561,6 +607,7 @@ public class FileStorageService {
                 .owner(file.getOwner() != null ? file.getOwner().getUsername() : null)
                 .ownedByCurrentUser(ownedByCurrentUser)
                 .accessRole(accessRole)
+                .canEdit(ownedByCurrentUser || allowsWrite(currentUserShare))
                 .version(file.contentVersionOrZero())
                 .createdAt(file.getCreatedAt())
                 .updatedAt(file.getUpdatedAt())
@@ -635,7 +682,7 @@ public class FileStorageService {
         }
         storedFileRepository.delete(file);
         for (String storageKey : storageKeys) {
-            cleanupStoredKey(storageKey);
+            deleteAfterCommit(storageKey);
         }
     }
 
@@ -664,6 +711,7 @@ public class FileStorageService {
                             .map(
                                     existingShare -> {
                                         existingShare.setAccessRole(role);
+                                        existingShare.setWriteEnabled(grantsWrite(role));
                                         return fileShareRepository.save(existingShare);
                                     })
                             .orElseGet(
@@ -672,6 +720,7 @@ public class FileStorageService {
                                         newShare.setFile(file);
                                         newShare.setSharedWithUser(targetUser);
                                         newShare.setAccessRole(role);
+                                        newShare.setWriteEnabled(grantsWrite(role));
                                         return fileShareRepository.save(newShare);
                                     });
 
@@ -754,8 +803,14 @@ public class FileStorageService {
         share.setFile(file);
         share.setShareToken(UUID.randomUUID().toString());
         share.setAccessRole(role);
+        share.setWriteEnabled(grantsWrite(role));
         share.setExpiresAt(resolveShareLinkExpiration());
         return fileShareRepository.save(share);
+    }
+
+    // Stamped at grant time so the decision is recorded on the share, not inferred later.
+    private boolean grantsWrite(ShareAccessRole role) {
+        return role == ShareAccessRole.EDITOR;
     }
 
     public void revokeShareLink(User owner, StoredFile file, String token) {
@@ -885,7 +940,10 @@ public class FileStorageService {
                                                 access.getUser() != null
                                                         ? access.getUser().getUsername()
                                                         : null)
-                                        .accessType(access.getAccessType().name())
+                                        .accessType(
+                                                access.getAccessType() != null
+                                                        ? access.getAccessType().name()
+                                                        : null)
                                         .accessedAt(access.getAccessedAt())
                                         .build())
                 .toList();
@@ -938,6 +996,7 @@ public class FileStorageService {
                                                             .name()
                                                             .toLowerCase(Locale.ROOT)
                                                     : null)
+                                    .canEdit(allowsWrite(share))
                                     .version(file != null ? file.contentVersionOrZero() : null)
                                     .createdAt(share != null ? share.getCreatedAt() : null)
                                     .expiresAt(share != null ? share.getExpiresAt() : null)
@@ -1142,6 +1201,25 @@ public class FileStorageService {
             return;
         }
         cleanupStoredKey(storedObject.getStorageKey());
+    }
+
+    // Superseded blobs must outlive the transaction: a rollback restores the row that still
+    // points at them, so deleting inline would destroy the only copy of the file.
+    private void deleteAfterCommit(String storageKey) {
+        if (storageKey == null || storageKey.isBlank()) {
+            return;
+        }
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            cleanupStoredKey(storageKey);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        cleanupStoredKey(storageKey);
+                    }
+                });
     }
 
     private void cleanupStoredKey(String storageKey) {
