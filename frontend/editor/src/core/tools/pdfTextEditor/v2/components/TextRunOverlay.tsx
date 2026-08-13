@@ -10,10 +10,6 @@ import {
   resolveLang,
   useSpellcheckPreference,
 } from "@app/tools/pdfTextEditor/v2/util/spellcheck";
-import {
-  buildExactLines,
-  type ExactLine,
-} from "@app/tools/pdfTextEditor/v2/util/exactLayout";
 import { embeddedFaceFamily } from "@app/tools/pdfTextEditor/v2/util/embeddedFace";
 import {
   fitTextToWidth,
@@ -126,72 +122,6 @@ function extractHardBreaks(element: HTMLElement): string {
   return element.innerText.replace(/\u00A0/g, " ");
 }
 
-const LINE_BREAK = String.fromCharCode(10);
-
-// One inline-block box per word at the engine's own advance, so words sit back
-// on the glyphs underneath. `innerText` still round-trips through it.
-function paintExactLines(
-  el: HTMLElement,
-  lines: ExactLine[],
-  originX: number,
-  scale: number,
-): void {
-  const fragment = document.createDocumentFragment();
-  lines.forEach((line, index) => {
-    if (index > 0) fragment.appendChild(document.createTextNode(LINE_BREAK));
-    // A line may start right of the box origin (an indent, or a centred
-    // line), and that offset is part of what the capture preserves.
-    const indent = (line.left - originX) * scale;
-    if (indent > 0.5) fragment.appendChild(box("", indent));
-    for (const token of line.tokens) {
-      fragment.appendChild(box(token.text, token.width * scale));
-    }
-  });
-  el.replaceChildren(fragment);
-}
-
-function box(text: string, width: number): HTMLSpanElement {
-  const span = document.createElement("span");
-  span.style.display = "inline-block";
-  span.style.width = `${Math.max(0, width)}px`;
-  span.style.whiteSpace = "pre";
-  span.dataset.exact = "1";
-  if (text) span.textContent = text;
-  return span;
-}
-
-/** Caret offset in plain-text terms, so flattening can restore it. */
-function caretOffset(el: HTMLElement): number | null {
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return null;
-  const range = sel.getRangeAt(0);
-  if (!el.contains(range.startContainer)) return null;
-  const probe = range.cloneRange();
-  probe.selectNodeContents(el);
-  probe.setEnd(range.startContainer, range.startOffset);
-  return probe.toString().length;
-}
-
-function setCaret(el: HTMLElement, offset: number): void {
-  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-  let seen = 0;
-  let node = walker.nextNode() as Text | null;
-  while (node) {
-    const len = node.data.length;
-    if (seen + len >= offset) {
-      const range = document.createRange();
-      range.setStart(node, Math.max(0, offset - seen));
-      range.collapse(true);
-      const sel = window.getSelection();
-      sel?.removeAllRanges();
-      sel?.addRange(range);
-      return;
-    }
-    seen += len;
-    node = walker.nextNode() as Text | null;
-  }
-}
-
 interface TextRunOverlayProps {
   run: TextRunSnapshot;
   pageHeight: number;
@@ -259,39 +189,6 @@ export function TextRunOverlay({
   const wasParagraphRef = useRef<boolean>((run.paragraphLineCount ?? 1) > 1);
   // True while the box is showing engine-exact word boxes; the first edit
   // flattens them because a typed character would overflow its fixed box.
-  const exactPaintedRef = useRef(false);
-
-  // Single-line runs only. Fixed-width boxes still fight a paragraph's
-  // hard-break machinery even when flattened before the edit lands.
-  // Single-line runs only. Fixed-width boxes still fight a paragraph's
-  // hard-break machinery even when flattened before the edit lands.
-  const exactLines =
-    run.charStartsX && run.charEndsX && (run.paragraphLineCount ?? 1) <= 1
-      ? buildExactLines(run.text, {
-          starts: run.charStartsX,
-          ends: run.charEndsX,
-        })
-      : null;
-
-  const flattenExact = (el: HTMLDivElement): void => {
-    if (!exactPaintedRef.current) return;
-    exactPaintedRef.current = false;
-    const offset = caretOffset(el);
-    el.innerText = extractHardBreaks(el);
-    if (offset !== null) setCaret(el, offset);
-  };
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || !focused || !exactLines) return;
-    if (exactPaintedRef.current) return;
-    if (extractHardBreaks(el) !== run.text) return;
-    const offset = caretOffset(el);
-    paintExactLines(el, exactLines, run.bounds.x, scale);
-    exactPaintedRef.current = true;
-    if (offset !== null) setCaret(el, offset);
-  });
-
   // Sync the contenteditable's text with the snapshot on external changes
   // (undo/redo, multi-select).
   useEffect(() => {
@@ -299,7 +196,6 @@ export function TextRunOverlay({
     if (!el) return;
     if (document.activeElement === el) return;
     if (el.innerText !== run.text) {
-      exactPaintedRef.current = false;
       el.innerText = run.text;
     }
   }, [run.text]);
@@ -525,7 +421,6 @@ export function TextRunOverlay({
       }}
       onBlur={(e) => {
         setTouched(false);
-        flattenExact(e.currentTarget as HTMLDivElement);
         setFocused(false);
         // Wrap mode: when the just-edited content overflows the locked box
         // width.
@@ -559,11 +454,6 @@ export function TextRunOverlay({
         if (composingRef.current || (e.nativeEvent as InputEvent).isComposing)
           return;
         const el = e.currentTarget as HTMLDivElement;
-        // Back to ordinary flow before anything reads the text, or a typed
-        // character stays in its fixed-width box and the line can never wrap.
-        // This must NOT move to `beforeinput`: rewriting the editing host
-        // during that event makes WebKit abandon the insertion outright.
-        flattenExact(el);
         // Always read hard breaks only - never synthesise newlines from browser
         // soft-wraps.
         const raw = extractHardBreaks(el);

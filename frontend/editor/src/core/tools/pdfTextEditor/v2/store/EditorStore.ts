@@ -7,6 +7,7 @@ import { resetBackendResolverCaches } from "@app/tools/pdfTextEditor/v2/charcode
 import { resetCmapCache } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 import { resetContentStreamCache } from "@app/tools/pdfTextEditor/v2/charcode/ContentStreamResolver";
 import {
+  resetCharCoverageCache,
   resetDroppedBase14Chars,
   resetOnPageAdvCache,
   resetPerCharBranchPtrs,
@@ -29,6 +30,7 @@ function resetCharcodeCaches(): void {
   resetPerCharBranchPtrs();
   // The dropped-char record is per-session/per-document, not pointer-keyed.
   resetDroppedBase14Chars();
+  resetCharCoverageCache();
   // FontFaces are keyed by font pointer, which PDFium reuses across documents.
   resetEmbeddedFaces();
 }

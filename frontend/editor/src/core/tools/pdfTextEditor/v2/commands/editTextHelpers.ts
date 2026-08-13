@@ -92,6 +92,15 @@ export function everyCharIn(text: string, pool: string): boolean {
   return true;
 }
 
+// Whether a font can encode a given character, keyed by font pointer. Replace
+// all rewrites every matching run, so resolving per run made the click block.
+const charCoverage = new Map<number, Map<string, boolean>>();
+
+/** Doc-scoped reset: PDFium reuses font pointers across documents. */
+export function resetCharCoverageCache(): void {
+  charCoverage.clear();
+}
+
 // True when the emit path will map EVERY char in this font. Same condition
 // emitTextLine uses to take its setCharcodes branch, so a true here means the
 // reuse really will render rather than fall through to raw SetText.
@@ -103,20 +112,33 @@ export function charcodesResolveFully(
   docPtr: number,
 ): boolean {
   if (!fontPtr || !text) return false;
-  try {
-    const resolved = tryResolveCharcodes(
-      fontPtr,
-      text,
-      { module: m, pagePtr, docPtr },
-      true,
-    );
-    const r = resolved?.result;
-    return (
-      !!r && r.coverage === text.length && r.charcodes.length === text.length
-    );
-  } catch {
-    return false;
+  let perFont = charCoverage.get(fontPtr);
+  if (!perFont) {
+    perFont = new Map();
+    charCoverage.set(fontPtr, perFont);
   }
+  // Distinct characters only: a long string costs no more than its alphabet.
+  for (const ch of new Set([...text])) {
+    const known = perFont.get(ch);
+    if (known === false) return false;
+    if (known === true) continue;
+    let ok = false;
+    try {
+      const resolved = tryResolveCharcodes(
+        fontPtr,
+        ch,
+        { module: m, pagePtr, docPtr },
+        true,
+      );
+      const r = resolved?.result;
+      ok = !!r && r.coverage === 1 && r.charcodes.length === 1;
+    } catch {
+      ok = false;
+    }
+    perFont.set(ch, ok);
+    if (!ok) return false;
+  }
+  return true;
 }
 
 /** Strip characters a base-14 (WinAnsi) font cannot render. */

@@ -65,65 +65,61 @@ test("the reader captures engine pen positions for page text", async ({
   expect(stats.monotonic).toBe(stats.measured);
 });
 
-test("focusing a run places every word on its engine origin", async ({
-  page,
-}: {
-  page: Page;
-}) => {
-  test.setTimeout(140_000);
-  await openSample(page);
-  const runId = await firstMeasuredRun(page);
-  expect(runId, "a multi-word run with captured positions").toBeTruthy();
+// The per-word boxes that used to tile here were invisible once the overlay
+// started showing the page bitmap until the first edit, and an inline-block
+// makes Home/End move within the WORD rather than the line - so every edit
+// landed at the click point. These pin the behaviour that replaced them.
+const EDITS: Array<{
+  name: string;
+  keys: (p: Page) => Promise<void>;
+  expect: (before: string) => string;
+}> = [
+  {
+    name: "End then type appends",
+    keys: async (p) => {
+      await p.keyboard.press("End");
+      await p.keyboard.type("Z");
+    },
+    expect: (b) => b + "Z",
+  },
+  {
+    name: "Home then type prepends",
+    keys: async (p) => {
+      await p.keyboard.press("Home");
+      await p.keyboard.type("Z");
+    },
+    expect: (b) => "Z" + b,
+  },
+  {
+    name: "Home then Delete removes the first character",
+    keys: async (p) => {
+      await p.keyboard.press("Home");
+      await p.keyboard.press("Delete");
+    },
+    expect: (b) => b.slice(1),
+  },
+];
 
-  const overlay = page.locator(`[data-testid="v2-run-${runId}"]`);
-  await overlay.focus();
-  await page.waitForTimeout(150);
+for (const c of EDITS) {
+  test(`caret: ${c.name}`, async ({ page }: { page: Page }) => {
+    test.setTimeout(140_000);
+    await openSample(page);
+    const runId = await firstMeasuredRun(page);
+    expect(runId).toBeTruthy();
 
-  const result = await page.evaluate((rid: string) => {
-    const store = (window as unknown as V2TestWindow).__v2_editor_store;
-    const run = store.doc.page(0).runs.find((r) => r.id === rid);
-    if (!run?.charStartsX) return null;
-    const el = document.querySelector<HTMLDivElement>(
-      `[data-testid="v2-run-${rid}"]`,
-    );
-    const canvas = document.querySelector<HTMLCanvasElement>(
-      '[data-testid="v2-page-0"] canvas',
-    );
-    if (!el || !canvas) return null;
-    const boxes = [...el.querySelectorAll<HTMLElement>("span[data-exact]")];
-    const origin = el.getBoundingClientRect().left;
-    // Derive the scale from the rendered page rather than store internals.
-    const scale =
-      canvas.getBoundingClientRect().width / store.doc.page(0).width;
-    // Walk the boxes alongside the text, comparing each word's rendered left
-    // edge with the engine origin of its first character.
-    const drift: number[] = [];
-    let at = 0;
-    for (const b of boxes) {
-      const text = b.textContent ?? "";
-      if (text.trim().length > 0) {
-        const expected =
-          ((run.charStartsX as number[])[at] - run.bounds.x) * scale;
-        const actual = b.getBoundingClientRect().left - origin;
-        if (Number.isFinite(expected)) drift.push(Math.abs(actual - expected));
-      }
-      at += text.length;
-    }
-    return {
-      boxes: boxes.length,
-      worstDrift: Math.max(0, ...drift),
-      samples: drift.length,
-    };
-  }, runId as string);
+    const overlay = page.locator(`[data-testid="v2-run-${runId}"]`);
+    const before = (await overlay.innerText()).replace(/\u00a0/g, " ");
+    await overlay.click();
+    await page.waitForTimeout(150);
+    await c.keys(page);
+    await page.waitForTimeout(300);
 
-  expect(result).not.toBeNull();
-  expect(result?.boxes).toBeGreaterThan(1);
-  expect(result?.samples).toBeGreaterThan(1);
-  // Sub-pixel: the boxes tile from the captured advances, so nothing drifts.
-  expect(result?.worstDrift ?? 99).toBeLessThan(1.5);
-});
+    const after = (await overlay.innerText()).replace(/\u00a0/g, " ");
+    expect(after).toBe(c.expect(before));
+  });
+}
 
-test("typing flattens the exact boxes and the text still round-trips", async ({
+test("typing leaves the text intact apart from the typed character", async ({
   page,
 }: {
   page: Page;
@@ -134,24 +130,14 @@ test("typing flattens the exact boxes and the text still round-trips", async ({
   expect(runId).toBeTruthy();
 
   const overlay = page.locator(`[data-testid="v2-run-${runId}"]`);
-  const before = (await overlay.innerText()).replace(/ /g, " ");
-  await overlay.focus();
+  const before = (await overlay.innerText()).replace(/\u00a0/g, " ");
+  await overlay.click();
   await page.waitForTimeout(120);
-  expect(
-    await overlay.locator("span[data-exact]").count(),
-    "boxes painted on focus",
-  ).toBeGreaterThan(0);
-
+  await page.keyboard.press("End");
   await page.keyboard.type("Z");
   await page.waitForTimeout(200);
-  expect(
-    await overlay.locator("span[data-exact]").count(),
-    "boxes flattened by the first edit",
-  ).toBe(0);
 
-  const after = (await overlay.innerText()).replace(/ /g, " ");
-  // Exactly the original text plus the typed character, nothing mangled by
-  // the box structure.
+  const after = (await overlay.innerText()).replace(/\u00a0/g, " ");
   expect(after.replace("Z", "")).toBe(before);
   expect(after).toContain("Z");
 });
