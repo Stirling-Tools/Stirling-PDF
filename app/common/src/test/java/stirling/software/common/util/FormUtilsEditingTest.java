@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -8,13 +9,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDPushButton;
 import org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton;
@@ -92,6 +99,76 @@ class FormUtilsEditingTest {
         assertNotNull(field, "field '" + name + "' should exist");
         assertTrue(!field.getWidgets().isEmpty(), "field should have at least one widget");
         return field.getWidgets().get(0).getRectangle();
+    }
+
+    /**
+     * Regression for the button-appearance gap: PDAcroForm.refreshAppearances() never synthesizes
+     * /AP for the button family, so without an explicit appearance a created checkbox or radio
+     * renders blank everywhere and its default value resolves to Off. This fix was lost once in a
+     * rebase; the assertions below are what catch that.
+     */
+    @Test
+    void addNewFields_givesToggleFieldsAppearanceStreamsAndKeepsTheirDefault() throws IOException {
+        byte[] saved;
+        try (PDDocument document = new PDDocument()) {
+            setupForm(document, PDRectangle.A4);
+            FormUtils.addNewFields(
+                    document,
+                    List.of(
+                            newField("checkbox", "agree", 50, 600, 20, 20, null, null, null),
+                            newField(
+                                    "radio",
+                                    "choice",
+                                    50,
+                                    500,
+                                    20,
+                                    20,
+                                    List.of("Yes", "No"),
+                                    null,
+                                    null),
+                            newText("fullname", 50, 400, 200, 24)));
+            saved = save(document);
+        }
+
+        try (PDDocument reloaded = Loader.loadPDF(saved)) {
+            PDAcroForm acroForm = reloaded.getDocumentCatalog().getAcroForm(null);
+            assertNotNull(acroForm);
+
+            // NeedAppearances=false means viewers trust our streams, so they must exist.
+            assertFalse(acroForm.getNeedAppearances(), "appearance generation should have run");
+
+            PDField checkBox = acroForm.getField("agree");
+            assertTrue(checkBox instanceof PDCheckBox);
+            assertEquals(
+                    Set.of("Off", "Yes"),
+                    normalStateNames(checkBox.getWidgets().get(0)),
+                    "checkbox needs an Off and an on-state appearance");
+
+            PDField radio = acroForm.getField("choice");
+            assertTrue(radio instanceof PDRadioButton);
+            assertEquals(2, radio.getWidgets().size());
+            assertEquals(Set.of("Off", "Yes"), normalStateNames(radio.getWidgets().get(0)));
+            assertEquals(Set.of("Off", "No"), normalStateNames(radio.getWidgets().get(1)));
+
+            // A text field's DA names /Helv; if /DR lacks that alias refreshAppearances throws for
+            // the whole form and every field above loses its appearance too.
+            PDField text = acroForm.getField("fullname");
+            assertNotNull(
+                    text.getWidgets().get(0).getAppearance().getNormalAppearance(),
+                    "text field should have a generated appearance");
+        }
+    }
+
+    /** The /AP /N state names on a widget. */
+    private static Set<String> normalStateNames(PDAnnotationWidget widget) {
+        PDAppearanceDictionary appearance = widget.getAppearance();
+        assertNotNull(appearance, "widget should have an /AP dictionary");
+        PDAppearanceEntry normal = appearance.getNormalAppearance();
+        assertNotNull(normal, "widget should have an /AP /N entry");
+        assertTrue(normal.isSubDictionary(), "a toggle needs per-state appearances");
+        return normal.getSubDictionary().keySet().stream()
+                .map(COSName::getName)
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     @Test

@@ -68,6 +68,12 @@ public class FormUtils {
     public final Set<String> CHOICE_FIELD_TYPES =
             Set.of(FIELD_TYPE_COMBOBOX, FIELD_TYPE_LISTBOX, FIELD_TYPE_RADIO);
 
+    /** The reserved off-state name every toggle widget must carry an appearance for. */
+    private final String OFF_STATE = "Off";
+
+    /** The on-state a checkbox gets when the definition supplies no export values. */
+    private final String DEFAULT_CHECKBOX_ON_STATE = "Yes";
+
     /**
      * Threshold in PDF points for considering two widgets to be on the same line. Fields whose
      * y-coordinates differ by less than this value are sorted left-to-right by x-coordinate instead
@@ -905,7 +911,11 @@ public class FormUtils {
                 }
                 PDFont helvetica = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
                 try {
-                    // Map standard name used by many DAs
+                    // Both spellings: every DA we write says "/Helv" (the Acrobat convention),
+                    // while third-party DAs use "/Helvetica". A DA naming a font that is not in
+                    // /DR makes refreshAppearances throw for the WHOLE form, so one missing alias
+                    // costs every field its appearance stream.
+                    dr.put(COSName.getPDFName("Helv"), helvetica);
                     dr.put(COSName.getPDFName("Helvetica"), helvetica);
                 } catch (Exception ignore) {
                     try {
@@ -2031,6 +2041,8 @@ public class FormUtils {
 
         Set<String> existingNames = collectExistingFieldNames(acroForm);
         int pageCount = document.getNumberOfPages();
+        // Buttons need their appearances built after creation; see applyButtonAppearances.
+        List<Map.Entry<String, NewFormFieldDefinition>> createdButtons = new ArrayList<>();
 
         for (NewFormFieldDefinition definition : definitions) {
             if (definition == null) continue;
@@ -2084,6 +2096,7 @@ public class FormUtils {
                     createNewField(
                             handler, acroForm, page, rectangle, uniqueName, definition, options);
                 }
+                createdButtons.add(Map.entry(uniqueName, definition));
             } catch (Exception e) {
                 log.warn(
                         "Failed to create field '{}' of type '{}': {}",
@@ -2094,7 +2107,174 @@ public class FormUtils {
             }
         }
 
+        applyButtonAppearances(document, acroForm, createdButtons);
         ensureAppearances(acroForm);
+    }
+
+    /**
+     * Draws {@code /AP /N} streams for every checkbox and radio widget created in this batch, then
+     * re-applies the default value.
+     *
+     * <p>Both steps are necessary. {@link PDAcroForm#refreshAppearances()} only flips {@code /AS}
+     * on appearances that already exist - it never synthesizes them for the button family - so a
+     * button created without this renders blank in pdf.js, in print, and in any viewer that honours
+     * our {@code NeedAppearances=false}. And because PDFBox derives a button's on-state from the
+     * {@code /AP /N} keys, {@code check()} / {@code setValue()} silently resolve to Off while those
+     * keys are missing, which is why the value is set again here rather than at creation time.
+     */
+    private void applyButtonAppearances(
+            PDDocument document,
+            PDAcroForm acroForm,
+            List<Map.Entry<String, NewFormFieldDefinition>> created) {
+        for (Map.Entry<String, NewFormFieldDefinition> entry : created) {
+            PDField field = acroForm.getField(entry.getKey());
+            if (!(field instanceof PDCheckBox) && !(field instanceof PDRadioButton)) {
+                continue;
+            }
+            boolean isRadio = field instanceof PDRadioButton;
+            List<String> onStates = buttonOnStates((PDButton) field);
+            List<PDAnnotationWidget> widgets = field.getWidgets();
+            for (int i = 0; i < widgets.size(); i++) {
+                String onState = i < onStates.size() ? onStates.get(i) : DEFAULT_CHECKBOX_ON_STATE;
+                try {
+                    applyToggleAppearance(document, widgets.get(i), onState, isRadio);
+                } catch (Exception e) {
+                    log.warn(
+                            "Could not build an appearance for '{}' widget {}: {}",
+                            entry.getKey(),
+                            i,
+                            e.getMessage());
+                }
+            }
+            applyButtonDefault((PDButton) field, entry.getValue(), onStates);
+        }
+    }
+
+    /** The on-state per widget: the export values when set, else the single checkbox state. */
+    private List<String> buttonOnStates(PDButton button) {
+        List<String> exportValues = button.getExportValues();
+        if (exportValues != null && !exportValues.isEmpty()) {
+            return exportValues;
+        }
+        return List.of(DEFAULT_CHECKBOX_ON_STATE);
+    }
+
+    /** Re-applies the definition's default now that the on-state keys exist to resolve it. */
+    private void applyButtonDefault(
+            PDButton button, NewFormFieldDefinition definition, List<String> onStates) {
+        try {
+            if (button instanceof PDCheckBox checkBox) {
+                if (isChecked(definition.defaultValue())) {
+                    checkBox.check();
+                } else {
+                    checkBox.unCheck();
+                }
+                return;
+            }
+            String requested = definition.defaultValue();
+            if (requested == null || requested.isBlank()) {
+                return;
+            }
+            // The widget states are sanitized PDF names, so match the raw request against those.
+            String match =
+                    onStates.stream()
+                            .filter(
+                                    state ->
+                                            state.equals(requested)
+                                                    || state.equalsIgnoreCase(
+                                                            sanitizePdfName(requested)))
+                            .findFirst()
+                            .orElse(null);
+            if (match != null) {
+                button.setValue(match);
+            }
+        } catch (Exception e) {
+            log.debug(
+                    "Could not apply default value for '{}': {}",
+                    button.getPartialName(),
+                    e.getMessage());
+        }
+    }
+
+    /**
+     * Builds the two-state {@code /AP /N} dictionary for one toggle widget: an empty "Off" stream
+     * plus an on-state drawn from primitives, so no font resource is needed. A radio gets a ring
+     * with a filled centre, a checkbox a box with a tick.
+     */
+    private void applyToggleAppearance(
+            PDDocument document, PDAnnotationWidget widget, String onState, boolean isRadio)
+            throws IOException {
+        PDRectangle rect = widget.getRectangle();
+        if (rect == null || rect.getWidth() <= 0 || rect.getHeight() <= 0) {
+            return;
+        }
+        float w = rect.getWidth();
+        float h = rect.getHeight();
+        PDRectangle bbox = new PDRectangle(w, h);
+
+        PDAppearanceDictionary appearance = new PDAppearanceDictionary();
+        COSDictionary normalStates = new COSDictionary();
+        normalStates.setItem(
+                COSName.getPDFName(OFF_STATE),
+                toggleStream(document, bbox, false, false).getCOSObject());
+        normalStates.setItem(
+                COSName.getPDFName(onState),
+                toggleStream(document, bbox, true, isRadio).getCOSObject());
+        appearance.getCOSObject().setItem(COSName.N, normalStates);
+        widget.setAppearance(appearance);
+        // Until a value selects it, the widget shows the Off appearance.
+        widget.getCOSObject().setName(COSName.AS, OFF_STATE);
+    }
+
+    private PDAppearanceStream toggleStream(
+            PDDocument document, PDRectangle bbox, boolean on, boolean isRadio) throws IOException {
+        PDAppearanceStream stream = new PDAppearanceStream(document);
+        stream.setBBox(bbox);
+        stream.setResources(new PDResources());
+
+        float w = bbox.getWidth();
+        float h = bbox.getHeight();
+        float inset = Math.min(w, h) * 0.1f;
+        try (PDPageContentStream content =
+                new PDPageContentStream(
+                        document, stream, stream.getStream().createOutputStream())) {
+            content.setStrokingColor(0f, 0f, 0f);
+            content.setNonStrokingColor(0f, 0f, 0f);
+            content.setLineWidth(Math.max(0.5f, Math.min(w, h) * 0.06f));
+            if (isRadio) {
+                drawCircle(content, w / 2, h / 2, Math.min(w, h) / 2 - inset);
+                content.stroke();
+                if (on) {
+                    drawCircle(content, w / 2, h / 2, Math.min(w, h) / 4 - inset / 2);
+                    content.fill();
+                }
+            } else {
+                content.addRect(inset, inset, w - 2 * inset, h - 2 * inset);
+                content.stroke();
+                if (on) {
+                    content.moveTo(w * 0.25f, h * 0.5f);
+                    content.lineTo(w * 0.45f, h * 0.28f);
+                    content.lineTo(w * 0.78f, h * 0.72f);
+                    content.stroke();
+                }
+            }
+        }
+        return stream;
+    }
+
+    /** A circle from four Bezier arcs; PDF has no primitive for one. */
+    private void drawCircle(PDPageContentStream content, float cx, float cy, float r)
+            throws IOException {
+        if (r <= 0) {
+            return;
+        }
+        float k = r * 0.5523f;
+        content.moveTo(cx - r, cy);
+        content.curveTo(cx - r, cy + k, cx - k, cy + r, cx, cy + r);
+        content.curveTo(cx + k, cy + r, cx + r, cy + k, cx + r, cy);
+        content.curveTo(cx + r, cy - k, cx + k, cy - r, cx, cy - r);
+        content.curveTo(cx - k, cy - r, cx - r, cy - k, cx - r, cy);
+        content.closePath();
     }
 
     /**
@@ -2151,7 +2331,7 @@ public class FormUtils {
             widget.getCOSObject().setItem(COSName.SUBTYPE, COSName.getPDFName("Widget"));
             widget.setParent(radio);
             // The widget's appearance state is "Off" until the group value selects it.
-            widget.getCOSObject().setName(COSName.AS, "Off");
+            widget.getCOSObject().setName(COSName.AS, OFF_STATE);
             widgets.add(widget);
 
             List<PDAnnotation> annotations = page.getAnnotations();
@@ -2189,9 +2369,9 @@ public class FormUtils {
                 Optional.ofNullable(raw)
                         .map(String::trim)
                         .filter(s -> !s.isEmpty())
-                        .map(s -> s.replaceAll("[^A-Za-z0-9_-]", "_"))
+                        .map(FormUtils::sanitizePdfName)
                         .orElse("Option" + (index + 1));
-        if ("Off".equalsIgnoreCase(base)) {
+        if (OFF_STATE.equalsIgnoreCase(base)) {
             base = "Option" + (index + 1);
         }
         String candidate = base;
@@ -2200,6 +2380,11 @@ public class FormUtils {
             candidate = base + "_" + suffix++;
         }
         return candidate;
+    }
+
+    /** Reduces a label to characters that are safe inside a PDF name. */
+    private static String sanitizePdfName(String raw) {
+        return raw == null ? "" : raw.trim().replaceAll("[^A-Za-z0-9_-]", "_");
     }
 
     /**
