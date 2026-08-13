@@ -114,6 +114,9 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // invisible to the static scan. The raw catalogue value is the fallback.
       /^policies\.field\./,
       /^policyOption\./,
+      // Failure-kind copy is keyed off the server's FailureKind enum and arrives as data, so no
+      // frontend source names it. FailureKindTest asserts every kind has copy here.
+      /^portal\.failures\.kind\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,
