@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -56,6 +57,17 @@ import stirling.software.proprietary.storage.service.FileStorageService;
 public class FileStorageController {
 
     private static final Duration SIGNED_URL_TTL = Duration.ofMinutes(5);
+
+    // Uploader-controlled content renders on our origin, so only these may be served inline.
+    private static final Set<String> INLINE_SAFE_TYPES =
+            Set.of(
+                    "application/pdf",
+                    "image/png",
+                    "image/jpeg",
+                    "image/gif",
+                    "image/webp",
+                    "image/bmp",
+                    "text/plain");
 
     private final FileStorageService fileStorageService;
     private final StorageProvider storageProvider;
@@ -286,7 +298,8 @@ public class FileStorageController {
                         ? MediaType.APPLICATION_OCTET_STREAM_VALUE
                         : file.getContentType();
         ContentDisposition disposition =
-                ContentDisposition.builder(inline ? "inline" : "attachment")
+                ContentDisposition.builder(
+                                inline && isInlineSafe(contentType) ? "inline" : "attachment")
                         .filename(file.getOriginalFilename())
                         .build();
         HttpHeaders headers = new HttpHeaders();
@@ -298,6 +311,13 @@ public class FileStorageController {
         }
         headers.setContentLength(file.getSizeBytes());
         return ResponseEntity.ok().headers(headers).body(resource);
+    }
+
+    // Match on the bare type so a "; charset=..." suffix cannot smuggle text/html past the list.
+    private static boolean isInlineSafe(String contentType) {
+        int separator = contentType.indexOf(';');
+        String bareType = separator < 0 ? contentType : contentType.substring(0, separator);
+        return INLINE_SAFE_TYPES.contains(bareType.trim().toLowerCase(Locale.ROOT));
     }
 
     private boolean isAuthenticated(Authentication authentication) {

@@ -36,6 +36,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
+import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.service.FileStorageService;
@@ -171,6 +172,109 @@ class FileStorageControllerTest {
 
         // Nothing was encrypted at rest, so there is no decryption to attest to.
         verifyNoInteractions(auditService);
+    }
+
+    @Test
+    void downloadFile_inlineHtml_forcesAttachmentDisposition() throws Exception {
+        StoredFile file = newStoredFile();
+        file.setOriginalFilename("payload.html");
+        file.setContentType("text/html");
+        streamedDownload(file);
+
+        // Uploader-controlled HTML served inline runs on our origin and steals the JWT.
+        mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L).param("inline", "true"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.CONTENT_DISPOSITION,
+                                        "attachment; filename=\"payload.html\""));
+    }
+
+    @Test
+    void downloadFile_inlineSvg_forcesAttachmentDisposition() throws Exception {
+        StoredFile file = newStoredFile();
+        file.setOriginalFilename("payload.svg");
+        file.setContentType("image/svg+xml");
+        streamedDownload(file);
+
+        // SVG carries script too, so it is not on the inline allowlist despite being an image.
+        mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L).param("inline", "true"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.CONTENT_DISPOSITION,
+                                        "attachment; filename=\"payload.svg\""));
+    }
+
+    @Test
+    void downloadFile_inlineHtmlWithCharsetParameter_forcesAttachmentDisposition()
+            throws Exception {
+        StoredFile file = newStoredFile();
+        file.setOriginalFilename("payload.html");
+        file.setContentType("TEXT/HTML; charset=utf-8");
+        streamedDownload(file);
+
+        // Parameters and casing must not let a blocked type slip past the allowlist.
+        mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L).param("inline", "true"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.CONTENT_DISPOSITION,
+                                        "attachment; filename=\"payload.html\""));
+    }
+
+    @Test
+    void downloadFile_inlinePdf_stillRendersInline() throws Exception {
+        StoredFile file = newStoredFile();
+        streamedDownload(file);
+
+        // The allowlist must not break the in-app viewer for the types it was built for.
+        mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L).param("inline", "true"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.CONTENT_DISPOSITION,
+                                        "inline; filename=\"doc.pdf\""));
+    }
+
+    @Test
+    void downloadFile_inlineTextPlainWithCharsetParameter_stillRendersInline() throws Exception {
+        StoredFile file = newStoredFile();
+        file.setOriginalFilename("notes.txt");
+        file.setContentType("text/plain; charset=UTF-8");
+        streamedDownload(file);
+
+        mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L).param("inline", "true"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.CONTENT_DISPOSITION,
+                                        "inline; filename=\"notes.txt\""));
+    }
+
+    @Test
+    void downloadShareLink_inlineHtml_forcesAttachmentDisposition() throws Exception {
+        StoredFile file = newStoredFile();
+        file.setOriginalFilename("payload.html");
+        file.setContentType("text/html");
+        FileShare share = new FileShare();
+        share.setFile(file);
+
+        when(fileStorageService.getShareByToken("tok")).thenReturn(share);
+        when(fileStorageService.canAccessShareLink(share, null)).thenReturn(true);
+        when(storageProvider.signedDownloadUrl(
+                        anyString(), any(Duration.class), anyBoolean(), anyString()))
+                .thenReturn(Optional.empty());
+        when(fileStorageService.loadFile(file))
+                .thenReturn(new ByteArrayResource("<script>alert(1)</script>".getBytes(UTF_8)));
+
+        // The share-link endpoint is the unauthenticated reach, so it needs the same guard.
+        mockMvc.perform(get("/api/v1/storage/share-links/{token}", "tok").param("inline", "true"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        header().string(
+                                        HttpHeaders.CONTENT_DISPOSITION,
+                                        "attachment; filename=\"payload.html\""));
     }
 
     /** Stubs an app-streamed (non-presigned) download of {@code file}. */
