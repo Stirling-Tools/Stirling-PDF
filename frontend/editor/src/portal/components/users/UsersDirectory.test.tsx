@@ -119,7 +119,7 @@ describe("UsersDirectory - member avatars", () => {
     document.querySelector<HTMLImageElement>("img.sui-avatar__img");
 
   it("shows the member's picture when the roster carried one", () => {
-    // Self-hosted supplies a data URL and SaaS a signed URL; the row only cares that it has one.
+    // Self-hosted supplies a data URL; the row only cares that it has one.
     const withPicture: Member = {
       ...MEMBER,
       avatarUrl: "data:image/png;base64,AQID",

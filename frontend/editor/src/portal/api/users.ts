@@ -37,7 +37,7 @@ export interface Member {
   lastActive: string;
   /**
    * Optional avatar image; falls back to initials when absent. Self-hosted supplies a data URL (the
-   * bearer-token transport rules out a plain image URL); SaaS supplies a signed storage URL.
+   * bearer-token transport rules out a plain image URL); SaaS has none yet.
    */
   avatarUrl?: string;
   /** Backend linkage for row actions (absent on pure fixtures). */
@@ -285,9 +285,10 @@ const AVATAR_BATCH_SIZE = 200;
 /**
  * Roster avatars as data URLs, keyed by user id. Data URLs because the portal authenticates with a
  * bearer token, which an `<img src>` request would not carry. Avatars are decoration, so a failure
- * degrades to initials rather than failing the roster.
+ * degrades to initials rather than failing the roster. Kept on the portal's own transport rather
+ * than reusing the editor's service, which would pull the editor apiClient into this bundle.
  */
-export async function fetchAvatarThumbnails(
+async function fetchAvatarThumbnails(
   userIds: string[],
 ): Promise<Record<string, string>> {
   const ids = Array.from(new Set(userIds)).filter(Boolean);
