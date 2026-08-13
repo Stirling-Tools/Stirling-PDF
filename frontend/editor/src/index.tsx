@@ -15,10 +15,13 @@ import App from "@app/App";
 import "@app/i18n"; // Initialize i18next
 import { BASE_PATH } from "@app/constants/app";
 import { applyDevWorktreeLabel } from "@app/utils/applyDevWorktreeLabel";
+import { SWUpdatePrompt } from "@app/components/shared/SWUpdatePrompt";
+import { startWebVitalsRUM } from "@app/performance/web-vitals";
 
 import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 
 applyDevWorktreeLabel();
+startWebVitalsRUM();
 
 if (typeof window !== "undefined") {
   const scheduleCompilation = () => {
@@ -48,5 +51,6 @@ root.render(
     <BrowserRouter basename={BASE_PATH}>
       <App />
     </BrowserRouter>
+    <SWUpdatePrompt />
   </React.StrictMode>,
 );

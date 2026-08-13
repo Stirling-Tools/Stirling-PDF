@@ -1,77 +1,241 @@
-import react from "@vitejs/plugin-react-swc";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
+import tailwindcss from "@tailwindcss/vite";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
 import fs from "node:fs/promises";
 import path, { resolve } from "node:path";
-import { constants, brotliCompress, gzip } from "node:zlib";
-import { fileURLToPath } from "node:url";
+import { constants, brotliCompress, gzip, zstdCompress } from "node:zlib";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption } from "vite";
+import type { PreRenderedAsset } from "rollup";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { VitePWA } from "vite-plugin-pwa";
+import { beasties } from "vite-plugin-beasties";
 
 const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const zstdPromise = promisify(zstdCompress);
 
-function compressStaticCopyPlugin(): PluginOption {
+// Let the precompression passes saturate more than the default 4 libuv
+// threads. Must be set before zlib first uses the threadpool, so it lives at
+// the top of the config module.
+process.env.UV_THREADPOOL_SIZE ??= "64";
+
+// Tool routes that fetch pdfium.wasm as soon as the page loads (PDF viewers
+// and canvas-rendered tools). The build injects a <link rel="preload"> for the
+// wasm into each of these routes' prerendered HTML.
+const PDFIUM_ROUTE_SET = new Set([
+  "compress",
+  "split",
+  "merge",
+  "sign",
+  "rotate",
+  "images",
+  "watermark",
+]);
+
+function resolveBase(runSubpath: string): string {
+  if (runSubpath) return `/${runSubpath}/`;
+  return process.env.VITE_BUILD_FOR_PREVIEW === "1" ? "/" : "./";
+}
+
+// Extensions never precompressed by either compression pass. Both
+// vite-plugin-compression2 (regex) and compressStaticCopyPlugin (Set) derive
+// from this single list. .zst siblings are excluded too so re-running a build
+// never recompresses already-compressed output.
+const COMPRESSION_EXCLUDED_EXTENSIONS = [
+  ".gz",
+  ".br",
+  ".zst",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".avif",
+  ".webp",
+  ".woff",
+  ".woff2",
+];
+const EXCLUDED_EXTENSION_SET = new Set(COMPRESSION_EXCLUDED_EXTENSIONS);
+const COMPRESSION_EXCLUDE_REGEX = new RegExp(
+  `\\.(${COMPRESSION_EXCLUDED_EXTENSIONS.map((e) => e.slice(1)).join("|")})$`,
+);
+
+// Write .gz, .br and .zst siblings for a file.
+//   - gzip level 9 (universal fallback)
+//   - brotli quality 11 for EVERY file (build time does not matter) with the
+//     largest window (16 MB) on wasm so cross-version gains survive
+//   - zstd level 22 (max). zstd decompresses faster than brotli, which is
+//     better for mobile; Content-Encoding: zstd is Baseline 2026.
+// All three encoders run concurrently via Promise.all. With
+// UV_THREADPOOL_SIZE raised above they share the libuv pool and parallelize
+// across cores instead of serializing per file. brotli Content-Encoding is
+// fully compatible with WebAssembly.instantiateStreaming (the browser
+// decompresses natively), so .wasm is intentionally NOT excluded.
+async function compressOne(file: string, root: string) {
+  // Only ever read inside the build output dir. All inputs derive from
+  // fs.readdir(distDir), but this guard keeps any stray path from escaping it.
+  const resolved = path.resolve(file);
+  if (!resolved.startsWith(`${path.resolve(root)}${path.sep}`)) return;
+
+  const ext = path.extname(resolved).toLowerCase();
+  if (EXCLUDED_EXTENSION_SET.has(ext)) return;
+  const content = await fs.readFile(resolved);
+  if (content.length < 1024) return;
+
+  const isWasm = ext === ".wasm";
+  const [gz, br, zst] = await Promise.all([
+    gzipPromise(content, { level: 9 }),
+    brotliPromise(content, {
+      params: {
+        [constants.BROTLI_PARAM_QUALITY]: 11,
+        [constants.BROTLI_PARAM_SIZE_HINT]: content.length,
+        // Largest window (16 MB) so wasm gains are kept across versions.
+        ...(isWasm && { [constants.BROTLI_PARAM_LGWIN]: 24 }),
+      },
+    }),
+    zstdPromise(content, {
+      params: {
+        [constants.ZSTD_c_compressionLevel]: 22,
+      },
+    }),
+  ]);
+  await Promise.all([
+    fs.writeFile(`${resolved}.gz`, gz),
+    fs.writeFile(`${resolved}.br`, br),
+    fs.writeFile(`${resolved}.zst`, zst),
+  ]);
+}
+
+// Emit pdf.js's hashed .mjs worker assets as .js. Cloudflare caches by file
+// extension (not MIME type) and its default list omits .mjs, so those assets
+// bypassed the edge cache on every request. The extension is irrelevant to a
+// `type: "module"` worker. Renaming at emission time lets the bundler substitute
+// the final filename into every `new URL(..., import.meta.url)` reference itself.
+// Shared by the main build and Vite's worker sub-builds, which do not inherit
+// the main build's output options.
+const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
+  assetInfo.names.some((name) => name.endsWith(".mjs"))
+    ? "assets/[name]-[hash].js"
+    : "assets/[name]-[hash][extname]";
+
+// The entry module script and the vendor-ui modulepreload are the critical
+// render-blocking resources (vendor-ui carries react/react-dom/mui/mantine/
+// emotion/iconify: everything on the critical path). Mark both
+// fetchpriority=high so the browser fetches them ahead of other preloads.
+function entryFetchPriorityPlugin(): PluginOption {
   return {
-    name: "compress-static-copy",
-    apply: "build" as const,
-    async closeBundle() {
-      const distDir = path.resolve(__dirname, "dist");
-      const targets = ["pdfium", "vendor", "pdfjs"];
-
-      const excludedExtensions = [
-        ".gz",
-        ".br",
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".webp",
-        ".woff",
-        ".woff2",
-      ];
-
-      async function walkAndCompress(dirOrFile: string) {
-        let stat;
-        try {
-          stat = await fs.stat(dirOrFile);
-        } catch {
-          return;
-        }
-
-        if (stat.isFile()) {
-          const ext = path.extname(dirOrFile).toLowerCase();
-          if (stat.size >= 1024 && !excludedExtensions.includes(ext)) {
-            const content = await fs.readFile(dirOrFile);
-
-            // Gzip (level 9)
-            const gzipped = await gzipPromise(content, { level: 9 });
-            await fs.writeFile(`${dirOrFile}.gz`, gzipped);
-
-            // Brotli (quality 11)
-            const brotlied = await brotliPromise(content, {
-              params: {
-                [constants.BROTLI_PARAM_QUALITY]: 11,
-              },
-            });
-            await fs.writeFile(`${dirOrFile}.br`, brotlied);
-          }
-        } else if (stat.isDirectory()) {
-          const files = await fs.readdir(dirOrFile);
-          for (const file of files) {
-            await walkAndCompress(path.join(dirOrFile, file));
-          }
-        }
-      }
-
-      for (const target of targets) {
-        await walkAndCompress(path.join(distDir, target));
-      }
+    name: "entry-fetch-priority",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(html) {
+        let scriptDone = false;
+        html = html.replace(
+          /<script type="module"([^>]*?)>/g,
+          (tag, attrs: string) => {
+            if (!scriptDone && attrs.includes("src=")) {
+              scriptDone = true;
+              return `<script type="module"${attrs} fetchpriority="high">`;
+            }
+            return tag;
+          },
+        );
+        html = html.replace(
+          /<link rel="modulepreload"[^>]*href="[^"]*vendor-ui[^"]*"[^>]*>/g,
+          (tag) =>
+            tag.includes("fetchpriority")
+              ? tag
+              : tag.replace(
+                  '<link rel="modulepreload"',
+                  '<link rel="modulepreload" fetchpriority="high"',
+                ),
+        );
+        return html;
+      },
     },
   };
+}
+
+// Preconnect the backend origin during dev (different port than the Vite dev
+// server). In production the API is same-origin (reverse proxy / bundled
+// Spring Boot), so nothing is injected into production HTML.
+function devBackendPreconnectPlugin(backendUrl: string): PluginOption {
+  let origin = "";
+  try {
+    origin = new URL(backendUrl).origin;
+  } catch {
+    return { name: "dev-backend-preconnect-disabled" };
+  }
+  return {
+    name: "dev-backend-preconnect",
+    apply: "serve",
+    transformIndexHtml(html) {
+      return html.replace(
+        "</head>",
+        `  <link rel="preconnect" href="${origin}" />\n  </head>`,
+      );
+    },
+  };
+}
+
+// Speculation Rules for the marketing site (SaaS flavour only): prefetch the
+// most common tool routes at moderate eagerness so navigations hit warm cache.
+// Prefetch (not prerender) is used because this is an SPA; self-hosted Docker
+// and desktop builds skip this.
+function speculationRulesPlugin(): PluginOption {
+  const rules = JSON.stringify({
+    prefetch: [
+      {
+        where: { href_matches: ["/compress", "/merge", "/split"] },
+        eagerness: "moderate",
+      },
+    ],
+  });
+  return {
+    name: "speculation-rules",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(html) {
+        return html.replace(
+          "</head>",
+          `  <script type="speculationrules">${rules}</script>\n  </head>`,
+        );
+      },
+    },
+  };
+}
+
+// Beasties (critters fork) on the prerendered route HTML files: inline
+// critical CSS per route, prune unused rules, and convert remaining
+// stylesheets to preload="swap". index.html is handled by the
+// vite-plugin-beasties instance below (transformIndexHtml); these route files
+// are written in closeBundle so they are processed here, before compression.
+async function beastiesRouteHtml(
+  distDir: string,
+  files: string[],
+  publicPath: string,
+) {
+  const { default: Beasties } = await import("beasties");
+  const instance = new Beasties({
+    path: distDir,
+    publicPath,
+    preload: "swap",
+    prune: 0.85,
+    inlineThreshold: 4096,
+    minimumExternalSize: 1024,
+    logLevel: "silent",
+  });
+  await Promise.all(
+    files.map(async (file) => {
+      const html = await fs.readFile(file, "utf8");
+      const inlined = await instance.process(html);
+      await fs.writeFile(file, inlined);
+    }),
+  );
 }
 
 // Bake per-route Open Graph / Twitter Card tags into static HTML at build time.
@@ -96,7 +260,7 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
     : "public/og-metadata.json";
   return {
     name: "prerender-og",
-    apply: "build" as const,
+    apply: "build",
     async closeBundle() {
       // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
       const { prerenderOg } = await import("./scripts/og-prerender.mjs");
@@ -111,7 +275,10 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
       let manifest;
       try {
         manifest = JSON.parse(
-          await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
+          await fs.readFile(
+            path.resolve(import.meta.dirname, manifestFile),
+            "utf8",
+          ),
         );
       } catch {
         console.warn(
@@ -120,23 +287,94 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         );
         return;
       }
-      const distDir = path.resolve(__dirname, "dist");
-      const count = await prerenderOg({ distDir, manifest, ogBase, baseHref });
-      console.log(
-        `[prerender-og] wrote ${count} prerendered route pages` +
-          (ogBase
-            ? ` (absolute URLs, base=${ogBase})`
-            : " (root-relative URLs)"),
-      );
+      const distDir = path.resolve(import.meta.dirname, "dist");
+      // Inject a pdfium.wasm preload into the head of routes that load the
+      // wasm engine on page load. Relative href resolves correctly at the
+      // deploy root and under a RUN_SUBPATH base.
+      const extraHeadFor = (routePath: string): string =>
+        PDFIUM_ROUTE_SET.has(routePath.replace(/^\//, ""))
+          ? '<link rel="preload" as="fetch" href="pdfium/pdfium.wasm" crossorigin="anonymous" />'
+          : "";
+      await prerenderOg({ distDir, manifest, ogBase, baseHref, extraHeadFor });
+
+      // closeBundle hooks run concurrently in Vite, not in plugin order, so a
+      // sibling plugin cannot reliably compress files written here. Process the
+      // freshly written route HTML here instead (index.html is already handled
+      // by the main compression plugin) so Spring's EncodedResourceResolver can
+      // serve it precompressed. Nested routes (e.g. dist/settings/people.html)
+      // are included, so walk the whole dist tree.
+      const htmlFiles: string[] = [];
+      const walkHtml = async (dir: string) => {
+        let entries;
+        try {
+          entries = await fs.readdir(dir, { withFileTypes: true });
+        } catch {
+          return;
+        }
+        for (const entry of entries) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) await walkHtml(p);
+          else if (
+            entry.name.endsWith(".html") &&
+            entry.name !== "index.html"
+          ) {
+            htmlFiles.push(p);
+          }
+        }
+      };
+      await walkHtml(distDir);
+
+      // Critical CSS first, then compress the finished HTML.
+      await beastiesRouteHtml(distDir, htmlFiles, baseHref);
+      await Promise.all(htmlFiles.map((f) => compressOne(f, distDir)));
+    },
+  };
+}
+
+function compressStaticCopyPlugin(): PluginOption {
+  return {
+    name: "compress-static-copy",
+    apply: "build",
+    async closeBundle() {
+      const distDir = path.resolve(import.meta.dirname, "dist");
+      const targets = ["pdfium", "vendor", "pdfjs"];
+
+      // Collect first, then compress with bounded concurrency. zlib's async API
+      // runs on libuv's threadpool, so a serial loop idles most cores on the
+      // build's most CPU-heavy step.
+      const files: string[] = [];
+      const walk = async (dir: string) => {
+        let entries;
+        try {
+          entries = await fs.readdir(dir, { withFileTypes: true });
+        } catch {
+          return;
+        }
+        for (const entry of entries) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) await walk(p);
+          else files.push(p);
+        }
+      };
+      for (const target of targets) await walk(path.join(distDir, target));
+
+      const POOL = 8;
+      for (let i = 0; i < files.length; i += POOL) {
+        await Promise.all(
+          files.slice(i, i + POOL).map((f) => compressOne(f, distDir)),
+        );
+      }
     },
   };
 }
 
 /**
- * When the app is served under a subpath (RUN_SUBPATH → base like "/app/"), Vite
- * serves index.html at "/app/" and redirects "/" → the base, but a bare "/app"
- * (no trailing slash) 404s. This middleware redirects "/app" → "/app/" so either
+ * When the app is served under a subpath (RUN_SUBPATH to base like "/app/"), Vite
+ * serves index.html at "/app/" and redirects "/" to the base, but a bare "/app"
+ * (no trailing slash) 404s. This middleware redirects "/app" to "/app/" so either
  * form loads the app in dev and `vite preview`. Query strings are preserved.
+ * 302 (not 301) so a changed RUN_SUBPATH never leaves a permanently cached
+ * redirect in a dev browser.
  */
 function subpathBareRedirectPlugin(subpath: string): PluginOption {
   const bare = `/${subpath}`;
@@ -146,7 +384,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
     const q = url.indexOf("?");
     const pathname = q === -1 ? url : url.slice(0, q);
     if (pathname === bare) {
-      res.statusCode = 301;
+      res.statusCode = 302;
       res.setHeader("Location", withSlash + (q === -1 ? "" : url.slice(q)));
       res.end();
       return;
@@ -164,7 +402,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
   };
 }
 
-// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
+// NOTE: cloud/ is a SHARED layer, not a runnable build flavor. It's compiled
 // into the saas and desktop builds. It has no entry here and no vite tsconfig;
 // it is only typechecked standalone via editor/src/cloud/tsconfig.json
 // (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
@@ -188,8 +426,8 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
 export default defineConfig(async ({ mode, command }) => {
   // Dev-only browser-tab label (worktree folder basename) surfaced by the
   // top-level dev tasks so concurrent worktrees have distinguishable tabs.
-  // Only injected during `vite` (dev serve) — never baked into a production
-  // build — and carries only the folder name, no path/host/user info.
+  // Only injected during `vite` (dev serve), never baked into a production
+  // build, and carries only the folder name, no path/host/user info.
   const devWorktreeLabel =
     command === "serve" ? (process.env.STIRLING_DEV_LABEL ?? "") : "";
   // Load env files relative to this config (frontend/editor/), regardless of
@@ -263,19 +501,37 @@ export default defineConfig(async ({ mode, command }) => {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
     plugins: [
+      // Tailwind v4 compiles its own CSS via the dedicated Vite plugin, which
+      // runs independently of Vite's CSS transformer. This lets the transformer
+      // stay on lightningcss (Rust) without losing Tailwind's postcss plugin.
+      tailwindcss(),
+      // React Compiler via the official Vite 8 preset: Oxc handles the JSX
+      // transform (plugin-react), Babel runs only the compiler preset on
+      // project files (node_modules excluded).
       react(),
+      babel({
+        presets: [reactCompilerPreset({ target: "19" })],
+        exclude: /node_modules/,
+      }),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
       compression({
         threshold: 1024,
-        exclude: [/\.(png|jpg|jpeg|gif|webp|woff|woff2)$/],
+        exclude: [COMPRESSION_EXCLUDE_REGEX],
         algorithms: [
           defineAlgorithm("gzip", { level: 9 }),
           defineAlgorithm("brotliCompress", {
             params: {
               [constants.BROTLI_PARAM_QUALITY]: 11,
+            },
+          }),
+          // zstd level 22 (max). The plugin schedules level>=20 zstd on a
+          // dedicated low-concurrency queue automatically.
+          defineAlgorithm("zstandard", {
+            params: {
+              [constants.ZSTD_c_compressionLevel]: 22,
             },
           }),
         ],
@@ -332,8 +588,58 @@ export default defineConfig(async ({ mode, command }) => {
           },
         ],
       }),
-      compressStaticCopyPlugin(),
       prerenderOgPlugin(effectiveMode === "saas"),
+      // Critical CSS for index.html (route files are handled inside
+      // prerenderOgPlugin, which must run before this instance per the
+      // plugin-order contract above).
+      beasties({
+        options: {
+          preload: "swap",
+          prune: 0.85,
+          inlineThreshold: 4096,
+          minimumExternalSize: 1024,
+          logLevel: "silent",
+        },
+      }),
+      entryFetchPriorityPlugin(),
+      compressStaticCopyPlugin(),
+      ...(effectiveMode === "saas" ? [speculationRulesPlugin()] : []),
+      devBackendPreconnectPlugin(backendUrl),
+      VitePWA({
+        strategies: "injectManifest",
+        srcDir: "src",
+        filename: "sw.ts",
+        registerType: "prompt",
+        injectRegister: null,
+        manifest: false,
+        devOptions: {
+          enabled: false,
+        },
+        injectManifest: {
+          // Precache only the app shell: entry HTML, the entry + critical
+          // vendor chunks, CSS and the wasm engine. Everything else (tool
+          // chunks, pdfjs, cmaps) is cached on demand by the SW's runtime
+          // StaleWhileRevalidate route, so first install stays light.
+          globPatterns: [
+            "index.html",
+            "assets/rolldown-runtime-*.js",
+            "assets/index-*.js",
+            "assets/vendor-ui-*.{js,css}",
+            "assets/*.css",
+            "pdfium/pdfium.wasm",
+          ],
+          globIgnores: [
+            "**/*.br",
+            "**/*.gz",
+            "**/*.zst",
+            "**/stats.html",
+            "**/*.map",
+          ],
+          maximumFileSizeToCacheInBytes: 8_000_000,
+          rollupFormat: "es",
+          minify: false,
+        },
+      }),
     ],
     server: {
       host: true,
@@ -348,6 +654,11 @@ export default defineConfig(async ({ mode, command }) => {
       },
       // Only use proxy in web mode - Tauri handles backend connections directly
       proxy: backendProxyConfig,
+      warmup: {
+        // Pre-transform the critical path on dev-server start so the first
+        // browser request is already warm.
+        clientFiles: ["src/index.tsx", "src/core/App.tsx"],
+      },
     },
     preview: {
       host: true,
@@ -355,21 +666,45 @@ export default defineConfig(async ({ mode, command }) => {
       strictPort: true,
       proxy: backendProxyConfig,
     },
+    css: {
+      // Lightning CSS (Rust) for the transform step. Tailwind v4 is handled by
+      // the @tailwindcss/vite plugin (added above), so the postcss pipeline is
+      // not needed here; autoprefixer is unnecessary for esnext targets.
+      transformer: "lightningcss",
+    },
     build: {
       target: "esnext",
-      rollupOptions: {
+      // The build already precompresses for real and ships a visualizer; the
+      // per-chunk gzip measurement Vite does for the log is wasted CI time.
+      reportCompressedSize: false,
+      cssMinify: "lightningcss",
+      // Inline tiny assets as base64; emit everything larger as real files so
+      // they get hashed, precompressed and edge-cached.
+      assetsInlineLimit: 4096,
+      rolldownOptions: {
         output: {
-          manualChunks(id) {
+          assetFileNames: mjsToJsAssetFileNames,
+          manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
+              // Leaf UI packages: they import react/emotion but are not imported
+              // by them, so they split without creating a chunk cycle. Keeping
+              // them separate stops icon edits from invalidating the whole
+              // vendor-ui chunk.
+              if (id.includes("@mui/icons-material")) return "vendor-mui-icons";
+              if (id.includes("@iconify/react")) return "vendor-iconify";
+              // react/react-dom/scheduler/emotion/mui/mantine are mutually
+              // circular, so they must stay in one chunk or module init order
+              // breaks at runtime (TDZ ReferenceError).
               if (
                 id.includes("react") ||
+                id.includes("scheduler") ||
                 id.includes("@mantine") ||
-                id.includes("@emotion") ||
                 id.includes("@mui") ||
+                id.includes("@emotion") ||
                 id.includes("@iconify")
               ) {
                 return "vendor-ui";
@@ -396,6 +731,16 @@ export default defineConfig(async ({ mode, command }) => {
     optimizeDeps: {
       exclude: ["@embedpdf/pdfium"],
     },
+    // Worker sub-builds do not inherit the main build's output.assetFileNames.
+    // Without this, the pdf.js worker referenced from inside a worker would be
+    // emitted as .mjs (see mjsToJsAssetFileNames above).
+    worker: {
+      rolldownOptions: {
+        output: {
+          assetFileNames: mjsToJsAssetFileNames,
+        },
+      },
+    },
     // base: "./" produces relative asset URLs which work when dist/ is served
     // at any path (e.g. Spring Boot bundling the frontend at /). But under
     // `vite preview` for deep SPA routes (e.g. /workflow/sign/<token>), the
@@ -405,10 +750,6 @@ export default defineConfig(async ({ mode, command }) => {
     // an absolute base so deep-route asset paths resolve to /assets/...
     // Trailing slash required: it becomes `<base href>`, and browsers resolve
     // relative URLs (manifest.json, favicon) against the base's *directory*.
-    base: runSubpath
-      ? `/${runSubpath}/`
-      : process.env.VITE_BUILD_FOR_PREVIEW === "1"
-        ? "/"
-        : "./",
+    base: resolveBase(runSubpath),
   };
 });

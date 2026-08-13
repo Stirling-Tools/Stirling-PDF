@@ -1,15 +1,30 @@
 /**
- * PDF.js Worker Manager - Centralized worker lifecycle management
+ * PDF.js Worker Manager - Centralized worker lifecycle management.
  *
  * Prevents infinite worker creation by managing PDF.js workers globally
- * and ensuring proper cleanup when operations complete.
+ * and ensuring proper cleanup when operations complete. The pdfjs bundle
+ * (~450 KB) is imported lazily on first use so it never enters the startup
+ * graph.
  */
 
-import {
-  GlobalWorkerOptions,
-  getDocument,
-  PDFDocumentProxy,
-} from "pdfjs-dist/legacy/build/pdf.mjs";
+import type { PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
+
+type PdfjsModule = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
+
+let pdfjsPromise: Promise<PdfjsModule> | null = null;
+
+const loadPdfjs = (): Promise<PdfjsModule> => {
+  pdfjsPromise ??= import("pdfjs-dist/legacy/build/pdf.mjs");
+  return pdfjsPromise;
+};
+
+type PdfSource =
+  | ArrayBuffer
+  | Uint8Array<ArrayBufferLike>
+  | string
+  | {
+      data: ArrayBuffer | Uint8Array<ArrayBufferLike>;
+    };
 
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
@@ -19,7 +34,7 @@ class PDFWorkerManager {
   private isInitialized = false;
 
   private constructor() {
-    this.initializeWorker();
+    // Worker setup is deferred to the first createDocument call.
   }
 
   static getInstance(): PDFWorkerManager {
@@ -30,25 +45,31 @@ class PDFWorkerManager {
   }
 
   /**
-   * Initialize PDF.js worker once globally
+   * Initialize PDF.js worker once globally.
    */
-  private initializeWorker(): void {
+  private async initializeWorker(): Promise<PdfjsModule> {
+    const pdfjs = await loadPdfjs();
     if (!this.isInitialized) {
-      GlobalWorkerOptions.workerSrc = new URL(
+      pdfjs.GlobalWorkerOptions.workerSrc = new URL(
         "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
         import.meta.url,
       ).toString();
-      (GlobalWorkerOptions as any).docBaseUrl = undefined;
+      (
+        pdfjs.GlobalWorkerOptions as typeof pdfjs.GlobalWorkerOptions & {
+          docBaseUrl?: string;
+        }
+      ).docBaseUrl = undefined;
       this.isInitialized = true;
     }
+    return pdfjs;
   }
 
   /**
-   * Create a PDF document with proper lifecycle management
-   * Supports ArrayBuffer, Uint8Array, URL string, or {data: ArrayBuffer} object
+   * Create a PDF document with proper lifecycle management.
+   * Supports ArrayBuffer, Uint8Array, URL string, or {data: ArrayBuffer} object.
    */
   async createDocument(
-    data: ArrayBuffer | Uint8Array | string | { data: ArrayBuffer },
+    data: PdfSource,
     options: {
       disableAutoFetch?: boolean;
       disableStream?: boolean;
@@ -61,39 +82,29 @@ class PDFWorkerManager {
       await this.waitForAvailableWorker();
     }
 
-    // Normalize input data to PDF.js format
-    let pdfData: any;
-    if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
-      pdfData = { data };
-    } else if (typeof data === "string") {
-      pdfData = data; // URL string
-    } else if (data && typeof data === "object" && "data" in data) {
-      pdfData = data; // Already in {data: ArrayBuffer} format
-    } else {
-      pdfData = data; // Pass through as-is
-    }
+    const pdfjs = await this.initializeWorker();
 
-    const loadingTask = getDocument(
+    // Normalize input data to PDF.js format
+    const pdfData:
+      | string
+      | { data: ArrayBuffer | Uint8Array<ArrayBufferLike> } =
+      data instanceof ArrayBuffer || data instanceof Uint8Array
+        ? { data }
+        : data;
+
+    const commonOptions = {
+      disableAutoFetch: options.disableAutoFetch ?? true,
+      disableStream: options.disableStream ?? true,
+      stopAtErrors: options.stopAtErrors ?? false,
+      verbosity: options.verbosity ?? 0,
+      // Suppress warnings about unimplemented widget types and other non-critical issues
+      isEvalSupported: false,
+    };
+
+    const loadingTask =
       typeof pdfData === "string"
-        ? {
-            url: pdfData,
-            disableAutoFetch: options.disableAutoFetch ?? true,
-            disableStream: options.disableStream ?? true,
-            stopAtErrors: options.stopAtErrors ?? false,
-            verbosity: options.verbosity ?? 0,
-            // Suppress warnings about unimplemented widget types and other non-critical issues
-            isEvalSupported: false,
-          }
-        : {
-            ...pdfData,
-            disableAutoFetch: options.disableAutoFetch ?? true,
-            disableStream: options.disableStream ?? true,
-            stopAtErrors: options.stopAtErrors ?? false,
-            verbosity: options.verbosity ?? 0,
-            // Suppress warnings about unimplemented widget types and other non-critical issues
-            isEvalSupported: false,
-          },
-    );
+        ? pdfjs.getDocument({ url: pdfData, ...commonOptions })
+        : pdfjs.getDocument({ ...pdfData, ...commonOptions });
 
     try {
       const pdf = await loadingTask.promise;

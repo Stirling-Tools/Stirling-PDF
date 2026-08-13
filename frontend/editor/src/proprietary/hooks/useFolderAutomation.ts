@@ -179,12 +179,12 @@ async function finalizeRun(
           }
         }
       } catch {
-        // Best-effort — FS write failure doesn't block the pipeline
+        // Best-effort: FS write failure doesn't block the pipeline
       }
     }
   }
 
-  // Delete stale outputs from a previous run (skip in auto-number mode — outputs accumulate)
+  // Delete stale outputs from a previous run (skip in auto-number mode; outputs accumulate)
   if (!isAutoNumber) {
     for (const oldId of prevOutputIds) {
       try {
@@ -369,8 +369,11 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
     void drainDueRetries();
 
     if ("serviceWorker" in navigator) {
+      // /sw.js is the app's single service worker (vite-plugin-pwa build of
+      // src/sw.ts); it now also hosts the retry-scheduling logic, so a
+      // registration here at the same scope reuses (not replaces) it.
       navigator.serviceWorker
-        .register("/sw-folder-retry.js", { scope: "/" })
+        .register("/sw.js", { scope: "/" })
         .catch((err) =>
           console.warn("Watched Folder retry SW registration failed:", err),
         );

@@ -1,9 +1,10 @@
 import { useEffect } from "react";
-import posthog from "posthog-js";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { loadPosthog } from "@app/services/posthogLoader";
+import type { PosthogClient } from "@app/services/posthogLoader";
 
-function applyPosthogConsent(): void {
-  if (typeof window === "undefined" || !posthog.__loaded) {
+function applyPosthogConsent(ph: PosthogClient): void {
+  if (typeof window === "undefined" || !ph.__loaded) {
     return;
   }
 
@@ -11,16 +12,16 @@ function applyPosthogConsent(): void {
     window.CookieConsent?.acceptedService?.("posthog", "analytics") || false;
 
   if (optedIn) {
-    posthog.set_config({ persistence: "localStorage+cookie" });
-    posthog.opt_in_capturing();
+    ph.set_config({ persistence: "localStorage+cookie" });
+    ph.opt_in_capturing();
     return;
   }
 
-  posthog.opt_out_capturing();
-  posthog.set_config({ persistence: "memory" });
+  ph.opt_out_capturing();
+  ph.set_config({ persistence: "memory" });
 }
 
-function ensurePosthogInitialized(): boolean {
+function ensurePosthogInitialized(ph: PosthogClient): boolean {
   if (typeof window === "undefined") {
     return false;
   }
@@ -32,8 +33,8 @@ function ensurePosthogInitialized(): boolean {
     return false;
   }
 
-  if (!posthog.__loaded) {
-    posthog.init(posthogKey, {
+  if (!ph.__loaded) {
+    ph.init(posthogKey, {
       api_host: posthogHost,
       defaults: "2025-05-24",
       capture_exceptions: true,
@@ -54,30 +55,40 @@ export function usePosthogTracking(): void {
     const analyticsEnabled = config?.enableAnalytics === true;
     const posthogEnabled = analyticsEnabled && config?.enablePosthog !== false;
 
+    // Analytics disabled: never load the module at all.
     if (!posthogEnabled) {
-      if (posthog.__loaded) {
-        posthog.opt_out_capturing();
-        posthog.set_config({ persistence: "memory" });
+      return;
+    }
+
+    let cancelled = false;
+    let removeConsentListeners: (() => void) | undefined;
+
+    void (async () => {
+      const ph = await loadPosthog();
+      if (cancelled || !ph) {
+        return;
       }
-      return;
-    }
+      if (!ensurePosthogInitialized(ph)) {
+        return;
+      }
 
-    if (!ensurePosthogInitialized()) {
-      return;
-    }
+      applyPosthogConsent(ph);
 
-    applyPosthogConsent();
+      const handleConsentChange = () => {
+        applyPosthogConsent(ph);
+      };
 
-    const handleConsentChange = () => {
-      applyPosthogConsent();
-    };
-
-    window.addEventListener("cc:onConsent", handleConsentChange);
-    window.addEventListener("cc:onChange", handleConsentChange);
+      window.addEventListener("cc:onConsent", handleConsentChange);
+      window.addEventListener("cc:onChange", handleConsentChange);
+      removeConsentListeners = () => {
+        window.removeEventListener("cc:onConsent", handleConsentChange);
+        window.removeEventListener("cc:onChange", handleConsentChange);
+      };
+    })();
 
     return () => {
-      window.removeEventListener("cc:onConsent", handleConsentChange);
-      window.removeEventListener("cc:onChange", handleConsentChange);
+      cancelled = true;
+      removeConsentListeners?.();
     };
   }, [config?.enableAnalytics, config?.enablePosthog]);
 }

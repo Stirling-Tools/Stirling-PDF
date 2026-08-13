@@ -78,6 +78,10 @@ const BASE_HREF_RE = /<base\s+href="[^"]*"\s*\/?>/i;
  * need it because a relative `<base href="./">` would resolve their assets
  * against the sub-path (e.g. /settings/) and 404; flat files and the root keep
  * the build's relative base.
+ *
+ * `extraHeadFor(routePath)` optionally returns extra markup injected right
+ * before `</head>` for a given route (e.g. a pdfium.wasm preload). It is NOT
+ * applied to the root index.html.
  * @returns {Promise<number>}
  */
 export async function prerenderOg({
@@ -85,6 +89,7 @@ export async function prerenderOg({
   manifest,
   ogBase = "",
   baseHref = "/",
+  extraHeadFor = () => "",
 }) {
   const template = await fs.readFile(path.join(distDir, "index.html"), "utf8");
 
@@ -107,6 +112,8 @@ export async function prerenderOg({
       ogBase,
       pageUrlPath: ogBase ? routePath : null,
     });
+    const extraHead = extraHeadFor(routePath);
+    if (extraHead) html = html.replace("</head>", `  ${extraHead}</head>`);
     const nested = segments.length > 1;
     if (nested)
       html = html.replace(BASE_HREF_RE, `<base href="${baseHref}" />`);
