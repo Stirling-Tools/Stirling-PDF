@@ -13,7 +13,7 @@ import java.util.Set;
  * simply did not exist on a fresh preview branch.
  *
  * <p>This class makes the boundary explicit and {@code SaasSchemaOwnershipTest} makes it binding:
- * every {@code @Entity} on the SaaS classpath must appear in exactly one of these two sets. A new
+ * every {@code @Entity} the SaaS app maps must appear in exactly one of these two sets. A new
  * entity fails the build until someone states who owns its table, which is the decision that was
  * previously made by accident.
  *
@@ -21,6 +21,16 @@ import java.util.Set;
  * migration-owned tables, so it cannot create, alter or drop them whatever {@code ddl-auto} says.
  * Inherited tables stay under Hibernate, so a preview branch built from migrations alone still
  * heals itself on first boot.
+ *
+ * <p><b>What this does not catch.</b> The register is a hand-maintained copy of what lives in
+ * another repository, and only one direction is enforced. The test fails when a *new* entity
+ * appears with no owner. It cannot notice a table changing sides: write a migration for {@code
+ * folders} in Stirling-PDF-SaaS and nothing here changes, the test still passes, and Hibernate
+ * carries on managing a table the migrations now own — which is precisely how {@code
+ * team_memberships.role} got widened. Adding a migration for anything in {@link #HIBERNATE_MANAGED}
+ * therefore means moving it to {@link #MIGRATION_OWNED} in the same change; nothing will remind
+ * you. Making that structural rather than remembered is what moving the SaaS tables into their own
+ * schema would buy, and is the reason this class is a stepping stone rather than the answer.
  */
 public final class SaasSchemaOwnership {
 

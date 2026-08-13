@@ -24,6 +24,23 @@ import org.hibernate.tool.schema.spi.SchemaFilterProvider;
  * over every mapped entity regardless of namespace, so moving SaaS tables to their own schema would
  * not by itself keep Hibernate out of them. {@link SaasSchemaOwnership} is the register; this class
  * only applies it.
+ *
+ * <p><b>Foreign keys still cross the line, on purpose.</b> Several inherited tables reference
+ * migration-owned ones — {@code folders}, {@code stored_files} and {@code file_shares} all point at
+ * {@code users}/{@code teams}. Hibernate's {@code SchemaCreatorImpl.createForeignKeys} and {@code
+ * AbstractSchemaMigrator.applyForeignKeys} check {@code includeTable} against the *owning* table
+ * only and then emit every foreign key on it, without consulting the referenced table. So excluding
+ * {@code users} does not cost the branch its referential integrity, and a branch ends up matching
+ * staging. It does mean the referenced tables have to exist by the time Hibernate runs, which holds
+ * because a Supabase branch applies its migrations at build time and the app connects afterwards.
+ *
+ * <p><b>Known gap: this cannot detect drift.</b> Filtering means Hibernate never inspects these
+ * tables, and {@link #getValidateFilter()} extends that to {@code validate}, so nothing here
+ * compares a migration-owned table against its entity. Combined with the register being a
+ * hand-maintained list of another repo's contents (see {@link SaasSchemaOwnership}), there is
+ * currently no automated signal when the register, the entities and the database disagree. That is
+ * a deliberate trade for a boot that does not fail on differences we accept, not a claim that drift
+ * cannot happen; a non-fatal drift report is the missing piece and belongs outside this class.
  */
 public class MigrationOwnedSchemaFilter implements SchemaFilterProvider, SchemaFilter {
 

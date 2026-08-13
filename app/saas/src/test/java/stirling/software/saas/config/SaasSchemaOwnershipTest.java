@@ -2,12 +2,15 @@ package stirling.software.saas.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.ClassUtils;
@@ -15,41 +18,69 @@ import org.springframework.util.ClassUtils;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
+import stirling.software.proprietary.security.configuration.DatabaseConfig;
+
 /**
  * Makes {@link SaasSchemaOwnership} binding rather than decorative.
  *
- * <p>Every {@code @Entity} on the SaaS classpath has to be declared as owned by either the Supabase
+ * <p>Every {@code @Entity} the SaaS app maps has to be declared as owned by either the Supabase
  * migrations or Hibernate. Adding an entity without saying which fails here, at build time, instead
  * of months later on a preview branch that has no such table. That is not hypothetical: {@code
  * payg_instance_usage} shipped with an entity and no migration and went unnoticed until a branch
  * tried to use it.
+ *
+ * <p>"Maps" is meant precisely: the scan covers the packages named by the {@code @EntityScan}
+ * declarations the app actually boots with, not everything under {@code stirling.software}. See
+ * {@link #mappedPackages()}. Note this only enforces one direction — {@link SaasSchemaOwnership}
+ * documents the drift it cannot see.
  */
 class SaasSchemaOwnershipTest {
 
-    /** Every module whose entities the SaaS app maps: its own plus everything it inherits. */
-    private static final String BASE_PACKAGE = "stirling.software";
+    /**
+     * The packages the running app actually maps, read off the two {@code @EntityScan} declarations
+     * that define them rather than hardcoded.
+     *
+     * <p>Scanning all of {@code stirling.software} would be easier and wrong in a quiet way: it is
+     * a superset, so it would force ownership declarations for entities Hibernate never sees and
+     * let the register claim tables that do not exist as far as the SaaS app is concerned. Deriving
+     * the list means this test measures the same set Hibernate does, and follows a package being
+     * added or moved without anyone updating it here.
+     */
+    private static Set<String> mappedPackages() {
+        Set<String> packages = new TreeSet<>();
+        for (Class<?> config : List.of(SaasJpaConfig.class, DatabaseConfig.class)) {
+            EntityScan scan = config.getAnnotation(EntityScan.class);
+            assertThat(scan)
+                    .as("%s must carry @EntityScan, or its entities are not mapped", config)
+                    .isNotNull();
+            packages.addAll(Arrays.asList(scan.value()));
+        }
+        return packages;
+    }
 
     private static TreeMap<String, String> mappedTables() {
         ClassPathScanningCandidateComponentProvider scanner =
                 new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
         TreeMap<String, String> byTable = new TreeMap<>();
-        for (BeanDefinition bd : scanner.findCandidateComponents(BASE_PACKAGE)) {
-            String className = bd.getBeanClassName();
-            Class<?> type;
-            try {
-                type =
-                        ClassUtils.forName(
-                                className, SaasSchemaOwnershipTest.class.getClassLoader());
-            } catch (ClassNotFoundException | LinkageError e) {
-                continue; // not on this module's runtime classpath; nothing to own
+        for (String basePackage : mappedPackages()) {
+            for (BeanDefinition bd : scanner.findCandidateComponents(basePackage)) {
+                String className = bd.getBeanClassName();
+                Class<?> type;
+                try {
+                    type =
+                            ClassUtils.forName(
+                                    className, SaasSchemaOwnershipTest.class.getClassLoader());
+                } catch (ClassNotFoundException | LinkageError e) {
+                    continue; // not on this module's runtime classpath; nothing to own
+                }
+                Table table = type.getAnnotation(Table.class);
+                String name =
+                        table != null && !table.name().isBlank()
+                                ? table.name()
+                                : camelToSnake(type.getSimpleName());
+                byTable.put(name.toLowerCase(), className);
             }
-            Table table = type.getAnnotation(Table.class);
-            String name =
-                    table != null && !table.name().isBlank()
-                            ? table.name()
-                            : camelToSnake(type.getSimpleName());
-            byTable.put(name.toLowerCase(), className);
         }
         return byTable;
     }
@@ -65,6 +96,12 @@ class SaasSchemaOwnershipTest {
         assertThat(mapped)
                 .as("entity scan found nothing, so this test proves nothing")
                 .isNotEmpty();
+        // The scan is derived from @EntityScan now, so a package quietly dropped from either
+        // declaration would shrink it and weaken this test rather than fail it. These four straddle
+        // the two declarations, so losing either side fails here instead of silently checking less.
+        assertThat(mapped.keySet())
+                .as("both @EntityScan declarations must have contributed to the scan")
+                .contains("users", "teams", "payg_instance_usage", "folders");
 
         Set<String> undeclared = new TreeSet<>();
         Set<String> both = new TreeSet<>();
