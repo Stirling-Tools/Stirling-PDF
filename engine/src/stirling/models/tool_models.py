@@ -951,7 +951,14 @@ class PdfToUaParams(ApiModel):
         FigurePolicy.require_alt,
         description="How to treat images with no description. require-alt leaves them undescribed so the report asks for input; mark-decorative treats every image as decoration.",
     )
-    language: str = Field("en-GB", description="Document language as a BCP-47 tag, for example en-GB")
+    language: str = Field(
+        "en-GB",
+        description="Document language as a BCP-47 tag, for example en-GB. Applied only when the document does not already declare one, unless overrideLanguage is set.",
+    )
+    override_language: bool = Field(
+        False,
+        description="Replace the language the document already declares. Off by default, so a document is never relabelled into a language it is not written in.",
+    )
     profile: Profile1 = Field(Profile1.ua1, description="PDF/UA conformance level to target")
     title: str | None = Field(
         None, description="Document title, required by PDF/UA. Falls back to the first heading, then the filename."
