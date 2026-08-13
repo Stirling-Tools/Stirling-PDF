@@ -284,6 +284,9 @@ public class MergeController {
 
                 try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
                         PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
+                } catch (JpdfiumGuard.JpdfiumBusyException e) {
+                    // A busy native layer says nothing about the file; do not brand it invalid.
+                    throw e;
                 } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
                     invalidIndexes.add(index);

@@ -1,8 +1,10 @@
 package stirling.software.SPDF.pdf.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,12 +21,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.SPDF.pdf.parser.PdfModels.Bounds;
 import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
 import stirling.software.SPDF.pdf.parser.TableExtractionService.PageTable;
 import stirling.software.SPDF.pdf.parser.TableExtractionService.Strategy;
+import stirling.software.common.util.JpdfiumGuard;
 
 /**
  * The point of the service is the fallback: ruled extraction wins where it fires, and pages with
@@ -118,6 +122,23 @@ class TableExtractionServiceTest {
         }
 
         assertThat(tables).isEmpty();
+    }
+
+    @Test
+    @DisplayName("a jpdfium lock timeout is raised, not reported as an empty table set")
+    void lockTimeoutIsNotSwallowedAsNoTables() throws IOException {
+        TableExtractionService svc = new TableExtractionService(tabulaTableParser);
+        when(tabulaTableParser.parse(any(PDDocument.class), eq(1))).thenReturn(List.of());
+        Path fixture = fallbackFixture();
+
+        try (MockedStatic<JpdfiumGuard> guard = mockStatic(JpdfiumGuard.class);
+                PDDocument doc = docWithPages(1)) {
+            guard.when(JpdfiumGuard::acquire).thenThrow(JpdfiumGuard.JpdfiumBusyException.class);
+
+            // Silently returning zero tables would hand the caller a 200 with missing data.
+            assertThatThrownBy(() -> svc.extract(doc, List.of(1), fixture))
+                    .isInstanceOf(JpdfiumGuard.JpdfiumBusyException.class);
+        }
     }
 
     @Test

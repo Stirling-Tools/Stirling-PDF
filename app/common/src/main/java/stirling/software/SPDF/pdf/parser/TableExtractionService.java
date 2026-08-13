@@ -49,6 +49,8 @@ public class TableExtractionService {
      * @param pdfPath path to the same PDF on disk, used for the word-grid fallback; when {@code
      *     null} only ruled extraction runs
      * @return tables in page order, empty when the document genuinely has none
+     * @throws JpdfiumGuard.JpdfiumBusyException if the native lock could not be taken; an empty
+     *     result must never stand in for "the server was too busy to look"
      */
     public List<PageTable> extract(PDDocument document, Collection<Integer> pages, Path pdfPath)
             throws IOException {
@@ -82,7 +84,10 @@ public class TableExtractionService {
      */
     private List<PageTable> wordGridTables(Path pdfPath, Set<Integer> wantedPages) {
         List<PageTable> out = new ArrayList<>();
-        try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
+        // Acquired outside the try: a lock timeout is a capacity failure, not "this page has no
+        // tables", so it must not reach the best-effort catch below.
+        JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
+        try (guard;
                 PdfDocument doc = PdfDocument.open(pdfPath)) {
             for (PdfMarkdownConverter.ExtractedTable t :
                     new PdfMarkdownConverter().extractTables(doc, wantedPages)) {
@@ -95,6 +100,9 @@ public class TableExtractionService {
                         "Word-grid fallback recovered {} table(s) on pages with no ruling lines",
                         out.size());
             }
+        } catch (JpdfiumGuard.JpdfiumBusyException e) {
+            // Belt and braces: busy never degrades to an empty table set, whatever raised it.
+            throw e;
         } catch (Exception e) {
             // Best-effort: the caller still has the ruled results. Logged with the throwable so a
             // converter bug is diagnosable rather than reading as "no tables".

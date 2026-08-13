@@ -173,6 +173,13 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
         try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
                 PdfDocument doc = PdfDocument.open(path)) {
             return doc.pageCount();
+        } catch (JpdfiumGuard.JpdfiumBusyException e) {
+            // Metering must not fail the request, but a busy lock under-counts: say so loudly.
+            log.warn(
+                    "Timed out waiting for jpdfium to count pages of {}; metering on bytes only, so"
+                            + " this operation is under-counted",
+                    displayName);
+            return 0;
         } catch (RuntimeException e) {
             log.debug(
                     "Could not read PDF page count for {} ({}); falling back to bytes-only units",
