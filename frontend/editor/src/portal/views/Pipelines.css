@@ -62,7 +62,7 @@
   border-radius: var(--radius-md);
   font-size: 0.875rem;
   background: var(--c-primary-tint);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .portal-pipelines__muted {
@@ -79,7 +79,7 @@
 
 .portal-pipelines__caret.is-open {
   transform: rotate(90deg);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 /* Table skeleton */
