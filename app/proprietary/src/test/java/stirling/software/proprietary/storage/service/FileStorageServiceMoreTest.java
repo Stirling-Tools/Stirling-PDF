@@ -41,7 +41,6 @@ import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
-import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 
@@ -57,7 +56,7 @@ class FileStorageServiceMoreTest {
     @Mock private UserRepository userRepository;
     @Mock private ApplicationProperties applicationProperties;
     @Mock private StorageProvider storageProvider;
-    @Mock private StorageCleanupEntryRepository storageCleanupEntryRepository;
+    @Mock private StorageCleanupQueue storageCleanupQueue;
 
     @Mock private ApplicationProperties.Security securityProperties;
     @Mock private ApplicationProperties.System systemProperties;
@@ -77,7 +76,7 @@ class FileStorageServiceMoreTest {
                         applicationProperties,
                         storageProvider,
                         Optional.empty(),
-                        storageCleanupEntryRepository);
+                        storageCleanupQueue);
 
         when(applicationProperties.getSecurity()).thenReturn(securityProperties);
         when(securityProperties.isEnableLogin()).thenReturn(true);

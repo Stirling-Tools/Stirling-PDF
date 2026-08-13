@@ -40,7 +40,6 @@ import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
-import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 
@@ -54,7 +53,7 @@ class FileStorageServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private ApplicationProperties applicationProperties;
     @Mock private StorageProvider storageProvider;
-    @Mock private StorageCleanupEntryRepository storageCleanupEntryRepository;
+    @Mock private StorageCleanupQueue storageCleanupQueue;
 
     @Mock private ApplicationProperties.Security securityProperties;
     @Mock private ApplicationProperties.System systemProperties;
@@ -75,7 +74,7 @@ class FileStorageServiceTest {
                         applicationProperties,
                         storageProvider,
                         Optional.empty(),
-                        storageCleanupEntryRepository);
+                        storageCleanupQueue);
 
         // Default: storage and sharing fully enabled, share links enabled, no expiry
         when(applicationProperties.getSecurity()).thenReturn(securityProperties);
