@@ -1822,10 +1822,11 @@ public class ConvertPDFToPDFA {
     }
 
     /** Tags a converted PDF/A for level A; must run after Ghostscript, which discards tags. */
-    private byte[] applyLevelA(
+    private stirling.software.SPDF.service.ua.PdfaAccessibilityService.Result applyLevelA(
             byte[] converted, PdfaProfile profile, String baseFileName, boolean declarePdfUa) {
         if (!profile.requiresTagging()) {
-            return converted;
+            return new stirling.software.SPDF.service.ua.PdfaAccessibilityService.Result(
+                    converted, true, List.of());
         }
         // Prefer the document's own title/language; hardcoding "en" mislabelled German reports.
         String language = null;
@@ -1849,7 +1850,7 @@ public class ConvertPDFToPDFA {
                     "{} requested but the document could not be tagged; returning level B",
                     profile.getDisplayName());
         }
-        return result.pdfBytes();
+        return result;
     }
 
     private ResponseEntity<Resource> handlePdfAConversion(
@@ -1879,13 +1880,14 @@ public class ConvertPDFToPDFA {
                 log.info("Using Ghostscript for PDF/A conversion to {}", profile.getDisplayName());
                 try {
                     converted = convertWithGhostscript(inputPath, workingDir, profile);
-                    converted = applyLevelA(converted, profile, baseFileName, declarePdfUa);
-                    String outputFilename = baseFileName + profile.outputSuffix();
+                    var levelA = applyLevelA(converted, profile, baseFileName, declarePdfUa);
+                    converted = levelA.pdfBytes();
+                    String outputFilename = baseFileName + profile.outputSuffix(levelA.levelA());
 
                     validateAndWarnPdfA(converted, profile, "Ghostscript");
 
                     if (strict) {
-                        verifyStrictCompliance(converted);
+                        verifyStrictCompliance(converted, profile, levelA.levelA());
                     }
 
                     TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
@@ -1906,14 +1908,15 @@ public class ConvertPDFToPDFA {
             }
 
             converted = convertWithPdfBoxMethod(inputPath, profile);
-            converted = applyLevelA(converted, profile, baseFileName, declarePdfUa);
-            String outputFilename = baseFileName + profile.outputSuffix();
+            var levelA = applyLevelA(converted, profile, baseFileName, declarePdfUa);
+            converted = levelA.pdfBytes();
+            String outputFilename = baseFileName + profile.outputSuffix(levelA.levelA());
 
             // Validate with PDFBox preflight and warn if issues found
             validateAndWarnPdfA(converted, profile, "PDFBox/LibreOffice");
 
             if (strict) {
-                verifyStrictCompliance(converted);
+                verifyStrictCompliance(converted, profile, levelA.levelA());
             }
 
             TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
@@ -1940,15 +1943,42 @@ public class ConvertPDFToPDFA {
         return normalised.contains("ua") || normalised.contains("wcag");
     }
 
-    private void verifyStrictCompliance(byte[] pdfBytes) throws IOException {
+    /**
+     * True when a result speaks for the requested profile. Only archival results count, and a level
+     * B pass must never satisfy a level A request.
+     */
+    private static boolean answersRequest(
+            PdfaProfile profile,
+            stirling.software.SPDF.model.api.security.PDFVerificationResult result) {
+        if (isAccessibilityProfile(result)) {
+            return false;
+        }
+        String standard = result.getStandard();
+        if (standard == null || standard.length() < 2) {
+            return false;
+        }
+        if (standard.charAt(0) != Character.forDigit(profile.getPart(), 10)) {
+            return false;
+        }
+        return !profile.requiresTagging() || Character.toLowerCase(standard.charAt(1)) == 'a';
+    }
+
+    private void verifyStrictCompliance(byte[] pdfBytes, PdfaProfile profile, boolean levelAReached)
+            throws IOException {
+        // Tagging is the only route to level A, so an untagged file cannot answer a strict request.
+        if (!levelAReached) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Strict PDF/A mode enabled: the document could not be tagged, so "
+                            + profile.getDisplayName()
+                            + " was not reached. It is valid at level B.");
+        }
         try (InputStream is = new ByteArrayInputStream(pdfBytes)) {
             List<stirling.software.SPDF.model.api.security.PDFVerificationResult> results =
                     veraPDFService.validatePDF(is);
-            // Only archival results count. Every document is now also checked against PDF/UA, and
-            // a compliant UA result must never satisfy a strict PDF/A request.
             boolean isCompliant =
                     results.stream()
-                            .filter(result -> !isAccessibilityProfile(result))
+                            .filter(result -> answersRequest(profile, result))
                             .anyMatch(
                                     stirling.software.SPDF.model.api.security.PDFVerificationResult
                                             ::isCompliant);
@@ -1959,7 +1989,9 @@ public class ConvertPDFToPDFA {
                                 .collect(Collectors.joining("; "));
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Strict PDF/A mode enabled: Conversion is not perfectly compliant. Details: "
+                        "Strict PDF/A mode enabled: the output is not perfectly compliant with "
+                                + profile.getDisplayName()
+                                + ". Details: "
                                 + details);
             }
         } catch (Exception e) {
@@ -2577,8 +2609,11 @@ public class ConvertPDFToPDFA {
             return match.orElse(PDF_A_2B);
         }
 
-        String outputSuffix() {
-            return suffix;
+        /**
+         * Names the file at the level actually reached; a level A name over level B content lies.
+         */
+        String outputSuffix(boolean levelAReached) {
+            return levelAReached ? suffix : "_PDFA-" + part + "b.pdf";
         }
 
         Optional<Format> preflightFormat() {

@@ -34,15 +34,16 @@ public class PdfUaTagger {
                     case AUTO -> !alreadyTagged;
                 };
 
+        List<String> languageWarnings = new ArrayList<>();
+        String language = resolveLanguage(document, options, languageWarnings);
+
         if (!rebuild) {
             log.info("Keeping existing structure tree; applying document requirements only");
             DocumentStructure kept = new DocumentStructure();
+            languageWarnings.forEach(kept::warn);
             metadataWriter
                     .applyDocumentRequirements(
-                            document,
-                            options.getTitle(),
-                            options.getLanguage(),
-                            options.getProfile())
+                            document, options.getTitle(), language, options.getProfile())
                     .forEach(kept::warn);
             return new TaggingResult(kept, false);
         }
@@ -53,7 +54,8 @@ public class PdfUaTagger {
 
         List<PageContent> pages = extractor.extract(document);
         DocumentStructure structure = analyzer.analyse(pages);
-        structure.setLanguage(options.getLanguage());
+        structure.setLanguage(language);
+        languageWarnings.forEach(structure::warn);
         applyFigurePolicy(structure, options);
 
         if (structure.isEmpty()) {
@@ -73,12 +75,34 @@ public class PdfUaTagger {
                 .applyDocumentRequirements(
                         document,
                         title,
-                        options.getLanguage(),
+                        language,
                         options.getProfile(),
                         options.isPreservePdfVersion())
                 .forEach(structure::warn);
 
         return new TaggingResult(structure, true);
+    }
+
+    /**
+     * Keeps the language the document already declares. Overwriting it relabels, say, a French file
+     * as English, and no validator can catch that.
+     */
+    private static String resolveLanguage(
+            PDDocument document, TaggingOptions options, List<String> warnings) {
+        String existing = document.getDocumentCatalog().getLanguage();
+        String requested = options.getLanguage();
+        if (existing == null || existing.isBlank() || options.isOverrideLanguage()) {
+            return requested;
+        }
+        if (requested != null && !requested.isBlank() && !requested.equalsIgnoreCase(existing)) {
+            warnings.add(
+                    "The document already declares its language as '"
+                            + existing
+                            + "', so the requested '"
+                            + requested
+                            + "' was ignored. Ask to override the language to change it.");
+        }
+        return existing;
     }
 
     /** Explicit title first, then the first heading, then the caller's fallback. */

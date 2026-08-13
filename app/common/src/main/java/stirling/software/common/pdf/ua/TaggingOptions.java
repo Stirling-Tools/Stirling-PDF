@@ -33,6 +33,9 @@ public class TaggingOptions {
     /** BCP-47 language tag for the document, for example {@code en-GB}. */
     private String language;
 
+    /** Replace a language the document already declares. Off, so a French file stays French. */
+    @Builder.Default private boolean overrideLanguage = false;
+
     private String title;
 
     /** Last resort when no title is given and none can be derived; pass the uploaded filename. */

@@ -71,6 +71,17 @@ class PdfUaServicesTest {
         }
     }
 
+    private static byte[] manyPages(int pages) throws IOException {
+        try (PDDocument document = new PDDocument()) {
+            for (int i = 0; i < pages; i++) {
+                document.addPage(new PDPage());
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            document.save(out);
+            return out.toByteArray();
+        }
+    }
+
     private static byte[] encryptedPdf() throws IOException {
         try (PDDocument document = new PDDocument()) {
             document.addPage(new PDPage());
@@ -154,6 +165,16 @@ class PdfUaServicesTest {
             assertEquals(
                     report.getIssues().size(),
                     report.getAutomaticallyFixable() + report.getNeedsInput());
+        }
+
+        @Test
+        @DisplayName("refuses a document past the page cap the conversion also applies")
+        void refusesTooManyPages() throws Exception {
+            byte[] oversized = manyPages(2001);
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> audit.audit(oversized, PdfUaProfile.UA1),
+                    "an uncapped report walks every page of any document a caller uploads");
         }
 
         @Test

@@ -79,10 +79,14 @@ public class ConvertPdfToPdfUa {
                         .profile(profile)
                         .title(request.getTitle())
                         .fallbackTitle(stem)
+                        // Only used when the document declares no language of its own.
                         .language(
                                 request.getLanguage() == null || request.getLanguage().isBlank()
                                         ? "en-GB"
                                         : request.getLanguage())
+                        .overrideLanguage(
+                                request.getOverrideLanguage() != null
+                                        && request.getOverrideLanguage())
                         .existingTags(existingTags(request.getExistingTags()))
                         .figurePolicy(figurePolicy(request.getFigurePolicy()))
                         .embedFonts(request.getEmbedFonts() == null || request.getEmbedFonts())

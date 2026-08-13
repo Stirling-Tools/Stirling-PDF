@@ -49,8 +49,11 @@ export interface ConvertParameters extends BaseParameters {
   pdfUaOptions: {
     profile: string;
     language: string;
+    overrideLanguage: boolean;
     title: string;
     embedFonts: boolean;
+    /** Descriptions as `pageIndex:ordinal=text` lines, keyed as the backend hands them out. */
+    altText: string;
   };
   pdfxOptions: {
     outputFormat: string;
@@ -117,8 +120,10 @@ export const defaultParameters: ConvertParameters = {
   pdfUaOptions: {
     profile: "ua1",
     language: "en-GB",
+    overrideLanguage: false,
     title: "",
     embedFonts: true,
+    altText: "",
   },
   pdfxOptions: {
     outputFormat: "pdfx",

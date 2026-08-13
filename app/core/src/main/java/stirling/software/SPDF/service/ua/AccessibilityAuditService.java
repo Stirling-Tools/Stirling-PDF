@@ -26,6 +26,7 @@ import stirling.software.common.pdf.ua.PdfUaProfile;
 import stirling.software.common.pdf.ua.StructBlock;
 import stirling.software.common.pdf.ua.StructType;
 import stirling.software.common.pdf.ua.TaggedContentExtractor;
+import stirling.software.common.util.ExceptionUtils;
 
 /** Produces an accessibility report without changing the document. */
 @Service
@@ -45,9 +46,15 @@ public class AccessibilityAuditService {
                     "Is the document language correct, including for quoted passages?",
                     "Do links describe their destination rather than saying 'click here'?");
 
+    /** The report walks every page and validates, so it carries the conversion's own caps. */
+    private static final long MAX_INPUT_BYTES = 100L * 1024 * 1024;
+
+    private static final int MAX_PAGES = 2000;
+
     private final PdfUaValidationService validationService;
 
     public AccessibilityReport audit(byte[] pdfBytes, PdfUaProfile profile) throws IOException {
+        enforceLimits(pdfBytes);
         AccessibilityReport report = new AccessibilityReport();
         report.setProfile(profile.displayName());
 
@@ -75,6 +82,33 @@ public class AccessibilityAuditService {
             log.debug("Could not inspect document for the summary: {}", e.getMessage());
         }
         return report;
+    }
+
+    /**
+     * Rejects before the expensive pass. An unreadable file is left to the report itself to say.
+     */
+    private static void enforceLimits(byte[] pdfBytes) {
+        if (pdfBytes.length > MAX_INPUT_BYTES) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.fileTooLarge",
+                    "This PDF is {0} MB. The accessibility report is limited to {1} MB.",
+                    pdfBytes.length / (1024 * 1024),
+                    MAX_INPUT_BYTES / (1024 * 1024));
+        }
+        int pages;
+        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+            pages = document.getNumberOfPages();
+        } catch (IOException e) {
+            return;
+        }
+        if (pages > MAX_PAGES) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.tooManyPages",
+                    "This PDF has {0} pages. The accessibility report is limited to {1} pages;"
+                            + " split it first.",
+                    pages,
+                    MAX_PAGES);
+        }
     }
 
     private void populateSummary(PDDocument document, AccessibilityReport report)

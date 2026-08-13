@@ -1,6 +1,7 @@
 package stirling.software.SPDF.service.ua;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -69,23 +70,23 @@ class PdfUa2ProfileTest {
     }
 
     @Test
-    @DisplayName("reports honestly whether UA-2 conformance was reached")
-    void reportsUa2Outcome() throws Exception {
+    @DisplayName("reaches UA-2 conformance and declares it")
+    void reachesUa2Conformance() throws Exception {
         PdfUaConversionOutcome outcome = convertUa2(PdfUaTestDocuments.simpleDocument());
-        System.out.printf(
-                "UA-2: declared=%s failures=%d%n",
-                outcome.declared(), outcome.validation().totalFailures());
-        outcome.validation()
-                .issues()
-                .forEach(
-                        issue ->
-                                System.out.printf(
-                                        "   clause %-8s x%-3d %s%n",
-                                        issue.getClause(),
-                                        issue.getOccurrences(),
-                                        issue.getTechnicalMessage()));
-        // A declaration is only written when validation passed, so these must agree either way.
-        assertEquals(outcome.declared(), outcome.validation().totalFailures() == 0);
+
+        String failures =
+                outcome.validation().issues().stream()
+                        .map(issue -> issue.getClause() + ": " + issue.getTechnicalMessage())
+                        .collect(java.util.stream.Collectors.joining("; "));
+        assertEquals(0, outcome.validation().totalFailures(), "UA-2 checks failed: " + failures);
+        assertTrue(outcome.declared(), "a conforming UA-2 file must carry the declaration");
         assertTrue(outcome.pdfBytes().length > 0);
+    }
+
+    @Test
+    @DisplayName("an illustrated document still cannot claim UA-2 without descriptions")
+    void undescribedImageBlocksTheUa2Claim() throws Exception {
+        PdfUaConversionOutcome outcome = convertUa2(PdfUaTestDocuments.imageDocument());
+        assertFalse(outcome.declared(), "an undescribed image must block the claim");
     }
 }

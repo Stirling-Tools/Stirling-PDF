@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import { Stack, Text, Select, Alert, Checkbox, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import apiClient from "@app/services/apiClient";
+import { Button } from "@app/ui/Button";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import { usePdfSignatureDetection } from "@app/hooks/usePdfSignatureDetection";
 import { StirlingFile } from "@app/types/fileContext";
@@ -15,6 +18,35 @@ interface ConvertToPdfUaSettingsProps {
   disabled?: boolean;
 }
 
+/** One image the backend says has no description yet, keyed as the conversion expects it back. */
+interface FigureNeedingDescription {
+  key: string;
+  page: number;
+  kind: string;
+}
+
+/**
+ * The wire form the endpoint parses: one `pageIndex:ordinal=description` per line. Descriptions are
+ * kept verbatim so that typing a space does not fight the field; the backend trims them.
+ */
+export const parseAltText = (raw: string): Record<string, string> => {
+  const parsed: Record<string, string> = {};
+  raw.split(/\r?\n/).forEach((line) => {
+    const split = line.indexOf("=");
+    if (split <= 0) return;
+    const key = line.slice(0, split).trim();
+    const description = line.slice(split + 1);
+    if (key && description.trim()) parsed[key] = description;
+  });
+  return parsed;
+};
+
+export const formatAltText = (descriptions: Record<string, string>): string =>
+  Object.entries(descriptions)
+    .filter(([, description]) => description.trim())
+    .map(([key, description]) => `${key}=${description}`)
+    .join("\n");
+
 /** PDF/UA conversion options; copy is deliberate - conformance is not guaranteed by one click. */
 const ConvertToPdfUaSettings = ({
   parameters,
@@ -24,6 +56,11 @@ const ConvertToPdfUaSettings = ({
 }: ConvertToPdfUaSettingsProps) => {
   const { t } = useTranslation();
   const { hasDigitalSignatures } = usePdfSignatureDetection(selectedFiles);
+  const [figures, setFigures] = useState<FigureNeedingDescription[] | null>(
+    null,
+  );
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
 
   const profileOptions = [
     { value: "ua1", label: "PDF/UA-1" },
@@ -32,6 +69,40 @@ const ConvertToPdfUaSettings = ({
 
   const update = (patch: Partial<ConvertParameters["pdfUaOptions"]>) =>
     onParameterChange("pdfUaOptions", { ...parameters.pdfUaOptions, ...patch });
+
+  const descriptions = parseAltText(parameters.pdfUaOptions.altText);
+  const fileKey = selectedFiles
+    .map((file) => `${file.name}:${file.size}`)
+    .join("|");
+
+  // The keys describe one document, so a scan must not outlive the selection it was made against.
+  useEffect(() => setFigures(null), [fileKey]);
+
+  // The keys are opaque, so they have to come from the backend's own analysis of this file.
+  const findFigures = async () => {
+    const file = selectedFiles[0];
+    if (!file) return;
+    setIsScanning(true);
+    setScanError(null);
+    try {
+      const formData = new FormData();
+      formData.append("fileInput", file);
+      formData.append("profile", parameters.pdfUaOptions.profile);
+      const { data } = await apiClient.post<{
+        figuresNeedingDescription?: FigureNeedingDescription[];
+      }>("/api/v1/security/accessibility-report", formData);
+      setFigures(data.figuresNeedingDescription ?? []);
+    } catch {
+      setScanError(
+        t(
+          "convert.pdfUaAltTextScanFailed",
+          "The images could not be listed. Convert anyway and the response reports what is missing.",
+        ),
+      );
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   return (
     <Stack gap="sm" data-testid="pdfua-settings">
@@ -68,12 +139,29 @@ const ConvertToPdfUaSettings = ({
         label={t("convert.pdfUaLanguage", "Document language")}
         description={t(
           "convert.pdfUaLanguageHelp",
-          "A BCP-47 tag such as en-GB. Required so a screen reader uses the right pronunciation.",
+          "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language.",
         )}
         value={parameters.pdfUaOptions.language}
         onChange={(event) => update({ language: event.currentTarget.value })}
         disabled={disabled}
         data-testid="pdfua-language-input"
+      />
+
+      <Checkbox
+        label={t(
+          "convert.pdfUaOverrideLanguage",
+          "Replace the document's own language",
+        )}
+        description={t(
+          "convert.pdfUaOverrideLanguageHelp",
+          "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible.",
+        )}
+        checked={parameters.pdfUaOptions.overrideLanguage}
+        onChange={(event) =>
+          update({ overrideLanguage: event.currentTarget.checked })
+        }
+        disabled={disabled}
+        data-testid="pdfua-override-language"
       />
 
       <TextInput
@@ -110,6 +198,56 @@ const ConvertToPdfUaSettings = ({
           )}
         </Text>
       </Alert>
+
+      <Button
+        variant="secondary"
+        onClick={findFigures}
+        loading={isScanning}
+        disabled={disabled || selectedFiles.length === 0}
+        data-testid="pdfua-find-figures"
+      >
+        {t("convert.pdfUaFindImages", "Find images needing a description")}
+      </Button>
+
+      {scanError && (
+        <Alert color="yellow">
+          <Text size="sm">{scanError}</Text>
+        </Alert>
+      )}
+
+      {figures?.length === 0 && (
+        <Text size="xs" c="dimmed" data-testid="pdfua-no-figures">
+          {t(
+            "convert.pdfUaNoImagesNeedingText",
+            "No image is missing a description.",
+          )}
+        </Text>
+      )}
+
+      {figures?.map((figure) => (
+        <TextInput
+          key={figure.key}
+          label={t("convert.pdfUaFigureLabel", "Page {{page}} {{kind}}", {
+            page: figure.page,
+            kind: figure.kind,
+          })}
+          placeholder={t(
+            "convert.pdfUaFigurePlaceholder",
+            "What this image tells the reader",
+          )}
+          value={descriptions[figure.key] ?? ""}
+          onChange={(event) =>
+            update({
+              altText: formatAltText({
+                ...descriptions,
+                [figure.key]: event.currentTarget.value,
+              }),
+            })
+          }
+          disabled={disabled}
+          data-testid={`pdfua-alt-text-${figure.key}`}
+        />
+      ))}
     </Stack>
   );
 };

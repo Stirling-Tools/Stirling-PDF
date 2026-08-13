@@ -38,10 +38,11 @@ public class AccessibilityReportController {
                     "Validates the document against PDF/UA and reports what fails, which failures"
                             + " can be fixed automatically, and which checks still need a person."
                             + " Does not modify the file.")
+    // Costs a full veraPDF pass plus the converter's own layout analysis over every page.
     @AutoJobPostMapping(
             value = "/accessibility-report",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     public ResponseEntity<AccessibilityReport> report(
             @ModelAttribute AccessibilityReportRequest request) {
 

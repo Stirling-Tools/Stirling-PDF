@@ -167,9 +167,21 @@ class ConvertPDFToPDFAGapTest {
         }
 
         private String suffixOf(Object profile) throws Exception {
-            Method m = profile.getClass().getDeclaredMethod("outputSuffix");
+            return suffixOf(profile, true);
+        }
+
+        private String suffixOf(Object profile, boolean levelAReached) throws Exception {
+            Method m = profile.getClass().getDeclaredMethod("outputSuffix", boolean.class);
             m.setAccessible(true);
-            return (String) m.invoke(profile);
+            return (String) m.invoke(profile, levelAReached);
+        }
+
+        @Test
+        @DisplayName("a level A profile falls back to the level B name when tagging failed")
+        void levelANotReachedIsNamedLevelB() throws Exception {
+            assertThat(suffixOf(resolveProfile("pdfa-1a"), false)).isEqualTo("_PDFA-1b.pdf");
+            assertThat(suffixOf(resolveProfile("pdfa-2a"), false)).isEqualTo("_PDFA-2b.pdf");
+            assertThat(suffixOf(resolveProfile("pdfa-3a"), true)).isEqualTo("_PDFA-3a.pdf");
         }
 
         @Test
@@ -723,6 +735,30 @@ class ConvertPDFToPDFAGapTest {
     @DisplayName("verifyStrictCompliance (VeraPDFService mocked)")
     class StrictCompliance {
 
+        private Object profile(String token) throws Exception {
+            Class<?> enumClass = null;
+            for (Class<?> inner : ConvertPDFToPDFA.class.getDeclaredClasses()) {
+                if (inner.getSimpleName().equals("PdfaProfile")) {
+                    enumClass = inner;
+                }
+            }
+            Method m = enumClass.getDeclaredMethod("fromRequest", String.class);
+            m.setAccessible(true);
+            return m.invoke(null, token);
+        }
+
+        private Throwable verify(String token, boolean levelAReached) throws Exception {
+            ConvertPDFToPDFA controller = newController();
+            return catchThrowable(
+                    () ->
+                            invokeInstance(
+                                    controller,
+                                    "verifyStrictCompliance",
+                                    (Object) "dummy".getBytes(),
+                                    profile(token),
+                                    levelAReached));
+        }
+
         @Test
         @DisplayName("compliant result passes without throwing")
         void compliantPasses() throws Exception {
@@ -732,14 +768,7 @@ class ConvertPDFToPDFAGapTest {
             ok.setComplianceSummary("PDF/A-1b compliant");
             when(veraPDFService.validatePDF(any())).thenReturn(List.of(ok));
 
-            ConvertPDFToPDFA controller = newController();
-            assertThatCode(
-                            () ->
-                                    invokeInstance(
-                                            controller,
-                                            "verifyStrictCompliance",
-                                            (Object) "dummy".getBytes()))
-                    .doesNotThrowAnyException();
+            assertThat(verify("pdfa-1", true)).isNull();
         }
 
         @Test
@@ -751,18 +780,62 @@ class ConvertPDFToPDFAGapTest {
             bad.setComplianceSummary("PDF/A-1b with errors");
             when(veraPDFService.validatePDF(any())).thenReturn(List.of(bad));
 
-            ConvertPDFToPDFA controller = newController();
-            ResponseStatusException ex =
-                    (ResponseStatusException)
-                            catchThrowable(
-                                    () ->
-                                            invokeInstance(
-                                                    controller,
-                                                    "verifyStrictCompliance",
-                                                    (Object) "dummy".getBytes()));
+            ResponseStatusException ex = (ResponseStatusException) verify("pdfa-1", true);
             assertThat(ex).isNotNull();
             assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(ex.getReason()).contains("PDF/A-1b with errors");
+        }
+
+        @Test
+        @DisplayName("a level B pass does not satisfy a level A request")
+        void levelBDoesNotSatisfyLevelA() throws Exception {
+            PDFVerificationResult ok = new PDFVerificationResult();
+            ok.setCompliant(true);
+            ok.setStandard("1b");
+            ok.setComplianceSummary("PDF/A-1b compliant");
+            when(veraPDFService.validatePDF(any())).thenReturn(List.of(ok));
+
+            ResponseStatusException ex = (ResponseStatusException) verify("pdfa-1a", true);
+            assertThat(ex).isNotNull();
+            assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(ex.getReason()).contains("PDF/A-1a");
+        }
+
+        @Test
+        @DisplayName("a level A result satisfies a level A request")
+        void levelASatisfiesLevelA() throws Exception {
+            PDFVerificationResult ok = new PDFVerificationResult();
+            ok.setCompliant(true);
+            ok.setStandard("2a");
+            ok.setComplianceSummary("PDF/A-2a compliant");
+            when(veraPDFService.validatePDF(any())).thenReturn(List.of(ok));
+
+            assertThat(verify("pdfa-2a", true)).isNull();
+        }
+
+        @Test
+        @DisplayName("untagged output fails a level A request before validation runs")
+        void untaggedLevelARequestFails() throws Exception {
+            ResponseStatusException ex = (ResponseStatusException) verify("pdfa-2a", false);
+            assertThat(ex).isNotNull();
+            assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(ex.getReason()).contains("could not be tagged");
+            verifyNoInteractions(veraPDFService);
+        }
+
+        @Test
+        @DisplayName("a compliant PDF/UA result never satisfies a strict PDF/A request")
+        void accessibilityResultIsIgnored() throws Exception {
+            PDFVerificationResult ua = new PDFVerificationResult();
+            ua.setCompliant(true);
+            ua.setStandard("ua1");
+            ua.setValidationProfile("ua1");
+            ua.setComplianceSummary("PDF/UA-1 compliant");
+            when(veraPDFService.validatePDF(any())).thenReturn(List.of(ua));
+
+            ResponseStatusException ex = (ResponseStatusException) verify("pdfa-2b", true);
+            assertThat(ex).isNotNull();
+            assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
 
         @Test
@@ -770,15 +843,7 @@ class ConvertPDFToPDFAGapTest {
         void emptyResultsTreatedNonCompliant() throws Exception {
             when(veraPDFService.validatePDF(any())).thenReturn(Collections.emptyList());
 
-            ConvertPDFToPDFA controller = newController();
-            ResponseStatusException ex =
-                    (ResponseStatusException)
-                            catchThrowable(
-                                    () ->
-                                            invokeInstance(
-                                                    controller,
-                                                    "verifyStrictCompliance",
-                                                    (Object) "dummy".getBytes()));
+            ResponseStatusException ex = (ResponseStatusException) verify("pdfa-1", true);
             assertThat(ex).isNotNull();
             assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
@@ -788,15 +853,7 @@ class ConvertPDFToPDFAGapTest {
         void serviceErrorWrappedAs500() throws Exception {
             when(veraPDFService.validatePDF(any())).thenThrow(new IOException("boom"));
 
-            ConvertPDFToPDFA controller = newController();
-            ResponseStatusException ex =
-                    (ResponseStatusException)
-                            catchThrowable(
-                                    () ->
-                                            invokeInstance(
-                                                    controller,
-                                                    "verifyStrictCompliance",
-                                                    (Object) "dummy".getBytes()));
+            ResponseStatusException ex = (ResponseStatusException) verify("pdfa-1", true);
             assertThat(ex).isNotNull();
             assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         }
