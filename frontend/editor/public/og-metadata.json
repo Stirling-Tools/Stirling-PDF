@@ -308,7 +308,8 @@
     "/editor": {
       "image": "/og_images/home.png",
       "title": "Editor - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "noindex": true
     },
     "/login": {
       "image": "/og_images/home.png",
@@ -836,6 +837,42 @@
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
     "/settings/payg": "/settings/payg",
     "/settings/account-link": "/settings/account-link"
+  },
+  "canonicalByPath": {
+    "/annotate": "/annotations",
+    "/scanner-effect": "/fake-scan",
+    "/pdf-to-single-page": "/single-large-page",
+    "/remove-cert-sign": "/remove-certificate-sign",
+    "/unlock-p-d-f-forms": "/unlock-pdf-forms",
+    "/replace-color": "/replace-color-pdf",
+    "/show-j-s": "/show-js",
+    "/split-pdfs": "/split",
+    "/merge-pdfs": "/merge",
+    "/compress-pdf": "/compress",
+    "/rotate-pdf": "/rotate",
+    "/convert-pdf": "/convert",
+    "/manage-signatures": "/cert-sign",
+    "/sanitize-pdf": "/sanitize",
+    "/ocr-pdf": "/ocr",
+    "/add-watermark": "/watermark",
+    "/auto-split-pdf": "/split",
+    "/auto-size-split-pdf": "/split",
+    "/pdf-organizer": "/reorganize-pages",
+    "/multi-page-layout": "/page-layout",
+    "/extract-page": "/extract-pages",
+    "/auto-redact": "/redact",
+    "/stamp": "/add-stamp",
+    "/view-pdf": "/read",
+    "/get-info-on-pdf": "/get-pdf-info",
+    "/remove-image-pdf": "/remove-image",
+    "/replace-and-invert-color-pdf": "/replace-color-pdf",
+    "/pipeline": "/automate",
+    "/extract-image-scans": "/scanner-image-split",
+    "/show-javascript": "/show-js",
+    "/split-by-size-or-count": "/split",
+    "/overlay-pdf": "/overlay-pdfs",
+    "/split-pdf-by-sections": "/split",
+    "/split-pdf-by-chapters": "/split"
   },
   "navLinks": [
     {

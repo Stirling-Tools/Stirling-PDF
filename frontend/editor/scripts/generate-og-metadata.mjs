@@ -4,8 +4,8 @@
 //
 // Outputs:
 //   src/core/data/ogImageMap.json      - { toolId: imageBasename }  (imported by the client)
-//   src/core/data/urlSeoOverrides.json - { path: { title, description } } (client per-URL meta)
-//   public/og-metadata.json            - { default, byTool, byPath, navLinks } (prerender input, all flavors)
+//   src/core/data/urlSeoOverrides.json - { path: { title, description } } (client per-URL meta, English only)
+//   public/og-metadata.json            - { default, byTool, byPath, canonicalByPath, navLinks } (prerender input)
 //   public/og-metadata.saas.json       - same shape, SaaS marketing copy/art (prerender input, --mode saas)
 //
 // Run: `node scripts/generate-og-metadata.mjs`        (writes files)
@@ -33,8 +33,9 @@ const DEFAULT_IMAGE_BASENAME = "home";
 // this they would all share the generic "Convert - Stirling PDF" title and
 // description - duplicate content that ranks for nothing. Each entry gets its
 // own crawlable title/description (prerendered) and a client-side override so
-// the SPA keeps the same title after hydration. `name` is the keyword phrase;
-// the app suffix (" - Stirling PDF" / the instance name) is added per surface.
+// the SPA keeps the same title after hydration in English (other locales keep
+// their translated copy). `name` is the keyword phrase; the app suffix
+// (" - Stirling PDF" / the instance name) is added per surface.
 const CONVERT_SEO_PAGES = {
   "/pdf-to-word": {
     name: "PDF to Word Converter",
@@ -405,8 +406,8 @@ for (const [routePath, seo] of Object.entries(CONVERT_SEO_PAGES)) {
 }
 
 // Base-tool keyword copy for the running SPA, on every alias of the tool, so the
-// hydrated <title> matches the prerendered one. Convert pages set above win (they
-// have more specific per-alias keywords), hence the guard.
+// hydrated English <title> matches the prerendered one. Convert pages set above
+// win (they have more specific per-alias keywords), hence the guard.
 for (const [id, name] of Object.entries(TOOL_SEO_TITLES)) {
   if (!byTool[id]) continue;
   for (const p of [canonicalPath(id), ...(aliasesByTool[id] || [])])
@@ -445,6 +446,19 @@ for (const id of allIds) {
 for (const [p, seo] of Object.entries(CONVERT_SEO_PAGES)) pushNav(p, seo.name);
 navLinks.sort((a, b) => a.label.localeCompare(b.label));
 
+// --- alias canonicalisation --------------------------------------------------
+// Many paths route to the same tool (/compress-pdf and /compress). Indexing them
+// all is duplicate content, so every alias canonicalises to the primary path the
+// nav hub links to, and the prerender leaves aliases out of the sitemap. Paths
+// keyed to themselves in byPath are landing pages with their own copy, so they
+// stay primary.
+const canonicalByPath = {};
+for (const [p, id] of Object.entries(byPath)) {
+  if (p === id) continue;
+  const primary = primaryPathByTool[id] || canonicalPath(id);
+  if (p !== primary) canonicalByPath[p] = primary;
+}
+
 const manifest = {
   default: {
     image: `/og_images/${DEFAULT_IMAGE_BASENAME}.png`,
@@ -453,15 +467,19 @@ const manifest = {
   },
   byTool,
   byPath,
+  canonicalByPath,
   navLinks,
 };
 
 // SaaS manifest: same tool pages as above, but the home default and two extra
 // marketing routes carry the stirling.com cards. Keeps all per-tool OG intact.
+// SaaS is the deploy with a canonical origin, so it needs the link hub most.
 const saasManifest = {
   default: SAAS_DEFAULT,
   byTool: { ...byTool },
   byPath: { ...byPath },
+  canonicalByPath: { ...canonicalByPath },
+  navLinks,
 };
 // Same app-surface rule as the pageTitles loop above: noindex, never a landing page.
 for (const [routePath, label] of Object.entries(SAAS_ONLY_PAGE_TITLES)) {

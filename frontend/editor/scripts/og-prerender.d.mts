@@ -28,6 +28,8 @@ export interface OgManifest {
   default: OgEntry;
   byTool: Record<string, OgEntry>;
   byPath: Record<string, string>;
+  /** Alias path -> primary path it canonicalises to (aliases only). */
+  canonicalByPath?: Record<string, string>;
   navLinks?: OgNavLink[];
 }
 
@@ -57,6 +59,8 @@ export function prerenderOg(args: {
   manifest: OgManifest;
   ogBase?: string;
   baseHref?: string;
+  /** Bake the crawlable landing body; only useful on public web deploys. */
+  injectLanding?: boolean;
 }): Promise<number>;
 export function buildSitemap(
   manifest: OgManifest,

@@ -261,6 +261,10 @@ function cleanSegments(routePath) {
  * against the sub-path (e.g. /settings/) and 404; flat files and the root keep
  * the build's relative base. The path prefix derived from it is also woven into
  * canonical/OG/JSON-LD URLs so a sub-path deploy (RUN_SUBPATH) stays consistent.
+ *
+ * `injectLanding` bakes the crawlable landing body (see buildBodyContent). It is
+ * only worth the pre-hydration flash on a crawlable public deploy, so callers
+ * enable it only when a canonical origin is known.
  * @returns {Promise<number>}
  */
 export async function prerenderOg({
@@ -268,12 +272,21 @@ export async function prerenderOg({
   manifest,
   ogBase = "",
   baseHref = "/",
+  injectLanding = false,
 }) {
   const template = await fs.readFile(path.join(distDir, "index.html"), "utf8");
   const pathPrefix = baseHref.replace(/\/+$/, ""); // "" or "/app"
   const siteRoot = ogBase ? `${ogBase}${pathPrefix}/` : "/";
   const homePath = `${pathPrefix}/`;
-  const navLinks = manifest.navLinks || [];
+  const canonicalByPath = manifest.canonicalByPath || {};
+  const navLinks = manifest.navLinks;
+  // The hub is the only crawlable path to the tools, so an empty one is a stale
+  // manifest, not a valid input - fail loudly instead of shipping a bare page.
+  if (injectLanding && (!Array.isArray(navLinks) || navLinks.length === 0)) {
+    throw new Error(
+      "prerenderOg: manifest has no navLinks - run scripts/generate-og-metadata.mjs",
+    );
+  }
 
   let home = injectOg(template, manifest.default, {
     ogBase,
@@ -284,13 +297,15 @@ export async function prerenderOg({
     pathPrefix,
   });
   // Home <title> stays the brand ("Stirling PDF"); the H1 targets the keyword.
-  home = injectBody(
-    home,
-    buildBodyContent(manifest.default, {
-      navLinks,
-      heading: "Free Online PDF Tools",
-    }),
-  );
+  if (injectLanding) {
+    home = injectBody(
+      home,
+      buildBodyContent(manifest.default, {
+        navLinks,
+        heading: "Free Online PDF Tools",
+      }),
+    );
+  }
   await fs.writeFile(path.join(distDir, "index.html"), home);
 
   let count = 0;
@@ -299,17 +314,19 @@ export async function prerenderOg({
     if (!segments) continue;
     const entry = manifest.byTool[id] ?? manifest.default;
     const pageUrlPath = pathPrefix + routePath;
+    // Aliases point at their primary URL so the duplicates are not indexed.
+    const canonicalRoute = canonicalByPath[routePath] || routePath;
     let html = injectOg(template, entry, {
       ogBase,
       pageUrlPath: ogBase ? pageUrlPath : null,
-      canonicalPath: pageUrlPath, // self-canonical: never points at a maybe-404 alias
+      canonicalPath: pathPrefix + canonicalRoute,
       noindex: !!entry.noindex,
       siteRoot,
       isHome: false,
       pathPrefix,
     });
     // App/auth pages (noindex) stay the bare shell - no crawlable landing copy.
-    if (!entry.noindex)
+    if (injectLanding && !entry.noindex)
       html = injectBody(html, buildBodyContent(entry, { navLinks }));
     const nested = segments.length > 1;
     if (nested)
@@ -325,7 +342,8 @@ export async function prerenderOg({
 /**
  * Build an XML sitemap of every indexable route. Requires an absolute origin
  * (sitemaps must use absolute URLs), so returns null when none is known - e.g.
- * self-hosted builds with no canonical domain. Noindex routes are excluded.
+ * self-hosted builds with no canonical domain. Noindex routes and aliases that
+ * canonicalise elsewhere are excluded.
  * @param {object} manifest
  * @param {{ogBase:string, pathPrefix?:string}} opts
  * @returns {string|null}
@@ -333,9 +351,12 @@ export async function prerenderOg({
 export function buildSitemap(manifest, { ogBase, pathPrefix = "" }) {
   if (!ogBase) return null;
   const base = ogBase + pathPrefix;
+  const canonicalByPath = manifest.canonicalByPath || {};
   const locs = new Set([`${base}/`]);
   for (const [routePath, id] of Object.entries(manifest.byPath || {})) {
     if (!cleanSegments(routePath)) continue;
+    // An alias is a duplicate of its primary URL - only the primary is listed.
+    if (canonicalByPath[routePath]) continue;
     const entry = manifest.byTool[id] ?? manifest.default;
     if (entry.noindex) continue;
     locs.add(base + routePath);

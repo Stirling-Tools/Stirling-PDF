@@ -852,5 +852,343 @@
     "/settings/account-link": "/settings/account-link",
     "/signup": "/signup",
     "/processor": "/processor"
-  }
+  },
+  "canonicalByPath": {
+    "/annotate": "/annotations",
+    "/scanner-effect": "/fake-scan",
+    "/pdf-to-single-page": "/single-large-page",
+    "/remove-cert-sign": "/remove-certificate-sign",
+    "/unlock-p-d-f-forms": "/unlock-pdf-forms",
+    "/replace-color": "/replace-color-pdf",
+    "/show-j-s": "/show-js",
+    "/split-pdfs": "/split",
+    "/merge-pdfs": "/merge",
+    "/compress-pdf": "/compress",
+    "/rotate-pdf": "/rotate",
+    "/convert-pdf": "/convert",
+    "/manage-signatures": "/cert-sign",
+    "/sanitize-pdf": "/sanitize",
+    "/ocr-pdf": "/ocr",
+    "/add-watermark": "/watermark",
+    "/auto-split-pdf": "/split",
+    "/auto-size-split-pdf": "/split",
+    "/pdf-organizer": "/reorganize-pages",
+    "/multi-page-layout": "/page-layout",
+    "/extract-page": "/extract-pages",
+    "/auto-redact": "/redact",
+    "/stamp": "/add-stamp",
+    "/view-pdf": "/read",
+    "/get-info-on-pdf": "/get-pdf-info",
+    "/remove-image-pdf": "/remove-image",
+    "/replace-and-invert-color-pdf": "/replace-color-pdf",
+    "/pipeline": "/automate",
+    "/extract-image-scans": "/scanner-image-split",
+    "/show-javascript": "/show-js",
+    "/split-by-size-or-count": "/split",
+    "/overlay-pdf": "/overlay-pdfs",
+    "/split-pdf-by-sections": "/split",
+    "/split-pdf-by-chapters": "/split"
+  },
+  "navLinks": [
+    {
+      "path": "/add-attachments",
+      "label": "Add Attachments to PDF"
+    },
+    {
+      "path": "/add-image",
+      "label": "Add Image to PDF"
+    },
+    {
+      "path": "/add-page-numbers",
+      "label": "Add Page Numbers to PDF"
+    },
+    {
+      "path": "/add-stamp",
+      "label": "Add Stamp to PDF"
+    },
+    {
+      "path": "/add-text",
+      "label": "Add Text to PDF"
+    },
+    {
+      "path": "/watermark",
+      "label": "Add Watermark to PDF"
+    },
+    {
+      "path": "/adjust-contrast",
+      "label": "Adjust PDF Colors and Contrast"
+    },
+    {
+      "path": "/annotations",
+      "label": "Annotate PDF"
+    },
+    {
+      "path": "/auto-rename",
+      "label": "Auto Rename PDF Files"
+    },
+    {
+      "path": "/auto-rotate",
+      "label": "Auto Rotate"
+    },
+    {
+      "path": "/cbr-to-pdf",
+      "label": "CBR to PDF Converter"
+    },
+    {
+      "path": "/cbz-to-pdf",
+      "label": "CBZ to PDF Converter"
+    },
+    {
+      "path": "/change-permissions",
+      "label": "Change PDF Permissions"
+    },
+    {
+      "path": "/single-large-page",
+      "label": "Combine PDF into a Single Page"
+    },
+    {
+      "path": "/compare",
+      "label": "Compare PDF Files"
+    },
+    {
+      "path": "/compress",
+      "label": "Compress PDF"
+    },
+    {
+      "path": "/booklet-imposition",
+      "label": "Create a PDF Booklet"
+    },
+    {
+      "path": "/crop",
+      "label": "Crop PDF"
+    },
+    {
+      "path": "/remove-pages",
+      "label": "Delete Pages from PDF"
+    },
+    {
+      "path": "/edit-table-of-contents",
+      "label": "Edit PDF Bookmarks"
+    },
+    {
+      "path": "/change-metadata",
+      "label": "Edit PDF Metadata"
+    },
+    {
+      "path": "/pdf-text-editor",
+      "label": "Edit PDF Text"
+    },
+    {
+      "path": "/eml-to-pdf",
+      "label": "Email (EML) to PDF Converter"
+    },
+    {
+      "path": "/extract-images",
+      "label": "Extract Images from PDF"
+    },
+    {
+      "path": "/extract-pages",
+      "label": "Extract PDF Pages"
+    },
+    {
+      "path": "/file-to-pdf",
+      "label": "File to PDF Converter"
+    },
+    {
+      "path": "/form-fill",
+      "label": "Fill PDF Forms"
+    },
+    {
+      "path": "/flatten",
+      "label": "Flatten PDF"
+    },
+    {
+      "path": "/html-to-pdf",
+      "label": "HTML to PDF Converter"
+    },
+    {
+      "path": "/img-to-pdf",
+      "label": "Image to PDF Converter"
+    },
+    {
+      "path": "/fake-scan",
+      "label": "Make a PDF Look Scanned"
+    },
+    {
+      "path": "/markdown-to-pdf",
+      "label": "Markdown to PDF Converter"
+    },
+    {
+      "path": "/merge",
+      "label": "Merge PDF"
+    },
+    {
+      "path": "/ocr",
+      "label": "OCR PDF"
+    },
+    {
+      "path": "/reorganize-pages",
+      "label": "Organize PDF Pages"
+    },
+    {
+      "path": "/overlay-pdfs",
+      "label": "Overlay PDFs"
+    },
+    {
+      "path": "/add-password",
+      "label": "Password Protect PDF"
+    },
+    {
+      "path": "/convert",
+      "label": "PDF Converter"
+    },
+    {
+      "path": "/get-pdf-info",
+      "label": "PDF Info and Metadata Viewer"
+    },
+    {
+      "path": "/page-layout",
+      "label": "PDF Multi-Page Layout"
+    },
+    {
+      "path": "/multi-tool",
+      "label": "PDF Page Editor"
+    },
+    {
+      "path": "/pdf-to-cbr",
+      "label": "PDF to CBR Converter"
+    },
+    {
+      "path": "/pdf-to-cbz",
+      "label": "PDF to CBZ Converter"
+    },
+    {
+      "path": "/pdf-to-csv",
+      "label": "PDF to CSV Converter"
+    },
+    {
+      "path": "/pdf-to-xlsx",
+      "label": "PDF to Excel Converter"
+    },
+    {
+      "path": "/pdf-to-html",
+      "label": "PDF to HTML Converter"
+    },
+    {
+      "path": "/pdf-to-img",
+      "label": "PDF to Image Converter"
+    },
+    {
+      "path": "/pdf-to-markdown",
+      "label": "PDF to Markdown Converter"
+    },
+    {
+      "path": "/pdf-to-pdfa",
+      "label": "PDF to PDF/A Converter"
+    },
+    {
+      "path": "/pdf-to-presentation",
+      "label": "PDF to PowerPoint Converter"
+    },
+    {
+      "path": "/pdf-to-text",
+      "label": "PDF to Text Converter"
+    },
+    {
+      "path": "/pdf-to-word",
+      "label": "PDF to Word Converter"
+    },
+    {
+      "path": "/pdf-to-xml",
+      "label": "PDF to XML Converter"
+    },
+    {
+      "path": "/read",
+      "label": "PDF Viewer"
+    },
+    {
+      "path": "/automate",
+      "label": "PDF Workflow Automation"
+    },
+    {
+      "path": "/redact",
+      "label": "Redact PDF"
+    },
+    {
+      "path": "/remove-annotations",
+      "label": "Remove Annotations from PDF"
+    },
+    {
+      "path": "/remove-blanks",
+      "label": "Remove Blank Pages from PDF"
+    },
+    {
+      "path": "/remove-image",
+      "label": "Remove Images from PDF"
+    },
+    {
+      "path": "/remove-certificate-sign",
+      "label": "Remove PDF Certificate Signature"
+    },
+    {
+      "path": "/remove-password",
+      "label": "Remove PDF Password"
+    },
+    {
+      "path": "/repair",
+      "label": "Repair PDF"
+    },
+    {
+      "path": "/replace-color-pdf",
+      "label": "Replace and Invert PDF Colors"
+    },
+    {
+      "path": "/scale-pages",
+      "label": "Resize PDF Pages"
+    },
+    {
+      "path": "/rotate",
+      "label": "Rotate PDF"
+    },
+    {
+      "path": "/sanitize",
+      "label": "Sanitize PDF"
+    },
+    {
+      "path": "/shared-sign",
+      "label": "Shared Signing"
+    },
+    {
+      "path": "/show-js",
+      "label": "Show JavaScript in PDF"
+    },
+    {
+      "path": "/sign",
+      "label": "Sign PDF"
+    },
+    {
+      "path": "/cert-sign",
+      "label": "Sign PDF with a Certificate"
+    },
+    {
+      "path": "/split",
+      "label": "Split PDF"
+    },
+    {
+      "path": "/scanner-image-split",
+      "label": "Split Scanned Photos"
+    },
+    {
+      "path": "/timestamp-pdf",
+      "label": "Timestamp PDF"
+    },
+    {
+      "path": "/unlock-pdf-forms",
+      "label": "Unlock PDF Forms"
+    },
+    {
+      "path": "/validate-signature",
+      "label": "Validate PDF Signature"
+    }
+  ]
 }

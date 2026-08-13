@@ -5,11 +5,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +19,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,10 +49,13 @@ public class ReactRoutingController {
     // Clean URL segment: no dots, slashes or traversal - matches the prerendered
     // file naming (e.g. compress -> compress.html, settings/people).
     private static final Pattern SAFE_SEGMENT = Pattern.compile("[A-Za-z0-9_-]+");
-    // Sentinel cached for routes with no prerendered file, so misses don't re-hit disk.
-    private static final String NO_PRERENDER = "no-prerendered-page";
-    // Clean-URL path -> processed prerendered HTML (or NO_PRERENDER). Bounded by the
-    // finite set of SPA routes; populated lazily on first request.
+    // Static HTML that is not a prerendered SPA route.
+    private static final Set<String> NON_ROUTE_HTML =
+            Set.of("index", "api-landing", "saas-landing", "mobile-upload", "mobile-sign");
+    // Route keys that have a prerendered file, discovered once at startup. Requests
+    // outside it never reach disk or the cache, so it cannot be grown by a caller.
+    private volatile Set<String> prerenderedRoutes = Set.of();
+    // Route key -> processed prerendered HTML; bounded by prerenderedRoutes.
     private final Map<String, String> prerenderedCache = new ConcurrentHashMap<>();
 
     // First path segments owned by the backend or static assets, never SPA routes.
@@ -122,6 +128,10 @@ public class ReactRoutingController {
         this.mobileUploadHtmlExists = this.cachedMobileUploadHtml != null;
         this.cachedMobileSignHtml = readStaticHtml("mobile-sign.html");
         this.mobileSignHtmlExists = this.cachedMobileSignHtml != null;
+
+        this.prerenderedCache.clear();
+        this.prerenderedRoutes = discoverPrerenderedRoutes();
+        log.debug("Prerendered SPA route pages found: {}", prerenderedRoutes.size());
 
         // Check for external index.html first (customFiles/static/)
         Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
@@ -216,18 +226,74 @@ public class ReactRoutingController {
             }
         }
         String key = String.join("/", segments);
+        if (!prerenderedRoutes.contains(key)) {
+            return null;
+        }
         String cached = prerenderedCache.get(key);
         if (cached != null) {
-            return NO_PRERENDER.equals(cached) ? null : cached;
+            return cached;
         }
         String html = readStaticHtml(key + ".html");
         if (html == null) {
-            prerenderedCache.put(key, NO_PRERENDER);
             return null;
         }
         String processed = applyContextPath(html);
         prerenderedCache.put(key, processed);
         return processed;
+    }
+
+    // Index the prerendered route pages that actually exist so serving them never
+    // needs a lookup keyed on an arbitrary request path.
+    private Set<String> discoverPrerenderedRoutes() {
+        Set<String> routes = new HashSet<>();
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        // One and two segments - the depths forwardRootPaths/forwardNestedPaths serve.
+        for (String pattern : List.of("classpath:/static/*.html", "classpath:/static/*/*.html")) {
+            try {
+                for (Resource resource : resolver.getResources(pattern)) {
+                    addPrerenderedRoute(routes, resource.getURL().getPath());
+                }
+            } catch (Exception ex) {
+                log.debug("Could not scan {} for prerendered pages", pattern, ex);
+            }
+        }
+        // The custom static dir wins in readStaticHtml, so it must be indexed too.
+        Path externalRoot = Path.of(InstallationPathConfig.getStaticPath());
+        if (Files.isDirectory(externalRoot)) {
+            try (Stream<Path> paths = Files.walk(externalRoot, 2)) {
+                paths.filter(p -> p.toString().endsWith(".html"))
+                        .forEach(p -> addPrerenderedRoute(routes, externalRoot.relativize(p)));
+            } catch (Exception ex) {
+                log.debug("Could not scan {} for prerendered pages", externalRoot, ex);
+            }
+        }
+        return Set.copyOf(routes);
+    }
+
+    private static void addPrerenderedRoute(Set<String> routes, Path relative) {
+        addPrerenderedRoute(routes, relative.toString().replace('\\', '/'));
+    }
+
+    // `location` is a resource path/URL; only the part after the static root and
+    // before ".html" is the route key (e.g. .../static/settings/people.html).
+    private static void addPrerenderedRoute(Set<String> routes, String location) {
+        if (!location.endsWith(".html")) {
+            return;
+        }
+        int staticIndex = location.lastIndexOf("static/");
+        String key =
+                staticIndex < 0 ? location : location.substring(staticIndex + "static/".length());
+        key = key.substring(0, key.length() - ".html".length());
+        String[] segments = key.split("/");
+        if (segments.length == 0 || segments.length > 2 || NON_ROUTE_HTML.contains(key)) {
+            return;
+        }
+        for (String segment : segments) {
+            if (!SAFE_SEGMENT.matcher(segment).matches()) {
+                return;
+            }
+        }
+        routes.add(key);
     }
 
     private Resource getIndexHtmlResource() {

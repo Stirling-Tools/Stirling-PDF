@@ -123,12 +123,21 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         return;
       }
       const distDir = path.resolve(__dirname, "dist");
-      const count = await prerenderOg({ distDir, manifest, ogBase, baseHref });
+      // The crawlable landing body only pays for itself where a crawler can
+      // reach the page; self-hosted and desktop builds just get the flash.
+      const injectLanding = Boolean(ogBase);
+      const count = await prerenderOg({
+        distDir,
+        manifest,
+        ogBase,
+        baseHref,
+        injectLanding,
+      });
       console.log(
         `[prerender-og] wrote ${count} prerendered route pages` +
           (ogBase
-            ? ` (absolute URLs, base=${ogBase})`
-            : " (root-relative URLs)"),
+            ? ` (absolute URLs, base=${ogBase}, crawlable landing body)`
+            : " (root-relative URLs, no landing body)"),
       );
 
       // Sitemaps need absolute URLs, so only emit when a canonical origin is

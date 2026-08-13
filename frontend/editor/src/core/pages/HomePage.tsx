@@ -69,7 +69,7 @@ function writePersistedSidebarCollapsed(collapsed: boolean): void {
 type MobileView = "tools" | "workbench";
 
 export default function HomePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { sidebarRefs } = useSidebarContext();
 
   const { quickAccessRef } = sidebarRefs;
@@ -299,9 +299,19 @@ export default function HomePage() {
   // path has one - this keeps the hydrated title/description matching the
   // keyword-targeted copy that crawlers see in the prerendered HTML.
   const appName = config?.appNameNavbar || "Stirling PDF";
-  const seoOverride = (
-    urlSeoOverrides as Record<string, { title: string; description: string }>
-  )[location.pathname];
+  // The override copy is English-only (it mirrors the prerendered HTML), so
+  // every other locale keeps its translated tool name and description.
+  const isEnglish = (i18n.resolvedLanguage || i18n.language || "").startsWith(
+    "en",
+  );
+  const seoOverride = isEnglish
+    ? (
+        urlSeoOverrides as Record<
+          string,
+          { title: string; description: string }
+        >
+      )[location.pathname]
+    : undefined;
   const defaultDescription = t(
     "app.description",
     "The Free Adobe Acrobat alternative (10M+ Downloads)",

@@ -228,8 +228,10 @@ describe("buildSitemap", () => {
     },
     byPath: {
       "/compress": "compress",
+      "/compress-pdf": "compress",
       "/settings/people": "/settings/people",
     },
+    canonicalByPath: { "/compress-pdf": "/compress" },
   };
 
   it("returns null without a canonical origin (sitemaps need absolute URLs)", () => {
@@ -252,6 +254,12 @@ describe("buildSitemap", () => {
     });
     expect(xml).toContain("<loc>https://stirling.com/app/</loc>");
     expect(xml).toContain("<loc>https://stirling.com/app/compress</loc>");
+  });
+
+  it("omits aliases that canonicalise to another URL (no duplicate content)", () => {
+    const xml = buildSitemap(manifest, { ogBase: "https://stirling.com" });
+    expect(xml).not.toContain("/compress-pdf");
+    expect(xml).toContain("<loc>https://stirling.com/compress</loc>");
   });
 });
 
@@ -333,7 +341,13 @@ describe("buildBodyContent + injectBody (crawlable landing content)", () => {
       navLinks: [{ path: "/compress", label: "Compress" }],
     };
 
-    await prerenderOg({ distDir: dir, manifest, ogBase: "", baseHref: "/" });
+    await prerenderOg({
+      distDir: dir,
+      manifest,
+      ogBase: "",
+      baseHref: "/",
+      injectLanding: true,
+    });
 
     const compress = await fs.readFile(path.join(dir, "compress.html"), "utf8");
     expect(compress).toContain('<div id="root"><div class="spdf-seo">');
@@ -347,6 +361,66 @@ describe("buildBodyContent + injectBody (crawlable landing content)", () => {
 
     const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
     expect(home).toContain("spdf-seo");
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it("leaves the mount point empty when landing content is off (self-hosted)", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-nobody-"));
+    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+    const manifest = {
+      default: {
+        image: "/og_images/home.png",
+        title: "Stirling PDF",
+        description: "home",
+      },
+      byTool: {
+        compress: {
+          image: "/og_images/compress.png",
+          title: "Compress - Stirling PDF",
+          description: "c",
+        },
+      },
+      byPath: { "/compress": "compress" },
+      navLinks: [{ path: "/compress", label: "Compress" }],
+    };
+
+    await prerenderOg({ distDir: dir, manifest, ogBase: "", baseHref: "/" });
+
+    const compress = await fs.readFile(path.join(dir, "compress.html"), "utf8");
+    expect(compress).toContain('<div id="root"></div>');
+    expect(compress).not.toContain("spdf-seo");
+    // OG/title metadata is still baked in - only the visible body is skipped.
+    expect(compress).toContain("<title>Compress - Stirling PDF</title>");
+
+    const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
+    expect(home).not.toContain("spdf-seo");
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it("refuses to bake landing content from a manifest with no navLinks", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-nonav-"));
+    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+    const manifest = {
+      default: {
+        image: "/og_images/home.png",
+        title: "Stirling PDF",
+        description: "home",
+      },
+      byTool: {},
+      byPath: {},
+    };
+
+    await expect(
+      prerenderOg({
+        distDir: dir,
+        manifest,
+        ogBase: "https://stirling.com",
+        baseHref: "/",
+        injectLanding: true,
+      }),
+    ).rejects.toThrow(/navLinks/);
 
     await fs.rm(dir, { recursive: true, force: true });
   });
@@ -400,6 +474,53 @@ describe("prerenderOg (flat + nested route files)", () => {
     );
     expect(nested).toContain("<title>People Settings - Stirling PDF</title>");
     expect(nested).toContain('<base href="/"'); // nested base rewritten to absolute
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it("canonicalises alias routes at their primary URL", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-alias-"));
+    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+    const manifest = {
+      default: {
+        image: "/og_images/home.png",
+        title: "Stirling PDF",
+        description: "d",
+      },
+      byTool: {
+        compress: {
+          image: "/og_images/compress.png",
+          title: "Compress - Stirling PDF",
+          description: "c",
+        },
+      },
+      byPath: { "/compress": "compress", "/compress-pdf": "compress" },
+      canonicalByPath: { "/compress-pdf": "/compress" },
+    };
+
+    await prerenderOg({
+      distDir: dir,
+      manifest,
+      ogBase: "https://stirling.com",
+      baseHref: "/",
+    });
+
+    const alias = await fs.readFile(
+      path.join(dir, "compress-pdf.html"),
+      "utf8",
+    );
+    expect(alias).toContain(
+      '<link rel="canonical" href="https://stirling.com/compress" />',
+    );
+    // og:url still names the page itself, only the canonical dedupes.
+    expect(alias).toContain(
+      '<meta property="og:url" content="https://stirling.com/compress-pdf" />',
+    );
+
+    const primary = await fs.readFile(path.join(dir, "compress.html"), "utf8");
+    expect(primary).toContain(
+      '<link rel="canonical" href="https://stirling.com/compress" />',
+    );
 
     await fs.rm(dir, { recursive: true, force: true });
   });
