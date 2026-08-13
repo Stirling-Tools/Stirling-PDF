@@ -2,11 +2,13 @@ package stirling.software.common.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -18,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 class JpdfiumGuardTest {
 
@@ -65,6 +68,36 @@ class JpdfiumGuardTest {
                 assertTrue(JpdfiumGuard.heldByCurrentThread());
             }
             assertTrue(JpdfiumGuard.heldByCurrentThread(), "inner close released the outer scope");
+        }
+        assertFalse(JpdfiumGuard.heldByCurrentThread());
+    }
+
+    @Test
+    @Timeout(30)
+    void acquireGivesUpInsteadOfWaitingForever() throws Exception {
+        // A wedged holder must not hang every other caller on the process-wide lock.
+        CountDownLatch held = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        Thread holder =
+                new Thread(
+                        () -> {
+                            try (JpdfiumGuard.Scope scope = JpdfiumGuard.acquire()) {
+                                held.countDown();
+                                release.await();
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        });
+        holder.start();
+        assertTrue(held.await(10, TimeUnit.SECONDS), "holder never took the lock");
+
+        try {
+            assertThrows(
+                    JpdfiumGuard.JpdfiumBusyException.class,
+                    () -> JpdfiumGuard.acquire(Duration.ofMillis(50)));
+        } finally {
+            release.countDown();
+            holder.join(10_000);
         }
         assertFalse(JpdfiumGuard.heldByCurrentThread());
     }

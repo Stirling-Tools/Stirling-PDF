@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.*;
+import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.jpdfium.exception.JPDFiumException;
 
@@ -410,6 +411,27 @@ public class GlobalExceptionHandler {
             return handlePdfAndDpiExceptions(translated, request);
         }
         return handleBaseApp(translated, request);
+    }
+
+    /**
+     * jpdfium is serialised process-wide, so a caller that cannot get the lock in time is a
+     * capacity signal, not a fault in the request: answer 503 rather than the catch-all 500.
+     */
+    @ExceptionHandler(JpdfiumGuard.JpdfiumBusyException.class)
+    public ResponseEntity<ProblemDetail> handleJpdfiumBusy(
+            JpdfiumGuard.JpdfiumBusyException ex, HttpServletRequest request) {
+        log.warn("jpdfium busy on {}: {}", request.getRequestURI(), ex.getMessage());
+        ProblemDetail problemDetail =
+                createBaseProblemDetail(
+                        HttpStatus.SERVICE_UNAVAILABLE,
+                        "The server is busy processing other PDFs. Please retry shortly.",
+                        request);
+        problemDetail.setType(URI.create("/errors/jpdfium-busy"));
+        problemDetail.setTitle("Service Busy");
+        problemDetail.setProperty("title", "Service Busy");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .contentType(PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     @ExceptionHandler({
