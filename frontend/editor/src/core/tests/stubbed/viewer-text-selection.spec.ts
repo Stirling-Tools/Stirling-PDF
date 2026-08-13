@@ -327,13 +327,50 @@ test("Ctrl+A works without first hovering the viewer", async ({ page }) => {
   expect(nativeSelectionLength).toBe(0);
 });
 
+async function togglePanOnThenOff(page: import("@playwright/test").Page) {
+  const panButton = page.locator('[aria-label="Pan Mode"]').first();
+  await expect(panButton).toBeVisible({ timeout: 10_000 });
+  await panButton.click();
+  await page.waitForTimeout(200);
+  await panButton.click();
+  await page.waitForTimeout(200);
+}
+
+test("text selection still works after toggling the pan tool off again", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  const firstPage = await loadSampleAndOpenViewer(page);
+
+  // Toggling pan on then off must land back in pointerMode, not the default mode.
+  await togglePanOnThenOff(page);
+  await dragSelectAcrossPage(page, firstPage);
+
+  const selectionRects = firstPage.locator(
+    ".pdf-selection-layer > div:first-child > div",
+  );
+  await expect(selectionRects.first()).toBeAttached({ timeout: 5_000 });
+});
+
 // hasTouch is required: the pan plugin's defaultConfig is "mobile", so only a
 // touch-capable context reproduces the pan lock that kills selection (#5175).
 test.describe("pan mode on a touch-capable device", () => {
   test.use({ hasTouch: true });
 
-  test("the viewer does not open locked in pan mode", async ({ page }) => {
+  // Playwright's Firefox stops dispatching PointerEvents for the mouse once
+  // hasTouch is on, so no pointer-driven interaction can be exercised there.
+  const skipPointerOnFirefox = (browserName: string) =>
+    test.skip(
+      browserName === "firefox",
+      "Playwright Firefox emits no PointerEvents for the mouse when hasTouch is set",
+    );
+
+  test("the viewer does not open locked in pan mode", async ({
+    page,
+    browserName,
+  }) => {
     test.setTimeout(60_000);
+    skipPointerOnFirefox(browserName);
     const firstPage = await loadSampleAndOpenViewer(page);
 
     await dragSelectAcrossPage(page, firstPage);
@@ -346,23 +383,104 @@ test.describe("pan mode on a touch-capable device", () => {
 
   test("text selection still works after toggling the pan tool off again", async ({
     page,
+    browserName,
   }) => {
     test.setTimeout(60_000);
+    skipPointerOnFirefox(browserName);
     const firstPage = await loadSampleAndOpenViewer(page);
 
-    // Toggling pan on then off should return the active mode to pointerMode.
-    const panButton = page.locator('[aria-label="Pan Mode"]').first();
-    await expect(panButton).toBeVisible({ timeout: 10_000 });
-    await panButton.click();
-    await page.waitForTimeout(200);
-    await panButton.click();
-    await page.waitForTimeout(200);
-
+    await togglePanOnThenOff(page);
     await dragSelectAcrossPage(page, firstPage);
 
     const selectionRects = firstPage.locator(
       ".pdf-selection-layer > div:first-child > div",
     );
     await expect(selectionRects.first()).toBeAttached({ timeout: 5_000 });
+  });
+
+  // Guards the other half of the trade: leaving the viewer in pointerMode must
+  // not make the interaction manager claim raw touch and block native scrolling.
+  test("a finger swipe still scrolls the document", async ({
+    page,
+    browserName,
+  }) => {
+    test.setTimeout(60_000);
+    // Multi-page so the viewport always overflows, whatever the window size.
+    await page
+      .locator('input[type="file"]')
+      .first()
+      .setInputFiles(MULTIPAGE_PDF);
+    const firstPage = page.locator('[data-page-index="0"]').first();
+    await expect(firstPage).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(2_000);
+
+    // touch-action:none anywhere between the page and its scroll container
+    // stops the browser panning that container with a finger.
+    const chain = await page.evaluate(() => {
+      let cur = document.querySelector(
+        '[data-page-index="0"]',
+      ) as HTMLElement | null;
+      const touchActions: string[] = [];
+      while (cur) {
+        const style = getComputedStyle(cur);
+        touchActions.push(style.touchAction);
+        if (style.overflowY === "auto" || style.overflowY === "scroll") {
+          return { touchActions, foundScroller: true };
+        }
+        cur = cur.parentElement;
+      }
+      return { touchActions, foundScroller: false };
+    });
+    expect(chain.foundScroller).toBe(true);
+    expect(chain.touchActions).not.toContain("none");
+
+    // Chromium is the only engine Playwright lets us inject trusted touches into.
+    if (browserName !== "chromium") return;
+
+    const readScroll = () =>
+      page.evaluate(() => {
+        let cur = document.querySelector(
+          '[data-page-index="0"]',
+        ) as HTMLElement | null;
+        while (cur) {
+          const style = getComputedStyle(cur);
+          if (style.overflowY === "auto" || style.overflowY === "scroll") {
+            return {
+              top: cur.scrollTop,
+              overflows: cur.scrollHeight > cur.clientHeight,
+            };
+          }
+          cur = cur.parentElement;
+        }
+        return { top: -1, overflows: false };
+      });
+
+    const before = await readScroll();
+    expect(before.overflows).toBe(true);
+
+    const box = await firstPage.boundingBox();
+    if (!box) throw new Error("Page wrapper has no bounding box");
+    const x = box.x + box.width * 0.5;
+    const yStart = box.y + box.height * 0.5;
+
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x, y: yStart }],
+    });
+    for (let step = 1; step <= 10; step++) {
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x, y: yStart - step * 20 }],
+      });
+      await page.waitForTimeout(16);
+    }
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await page.waitForTimeout(1_000);
+
+    expect((await readScroll()).top).toBeGreaterThan(before.top);
   });
 });

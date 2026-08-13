@@ -23,6 +23,7 @@ import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
 import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
 import {
   InteractionManagerPluginPackage,
+  InteractionManagerPlugin,
   PagePointerProvider,
   GlobalPointerProvider,
 } from "@embedpdf/plugin-interaction-manager/react";
@@ -512,6 +513,19 @@ export function LocalEmbedPDF({
           engine={engine}
           plugins={plugins}
           onInitialized={async (registry: PluginRegistry) => {
+            // pointerMode is a read/select mode, so the browser must keep touch:
+            // without this it claims raw touch and touch-action:none kills scroll.
+            const interactionApi = registry
+              .getPlugin<InteractionManagerPlugin>("interaction-manager")
+              ?.provides?.();
+            interactionApi?.registerMode({
+              id: "pointerMode",
+              scope: "page",
+              exclusive: false,
+              cursor: "auto",
+              wantsRawTouch: false,
+            });
+
             // v2.0: Use registry.getPlugin() to access plugin APIs
             const annotationPlugin = registry.getPlugin("annotation");
             if (!annotationPlugin || !annotationPlugin.provides) return;
