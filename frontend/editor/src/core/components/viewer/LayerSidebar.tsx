@@ -373,7 +373,7 @@ export function LayerSidebar({
 
       {status === "error" && (
         <div className="sidebar-base__error">
-          <Text size="sm" c="red" ta="center">
+          <Text size="sm" c="var(--color-red-dark)" ta="center">
             {loadError ?? "Failed to load layers."}
           </Text>
         </div>

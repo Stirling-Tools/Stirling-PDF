@@ -64,7 +64,7 @@
   height: 1.75rem;
   border-radius: 9999px;
   background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
   flex-shrink: 0;
   position: relative;
 }
@@ -139,7 +139,7 @@
     var(--mantine-color-blue-filled) 18%,
     transparent
   );
-  color: var(--mantine-color-blue-3, var(--mantine-color-blue-filled));
+  color: var(--c-accent-text);
 }
 
 /* Same treatment for the input pill and quick-action cards. */
@@ -224,7 +224,7 @@
   border: 1px solid var(--mantine-color-blue-light);
   border-radius: 9999px;
   background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
   font-size: 0.8rem;
   font-weight: 500;
   line-height: 1.1;
@@ -302,7 +302,7 @@
   height: 2rem;
   border-radius: 0.5rem;
   background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
   flex-shrink: 0;
 }
 
@@ -453,7 +453,7 @@
 }
 
 .chat-message-action-btn--active {
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
 }
 
 .chat-message-timestamp {
@@ -680,7 +680,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.125rem 0.5rem;
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
 }
 
 @media (prefers-reduced-motion: reduce) {
