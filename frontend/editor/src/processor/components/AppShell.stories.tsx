@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { AppShell } from "@processor/components/AppShell";
 import { Home } from "@processor/views/Home";
 
@@ -12,6 +13,14 @@ const meta: Meta<typeof AppShell> = {
   title: "Processor/Shell/AppShell",
   component: AppShell,
   parameters: { layout: "fullscreen" },
+  decorators: [
+    // The shell hosts the portal search bar, which reads the tool registry.
+    (Story) => (
+      <ToolRegistryProvider>
+        <Story />
+      </ToolRegistryProvider>
+    ),
+  ],
 };
 export default meta;
 type Story = StoryObj<typeof AppShell>;

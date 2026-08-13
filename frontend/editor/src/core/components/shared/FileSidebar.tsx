@@ -33,11 +33,9 @@ import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { AppSwitcher } from "@app/components/shared/AppSwitcher";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import SearchIcon from "@mui/icons-material/Search";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -102,8 +100,6 @@ export interface FileSidebarProps {
   onUploadFiles?: (files: File[]) => void | Promise<void>;
   /** Override the Google Drive handler. */
   onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
-  /** Override the Search row click (e.g. focus the /files search input). */
-  onSearchClick?: () => void;
   /** Extra action row inserted under Open-from-computer (e.g. New folder). */
   extraAction?: {
     icon: React.ReactNode;
@@ -155,7 +151,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onOpenSettings,
       onUploadFiles,
       onPickGoogleDriveFiles,
-      onSearchClick,
       extraAction,
       toggleAriaLabel,
       toggleIcon,
@@ -168,9 +163,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Classification off (non-SaaS / AI-off) → never show the per-row label chip,
     // even if a stub carries labels from an imported PDF; keeps the row plain.
     const classificationEnabled = useClassificationEnabled();
-    const [searchActive, setSearchActive] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
-    const searchInputRef = useRef<HTMLInputElement>(null);
     const nativeFileInputRef = useRef<HTMLInputElement>(null);
     // State (not ref) so setting it triggers a re-render - avoids racing addFiles state updates.
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
@@ -439,17 +431,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
     }, [pendingViewFileId, state.files.ids, setActiveFileId, navActions]);
 
-    // Memoized so an unrelated re-render (e.g. a policy-run store tick) keeps a
-    // stable array identity — avoids re-running the grouping memo + backfill effect.
-    const filteredFileStubs = useMemo(() => {
-      const q = searchQuery.trim().toLowerCase();
-      return q
-        ? allFileStubs.filter((stub) => stub.name.toLowerCase().includes(q))
-        : allFileStubs;
-    }, [allFileStubs, searchQuery]);
-
     // SaaS groups by classification label; core returns null → one flat, recency-sorted list.
-    const fileGroups = useFileSidebarGroups(filteredFileStubs);
+    const fileGroups = useFileSidebarGroups(allFileStubs);
     // Workbench membership as a Set for O(1) per-row lookups (see renderFileRow).
     const workbenchIds = useMemo(
       () => new Set(state.files.ids.map((id) => id as string)),
@@ -459,12 +442,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // must key by their unique leaf id rather than the shared lineage (see renderFileRow).
     const lineageCounts = useMemo(() => {
       const counts = new Map<string, number>();
-      for (const s of filteredFileStubs) {
+      for (const s of allFileStubs) {
         const k = (s.originalFileId ?? s.id) as string;
         counts.set(k, (counts.get(k) ?? 0) + 1);
       }
       return counts;
-    }, [filteredFileStubs]);
+    }, [allFileStubs]);
     // Per-group expand/collapse, falling back to each group's default until toggled.
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
@@ -472,29 +455,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         setGroupOpen((prev) => ({ ...prev, [id]: open })),
       [],
     );
-
-    // Handle search activation
-    const handleSearchClick = useCallback(() => {
-      if (onSearchClick) {
-        onSearchClick();
-        return;
-      }
-      if (collapsed && onToggleCollapse) {
-        onToggleCollapse();
-      }
-      setSearchActive(true);
-    }, [collapsed, onToggleCollapse, onSearchClick]);
-
-    const handleSearchClose = useCallback(() => {
-      setSearchActive(false);
-      setSearchQuery("");
-    }, []);
-
-    useEffect(() => {
-      if (searchActive && searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    }, [searchActive]);
 
     // Handle Google Drive
     const handleGoogleDriveClick = useCallback(async () => {
@@ -854,58 +814,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
           </div>
 
-          {/* Box 1 — top controls (search + open / my files / cloud). No title. */}
+          {/* Box 1 — top controls (open / my files / cloud). No title. File
+              search lives in the global super search (top bar), not here. */}
           <NavSurface className="file-sidebar-controls">
-            {/* Search row */}
-            <Tooltip
-              label={t("fileSidebar.search", "Search")}
-              position="right"
-              withinPortal
-              disabled={!collapsed}
-            >
-              <div
-                className={`file-sidebar-search-row${searchActive && !collapsed ? " active" : ""}`}
-                onClick={!searchActive ? handleSearchClick : undefined}
-                role={!searchActive ? "button" : undefined}
-                tabIndex={!searchActive ? 0 : undefined}
-                onKeyDown={
-                  !searchActive
-                    ? (e) => e.key === "Enter" && handleSearchClick()
-                    : undefined
-                }
-              >
-                {searchActive && !collapsed ? (
-                  <CloseIcon
-                    className="file-sidebar-search-icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSearchClose();
-                    }}
-                  />
-                ) : (
-                  <SearchIcon className="file-sidebar-search-icon" />
-                )}
-                {!collapsed &&
-                  (searchActive ? (
-                    <input
-                      ref={searchInputRef}
-                      className="file-sidebar-search-input sidebar-content-fade"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={t(
-                        "fileSidebar.searchPlaceholder",
-                        "Search files...",
-                      )}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  ) : (
-                    <span className="file-sidebar-search-label sidebar-content-fade">
-                      {t("fileSidebar.search", "Search")}
-                    </span>
-                  ))}
-              </div>
-            </Tooltip>
-
             {/* Hidden native file input - kept outside the !collapsed gate so
                 the "Open from computer" row below (always rendered) can fire
                 it in either sidebar state without a silent no-op. */}
@@ -1138,7 +1049,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <span className="file-sidebar-section-label">
                       {t("fileSidebar.library", "PDF Library")}
                     </span>
-                    <FileSidebarGroupControls stubs={filteredFileStubs} />
+                    <FileSidebarGroupControls stubs={allFileStubs} />
                     <ActionIcon
                       variant="quiet"
                       className="file-sidebar-section-btn file-sidebar-section-btn-external"
@@ -1172,7 +1083,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <div className="file-sidebar-loading">
                       <Loader size="sm" color="var(--c-text-subtle)" />
                     </div>
-                  ) : filteredFileStubs.length > 0 ? (
+                  ) : allFileStubs.length > 0 ? (
                     <div className="file-sidebar-file-list">
                       {fileGroups ? (
                         <>
@@ -1250,29 +1161,24 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                               "fileSidebar.viewAll",
                               "View all {{count}} files",
                               {
-                                count: filteredFileStubs.length,
+                                count: allFileStubs.length,
                               },
                             )}
                           </Button>
                         </>
                       ) : (
-                        filteredFileStubs.map(renderFileRow)
+                        allFileStubs.map(renderFileRow)
                       )}
                     </div>
                   ) : (
-                    !searchActive && (
-                      <div className="file-sidebar-empty">
-                        <p className="file-sidebar-empty-text">
-                          {t("fileSidebar.noFiles", "No files yet")}
-                        </p>
-                        <p className="file-sidebar-empty-hint">
-                          {t(
-                            "fileSidebar.dropHint",
-                            "Open files to get started",
-                          )}
-                        </p>
-                      </div>
-                    )
+                    <div className="file-sidebar-empty">
+                      <p className="file-sidebar-empty-text">
+                        {t("fileSidebar.noFiles", "No files yet")}
+                      </p>
+                      <p className="file-sidebar-empty-hint">
+                        {t("fileSidebar.dropHint", "Open files to get started")}
+                      </p>
+                    </div>
                   )}
                 </div>
               )}

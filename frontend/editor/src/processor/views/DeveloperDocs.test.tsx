@@ -25,7 +25,6 @@ const renderDocs = (ui: ReactElement) =>
 describe("DeveloperDocs — markdown browser over the generated manifest", () => {
   it("keeps Overview static (open, no toggle) and other sections collapsed", () => {
     renderDocs(<DeveloperDocs />);
-    expect(screen.getByRole("searchbox")).toBeInTheDocument();
     // Overview is static: its items show, and it has no toggle button.
     expect(
       screen.getByRole("button", { name: "Production Deployment Guide" }),
@@ -48,23 +47,6 @@ describe("DeveloperDocs — markdown browser over the generated manifest", () =>
     expect(
       screen.getByRole("button", { name: "Kubernetes Guide" }),
     ).toBeInTheDocument();
-  });
-
-  it("searches doc content (not just titles), shows a snippet, and navigates", async () => {
-    renderDocs(<DeveloperDocs />);
-    // "Tesseract" appears in the OCR doc body but in no doc title — a result
-    // whose snippet contains it proves full-text (content) search.
-    fireEvent.change(screen.getByRole("searchbox"), {
-      target: { value: "Tesseract" },
-    });
-    const hits = await screen.findAllByRole("button", { name: /Tesseract/i });
-    expect(hits.length).toBeGreaterThan(0);
-    fireEvent.click(hits[0]);
-    await waitFor(() =>
-      expect(
-        screen.queryByText(/locally hosted web application/i),
-      ).not.toBeInTheDocument(),
-    );
   });
 
   it("follows an internal doc: link inside the rendered markdown", async () => {

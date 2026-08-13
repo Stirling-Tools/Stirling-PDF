@@ -3,29 +3,22 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, EmptyState } from "@app/ui";
 import { DocsNav } from "@processor/components/docs/DocsNav";
-import { DocsSearch } from "@processor/components/docs/DocsSearch";
 import { DocsSection } from "@processor/components/docs/DocsSection";
 import { DocsToc } from "@processor/components/docs/DocsToc";
 import { MarkdownDoc } from "@processor/components/docs/MarkdownDoc";
 import { extractHeadings } from "@processor/docs/headings";
 import {
-  allDocs,
   firstDocId,
   loadDoc,
   loadDocsNav,
 } from "@processor/docs/manifest/registry";
-import {
-  searchDocs,
-  toPlainText,
-  type SearchDoc,
-} from "@processor/docs/search";
 import "@processor/views/DeveloperDocs.css";
 
 /**
  * Developer Docs — a markdown browser over the docs manifest generated from the
- * Stirling docs repo (see scripts/sync-processor-docs.mts). The nav is auto-sorted
- * from the repo's folders + frontmatter; content is the repo markdown, and the
- * search box does full-text search across every doc.
+ * Stirling docs repo (see scripts/sync-portal-docs.mts). The nav is auto-sorted
+ * from the repo's folders + frontmatter; content is the repo markdown. Full-text
+ * search across docs lives in the global super search (Cmd/Ctrl+K).
  */
 export function DeveloperDocs() {
   const { t } = useTranslation();
@@ -33,23 +26,9 @@ export function DeveloperDocs() {
   const navigate = useNavigate();
   const contentRef = useRef<HTMLElement>(null);
   const [navOpen, setNavOpen] = useState(false);
-  const [query, setQuery] = useState("");
 
   const nav = useMemo(() => loadDocsNav(), []);
   const fallback = useMemo(() => firstDocId(), []);
-
-  // Full-text index over every doc's plaintext body (built once).
-  const index = useMemo<SearchDoc[]>(() => {
-    const labels = new Map(nav.map((s) => [s.id, s.label]));
-    return allDocs().map((d) => ({
-      id: d.id,
-      title: d.title,
-      sectionLabel: labels.get(d.section) ?? "",
-      text: toPlainText(d.markdown),
-    }));
-  }, [nav]);
-  const results = useMemo(() => searchDocs(index, query), [index, query]);
-  const searching = query.trim().length > 0;
 
   // Deep-link support: the active doc id lives in the URL hash.
   const hashId = decodeURIComponent(hash.replace(/^#/, ""));
@@ -65,12 +44,11 @@ export function DeveloperDocs() {
     [doc],
   );
 
-  // Navigating closes the mobile drawer, clears the search, and resets the pane.
+  // Navigating closes the mobile drawer and resets the pane.
   const onSelect = useCallback(
     (id: string) => {
       navigate({ hash: id });
       setNavOpen(false);
-      setQuery("");
     },
     [navigate],
   );
@@ -106,19 +84,11 @@ export function DeveloperDocs() {
         {t("processor.docs.browse")}
       </Button>
 
-      {/* Layout columns, not landmarks: the search and the two <nav>s inside them
-          already carry their own named landmarks, and a pair of unlabelled
-          complementary regions is indistinguishable to assistive tech. */}
-      <div className={"processor-docs__sidebar" + (navOpen ? " is-open" : "")}>
-        <DocsSearch
-          query={query}
-          onQueryChange={setQuery}
-          results={results}
-          onSelect={onSelect}
-        />
-        {!searching && (
-          <DocsNav sections={nav} active={activeId ?? ""} onSelect={onSelect} />
-        )}
+      {/* Layout column, not a landmark: the <nav> inside already carries its
+          own named landmark, and an unlabelled complementary region would be
+          indistinguishable to assistive tech. */}
+      <div className={"portal-docs__sidebar" + (navOpen ? " is-open" : "")}>
+        <DocsNav sections={nav} active={activeId ?? ""} onSelect={onSelect} />
       </div>
 
       <main className="processor-docs__content" ref={contentRef}>

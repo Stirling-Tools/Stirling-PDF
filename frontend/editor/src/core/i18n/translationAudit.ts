@@ -79,7 +79,8 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // SignSettings / SavedSignaturesSection resolve every key as
       // t(`${scope}.${key}`); scope and leaf only ever exist as separate literals.
       /^(sign|addText|addImage)\./,
-      // SettingsSearchBar indexes whole subtrees via t(prefix, { returnObjects }).
+      // Super search's settings content matching (settingsContentSearch)
+      // indexes whole subtrees via t(prefix, { returnObjects }).
       /^admin\.settings\./,
       /^settings\./,
       /^account\./,
