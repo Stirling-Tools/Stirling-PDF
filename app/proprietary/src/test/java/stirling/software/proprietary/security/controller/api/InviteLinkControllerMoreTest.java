@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.controller.api;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -267,12 +268,37 @@ class InviteLinkControllerMoreTest {
         @DisplayName("returns 404 for an expired token")
         void expiredToken() throws Exception {
             InviteToken invite = validInvite("exp");
+            invite.setEmail("exp@ex.com");
             invite.setExpiresAt(LocalDateTime.now().minusHours(1));
             when(inviteTokenRepository.findByToken("exp")).thenReturn(Optional.of(invite));
+            when(userService.usernameExistsIgnoreCase("exp@ex.com")).thenReturn(false);
+            // The expiry is enforced by the atomic claim, which matches no row
+            when(inviteTokenRepository.consumeIfUnused(eq("exp"), any(LocalDateTime.class)))
+                    .thenReturn(0);
 
             mockMvc.perform(post("/api/v1/invite/accept/exp").param("password", "secret123"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error").value("Invalid invite link"));
+
+            verify(userService, never()).saveUserCore(any());
+        }
+
+        @Test
+        @DisplayName("returns 404 for an already-used token without creating an account")
+        void usedToken() throws Exception {
+            InviteToken invite = validInvite("used");
+            invite.setEmail("used@ex.com");
+            invite.setUsed(true);
+            when(inviteTokenRepository.findByToken("used")).thenReturn(Optional.of(invite));
+            when(userService.usernameExistsIgnoreCase("used@ex.com")).thenReturn(false);
+            when(inviteTokenRepository.consumeIfUnused(eq("used"), any(LocalDateTime.class)))
+                    .thenReturn(0);
+
+            mockMvc.perform(post("/api/v1/invite/accept/used").param("password", "secret123"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error").value("Invalid invite link"));
+
+            verify(userService, never()).saveUserCore(any());
         }
 
         @Test
@@ -295,13 +321,15 @@ class InviteLinkControllerMoreTest {
             invite.setTeamId(3L);
             when(inviteTokenRepository.findByToken("preset")).thenReturn(Optional.of(invite));
             when(userService.usernameExistsIgnoreCase("preset@ex.com")).thenReturn(false);
+            when(inviteTokenRepository.consumeIfUnused(eq("preset"), any(LocalDateTime.class)))
+                    .thenReturn(1);
 
             mockMvc.perform(post("/api/v1/invite/accept/preset").param("password", "secret123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.username").value("preset@ex.com"));
 
             verify(userService).saveUserCore(any());
-            verify(inviteTokenRepository).save(invite);
+            verify(inviteTokenRepository).consumeIfUnused(eq("preset"), any(LocalDateTime.class));
         }
     }
 }

@@ -79,19 +79,7 @@ public class WorkflowParticipantController {
 
         workflowSessionService.ensureSigningEnabled();
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(token)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
-
-        // Check if participant is expired
-        if (participant.isExpired()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
-        }
+        WorkflowParticipant participant = requireLiveParticipant(token);
 
         // Mark as viewed if not already
         if (participant.getStatus() == ParticipantStatus.PENDING
@@ -115,14 +103,7 @@ public class WorkflowParticipantController {
 
         workflowSessionService.ensureSigningEnabled();
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(token)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
+        WorkflowParticipant participant = requireLiveParticipant(token);
 
         return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
     }
@@ -145,20 +126,9 @@ public class WorkflowParticipantController {
                     HttpStatus.BAD_REQUEST, "Participant token is required");
         }
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(request.getParticipantToken())
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
+        WorkflowParticipant participant = requireLiveParticipant(request.getParticipantToken());
 
         // Check if participant can still submit
-        if (participant.isExpired()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
-        }
-
         if (participant.hasCompleted()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Participant has already completed their action");
@@ -204,14 +174,7 @@ public class WorkflowParticipantController {
 
         workflowSessionService.ensureSigningEnabled();
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(token)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
+        WorkflowParticipant participant = requireLiveParticipant(token);
 
         if (participant.hasCompleted()) {
             throw new ResponseStatusException(
@@ -248,18 +211,7 @@ public class WorkflowParticipantController {
 
         workflowSessionService.ensureSigningEnabled();
 
-        WorkflowParticipant participant =
-                participantRepository
-                        .findByShareToken(token)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.FORBIDDEN,
-                                                "Invalid or expired participant token"));
-
-        if (participant.isExpired()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
-        }
+        WorkflowParticipant participant = requireLiveParticipant(token);
 
         try {
             WorkflowSession session = participant.getWorkflowSession();
@@ -368,6 +320,28 @@ public class WorkflowParticipantController {
                             false,
                             "Failed to read certificate file"));
         }
+    }
+
+    /**
+     * Resolves a share token to its participant, rejecting unknown and expired tokens. Every
+     * participant-facing endpoint must go through this so the expiry check cannot be forgotten
+     * (GHSA-cjr3-pj58-h8jj).
+     */
+    private WorkflowParticipant requireLiveParticipant(String token) {
+        WorkflowParticipant participant =
+                participantRepository
+                        .findByShareToken(token)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN,
+                                                "Invalid or expired participant token"));
+
+        if (participant.isExpired()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
+        }
+
+        return participant;
     }
 
     /**

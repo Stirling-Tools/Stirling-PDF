@@ -2,6 +2,7 @@ package stirling.software.proprietary.security.controller.api;
 
 import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -173,6 +174,8 @@ class InviteLinkControllerTest {
         invite.setEmail(null); // email required from request
         when(inviteTokenRepository.findByToken("abc")).thenReturn(Optional.of(invite));
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
+        when(inviteTokenRepository.consumeIfUnused(eq("abc"), any(LocalDateTime.class)))
+                .thenReturn(1);
 
         mockMvc.perform(
                         post("/api/v1/invite/accept/abc")
@@ -183,6 +186,26 @@ class InviteLinkControllerTest {
                 .andExpect(jsonPath("$.username").value("new@example.com"));
 
         verify(userService).saveUserCore(any());
-        verify(inviteTokenRepository).save(invite);
+        verify(inviteTokenRepository).consumeIfUnused(eq("abc"), any(LocalDateTime.class));
+    }
+
+    @Test
+    void acceptInviteRejectsWhenTheTokenWasAlreadyConsumed() throws Exception {
+        InviteToken invite = new InviteToken();
+        invite.setToken("abc");
+        invite.setExpiresAt(LocalDateTime.now().plusHours(2));
+        invite.setRole(Role.USER.getRoleId());
+        invite.setEmail("race@example.com");
+        when(inviteTokenRepository.findByToken("abc")).thenReturn(Optional.of(invite));
+        when(userService.usernameExistsIgnoreCase("race@example.com")).thenReturn(false);
+        // Loser of the race: the atomic claim matches no row
+        when(inviteTokenRepository.consumeIfUnused(eq("abc"), any(LocalDateTime.class)))
+                .thenReturn(0);
+
+        mockMvc.perform(post("/api/v1/invite/accept/abc").param("password", "password123"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Invalid invite link"));
+
+        verify(userService, never()).saveUserCore(any());
     }
 }

@@ -7,6 +7,9 @@ import java.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -399,6 +402,7 @@ public class InviteLinkController {
      * @param password The password to set for the new account
      * @return Success or error response
      */
+    @Transactional
     @PostMapping("/accept/{token}")
     public ResponseEntity<?> acceptInvite(
             @PathVariable String token,
@@ -418,14 +422,6 @@ public class InviteLinkController {
             }
 
             InviteToken invite = inviteOpt.get();
-
-            if (invite.isUsed()) {
-                return invalidInviteResponse();
-            }
-
-            if (invite.isExpired()) {
-                return invalidInviteResponse();
-            }
 
             // Determine the email to use
             String effectiveEmail = invite.getEmail();
@@ -450,6 +446,12 @@ public class InviteLinkController {
                 return invalidInviteResponse();
             }
 
+            // Claim the invite atomically before creating the account, so two concurrent
+            // redemptions of the same link cannot both succeed (GHSA-rmrr-v9p4-qqvc)
+            if (inviteTokenRepository.consumeIfUnused(token, LocalDateTime.now()) != 1) {
+                return invalidInviteResponse();
+            }
+
             // Create the user account
             SaveUserRequest.Builder builder =
                     SaveUserRequest.builder()
@@ -458,11 +460,6 @@ public class InviteLinkController {
                             .teamId(invite.getTeamId())
                             .role(invite.getRole());
             userService.saveUserCore(builder.build());
-
-            // Mark invite as used
-            invite.setUsed(true);
-            invite.setUsedAt(LocalDateTime.now());
-            inviteTokenRepository.save(invite);
 
             log.info(
                     "User account created via invite link: {} with role: {}",
@@ -473,6 +470,10 @@ public class InviteLinkController {
                     Map.of("message", "Account created successfully", "username", effectiveEmail));
 
         } catch (Exception e) {
+            // Undo the claim so a failed account creation does not burn the invite
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            }
             log.error("Failed to accept invite: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to create account"));

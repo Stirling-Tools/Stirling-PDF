@@ -155,6 +155,19 @@ class WorkflowParticipantControllerMoreTest {
     }
 
     @Test
+    @DisplayName("getParticipantDetails expired token throws 403")
+    void getParticipantDetails_expiredToken() {
+        WorkflowParticipant p = participant(ParticipantStatus.VIEWED);
+        p.setExpiresAt(java.time.LocalDateTime.now().minusDays(1));
+        when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+        assertThatThrownBy(() -> controller.getParticipantDetails(TOKEN))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     @DisplayName("getParticipantDetails invalid token throws 403")
     void getParticipantDetails_invalidToken() {
         when(participantRepository.findByShareToken("bad")).thenReturn(Optional.empty());
@@ -196,6 +209,18 @@ class WorkflowParticipantControllerMoreTest {
             when(participantRepository.findByShareToken("bad")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> controller.submitSignature(request("bad")))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.FORBIDDEN);
+        }
+
+        @Test
+        void expiredParticipant_throwsForbidden() {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            p.setExpiresAt(java.time.LocalDateTime.now().minusDays(1));
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+            assertThatThrownBy(() -> controller.submitSignature(request(TOKEN)))
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(HttpStatus.FORBIDDEN);
@@ -254,6 +279,18 @@ class WorkflowParticipantControllerMoreTest {
             when(participantRepository.findByShareToken("bad")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> controller.declineParticipation("bad", null))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.FORBIDDEN);
+        }
+
+        @Test
+        void expiredParticipant_throwsForbidden() {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            p.setExpiresAt(java.time.LocalDateTime.now().minusDays(1));
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+            assertThatThrownBy(() -> controller.declineParticipation(TOKEN, "too late"))
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(HttpStatus.FORBIDDEN);

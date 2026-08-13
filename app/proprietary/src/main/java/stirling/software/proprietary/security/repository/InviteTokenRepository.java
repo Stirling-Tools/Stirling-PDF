@@ -29,4 +29,11 @@ public interface InviteTokenRepository extends JpaRepository<InviteToken, Long> 
 
     @Query("SELECT COUNT(it) FROM InviteToken it WHERE it.used = false AND it.expiresAt > :now")
     long countActiveInvites(@Param("now") LocalDateTime now);
+
+    // Atomic claim so concurrent redemptions of one invite cannot both win (GHSA-rmrr-v9p4-qqvc).
+    @Modifying(clearAutomatically = true)
+    @Query(
+            "UPDATE InviteToken it SET it.used = true, it.usedAt = :now WHERE it.token = :token AND"
+                    + " it.used = false AND it.expiresAt > :now")
+    int consumeIfUnused(@Param("token") String token, @Param("now") LocalDateTime now);
 }
