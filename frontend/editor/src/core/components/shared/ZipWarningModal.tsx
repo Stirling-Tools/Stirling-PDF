@@ -18,7 +18,7 @@ const WARNING_ICON_STYLE: CSSProperties = {
   fontSize: 36,
   display: "block",
   margin: "0 auto 8px",
-  color: "var(--mantine-color-blue-6)",
+  color: "var(--c-accent-text)",
 };
 
 const ZipWarningModal = ({

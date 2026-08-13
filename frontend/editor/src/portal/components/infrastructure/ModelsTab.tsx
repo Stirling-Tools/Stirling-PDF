@@ -77,7 +77,12 @@ export function ModelsTab() {
       width: "9rem",
       render: (m) => (
         <div className="portal-infra__load">
-          <ProgressBar value={m.load} thresholded height={6} />
+          <ProgressBar
+            value={m.load}
+            thresholded
+            height={6}
+            label={t("portal.infrastructure.models.loadAria", { name: m.name })}
+          />
           <span className="portal-infra__load-pct">{pct(m.load)}</span>
         </div>
       ),
