@@ -550,10 +550,22 @@ public class FileStorageService {
 
         // Egress gate, before anything is written: a Sharing policy may refuse this recipient
         // outright, or cap the access they are granted.
-        ShareChannel channel = isEmail ? ShareChannel.EMAIL_SHARE : ShareChannel.USER_SHARE;
+        // Usernames are commonly email addresses, so a registered recipient is a user share however
+        // it was typed; only a link mailed to someone with no account is an email share.
+        ShareChannel channel =
+                isEmail && targetUserOpt.isEmpty()
+                        ? ShareChannel.EMAIL_SHARE
+                        : ShareChannel.USER_SHARE;
         ShareEgressDecision decision =
                 requireEgressAllowed(channel, file, owner, normalizedUsername, role);
         ShareAccessRole effectiveRole = decision.role();
+        // Sharing with a registered user by email also mails a link, and that link is an email
+        // share in its own right, so it is judged as one before anything is written.
+        ShareEgressDecision linkDecision =
+                isEmail && channel != ShareChannel.EMAIL_SHARE
+                        ? requireEgressAllowed(
+                                ShareChannel.EMAIL_SHARE, file, owner, normalizedUsername, role)
+                        : decision;
 
         if (targetUserOpt.isPresent()) {
             User targetUser = targetUserOpt.get();
@@ -591,13 +603,15 @@ public class FileStorageService {
                             HttpStatus.BAD_REQUEST,
                             "Share links must be enabled for email sharing");
                 }
-                // Already decided above as an email share; don't re-evaluate as a link share.
-                FileShare linkShare = mintShareLink(file, effectiveRole, decision, channel);
+                // Already judged as an email share above; don't re-evaluate it as a link share.
+                FileShare linkShare =
+                        mintShareLink(
+                                file, linkDecision.role(), linkDecision, ShareChannel.EMAIL_SHARE);
                 sendShareNotification(
                         owner,
                         file,
                         normalizedUsername,
-                        effectiveRole,
+                        linkDecision.role(),
                         buildShareLinkUrl(linkShare));
             }
 
@@ -615,9 +629,10 @@ public class FileStorageService {
                     HttpStatus.BAD_REQUEST, "Share links must be enabled for email sharing");
         }
 
-        FileShare linkShare = mintShareLink(file, effectiveRole, decision, channel);
+        FileShare linkShare =
+                mintShareLink(file, linkDecision.role(), linkDecision, ShareChannel.EMAIL_SHARE);
         sendShareNotification(
-                owner, file, normalizedUsername, effectiveRole, buildShareLinkUrl(linkShare));
+                owner, file, normalizedUsername, linkDecision.role(), buildShareLinkUrl(linkShare));
         return linkShare;
     }
 

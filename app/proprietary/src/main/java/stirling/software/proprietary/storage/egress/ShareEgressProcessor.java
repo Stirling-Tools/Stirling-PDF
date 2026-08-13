@@ -1,13 +1,16 @@
 package stirling.software.proprietary.storage.egress;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.springframework.core.io.AbstractResource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -55,15 +58,21 @@ public class ShareEgressProcessor {
 
     private final FileShareRepository fileShareRepository;
 
-    /** The bytes to serve: cached copy, a fresh one, or the original when nothing processes it. */
-    public Resource resolve(FileShare share, Resource original, ShareEgressDecision decision) {
+    /**
+     * The bytes to serve: cached copy, a fresh one, or the original when nothing processes it.
+     *
+     * @param filename what the document is called; storage providers hand back unnamed resources
+     *     and the tool chain decides what it accepts from the extension.
+     */
+    public Resource resolve(
+            FileShare share, Resource original, String filename, ShareEgressDecision decision) {
         if (!decision.requiresManagedDelivery()) {
             return original;
         }
         String cached = cachedFileId(share, decision);
         if (cached != null) {
             try {
-                return toResource(cached, original.getFilename());
+                return toResource(cached, filename);
             } catch (IOException | RuntimeException e) {
                 log.warn(
                         "Cached processed copy {} could not be read; re-deriving: {}",
@@ -71,12 +80,7 @@ public class ShareEgressProcessor {
                         e.getMessage());
             }
         }
-        String fileId = derive(share, original, decision);
-        try {
-            return toResource(fileId, original.getFilename());
-        } catch (IOException e) {
-            throw refuse(decision, e);
-        }
+        return derive(share, original, filename, decision);
     }
 
     /** The still-valid cached copy for this decision, or null if absent, stale, or swept away. */
@@ -90,8 +94,9 @@ public class ShareEgressProcessor {
     }
 
     /** Runs each policy's chain on the previous one's output; records the result on the share. */
-    private String derive(FileShare share, Resource original, ShareEgressDecision decision) {
-        Resource current = original;
+    private Resource derive(
+            FileShare share, Resource original, String filename, ShareEgressDecision decision) {
+        Resource current = named(original, filename);
         String fileId = null;
         for (String policyId : decision.transformPolicyIds()) {
             Policy policy = policyStore.get(policyId).orElse(null);
@@ -101,14 +106,22 @@ public class ShareEgressProcessor {
                 continue;
             }
             fileId = runChain(policy, current, decision);
-            current = read(fileId, original.getFilename(), decision);
+            current = read(fileId, filename, decision);
         }
-        if (decision.viewOnly()) {
+        if (decision.viewOnly() && rasterisable(filename)) {
             // View-only means no working copy leaves, so the bytes are rasterised whatever
             // disposition the client asked for.
             fileId = runChain(rasterisingPolicy(decision), current, decision);
+            current = read(fileId, filename, decision);
         }
         if (fileId == null) {
+            if (decision.viewOnly()) {
+                // Nothing here to rasterise, so the stored bytes are what the recipient sees;
+                // view-only still binds as the inline-only disposition the caller enforces.
+                log.debug(
+                        "View-only delivery of a non-PDF payload {} serves it as stored", filename);
+                return current;
+            }
             throw new ShareEgressException(
                     new ShareEgressDecision(
                             false,
@@ -123,7 +136,28 @@ public class ShareEgressProcessor {
                             null));
         }
         stampCache(share, decision, fileId);
-        return fileId;
+        return current;
+    }
+
+    /**
+     * Whether the rasterising pass can apply at all: only a PDF has pages to render. An unknown
+     * type counts as one, so a view-only delivery fails closed rather than handing over the stored
+     * document.
+     */
+    private static boolean rasterisable(String filename) {
+        String extension = extensionOf(filename);
+        return extension == null || "pdf".equals(extension);
+    }
+
+    private static String extensionOf(String filename) {
+        if (filename == null) {
+            return null;
+        }
+        int dot = filename.lastIndexOf('.');
+        if (dot < 0 || dot == filename.length() - 1) {
+            return null;
+        }
+        return filename.substring(dot + 1).toLowerCase(Locale.ROOT);
     }
 
     /** The rasterising pass, attributed and billed to the policy that asked for view-only. */
@@ -201,6 +235,51 @@ public class ShareEgressProcessor {
                 return filename;
             }
         };
+    }
+
+    /** The stored bytes under the document's own name; providers hand back unnamed resources. */
+    private static Resource named(Resource resource, String filename) {
+        if (filename == null || filename.equals(resource.getFilename())) {
+            return resource;
+        }
+        return new NamedResource(resource, filename);
+    }
+
+    /** Renames without reading: the stored resource may decrypt on open, or be single-use. */
+    private static final class NamedResource extends AbstractResource {
+
+        private final Resource delegate;
+        private final String filename;
+
+        private NamedResource(Resource delegate, String filename) {
+            this.delegate = delegate;
+            this.filename = filename;
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return delegate.getInputStream();
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            return delegate.contentLength();
+        }
+
+        @Override
+        public boolean exists() {
+            return delegate.exists();
+        }
+
+        @Override
+        public String getFilename() {
+            return filename;
+        }
+
+        @Override
+        public String getDescription() {
+            return delegate.getDescription();
+        }
     }
 
     private static ShareEgressException refuse(ShareEgressDecision decision, Throwable cause) {

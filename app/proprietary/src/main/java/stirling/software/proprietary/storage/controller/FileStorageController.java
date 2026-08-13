@@ -309,7 +309,7 @@ public class FileStorageController {
         // and the view-only disposition, so managed deliveries always stream through here.
         org.springframework.core.io.Resource stored = fileStorageService.loadFile(file);
         org.springframework.core.io.Resource served =
-                shareEgressProcessor.resolve(share, stored, decision);
+                shareEgressProcessor.resolve(share, stored, file.getOriginalFilename(), decision);
         return buildFileResponse(file, served, servedInline);
     }
 

@@ -56,11 +56,13 @@ public class ShareEgressPolicyService {
 
     /** The channel stamped when the share was granted; older rows fall back to their shape. */
     private static ShareChannel channelOf(FileShare share) {
-        if (share.getEgressChannel() != null) {
-            return share.getEgressChannel();
+        if (share.getSharedWithUser() != null) {
+            // A row naming a user is a user share whatever it was stamped, so typing that user's
+            // email address cannot turn their share into an email share at delivery.
+            return ShareChannel.USER_SHARE;
         }
-        return share.getSharedWithUser() != null
-                ? ShareChannel.USER_SHARE
+        return share.getEgressChannel() != null
+                ? share.getEgressChannel()
                 : ShareChannel.SHARE_LINK;
     }
 

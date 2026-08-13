@@ -37,6 +37,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.storage.model.FileShare;
@@ -54,6 +55,7 @@ class ShareEgressProcessorTest {
     private static final String POLICY_ID = "policy-1";
     private static final String FINGERPRINT = "fingerprint";
     private static final String FLATTEN = "/api/v1/misc/flatten";
+    private static final String PDF_NAME = "doc.pdf";
     private static final byte[] ORIGINAL = {1, 1, 1};
     private static final byte[] PROCESSED = {2, 2, 2, 2};
 
@@ -81,7 +83,7 @@ class ShareEgressProcessorTest {
     void anUngovernedDeliveryServesTheStoredOriginal() {
         Resource original = original();
 
-        Resource served = processor.resolve(share, original, unrestricted());
+        Resource served = processor.resolve(share, original, PDF_NAME, unrestricted());
 
         assertThat(served).isSameAs(original);
         verifyNoInteractions(policyEngine);
@@ -91,7 +93,7 @@ class ShareEgressProcessorTest {
     void aPolicyChainProducesTheCopyThatIsServed() throws Exception {
         runProduces(PROCESSED);
 
-        Resource served = processor.resolve(share, original(), transforming());
+        Resource served = processor.resolve(share, original(), PDF_NAME, transforming());
 
         assertThat(served.getContentAsByteArray()).isEqualTo(PROCESSED);
         assertThat(served.getFilename()).isEqualTo("doc.pdf");
@@ -101,7 +103,7 @@ class ShareEgressProcessorTest {
     void theProcessedCopyIsCachedAgainstTheShare() throws Exception {
         String fileId = runProduces(PROCESSED);
 
-        processor.resolve(share, original(), transforming());
+        processor.resolve(share, original(), PDF_NAME, transforming());
 
         verify(fileShareRepository).save(share);
         assertThat(share.getEgressFileId()).isEqualTo(fileId);
@@ -116,7 +118,7 @@ class ShareEgressProcessorTest {
         share.setEgressFileId(cached);
         share.setEgressFingerprint(FINGERPRINT);
 
-        Resource served = processor.resolve(share, original(), transforming());
+        Resource served = processor.resolve(share, original(), PDF_NAME, transforming());
 
         assertThat(served.getContentAsByteArray()).isEqualTo(PROCESSED);
         verifyNoInteractions(policyEngine);
@@ -128,7 +130,7 @@ class ShareEgressProcessorTest {
         share.setEgressFingerprint("stale");
         runProduces(PROCESSED);
 
-        Resource served = processor.resolve(share, original(), transforming());
+        Resource served = processor.resolve(share, original(), PDF_NAME, transforming());
 
         assertThat(served.getContentAsByteArray()).isEqualTo(PROCESSED);
     }
@@ -139,7 +141,10 @@ class ShareEgressProcessorTest {
         share.setEgressFingerprint(FINGERPRINT);
         runProduces(PROCESSED);
 
-        assertThat(processor.resolve(share, original(), transforming()).getContentAsByteArray())
+        assertThat(
+                        processor
+                                .resolve(share, original(), PDF_NAME, transforming())
+                                .getContentAsByteArray())
                 .isEqualTo(PROCESSED);
     }
 
@@ -147,7 +152,7 @@ class ShareEgressProcessorTest {
     void aViewOnlyDecisionRasterisesEvenWithNoToolChain() throws Exception {
         runProduces(PROCESSED);
 
-        Resource served = processor.resolve(share, original(), viewOnly(List.of()));
+        Resource served = processor.resolve(share, original(), PDF_NAME, viewOnly(List.of()));
 
         assertThat(served.getContentAsByteArray()).isEqualTo(PROCESSED);
         assertThat(ranOperations()).containsExactly(FLATTEN);
@@ -157,9 +162,52 @@ class ShareEgressProcessorTest {
     void aViewOnlyDecisionRasterisesAfterTheToolChain() throws Exception {
         runProduces(PROCESSED);
 
-        processor.resolve(share, original(), viewOnly(List.of(POLICY_ID)));
+        processor.resolve(share, original(), PDF_NAME, viewOnly(List.of(POLICY_ID)));
 
         assertThat(ranOperations()).containsExactly("/api/v1/security/add-watermark", FLATTEN);
+    }
+
+    @Test
+    void aViewOnlyDeliveryOfANonPdfServesTheStoredBytes() throws Exception {
+        // The rasteriser only understands PDFs, so running it here would refuse the delivery
+        // outright. View-only still binds: the caller serves it inline, never as an attachment.
+        Resource served = processor.resolve(share, original(), "photo.png", viewOnly(List.of()));
+
+        assertThat(served.getContentAsByteArray()).isEqualTo(ORIGINAL);
+        verifyNoInteractions(policyEngine);
+        assertThat(share.getEgressFileId()).isNull();
+    }
+
+    @Test
+    void aNonPdfStillRunsTheToolChainTheSharingPolicyConfigured() throws Exception {
+        runProduces(PROCESSED);
+
+        processor.resolve(share, original(), "photo.png", viewOnly(List.of(POLICY_ID)));
+
+        // Only the rasterising pass is skipped; whether a tool accepts the type is the chain's own
+        // business, and a step that refuses it still fails the delivery closed.
+        assertThat(ranOperations()).containsExactly("/api/v1/security/add-watermark");
+    }
+
+    @Test
+    void aViewOnlyPayloadOfUnknownTypeIsStillRasterised() throws Exception {
+        runProduces(PROCESSED);
+
+        // Nothing says it is not a PDF, so it fails closed rather than handing over the original.
+        processor.resolve(share, original(), "scan-no-extension", viewOnly(List.of()));
+
+        assertThat(ranOperations()).containsExactly(FLATTEN);
+    }
+
+    @Test
+    void theToolChainSeesTheDocumentsOwnNameNotTheStoredResources() throws Exception {
+        runProduces(PROCESSED);
+
+        // Providers hand back unnamed resources (database, S3, decrypting), and the engine reads
+        // the accepted type off the filename.
+        processor.resolve(share, new ByteArrayResource(ORIGINAL), PDF_NAME, transforming());
+
+        assertThat(ranInputNames()).containsExactly(PDF_NAME);
     }
 
     @Test
@@ -169,7 +217,7 @@ class ShareEgressProcessorTest {
         when(policyEngine.runPolicy(any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("run-1", CompletableFuture.completedFuture(run)));
 
-        assertThatThrownBy(() -> processor.resolve(share, original(), transforming()))
+        assertThatThrownBy(() -> processor.resolve(share, original(), PDF_NAME, transforming()))
                 .isInstanceOf(ShareEgressException.class)
                 .hasMessageContaining("was not released");
     }
@@ -182,7 +230,7 @@ class ShareEgressProcessorTest {
                                 "run-1",
                                 CompletableFuture.failedFuture(new IllegalStateException("boom"))));
 
-        assertThatThrownBy(() -> processor.resolve(share, original(), transforming()))
+        assertThatThrownBy(() -> processor.resolve(share, original(), PDF_NAME, transforming()))
                 .isInstanceOf(ShareEgressException.class);
         verify(policyEngine).cancel("run-1");
     }
@@ -191,7 +239,7 @@ class ShareEgressProcessorTest {
     void aPolicyDeletedMidFlightReleasesNothing() {
         when(policyStore.get(anyString())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> processor.resolve(share, original(), transforming()))
+        assertThatThrownBy(() -> processor.resolve(share, original(), PDF_NAME, transforming()))
                 .isInstanceOf(ShareEgressException.class)
                 .hasMessageContaining("no longer available");
         verifyNoInteractions(policyEngine);
@@ -202,7 +250,10 @@ class ShareEgressProcessorTest {
         runProduces(PROCESSED);
         when(fileShareRepository.save(any())).thenThrow(new IllegalStateException("db down"));
 
-        assertThat(processor.resolve(share, original(), transforming()).getContentAsByteArray())
+        assertThat(
+                        processor
+                                .resolve(share, original(), PDF_NAME, transforming())
+                                .getContentAsByteArray())
                 .isEqualTo(PROCESSED);
     }
 
@@ -216,6 +267,17 @@ class ShareEgressProcessorTest {
         return captor.getAllValues().stream()
                 .flatMap(policy -> policy.steps().stream())
                 .map(PipelineStep::operation)
+                .toList();
+    }
+
+    /** The filename each run's primary input carried into the engine. */
+    private List<String> ranInputNames() {
+        ArgumentCaptor<PolicyInputs> captor = ArgumentCaptor.forClass(PolicyInputs.class);
+        verify(policyEngine, org.mockito.Mockito.atLeastOnce())
+                .runPolicy(any(), captor.capture(), any());
+        return captor.getAllValues().stream()
+                .flatMap(inputs -> inputs.primary().stream())
+                .map(Resource::getFilename)
                 .toList();
     }
 

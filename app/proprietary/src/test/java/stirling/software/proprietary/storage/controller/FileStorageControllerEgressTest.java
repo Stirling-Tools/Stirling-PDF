@@ -6,12 +6,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +21,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -31,6 +34,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.cluster.inprocess.LocalDiskFileStore;
+import stirling.software.proprietary.policy.engine.PolicyEngine;
+import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.AuditService;
 import stirling.software.proprietary.storage.egress.ShareEgressDecision;
@@ -39,6 +45,7 @@ import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
+import stirling.software.proprietary.storage.repository.FileShareRepository;
 import stirling.software.proprietary.storage.service.FileStorageService;
 
 /** The delivery half: what the download endpoints do once a policy has decided. */
@@ -48,6 +55,7 @@ class FileStorageControllerEgressTest {
 
     private static final String TOKEN = "tok";
     private static final String STORAGE_KEY = "11/abc-doc.pdf";
+    private static final byte[] PNG = {(byte) 0x89, 'P', 'N', 'G'};
 
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
@@ -79,7 +87,7 @@ class FileStorageControllerEgressTest {
     @Test
     void aViewOnlyPolicyNeverServesAnAttachment() {
         when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(viewOnly());
-        when(shareEgressProcessor.resolve(eq(share), any(), any()))
+        when(shareEgressProcessor.resolve(eq(share), any(), any(), any()))
                 .thenReturn(new ByteArrayResource(new byte[] {7}));
 
         // Asking for an attachment is a client hint; the policy decides the disposition.
@@ -94,13 +102,13 @@ class FileStorageControllerEgressTest {
     void aViewOnlyDeliveryIsProcessedWhicheverDispositionIsAskedFor() {
         ShareEgressDecision decision = viewOnly();
         when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(decision);
-        when(shareEgressProcessor.resolve(eq(share), any(), eq(decision)))
+        when(shareEgressProcessor.resolve(eq(share), any(), any(), eq(decision)))
                 .thenReturn(new ByteArrayResource(new byte[] {7}));
 
         // The bypass this closes: ?inline=true used to skip the gate and hand back the original.
         controller.downloadShareLink(TOKEN, authentication, true);
 
-        verify(shareEgressProcessor).resolve(eq(share), any(), eq(decision));
+        verify(shareEgressProcessor).resolve(eq(share), any(), any(), eq(decision));
     }
 
     @Test
@@ -117,7 +125,7 @@ class FileStorageControllerEgressTest {
     @Test
     void aViewOnlyAccessIsLoggedAsAViewNotADownload() {
         when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(viewOnly());
-        when(shareEgressProcessor.resolve(eq(share), any(), any()))
+        when(shareEgressProcessor.resolve(eq(share), any(), any(), any()))
                 .thenReturn(new ByteArrayResource(new byte[] {7}));
 
         controller.downloadShareLink(TOKEN, authentication, false);
@@ -128,7 +136,7 @@ class FileStorageControllerEgressTest {
     @Test
     void aGovernedDeliveryNeverRedirectsToASignedUrl() throws Exception {
         when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(viewOnly());
-        when(shareEgressProcessor.resolve(eq(share), any(), any()))
+        when(shareEgressProcessor.resolve(eq(share), any(), any(), any()))
                 .thenReturn(new ByteArrayResource(new byte[] {7}));
         when(storageProvider.signedDownloadUrl(
                         eq(STORAGE_KEY), any(Duration.class), anyBoolean(), anyString()))
@@ -148,7 +156,7 @@ class FileStorageControllerEgressTest {
         ShareEgressDecision decision = transforming();
         byte[] processed = new byte[] {1, 2, 3, 4, 5};
         when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(decision);
-        when(shareEgressProcessor.resolve(eq(share), any(), eq(decision)))
+        when(shareEgressProcessor.resolve(eq(share), any(), any(), eq(decision)))
                 .thenReturn(new ByteArrayResource(processed));
 
         ResponseEntity<Resource> response =
@@ -197,15 +205,45 @@ class FileStorageControllerEgressTest {
         when(fileStorageService.getAccessibleFile(user, 77L)).thenReturn(file);
         when(fileStorageService.findUserShare(user, file)).thenReturn(Optional.of(userShare));
         when(fileStorageService.decideDelivery(eq(userShare), any())).thenReturn(decision);
-        when(shareEgressProcessor.resolve(eq(userShare), any(), eq(decision)))
+        when(shareEgressProcessor.resolve(eq(userShare), any(), any(), eq(decision)))
                 .thenReturn(new ByteArrayResource(new byte[] {9}));
 
         ResponseEntity<Resource> response = controller.downloadFile(77L, false);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(shareEgressProcessor).resolve(eq(userShare), any(), eq(decision));
+        verify(shareEgressProcessor).resolve(eq(userShare), any(), any(), eq(decision));
         // Direct downloads are not share-link accesses, so nothing is logged against a token.
         verify(fileStorageService, never()).recordShareAccess(any(), any(), anyBoolean());
+    }
+
+    @Test
+    void aNonPdfSharedWithAnExternalRecipientIsStillDelivered(@TempDir Path tempDir) {
+        // externalRecipients=restrict makes every external recipient view-only, and the rasterising
+        // pass only understands PDFs; running it here would refuse the share outright.
+        StoredFile image = storedFile();
+        image.setOriginalFilename("photo.png");
+        image.setContentType("image/png");
+        share.setFile(image);
+        PolicyEngine policyEngine = mock(PolicyEngine.class);
+        FileStorageController withRealProcessor =
+                new FileStorageController(
+                        fileStorageService,
+                        storageProvider,
+                        new ShareEgressProcessor(
+                                mock(PolicyStore.class),
+                                policyEngine,
+                                new LocalDiskFileStore(tempDir.toString()),
+                                mock(FileShareRepository.class)),
+                        auditService);
+        when(fileStorageService.loadFile(image)).thenReturn(new ByteArrayResource(PNG));
+        when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(viewOnly());
+
+        ResponseEntity<Resource> response =
+                withRealProcessor.downloadShareLink(TOKEN, authentication, false);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentDisposition().isInline()).isTrue();
+        verifyNoInteractions(policyEngine);
     }
 
     @Test
@@ -215,7 +253,7 @@ class FileStorageControllerEgressTest {
                 new UsernamePasswordAuthenticationToken(secondRecipient(), "n/a", List.of());
         when(fileStorageService.canAccessShareLink(share, second)).thenReturn(true);
         when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(decision);
-        when(shareEgressProcessor.resolve(eq(share), any(), eq(decision)))
+        when(shareEgressProcessor.resolve(eq(share), any(), any(), eq(decision)))
                 .thenReturn(new ByteArrayResource(new byte[] {9}));
 
         assertThat(controller.downloadShareLink(TOKEN, authentication, false).getStatusCode())

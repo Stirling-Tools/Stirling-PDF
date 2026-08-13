@@ -316,6 +316,8 @@ The governing policies are always the **file owner's team's**, never the accesso
 
 The channel is stamped on the share row when it is granted (`file_shares.egress_channel`), so the link an email share mints is still evaluated as `emailShare` when the recipient opens it. Without that stamp a policy narrowed to the email channel would gate the grant and then let the delivery through untouched.
 
+Typing a **registered user's** email address is still a user share: the row that names them is stamped `userShare`, and only the link that gets mailed is an `emailShare`. Both channels are evaluated before anything is written, each against the artefact it governs. Usernames in this product are commonly email addresses, so treating the row as an email share would quietly stop a `userShare` policy from biting on the ordinary path.
+
 The owner downloading their own file is not egress and is never gated.
 
 ### Settings
@@ -343,6 +345,8 @@ Three behaviours worth knowing:
 - **Fails closed.** If the tool chain errors or does not finish inside 120s, the delivery is refused rather than falling back to the unprocessed original.
 - **No signed-URL shortcut.** When a policy applies view-only or a transform, delivery always streams through the application. A provider-signed URL points straight at the stored object and would bypass both.
 - **View-only is decided by the server.** `?inline` is a client hint about the disposition; it cannot decide whether the policy applies. A view-only delivery is always served inline, always processed, and its final pass rasterises the pages, so what leaves is a rendition rather than the stored document. Recipients still see the file; they do not receive a working copy of it.
+
+**View-only over a non-PDF.** Stored files are not all PDFs, and the rasterising pass is a PDF operation. For a payload whose type says it is something else (a PNG, a spreadsheet), that pass is skipped and the stored bytes are served: view-only then means only the inline-only disposition, which is what it can mean for a format with no pages to render. Any tool chain the policy configures still runs, and still fails the delivery closed if a step refuses the type. A payload whose type cannot be read at all counts as a PDF, so it is rasterised or refused rather than handed over untouched.
 
 The cached copy is read back through the low-level file store rather than the job-ownership-checked wrapper: the share has already authorised the recipient, and the ownership check would refuse every recipient except the one whose download happened to derive the copy.
 
