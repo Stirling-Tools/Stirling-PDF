@@ -7,11 +7,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.cos.COSName;
@@ -33,7 +30,7 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyl
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.pdf.parser.PageColumnLayout;
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
-import stirling.software.SPDF.pdf.redaction.RedactionPipeline;
+import stirling.software.SPDF.pdf.redaction.RedactionAssurance;
 import stirling.software.SPDF.pdf.redaction.RedactionVerificationFailedException;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -95,8 +92,8 @@ class RedactExecuteService {
         try {
             document = pdfDocumentFactory.load(request.getFileInput());
 
-            // Single-pass text scan: collect all text-based targets so we run the PDF stripper only
-            // once across the entire execute() call rather than once per target.
+            // Single-pass text scan: collect all text-based targets so we run the PDF
+            // stripper only once across the entire execute() call rather than once per target.
             Map<Integer, List<PDFText>> foundTexts =
                     hasTextOps ? collectTextMatches(document, request) : new HashMap<>();
 
@@ -106,14 +103,13 @@ class RedactExecuteService {
                     totalMatches,
                     foundTexts.size());
 
-            // Text removal (content-stream rewriting) - skipped in overlay-only mode.
+            // Text removal (content-stream rewriting) — skipped in overlay-only mode.
             boolean needsOverlayOnly = overlayOnly;
             if (hasTextOps && !foundTexts.isEmpty() && !overlayOnly) {
                 needsOverlayOnly = applyTextRemoval(document, request);
             } else if (overlayOnly) {
-                log.warn(
-                        "[redact/execute] overlay-only mode requested - text stays extractable "
-                                + "under the boxes and verification is skipped");
+                log.info(
+                        "[redact/execute] overlay-only mode requested — skipping content-stream rewriting");
             }
 
             // Reload fresh document on fallback so we overlay onto clean content.
@@ -134,56 +130,48 @@ class RedactExecuteService {
                 applyPageWipe(document, wipePages, style);
             }
 
-            // Range + image-box redactions are geometric overlays.
-            Set<Integer> geometricRasterPages = new HashSet<>();
             for (TextRange range : ranges) {
-                geometricRasterPages.addAll(
-                        applyRangeRedaction(document, range, style, layoutCache));
+                applyRangeRedaction(document, range, style, layoutCache);
             }
 
             for (ImageBox box : imageBoxes) {
-                geometricRasterPages.addAll(applyImageBoxRedaction(document, box, style));
+                applyImageBoxRedaction(document, box, style);
             }
 
             if (request.getRedactImagePages() != null) {
                 applyAllImagesRedaction(document, request.getRedactImagePages(), style);
             }
 
-            // Overlay-only skips removal/verify; font-fallback overlays still pass targets.
-            Set<String> literalTargets = new LinkedHashSet<>();
-            for (String value : textValues) {
-                String trimmed = value == null ? "" : value.trim();
-                if (!trimmed.isEmpty()) {
-                    literalTargets.add(trimmed);
+            TempFile out =
+                    manualRedactionService.finalizeRedaction(
+                            document,
+                            foundTexts,
+                            style.getColor(),
+                            style.getPadding(),
+                            convertToImage,
+                            !needsOverlayOnly);
+
+            // Only verify when removal was actually promised: OVERLAY_ONLY is an explicit
+            // request for a cover-up, but the implicit fallback above is a silent one.
+            if (hasTextOps && !overlayOnly) {
+                try {
+                    RedactionAssurance.scrubAndVerify(
+                            out.getFile().toPath(),
+                            RedactionAssurance.targetsFor(textValues, false, false));
+                    RedactionAssurance.scrubAndVerify(
+                            out.getFile().toPath(),
+                            RedactionAssurance.targetsFor(regexPatterns, true, false));
+                } catch (Exception e) {
+                    out.close();
+                    throw e;
                 }
             }
-            List<Pattern> verificationPatterns =
-                    RedactionPipeline.buildPatterns(
-                            regexPatterns.toArray(new String[0]), true, false);
-            Set<String> finalizeTargets = overlayOnly ? Collections.emptySet() : literalTargets;
-            List<Pattern> finalizePatterns =
-                    overlayOnly ? Collections.emptyList() : verificationPatterns;
+            return out;
 
-            return manualRedactionService.finalizeRedaction(
-                    document,
-                    foundTexts,
-                    style.getColor(),
-                    style.getPadding(),
-                    convertToImage,
-                    !needsOverlayOnly,
-                    finalizeTargets,
-                    finalizePatterns,
-                    geometricRasterPages);
-
+        } catch (RedactionVerificationFailedException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Execute redaction failed: {}", e.getMessage(), e);
-            // Typed failures keep their HTTP mapping (400 invalid input, 422 unverifiable).
-            if (e instanceof IllegalArgumentException iae) {
-                throw iae;
-            }
-            if (e instanceof RedactionVerificationFailedException rvfe) {
-                throw rvfe;
-            }
             throw new RuntimeException("Failed to perform PDF redaction: " + e.getMessage(), e);
         } finally {
             if (document != null) {
@@ -196,7 +184,9 @@ class RedactExecuteService {
         }
     }
 
+    // -----------------------------------------------------------------------
     // Single-pass text scan (one stripper pass per execute() call)
+    // -----------------------------------------------------------------------
 
     /**
      * Runs a single PDF text-stripper pass over all text-based targets and returns the merged hit
@@ -229,7 +219,9 @@ class RedactExecuteService {
         return found;
     }
 
+    // -----------------------------------------------------------------------
     // Text removal (content-stream rewriting)
+    // -----------------------------------------------------------------------
 
     /**
      * Attempts content-stream text removal for all text/regex targets. Returns {@code true} if the
@@ -263,7 +255,7 @@ class RedactExecuteService {
 
             if (fallback) {
                 log.warn(
-                        "[redact/execute] font compatibility issue - falling back to overlay-only");
+                        "[redact/execute] font compatibility issue — falling back to overlay-only");
             } else {
                 log.info("[redact/execute] content-stream text removal applied successfully");
             }
@@ -276,7 +268,9 @@ class RedactExecuteService {
         }
     }
 
+    // -----------------------------------------------------------------------
     // Per-operation dispatch methods
+    // -----------------------------------------------------------------------
 
     private void applyPageWipe(PDDocument document, List<Integer> pageNumbers, RedactStyle style)
             throws IOException {
@@ -310,13 +304,8 @@ class RedactExecuteService {
                 PDPage page = allPages.get(idx);
                 List<float[]> elementBoxes =
                         pageElementBoxes.getOrDefault(idx, Collections.emptyList());
-                // Same wipe guarantees as the manual path: widget field values, annotations and
-                // the page thumbnail must not survive a "wiped" page.
-                RedactionPipeline.detachAcroFormWidgets(document, page);
                 page.getCOSObject().removeItem(COSName.CONTENTS);
                 page.setResources(new PDResources());
-                page.getCOSObject().removeItem(COSName.ANNOTS);
-                page.getCOSObject().removeItem(COSName.getPDFName("Thumb"));
                 try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
                     cs.setNonStrokingColor(pageColor);
                     if (elementBoxes.isEmpty()) {
@@ -337,10 +326,7 @@ class RedactExecuteService {
         }
     }
 
-    /**
-     * @return 0-based pages covered by the range overlay; those pages must be rasterised.
-     */
-    private Set<Integer> applyRangeRedaction(
+    private void applyRangeRedaction(
             PDDocument document,
             TextRange range,
             RedactStyle style,
@@ -358,11 +344,6 @@ class RedactExecuteService {
                         style.getPadding(),
                         ManualRedactionService.decodeOrDefault(style.getColor()),
                         false);
-                Set<Integer> pages = new HashSet<>();
-                for (PDFText block : blocks) {
-                    pages.add(block.getPageIndex());
-                }
-                return pages;
             } else {
                 log.warn(
                         "[redact/execute] range not found: start='{}' end='{}'",
@@ -370,23 +351,12 @@ class RedactExecuteService {
                         rangeEnd);
             }
         } catch (Exception e) {
-            // Fail closed: a throwing range op must not come back as an unredacted 200.
-            throw new RuntimeException(
-                    "Range redaction failed for start='" + rangeStart + "': " + e.getMessage(), e);
+            log.warn("[redact/execute] range redaction failed: {}", e.getMessage());
         }
-        return Collections.emptySet();
     }
 
-    /**
-     * @return 0-based page covered by the image-box overlay; that page must be rasterised.
-     */
-    private Set<Integer> applyImageBoxRedaction(
-            PDDocument document, ImageBox box, RedactStyle style) throws IOException {
-        if (box.pageIndex() < 0 || box.pageIndex() >= document.getNumberOfPages()) {
-            // Nothing was drawn, so don't schedule a pointless rasterise/reload cycle.
-            log.warn("[redact/execute] image box references out-of-range page {}", box.pageIndex());
-            return Collections.emptySet();
-        }
+    private void applyImageBoxRedaction(PDDocument document, ImageBox box, RedactStyle style)
+            throws IOException {
         List<float[]> boxes =
                 List.of(
                         new float[] {
@@ -395,7 +365,6 @@ class RedactExecuteService {
         log.info("[redact/execute] image box overlay on page {}", box.pageIndex());
         Color boxColor = ManualRedactionService.decodeOrDefault(style.getColor());
         manualRedactionService.redactImageBoxes(document, boxes, boxColor);
-        return Set.of(box.pageIndex());
     }
 
     private void applyAllImagesRedaction(
@@ -439,7 +408,9 @@ class RedactExecuteService {
         }
     }
 
+    // -----------------------------------------------------------------------
     // Range collection helpers
+    // -----------------------------------------------------------------------
 
     /**
      * Locates {@code startStr} in the document and returns {@link PDFText} blocks for every text
@@ -509,7 +480,7 @@ class RedactExecuteService {
                 }
                 if (end == null) {
                     log.warn(
-                            "[redact/execute] no end anchor after start at (page={}, col={}, y={}) - skipping",
+                            "[redact/execute] no end anchor after start at (page={}, col={}, y={}) — skipping",
                             start.page + 1,
                             start.col,
                             start.y);
@@ -530,7 +501,7 @@ class RedactExecuteService {
         }
 
         log.info(
-                "[redact/execute] range '{}'->'{}': {} total blocks",
+                "[redact/execute] range '{}'→'{}': {} total blocks",
                 startStr,
                 openEnded ? "<end of document>" : endStr,
                 blocks.size());
@@ -562,6 +533,7 @@ class RedactExecuteService {
         float endY = openEnded ? Float.POSITIVE_INFINITY : end.text.getY2();
 
         // Line-box cache: populated lazily per page, reused across range iterations.
+        // Cannot use computeIfAbsent because AllTextLineExtractor's constructor throws IOException.
         Map<Integer, List<float[]>> lineBoxCache = new HashMap<>();
 
         for (int pageIdx = startPage; pageIdx <= endPage; pageIdx++) {
@@ -684,7 +656,7 @@ class RedactExecuteService {
         PageColumnLayout layout =
                 PageColumnLayout.fromLineBoxes(extractor.getLineBoxes(), pageWidth);
         if (layout.columnCount() > 1) {
-            float[] g = layout.gutters().get(0);
+            float[] g = layout.gutters().getFirst();
             log.info(
                     "[redact/execute] page {} layout: 2 cols, gutter x=[{}, {}]",
                     pageIdx + 1,
@@ -727,7 +699,7 @@ class RedactExecuteService {
             if (i > 0) sb.append(", ");
             sb.append(String.format("(p=%d,c=%d,y=%.1f)", a.page + 1, a.col, a.y));
         }
-        if (anchors.size() > max) sb.append(", ...");
+        if (anchors.size() > max) sb.append(", …");
         return sb.toString();
     }
 
@@ -753,8 +725,9 @@ class RedactExecuteService {
             candidates.add(new Candidate(tolerant, true));
         }
 
-        // Long multi-line anchors mismatch on extraction artifacts, so try just the first non-empty
-        // line.
+        // If the anchor spans multiple lines (model provided entire paragraph instead of a short
+        // phrase), try just the first non-empty line — it's usually sufficient to locate the
+        // position and avoids mismatches from mid-paragraph text extraction artifacts.
         if (trimmed.contains("\n")) {
             String firstLine =
                     Arrays.stream(trimmed.split("\n"))
@@ -782,7 +755,7 @@ class RedactExecuteService {
             if (!m.isEmpty()) {
                 if (!c.pattern.equals(trimmed)) {
                     log.info(
-                            "[redact/execute] range boundary matched via fallback: '{}' -> '{}'",
+                            "[redact/execute] range boundary matched via fallback: '{}' → '{}'",
                             trimmed,
                             c.pattern);
                 }
@@ -794,7 +767,9 @@ class RedactExecuteService {
 
     private record Candidate(String pattern, boolean useRegex) {}
 
+    // -----------------------------------------------------------------------
     // Static helpers
+    // -----------------------------------------------------------------------
 
     /**
      * Joins {@code raw}'s alphanumeric runs with {@code \W*} so anchors match across punctuation

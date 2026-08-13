@@ -22,6 +22,13 @@ public class PolicyRun {
     private final String policyId;
 
     private final PipelineDefinition definition;
+
+    /**
+     * The source's opaque reference to the document this run is about; null for an ad-hoc run or a
+     * source that names no document. Hashed upstream, so never a path or a filename.
+     */
+    private final String fileIdentity;
+
     private final Instant createdAt = Instant.now();
 
     private volatile PolicyRunStatus status = PolicyRunStatus.PENDING;
@@ -49,10 +56,12 @@ public class PolicyRun {
     private volatile List<ResultFile> outputs = List.of();
     private volatile Instant updatedAt = Instant.now();
 
-    public PolicyRun(String runId, String policyId, PipelineDefinition definition) {
+    public PolicyRun(
+            String runId, String policyId, PipelineDefinition definition, String fileIdentity) {
         this.runId = runId;
         this.policyId = policyId;
         this.definition = definition;
+        this.fileIdentity = fileIdentity;
     }
 
     public int stepCount() {

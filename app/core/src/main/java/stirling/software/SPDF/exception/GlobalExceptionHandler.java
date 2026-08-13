@@ -1040,9 +1040,9 @@ public class GlobalExceptionHandler {
     /**
      * Handle RedactionVerificationFailedException.
      *
-     * <p>When thrown: Redaction could not prove the target text is gone (and rasterisation could
-     * not guarantee it either), so the document was withheld rather than returned looking redacted
-     * while still carrying the text.
+     * <p>When thrown: Redaction could not prove the target text is gone, so the document was
+     * withheld rather than returned looking redacted while still carrying the text. Messages
+     * identify targets by ordinal only - the target text must never reach a response body.
      *
      * <p>Client action: Retry with "convert to image" enabled for a guaranteed (rasterised)
      * redaction; retrying unchanged will not help.

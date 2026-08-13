@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
@@ -13,8 +14,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSArray;
@@ -50,7 +49,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
-import stirling.software.SPDF.pdf.redaction.RedactionPipeline;
+import stirling.software.SPDF.pdf.redaction.RedactionVerificationFailedException;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -142,19 +141,22 @@ class RedactionPdfVarietyTest {
     }
 
     @Test
-    @DisplayName("embedded Type0 with /ToUnicode stripped: target still gone, neighbours survive")
-    void type0WithoutToUnicode() throws IOException {
-        byte[] out = autoRedact(type0NoToUnicodePdf("alpha SECRET omega"), "SECRET");
-        assertGone(out, "SECRET");
-        assertThat(pdfText(out)).contains("alpha").contains("omega");
+    @DisplayName("embedded Type0 without /ToUnicode: native engine misses it, request fails closed")
+    void type0WithoutToUnicodeFailsClosed() throws IOException {
+        // The native engine has no unicode mapping to match on, so nothing is removed while
+        // PDFBox can still extract the target. Verification turns that into a 422.
+        byte[] input = type0NoToUnicodePdf("alpha SECRET omega");
+        factoryReturns(input);
+        RedactPdfRequest request = baseRequest(input, "SECRET");
+        assertThatThrownBy(() -> controller.redactPdf(request))
+                .isInstanceOf(RedactionVerificationFailedException.class);
     }
 
     @Test
     @DisplayName("symbolic TrueType (no encoding, no ToUnicode): target not extractable")
     void symbolicTrueType() throws IOException {
-        // PDFBox extraction is glyph-blind here, so removal is guaranteed by the native pass +
-        // rasterise fallback rather than surgical decode; this pins that the pipeline handles a
-        // symbolic font without error and leaves no extractable target.
+        // PDFBox extraction is glyph-blind here, so the native verification pass is what proves
+        // removal; this pins that a symbolic font neither errors nor leaves the target readable.
         byte[] out = autoRedact(symbolicTtfPdf("alpha SECRET omega"), "SECRET");
         assertGone(out, "SECRET");
     }
@@ -256,10 +258,27 @@ class RedactionPdfVarietyTest {
     }
 
     @Test
-    @DisplayName("target inside a Form XObject is removed")
-    void formXObjectText() throws IOException {
-        byte[] out = autoRedact(formXObjectPdf(), "SECRET");
-        assertGone(out, "SECRET");
+    @DisplayName("target inside a Form XObject: native engine misses it, request fails closed")
+    void formXObjectTextFailsClosed() throws IOException {
+        // The native engine does not descend into form XObjects, so the target survives the
+        // redaction; without verification this endpoint would return a 200 and a leak.
+        byte[] input = formXObjectPdf();
+        factoryReturns(input);
+        RedactPdfRequest request = baseRequest(input, "SECRET");
+        assertThatThrownBy(() -> controller.redactPdf(request))
+                .isInstanceOf(RedactionVerificationFailedException.class);
+    }
+
+    @Test
+    @DisplayName("verification failure message carries an ordinal, never the target text")
+    void verificationFailureDoesNotEchoTarget() throws IOException {
+        byte[] input = formXObjectPdf();
+        factoryReturns(input);
+        RedactPdfRequest request = baseRequest(input, "SECRET");
+        assertThatThrownBy(() -> controller.redactPdf(request))
+                .isInstanceOf(RedactionVerificationFailedException.class)
+                .hasMessageNotContaining("SECRET")
+                .hasMessageContaining("#1");
     }
 
     @Test
@@ -301,36 +320,6 @@ class RedactionPdfVarietyTest {
         assertThat(text).contains("classification").contains("scatter");
         // The standalone word must be gone in any case variant.
         assertThat(text).doesNotContainPattern("(?i)\\bcat\\b");
-    }
-
-    // Page-scoped rasterisation (pipeline-level, deterministic)
-
-    @Test
-    @DisplayName("verification leak rasterises only the leaking page, others keep text")
-    void leakRasterisesOnlyLeakingPage() throws IOException {
-        // Cross-operator split defeats the per-operand literal rewriter
-        byte[] input = crossOperatorPdf();
-        byte[] out;
-        try (PDDocument doc = Loader.loadPDF(input)) {
-            Set<String> targets = Set.of("SECRET");
-            List<Pattern> patterns =
-                    RedactionPipeline.buildPatterns(new String[] {"SECRET"}, false, false);
-            RedactionPipeline.redactLiteralTerms(doc, targets, patterns);
-            out = RedactionPipeline.finalize(doc, targets, patterns);
-        }
-
-        try (PDDocument reopened = Loader.loadPDF(out)) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            stripper.setStartPage(1);
-            stripper.setEndPage(1);
-            String page1 = stripper.getText(reopened);
-            stripper.setStartPage(2);
-            stripper.setEndPage(2);
-            String page2 = stripper.getText(reopened);
-
-            assertThat(page1.toLowerCase()).doesNotContain("secret");
-            assertThat(page2).contains("PUBLIC PAGE TWO");
-        }
     }
 
     // Drivers and assertions

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -22,6 +23,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -31,6 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.PDFText;
@@ -118,10 +122,18 @@ class RedactExecuteServiceMoreTest {
 
     private RedactExecuteRequest requestFor(byte[] pdfBytes) {
         RedactExecuteRequest req = new RedactExecuteRequest();
-        req.setFileInput(
-                new org.springframework.mock.web.MockMultipartFile(
-                        "fileInput", "in.pdf", "application/pdf", pdfBytes));
+        req.setFileInput(new MockMultipartFile("fileInput", "in.pdf", "application/pdf", pdfBytes));
         return req;
+    }
+
+    private PDFont helvetica(PDDocument doc) throws IOException {
+        try (InputStream is =
+                getClass().getResourceAsStream("/type3/library/fonts/dejavu/DejaVuSans.ttf")) {
+            if (is != null) {
+                return PDType0Font.load(doc, is);
+            }
+        }
+        return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
     }
 
     private byte[] singlePageTextPdf(String... lines) throws IOException {
@@ -129,7 +141,7 @@ class RedactExecuteServiceMoreTest {
             PDPage page = new PDPage(PDRectangle.LETTER);
             doc.addPage(page);
             try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE);
+                cs.setFont(helvetica(doc), FONT_SIZE);
                 for (int i = 0; i < lines.length; i++) {
                     cs.beginText();
                     cs.newLineAtOffset(LEFT_X, TOP_Y - i * LINE_H);
@@ -149,7 +161,7 @@ class RedactExecuteServiceMoreTest {
                 PDPage page = new PDPage(PDRectangle.LETTER);
                 doc.addPage(page);
                 try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-                    cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE);
+                    cs.setFont(helvetica(doc), FONT_SIZE);
                     cs.beginText();
                     cs.newLineAtOffset(LEFT_X, TOP_Y);
                     cs.showText("page " + p + " has SECRET content here");

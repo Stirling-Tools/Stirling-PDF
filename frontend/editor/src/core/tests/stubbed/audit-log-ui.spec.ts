@@ -73,7 +73,7 @@ async function setUpAdminWithAudit(
       ],
     }),
   );
-  await page.goto("/");
+  await page.goto("/editor");
 }
 
 test.describe("Audit log UI", () => {

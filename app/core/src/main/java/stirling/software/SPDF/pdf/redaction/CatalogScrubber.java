@@ -43,10 +43,10 @@ public final class CatalogScrubber {
     // A literal shorter than this won't delete a whole carrier (JS/XFA/action/embedded file).
     static final int MIN_CARRIER_DROP_LITERAL = 3;
 
-    // Regexes can't be window-scanned, so they only see this much of a stream; literals scan
-    // the whole stream in a sliding window and have no size limit.
-    private static final int MAX_STREAM_PATTERN_CHARS = 2 * 1024 * 1024;
     private static final int STREAM_CHUNK_CHARS = 64 * 1024;
+
+    // Overlap carried between chunks so a regex match can't be split across a chunk seam.
+    private static final int PATTERN_WINDOW_OVERLAP = 4 * 1024;
 
     // Bounds recursive walks so a crafted deep or cyclic object graph can't blow the stack.
     private static final int MAX_WALK_DEPTH = 100;
@@ -73,18 +73,6 @@ public final class CatalogScrubber {
     /** Scrub all catalog-level carriers of the given literal/regex targets. */
     public static void scrub(
             PDDocument document, Set<String> literalTargets, List<Pattern> patterns) {
-        scrub(document, literalTargets, patterns, false);
-    }
-
-    /**
-     * boundaryLiterals=true matches literals only at word boundaries: area-captured tokens are
-     * fuzzy, and substring-stripping a token like "the" would mangle every unrelated carrier.
-     */
-    public static void scrub(
-            PDDocument document,
-            Set<String> literalTargets,
-            List<Pattern> patterns,
-            boolean boundaryLiterals) {
         if (document == null) {
             return;
         }
@@ -92,7 +80,7 @@ public final class CatalogScrubber {
         if (catalog == null) {
             return;
         }
-        CompiledTargets ct = CompiledTargets.compile(literalTargets, patterns, boundaryLiterals);
+        CompiledTargets ct = CompiledTargets.compile(literalTargets, patterns);
         if (ct.isEmpty()) {
             return;
         }
@@ -113,15 +101,14 @@ public final class CatalogScrubber {
         final List<LiteralTarget> literals = new ArrayList<>();
         final List<Pattern> patterns = new ArrayList<>();
 
-        static CompiledTargets compile(
-                Set<String> literalTargets, List<Pattern> rawPatterns, boolean boundary) {
+        static CompiledTargets compile(Set<String> literalTargets, List<Pattern> rawPatterns) {
             CompiledTargets ct = new CompiledTargets();
             if (literalTargets != null) {
                 for (String target : literalTargets) {
                     if (target == null || target.isEmpty()) {
                         continue;
                     }
-                    ct.literals.add(new LiteralTarget(target, boundary));
+                    ct.literals.add(new LiteralTarget(target));
                 }
             }
             if (rawPatterns != null) {
@@ -165,32 +152,37 @@ public final class CatalogScrubber {
     private static final class LiteralTarget {
         final String lower;
         final Pattern strip;
-        final boolean boundary;
+        final Pattern dropMatch;
         final boolean droppable;
         final int windowSpan;
 
-        LiteralTarget(String target, boolean boundary) {
+        LiteralTarget(String target) {
             this.lower = target.toLowerCase(Locale.ROOT);
-            this.boundary = boundary;
-            String core = Pattern.quote(target);
-            if (boundary) {
-                core = TextFinderUtils.applyWordBoundaries(target, core);
-            }
-            this.strip = Pattern.compile(core, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            String quoted = Pattern.quote(target);
+            this.strip = Pattern.compile(quoted, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            // Deleting a whole carrier always needs word boundaries: a bare substring hit on
+            // "Ltd" would wipe every attachment whose bytes happen to contain those letters.
+            this.dropMatch =
+                    Pattern.compile(
+                            TextFinderUtils.applyWordBoundaries(target, quoted),
+                            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
             this.droppable = target.trim().length() >= MIN_CARRIER_DROP_LITERAL;
             // +2 keeps one lookaround context char on each side inside the window.
             this.windowSpan = target.length() + 2;
         }
 
-        boolean hits(String source, String lowerSource) {
-            if (boundary) {
-                try {
-                    return strip.matcher(DeadlineCharSequence.of(source)).find();
-                } catch (RuntimeException | StackOverflowError e) {
-                    return true; // fail closed
-                }
-            }
+        /** Substring hit, used when rewriting a carrier string in place. */
+        boolean hits(String lowerSource) {
             return lowerSource.contains(lower);
+        }
+
+        /** Word-boundary match used for the delete-the-whole-carrier decision. */
+        boolean hitsForDrop(String source) {
+            try {
+                return dropMatch.matcher(DeadlineCharSequence.of(source)).find();
+            } catch (RuntimeException | StackOverflowError e) {
+                return true; // fail closed
+            }
         }
     }
 
@@ -266,50 +258,37 @@ public final class CatalogScrubber {
     }
 
     /**
-     * Scans the whole stream for droppable literals with a sliding window (no size limit, bounded
-     * memory), so a large but clean carrier - a 5 MB attachment, a big XFA packet - is no longer
-     * dropped just for its size. Regexes can't be window-scanned: they see the first {@link
-     * #MAX_STREAM_PATTERN_CHARS} and anything beyond stays unproven (treated as a match).
+     * Sliding-window scan of the WHOLE stream (bounded memory, no size limit) for both droppable
+     * literals and regex patterns, so a large but clean carrier - a 5 MB attachment, a big XFA
+     * packet - is never dropped merely for its size. Size alone must not imply deletion.
      */
     private static boolean streamContainsTarget(COSStream stream, CompiledTargets ct) {
-        int windowSpan = ct.maxDropWindowSpan();
-        boolean scanLiterals = windowSpan > 0;
+        int literalSpan = ct.maxDropWindowSpan();
+        boolean scanLiterals = literalSpan > 0;
         boolean scanPatterns = !ct.patterns.isEmpty();
         if (!scanLiterals && !scanPatterns) {
             return false;
         }
+        int overlap = Math.max(literalSpan, scanPatterns ? PATTERN_WINDOW_OVERLAP : 0);
         try (Reader reader =
                 new InputStreamReader(stream.createInputStream(), StandardCharsets.UTF_8)) {
             char[] chunk = new char[STREAM_CHUNK_CHARS];
-            StringBuilder patternPrefix = scanPatterns ? new StringBuilder() : null;
             String tail = "";
-            long totalChars = 0;
             int n;
             while ((n = reader.read(chunk)) > 0) {
-                totalChars += n;
+                String window = tail + new String(chunk, 0, n);
                 if (scanLiterals) {
-                    String window = tail + new String(chunk, 0, n);
-                    String lowerWindow = window.toLowerCase(Locale.ROOT);
                     for (LiteralTarget lt : ct.literals) {
-                        if (lt.droppable && lt.hits(window, lowerWindow)) {
+                        if (lt.droppable && lt.hitsForDrop(window)) {
                             return true;
                         }
                     }
-                    int keep = Math.min(window.length(), windowSpan);
-                    tail = window.substring(window.length() - keep);
                 }
-                if (patternPrefix != null && patternPrefix.length() < MAX_STREAM_PATTERN_CHARS) {
-                    int room = MAX_STREAM_PATTERN_CHARS - patternPrefix.length();
-                    patternPrefix.append(chunk, 0, Math.min(n, room));
-                }
-            }
-            if (patternPrefix != null) {
-                if (matches(patternPrefix.toString(), ct, true)) {
+                if (scanPatterns && matchesPatterns(window, ct)) {
                     return true;
                 }
-                if (totalChars > patternPrefix.length()) {
-                    return true; // pattern targets exist but part of the stream went unscanned
-                }
+                int keep = Math.min(window.length(), overlap);
+                tail = window.substring(window.length() - keep);
             }
             return false;
         } catch (Exception e) {
@@ -811,7 +790,7 @@ public final class CatalogScrubber {
 
     /** Test-visible compatibility wrapper; compiles targets per call. */
     static String stripMatches(String source, Set<String> literalTargets, List<Pattern> patterns) {
-        return stripMatches(source, CompiledTargets.compile(literalTargets, patterns, false));
+        return stripMatches(source, CompiledTargets.compile(literalTargets, patterns));
     }
 
     private static String stripMatches(String source, CompiledTargets ct) {
@@ -833,30 +812,40 @@ public final class CatalogScrubber {
             } catch (RuntimeException | StackOverflowError e) {
                 // Fail closed: a throwing regex means we cannot prove the carrier clean, so
                 // drop the whole string rather than leaving it intact.
-                log.warn("Pattern replace failed for {}; dropping carrier text", pattern);
+                log.warn("A redaction pattern failed to replace; dropping carrier text");
                 return "";
             }
         }
         return result;
     }
 
-    /** dropOnly=true restricts literals to those specific enough to delete a whole carrier. */
+    /**
+     * dropOnly=true is the delete-the-whole-carrier decision: only literals long enough to be
+     * specific, and only at word boundaries.
+     */
     private static boolean matches(String source, CompiledTargets ct, boolean dropOnly) {
         if (source == null || source.isEmpty()) {
             return false;
         }
         String lower = null;
         for (LiteralTarget lt : ct.literals) {
-            if (dropOnly && !lt.droppable) {
+            if (dropOnly) {
+                if (lt.droppable && lt.hitsForDrop(source)) {
+                    return true;
+                }
                 continue;
             }
-            if (!lt.boundary && lower == null) {
+            if (lower == null) {
                 lower = source.toLowerCase(Locale.ROOT);
             }
-            if (lt.hits(source, lower)) {
+            if (lt.hits(lower)) {
                 return true;
             }
         }
+        return matchesPatterns(source, ct);
+    }
+
+    private static boolean matchesPatterns(String source, CompiledTargets ct) {
         for (Pattern pattern : ct.patterns) {
             try {
                 if (pattern.matcher(DeadlineCharSequence.of(source)).find()) {
@@ -864,7 +853,7 @@ public final class CatalogScrubber {
                 }
             } catch (RuntimeException | StackOverflowError e) {
                 // Fail closed: a throwing regex counts as a match so the carrier is scrubbed.
-                log.warn("Pattern match failed for {}; treating carrier as a match", pattern);
+                log.warn("A verification pattern failed to match; treating carrier as a match");
                 return true;
             }
         }
