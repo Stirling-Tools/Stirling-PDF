@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,6 +42,7 @@ import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.common.util.SvgSanitizer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -50,12 +52,23 @@ import stirling.software.common.util.WebResponseUtils;
 @Slf4j
 public class ConvertOfficeController {
 
+    private static final int SNIFF_BYTES = 8192;
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
     private final CustomHtmlSanitizer customHtmlSanitizer;
     private final OfficeDocumentSanitizer officeDocumentSanitizer;
+    private final SvgSanitizer svgSanitizer;
     private final EndpointConfiguration endpointConfiguration;
     private final TempFileManager tempFileManager;
+
+    private enum SniffedContent {
+        ZIP_OFFICE,
+        FLAT_XML_OFFICE,
+        SVG,
+        HTML,
+        UNKNOWN
+    }
 
     private boolean isUnoconvertAvailable() {
         return endpointConfiguration.isGroupEnabled("Unoconvert")
@@ -87,17 +100,11 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
-        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
-            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
-            Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
-        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
-            byte[] sanitized =
-                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
-            Files.write(inputPath, sanitized);
-        } else {
-            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+        try {
+            writeSanitizedInput(inputFile, inputPath, extensionLower);
+        } catch (IOException e) {
+            FileUtils.deleteQuietly(workDir.toFile());
+            throw e;
         }
 
         Path libreOfficeProfile = null;
@@ -198,6 +205,144 @@ public class ConvertOfficeController {
                 FileUtils.deleteQuietly(libreOfficeProfile.toFile());
             }
         }
+    }
+
+    // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
+    private void writeSanitizedInput(MultipartFile inputFile, Path inputPath, String extensionLower)
+            throws IOException {
+        byte[] head;
+        try (InputStream in = inputFile.getInputStream()) {
+            head = in.readNBytes(SNIFF_BYTES);
+        }
+        SniffedContent sniffed = sniffContent(head);
+        boolean htmlExtension = "html".equals(extensionLower) || "htm".equals(extensionLower);
+
+        if (htmlExtension || sniffed == SniffedContent.HTML) {
+            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
+            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
+            Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
+        } else if (sniffed == SniffedContent.SVG) {
+            Files.write(inputPath, svgSanitizer.sanitize(inputFile.getBytes()));
+        } else if (sniffed == SniffedContent.FLAT_XML_OFFICE) {
+            Files.write(inputPath, officeDocumentSanitizer.sanitizeFlatXml(inputFile.getBytes()));
+        } else if (sniffed == SniffedContent.ZIP_OFFICE) {
+            Files.write(
+                    inputPath, officeDocumentSanitizer.sanitizeZipContainer(inputFile.getBytes()));
+        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
+            byte[] sanitized =
+                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
+            Files.write(inputPath, sanitized);
+        } else {
+            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    // LibreOffice routes on content, not extension, so sniffing decides; unknown stays as today.
+    private SniffedContent sniffContent(byte[] head) {
+        if (head == null || head.length < 4) {
+            return SniffedContent.UNKNOWN;
+        }
+        if (head[0] == 0x50 && head[1] == 0x4B && head[2] == 0x03 && head[3] == 0x04) {
+            return isOfficeZip(head) ? SniffedContent.ZIP_OFFICE : SniffedContent.UNKNOWN;
+        }
+        String rootElement = firstElementName(decodeHead(head));
+        if ("svg".equals(rootElement) || rootElement.endsWith(":svg")) {
+            return SniffedContent.SVG;
+        }
+        if (rootElement.startsWith("office:document") || "w:worddocument".equals(rootElement)) {
+            return SniffedContent.FLAT_XML_OFFICE;
+        }
+        if ("html".equals(rootElement)) {
+            return SniffedContent.HTML;
+        }
+        return SniffedContent.UNKNOWN;
+    }
+
+    // Only re-zip containers that look like OOXML/ODF; other archives keep the raw copy path.
+    private boolean isOfficeZip(byte[] head) {
+        if (head.length < 30) {
+            return false;
+        }
+        int nameLength = (head[26] & 0xFF) | ((head[27] & 0xFF) << 8);
+        if (nameLength <= 0 || 30 + nameLength > head.length) {
+            return false;
+        }
+        String firstEntry =
+                new String(head, 30, nameLength, StandardCharsets.ISO_8859_1)
+                        .toLowerCase(Locale.ROOT);
+        return "mimetype".equals(firstEntry) || "[content_types].xml".equals(firstEntry);
+    }
+
+    private String decodeHead(byte[] head) {
+        if (head.length >= 2) {
+            if ((head[0] & 0xFF) == 0xFF && (head[1] & 0xFF) == 0xFE) {
+                return new String(head, StandardCharsets.UTF_16LE);
+            }
+            if ((head[0] & 0xFF) == 0xFE && (head[1] & 0xFF) == 0xFF) {
+                return new String(head, StandardCharsets.UTF_16BE);
+            }
+        }
+        return new String(head, StandardCharsets.UTF_8);
+    }
+
+    // Returns the lower-cased root element name, or empty when the input is not markup.
+    private String firstElementName(String prefix) {
+        int i = 0;
+        while (i < prefix.length()) {
+            char c = prefix.charAt(i);
+            if (Character.isWhitespace(c) || c == '\uFEFF') {
+                i++;
+                continue;
+            }
+            if (c != '<') {
+                return "";
+            }
+            if (prefix.startsWith("<?", i)) {
+                int end = prefix.indexOf("?>", i);
+                if (end < 0) {
+                    return "";
+                }
+                i = end + 2;
+                continue;
+            }
+            if (prefix.startsWith("<!--", i)) {
+                int end = prefix.indexOf("-->", i);
+                if (end < 0) {
+                    return "";
+                }
+                i = end + 3;
+                continue;
+            }
+            // a doctype declares the root element, so its name answers the question
+            if (prefix.regionMatches(true, i, "<!doctype", 0, 9)) {
+                return readName(prefix, skipWhitespace(prefix, i + 9));
+            }
+            if (prefix.startsWith("<!", i)) {
+                return "";
+            }
+            return readName(prefix, i + 1);
+        }
+        return "";
+    }
+
+    private int skipWhitespace(String value, int from) {
+        int i = from;
+        while (i < value.length() && Character.isWhitespace(value.charAt(i))) {
+            i++;
+        }
+        return i;
+    }
+
+    private String readName(String value, int from) {
+        int end = from;
+        while (end < value.length()) {
+            char c = value.charAt(end);
+            if (Character.isWhitespace(c) || c == '>' || c == '/') {
+                break;
+            }
+            end++;
+        }
+        return value.substring(from, end).toLowerCase(Locale.ROOT);
     }
 
     private boolean isValidFileExtension(String fileExtension) {

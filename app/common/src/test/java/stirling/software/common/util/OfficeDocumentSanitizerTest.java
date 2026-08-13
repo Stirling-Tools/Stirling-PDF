@@ -61,6 +61,20 @@ class OfficeDocumentSanitizerTest {
                     + "<draw:frame><draw:image xlink:href=\"Pictures/image1.png\" xlink:type=\"simple\"/></draw:frame>"
                     + "</office:text></office:body></office:document-content>";
 
+    private static final String FLAT_ODF_EXTERNAL =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                    + "<office:document"
+                    + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
+                    + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
+                    + " xmlns:xlink=\"http://www.w3.org/1999/xlink\""
+                    + " office:mimetype=\"application/vnd.oasis.opendocument.text\">"
+                    + "<office:body><office:text>"
+                    + "<draw:frame><draw:image xlink:href=\""
+                    + EXTERNAL_URL
+                    + "\" xlink:type=\"simple\"/></draw:frame>"
+                    + "<draw:frame><draw:image xlink:href=\"Pictures/image1.png\"/></draw:frame>"
+                    + "</office:text></office:body></office:document>";
+
     private SsrfProtectionService ssrfProtectionService;
     private ApplicationProperties applicationProperties;
     private OfficeDocumentSanitizer sanitizer;
@@ -81,6 +95,11 @@ class OfficeDocumentSanitizerTest {
         assertTrue(sanitizer.isSanitizableExtension("odt"));
         assertTrue(sanitizer.isSanitizableExtension("ods"));
         assertTrue(sanitizer.isSanitizableExtension("odp"));
+        assertTrue(sanitizer.isSanitizableExtension("fodt"));
+        assertTrue(sanitizer.isSanitizableExtension("FODS"));
+        assertTrue(sanitizer.isSanitizableExtension("fodp"));
+        assertTrue(sanitizer.isSanitizableExtension("fodg"));
+        assertTrue(sanitizer.isSanitizableExtension("fodm"));
         assertFalse(sanitizer.isSanitizableExtension("pdf"));
         assertFalse(sanitizer.isSanitizableExtension("html"));
         assertFalse(sanitizer.isSanitizableExtension(""));
@@ -341,6 +360,78 @@ class OfficeDocumentSanitizerTest {
         String out = new String(result.get("content.xml"), StandardCharsets.UTF_8);
         assertTrue(out.contains("../Pictures/image1.png"));
         assertTrue(out.contains("#anchor"));
+    }
+
+    @Test
+    void sanitize_unparseablePartWithExternalReferenceFailsClosed() throws IOException {
+        // DOCTYPE makes the part unparseable; it must not slip past sanitization.
+        String poisonedRels =
+                "<?xml version=\"1.0\"?><!DOCTYPE Relationships SYSTEM \"http://evil.example/x.dtd\">"
+                        + "<Relationships><Relationship Id=\"rId1\" Target=\""
+                        + EXTERNAL_URL
+                        + "\" TargetMode=\"External\"/></Relationships>";
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("word/_rels/document.xml.rels", poisonedRels.getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+
+        assertThrows(IOException.class, () -> sanitizer.sanitize(docx, "docx"));
+    }
+
+    @Test
+    void sanitize_unparseablePartWithoutExternalReferencePassesThrough() throws IOException {
+        byte[] broken = "<content><item>unclosed</content>".getBytes(StandardCharsets.UTF_8);
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("content.xml", broken);
+        byte[] odt = zip(entries);
+
+        byte[] cleaned = sanitizer.sanitize(odt, "odt");
+
+        Map<String, byte[]> result = unzip(cleaned);
+        assertArrayEquals(broken, result.get("content.xml"));
+    }
+
+    @Test
+    void sanitize_flatOdfStripsExternalHrefButKeepsInternal() throws IOException {
+        byte[] fodt = FLAT_ODF_EXTERNAL.getBytes(StandardCharsets.UTF_8);
+
+        String cleaned = new String(sanitizer.sanitize(fodt, "fodt"), StandardCharsets.UTF_8);
+
+        assertFalse(cleaned.contains(EXTERNAL_URL), "External xlink:href should be stripped");
+        assertTrue(cleaned.contains("Pictures/image1.png"), "Internal href should be preserved");
+    }
+
+    @Test
+    void sanitizeFlatXml_stripsExternalHref() throws IOException {
+        String cleaned =
+                new String(
+                        sanitizer.sanitizeFlatXml(
+                                FLAT_ODF_EXTERNAL.getBytes(StandardCharsets.UTF_8)),
+                        StandardCharsets.UTF_8);
+
+        assertFalse(cleaned.contains(EXTERNAL_URL));
+    }
+
+    @Test
+    void sanitizeFlatXml_unparseableInputThrows() {
+        byte[] withDoctype =
+                ("<?xml version=\"1.0\"?><!DOCTYPE office:document SYSTEM"
+                                + " \"http://evil.example/x.dtd\"><office:document/>")
+                        .getBytes(StandardCharsets.UTF_8);
+
+        assertThrows(IOException.class, () -> sanitizer.sanitizeFlatXml(withDoctype));
+    }
+
+    @Test
+    void sanitizeZipContainer_stripsExternalRelationshipWithoutExtensionHint() throws IOException {
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("word/_rels/document.xml.rels", DOCX_RELS.getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+
+        Map<String, byte[]> result = unzip(sanitizer.sanitizeZipContainer(docx));
+
+        String rels =
+                new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
+        assertFalse(rels.contains(EXTERNAL_URL));
     }
 
     private static byte[] zip(Map<String, byte[]> entries) throws IOException {

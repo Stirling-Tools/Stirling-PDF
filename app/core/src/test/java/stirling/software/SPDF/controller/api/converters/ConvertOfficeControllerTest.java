@@ -8,6 +8,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -16,6 +17,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -47,6 +50,7 @@ import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.ProcessExecutor.Processes;
+import stirling.software.common.util.SvgSanitizer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -66,6 +70,7 @@ class ConvertOfficeControllerTest {
     @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
     @Mock private OfficeDocumentSanitizer officeDocumentSanitizer;
+    @Mock private SvgSanitizer svgSanitizer;
     @Mock private EndpointConfiguration endpointConfiguration;
     @Mock private TempFileManager tempFileManager;
 
@@ -77,6 +82,7 @@ class ConvertOfficeControllerTest {
                 runtimePathConfig,
                 customHtmlSanitizer,
                 officeDocumentSanitizer,
+                svgSanitizer,
                 endpointConfiguration,
                 tempFileManager);
     }
@@ -448,6 +454,149 @@ class ConvertOfficeControllerTest {
                 Mockito.verifyNoInteractions(pdfDocumentFactory);
             }
         }
+    }
+
+    @Nested
+    @DisplayName("content sniffing dispatch")
+    class ContentSniffing {
+
+        @Test
+        @DisplayName("html uploaded as .doc is routed through the html sanitizer")
+        void htmlUploadedAsDoc() throws Exception {
+            when(customHtmlSanitizer.sanitize(anyString())).thenReturn("<html>clean</html>");
+
+            byte[] written =
+                    convertCapturingInput(
+                            file(
+                                    "report.doc",
+                                    "<!DOCTYPE html><html><body>"
+                                            + "<img src=\"http://evil.example/x\"></body></html>"));
+
+            assertThat(new String(written, StandardCharsets.UTF_8)).isEqualTo("<html>clean</html>");
+            Mockito.verify(customHtmlSanitizer).sanitize(anyString());
+            Mockito.verifyNoInteractions(svgSanitizer);
+        }
+
+        @Test
+        @DisplayName("flat ODF uploaded as .doc is routed through the flat-xml sanitizer")
+        void flatOdfUploadedAsDoc() throws Exception {
+            String flat =
+                    "<?xml version=\"1.0\"?><office:document"
+                            + " xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
+                            + " xmlns:draw=\"urn:oasis:names:tc:opendocument:xmlns:drawing:1.0\""
+                            + " xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+                            + "<draw:image xlink:href=\"http://evil.example/x.png\"/>"
+                            + "</office:document>";
+            when(officeDocumentSanitizer.sanitizeFlatXml(any(byte[].class)))
+                    .thenReturn("<office:document/>".getBytes(StandardCharsets.UTF_8));
+
+            byte[] written = convertCapturingInput(file("report.doc", flat));
+
+            assertThat(new String(written, StandardCharsets.UTF_8)).isEqualTo("<office:document/>");
+            Mockito.verify(officeDocumentSanitizer).sanitizeFlatXml(any(byte[].class));
+        }
+
+        @Test
+        @DisplayName("svg uploaded as .txt is routed through the svg sanitizer")
+        void svgUploadedAsTxt() throws Exception {
+            String svg =
+                    "<svg xmlns=\"http://www.w3.org/2000/svg\">"
+                            + "<image href=\"http://evil.example/x.png\"/></svg>";
+            when(svgSanitizer.sanitize(any(byte[].class)))
+                    .thenReturn("<svg/>".getBytes(StandardCharsets.UTF_8));
+
+            byte[] written = convertCapturingInput(file("evil.txt", svg));
+
+            assertThat(new String(written, StandardCharsets.UTF_8)).isEqualTo("<svg/>");
+            Mockito.verify(svgSanitizer).sanitize(any(byte[].class));
+            Mockito.verifyNoInteractions(customHtmlSanitizer);
+        }
+
+        @Test
+        @DisplayName("real docx zip is still sanitized as a zip container")
+        void realDocxZipStillSanitized() throws Exception {
+            byte[] docx = minimalOoxmlZip();
+            when(officeDocumentSanitizer.sanitizeZipContainer(any(byte[].class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            byte[] written = convertCapturingInput(docxFile(docx));
+
+            assertThat(written).isEqualTo(docx);
+            Mockito.verify(officeDocumentSanitizer).sanitizeZipContainer(any(byte[].class));
+            Mockito.verify(officeDocumentSanitizer, Mockito.never())
+                    .sanitize(any(byte[].class), anyString());
+        }
+
+        @Test
+        @DisplayName("csv, txt and rtf pass through to LibreOffice untouched")
+        void plainFormatsPassThroughUntouched() throws Exception {
+            assertPassesThrough("data.csv", "a,b,c\n1,2,3\n");
+            assertPassesThrough("notes.txt", "just some text\n");
+            assertPassesThrough("memo.rtf", "{\\rtf1\\ansi hello}");
+
+            Mockito.verifyNoInteractions(customHtmlSanitizer);
+            Mockito.verifyNoInteractions(svgSanitizer);
+            Mockito.verify(officeDocumentSanitizer, Mockito.never())
+                    .sanitize(any(byte[].class), anyString());
+            Mockito.verify(officeDocumentSanitizer, Mockito.never())
+                    .sanitizeZipContainer(any(byte[].class));
+            Mockito.verify(officeDocumentSanitizer, Mockito.never())
+                    .sanitizeFlatXml(any(byte[].class));
+        }
+
+        private void assertPassesThrough(String filename, String content) throws Exception {
+            byte[] written = convertCapturingInput(file(filename, content));
+            assertThat(written).isEqualTo(content.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    private static MockMultipartFile file(String filename, String content) {
+        return new MockMultipartFile(
+                "fileInput",
+                filename,
+                "application/octet-stream",
+                content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static byte[] minimalOoxmlZip() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            zos.putNextEntry(new ZipEntry("[Content_Types].xml"));
+            zos.write("<Types/>".getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+        }
+        return baos.toByteArray();
+    }
+
+    /** Runs a conversion and returns the exact bytes LibreOffice was handed. */
+    private byte[] convertCapturingInput(MockMultipartFile inputFile) throws Exception {
+        when(endpointConfiguration.isGroupEnabled("Unoconvert")).thenReturn(false);
+        when(endpointConfiguration.isGroupEnabled("Python")).thenReturn(false);
+        byte[][] captured = new byte[1][];
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+            ProcessExecutorResult result = mockExecutor(pe, 0);
+            ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
+            when(executor.runCommandWithOutputHandling(any(List.class)))
+                    .thenAnswer(
+                            inv -> {
+                                List<String> command = inv.getArgument(0);
+                                Path inputPath = Path.of(command.get(command.size() - 1));
+                                captured[0] = Files.readAllBytes(inputPath);
+                                String name = inputPath.getFileName().toString();
+                                Path out =
+                                        inputPath
+                                                .getParent()
+                                                .resolve(
+                                                        name.substring(0, name.lastIndexOf('.'))
+                                                                + ".pdf");
+                                Files.writeString(out, "%PDF sniffed");
+                                return result;
+                            });
+
+            File pdf = controller.convertToPdf(inputFile);
+            deleteWorkdir(pdf);
+        }
+        return captured[0];
     }
 
     private static void deleteWorkdir(File producedPdf) throws IOException {

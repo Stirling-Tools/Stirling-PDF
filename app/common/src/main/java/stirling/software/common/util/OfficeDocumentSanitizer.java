@@ -3,10 +3,12 @@ package stirling.software.common.util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -52,8 +54,23 @@ public class OfficeDocumentSanitizer {
                     "odt", "ott", "ods", "ots", "odp", "otp", "odg", "otg", "odf", "odc", "odi",
                     "odm");
 
+    // Flat (uncompressed) OpenDocument: a single XML file rather than a zip container.
+    private static final Set<String> FLAT_XML_EXTENSIONS =
+            Set.of("fodt", "fods", "fodp", "fodg", "fodm");
+
     private static final Set<String> ODF_XML_PARTS =
             Set.of("content.xml", "styles.xml", "meta.xml", "settings.xml");
+
+    // Markers that make an unparseable XML part too dangerous to hand to LibreOffice unsanitized.
+    // Namespace declarations legitimately contain http URLs, so match reference
+    // attributes and non-web schemes rather than any URL-looking text.
+    private static final Pattern EXTERNAL_REFERENCE_MARKER =
+            Pattern.compile(
+                    "targetmode\\s*=\\s*[\"']?\\s*external"
+                            + "|href\\s*=\\s*[\"']?\\s*(?:https?|ftp|file|smb):"
+                            + "|\\b(?:file|smb):/"
+                            + "|\\\\\\\\\\w",
+                    Pattern.CASE_INSENSITIVE);
 
     private final SsrfProtectionService ssrfProtectionService;
     private final ApplicationProperties applicationProperties;
@@ -70,7 +87,9 @@ public class OfficeDocumentSanitizer {
             return false;
         }
         String lower = extension.toLowerCase(Locale.ROOT);
-        return OOXML_EXTENSIONS.contains(lower) || ODF_EXTENSIONS.contains(lower);
+        return OOXML_EXTENSIONS.contains(lower)
+                || ODF_EXTENSIONS.contains(lower)
+                || FLAT_XML_EXTENSIONS.contains(lower);
     }
 
     public byte[] sanitize(byte[] documentBytes, String extension) throws IOException {
@@ -82,6 +101,36 @@ public class OfficeDocumentSanitizer {
             return documentBytes;
         }
         if (!isSanitizableExtension(extension)) {
+            return documentBytes;
+        }
+        if (FLAT_XML_EXTENSIONS.contains(extension.toLowerCase(Locale.ROOT))) {
+            return sanitizeFlatXml(documentBytes);
+        }
+        return sanitizeZipContainer(documentBytes);
+    }
+
+    // Flat XML has no container to fall back on, so a parse failure must fail closed.
+    public byte[] sanitizeFlatXml(byte[] documentBytes) throws IOException {
+        if (documentBytes == null || documentBytes.length == 0) {
+            throw new IOException("Office document input is empty or null");
+        }
+        if (applicationProperties.getSystem().isDisableSanitize()) {
+            log.debug("Office document sanitization disabled by configuration");
+            return documentBytes;
+        }
+        try {
+            return sanitizeOdfXml(documentBytes);
+        } catch (ParserConfigurationException | SAXException | TransformerException e) {
+            throw new IOException("Failed to sanitize flat XML office document", e);
+        }
+    }
+
+    public byte[] sanitizeZipContainer(byte[] documentBytes) throws IOException {
+        if (documentBytes == null || documentBytes.length == 0) {
+            throw new IOException("Office document input is empty or null");
+        }
+        if (applicationProperties.getSystem().isDisableSanitize()) {
+            log.debug("Office document sanitization disabled by configuration");
             return documentBytes;
         }
 
@@ -117,7 +166,7 @@ public class OfficeDocumentSanitizer {
         return out.toByteArray();
     }
 
-    private byte[] sanitizeEntry(String entryName, byte[] entryBytes) {
+    private byte[] sanitizeEntry(String entryName, byte[] entryBytes) throws IOException {
         String lower = entryName.toLowerCase(Locale.ROOT);
         try {
             if (lower.endsWith(".rels")) {
@@ -130,12 +179,25 @@ public class OfficeDocumentSanitizer {
                 | SAXException
                 | IOException
                 | TransformerException e) {
+            // An unparseable part carrying an external reference must not reach LibreOffice.
+            if (containsExternalReferenceMarker(entryBytes)) {
+                throw new IOException(
+                        "Unparseable XML part '"
+                                + entryName
+                                + "' contains an external reference and cannot be sanitized",
+                        e);
+            }
             log.warn(
                     "Failed to parse XML part '{}' for sanitization, leaving as-is: {}",
                     entryName,
                     e.getMessage());
         }
         return entryBytes;
+    }
+
+    private boolean containsExternalReferenceMarker(byte[] entryBytes) {
+        String raw = new String(entryBytes, StandardCharsets.ISO_8859_1);
+        return EXTERNAL_REFERENCE_MARKER.matcher(raw).find();
     }
 
     private boolean isOdfXmlPart(String lowerName) {
