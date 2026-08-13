@@ -244,8 +244,8 @@ export function TextRunOverlay({
   // flattens them because a typed character would overflow its fixed box.
   const exactPaintedRef = useRef(false);
 
-  // Single-line runs only: fixed-width boxes fight a paragraph's wrap,
-  // manual-break and re-flow paths, which rewrite this element constantly.
+  // Single-line runs only. Fixed-width boxes still fight a paragraph's
+  // hard-break machinery even when flattened before the edit lands.
   const exactLines =
     run.charStartsX && run.charEndsX && (run.paragraphLineCount ?? 1) <= 1
       ? buildExactLines(run.text, {
@@ -261,6 +261,14 @@ export function TextRunOverlay({
     el.innerText = extractHardBreaks(el);
     if (offset !== null) setCaret(el, offset);
   };
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onNativeBeforeInput = (): void => flattenExact(el);
+    el.addEventListener("beforeinput", onNativeBeforeInput);
+    return () => el.removeEventListener("beforeinput", onNativeBeforeInput);
+  });
 
   useEffect(() => {
     const el = ref.current;

@@ -1,6 +1,13 @@
+const DEVICE_FONT_PREFIX = "device:";
+
 // Map a source font id to the base-14 family + style that best preserves its
 // broad class.
 export function helveticaVariantFor(fontId: string): string {
+  // A run already carrying an embedded device font keeps it; mapping to
+  // base-14 here is what reverted "Segoe UI" to Helvetica on the next edit.
+  if (fontId.startsWith(DEVICE_FONT_PREFIX)) {
+    return fontId.slice(DEVICE_FONT_PREFIX.length);
+  }
   const bold = /bold|black|heavy/i.test(fontId);
   const italic = /italic|oblique/i.test(fontId);
   const mono = /mono|courier|consol/i.test(fontId);

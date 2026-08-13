@@ -33,6 +33,8 @@ export interface ValueSpan {
 }
 
 interface ObjectSource {
+  /** Generation the file declares for this object; almost always 0. */
+  gen: number;
   /** Byte offset of the object's `obj` keyword, for top-level objects. */
   offset?: number;
   /** Pre-extracted body, for objects unpacked from an object stream. */
@@ -96,7 +98,10 @@ export class RawPdf {
       const num = parseInt(m[1], 10);
       if (!Number.isFinite(num)) continue;
       // Later revisions shadow earlier ones, so the last definition wins.
-      objects.set(num, { offset: m.index + m[0].length });
+      objects.set(num, {
+        gen: parseInt(m[2], 10) || 0,
+        offset: m.index + m[0].length,
+      });
       if (num > maxObjNum) maxObjNum = num;
     }
     if (objects.size === 0) return null;
@@ -170,6 +175,7 @@ export class RawPdf {
    * nothing.
    */
   private async indexObjectStreams(): Promise<void> {
+    const compressed = await this.compressedInNewestXref();
     const containers: number[] = [];
     for (const num of this.objects.keys()) {
       const body = this.objectBody(num);
@@ -190,14 +196,64 @@ export class RawPdf {
         const objNum = nums[i * 2];
         const off = nums[i * 2 + 1];
         if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
-        // A top-level definition is from an appended revision and wins.
-        if (this.objects.has(objNum)) continue;
+        // A top-level definition usually comes from a later revision and
+        // wins - unless the newest xref says this object lives in a stream,
+        // in which case the top-level copy is the stale one.
+        if (this.objects.has(objNum) && !compressed.has(objNum)) continue;
         const nextOff = i + 1 < n ? nums[i * 2 + 3] : data.length - first;
         const end = Number.isFinite(nextOff) ? first + nextOff : text.length;
-        this.objects.set(objNum, { body: text.slice(first + off, end) });
+        // Objects inside an object stream are generation 0 by definition.
+        this.objects.set(objNum, {
+          gen: 0,
+          body: text.slice(first + off, end),
+        });
         if (objNum > this.highestObj) this.highestObj = objNum;
       }
     }
+  }
+
+  // Object numbers the NEWEST cross-reference section stores inside an object
+  // stream (entry type 2). Empty for classic tables, which have no type 2.
+  private async compressedInNewestXref(): Promise<Set<number>> {
+    const out = new Set<number>();
+    if (this.startXref < 0 || !this.usesXrefStream) return out;
+    const header = /^(\d+)\s+(\d+)\s+obj/.exec(
+      this.src.slice(this.startXref, this.startXref + 64),
+    );
+    if (!header) return out;
+    const num = parseInt(header[1], 10);
+    const body = this.objectBody(num);
+    if (!body || !/\/Type\s*\/XRef/.test(body)) return out;
+    const data = await this.streamData(num);
+    if (!data) return out;
+
+    const wSpan = this.valueSpan(body, "W");
+    const w = wSpan
+      ? [...wSpan.text.matchAll(/\d+/g)].map((m) => parseInt(m[0], 10))
+      : [];
+    if (w.length < 3) return out;
+    const size = this.dictInt(body, "Size") ?? 0;
+    const indexSpan = this.valueSpan(body, "Index");
+    const index = indexSpan
+      ? [...indexSpan.text.matchAll(/\d+/g)].map((m) => parseInt(m[0], 10))
+      : [0, size];
+
+    const rowLen = w[0] + w[1] + w[2];
+    if (rowLen <= 0) return out;
+    let at = 0;
+    for (let g = 0; g + 1 < index.length; g += 2) {
+      for (let k = 0; k < index[g + 1]; k += 1) {
+        if (at + rowLen > data.length) return out;
+        let type = 1;
+        if (w[0] > 0) {
+          type = 0;
+          for (let b = 0; b < w[0]; b += 1) type = (type << 8) | data[at + b];
+        }
+        if (type === 2) out.add(index[g] + k);
+        at += rowLen;
+      }
+    }
+    return out;
   }
 
   /** Object numbers appended by a revision must start above this. */
@@ -222,6 +278,11 @@ export class RawPdf {
     }
     this.bodyCache.set(num, body);
     return body;
+  }
+
+  /** Generation the file declares for an object, 0 when unknown. */
+  generationOf(num: number): number {
+    return this.objects.get(num)?.gen ?? 0;
   }
 
   hasObject(num: number): boolean {

@@ -38,6 +38,8 @@ import {
 
 const MARKED_CONTENT = new Set(["BDC", "BMC", "EMC", "MP", "DP"]);
 
+export type ShadingPhase = "all" | "background" | "foreground";
+
 interface ExtractedShading {
   /** Content-stream fragment that redraws every shading on the page. */
   content: string;
@@ -51,13 +53,22 @@ interface ExtractedShading {
  * Replay a page's content, keeping only what is needed to redraw its
  * shadings. Returns null when the page has none.
  */
-export function extractShadingDraws(content: string): ExtractedShading | null {
+export function extractShadingDraws(
+  content: string,
+  phase: ShadingPhase = "all",
+): ExtractedShading | null {
   const ops = parseOps(content);
   const firstText = ops.findIndex((o) => TEXT_SHOWING.has(o.op));
-  const firstShading = ops.findIndex((o) => o.op === "sh");
-  if (firstShading < 0) return null;
+  const wanted = (index: number): boolean => {
+    if (phase === "all" || firstText < 0) return true;
+    return phase === "background" ? index < firstText : index > firstText;
+  };
+  const shIndexes = ops
+    .map((o, i) => (o.op === "sh" ? i : -1))
+    .filter((i) => i >= 0 && wanted(i));
+  if (shIndexes.length === 0) return null;
 
-  const lastShading = ops.map((o) => o.op).lastIndexOf("sh");
+  const lastShading = shIndexes[shIndexes.length - 1];
   const shading: string[] = [];
   const extGState: string[] = [];
   const pattern: string[] = [];
@@ -89,6 +100,8 @@ export function extractShadingDraws(content: string): ExtractedShading | null {
     if (op.op === "sh") {
       const name = op.operands[op.operands.length - 1];
       if (!name || name[0] !== "/") return null;
+      // Out-of-phase shadings still contribute nothing but must not paint.
+      if (!wanted(i)) continue;
       shading.push(name.slice(1));
       out.push(`${name} sh`);
       continue;
@@ -132,7 +145,7 @@ export function extractShadingDraws(content: string): ExtractedShading | null {
       extGState: [...new Set(extGState)],
       pattern: [...new Set(pattern)],
     },
-    isBackground: firstText < 0 || firstShading < firstText,
+    isBackground: firstText < 0 || shIndexes[0] < firstText,
   };
 }
 
@@ -184,48 +197,50 @@ export async function preserveShadings(
 
     const content = await original.pageContent(originalPageNum);
     if (!content) continue;
-    const extracted = extractShadingDraws(toLatin1(content));
-    if (!extracted) continue;
-
+    const page = toLatin1(content);
     const savedBody = saved.objectBody(savedPageNum);
     if (!savedBody) continue;
-
-    // If the saved file no longer declares the names the fragment uses,
-    // re-injecting it would draw nothing at best and break the page at
-    // worst. Leaving the file alone is the correct outcome.
     const resources = saved.pageInherited(savedPageNum, "Resources");
-    const resolvable =
-      extracted.needs.shading.every((n) =>
-        resourceHasName(saved, resources, "Shading", n),
-      ) &&
-      extracted.needs.extGState.every((n) =>
-        resourceHasName(saved, resources, "ExtGState", n),
-      ) &&
-      extracted.needs.pattern.every((n) =>
-        resourceHasName(saved, resources, "Pattern", n),
-      );
-    if (!resolvable) continue;
-
     const existing = saved.contentRefs(savedBody);
     if (existing.length === 0) continue;
     const span = saved.valueSpan(savedBody, "Contents");
     if (!span) continue;
 
-    const raw = fromLatin1(extracted.content);
-    const packed = await deflate(raw);
-    const streamNum = nextNum;
-    nextNum += 1;
-    objects.push({
-      num: streamNum,
-      body: packed
-        ? streamObject("<< /Filter /FlateDecode >>", packed)
-        : streamObject("<< >>", raw),
-    });
+    // Split by phase: a gradient that sat under the text goes back under it,
+    // one that sat over it goes back over. A single fragment for the page put
+    // mid-page shadings on the wrong side of the content.
+    const before: number[] = [];
+    const after: number[] = [];
+    for (const phase of ["background", "foreground"] as const) {
+      const extracted = extractShadingDraws(page, phase);
+      if (!extracted) continue;
+      const resolvable =
+        extracted.needs.shading.every((n) =>
+          resourceHasName(saved, resources, "Shading", n),
+        ) &&
+        extracted.needs.extGState.every((n) =>
+          resourceHasName(saved, resources, "ExtGState", n),
+        ) &&
+        extracted.needs.pattern.every((n) =>
+          resourceHasName(saved, resources, "Pattern", n),
+        );
+      if (!resolvable) continue;
 
-    // A background gradient has to go under the page, not over it.
-    const order = extracted.isBackground
-      ? [streamNum, ...existing]
-      : [...existing, streamNum];
+      const raw = fromLatin1(extracted.content);
+      const packed = await deflate(raw);
+      const streamNum = nextNum;
+      nextNum += 1;
+      objects.push({
+        num: streamNum,
+        body: packed
+          ? streamObject("<< /Filter /FlateDecode >>", packed)
+          : streamObject("<< >>", raw),
+      });
+      (phase === "background" ? before : after).push(streamNum);
+    }
+    if (before.length === 0 && after.length === 0) continue;
+
+    const order = [...before, ...existing, ...after];
     const array = `[${order.map((n) => `${n} 0 R`).join(" ")}]`;
     objects.push({
       num: savedPageNum,

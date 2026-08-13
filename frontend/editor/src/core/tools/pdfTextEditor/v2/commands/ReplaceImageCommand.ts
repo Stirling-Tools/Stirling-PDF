@@ -72,6 +72,9 @@ export class ReplaceImageCommand implements Command {
     const page = doc.page(this.pageIndex);
     const img = page.findImage(this.imageId);
     if (!img || !img.pdfiumObjPtr) return;
+    // This build exposes no FPDFFormObj_InsertObject, so a form-nested image
+    // could be detached but never put back. Refusing beats corrupting.
+    if (img.containerPtr) return;
     const m = doc.module;
     if (this.prevMatrix === null || this.prevBounds === null) {
       this.prevObjPtr = img.pdfiumObjPtr;

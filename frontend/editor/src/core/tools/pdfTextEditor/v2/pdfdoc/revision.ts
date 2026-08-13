@@ -63,8 +63,13 @@ export function appendRevision(
   at += lead.length;
 
   const offsets = new Map<number, number>();
+  const gens = new Map<number, number>();
   for (const obj of sorted) {
-    const header = fromLatin1(`${obj.num} 0 obj\n`);
+    // Rewriting at generation 0 would orphan every reference that names the
+    // object's real generation.
+    const gen = pdf.generationOf(obj.num);
+    gens.set(obj.num, gen);
+    const header = fromLatin1(`${obj.num} ${gen} obj\n`);
     offsets.set(obj.num, at);
     parts.push(header, obj.body, fromLatin1("\nendobj\n"));
     at += header.length + obj.body.length + "\nendobj\n".length;
@@ -90,7 +95,8 @@ export function appendRevision(
     for (const [first, nums] of runsOf(sorted.map((o) => o.num))) {
       table += `${first} ${nums.length}\n`;
       for (const num of nums) {
-        table += `${String(offsets.get(num) ?? 0).padStart(10, "0")} 00000 n \n`;
+        const gen = String(gens.get(num) ?? 0).padStart(5, "0");
+        table += `${String(offsets.get(num) ?? 0).padStart(10, "0")} ${gen} n \n`;
       }
     }
     table +=
@@ -114,7 +120,7 @@ export function appendRevision(
     index.push(first, nums.length);
     for (const num of nums) {
       const off = offsets.get(num) ?? 0;
-      rows.push([1, off, 0]);
+      rows.push([1, off, gens.get(num) ?? 0]);
     }
   }
   const data = new Uint8Array(rows.length * 7);

@@ -63,8 +63,13 @@ export class PdfiumTextReader {
       LineGrouper.apply(page);
       if (mode === "auto") ParagraphGrouper.apply(page);
       // Grouping is done.
-      inferRunCharSpacing(m, page, textPagePtr);
-      captureCharPositions(m, page, textPagePtr);
+      // One walk feeds both: each was reading the same characters with its
+      // own WASM round-trips, doubling the cost of every page read.
+      const geometry = collectCharGeometry(m, page, textPagePtr);
+      if (geometry) {
+        inferRunCharSpacing(page, geometry);
+        captureCharPositions(geometry);
+      }
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
     }
@@ -89,81 +94,118 @@ function indexRunsByObjectPtr(runs: TextRun[]): Map<number, TextRun> {
 
 // Infer each run's effective character spacing from on-page char geometry: for
 // consecutive text-page chars inside one run, `extra = nextOrigin.x - origin.x.
-function inferRunCharSpacing(
+interface CharGeometry {
+  cp: number;
+  run: TextRun | null;
+  /** False when the engine could not give this character a box. */
+  ok: boolean;
+  left: number;
+  right: number;
+  bottom: number;
+  originX: number;
+}
+
+// Read every character's geometry once. Both consumers below need the same
+// characters, so doing this twice was pure duplicated WASM traffic.
+function collectCharGeometry(
   m: WrappedPdfiumModule,
   page: Page,
   textPagePtr: number,
-): void {
-  const runs = page.runs;
-  if (runs.length === 0) return;
-  const ptrToRun = indexRunsByObjectPtr(runs);
-
+): CharGeometry[] | null {
+  if (page.runs.length === 0) return null;
+  const probe = m as unknown as {
+    FPDFText_GetLooseCharBox?: (tp: number, i: number, rect: number) => boolean;
+    FPDFText_GetCharOrigin?: (
+      tp: number,
+      i: number,
+      x: number,
+      y: number,
+    ) => boolean;
+  };
+  if (!probe.FPDFText_GetLooseCharBox) return null;
   const charCount = m.FPDFText_CountChars(textPagePtr);
-  if (charCount <= 1) return;
+  if (charCount <= 1) return null;
+
+  const ptrToRun = indexRunsByObjectPtr(page.runs);
   const wasm = m.pdfium.wasmExports;
   const rectBuf = wasm.malloc(16); // FS_RECT: 4 floats {l, t, r, b}
-  const samples = new Map<TextRun, number[]>();
+  const xPtr = wasm.malloc(8);
+  const yPtr = wasm.malloc(8);
+  const out: CharGeometry[] = [];
   try {
-    const looseMod = m as unknown as {
-      FPDFText_GetLooseCharBox?: (
-        tp: number,
-        i: number,
-        rect: number,
-      ) => boolean;
-    };
-    if (!looseMod.FPDFText_GetLooseCharBox) return;
-    const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
-    let prev: {
-      run: TextRun;
-      left: number;
-      right: number;
-      bottom: number;
-    } | null = null;
-    for (let i = 0; i < charCount; i++) {
+    for (let i = 0; i < charCount; i += 1) {
       const cp = m.FPDFText_GetUnicode(textPagePtr, i);
-      const isWs = !cp || cp <= 0x20 || cp === 0xa0;
       const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
-      const run = objPtr ? ptrToRun.get(objPtr) : undefined;
-      if (isWs) {
-        // A REAL space glyph (belongs to a text object) ends the pair chain -
-        // pairs across it would fold word spacing (Tw) into the estimate.
-        if (run) prev = null;
-        continue;
-      }
-      if (!run) {
-        prev = null;
-        continue;
-      }
-      if (!looseMod.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf)) {
-        prev = null;
-        continue;
-      }
+      const run = objPtr ? (ptrToRun.get(objPtr) ?? null) : null;
+      const boxed = probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf);
+      const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
       const f = new Float32Array(heap.buffer, rectBuf, 4);
-      const cur = { run, left: f[0], right: f[2], bottom: f[3] };
-      if (prev && prev.run === run) {
-        const advance = prev.right - prev.left;
-        const delta = cur.left - prev.left;
-        const extra = delta - advance;
-        // Same visual line, forward advance only, and NOT a word gap: real
-        // letter-spacing stays well under ~0.6em.
-        if (
-          delta > 0 &&
-          advance > 0 &&
-          extra < run.fontSize * 0.6 &&
-          Math.abs(cur.bottom - prev.bottom) < Math.max(1, run.fontSize * 0.25)
-        ) {
-          let arr = samples.get(run);
-          if (!arr) {
-            arr = [];
-            samples.set(run, arr);
-          }
-          arr.push(extra);
-        }
+      let originX = Number.NaN;
+      if (probe.FPDFText_GetCharOrigin?.(textPagePtr, i, xPtr, yPtr)) {
+        originX = m.pdfium.getValue(xPtr, "double");
       }
-      prev = cur;
+      out.push({
+        cp,
+        run,
+        ok: boxed,
+        left: boxed ? f[0] : Number.NaN,
+        right: boxed ? f[2] : Number.NaN,
+        bottom: boxed ? f[3] : Number.NaN,
+        originX,
+      });
     }
   } finally {
     wasm.free(rectBuf);
+    wasm.free(xPtr);
+    wasm.free(yPtr);
+  }
+  return out;
+}
+
+function inferRunCharSpacing(page: Page, geometry: CharGeometry[]): void {
+  if (page.runs.length === 0) return;
+  const samples = new Map<TextRun, number[]>();
+  let prev: {
+    run: TextRun;
+    left: number;
+    right: number;
+    bottom: number;
+  } | null = null;
+  for (const g of geometry) {
+    const isWs = !g.cp || g.cp <= 0x20 || g.cp === 0xa0;
+    if (isWs) {
+      // A REAL space glyph (belongs to a text object) ends the pair chain -
+      // pairs across it would fold word spacing (Tw) into the estimate.
+      if (g.run) prev = null;
+      continue;
+    }
+    if (!g.run || !g.ok) {
+      prev = null;
+      continue;
+    }
+    const run = g.run;
+    const cur = { run, left: g.left, right: g.right, bottom: g.bottom };
+    if (prev && prev.run === run) {
+      const advance = prev.right - prev.left;
+      const delta = cur.left - prev.left;
+      const extra = delta - advance;
+      // Same visual line, forward advance only, and NOT a word gap: real
+      // letter-spacing stays well under ~0.6em.
+      if (
+        delta > 0 &&
+        advance > 0 &&
+        extra < run.fontSize * 0.6 &&
+        Math.abs(cur.bottom - prev.bottom) < Math.max(1, run.fontSize * 0.25)
+      ) {
+        let arr = samples.get(run);
+        if (!arr) {
+          arr = [];
+          samples.set(run, arr);
+        }
+        arr.push(extra);
+      }
+    }
+    prev = cur;
   }
 
   for (const [run, extras] of samples) {
@@ -187,62 +229,22 @@ function inferRunCharSpacing(
 
 // Record where the engine put every glyph, indexed by code unit of `text`.
 // Both units of a surrogate pair share a value; synthesised spaces stay NaN.
-function captureCharPositions(
-  m: WrappedPdfiumModule,
-  page: Page,
-  textPagePtr: number,
-): void {
-  const probe = m as unknown as {
-    FPDFText_GetCharOrigin?: (
-      tp: number,
-      index: number,
-      x: number,
-      y: number,
-    ) => boolean;
-    FPDFText_GetLooseCharBox?: (tp: number, i: number, rect: number) => boolean;
-  };
-  if (!probe.FPDFText_GetCharOrigin || !probe.FPDFText_GetLooseCharBox) return;
-
-  const ptrToRun = indexRunsByObjectPtr(page.runs);
-  if (ptrToRun.size === 0) return;
-
-  const charCount = m.FPDFText_CountChars(textPagePtr);
-  if (charCount <= 0) return;
-  const wasm = m.pdfium.wasmExports;
-  const xPtr = wasm.malloc(8);
-  const yPtr = wasm.malloc(8);
-  const rectBuf = wasm.malloc(16);
+function captureCharPositions(geometry: CharGeometry[]): void {
   const glyphs = new Map<
     TextRun,
     Array<{ cp: number; x: number; end: number }>
   >();
-  try {
-    for (let i = 0; i < charCount; i += 1) {
-      const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
-      const run = objPtr ? ptrToRun.get(objPtr) : undefined;
-      if (!run) continue;
-      const cp = m.FPDFText_GetUnicode(textPagePtr, i);
-      if (!cp) continue;
-      if (!probe.FPDFText_GetCharOrigin(textPagePtr, i, xPtr, yPtr)) continue;
-      if (!probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf)) continue;
-      const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
-      const rect = new Float32Array(heap.buffer, rectBuf, 4);
-      const x = m.pdfium.getValue(xPtr, "double");
-      // The loose box's right edge is the pen position after the glyph,
-      // which is what makes consecutive word boxes tile without drift.
-      const end = rect[2];
-      if (!Number.isFinite(x) || !Number.isFinite(end) || end < x) continue;
-      let list = glyphs.get(run);
-      if (!list) {
-        list = [];
-        glyphs.set(run, list);
-      }
-      list.push({ cp, x, end });
+  for (const g of geometry) {
+    if (!g.run || !g.cp || !g.ok) continue;
+    if (!Number.isFinite(g.originX) || g.right < g.originX) continue;
+    let list = glyphs.get(g.run);
+    if (!list) {
+      list = [];
+      glyphs.set(g.run, list);
     }
-  } finally {
-    wasm.free(xPtr);
-    wasm.free(yPtr);
-    wasm.free(rectBuf);
+    // The loose box's right edge is the pen position after the glyph, which
+    // is what makes consecutive word boxes tile without drift.
+    list.push({ cp: g.cp, x: g.originX, end: g.right });
   }
 
   for (const [run, list] of glyphs) {
@@ -356,7 +358,7 @@ function walkObjects(
       }
     } else if (type === FPDF_PAGEOBJ_IMAGE) {
       const indexId = [...path, i].join("-");
-      const img = readImage(m, page, objPtr, indexId, transform);
+      const img = readImage(m, page, objPtr, indexId, transform, containerPtr);
       if (img) images.push(img);
     } else if (type === FPDF_PAGEOBJ_FORM && depth < MAX_DEPTH) {
       let formCount: number;
@@ -723,6 +725,7 @@ function readImage(
   objPtr: number,
   index: number | string,
   transform: Affine,
+  containerPtr: number,
 ): ImageObject | null {
   const localBounds = readBounds(m, objPtr);
   if (!localBounds) return null;
@@ -734,5 +737,6 @@ function readImage(
     pdfiumObjPtr: objPtr,
     bounds: ident ? localBounds : transformRect(transform, localBounds),
     matrix: ident ? localMatrix : composeAffine(transform, localMatrix),
+    containerPtr,
   });
 }

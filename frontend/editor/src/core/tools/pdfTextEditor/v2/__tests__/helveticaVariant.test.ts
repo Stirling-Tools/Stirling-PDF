@@ -36,3 +36,15 @@ describe("helveticaVariantFor", () => {
     expect(helveticaVariantFor("CourierBold")).toBe("Courier-Bold");
   });
 });
+
+describe("device fonts survive an edit", () => {
+  it("keeps the embedded family instead of mapping it to base-14", () => {
+    expect(helveticaVariantFor("device:Segoe UI")).toBe("Segoe UI");
+    expect(helveticaVariantFor("device:Georgia Bold")).toBe("Georgia Bold");
+  });
+
+  it("still maps a non-device id by its style class", () => {
+    expect(helveticaVariantFor("pdf:12:ArialBold")).toBe("Helvetica-Bold");
+    expect(helveticaVariantFor("base14:Times-Roman")).toBe("Times-Roman");
+  });
+});
