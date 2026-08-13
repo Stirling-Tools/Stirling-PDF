@@ -15,6 +15,10 @@ import {
   type ExactLine,
 } from "@app/tools/pdfTextEditor/v2/util/exactLayout";
 import { embeddedFaceFamily } from "@app/tools/pdfTextEditor/v2/util/embeddedFace";
+import {
+  fitTextToWidth,
+  NO_FIT,
+} from "@app/tools/pdfTextEditor/v2/util/fitText";
 
 // React + contentEditable do not play well together when JSX manages the
 // element's children: React reconciles the children on every render and can.
@@ -320,6 +324,27 @@ export function TextRunOverlay({
   const fontStyle = cssStyleFor(run.fontId);
   const fontSizePx = Math.max(4, run.fontSize * scale);
 
+  // Only fit when CSS glyphs are actually on screen. Unfocused and
+  // focused-but-unedited runs show the page bitmap itself, which needs nothing.
+  // Paragraphs are excluded: their width is per line, not per run.
+  const showsGlyphs = edited || dragging;
+  const singleLine = (run.paragraphLineCount ?? 1) <= 1;
+  const fit =
+    showsGlyphs && singleLine
+      ? fitTextToWidth(
+          run.text,
+          measureMaxLineWidth(
+            run.text,
+            fontFamily,
+            fontWeight,
+            fontStyle,
+            fontSizePx,
+          ),
+          run.bounds.width * scale,
+          fontSizePx,
+        )
+      : NO_FIT;
+
   // Line height (px).
   const lineHeightPx =
     run.paragraphLineHeight && run.paragraphLineHeight > 0
@@ -557,9 +582,16 @@ export function TextRunOverlay({
         minHeight: height,
         // Live Ctrl+drag preview: follow the cursor via transform, and
         // float above siblings + dim slightly so the move reads clearly.
-        transform: dragOffset
-          ? `translate(${dragOffset.x}px, ${dragOffset.y}px)`
-          : undefined,
+        // Drag preview and the width fit both live here, so compose them.
+        transform:
+          [
+            dragOffset ? `translate(${dragOffset.x}px, ${dragOffset.y}px)` : "",
+            fit.scaleX !== 1 ? `scaleX(${fit.scaleX})` : "",
+          ]
+            .filter(Boolean)
+            .join(" ") || undefined,
+        // Scale from the run's own origin, never its centre.
+        transformOrigin: fit.scaleX !== 1 ? "0 50%" : undefined,
         opacity: dragging ? 0.75 : 1,
         zIndex: dragging ? 20 : undefined,
         // Only the opacity settle is animated.
@@ -572,9 +604,11 @@ export function TextRunOverlay({
         fontSize: fontSizePx,
         // Mirror the run's letter-spacing so the editing view tracks the
         // wide-set glyphs underneath.
-        letterSpacing: run.charSpacingPt
-          ? `${run.charSpacingPt * scale}px`
-          : undefined,
+        // The run's own tracking plus whatever the width fit needs.
+        letterSpacing:
+          run.charSpacingPt || fit.letterSpacing
+            ? `${(run.charSpacingPt ?? 0) * scale + fit.letterSpacing}px`
+            : undefined,
         // Same line-height used in the baseline math above, so the CSS
         // baselines land exactly where we computed `top`.
         lineHeight: `${lineHeightPx}px`,

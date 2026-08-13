@@ -92,6 +92,33 @@ export function everyCharIn(text: string, pool: string): boolean {
   return true;
 }
 
+// True when the emit path will map EVERY char in this font. Same condition
+// emitTextLine uses to take its setCharcodes branch, so a true here means the
+// reuse really will render rather than fall through to raw SetText.
+export function charcodesResolveFully(
+  m: WrappedPdfiumModule,
+  fontPtr: number,
+  text: string,
+  pagePtr: number,
+  docPtr: number,
+): boolean {
+  if (!fontPtr || !text) return false;
+  try {
+    const resolved = tryResolveCharcodes(
+      fontPtr,
+      text,
+      { module: m, pagePtr, docPtr },
+      true,
+    );
+    const r = resolved?.result;
+    return (
+      !!r && r.coverage === text.length && r.charcodes.length === text.length
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** Strip characters a base-14 (WinAnsi) font cannot render. */
 export function sanitizeForBase14(text: string): string {
   let out = "";

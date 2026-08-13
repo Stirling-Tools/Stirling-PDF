@@ -3,12 +3,13 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 import { PdfiumTextWriter } from "@app/tools/pdfTextEditor/v2/pdfium/PdfiumTextWriter";
 import { sampleBackground } from "@app/tools/pdfTextEditor/v2/pdfium/BackgroundSampler";
 import {
+  charcodesResolveFully,
   collectContainersByPtr,
   collectMemberPtrs,
   emitFillRect,
   emitTextLine,
-  inkFromRun,
   everyCharIn,
+  inkFromRun,
   removeMemberPtrs,
   rotationFromMatrix,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
@@ -303,9 +304,24 @@ export class EditTextCommand implements Command {
       this.nextText.replace(/[\r\n]/g, ""),
       this.prevText ?? "",
     );
-    // Reusing the source font handle works when: * Every nextText char already
-    // appears in prevText - guarantees the font has a glyph for each char.
-    const canReuseFont = safeChars && run.containerPtr === 0;
+    // Reusing the source font handle works when every nextText char already
+    // appears in prevText, which guarantees a glyph. That proxy is strict: it
+    // threw away a fully embedded face the moment a NEW letter was typed. So
+    // also accept the case where the charcodes provably resolve for the whole
+    // string, which is exactly what the emit path needs to succeed.
+    const candidateFontPtr = run.pdfiumObjPtr
+      ? safeGetFont(m, run.pdfiumObjPtr)
+      : 0;
+    const canReuseFont =
+      run.containerPtr === 0 &&
+      (safeChars ||
+        charcodesResolveFully(
+          m,
+          candidateFontPtr,
+          this.nextText.replace(/[\r\n]/g, ""),
+          page.pagePtr,
+          doc.docPtr,
+        ));
     // Borrow the font of the member sharing the most chars with the new text.
     const borrowPtrs = collectMemberPtrs(run);
     const borrowTexts =
