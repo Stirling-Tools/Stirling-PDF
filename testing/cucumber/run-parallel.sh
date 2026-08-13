@@ -54,6 +54,11 @@ if [ "${#AUTH_FEATURES[@]}" -gt 0 ]; then
     SHARDS=$((SHARDS - 1))
 fi
 
+# The pin above can take SHARDS to 0 or below, which makes the shard loop run zero
+# times: every shardable feature is skipped and the run still reports success.
+[ "$SHARDS" -lt 0 ] && SHARDS=0
+[ "${#FEATURES[@]}" -gt 0 ] && [ "$SHARDS" -lt 1 ] && SHARDS=1
+
 if [ "$SHARDS" -gt "${#FEATURES[@]}" ]; then
     echo "Only ${#FEATURES[@]} shardable feature files, reducing shards from $SHARDS"
     SHARDS="${#FEATURES[@]}"
