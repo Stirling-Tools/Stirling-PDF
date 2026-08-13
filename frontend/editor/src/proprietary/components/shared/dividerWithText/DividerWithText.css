@@ -16,11 +16,7 @@
 }
 
 .text-divider .text-divider__label {
-  /* A single channel triple cannot follow the colour scheme, and the old
-     fallback only reached 3.8:1 on the dark page. The muted text token carries
-     the readable shade for each scheme; the opacity hook is kept separate. */
   color: var(--c-text-muted);
-  opacity: var(--text-divider-opacity, 1);
   font-size: 0.75rem; /* 12px */
   white-space: nowrap;
 }
@@ -44,13 +40,6 @@
 .text-divider.force-light .text-divider__rule {
   background-color: rgb(
     var(--text-divider-rule-rgb-light, var(--gray-200)) /
-    var(--text-divider-opacity, 1)
-  );
-}
-
-.text-divider.force-light .text-divider__label {
-  color: rgb(
-    var(--text-divider-label-rgb-light, var(--gray-400)) /
     var(--text-divider-opacity, 1)
   );
 }
