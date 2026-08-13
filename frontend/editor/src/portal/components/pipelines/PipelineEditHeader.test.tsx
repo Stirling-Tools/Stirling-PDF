@@ -24,7 +24,7 @@ function renderHeader(overrides: Partial<PipelineEditHeaderProps> = {}) {
     onBack: vi.fn(),
     onSave: vi.fn(),
     onRun: vi.fn(),
-    onClearHistory: vi.fn(),
+    onReprocess: vi.fn(),
     onDelete: vi.fn(),
     onViewDefinition: vi.fn(),
   };
@@ -37,7 +37,7 @@ function renderHeader(overrides: Partial<PipelineEditHeaderProps> = {}) {
       blockers={[]}
       saving={false}
       running={false}
-      clearingHistory={false}
+      reprocessing={false}
       {...handlers}
       {...overrides}
     />,
@@ -106,7 +106,7 @@ describe("PipelineEditHeader", () => {
       screen.getByLabelText("portal.pipelines.builder.moreActions"),
     );
     fireEvent.click(screen.getByText("portal.pipelines.detail.clearHistory"));
-    expect(handlers.onClearHistory).toHaveBeenCalled();
+    expect(handlers.onReprocess).toHaveBeenCalled();
 
     fireEvent.click(
       screen.getByLabelText("portal.pipelines.builder.moreActions"),

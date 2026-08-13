@@ -782,17 +782,19 @@ describe("PipelineBuilder", () => {
     ).toBeInTheDocument();
   });
 
-  it("clears processed history from the header and confirms", async () => {
+  it("reprocesses the source: clears the processed record, runs, and reports", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
     await openTray();
     fireEvent.click(screen.getByText("portal.pipelines.detail.clearHistory"));
 
+    // It forgets what was processed, then triggers a run so those files go through now.
     await waitFor(() =>
       expect(clearProcessedHistory).toHaveBeenCalledWith("plc-1"),
     );
+    await waitFor(() => expect(triggerPipeline).toHaveBeenCalledWith("plc-1"));
     expect(
-      await screen.findByText("portal.pipelines.run.historyCleared"),
+      await screen.findByText("portal.pipelines.run.completed"),
     ).toBeInTheDocument();
   });
 

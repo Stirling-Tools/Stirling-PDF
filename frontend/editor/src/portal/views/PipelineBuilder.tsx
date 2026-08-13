@@ -271,7 +271,8 @@ export function PipelineBuilder() {
   // Pausing/activating an existing pipeline acts immediately (a separate save), not on the next
   // "Save changes"; this tracks that in-flight toggle.
   const [togglingEnabled, setTogglingEnabled] = useState(false);
-  const [clearingHistory, setClearingHistory] = useState(false);
+  // Clearing the processed record then running, so already-handled files go through again.
+  const [reprocessing, setReprocessing] = useState(false);
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -814,39 +815,45 @@ export function PipelineBuilder() {
     return { tone: "info", text: t("portal.pipelines.run.empty") };
   }
 
+  // Trigger the saved pipeline and report the outcome: what the sweep started (or why it started
+  // nothing), then each run's terminal state. Shared by Run now and the reprocess action.
+  async function reportRun(policyId: string) {
+    const outcome = await triggerPipeline(policyId);
+    const runIds = outcome.runIds;
+    if (runIds.length === 0) {
+      if (mounted.current) setRunResult(emptySweepResult(outcome));
+      return;
+    }
+    const finals = await Promise.all(runIds.map((runId) => awaitRun(runId)));
+    if (!mounted.current) return;
+    const failed = finals.find((r) => r?.status === "FAILED");
+    if (failed) {
+      setRunResult({
+        tone: "danger",
+        text: t("portal.pipelines.run.failed", { error: failed.error ?? "" }),
+      });
+    } else if (finals.some((r) => r === null)) {
+      // Gave up polling before a terminal status; the run may still finish server-side.
+      setRunResult({
+        tone: "warning",
+        text: t("portal.pipelines.run.timeout"),
+      });
+    } else if (finals.every((r) => r?.status === "COMPLETED")) {
+      setRunResult({
+        tone: "success",
+        text: t("portal.pipelines.run.completed", { count: finals.length }),
+      });
+    } else {
+      setRunResult({ tone: "info", text: t("portal.pipelines.run.running") });
+    }
+  }
+
   async function handleRun() {
-    if (running || !id) return;
+    if (running || reprocessing || !id) return;
     setRunning(true);
     setRunResult(null);
     try {
-      const outcome = await triggerPipeline(id);
-      const runIds = outcome.runIds;
-      if (runIds.length === 0) {
-        if (mounted.current) setRunResult(emptySweepResult(outcome));
-        return;
-      }
-      const finals = await Promise.all(runIds.map((runId) => awaitRun(runId)));
-      if (!mounted.current) return;
-      const failed = finals.find((r) => r?.status === "FAILED");
-      if (failed) {
-        setRunResult({
-          tone: "danger",
-          text: t("portal.pipelines.run.failed", { error: failed.error ?? "" }),
-        });
-      } else if (finals.some((r) => r === null)) {
-        // Gave up polling before a terminal status; the run may still finish server-side.
-        setRunResult({
-          tone: "warning",
-          text: t("portal.pipelines.run.timeout"),
-        });
-      } else if (finals.every((r) => r?.status === "COMPLETED")) {
-        setRunResult({
-          tone: "success",
-          text: t("portal.pipelines.run.completed", { count: finals.length }),
-        });
-      } else {
-        setRunResult({ tone: "info", text: t("portal.pipelines.run.running") });
-      }
+      await reportRun(id);
     } catch (e) {
       if (mounted.current)
         setRunResult({ tone: "danger", text: errorMessage(e) });
@@ -856,26 +863,22 @@ export function PipelineBuilder() {
   }
 
   /**
-   * Forget which source files this pipeline has processed, so the next sweep
-   * reprocesses everything currently in its sources (the standard retry for a
-   * parked-by-failure file). Does not touch the files themselves.
+   * Reprocess everything currently in the sources: forget which files the pipeline already handled,
+   * then run at once so those files - which a normal run skips - go through now. Reports the run's
+   * outcome exactly like Run now; does not touch the files themselves.
    */
-  async function handleClearHistory() {
-    if (clearingHistory || !id) return;
-    setClearingHistory(true);
+  async function handleReprocessAll() {
+    if (running || reprocessing || !id) return;
+    setReprocessing(true);
     setRunResult(null);
     try {
       await clearProcessedHistory(id);
-      if (mounted.current)
-        setRunResult({
-          tone: "success",
-          text: t("portal.pipelines.run.historyCleared"),
-        });
+      await reportRun(id);
     } catch (e) {
       if (mounted.current)
         setRunResult({ tone: "danger", text: errorMessage(e) });
     } finally {
-      if (mounted.current) setClearingHistory(false);
+      if (mounted.current) setReprocessing(false);
     }
   }
 
@@ -1143,8 +1146,8 @@ export function PipelineBuilder() {
           onSave={() => save(listPath)}
           onRun={handleRun}
           running={running}
-          onClearHistory={handleClearHistory}
-          clearingHistory={clearingHistory}
+          onReprocess={handleReprocessAll}
+          reprocessing={reprocessing}
           onDelete={() => setPendingDelete(true)}
           onViewDefinition={() => setDefinitionOpen(true)}
         />

@@ -7,7 +7,7 @@ import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
 import PowerSettingsNewRoundedIcon from "@mui/icons-material/PowerSettingsNewRounded";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import { ActionIcon, Button, Dropdown, Input } from "@app/ui";
@@ -34,8 +34,9 @@ export interface PipelineEditHeaderProps {
   /** Run the saved pipeline against its real input, delivering to its real destination. */
   onRun: () => void;
   running: boolean;
-  onClearHistory: () => void;
-  clearingHistory: boolean;
+  /** Reprocess everything in the sources: clears the processed record, then runs at once. */
+  onReprocess: () => void;
+  reprocessing: boolean;
   onDelete: () => void;
   onViewDefinition: () => void;
 }
@@ -60,8 +61,8 @@ export function PipelineEditHeader({
   onSave,
   onRun,
   running,
-  onClearHistory,
-  clearingHistory,
+  onReprocess,
+  reprocessing,
   onDelete,
   onViewDefinition,
 }: PipelineEditHeaderProps) {
@@ -186,9 +187,9 @@ export function PipelineEditHeader({
           </Dropdown.Trigger>
           <Dropdown.Menu>
             <Dropdown.Item
-              onSelect={onClearHistory}
-              disabled={clearingHistory}
-              leading={<HistoryRoundedIcon style={{ fontSize: "1.125rem" }} />}
+              onSelect={onReprocess}
+              disabled={reprocessing}
+              leading={<ReplayRoundedIcon style={{ fontSize: "1.125rem" }} />}
             >
               {t("portal.pipelines.detail.clearHistory")}
             </Dropdown.Item>

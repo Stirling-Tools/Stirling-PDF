@@ -40,8 +40,8 @@ function Playground({
       onSave={noop}
       onRun={noop}
       running={false}
-      onClearHistory={noop}
-      clearingHistory={false}
+      onReprocess={noop}
+      reprocessing={false}
       onDelete={noop}
       onViewDefinition={noop}
     />
