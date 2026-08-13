@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fathzer.soft.javaluator.DoubleEvaluator;
 
+import io.github.pixee.security.Filenames;
 import io.github.pixee.security.HostValidator;
 import io.github.pixee.security.Urls;
 
@@ -121,6 +122,9 @@ public class GeneralUtils {
      *   <li>Fresh Matcher instances ensure thread safety
      * </ul>
      *
+     * <p>Any directory component is stripped first, so attacker-supplied upload names cannot leak
+     * path traversal into derived names such as zip entries.
+     *
      * @param filename the filename to process, may be null
      * @return filename without extension, or "default" if input is null
      */
@@ -133,18 +137,20 @@ public class GeneralUtils {
             return filename;
         }
 
-        int dotIndex = filename.lastIndexOf('.');
-        if (dotIndex > 0 && dotIndex < filename.length() - 1) {
-            return filename.substring(0, dotIndex);
+        String simpleName = Filenames.toSimpleFileName(filename);
+
+        int dotIndex = simpleName.lastIndexOf('.');
+        if (dotIndex > 0 && dotIndex < simpleName.length() - 1) {
+            return simpleName.substring(0, dotIndex);
         }
 
-        if (dotIndex == 0 || dotIndex == filename.length() - 1 || dotIndex == -1) {
-            return filename;
+        if (dotIndex == 0 || dotIndex == simpleName.length() - 1 || dotIndex == -1) {
+            return simpleName;
         }
 
         Pattern pattern = patternCache.getPattern(RegexPatternUtils.getExtensionRegex());
-        Matcher matcher = pattern.matcher(filename);
-        return matcher.find() ? matcher.replaceFirst("") : filename;
+        Matcher matcher = pattern.matcher(simpleName);
+        return matcher.find() ? matcher.replaceFirst("") : simpleName;
     }
 
     /**

@@ -221,7 +221,29 @@ public class GeneralUtilsTest {
 
         // Test multiple dots
         assertEquals("file.with.multiple", GeneralUtils.removeExtension("file.with.multiple.dots"));
-        assertEquals("path/to/file", GeneralUtils.removeExtension("path/to/file.ext"));
+        // Directory components are stripped, only the base name is kept
+        assertEquals("file", GeneralUtils.removeExtension("path/to/file.ext"));
+    }
+
+    @Test
+    void testRemoveExtensionStripsPathTraversal() {
+        assertEquals("passwd", GeneralUtils.removeExtension("../../../etc/passwd.txt"));
+        assertEquals("evil", GeneralUtils.removeExtension("/absolute/path/evil.pdf"));
+        assertEquals("passwd", GeneralUtils.removeExtension("....//....//etc/passwd.txt"));
+
+        // No result may carry a separator that a zip entry could use to escape its directory
+        for (String traversal :
+                new String[] {
+                    "../../evil.pdf",
+                    "..\\..\\evil.pdf",
+                    "dir/../../evil.pdf",
+                    "/etc/cron.d/payload",
+                    "a/b/c"
+                }) {
+            String result = GeneralUtils.removeExtension(traversal);
+            assertFalse(result.contains("/"), "Result should not contain '/': " + result);
+            assertFalse(result.contains("\\"), "Result should not contain '\\': " + result);
+        }
     }
 
     @Test
@@ -418,6 +440,7 @@ public class GeneralUtilsTest {
         // Test complex cases
         assertEquals(
                 "complex.file.name", GeneralUtils.getTitleFromFilename("complex.file.name.txt"));
-        assertEquals("path/to/file", GeneralUtils.getTitleFromFilename("path/to/file.ext"));
+        // Directory components are stripped, only the base name is kept
+        assertEquals("file", GeneralUtils.getTitleFromFilename("path/to/file.ext"));
     }
 }
