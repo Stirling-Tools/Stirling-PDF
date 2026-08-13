@@ -8,6 +8,7 @@ export * from "@app/ui/MethodBadge";
 export * from "@app/ui/ToggleSwitch";
 export * from "@app/ui/ProgressBar";
 export * from "@app/ui/MetricCard";
+export * from "@app/ui/NodeCard";
 export * from "@app/ui/NavItem";
 export * from "@app/ui/NavSurface";
 export * from "@app/ui/PanelHeader";
