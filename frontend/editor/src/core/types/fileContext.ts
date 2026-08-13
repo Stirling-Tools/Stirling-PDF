@@ -323,6 +323,12 @@ export interface FileContextActions {
       insertAfterPageId?: string;
       selectFiles?: boolean;
       skipUploadTracking?: boolean;
+      /**
+       * Mark every added file as produced in-app rather than uploaded, which is what stops the
+       * policy auto-run enforcing an upload policy on it. Set by anything adding a file that has
+       * already been through a policy or a tool: policy output delivery, and the bell's unlock.
+       */
+      derivedFromTool?: boolean;
     },
   ) => Promise<StirlingFile[]>;
   addFilesWithOptions: (

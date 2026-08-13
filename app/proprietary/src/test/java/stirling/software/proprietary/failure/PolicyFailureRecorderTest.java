@@ -39,6 +39,7 @@ import tools.jackson.databind.json.JsonMapper;
 class PolicyFailureRecorderTest {
 
     private static final Long TEAM = 11L;
+    private static final String ACTOR = "dana@example.com";
 
     @Mock private PolicyStore policyStore;
 
@@ -378,6 +379,42 @@ class PolicyFailureRecorderTest {
                     "run-2", "policy-1", null, null, null, "boom", new IOException("x"));
 
             assertThat(store.list(TEAM, null, null, null, 10)).hasSize(2);
+        }
+
+        @Test
+        void theSameDocumentFailingInTwoAttendedRunsIsOneIncident() {
+            // WHAT THE DOCUMENT REFERENCE BUYS. A password-protected input is FILE-scoped, and
+            // every
+            // upload is a new run, so with no reference the run id stands in for the document and
+            // the
+            // same broken file re-uploaded reads as a second incident instead of a second
+            // occurrence.
+            when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
+
+            recorder.recordRunFailure(
+                    "run-1", "policy-1", null, "editor-file-1", ACTOR, "locked", passwordFailure());
+            recorder.recordRunFailure(
+                    "run-2", "policy-1", null, "editor-file-1", ACTOR, "locked", passwordFailure());
+
+            List<FileRunEvent> events = store.list(TEAM, null, null, null, 10);
+            assertThat(events).hasSize(1);
+            assertThat(events.getFirst().occurrences()).isEqualTo(2);
+        }
+
+        @Test
+        void twoDocumentsFailingTheSameWayStaySeparateIncidents() {
+            // The other half of the rule: folding is per document, so two broken uploads are still
+            // two rows and neither is credited with the other's occurrence.
+            when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
+
+            recorder.recordRunFailure(
+                    "run-1", "policy-1", null, "editor-file-1", ACTOR, "locked", passwordFailure());
+            recorder.recordRunFailure(
+                    "run-2", "policy-1", null, "editor-file-2", ACTOR, "locked", passwordFailure());
+
+            assertThat(store.list(TEAM, null, null, null, 10))
+                    .hasSize(2)
+                    .allMatch(event -> event.occurrences() == 1);
         }
     }
 }

@@ -60,13 +60,21 @@ export async function reorderPolicies(orderedIds: string[]): Promise<void> {
   await apiClient.put("/api/v1/policies/order", orderedIds);
 }
 
-/** Run a stored policy by id on the supplied files; returns the run id. */
+/**
+ * Run a stored policy by id on the supplied files; returns the run id.
+ *
+ * `fileId` is this workspace's own opaque id for the document being run. The server records it against
+ * any failure of the run, which is the only way an attended failure can name a document this browser can
+ * resolve. Only honoured for a single-document run, and never a filename.
+ */
 export async function runStoredPolicy(
   id: string,
   files: File[],
+  fileId?: string,
 ): Promise<string> {
   const form = new FormData();
   for (const file of files) form.append("fileInput", file);
+  if (fileId) form.append("fileId", fileId);
   // Don't set Content-Type: the HTTP client must generate multipart/form-data
   // WITH its boundary from the FormData body. A manual boundary-less header makes
   // the server reject the request ("no multipart boundary parameter").

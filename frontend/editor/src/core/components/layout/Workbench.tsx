@@ -18,6 +18,7 @@ import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import LandingPage from "@app/components/shared/LandingPage";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
 import { ChatFAB } from "@app/components/chat/ChatFAB";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -219,6 +220,12 @@ export default function Workbench() {
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
+      {!hasFiles && !isCustomViewActive && (
+        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
+          <NotificationBell />
+        </div>
+      )}
+
       {/* Workbench Bar - animates in/out based on file presence */}
       {currentView !== "myFiles" &&
         !customWorkbenchViews.find((v) => v.workbenchId === currentView)

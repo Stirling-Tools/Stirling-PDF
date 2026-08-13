@@ -545,7 +545,9 @@ public class PolicyController {
                             + " under 'fileInput', supporting files under 'assets[i].key' /"
                             + " 'assets[i].file' - only for bindings the policy does not already"
                             + " store). Runs regardless of the policy's enabled flag, which only"
-                            + " gates automatic triggering. Returns a run id.")
+                            + " gates automatic triggering. A single-document run may also send its"
+                            + " own opaque 'fileId', which is recorded against any failure so the"
+                            + " caller can resolve it back to that document. Returns a run id.")
     public ResponseEntity<JobResponse<Void>> runStoredPolicy(
             @PathVariable String policyId, @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
@@ -559,7 +561,14 @@ public class PolicyController {
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
         stampPolicyAudit(policy.toDefinition());
         PolicyInputs inputs = toInputs(files);
-        String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
+        String runId =
+                policyRunner
+                        .runWith(
+                                policy,
+                                inputs,
+                                PolicyProgressListener.NOOP,
+                                documentReferenceFor(files, inputs))
+                        .runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
 
@@ -668,6 +677,23 @@ public class PolicyController {
             }
         }
         return new PolicyInputs(primary, supportingFiles);
+    }
+
+    /**
+     * The document reference to record against a failure of this run: the caller's own opaque id,
+     * but only when the run carries exactly one primary document. A recorded incident has a single
+     * file reference, so naming one document out of several would attribute the failure to
+     * whichever happened to be bound first, which is worse than naming none.
+     *
+     * <p>Counted off the resolved inputs rather than the raw multipart list, so an empty part
+     * cannot make a single-document run look like two.
+     */
+    private static String documentReferenceFor(PolicyRunFiles files, PolicyInputs inputs) {
+        String fileId = files.getFileId();
+        if (fileId == null || fileId.isBlank() || inputs.primary().size() != 1) {
+            return null;
+        }
+        return fileId;
     }
 
     private PolicyProgressListener streamListener(SseEmitter emitter) {

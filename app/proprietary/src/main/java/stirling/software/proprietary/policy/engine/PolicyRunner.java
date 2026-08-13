@@ -120,10 +120,22 @@ public class PolicyRunner {
      * Run a stored policy on caller-supplied files (e.g. an editor upload), bypassing its sources.
      * The supplied documents are still counted against the virtual {@link EditorSource}, scoped to
      * the policy's team, so the Sources overview reports the whole team's editor throughput.
+     *
+     * <p>Attended: no source fed this run, which is what later tells its recorded failures apart
+     * from an unattended sweep's.
+     *
+     * @param documentReference the caller's own opaque reference to the single document it is
+     *     running on, or null when it supplied none (or supplied several). Passed through
+     *     untouched, and lands where an unattended run's {@link ResolvedInput#forFile} identity
+     *     does; see {@code PolicyEngine#runPolicy} for how the two are told apart.
      */
     public PolicyRunHandle runWith(
-            Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
-        PolicyRunHandle handle = policyEngine.runPolicy(policy, inputs, listener);
+            Policy policy,
+            PolicyInputs inputs,
+            PolicyProgressListener listener,
+            String documentReference) {
+        PolicyRunHandle handle =
+                policyEngine.runPolicy(policy, inputs, listener, null, documentReference);
         docCounter.record(EditorSource.counterKey(policy.teamId()), inputs.primary().size());
         return handle;
     }

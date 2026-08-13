@@ -11,6 +11,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import stirling.software.proprietary.policy.controller.PolicyRunFiles;
+
 /**
  * The privacy contract: a recorded failure carries no document identity of its own. There is no
  * name column and the dedup key is built only from opaque ids, so nothing here derives from what a
@@ -51,6 +53,18 @@ class RecordFailurePrivacyTest {
         assertThat(List.of(FileRunEventView.class.getRecordComponents()))
                 .extracting(RecordComponent::getName)
                 .doesNotContain("fileName");
+    }
+
+    @Test
+    void theRunRequestThatSuppliesADocumentReferenceCarriesNoNameEither() {
+        // An attended run sends its own opaque reference to the document so a failure of it can be
+        // resolved back to that document. The same discipline applies at the door as in the row: an
+        // id and nothing else, or a document name reaches the wire on the way to a table that
+        // deliberately has nowhere to put it.
+        assertThat(List.of(PolicyRunFiles.class.getDeclaredFields()))
+                .extracting(Field::getName)
+                .contains("fileId")
+                .doesNotContain("fileName", "documentName", "name");
     }
 
     @Test

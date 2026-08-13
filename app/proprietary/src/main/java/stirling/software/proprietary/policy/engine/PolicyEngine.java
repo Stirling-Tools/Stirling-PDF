@@ -151,7 +151,12 @@ public class PolicyEngine {
      * As {@link #runPolicy(Policy, PolicyInputs, PolicyProgressListener)}, recording which source
      * fed the run and its opaque reference to the document. The first says where an unattended
      * failure came from; the second says which document, and is what lets the same document failing
-     * again fold into one incident. Both null for a user's upload.
+     * again fold into one incident.
+     *
+     * <p>An attended run (a user's upload) has no source, and that absence is the discriminator for
+     * the two id spaces {@code fileIdentity} carries: with no source it is the reference the client
+     * minted for its own document, otherwise a source's one-way hash of a path or key. Either way
+     * this engine only carries it, and reads nothing out of it.
      */
     public PolicyRunHandle runPolicy(
             Policy policy,

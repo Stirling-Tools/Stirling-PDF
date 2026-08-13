@@ -1,6 +1,7 @@
 package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -60,14 +61,20 @@ class FileRunEventServiceTest {
     }
 
     private FileRunEvent given(FailureKind kind, Long teamId, String fileId) {
+        return givenHitBy("author@example.com", kind, teamId, fileId);
+    }
+
+    /** As {@link #given} but naming who the incident belongs to, which decides its ownership. */
+    private FileRunEvent givenHitBy(String actor, FailureKind kind, Long teamId, String fileId) {
         return store.record(
                 new RecordFailure(
                         kind,
                         FailureOrigin.POLICY,
                         teamId,
-                        "author@example.com",
+                        actor,
                         "policy-1",
-                        "run-1",
+                        // Distinct per file, so a RUN-scoped kind does not fold two rows into one.
+                        "run-" + fileId,
                         null,
                         fileId,
                         "detail"));
@@ -77,11 +84,30 @@ class FileRunEventServiceTest {
     @DisplayName("acknowledge")
     class Acknowledge {
 
+        /**
+         * No kind offers ACKNOWLEDGE any more, so it cannot be dispatched; the bean stays for rows
+         * that are already {@code ACKNOWLEDGED}. Exercised directly so their transition stays
+         * covered.
+         */
+        private FileRunEvent acknowledge(FileRunEvent event, String actor) {
+            return new AcknowledgeAction(store).execute(event, Map.of(), actor);
+        }
+
+        @Test
+        void isNoLongerOfferedSoItCannotBeDispatched() {
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThatThrownBy(() -> service.dispatch(event.id(), "ACKNOWLEDGE", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ACTION_NOT_DECLARED);
+        }
+
         @Test
         void movesANewEventToAcknowledgedAndStampsTheActor() {
             FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
-            FileRunEvent updated = service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
+            FileRunEvent updated = acknowledge(event, ACTOR);
 
             assertThat(updated.status()).isEqualTo(FileRunEventStatus.ACKNOWLEDGED);
             assertThat(updated.statusActor()).isEqualTo(ACTOR);
@@ -91,15 +117,25 @@ class FileRunEventServiceTest {
         @Test
         void isANoOpWhenAlreadyAcknowledgedSoOwnershipIsNotStolen() {
             FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
-            FileRunEvent first = service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
-            Instant originalAt = first.statusAt();
+            Instant originalAt = acknowledge(event, ACTOR).statusAt();
 
-            when(userService.getCurrentUsername()).thenReturn("someone-else@example.com");
-            FileRunEvent second = service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
+            FileRunEvent second = acknowledge(event, "someone-else@example.com");
 
             assertThat(second.status()).isEqualTo(FileRunEventStatus.ACKNOWLEDGED);
             assertThat(second.statusActor()).isEqualTo(ACTOR);
             assertThat(second.statusAt()).isEqualTo(originalAt);
+        }
+
+        @Test
+        void anAlreadyAcknowledgedRowStaysReadableAndClosable() {
+            // The reason the id and its bean stay: a row in this state predates the retry actions
+            // and must not become a row nobody can act on.
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+            acknowledge(event, ACTOR);
+
+            assertThat(service.list(FileRunEventStatus.ACKNOWLEDGED, null, 10)).hasSize(1);
+            assertThat(service.dispatch(event.id(), "DISMISS", Map.of()).status())
+                    .isEqualTo(FileRunEventStatus.DISMISSED);
         }
     }
 
@@ -118,10 +154,79 @@ class FileRunEventServiceTest {
         @Test
         void closesAnAcknowledgedEvent() {
             FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
-            service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
+            new AcknowledgeAction(store).execute(event, Map.of(), ACTOR);
 
             assertThat(service.dispatch(event.id(), "DISMISS", Map.of()).status())
                     .isEqualTo(FileRunEventStatus.DISMISSED);
+        }
+    }
+
+    @Nested
+    @DisplayName("resolve")
+    class Resolve {
+
+        @Test
+        void marksTheRowResolvedWhenAClientReportsItsRetryWorked() {
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+
+            FileRunEvent resolved = service.resolve(event.id());
+
+            assertThat(resolved.status()).isEqualTo(FileRunEventStatus.RESOLVED);
+            assertThat(resolved.statusActor()).isEqualTo(ACTOR);
+            assertThat(service.list(null, null, 10)).as("resolved work is not open work").isEmpty();
+        }
+
+        @Test
+        void isNotAnActionAnyoneCanPress() {
+            // System-set on a successful client-side retry, so there is no id to dispatch and no
+            // button to render. Stated as a test because the absence is the property.
+            assertThat(Arrays.stream(FailureActionId.values()).map(Enum::name))
+                    .doesNotContain("RESOLVE", "RESOLVED");
+        }
+
+        @Test
+        void reportingTheSameSuccessTwiceIsNotARefusal() {
+            // A client that retries, succeeds and reports twice is telling the truth twice.
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            Instant first = service.resolve(event.id()).statusAt();
+
+            assertThat(service.resolve(event.id()).statusAt()).isEqualTo(first);
+        }
+
+        @Test
+        void aDismissedRowCannotBeResolvedBehindTheReviewersBack() {
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            service.dispatch(event.id(), "DISMISS", Map.of());
+
+            assertThatThrownBy(() -> service.resolve(event.id()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ALREADY_CLOSED);
+        }
+
+        @Test
+        void anotherTeamsRowIsNotFound() {
+            FileRunEvent theirs = given(FailureKind.UNKNOWN, 99L, "f1");
+
+            assertThatThrownBy(() -> service.resolve(theirs.id()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.EVENT_NOT_FOUND);
+        }
+
+        @Test
+        void aRecurrenceReopensIt() {
+            // RESOLVED claims one attempt worked, not that the problem is gone for good.
+            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
+            FileRunEvent event = service.list(null, null, 10).getFirst();
+            service.resolve(event.id());
+
+            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
+
+            assertThat(service.list(null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::status)
+                    .isEqualTo(FileRunEventStatus.NEW);
         }
     }
 
@@ -180,7 +285,7 @@ class FileRunEventServiceTest {
         void anotherTeamsEventIsNotFound() {
             FileRunEvent theirs = given(FailureKind.UNKNOWN, 99L, "f1");
 
-            assertThatThrownBy(() -> service.dispatch(theirs.id(), "ACKNOWLEDGE", Map.of()))
+            assertThatThrownBy(() -> service.dispatch(theirs.id(), "DISMISS", Map.of()))
                     .isInstanceOf(FailureActionException.class)
                     .extracting(e -> ((FailureActionException) e).getReason())
                     .isEqualTo(FailureActionException.Reason.EVENT_NOT_FOUND);
@@ -188,10 +293,44 @@ class FileRunEventServiceTest {
 
         @Test
         void anUnknownEventIdIsNotFound() {
-            assertThatThrownBy(() -> service.dispatch("nope", "ACKNOWLEDGE", Map.of()))
+            assertThatThrownBy(() -> service.dispatch("nope", "DISMISS", Map.of()))
                     .isInstanceOf(FailureActionException.class)
                     .extracting(e -> ((FailureActionException) e).getReason())
                     .isEqualTo(FailureActionException.Reason.EVENT_NOT_FOUND);
+        }
+
+        @Test
+        void anActionTheClientRunsIsRefusedRatherThanPretendedTo() {
+            // UNKNOWN offers RETRY, and the server has neither the document nor the tool. Answering
+            // 200 here would tell the client something was retried when nothing was.
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThatThrownBy(() -> service.dispatch(event.id(), "RETRY", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ACTION_NOT_DISPATCHABLE);
+
+            assertThat(store.find(event.id(), TEAM).orElseThrow().status())
+                    .isEqualTo(FileRunEventStatus.NEW);
+        }
+
+        @Test
+        void everyClientActionIsRefusedWhicheverKindDeclaresIt() {
+            // Asserted over the vocabulary rather than one id, so an action added on the client
+            // side cannot arrive dispatchable because nobody thought to test it.
+            for (FailureKind kind : FailureKind.values()) {
+                FileRunEvent event = given(kind, TEAM, "f-" + kind.getId());
+                for (FailureActionId action : kind.getActions()) {
+                    if (action.runsOnServer()) {
+                        continue;
+                    }
+                    assertThatThrownBy(() -> service.dispatch(event.id(), action.name(), Map.of()))
+                            .as("%s offers %s", kind.getId(), action)
+                            .isInstanceOf(FailureActionException.class)
+                            .extracting(e -> ((FailureActionException) e).getReason())
+                            .isEqualTo(FailureActionException.Reason.ACTION_NOT_DISPATCHABLE);
+                }
+            }
         }
 
         @Test
@@ -231,11 +370,6 @@ class FileRunEventServiceTest {
             FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
             service.dispatch(event.id(), "DISMISS", Map.of());
 
-            assertThatThrownBy(() -> service.dispatch(event.id(), "ACKNOWLEDGE", Map.of()))
-                    .isInstanceOf(FailureActionException.class)
-                    .extracting(e -> ((FailureActionException) e).getReason())
-                    .isEqualTo(FailureActionException.Reason.ALREADY_CLOSED);
-
             assertThatThrownBy(() -> service.dispatch(event.id(), "DISMISS", Map.of()))
                     .isInstanceOf(FailureActionException.class)
                     .extracting(e -> ((FailureActionException) e).getReason())
@@ -244,18 +378,195 @@ class FileRunEventServiceTest {
     }
 
     @Nested
-    @DisplayName("available actions are resolved per row")
-    class Availability {
+    @DisplayName("ownership is derived against whoever is reading")
+    class OwnershipDerivation {
 
         @Test
-        void openRowOffersEveryDeclaredActionEnabled() {
-            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+        void theCallersOwnFailureIsMine() {
+            FileRunEvent mine = givenHitBy(ACTOR, FailureKind.UNKNOWN, TEAM, "f1");
 
-            List<FileRunEventService.AvailableAction> actions = service.availableActions(event);
+            assertThat(service.ownershipOf(mine)).isEqualTo(Ownership.MINE);
+        }
 
-            assertThat(actions).hasSize(2);
-            assertThat(actions).allMatch(FileRunEventService.AvailableAction::enabled);
-            assertThat(actions).allMatch(action -> action.disabledReasonKey() == null);
+        @Test
+        void aColleaguesIsTheirs() {
+            FileRunEvent theirs =
+                    givenHitBy("colleague@example.com", FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThat(service.ownershipOf(theirs)).isEqualTo(Ownership.THEIRS);
+        }
+
+        @Test
+        void anUnattendedRunsIsNobodys() {
+            // A trigger-fired run has no user to name, so there is nobody to hand the fix to.
+            FileRunEvent unattended = givenHitBy(null, FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThat(service.ownershipOf(unattended)).isEqualTo(Ownership.UNOWNED);
+        }
+
+        @Test
+        void theSameRowIsMineToOnePersonAndTheirsToAnother() {
+            // Why it is derived and not stored: one stored answer would be wrong for everyone but
+            // the person it was stored for.
+            FileRunEvent event = givenHitBy(ACTOR, FailureKind.UNKNOWN, TEAM, "f1");
+            assertThat(service.ownershipOf(event)).isEqualTo(Ownership.MINE);
+
+            when(userService.getCurrentUsername()).thenReturn("colleague@example.com");
+
+            assertThat(service.ownershipOf(event)).isEqualTo(Ownership.THEIRS);
+        }
+    }
+
+    @Nested
+    @DisplayName("available actions are resolved per row and per reader")
+    class Availability {
+
+        private List<FailureActionId> offeredFor(FileRunEvent event) {
+            return service.availableActions(event).stream()
+                    .map(FileRunEventService.AvailableAction::id)
+                    .toList();
+        }
+
+        @Test
+        void theOwnerIsOfferedTheFixAndNotTheReviewersView() {
+            // A member reading their own password failure: the unlock is theirs to do, and the
+            // processor view is for whoever reviews the team rather than owns the file.
+            when(authority.canEditPolicies()).thenReturn(false);
+            FileRunEvent mine = givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThat(offeredFor(mine))
+                    .containsExactly(
+                            FailureActionId.DECRYPT_AND_RETRY,
+                            FailureActionId.RETRY,
+                            FailureActionId.VIEW_FILE,
+                            FailureActionId.DISMISS);
+            assertThat(service.availableActions(mine))
+                    .allMatch(FileRunEventService.AvailableAction::enabled);
+        }
+
+        @Test
+        void aReviewerReadingAColleaguesIsNotOfferedThePasswordTheyDoNotHave() {
+            // Dropped rather than disabled: a greyed-out "Decrypt and retry" would read as the
+            // reviewer's permission problem, when it is simply not their document.
+            FileRunEvent theirs =
+                    givenHitBy(
+                            "colleague@example.com",
+                            FailureKind.INPUT_PASSWORD_PROTECTED,
+                            TEAM,
+                            "f1");
+
+            assertThat(offeredFor(theirs))
+                    .containsExactly(FailureActionId.VIEW_IN_PROCESSOR, FailureActionId.DISMISS);
+        }
+
+        @Test
+        void aReviewerInheritsTheOwnerActionsOnAnUnattendedRow() {
+            // Nobody owns it, so without the inheritance the row could only ever be dismissed.
+            FileRunEvent unattended =
+                    givenHitBy(null, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThat(offeredFor(unattended))
+                    .containsExactly(
+                            FailureActionId.DECRYPT_AND_RETRY,
+                            FailureActionId.RETRY,
+                            FailureActionId.VIEW_FILE,
+                            FailureActionId.VIEW_IN_PROCESSOR,
+                            FailureActionId.DISMISS);
+        }
+
+        @Test
+        void inheritedOwnerActionsComeBackDisabledWithTheReasonWhy() {
+            // The file was fed by a folder, bucket or webhook, and re-running it from there is work
+            // that has not landed. Said out loud rather than offered as a button that does nothing.
+            FileRunEvent unattended =
+                    givenHitBy(null, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThat(service.availableActions(unattended))
+                    .filteredOn(action -> action.id() != FailureActionId.DISMISS)
+                    .filteredOn(action -> action.id() != FailureActionId.VIEW_IN_PROCESSOR)
+                    .isNotEmpty()
+                    .allSatisfy(
+                            action -> {
+                                assertThat(action.enabled()).isFalse();
+                                assertThat(action.disabledReasonKey())
+                                        .isEqualTo("portal.failures.disabled.unattended");
+                            });
+        }
+
+        @Test
+        void theReviewersOwnActionsStayUsableOnAnUnattendedRow() {
+            FileRunEvent unattended =
+                    givenHitBy(null, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThat(service.availableActions(unattended))
+                    .filteredOn(
+                            action ->
+                                    action.id() == FailureActionId.DISMISS
+                                            || action.id() == FailureActionId.VIEW_IN_PROCESSOR)
+                    .hasSize(2)
+                    .allMatch(FileRunEventService.AvailableAction::enabled);
+        }
+
+        @Test
+        void theOwnersActionsAreDisabledWhenTheRowNamesNoDocument() {
+            // A row with no document id has nothing to name even for the owner holding the file.
+            // Answered here rather than left to the client, which would otherwise report it "not on
+            // this device" while it sits in their own workbench.
+            FileRunEvent documentless =
+                    givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, null);
+
+            assertThat(service.ownershipOf(documentless)).isEqualTo(Ownership.MINE);
+            assertThat(service.availableActions(documentless))
+                    .filteredOn(action -> action.id() != FailureActionId.DISMISS)
+                    .filteredOn(action -> action.id() != FailureActionId.VIEW_IN_PROCESSOR)
+                    .isNotEmpty()
+                    .allSatisfy(
+                            action -> {
+                                assertThat(action.enabled()).isFalse();
+                                assertThat(action.disabledReasonKey())
+                                        .isEqualTo("portal.failures.disabled.noDocument");
+                            });
+        }
+
+        @Test
+        void aRowThatNamesADocumentKeepsItsOwnerActionsUsable() {
+            FileRunEvent withDocument =
+                    givenHitBy(ACTOR, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThat(service.availableActions(withDocument))
+                    .isNotEmpty()
+                    .allMatch(FileRunEventService.AvailableAction::enabled);
+        }
+
+        @Test
+        void aMemberIsNotOfferedTheOwnerActionsOnAnUnattendedRow() {
+            // The inheritance is the reviewer's, not everybody's. A member has no claim on a run
+            // nobody attended, and cannot see one in the first place.
+            when(authority.canEditPolicies()).thenReturn(false);
+            FileRunEvent unattended =
+                    givenHitBy(null, FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThat(offeredFor(unattended)).containsExactly(FailureActionId.DISMISS);
+        }
+
+        @Test
+        void aLoginDisabledOperatorKeepsTheirOwnActions() {
+            // Its rows are unowned because it has no users, not because nothing attended them, and
+            // the one operator is holding the document. Disabling their retry would be wrong.
+            ApplicationProperties props = new ApplicationProperties();
+            props.getSecurity().setEnableLogin(false);
+            FileRunEventService unsecured =
+                    new FileRunEventService(
+                            store,
+                            new FailureActionRegistry(List.of(new DismissAction(store))),
+                            authority,
+                            userService,
+                            props);
+            FileRunEvent event = givenHitBy(null, FailureKind.INPUT_PASSWORD_PROTECTED, null, "f1");
+
+            assertThat(unsecured.availableActions(event))
+                    .extracting(FileRunEventService.AvailableAction::enabled)
+                    .containsOnly(true);
         }
 
         @Test
@@ -275,21 +586,14 @@ class FileRunEventServiceTest {
         }
 
         @Test
-        void carriesTheKindsOverriddenLabelWhereItHasOne() {
-            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
-
-            assertThat(service.availableActions(event))
-                    .extracting(FileRunEventService.AvailableAction::labelKey)
-                    .contains("portal.failures.action.dismissSkipFile");
-        }
-
-        @Test
-        void fallsBackToTheGenericLabelWhereTheKindDeclaresNoOverride() {
+        void carriesTheLabelKeyForEachOffer() {
             FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
 
             assertThat(service.availableActions(event))
                     .extracting(FileRunEventService.AvailableAction::labelKey)
-                    .containsExactly("portal.failures.action.dismiss");
+                    .containsExactly(
+                            "portal.failures.action.viewInProcessor",
+                            "portal.failures.action.dismiss");
         }
     }
 
@@ -450,7 +754,47 @@ class FileRunEventServiceTest {
             complete.verifyEveryDeclaredActionHasAHandler();
 
             for (FailureActionId id : FailureActionId.values()) {
-                assertThat(complete.find(id)).isPresent();
+                // Only the server's actions need a handler: the rest are run by the client, which
+                // is why the boot check no longer asks about them.
+                assertThat(complete.find(id).isPresent()).isEqualTo(id.runsOnServer());
+            }
+        }
+
+        @Test
+        void doesNotAskForAHandlerForAnActionTheClientRuns() {
+            // Every kind declares client actions, so a registry holding only the server's two must
+            // still boot; otherwise every retry button would need an empty handler beside it.
+            FailureActionRegistry serverOnly =
+                    new FailureActionRegistry(
+                            List.of(new AcknowledgeAction(store), new DismissAction(store)));
+
+            assertThatCode(serverOnly::verifyEveryDeclaredActionHasAHandler)
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void refusesAHandlerForAnActionTheClientRuns() {
+            // It could never be reached: dispatch refuses the id before resolving a handler. A bean
+            // that is never called is worse than no bean, because it reads as though it were.
+            assertThatThrownBy(() -> new FailureActionRegistry(List.of(new ClientSideAction())))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("RETRY");
+        }
+
+        /**
+         * A handler for an action the client runs, which is exactly what must not be registered.
+         */
+        private static final class ClientSideAction implements FailureAction {
+
+            @Override
+            public FailureActionId id() {
+                return FailureActionId.RETRY;
+            }
+
+            @Override
+            public FileRunEvent execute(
+                    FileRunEvent event, Map<String, String> inputs, String actor) {
+                throw new UnsupportedOperationException();
             }
         }
     }

@@ -55,6 +55,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import "@app/components/shared/WorkbenchBar.css";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
 
@@ -663,6 +664,11 @@ export default function WorkbenchBar({
               ? t("workbenchBar.closeAll", "Close All")
               : t("workbenchBar.closePdf", "Close PDF"),
           )}
+
+        {/* Last in the globals, so it is the rightmost control. Workbench floats it instead
+            when the bar is down, so the bell is reachable whether or not a file is open. */}
+        <div className="workbench-bar-divider workbench-bar-globals-sep" />
+        <NotificationBell />
       </div>
     </div>
   );

@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -38,6 +39,7 @@ import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
@@ -84,7 +86,11 @@ class PolicyControllerTest {
 
     @Mock private ProcessedLedger processedLedger;
 
-    @Mock private TempFileManager tempFileManager;
+    // Real, not mocked: the run endpoints spool their uploads through it, and a test that supplies
+    // files needs them to actually land somewhere.
+    private final TempFileManager tempFileManager =
+            new TempFileManager(new TempFileRegistry(), new ApplicationProperties());
+
     @Mock private JobOwnershipService jobOwnershipService;
 
     private ApplicationProperties applicationProperties;
@@ -663,13 +669,49 @@ class PolicyControllerTest {
     @DisplayName("runStoredPolicy")
     class RunStoredPolicy {
 
+        /**
+         * The run files an editor sends: the documents, plus its own id for a single one of them.
+         */
+        private PolicyRunFiles filesWith(String fileId, int documents) {
+            PolicyRunFiles files = new PolicyRunFiles();
+            files.setFileId(fileId);
+            files.setFileInput(
+                    java.util.stream.IntStream.range(0, documents)
+                            .mapToObj(
+                                    i ->
+                                            (org.springframework.web.multipart.MultipartFile)
+                                                    new MockMultipartFile(
+                                                            "fileInput",
+                                                            "doc" + i + ".pdf",
+                                                            "application/pdf",
+                                                            ("pdf-" + i).getBytes()))
+                            .toList());
+            return files;
+        }
+
+        /** The document reference the run was actually started with. */
+        private String documentReferenceOf(PolicyRunFiles files) throws Exception {
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            when(policyRunner.runWith(eq(p), any(), eq(PolicyProgressListener.NOOP), any()))
+                    .thenReturn(handle("run-9"));
+
+            controller.runStoredPolicy("a", files);
+
+            ArgumentCaptor<String> reference = ArgumentCaptor.forClass(String.class);
+            verify(policyRunner)
+                    .runWith(eq(p), any(), eq(PolicyProgressListener.NOOP), reference.capture());
+            return reference.getValue();
+        }
+
         @Test
         @DisplayName("runs a stored, accessible policy")
         void runsStored() throws Exception {
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            when(policyRunner.runWith(eq(p), any(), eq(PolicyProgressListener.NOOP)))
+            when(policyRunner.runWith(eq(p), any(), eq(PolicyProgressListener.NOOP), any()))
                     .thenReturn(handle("run-9"));
 
             ResponseEntity<JobResponse<Void>> response =
@@ -677,6 +719,36 @@ class PolicyControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
             assertThat(response.getBody().getJobId()).isEqualTo("run-9");
+        }
+
+        @Test
+        @DisplayName("records the caller's own id for a single-document run")
+        void carriesTheCallersDocumentReference() throws Exception {
+            // The point of the whole field: a failure of this run names a document the client that
+            // started it can resolve, so the actions that need the bytes are reachable.
+            assertThat(documentReferenceOf(filesWith("editor-file-1", 1)))
+                    .isEqualTo("editor-file-1");
+        }
+
+        @Test
+        @DisplayName("records nothing when the run carries several documents")
+        void refusesToGuessWhichOfSeveralDocumentsItIs() throws Exception {
+            // One incident, one file reference: naming one of several would attribute the
+            // failure to whichever document happened to be bound first.
+            assertThat(documentReferenceOf(filesWith("editor-file-1", 3))).isNull();
+        }
+
+        @Test
+        @DisplayName("records nothing when the caller sent no id")
+        void toleratesACallerThatSendsNoReference() throws Exception {
+            // Every other client (and every older one) keeps working exactly as before.
+            assertThat(documentReferenceOf(filesWith(null, 1))).isNull();
+        }
+
+        @Test
+        @DisplayName("records nothing for a blank id")
+        void treatsABlankReferenceAsNone() throws Exception {
+            assertThat(documentReferenceOf(filesWith("   ", 1))).isNull();
         }
 
         @Test

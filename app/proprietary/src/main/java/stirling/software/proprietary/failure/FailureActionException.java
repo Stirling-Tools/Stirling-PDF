@@ -1,10 +1,13 @@
 package stirling.software.proprietary.failure;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.Getter;
 
 /**
- * Why an action could not be dispatched. Carries a {@link Reason} rather than an HTTP status, so
- * the service stays web-agnostic and the controller owns the mapping.
+ * Why an action could not be dispatched. Thrown carrying a {@link Reason} rather than an HTTP
+ * status, so the service stays web-agnostic and only a controller ever reaches for {@link
+ * #statusOf}.
  */
 @Getter
 public class FailureActionException extends RuntimeException {
@@ -23,13 +26,16 @@ public class FailureActionException extends RuntimeException {
 
         /**
          * The action exists but this kind does not declare it, so an incoherent pairing (releasing
-         * a document whose destination is what failed) cannot be dispatched even by hand.
-         *
-         * <p>Unreachable today: both kinds declare both actions, so no request can trip this guard
-         * until a kind ships with a restricted action set. Declared now because the guard must
-         * exist before that kind does, not after.
+         * a document whose destination is what failed) cannot be dispatched even by hand. Reachable
+         * as of the kinds that stopped offering {@link FailureActionId#ACKNOWLEDGE}.
          */
         ACTION_NOT_DECLARED,
+
+        /**
+         * The kind offers it, but the client is what runs it (see {@link
+         * FailureActionId.Execution#CLIENT}), so it is refused rather than half-performed.
+         */
+        ACTION_NOT_DISPATCHABLE,
 
         /** The event is already closed, so no further transition is possible. */
         ALREADY_CLOSED
@@ -45,5 +51,23 @@ public class FailureActionException extends RuntimeException {
     public FailureActionException(Reason reason, String message, Throwable cause) {
         super(message, cause);
         this.reason = reason;
+    }
+
+    /**
+     * The HTTP status each refusal reason answers with. Lives with the reasons it maps, so the two
+     * surfaces that dispatch actions, the failure queue and the notification bell, cannot drift
+     * apart and a client's error handling does not depend on which one it called.
+     *
+     * <p>A closed row is a conflict rather than a bad request: the request was well-formed and
+     * would have been valid a moment earlier. A missing row is a 404 whether it never existed,
+     * belongs to another team or is a colleague's, so trying does not confirm which.
+     */
+    public static HttpStatus statusOf(Reason reason) {
+        return switch (reason) {
+            case EVENT_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case ACTION_NOT_RECOGNISED, ACTION_NOT_DECLARED, ACTION_NOT_DISPATCHABLE ->
+                    HttpStatus.BAD_REQUEST;
+            case ALREADY_CLOSED -> HttpStatus.CONFLICT;
+        };
     }
 }

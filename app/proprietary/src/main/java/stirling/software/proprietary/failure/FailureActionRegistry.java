@@ -16,6 +16,9 @@ import lombok.extern.slf4j.Slf4j;
  * Resolves a {@link FailureActionId} to the bean that implements it. The startup check is the
  * point: because kinds declare action ids as data, one could name an action nobody implements,
  * which would otherwise show up as a button that 400s rather than as a failed boot.
+ *
+ * <p>Only {@link FailureActionId.Execution#SERVER} ids belong here. A client action has no bean by
+ * design, and a bean for one is refused outright because dispatch could never reach it.
  */
 @Slf4j
 @Service
@@ -25,6 +28,14 @@ public class FailureActionRegistry {
 
     public FailureActionRegistry(List<FailureAction> actions) {
         for (FailureAction action : actions) {
+            if (!action.id().runsOnServer()) {
+                throw new IllegalStateException(
+                        "Action "
+                                + action.id()
+                                + " is run by the client, so "
+                                + action.getClass().getName()
+                                + " could never be dispatched");
+            }
             FailureAction clash = byId.put(action.id(), action);
             if (clash != null) {
                 throw new IllegalStateException(
@@ -39,8 +50,8 @@ public class FailureActionRegistry {
     }
 
     /**
-     * Fail fast if any kind declares an action with no handler, naming every gap rather than the
-     * first, so one boot tells you everything that is missing.
+     * Fail fast if any kind declares a server action with no handler, naming every gap rather than
+     * the first, so one boot tells you everything that is missing.
      */
     @PostConstruct
     void verifyEveryDeclaredActionHasAHandler() {
@@ -49,6 +60,7 @@ public class FailureActionRegistry {
                         .flatMap(
                                 kind ->
                                         kind.getActions().stream()
+                                                .filter(FailureActionId::runsOnServer)
                                                 .filter(action -> !byId.containsKey(action))
                                                 .map(action -> kind.getId() + " -> " + action))
                         .toList();

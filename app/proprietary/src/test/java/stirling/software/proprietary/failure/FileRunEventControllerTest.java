@@ -128,7 +128,9 @@ class FileRunEventControllerTest {
         }
 
         @Test
-        void carriesActionsAlreadyResolvedForTheRow() {
+        void carriesActionsAlreadyResolvedForTheRowAndItsReader() {
+            // A leader reading a colleague's password failure: the unlock is not theirs to do,
+            // so it is not in the list at all.
             given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
             List<FileRunEventView.ActionView> actions =
@@ -136,8 +138,30 @@ class FileRunEventControllerTest {
 
             assertThat(actions)
                     .extracting(FileRunEventView.ActionView::id)
-                    .containsExactlyInAnyOrder("ACKNOWLEDGE", "DISMISS");
+                    .containsExactly("VIEW_IN_PROCESSOR", "DISMISS");
             assertThat(actions).allMatch(FileRunEventView.ActionView::enabled);
+        }
+
+        @Test
+        void carriesEnoughForAClientToRenderAndRouteAnActionItDoesNotKnow() {
+            // The English fallback, which side runs it, and where the kind wants it: everything a
+            // build with no copy for a newly shipped action still needs.
+            given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThat(controller.list(null, null, null).events().getFirst().actions())
+                    .allSatisfy(
+                            action -> {
+                                assertThat(action.defaultLabel()).isNotBlank();
+                                assertThat(action.execution()).isNotNull();
+                            })
+                    .filteredOn(action -> "VIEW_IN_PROCESSOR".equals(action.id()))
+                    .singleElement()
+                    .satisfies(
+                            action -> {
+                                assertThat(action.execution())
+                                        .isEqualTo(FailureActionId.Execution.CLIENT);
+                                assertThat(action.defaultLabel()).isEqualTo("View in processor");
+                            });
         }
 
         @Test
@@ -162,14 +186,18 @@ class FileRunEventControllerTest {
         void filtersByStatusAndByKind() {
             FileRunEvent locked = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "locked");
             given(FailureKind.UNKNOWN, TEAM, "open");
-            controller.act(locked.id(), "ACKNOWLEDGE", null);
+            controller.act(locked.id(), "DISMISS", null);
 
-            assertThat(controller.list(FileRunEventStatus.ACKNOWLEDGED, null, null).events())
-                    .hasSize(1);
-            assertThat(controller.list(null, "INPUT_PASSWORD_PROTECTED", null).events())
+            assertThat(controller.list(FileRunEventStatus.DISMISSED, null, null).events())
                     .extracting(FileRunEventView::fileId)
                     .containsExactly("locked");
-            // Acknowledged is still open work, so it stays in the default queue.
+            // A dismissed row is decided, so the default queue holds only the other one.
+            assertThat(controller.list(null, null, null).events())
+                    .extracting(FileRunEventView::fileId)
+                    .containsExactly("open");
+            assertThat(controller.list(null, "INPUT_PASSWORD_PROTECTED", null).events())
+                    .extracting(FileRunEventView::fileId)
+                    .isEmpty();
             assertThat(controller.list(null, "NO_SUCH_KIND", null).events()).isEmpty();
         }
 
@@ -211,10 +239,47 @@ class FileRunEventControllerTest {
         void appliesADeclaredActionAndReturnsTheUpdatedRow() {
             FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
 
-            FileRunEventView updated = controller.act(event.id(), "ACKNOWLEDGE", null);
+            FileRunEventView updated = controller.act(event.id(), "DISMISS", null);
 
-            assertThat(updated.status()).isEqualTo(FileRunEventStatus.ACKNOWLEDGED);
+            assertThat(updated.status()).isEqualTo(FileRunEventStatus.DISMISSED);
             assertThat(updated.statusActor()).isEqualTo("reviewer@example.com");
+        }
+
+        @Test
+        void anActionTheClientRunsIsABadRequest() {
+            // Offered, and still not the server's to perform: the document is in the browser.
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThat(statusOf(() -> controller.act(event.id(), "RETRY", null)))
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
+        void anActionNoKindOffersAnyMoreIsABadRequest() {
+            // ACKNOWLEDGE is still in the vocabulary for the rows that carry it, and still not
+            // something any kind offers, so posting it is refused rather than applied.
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThat(statusOf(() -> controller.act(event.id(), "ACKNOWLEDGE", null)))
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
+        void recordsAClientSideRetryAsResolved() {
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+
+            FileRunEventView resolved = controller.resolved(event.id());
+
+            assertThat(resolved.status()).isEqualTo(FileRunEventStatus.RESOLVED);
+            assertThat(resolved.statusActor()).isEqualTo("reviewer@example.com");
+        }
+
+        @Test
+        void resolvingAnotherTeamsRowIsNotFound() {
+            FileRunEvent theirs = given(FailureKind.UNKNOWN, 99L, "f1");
+
+            assertThat(statusOf(() -> controller.resolved(theirs.id())))
+                    .isEqualTo(HttpStatus.NOT_FOUND);
         }
 
         @Test
@@ -238,7 +303,7 @@ class FileRunEventControllerTest {
             // 404 rather than 403, so the response does not confirm the row exists.
             FileRunEvent theirs = given(FailureKind.UNKNOWN, 99L, "f1");
 
-            assertThat(statusOf(() -> controller.act(theirs.id(), "ACKNOWLEDGE", null)))
+            assertThat(statusOf(() -> controller.act(theirs.id(), "DISMISS", null)))
                     .isEqualTo(HttpStatus.NOT_FOUND);
         }
 
@@ -248,7 +313,7 @@ class FileRunEventControllerTest {
             FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
             controller.act(event.id(), "DISMISS", null);
 
-            assertThat(statusOf(() -> controller.act(event.id(), "ACKNOWLEDGE", null)))
+            assertThat(statusOf(() -> controller.act(event.id(), "DISMISS", null)))
                     .isEqualTo(HttpStatus.CONFLICT);
         }
     }
@@ -276,7 +341,9 @@ class FileRunEventControllerTest {
 
             assertThat(locked.actions())
                     .extracting(FailureKindView.ActionDeclaration::labelKey)
-                    .contains("portal.failures.action.dismissSkipFile");
+                    .contains(
+                            "portal.failures.action.decryptAndRetry",
+                            "portal.failures.action.dismiss");
         }
 
         @Test

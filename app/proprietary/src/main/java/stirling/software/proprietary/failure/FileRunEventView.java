@@ -60,14 +60,26 @@ public record FileRunEventView(
                 event.lastSeenAt() == null ? 0L : event.lastSeenAt().toEpochMilli());
     }
 
-    /** One button, as offered for this specific row. */
+    /**
+     * One button, as offered to this caller about this row. {@code defaultLabel} and {@code
+     * execution} are here for the reason {@code defaultTitle} is on the row: a client can then
+     * render, and route, an action it was never built with. Declaration order is display order.
+     */
     public record ActionView(
-            String id, String labelKey, boolean enabled, String disabledReasonKey) {
+            String id,
+            String labelKey,
+            String defaultLabel,
+            FailureActionId.Execution execution,
+            boolean enabled,
+            String disabledReasonKey) {
 
-        static ActionView of(FileRunEventService.AvailableAction action) {
+        /** Public because the notification bell projects the same resolved offers. */
+        public static ActionView of(FileRunEventService.AvailableAction action) {
             return new ActionView(
                     action.id().name(),
                     action.labelKey(),
+                    action.id().getDefaultLabel(),
+                    action.id().getExecution(),
                     action.enabled(),
                     action.disabledReasonKey());
         }
