@@ -183,6 +183,20 @@ export function fileContextReducer(
       const remainingIds = state.files.ids.filter(
         (id) => !fileIds.includes(id),
       );
+      // Clear selections that reference removed files
+      const validSelectedFileIds = state.ui.selectedFileIds.filter(
+        (id) => !fileIds.includes(id),
+      );
+
+      // Deleting a library file that was never in the workbench removes nothing
+      // here, and must not re-render every file and UI consumer.
+      const removedFromWorkbench =
+        remainingIds.length !== state.files.ids.length ||
+        fileIds.some((id) => id in state.files.byId);
+      const deselected =
+        validSelectedFileIds.length !== state.ui.selectedFileIds.length;
+      if (!removedFromWorkbench && !deselected) return state;
+
       const newById = { ...state.files.byId };
 
       // Remove files from state (resource cleanup handled by lifecycle manager)
@@ -190,21 +204,14 @@ export function fileContextReducer(
         delete newById[id];
       });
 
-      // Clear selections that reference removed files
-      const validSelectedFileIds = state.ui.selectedFileIds.filter(
-        (id) => !fileIds.includes(id),
-      );
-
       return {
         ...state,
-        files: {
-          ids: remainingIds,
-          byId: newById,
-        },
-        ui: {
-          ...state.ui,
-          selectedFileIds: validSelectedFileIds,
-        },
+        files: removedFromWorkbench
+          ? { ids: remainingIds, byId: newById }
+          : state.files,
+        ui: deselected
+          ? { ...state.ui, selectedFileIds: validSelectedFileIds }
+          : state.ui,
       };
     }
 

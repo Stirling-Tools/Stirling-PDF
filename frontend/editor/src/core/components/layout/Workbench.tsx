@@ -1,7 +1,7 @@
 import { useState, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { Box, Loader, Center } from "@mantine/core";
+import { Box, Loader, Center, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
@@ -44,7 +44,7 @@ export default function Workbench() {
   useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
 
   // Use context-based hooks to eliminate all prop drilling
-  const { files: activeFiles } = useAllFiles();
+  const { files: activeFiles, fileIds } = useAllFiles();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
@@ -134,6 +134,20 @@ export default function Workbench() {
     }
 
     if (activeFiles.length === 0) {
+      // Files are open but their bytes are still loading (a cold PDF engine can
+      // take seconds). Showing the drop zone here reads as "the click did nothing".
+      if (fileIds.length > 0) {
+        return (
+          <Center h="100%" w="100%">
+            <Stack align="center" gap="md">
+              <Loader size="lg" />
+              <Text c="dimmed" size="sm">
+                {t("fileManager.loadingFiles", "Loading files...")}
+              </Text>
+            </Stack>
+          </Center>
+        );
+      }
       return <LandingPage />;
     }
 
