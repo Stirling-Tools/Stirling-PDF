@@ -257,6 +257,14 @@ export default function AdminFormDetectionSection() {
             <Text size="xs" c="dimmed" mt={2}>
               {entry.description}
             </Text>
+            {entry.license ? (
+              // Installing pulls third-party weights whose terms differ per model, so the
+              // admin making that call sees them before choosing, not in a doc somewhere.
+              <Text size="xs" c="dimmed" mt={4}>
+                {t("admin.formDetection.licenseLabel", "Licence")}:{" "}
+                {entry.license}
+              </Text>
+            ) : null}
           </div>
 
           <div style={{ flexShrink: 0 }}>
