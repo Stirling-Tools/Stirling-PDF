@@ -175,7 +175,7 @@ class PdfMarkdownConverterTest {
                     || isTableSeparatorRow(line)) {
                 continue;
             }
-            if (sb.length() > 0) {
+            if (!sb.isEmpty()) {
                 sb.append('\n');
             }
             sb.append(line);

@@ -52,25 +52,21 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
 
-      - name: Cache Gradle dependencies
+      - name: Cache Gradle User Home
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
-            gradle-${{ runner.os }}-
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
-        with:
-          gradle-version: 9.6.1
+            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
+            gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -146,15 +142,21 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - name: Cache Gradle User Home
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          gradle-version: 9.6.1
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
+            gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Setup Node.js
         if: matrix.variant.build_frontend == true
@@ -238,7 +240,7 @@ jobs:
       # before the second setup-java overwrites JAVA_HOME.
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
@@ -250,15 +252,21 @@ jobs:
 
       # Temurin has no windows-aarch64 JDK 25 yet; Microsoft OpenJDK does.
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - name: Cache Gradle User Home
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          gradle-version: 9.6.1
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
+            gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -467,7 +475,7 @@ jobs:
           fi
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -497,7 +505,6 @@ jobs:
           projectPath: ./frontend/editor
           tauriScript: npx tauri
           args: ${{ matrix.args }}
-          updaterJsonKeepUniversal: true
 
       # Bundled libwayland conflicts with the host's on some distros (Fedora
       # Wayland: EGL_BAD_PARAMETER, blank window - #6878). Repack without it,
@@ -872,7 +879,7 @@ jobs:
           PYEOF
 
       - name: Upload merged artifacts for review
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-artifacts
           path: ./artifacts/
@@ -880,10 +887,16 @@ jobs:
 
       # Gate publish on valid updater sigs. Runs after the review upload (so
       # artifacts survive for debugging) and before action-gh-release.
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
       - name: Verify updater signatures
         run: |
-          python3 -m pip install --quiet 'cryptography==44.0.0'
-          python3 .github/scripts/verify-updater-signatures.py \
+          uv run --project engine --locked --only-group updater-signatures python .github/scripts/verify-updater-signatures.py \
             ./artifacts/tauri frontend/editor/src-tauri/tauri.conf.json
 
       # workflow_dispatch path requires platform=='all' so a single-platform
@@ -894,7 +907,7 @@ jobs:
       # instead of silently shipping a broken auto-update.
       - name: Upload binaries to Release
         if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true' && github.event.inputs.platform == 'all') || github.event_name == 'release' || github.ref == 'refs/heads/V2-master'
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           # Don't regenerate/append notes on re-runs, and don't force this into the

@@ -14,13 +14,10 @@ import argparse
 import json
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Summarize Type3 signature JSON dumps."
-    )
+    parser = argparse.ArgumentParser(description="Summarize Type3 signature JSON dumps.")
     parser.add_argument(
         "--input",
         default="docs/type3/signatures",
@@ -34,8 +31,8 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_signatures(directory: Path) -> Dict[str, List[dict]]:
-    inventory: Dict[str, List[dict]] = defaultdict(list)
+def load_signatures(directory: Path) -> dict[str, list[dict]]:
+    inventory: dict[str, list[dict]] = defaultdict(list)
     for path in sorted(directory.glob("*.json")):
         with path.open("r", encoding="utf-8") as handle:
             payload = json.load(handle)
@@ -55,15 +52,12 @@ def load_signatures(directory: Path) -> Dict[str, List[dict]]:
     return inventory
 
 
-def write_markdown(
-    inventory: Dict[str, List[dict]], output: Path, input_dir: Path
-) -> None:
-    lines: List[str] = []
+def write_markdown(inventory: dict[str, list[dict]], output: Path, input_dir: Path) -> None:
+    lines: list[str] = []
     lines.append("# Type3 Signature Inventory")
     lines.append("")
     lines.append(
-        f"_Generated from `{input_dir}`. "
-        "Run `scripts/summarize_type3_signatures.py` after capturing new samples._"
+        f"_Generated from `{input_dir}`. Run `scripts/summarize_type3_signatures.py` after capturing new samples._"
     )
     lines.append("")
 
@@ -76,9 +70,7 @@ def write_markdown(
         for entry in entries:
             signature = entry.get("signature") or "—"
             sample = Path(entry["source"]).name
-            glyph_count = (
-                entry.get("glyphCount") if entry.get("glyphCount") is not None else "—"
-            )
+            glyph_count = entry.get("glyphCount") if entry.get("glyphCount") is not None else "—"
             coverage = entry.get("glyphCoverage") or []
             preview = ", ".join(str(code) for code in coverage[:10])
             lines.append(f"| `{signature}` | `{sample}` | {glyph_count} | {preview} |")

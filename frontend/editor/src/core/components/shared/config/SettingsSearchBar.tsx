@@ -138,7 +138,7 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
           const translationPrefixes = getTranslationPrefixesForNavKey(item.key);
           const translationContent = translationPrefixes.flatMap((prefix) =>
             flattenTranslationStrings(
-              t(prefix, { returnObjects: true, defaultValue: {} } as any),
+              t(prefix, { returnObjects: true, defaultValue: {} }),
             ),
           );
 

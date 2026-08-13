@@ -1103,7 +1103,7 @@ public class PdfMarkdownConverter {
         if (xs.isEmpty()) {
             return List.of(lines);
         }
-        float splitAt = (xs.get(0) + xs.get(xs.size() - 1)) / 2f;
+        float splitAt = (xs.getFirst() + xs.getLast()) / 2f;
         float biggestGap = 0;
         for (int i = 1; i < xs.size(); i++) {
             float gap = xs.get(i) - xs.get(i - 1);
@@ -1680,7 +1680,7 @@ public class PdfMarkdownConverter {
 
         List<List<Line>> anchorGroups = new ArrayList<>();
         List<Line> current = new ArrayList<>();
-        current.add(cands.get(0));
+        current.add(cands.getFirst());
         for (int i = 1; i < cands.size(); i++) {
             float gap = cands.get(i - 1).y - cands.get(i).y;
             if (gap > splitThreshold) {
@@ -1703,8 +1703,8 @@ public class PdfMarkdownConverter {
             if (anchors.size() < 2) {
                 continue;
             }
-            float top = anchors.get(0).y;
-            float bottom = anchors.get(anchors.size() - 1).y;
+            float top = anchors.getFirst().y;
+            float bottom = anchors.getLast().y;
 
             // Each anchor seeds a row; absorb wrapped continuation lines (non-anchors within the
             // run's vertical span, with a little slack below the last row) into the anchor above.
@@ -2194,8 +2194,8 @@ public class PdfMarkdownConverter {
         float minGutter = Math.max(gutterFloor, charWidth * gutterChars);
         List<float[]> merged = new ArrayList<>();
         for (float[] band : columns) {
-            if (!merged.isEmpty() && band[0] - merged.get(merged.size() - 1)[1] < minGutter) {
-                merged.get(merged.size() - 1)[1] = band[1];
+            if (!merged.isEmpty() && band[0] - merged.getLast()[1] < minGutter) {
+                merged.getLast()[1] = band[1];
             } else {
                 merged.add(new float[] {band[0], band[1]});
             }
@@ -2254,7 +2254,7 @@ public class PdfMarkdownConverter {
             }
         }
         StringBuilder sb = new StringBuilder();
-        sb.append(buildGfmRow(rows.get(0), widths, cols)).append('\n');
+        sb.append(buildGfmRow(rows.getFirst(), widths, cols)).append('\n');
         sb.append('|');
         for (int c = 0; c < cols; c++) {
             sb.append('-').append("-".repeat(widths[c])).append('-').append('|');
@@ -2667,8 +2667,8 @@ public class PdfMarkdownConverter {
         }
         // Only merge a sentence continuation between two text paragraphs, never into/out of a
         // table.
-        if (!(output.get(output.size() - 1) instanceof String last)
-                || !(pageItems.get(0) instanceof String first)) {
+        if (!(output.getLast() instanceof String last)
+                || !(pageItems.getFirst() instanceof String first)) {
             return;
         }
         if (!first.isEmpty()
@@ -2695,7 +2695,7 @@ public class PdfMarkdownConverter {
         for (Object e : elements) {
             if (e instanceof TableBlock tb
                     && !out.isEmpty()
-                    && out.get(out.size() - 1) instanceof TableBlock prev) {
+                    && out.getLast() instanceof TableBlock prev) {
                 if (acc == null) {
                     acc = ColumnAccumulator.of(prev.rows());
                 }
@@ -2710,7 +2710,7 @@ public class PdfMarkdownConverter {
                     List<List<Line>> tail = tb.rows();
                     if (!tail.isEmpty()
                             && !prev.rows().isEmpty()
-                            && rowText(tail.get(0)).equals(rowText(prev.rows().get(0)))) {
+                            && rowText(tail.getFirst()).equals(rowText(prev.rows().getFirst()))) {
                         tail = tail.subList(1, tail.size());
                     }
                     for (List<Line> row : tail) {
@@ -2905,7 +2905,7 @@ public class PdfMarkdownConverter {
                 continue;
             }
             if (e instanceof TableBlock tb && !tb.rows().isEmpty()) {
-                return rowText(tb.rows().get(0));
+                return rowText(tb.rows().getFirst());
             }
             return null;
         }
@@ -2917,7 +2917,7 @@ public class PdfMarkdownConverter {
         ordered.sort(Comparator.comparingDouble((Line l) -> l.y).reversed());
         StringBuilder sb = new StringBuilder();
         for (Line l : ordered) {
-            if (sb.length() > 0) {
+            if (!sb.isEmpty()) {
                 sb.append(' ');
             }
             sb.append(l.text);

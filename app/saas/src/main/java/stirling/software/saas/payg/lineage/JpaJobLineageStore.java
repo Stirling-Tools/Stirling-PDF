@@ -75,7 +75,7 @@ public class JpaJobLineageStore implements JobLineageStore {
         List<LineageMatch> matches =
                 hashRepository.findOpenJobsForSignatures(
                         userId, JobStatus.OPEN, since, storageKeys, Limit.of(1));
-        return matches.isEmpty() ? Optional.empty() : Optional.of(matches.get(0));
+        return matches.isEmpty() ? Optional.empty() : Optional.of(matches.getFirst());
     }
 
     @Override
