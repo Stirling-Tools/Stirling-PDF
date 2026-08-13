@@ -3131,6 +3131,14 @@ test.describe("PDF text editor v2 - glyph fallback", () => {
   });
 });
 
+/** Alpha of a computed `rgb()/rgba()` string; 0 when fully transparent. */
+function alphaOf(cssColor: string): number {
+  const m = /rgba?\(([^)]+)\)/.exec(cssColor);
+  if (!m) return 1;
+  const parts = m[1].split(",").map((x) => parseFloat(x.trim()));
+  return parts.length >= 4 ? parts[3] : 1;
+}
+
 test.describe("PDF text editor v2 - typing fidelity", () => {
   test("a clicked run keeps its original ink until it is actually edited", async ({
     page,
@@ -3154,14 +3162,15 @@ test.describe("PDF text editor v2 - typing fidelity", () => {
     // rather than being covered by a CSS approximation of them.
     const clicked = await read();
     expect(clicked.color).toBe("rgba(0, 0, 0, 0)");
-    // The faint selection tint is fine; what must not appear is the opaque
+    // A faint selection tint is fine; what must not appear is the near-opaque
     // mask, which would hide the PDF's own glyphs behind a CSS rendering.
-    expect(clicked.background).toBe("rgba(44, 123, 229, 0.08)");
+    expect(alphaOf(clicked.background)).toBeLessThan(0.5);
 
     await page.keyboard.type("X");
     const typed = await read();
     expect(typed.color).not.toBe("rgba(0, 0, 0, 0)");
-    expect(typed.background).not.toBe("rgba(0, 0, 0, 0)");
+    // Now the text really differs from the bitmap, so it must be masked.
+    expect(alphaOf(typed.background)).toBeGreaterThan(0.5);
     expect(typed.fontFamily.length).toBeGreaterThan(0);
   });
 });
@@ -4833,6 +4842,12 @@ test.describe("PDF text editor v2 - stress: save+reopen multi-cycle", () => {
         test.skip(true, "fixture missing tagline");
         return;
       }
+      // Click through Playwright first: it waits for the overlay node to be
+      // stable, so a re-render can't land between focus and the insert and
+      // swallow the keystroke.
+      const target = page.locator(`[data-testid="v2-run-${id}"]`);
+      await expect(target).toBeVisible({ timeout: 15_000 });
+      await target.click();
       await page.evaluate(
         ({ tid, c }) => {
           const el = document.querySelector<HTMLDivElement>(
