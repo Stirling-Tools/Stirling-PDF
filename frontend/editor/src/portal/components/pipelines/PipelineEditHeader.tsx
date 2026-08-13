@@ -166,10 +166,13 @@ export function PipelineEditHeader({
             : t("portal.pipelines.builder.activate")}
         </Button>
 
+        {/* Run and Reprocess both start a run, so only one at a time: each is disabled while the
+            other is in flight, matching the handler guards (a click otherwise silently no-ops). */}
         <Button
           variant="secondary"
           size="sm"
           loading={running}
+          disabled={reprocessing}
           onClick={onRun}
           leftSection={
             <PlayArrowRoundedIcon style={{ fontSize: "1.125rem" }} />
@@ -192,7 +195,7 @@ export function PipelineEditHeader({
           <Dropdown.Menu>
             <Dropdown.Item
               onSelect={onReprocess}
-              disabled={reprocessing}
+              disabled={reprocessing || running}
               leading={<ReplayRoundedIcon style={{ fontSize: "1.125rem" }} />}
             >
               {t("portal.pipelines.detail.clearHistory")}

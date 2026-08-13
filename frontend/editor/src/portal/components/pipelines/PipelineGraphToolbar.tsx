@@ -6,13 +6,8 @@ import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import { ActionIcon, Button, FilePicker, Spinner } from "@app/ui";
+import { type RunOutputFile } from "@portal/api/pipelines";
 import "@portal/components/pipelines/PipelineGraphToolbar.css";
-
-/** One file a test run produced, downloadable from the result strip. */
-export interface RunOutputFile {
-  fileId: string;
-  fileName: string | null;
-}
 
 /**
  * A test run's outcome. Whole-pipeline, not per-node: the backend reports one flat list of files

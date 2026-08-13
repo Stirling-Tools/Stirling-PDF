@@ -614,30 +614,22 @@ export function PipelineBuilder() {
   }, [seeded, snapshot]);
   const dirty = baseline.current !== null && baseline.current !== snapshot;
 
-  // The input needs a source, and a scheduled input needs a positive interval; the pipeline
-  // needs exactly one output destination.
-  const inputValid =
-    input.sourceId !== "" &&
-    (input.triggerType !== "schedule" || Number(input.scheduleCount) > 0);
+  // Each validity condition is defined exactly once here, then consumed both by the graph (which
+  // flags each end) and by the blocker list below.
+  const sourceChosen = input.sourceId !== "";
+  const scheduleValid =
+    input.triggerType !== "schedule" || Number(input.scheduleCount) > 0;
+  const inputValid = sourceChosen && scheduleValid;
   const outputValid = outputIds.length === 1;
-  const canSave =
-    name.trim() !== "" &&
-    inputValid &&
-    outputValid &&
-    !hasUploadSteps &&
-    !hasUnconfiguredSteps &&
-    !hasIncompatibleSteps &&
-    !submitting;
 
-  // Every reason the pipeline can't be committed yet, in the order they appear down the form, so a
-  // disabled Create / Save button can say exactly what is still owed rather than just refusing.
-  // Mirrors the canSave conditions above (submitting aside - that is transient, not something to fix).
+  // The single source of truth for "can this be committed": every reason it can't be, in the order
+  // they appear down the form, so a disabled Create / Save button can say exactly what is still owed.
   const blockers: string[] = [];
   if (name.trim() === "")
     blockers.push(t("portal.pipelines.builder.blocker.name"));
-  if (input.sourceId === "")
+  if (!sourceChosen)
     blockers.push(t("portal.pipelines.builder.blocker.source"));
-  else if (input.triggerType === "schedule" && Number(input.scheduleCount) <= 0)
+  else if (!scheduleValid)
     blockers.push(t("portal.pipelines.builder.blocker.schedule"));
   if (!outputValid)
     blockers.push(t("portal.pipelines.builder.blocker.destination"));
@@ -659,6 +651,9 @@ export function PipelineBuilder() {
         tools: blockingSteps.join(", "),
       }),
     );
+
+  // Nothing left to fix, and not already committing.
+  const canSave = blockers.length === 0 && !submitting;
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
 
