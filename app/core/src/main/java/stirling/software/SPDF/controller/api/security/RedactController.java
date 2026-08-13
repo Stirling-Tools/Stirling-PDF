@@ -42,6 +42,7 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -226,32 +227,37 @@ public class RedactController {
 
                 TempFile tempOutput = tempFileManager.createManagedTempFile(".pdf");
                 try {
-                    try (PdfDocument checkDoc = PdfDocument.open(tempInput.getFile().toPath())) {
-                        if (checkDoc.pageCount() <= 0) {
-                            throw new IOException("Invalid or empty PDF document");
+                    // PDFium is process-global, so every native handle stays inside one scope.
+                    try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire()) {
+                        try (PdfDocument checkDoc =
+                                PdfDocument.open(tempInput.getFile().toPath())) {
+                            if (checkDoc.pageCount() <= 0) {
+                                throw new IOException("Invalid or empty PDF document");
+                            }
                         }
-                    }
 
-                    log.debug(
-                            "Calling JPDFium PdfRedactor.redact in RedactController (terms={})",
-                            terms);
-                    RedactResult result = PdfRedactor.redact(tempInput.getFile().toPath(), options);
-                    log.debug(
-                            "JPDFium auto-redact complete (matches={})",
-                            result != null ? result.totalMatches() : -1);
-                    if (result == null) {
-                        throw new IOException("JPDFium auto-redact returned null result");
-                    }
-                    try {
-                        result.save(tempOutput.getFile().toPath());
-                        log.info(
-                                "JPDFium auto-redact: {} matches processed into {}",
-                                result.totalMatches(),
-                                filename);
-                        return WebResponseUtils.pdfFileToWebResponse(tempOutput, filename);
-                    } finally {
-                        if (result.document() != null) {
-                            result.document().close();
+                        log.debug(
+                                "Calling JPDFium PdfRedactor.redact in RedactController (terms={})",
+                                terms);
+                        RedactResult result =
+                                PdfRedactor.redact(tempInput.getFile().toPath(), options);
+                        log.debug(
+                                "JPDFium auto-redact complete (matches={})",
+                                result != null ? result.totalMatches() : -1);
+                        if (result == null) {
+                            throw new IOException("JPDFium auto-redact returned null result");
+                        }
+                        try {
+                            result.save(tempOutput.getFile().toPath());
+                            log.info(
+                                    "JPDFium auto-redact: {} matches processed into {}",
+                                    result.totalMatches(),
+                                    filename);
+                            return WebResponseUtils.pdfFileToWebResponse(tempOutput, filename);
+                        } finally {
+                            if (result.document() != null) {
+                                result.document().close();
+                            }
                         }
                     }
                 } catch (Exception e) {

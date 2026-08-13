@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.utils.text.TextFinderUtils;
+import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.redact.PdfRedactor;
 import stirling.software.jpdfium.redact.RedactOptions;
@@ -112,28 +113,32 @@ class TextRedactionService {
                             .glyphAware(true)
                             .build();
 
-            try (PdfDocument checkDoc = PdfDocument.open(tempIn.toPath())) {
-                if (checkDoc.pageCount() <= 0) {
+            RedactResult result;
+            // PDFium is process-global, so every native handle here stays inside one guard scope.
+            try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire()) {
+                try (PdfDocument checkDoc = PdfDocument.open(tempIn.toPath())) {
+                    if (checkDoc.pageCount() <= 0) {
+                        return true;
+                    }
+                }
+
+                log.debug("Calling JPDFium PdfRedactor.redact (terms={})", terms);
+                result = PdfRedactor.redact(tempIn.toPath(), options);
+                log.debug(
+                        "JPDFium PdfRedactor.redact complete (matches={})",
+                        result != null ? result.totalMatches() : -1);
+                if (result == null) {
+                    log.warn(
+                            "JPDFium PdfRedactor.redact returned null result, falling back to box-only redaction mode");
                     return true;
                 }
-            }
 
-            log.debug("Calling JPDFium PdfRedactor.redact (terms={})", terms);
-            RedactResult result = PdfRedactor.redact(tempIn.toPath(), options);
-            log.debug(
-                    "JPDFium PdfRedactor.redact complete (matches={})",
-                    result != null ? result.totalMatches() : -1);
-            if (result == null) {
-                log.warn(
-                        "JPDFium PdfRedactor.redact returned null result, falling back to box-only redaction mode");
-                return true;
-            }
-
-            try {
-                result.save(tempOut.toPath());
-            } finally {
-                if (result.document() != null) {
-                    result.document().close();
+                try {
+                    result.save(tempOut.toPath());
+                } finally {
+                    if (result.document() != null) {
+                        result.document().close();
+                    }
                 }
             }
 
