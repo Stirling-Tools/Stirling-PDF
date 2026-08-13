@@ -109,9 +109,13 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
             )
         ],
     ),
-    ToolEndpoint.PDF_TO_MARKDOWN: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.MARKDOWN, arity=ToolArity.SISO),
+    ToolEndpoint.PDF_TO_MARKDOWN: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.MARKDOWN, arity=ToolArity.SISO
+    ),
     ToolEndpoint.PDF_TO_PDFA: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.PDF_TO_PRESENTATION: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PPT, arity=ToolArity.SISO),
+    ToolEndpoint.PDF_TO_PRESENTATION: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PPT, arity=ToolArity.SISO
+    ),
     ToolEndpoint.PDF_TO_TEXT: ToolIOSpec(
         accepts=[ToolFormat.PDF],
         produces=ToolFormat.TEXT,
@@ -160,24 +164,40 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         ],
     ),
     ToolEndpoint.URL_TO_PDF: ToolIOSpec(accepts=[ToolFormat.NONE], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.VECTOR_TO_PDF: ToolIOSpec(accepts=[ToolFormat.POSTSCRIPT], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.BOOKLET_IMPOSITION: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
+    ToolEndpoint.VECTOR_TO_PDF: ToolIOSpec(
+        accepts=[ToolFormat.POSTSCRIPT], produces=ToolFormat.PDF, arity=ToolArity.SISO
+    ),
+    ToolEndpoint.BOOKLET_IMPOSITION: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
+    ),
     ToolEndpoint.CROP: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.EDIT_TABLE_OF_CONTENTS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
+    ToolEndpoint.EDIT_TABLE_OF_CONTENTS: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
+    ),
     ToolEndpoint.EDIT_TEXT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.MERGE_PDFS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.MISO),
     ToolEndpoint.MULTI_PAGE_LAYOUT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.PDF_TO_SINGLE_PAGE: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
+    ToolEndpoint.PDF_TO_SINGLE_PAGE: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
+    ),
     ToolEndpoint.REARRANGE_PAGES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.REMOVE_IMAGE_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.REMOVE_PAGES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.ROTATE_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.SCALE_PAGES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.SPLIT_BY_SIZE_OR_COUNT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO),
-    ToolEndpoint.SPLIT_FOR_POSTER_PRINT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO),
+    ToolEndpoint.SPLIT_BY_SIZE_OR_COUNT: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO
+    ),
+    ToolEndpoint.SPLIT_FOR_POSTER_PRINT: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO
+    ),
     ToolEndpoint.SPLIT_PAGES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO),
-    ToolEndpoint.SPLIT_PDF_BY_CHAPTERS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO),
-    ToolEndpoint.SPLIT_PDF_BY_SECTIONS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO),
+    ToolEndpoint.SPLIT_PDF_BY_CHAPTERS: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO
+    ),
+    ToolEndpoint.SPLIT_PDF_BY_SECTIONS: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO
+    ),
     ToolEndpoint.ADD_COMMENTS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.ADD_PAGE_NUMBERS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.ADD_STAMP: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
@@ -197,8 +217,12 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.AUTO_SPLIT_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO),
     ToolEndpoint.COMPRESS_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.DELETE_ATTACHMENT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.EXTRACT_ATTACHMENTS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.ZIP, arity=ToolArity.SISO),
-    ToolEndpoint.EXTRACT_IMAGE_SCANS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.IMAGE, arity=ToolArity.SIMO),
+    ToolEndpoint.EXTRACT_ATTACHMENTS: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.ZIP, arity=ToolArity.SISO
+    ),
+    ToolEndpoint.EXTRACT_IMAGE_SCANS: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.IMAGE, arity=ToolArity.SIMO
+    ),
     ToolEndpoint.EXTRACT_IMAGES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.IMAGE, arity=ToolArity.SIMO),
     ToolEndpoint.FLATTEN: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.OCR_PDF: ToolIOSpec(
@@ -216,7 +240,9 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
     ToolEndpoint.REMOVE_BLANKS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO),
     ToolEndpoint.RENAME_ATTACHMENT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.REPAIR: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
-    ToolEndpoint.REPLACE_INVERT_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
+    ToolEndpoint.REPLACE_INVERT_PDF: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
+    ),
     ToolEndpoint.SCANNER_EFFECT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.UNLOCK_PDF_FORMS: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.UPDATE_METADATA: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
