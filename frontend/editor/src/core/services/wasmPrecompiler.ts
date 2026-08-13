@@ -94,10 +94,17 @@ function openWasmCacheDb(): Promise<WasmCacheDb | null> {
         },
         putModule(hash, module) {
           return new Promise((res) => {
-            // IndexedDB stores values via the structured-clone algorithm, so
-            // the WebAssembly.Module is persisted directly (Modules are
-            // structured-cloneable in all Baseline 2026 engines).
-            const req = tx(MODULE_STORE, "readwrite").put(module, hash);
+            // Persist the compiled module keyed by its hash. Storage goes
+            // through IndexedDB's structured-clone algorithm; browsers that
+            // do not support serializing WebAssembly.Module throw a
+            // DataCloneError here, which is handled by the caller.
+            let req: IDBRequest;
+            try {
+              req = tx(MODULE_STORE, "readwrite").put(module, hash);
+            } catch {
+              res();
+              return;
+            }
             req.onsuccess = () => res();
             req.onerror = () => res();
           });

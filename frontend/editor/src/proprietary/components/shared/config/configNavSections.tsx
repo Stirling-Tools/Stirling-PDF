@@ -4,6 +4,7 @@ import {
   useConfigNavSections as useCoreConfigNavSections,
   ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
+import type { ConfigNavItem } from "@app/components/shared/config/types";
 import PeopleSection from "@app/components/shared/config/configSections/PeopleSection";
 import TeamsSection from "@app/components/shared/config/configSections/TeamsSection";
 import AdminGeneralSection from "@app/components/shared/config/configSections/AdminGeneralSection";
@@ -42,7 +43,7 @@ export const useConfigNavSections = (
   const { t } = useTranslation();
 
   // Get the core sections (Preferences + Help)
-  const sections = useCoreConfigNavSections(
+  const coreSections = useCoreConfigNavSections(
     isAdmin,
     runningEE,
     loginEnabled,
@@ -50,26 +51,32 @@ export const useConfigNavSections = (
     showSettingsWhenNoLogin,
   );
 
-  // Add account management under Preferences
-  const preferencesSection = sections.find((section) =>
-    section.items.some((item) => item.key === "general"),
+  // Build a fresh section list per render. The core hook's result is memoized,
+  // so mutating it (push/splice) would accumulate duplicates across renders.
+  const sections: ConfigNavSection[] = coreSections.map((section) =>
+    section.items.some((item) => item.key === "general")
+      ? {
+          ...section,
+          items: [
+            ...section.items.map((item) =>
+              item.key === "general"
+                ? { ...item, component: <GeneralWithLoginLanding /> }
+                : item,
+            ),
+            ...(loginEnabled
+              ? ([
+                  {
+                    key: "account",
+                    label: t("account.accountSettings", "Account"),
+                    icon: "person-rounded",
+                    component: <AccountSection />,
+                  },
+                ] satisfies ConfigNavItem[])
+              : []),
+          ],
+        }
+      : section,
   );
-  if (preferencesSection) {
-    preferencesSection.items = preferencesSection.items.map((item) =>
-      item.key === "general"
-        ? { ...item, component: <GeneralWithLoginLanding /> }
-        : item,
-    );
-
-    if (loginEnabled) {
-      preferencesSection.items.push({
-        key: "account",
-        label: t("account.accountSettings", "Account"),
-        icon: "person-rounded",
-        component: <AccountSection />,
-      });
-    }
-  }
 
   // Add Admin sections for admins. When login is disabled, keep the historical
   // read-only admin preview only if system.showSettingsWhenNoLogin allows it.

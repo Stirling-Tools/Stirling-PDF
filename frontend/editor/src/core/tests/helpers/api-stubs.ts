@@ -236,6 +236,13 @@ export async function mockAppApis(
     route.fulfill({ json: {} }),
   );
 
+  // SaaS team endpoints — catch-all so the landing page's `/team/my` probe
+  // never escapes to the Vite proxy (502 console noise). Specs can override
+  // with a narrower route registered afterwards.
+  await page.route("**/api/v1/team/**", (route: Route) =>
+    route.fulfill({ json: [] }),
+  );
+
   // License info — stubbed so admin settings doesn't log proxy errors
   await page.route("**/api/v1/admin/license-info", (route: Route) =>
     route.fulfill({ json: { licenseType: "FREE", valid: true, maxUsers: 5 } }),

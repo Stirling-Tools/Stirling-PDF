@@ -3,8 +3,7 @@
  * Stirling PDF service worker (module type).
  *
  * Responsibilities:
- *  1. Precache the app shell (injected `self.__WB_MANIFEST` - entry HTML,
- *     JS/CSS bundles, pdfium.wasm, self-hosted fonts).
+ *  1. Precache the app shell (manifest injected at build time).
  *  2. Runtime-cache pdfium/pdfjs/logos with long-lived strategies.
  *  3. Watched Folder retry scheduling (ported from sw-folder-retry.js so there
  *     is exactly ONE controlling service worker per scope).

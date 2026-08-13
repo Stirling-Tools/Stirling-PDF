@@ -1,4 +1,5 @@
-import react from "@vitejs/plugin-react";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
 import fs from "node:fs/promises";
@@ -504,14 +505,13 @@ export default defineConfig(async ({ mode, command }) => {
       // runs independently of Vite's CSS transformer. This lets the transformer
       // stay on lightningcss (Rust) without losing Tailwind's postcss plugin.
       tailwindcss(),
-      // React Compiler (babel-plugin-react-compiler) automatically memoizes
-      // components and hooks. The compiler only runs on project files
-      // (plugin-react excludes node_modules by default). Oxc handles the JSX
-      // transform; Babel handles the compiler pass.
-      react({
-        babel: {
-          plugins: [["babel-plugin-react-compiler", { target: "19" }]],
-        },
+      // React Compiler via the official Vite 8 preset: Oxc handles the JSX
+      // transform (plugin-react), Babel runs only the compiler preset on
+      // project files (node_modules excluded).
+      react(),
+      babel({
+        presets: [reactCompilerPreset({ target: "19" })],
+        exclude: /node_modules/,
       }),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({

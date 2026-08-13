@@ -42,7 +42,7 @@ export default defineConfig({
           }),
         ],
         esbuild: {
-          target: "es2020",
+          target: "es2022",
         },
       },
       {
@@ -62,7 +62,7 @@ export default defineConfig({
           }),
         ],
         esbuild: {
-          target: "es2020",
+          target: "es2022",
         },
       },
       {
@@ -80,7 +80,7 @@ export default defineConfig({
           }),
         ],
         esbuild: {
-          target: "es2020",
+          target: "es2022",
         },
       },
       {
@@ -98,7 +98,7 @@ export default defineConfig({
           }),
         ],
         esbuild: {
-          target: "es2020",
+          target: "es2022",
         },
       },
       {
@@ -122,7 +122,7 @@ export default defineConfig({
           }),
         ],
         esbuild: {
-          target: "es2020",
+          target: "es2022",
         },
       },
       {
@@ -140,12 +140,12 @@ export default defineConfig({
           }),
         ],
         esbuild: {
-          target: "es2020",
+          target: "es2022",
         },
       },
     ],
   },
   esbuild: {
-    target: "es2020",
+    target: "es2022",
   },
 });
