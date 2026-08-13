@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Slider, Text, Group, NumberInput } from "@mantine/core";
 
 interface Props {
@@ -21,9 +22,10 @@ export default function SliderWithInput({
   step = 1,
   suffix = "%",
 }: Props) {
+  const labelId = useId();
   return (
     <div>
-      <Text size="sm" fw={500} mb={8}>
+      <Text id={labelId} size="sm" fw={500} mb={8}>
         {label}
       </Text>
       <Group gap="md" align="center">
@@ -35,6 +37,9 @@ export default function SliderWithInput({
             value={value}
             onChange={onChange}
             disabled={disabled}
+            // Mantine's slider thumb is a div, not an input, so the heading
+            // above cannot name it through a <label> association.
+            thumbLabel={label}
           />
         </div>
         <NumberInput
@@ -46,6 +51,7 @@ export default function SliderWithInput({
           disabled={disabled}
           suffix={suffix}
           style={{ width: 90 }}
+          aria-labelledby={labelId}
         />
       </Group>
     </div>

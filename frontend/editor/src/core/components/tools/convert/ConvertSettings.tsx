@@ -10,9 +10,6 @@ import {
   getAvailableToExtensions as defaultGetAvailableToExtensions,
 } from "@app/utils/convertUtils";
 import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
-import { useFileSelection } from "@app/contexts/FileContext";
-import { useFileState } from "@app/contexts/FileContext";
-import { detectFileExtension } from "@app/utils/fileUtils";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
 import GroupedFormatDropdown from "@app/components/tools/convert/GroupedFormatDropdown";
@@ -50,6 +47,12 @@ interface ConvertSettingsProps {
     fromExtension: string,
   ) => Array<{ value: string; label: string; group: string }>;
   selectedFiles?: StirlingFile[];
+  /**
+   * Called with the newly chosen source format. The editor uses this to select the loaded files
+   * that match; surfaces without loaded files (automation, pipeline builder) simply omit it. Keeping
+   * the file-selection side effect out of here is what lets this component render outside FileContext.
+   */
+  onSourceFormatSelected?: (fromExtension: string) => void;
   disabled?: boolean;
 }
 
@@ -58,13 +61,11 @@ const ConvertSettings = ({
   onParameterChange,
   getAvailableToExtensions = defaultGetAvailableToExtensions,
   selectedFiles = [],
+  onSourceFormatSelected,
   disabled = false,
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const { setSelectedFiles } = useFileSelection();
-  const { state, selectors } = useFileState();
-  const activeFiles = state.files.ids;
   const { preferences } = usePreferences();
 
   const allEndpoints = useMemo(() => {
@@ -235,39 +236,12 @@ const ConvertSettings = ({
     onParameterChange("toExtension", autoTarget);
   };
 
-  const filterFilesByExtension = (extension: string) => {
-    const files = activeFiles
-      .map((fileId) => selectors.getFile(fileId))
-      .filter(Boolean) as StirlingFile[];
-    return files.filter((file) => {
-      const fileExtension = detectFileExtension(file.name);
-
-      if (extension === "any") {
-        return true;
-      } else if (extension === "image") {
-        return isImageFormat(fileExtension);
-      } else {
-        return fileExtension === extension;
-      }
-    });
-  };
-
-  const updateFileSelection = (files: StirlingFile[]) => {
-    const fileIds = files.map((file) => file.fileId);
-    setSelectedFiles(fileIds);
-  };
-
   const handleFromExtensionChange = (value: string) => {
     onParameterChange("fromExtension", value);
     setAutoTargetExtension(value);
     resetParametersToDefaults();
-
-    if (activeFiles.length > 0) {
-      const matchingFiles = filterFilesByExtension(value);
-      updateFileSelection(matchingFiles);
-    } else {
-      updateFileSelection([]);
-    }
+    // Editor-only: let the host select the loaded files matching this source format.
+    onSourceFormatSelected?.(value);
   };
 
   const handleToExtensionChange = (value: string) => {

@@ -1,16 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { policyAccentVar } from "@app/components/policies/policyStatus";
+import { isClassificationCategory } from "@app/data/policyCategories";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
-
-/** How long after a run a badge counts as "recent" (drives the one-off glow).
- *  Measured from run start — must exceed the longest realistic policy wall-clock
- *  time so the glow still fires after a slow run completes and imports. Old or
- *  reloaded runs fall outside this window, suppressing the glow on page reload. */
-const RECENT_MS = 5 * 60 * 1000;
 
 /** Minimal provenance shape needed to resolve a file's inherited badges. */
 type LineageStub = {
@@ -19,14 +14,10 @@ type LineageStub = {
   sourceFileIds?: string[];
 };
 
-/** Merge a ref into a list, deduping by policy id. A direct (recent) hit wins
- *  the glow over an inherited one for the same policy. */
+/** Merge a ref into a list, deduping by policy id. */
 function mergeRef(list: FileItemPolicyRef[], ref: FileItemPolicyRef): void {
-  const existing = list.find((p) => p.id === ref.id);
-  if (!existing) {
+  if (!list.some((p) => p.id === ref.id)) {
     list.push(ref);
-  } else if (ref.recent) {
-    existing.recent = true;
   }
 }
 
@@ -42,21 +33,18 @@ function mergeRef(list: FileItemPolicyRef[], ref: FileItemPolicyRef): void {
  * from: its transitive `sourceFileIds` (recorded at the consume boundary, so it
  * covers split/merge/convert too) plus, defensively, its `parentFileId`.
  * Because `sourceFileIds` is transitive, a flat lookup suffices — no chain walk,
- * and it survives a consumed intermediate. Inherited badges never glow
- * (recent=false): only the original application does.
+ * and it survives a consumed intermediate.
  */
 export function buildPolicyBadgeMap(
   runs: ReadonlyArray<PolicyRunRecord>,
   stubs: ReadonlyArray<LineageStub>,
   labelById: ReadonlyMap<string, string>,
-  now: number,
 ): Map<string, FileItemPolicyRef[]> {
   // Direct badges: a file that IS a policy run's output.
   const directByFile = new Map<string, FileItemPolicyRef[]>();
   for (const run of runs) {
     const name = labelById.get(run.categoryId);
     if (!name) continue;
-    const recent = now - run.startedAt < RECENT_MS;
     for (const fileId of run.outputFileIds ?? []) {
       const list = directByFile.get(fileId) ?? [];
       if (!list.some((p) => p.id === run.categoryId)) {
@@ -64,7 +52,6 @@ export function buildPolicyBadgeMap(
           id: run.categoryId,
           name,
           accentColor: policyAccentVar(run.categoryId),
-          recent,
         });
         directByFile.set(fileId, list);
       }
@@ -86,7 +73,7 @@ export function buildPolicyBadgeMap(
   // from. `sourceFileIds` is the transitive provenance set (so a flat lookup
   // catches even ancestors whose intermediate edits were consumed), and
   // `parentFileId` is included defensively for any child not created via a
-  // consume. Inherited badges are marked recent=false (carried, not applied).
+  // consume.
   for (const stub of stubs) {
     const sources = new Set<string>(stub.sourceFileIds ?? []);
     if (stub.parentFileId) sources.add(stub.parentFileId);
@@ -94,14 +81,17 @@ export function buildPolicyBadgeMap(
       const srcBadges = directByFile.get(src);
       if (!srcBadges?.length) continue;
       const list = result.get(stub.id) ?? [];
-      for (const ref of srcBadges) mergeRef(list, { ...ref, recent: false });
+      for (const ref of srcBadges) mergeRef(list, { ...ref });
       result.set(stub.id, list);
     }
   }
 
   // In-flight pass: add (or upgrade) a badge on the input file for any run that
   // is currently being processed, so the sidebar shows a spinning indicator
-  // while the policy is actively enforcing — not just after it completes.
+  // while the policy is actively running — not just after it completes.
+  // Blocking policies set `enforcing` (which gates actions/overlays);
+  // classification is non-blocking, so it sets `background` instead — same
+  // spinner, but nothing is ever gated on it.
   // Keep the spinner until `imported` is true: the status reaches COMPLETED
   // before the output files are imported into the workspace, so gating on
   // status alone would drop the badge during that async gap.
@@ -112,17 +102,19 @@ export function buildPolicyBadgeMap(
     if (settled && !run.retrying) continue;
     const name = labelById.get(run.categoryId);
     if (!name) continue;
+    const inFlightFlag = isClassificationCategory(run.categoryId)
+      ? ("background" as const)
+      : ("enforcing" as const);
     const list = result.get(run.fileId) ?? [];
     const existing = list.find((p) => p.id === run.categoryId);
     if (existing) {
-      existing.enforcing = true;
+      existing[inFlightFlag] = true;
     } else {
       list.push({
         id: run.categoryId,
         name,
         accentColor: policyAccentVar(run.categoryId),
-        recent: false,
-        enforcing: true,
+        [inFlightFlag]: true,
       });
       result.set(run.fileId, list);
     }
@@ -131,20 +123,70 @@ export function buildPolicyBadgeMap(
   return result;
 }
 
+/** Field-wise equality for a badge ref — the whole shape `PolicyBadges` renders. */
+function sameRef(a: FileItemPolicyRef, b: FileItemPolicyRef): boolean {
+  return (
+    a.id === b.id &&
+    a.name === b.name &&
+    a.accentColor === b.accentColor &&
+    !!a.enforcing === !!b.enforcing &&
+    !!a.background === !!b.background
+  );
+}
+
+function sameRefs(a: FileItemPolicyRef[], b: FileItemPolicyRef[]): boolean {
+  return a.length === b.length && a.every((ref, i) => sameRef(ref, b[i]));
+}
+
+/**
+ * Carry the previous map's array references over to files whose badges didn't
+ * change, and return the previous MAP itself when none did.
+ *
+ * {@link buildPolicyBadgeMap} allocates a fresh array per badged file on every
+ * call, and the run store hands back a new `runs` array on every status poll —
+ * so without this, one file's poll tick gives EVERY badged file a new `policies`
+ * identity, and the memoized sidebar rows can never bail out (the case the
+ * memoization exists for). `NO_POLICIES` in FileSidebar only covers the rows
+ * with no badges at all.
+ */
+export function reusePolicyBadgeArrays(
+  previous: Map<string, FileItemPolicyRef[]> | null,
+  next: Map<string, FileItemPolicyRef[]>,
+): Map<string, FileItemPolicyRef[]> {
+  if (!previous) return next;
+  let changed = previous.size !== next.size;
+  for (const [fileId, refs] of next) {
+    const before = previous.get(fileId);
+    if (before && sameRefs(before, refs)) next.set(fileId, before);
+    else changed = true;
+  }
+  return changed ? next : previous;
+}
+
 /**
  * Distinct policies that have produced each file, keyed by fileId, derived from
  * the reactive policy run store. Drives the file sidebar's shield badges. The
  * badge follows a document down its tool-edit chain — see
  * {@link buildPolicyBadgeMap}. Shadows the core stub via the {@code @app/*}
  * alias cascade.
+ *
+ * Per-file array identity is preserved across rebuilds so memoized consumers
+ * (the sidebar rows) only re-render for the file that actually changed — see
+ * {@link reusePolicyBadgeArrays}.
  */
 export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
   const runs = usePolicyRuns();
   const { fileStubs } = useAllFiles();
+  const previous = useRef<Map<string, FileItemPolicyRef[]> | null>(null);
   return useMemo(() => {
     const labelById = new Map(
       loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
     );
-    return buildPolicyBadgeMap(runs, fileStubs, labelById, Date.now());
+    const map = reusePolicyBadgeArrays(
+      previous.current,
+      buildPolicyBadgeMap(runs, fileStubs, labelById),
+    );
+    previous.current = map;
+    return map;
   }, [runs, fileStubs]);
 }
