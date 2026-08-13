@@ -1,7 +1,6 @@
 import { assistantHandlers } from "@processor/mocks/handlers/assistant";
 import { authHandlers } from "@processor/mocks/handlers/auth";
 import { notificationsHandlers } from "@processor/mocks/handlers/notifications";
-import { searchHandlers } from "@processor/mocks/handlers/search";
 import { pipelinesHandlers } from "@processor/mocks/handlers/pipelines";
 import { sourcesHandlers } from "@processor/mocks/handlers/sources";
 import { infrastructureHandlers } from "@processor/mocks/handlers/infrastructure";
@@ -21,7 +20,6 @@ export const handlers = [
   ...authHandlers,
   ...notificationsHandlers,
   ...assistantHandlers,
-  ...searchHandlers,
   ...pipelinesHandlers,
   ...sourcesHandlers,
   ...infrastructureHandlers,

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { ActionIcon } from "@app/ui";
 import { Sidebar } from "@processor/components/Sidebar";
+import { ProcessorSearchBar } from "@processor/components/ProcessorSearchBar";
 import { useUI } from "@processor/contexts/UIContext";
 import { MenuIcon, SearchIcon } from "@processor/components/icons";
 import { Logo } from "@app/ui/Logo";
@@ -10,12 +11,12 @@ import "@processor/components/AppShell.css";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
- * desktop): hamburger opens the sidebar drawer, search opens the palette
- * (there's no ⌘K on a phone).
+ * desktop): hamburger opens the sidebar drawer, search focuses the global
+ * search bar below (there's no ⌘K on a phone).
  */
 function MobileTopbar() {
   const { t } = useTranslation();
-  const { mobileNavOpen, toggleMobileNav, openSearch } = useUI();
+  const { mobileNavOpen, toggleMobileNav, closeMobileNav } = useUI();
   return (
     <header className="processor-shell__topbar">
       <ActionIcon
@@ -37,7 +38,10 @@ function MobileTopbar() {
         variant="tertiary"
         size="lg"
         aria-label={t("processor.shell.topbar.search")}
-        onClick={openSearch}
+        onClick={() => {
+          closeMobileNav();
+          document.getElementById("processor-search-input")?.focus();
+        }}
       >
         <SearchIcon size={19} />
       </ActionIcon>
@@ -47,9 +51,10 @@ function MobileTopbar() {
 
 /**
  * Two-column layout: fixed-width sidebar on the left, a scrolling main column on
- * the right. Under the mobile breakpoint the sidebar becomes an off-canvas
- * drawer behind a scrim, opened from the topbar hamburger. The Sidebar reads
- * its state from context, so this shell stays prop-free.
+ * the right (topped by the global search bar). Under the mobile breakpoint the
+ * sidebar becomes an off-canvas drawer behind a scrim, opened from the topbar
+ * hamburger. The Sidebar reads its state from context, so this shell stays
+ * prop-free.
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const { mobileNavOpen, closeMobileNav } = useUI();
@@ -83,6 +88,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
       <div className="processor-shell__main">
         <MobileTopbar />
+        <ProcessorSearchBar />
         <main className="processor-shell__view">{children}</main>
       </div>
     </div>
