@@ -379,13 +379,13 @@ ARG UNOSERVER_VERSION=3.6
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     set -eux; \
     apt-get update; \
+    # Security: patch inherited base packages against the Ubuntu archives only. Must run
+    # before the PPA is added, or PPA rebuilds can replace Ubuntu security-team builds.
+    apt-get upgrade -y; \
     # Add LibreOffice Fresh PPA for latest version (26.2.x)
     apt-get install -y --no-install-recommends software-properties-common; \
     add-apt-repository -y ppa:libreoffice/ppa; \
     apt-get update; \
-    # Security: upgrade base-image packages to latest noble patches (reduces deb CVEs
-    # in openssl, perl, libxml2, gnutls, cups, curl, etc. inherited from the runtime base)
-    apt-get upgrade -y; \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
