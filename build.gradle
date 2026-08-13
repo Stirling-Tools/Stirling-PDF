@@ -45,7 +45,7 @@ ext {
     jpdfiumVersion = "1.0.4"
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.44.12"
-    jschVersion = "0.2.23"
+    jschVersion = "2.28.6"
     commonsNetVersion = "3.11.1"
     smbjVersion = "0.14.0"
     tinkVersion = "1.23.0"
@@ -302,8 +302,17 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        jvmArgs '--enable-native-access=ALL-UNNAMED'
         systemProperty 'java.awt.headless', 'true'
         systemProperty 'apple.awt.UIElement', 'true'
+
+        testLogging {
+            events "started", "failed"
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+            exceptionFormat "full"
+        }
         finalizedBy(jacocoReport)
     }
 
