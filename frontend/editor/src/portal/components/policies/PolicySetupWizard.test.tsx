@@ -194,10 +194,10 @@ describe("PolicySetupWizard", () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
-    // Purview is absent: no tenant is connected in this test, so it is never offered.
+    // Purview is absent: no tenant is connected in this test, so it is never offered. Flatten is
+    // absent too: it rasterises pages, which would leave the archive without a text layer.
     expect(result.steps.map((s) => s.operation)).toEqual([
       "/api/v1/security/sanitize-pdf",
-      "/api/v1/misc/flatten",
       "/api/v1/convert/pdf/pdfa",
       "/api/v1/security/validate-compliance",
     ]);
@@ -207,11 +207,11 @@ describe("PolicySetupWizard", () => {
       removeXMPMetadata: true,
       removeFonts: false,
     });
-    expect(result.steps[2].parameters).toMatchObject({
+    expect(result.steps[1].parameters).toMatchObject({
       outputFormat: "pdfa-2b",
     });
     // The gate stops the run by default; a gate that only logged would be decorative.
-    expect(result.steps[3].parameters).toMatchObject({
+    expect(result.steps[2].parameters).toMatchObject({
       standard: "pdfa",
       onViolation: "fail",
     });

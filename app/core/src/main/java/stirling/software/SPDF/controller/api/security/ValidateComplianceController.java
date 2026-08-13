@@ -109,7 +109,10 @@ public class ValidateComplianceController {
         if (!isCompliant(checked, standard)) {
             String detail = buildViolationDetail(standard, checked);
             if (!ON_VIOLATION_WARN.equals(onViolation)) {
-                throw new IOException(detail + "; the run was stopped.");
+                // Typed, not a bare IOException: only an error-coded response reaches the review
+                // surface as a compliance failure rather than an unrecognised one.
+                throw ExceptionUtils.createComplianceNotMetException(
+                        detail + "; the run was stopped.");
             }
             log.warn("{}; continuing because onViolation=warn", detail);
         } else {
@@ -164,7 +167,14 @@ public class ValidateComplianceController {
         if (STANDARD_PDFUA.equals(standard)) {
             return isPdfUa(result);
         }
-        return true;
+        // auto: judge only what the document declares, so one declaring nothing passes.
+        return !isUndeclared(result);
+    }
+
+    // veraPDF reports "the document declares no PDF/A" as a result of its own; under auto that is
+    // not a violation, it is the absence of anything to check.
+    private static boolean isUndeclared(PDFVerificationResult result) {
+        return !result.isDeclaredPdfa() && NOT_PDFA_STANDARD_ID.equals(result.getStandard());
     }
 
     // Names carry the display form ("PDF/UA-1"), ids the veraPDF flavour ("ua1"); check both.

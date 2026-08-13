@@ -220,13 +220,12 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "Strips hidden data, converts to the PDF/A archival format, and validates the result against the standard.",
     rules: ["Strip hidden data", "Convert to PDF/A", "Validate compliance"],
     // Ordered so the gate judges the document that actually ships. Fonts are left alone: PDF/A
-    // requires them embedded.
+    // requires them embedded. No flatten step: it rasterises whole pages, losing the text layer.
     defaultOperations: [
       {
         operation: "sanitize",
         parameters: { removeMetadata: true, removeXMPMetadata: true },
       },
-      { operation: "flatten", parameters: {} },
       { operation: "pdfa", parameters: { outputFormat: "pdfa-2b" } },
       {
         operation: "complianceCheck",

@@ -299,7 +299,8 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.compliance.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    // Gate last, so it judges the document that actually ships.
+    // Gate last, so it judges the document that actually ships. No flatten step: it rasterises
+    // whole pages, and an archive without a text layer is not an archive.
     defaultOperations: [
       // Hidden data is the usual disclosure route: strip scripts, attachments and both metadata
       // streams. Fonts stay - PDF/A requires them embedded.
@@ -307,7 +308,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         removeMetadata: true,
         removeXMPMetadata: true,
       }),
-      policyStep("flatten"),
       policyStep("pdfa"),
       policyStep("purviewApplyLabel"),
       policyStep("complianceCheck"),
