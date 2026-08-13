@@ -10,6 +10,7 @@ import { alert } from "@app/components/toast";
 import type { StirlingFile } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { fileStorage } from "@app/services/fileStorage";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import {
   getShareBundleEntryRootId,
   isZipBundle,
@@ -174,7 +175,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
             }
 
             navActions.setWorkbench("viewer");
-            navigate("/", { replace: true });
+            navigate(EDITOR_BASENAME, { replace: true });
             return;
           }
         }
@@ -210,7 +211,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
         }
 
         navActions.setWorkbench("viewer");
-        navigate("/", { replace: true });
+        navigate(EDITOR_BASENAME, { replace: true });
       } catch (error: unknown) {
         if (signal.aborted) return;
         const status = isAxiosError(error) ? error.response?.status : undefined;
@@ -240,7 +241,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
             expandable: false,
             durationMs: 4500,
           });
-          navigate("/", { replace: true });
+          navigate(EDITOR_BASENAME, { replace: true });
         } else if (status === 404 || status === 410) {
           alert({
             alertType: "error",
@@ -248,7 +249,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
             expandable: false,
             durationMs: 4000,
           });
-          navigate("/", { replace: true });
+          navigate(EDITOR_BASENAME, { replace: true });
         } else {
           alert({
             alertType: "error",
