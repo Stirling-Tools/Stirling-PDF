@@ -74,6 +74,18 @@
 .sui-datatable__th--fit {
   width: 1%;
 }
+/* Accessible-only header text for blank affordance/action columns. */
+.sui-datatable__th-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .sui-datatable__sort {
   display: inline-flex;
@@ -298,7 +310,7 @@
   cursor: pointer;
   font: inherit;
   font-size: 0.75rem;
-  color: var(--c-accent-fg, var(--c-primary));
+  color: var(--c-accent-text);
 }
 .sui-datatable__show-all:hover {
   text-decoration: underline;
@@ -329,7 +341,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  color: var(--c-accent-fg, var(--c-primary));
+  color: var(--c-accent-text);
   text-decoration: none;
   font-weight: 500;
 }

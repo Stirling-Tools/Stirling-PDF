@@ -36,6 +36,10 @@ export interface DataTableColumn<T> {
   sortValue?: (row: T) => SortValue;
   /** Comparator kind, derived from the cell type. Only set when sortable. */
   sortFn?: DataTableSortFn;
+  /** Cell renders its own interactive control (button/link/select/chip). Rows
+   *  containing one drop their `role="button"` so a button never nests inside a
+   *  button - the control is the keyboard path instead. */
+  interactive?: boolean;
   /** Internal, design-system-owned renderer. Call-sites never supply this. */
   renderCell: (row: T) => ReactNode;
 }
@@ -163,6 +167,7 @@ function base<T>(
   extra: Pick<DataTableColumn<T>, "align" | "nowrap" | "fit" | "renderCell"> & {
     sortValue?: (row: T) => SortValue;
     sortFn?: DataTableSortFn;
+    interactive?: boolean;
   },
 ): DataTableColumn<T> {
   return {
@@ -174,6 +179,7 @@ function base<T>(
     sortable: !!o.sortable,
     sortValue: o.sortable ? extra.sortValue : undefined,
     sortFn: o.sortable ? extra.sortFn : undefined,
+    interactive: extra.interactive,
     renderCell: extra.renderCell,
   };
 }
@@ -338,6 +344,7 @@ function caps<T>(
     align: "left",
     nowrap: false,
     fit: false,
+    interactive: true,
     renderCell: (r) => (
       <div className="sui-dtc__labels">
         {o.get(r).map((c) => (
@@ -414,6 +421,7 @@ function actions<T>(o: {
     nowrap: true,
     fit: true,
     sortable: false,
+    interactive: true,
     renderCell: (r) => renderCellActions(o.get(r)),
   };
 }
@@ -464,6 +472,7 @@ function links<T>(o: {
     nowrap: true,
     fit: true,
     sortable: false,
+    interactive: true,
     renderCell: (r) => (
       <div className="sui-dtc__links">
         {o.get(r).map((l) => (
@@ -503,6 +512,7 @@ function select<T>(o: {
     nowrap: true,
     fit: false,
     sortable: false,
+    interactive: true,
     renderCell: (r) => {
       const s = o.get(r);
       const change = o.onChange;

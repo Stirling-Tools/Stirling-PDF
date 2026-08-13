@@ -12,6 +12,7 @@ import {
   tableFeatures,
   useTable,
 } from "@tanstack/react-table";
+import { useTranslation } from "react-i18next";
 import { Skeleton } from "@app/ui/Skeleton";
 import { Tabs } from "@app/ui/Tabs";
 import {
@@ -28,6 +29,9 @@ interface ColumnMeta {
   align: "left" | "right";
   nowrap: boolean;
   fit: boolean;
+  /** Visually-hidden header text for blank affordance/action columns, so the
+   *  column still has an accessible name (avoids axe `empty-table-header`). */
+  srHeader?: string;
 }
 
 /**
@@ -185,6 +189,7 @@ export function DataTable<T extends RowData>({
     showLess: "Show less",
   },
 }: DataTableProps<T>) {
+  const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>(
     defaultSort
       ? [{ id: defaultSort.key, desc: defaultSort.direction === "desc" }]
@@ -227,6 +232,10 @@ export function DataTable<T extends RowData>({
 
   const interactive = Boolean(onRowClick);
   const showChevron = interactive && rowAffordance === "chevron";
+  // A row that holds its own controls (actions/links/select/caps) can't also be
+  // a `role="button"` (a button may not contain interactive descendants); it
+  // keeps the click as a mouse shortcut, and the inner control is the keyboard path.
+  const rowsContainControls = columns.some((c) => c.interactive);
 
   const effectiveColumns = useMemo<DataTableColumn<T>[]>(() => {
     if (!showChevron) return columns;
@@ -252,7 +261,19 @@ export function DataTable<T extends RowData>({
   const tanstackColumns = useMemo<ColumnDef<DataTableFeatures, T>[]>(() => {
     const helper = createColumnHelper<DataTableFeatures, T>();
     return effectiveColumns.map((c) => {
-      const meta: ColumnMeta = { align: c.align, nowrap: c.nowrap, fit: c.fit };
+      // A blank header (trailing affordance/action columns) still needs an
+      // accessible name for assistive tech.
+      const srHeader = c.header
+        ? undefined
+        : c.key === CHEVRON_COLUMN_KEY
+          ? t("common.open", "Open")
+          : t("common.actions", "Actions");
+      const meta: ColumnMeta = {
+        align: c.align,
+        nowrap: c.nowrap,
+        fit: c.fit,
+        srHeader,
+      };
       if (c.sortable && c.sortValue) {
         const sortValue = c.sortValue;
         return helper.accessor((row: T): unknown => sortValue(row), {
@@ -272,7 +293,7 @@ export function DataTable<T extends RowData>({
         meta,
       });
     });
-  }, [effectiveColumns]);
+  }, [effectiveColumns, t]);
 
   const table = useTable({
     features: DATA_TABLE_FEATURES,
@@ -391,6 +412,9 @@ export function DataTable<T extends RowData>({
     body = table.getRowModel().rows.map((row) => {
       const rowInteractive =
         interactive && (isRowInteractive?.(row.original) ?? true);
+      // Only a row that owns the whole interaction takes the button role +
+      // keyboard handling; a row with its own controls keeps just the mouse click.
+      const asButton = rowInteractive && !rowsContainControls;
       return (
         <tr
           key={row.id}
@@ -402,10 +426,10 @@ export function DataTable<T extends RowData>({
           onClick={
             rowInteractive ? () => onRowClick?.(row.original) : undefined
           }
-          tabIndex={rowInteractive ? 0 : undefined}
-          role={rowInteractive ? "button" : undefined}
+          tabIndex={asButton ? 0 : undefined}
+          role={asButton ? "button" : undefined}
           onKeyDown={
-            rowInteractive
+            asButton
               ? (e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
@@ -506,6 +530,10 @@ export function DataTable<T extends RowData>({
                               <SortGlyph />
                             </span>
                           </button>
+                        ) : meta?.srHeader ? (
+                          <span className="sui-datatable__th-sr">
+                            {meta.srHeader}
+                          </span>
                         ) : (
                           label
                         )}
