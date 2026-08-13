@@ -42,6 +42,7 @@ import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.SsrfProtectionService;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -95,13 +96,14 @@ public class ConvertWebsiteToPdfTest {
         when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
         when(pdfDocumentFactory.load(any(File.class))).thenReturn(new PDDocument());
 
-        // Build SUT
+        // Build SUT with the real SSRF service so the shipped defaults are exercised
         sut =
                 new ConvertWebsiteToPDF(
                         pdfDocumentFactory,
                         runtimePathConfig,
                         applicationProperties,
-                        tempFileManager);
+                        tempFileManager,
+                        new SsrfProtectionService(applicationProperties));
 
         // Provide RequestContext for ServletUriComponentsBuilder
         MockHttpServletRequest req = new MockHttpServletRequest();
@@ -350,6 +352,81 @@ public class ConvertWebsiteToPdfTest {
             assertTrue(
                     location.getQuery() != null
                             && location.getQuery().contains("error=error.disallowedUrlContent"));
+        }
+    }
+
+    private void assertRejectedForContent(String html) throws Exception {
+        UrlToPdfRequest request = new UrlToPdfRequest();
+        request.setUrlInput("https://example.com");
+
+        try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
+                MockedStatic<HttpClient> httpClient = mockHttpClientReturning(html)) {
+
+            gu.when(() -> GeneralUtils.isValidURL("https://example.com")).thenReturn(true);
+            gu.when(() -> GeneralUtils.isURLReachable("https://example.com")).thenReturn(true);
+
+            ResponseEntity<?> resp = sut.urlToPdf(request);
+
+            assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
+            URI location = resp.getHeaders().getLocation();
+            assertNotNull(location, "Location header expected");
+            assertTrue(
+                    location.getQuery() != null
+                            && location.getQuery().contains("error=error.disallowedUrlContent"));
+        }
+    }
+
+    @Test
+    void redirect_with_error_when_resource_targets_loopback() throws Exception {
+        assertRejectedForContent("<img src=\"http://127.0.0.1:9000/secret.png\">");
+    }
+
+    @Test
+    void redirect_with_error_when_stylesheet_targets_cloud_metadata() throws Exception {
+        assertRejectedForContent(
+                "<link rel=\"stylesheet\" href=\"http://169.254.169.254/latest/meta-data/\">");
+    }
+
+    @Test
+    void redirect_with_error_when_css_url_targets_private_network() throws Exception {
+        assertRejectedForContent("<style>body{background:url('http://10.1.2.3/x.png')}</style>");
+    }
+
+    @Test
+    void redirect_with_error_when_resource_uses_non_http_scheme() throws Exception {
+        assertRejectedForContent("<img src=\"ftp://files.example.com/x.png\">");
+    }
+
+    @Test
+    void data_uri_and_same_host_resources_are_still_converted() throws Exception {
+        // public IP literal as base keeps the SSRF check DNS-free
+        String url = "https://93.184.215.14/page.html";
+        UrlToPdfRequest request = new UrlToPdfRequest();
+        request.setUrlInput(url);
+
+        String html =
+                "<img src=\"data:image/png;base64,AAAA\"><img src=\"/logo.png\">"
+                        + "<rect fill=\"url(#grad)\"/>";
+
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
+                MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
+                MockedStatic<HttpClient> httpClient = mockHttpClientReturning(html)) {
+
+            gu.when(() -> GeneralUtils.isValidURL(url)).thenReturn(true);
+            gu.when(() -> GeneralUtils.isURLReachable(url)).thenReturn(true);
+            gu.when(() -> GeneralUtils.convertToFileName(anyString())).thenReturn("page");
+            gu.when(() -> GeneralUtils.generateFilename(anyString(), anyString()))
+                    .thenAnswer(inv -> inv.<String>getArgument(0) + inv.<String>getArgument(1));
+
+            ProcessExecutor mockExec = Mockito.mock(ProcessExecutor.class);
+            pe.when(() -> ProcessExecutor.getInstance(Processes.WEASYPRINT)).thenReturn(mockExec);
+            ProcessExecutorResult dummyResult = Mockito.mock(ProcessExecutorResult.class);
+            when(mockExec.runCommandWithOutputHandling(Mockito.<List>any()))
+                    .thenReturn(dummyResult);
+
+            ResponseEntity<?> resp = sut.urlToPdf(request);
+
+            assertEquals(HttpStatus.OK, resp.getStatusCode());
         }
     }
 }

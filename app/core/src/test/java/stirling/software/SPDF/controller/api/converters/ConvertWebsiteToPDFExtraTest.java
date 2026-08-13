@@ -1,6 +1,8 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -18,6 +20,7 @@ import org.mockito.quality.Strictness;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.SsrfProtectionService;
 import stirling.software.common.util.TempFileManager;
 
 /**
@@ -33,6 +36,7 @@ class ConvertWebsiteToPDFExtraTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private TempFileManager tempFileManager;
+    @Mock private SsrfProtectionService ssrfProtectionService;
 
     private ConvertWebsiteToPDF sut;
 
@@ -43,7 +47,8 @@ class ConvertWebsiteToPDFExtraTest {
                         pdfDocumentFactory,
                         runtimePathConfig,
                         new ApplicationProperties(),
-                        tempFileManager);
+                        tempFileManager,
+                        ssrfProtectionService);
     }
 
     private boolean containsDisallowed(String html) throws Exception {
@@ -52,6 +57,14 @@ class ConvertWebsiteToPDFExtraTest {
                         "containsDisallowedUriScheme", String.class);
         m.setAccessible(true);
         return (boolean) m.invoke(sut, html);
+    }
+
+    private boolean containsBlockedResource(String html) throws Exception {
+        Method m =
+                ConvertWebsiteToPDF.class.getDeclaredMethod(
+                        "containsBlockedResourceReference", String.class, String.class);
+        m.setAccessible(true);
+        return (boolean) m.invoke(sut, html, "https://example.com/page.html");
     }
 
     private String percentDecode(String content) throws Exception {
@@ -126,6 +139,118 @@ class ConvertWebsiteToPDFExtraTest {
         void wordBoundaryGuard() throws Exception {
             // the (?<![a-z0-9_]) lookbehind prevents matching the 'file' inside 'profile'
             assertThat(containsDisallowed("<span>profile://something</span>")).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("containsBlockedResourceReference")
+    class BlockedResourceReference {
+
+        @Test
+        @DisplayName("null and empty content are allowed")
+        void nullAndEmpty() throws Exception {
+            assertThat(containsBlockedResource(null)).isFalse();
+            assertThat(containsBlockedResource("")).isFalse();
+        }
+
+        @Test
+        @DisplayName("a relative image on an allowed host passes")
+        void relativeImageAllowed() throws Exception {
+            when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(true);
+            assertThat(containsBlockedResource("<img src=\"/assets/logo.png\">")).isFalse();
+        }
+
+        @Test
+        @DisplayName("a relative image is resolved against the page base url before checking")
+        void relativeImageResolvedAgainstBase() throws Exception {
+            when(ssrfProtectionService.isUrlAllowed("https://example.com/assets/logo.png"))
+                    .thenReturn(false);
+            assertThat(containsBlockedResource("<img src=\"assets/logo.png\">")).isTrue();
+        }
+
+        @Test
+        @DisplayName("an absolute resource rejected by the SSRF service blocks the conversion")
+        void blockedAbsoluteResource() throws Exception {
+            when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
+            assertThat(containsBlockedResource("<img src=\"http://169.254.169.254/latest/\">"))
+                    .isTrue();
+        }
+
+        @Test
+        @DisplayName("a stylesheet link is checked as well as images")
+        void stylesheetLinkChecked() throws Exception {
+            when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
+            assertThat(
+                            containsBlockedResource(
+                                    "<link rel=\"stylesheet\" href=\"http://127.0.0.1/a.css\">"))
+                    .isTrue();
+        }
+
+        @Test
+        @DisplayName("a css url() reference is checked")
+        void cssUrlChecked() throws Exception {
+            when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
+            assertThat(containsBlockedResource("<style>body{background:url('http://10.0.0.1/x')}"))
+                    .isTrue();
+        }
+
+        @Test
+        @DisplayName("a bare @import is checked")
+        void cssImportChecked() throws Exception {
+            when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
+            assertThat(containsBlockedResource("<style>@import \"http://10.0.0.1/x.css\";</style>"))
+                    .isTrue();
+        }
+
+        @Test
+        @DisplayName(
+                "a non-http scheme is rejected by the allowlist without consulting the service")
+        void nonHttpSchemeRejected() throws Exception {
+            assertThat(containsBlockedResource("<img src=\"ftp://files.example.com/x.png\">"))
+                    .isTrue();
+        }
+
+        @Test
+        @DisplayName("an entity-obfuscated scheme is decoded before the allowlist check")
+        void obfuscatedSchemeRejected() throws Exception {
+            assertThat(containsBlockedResource("<img src=\"gopher&colon;&sol;&sol;x/\">")).isTrue();
+        }
+
+        @Test
+        @DisplayName("data uris and fragments are allowed")
+        void dataUriAndFragmentAllowed() throws Exception {
+            when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(true);
+            assertThat(
+                            containsBlockedResource(
+                                    "<img src=\"data:image/png;base64,AAAA\">"
+                                            + "<rect fill=\"url(#grad)\"/>"))
+                    .isFalse();
+        }
+
+        @Test
+        @DisplayName("srcset descriptors are stripped before checking")
+        void srcsetDescriptorsStripped() throws Exception {
+            // only the bare url is stubbed, so a retained '1x' descriptor would fail the check
+            when(ssrfProtectionService.isUrlAllowed("https://example.com/a.png")).thenReturn(true);
+            assertThat(containsBlockedResource("<img srcset=\"/a.png 1x\">")).isFalse();
+        }
+
+        @Test
+        @DisplayName("each distinct host is checked once")
+        void distinctHostsChecked() throws Exception {
+            when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(true);
+            when(ssrfProtectionService.isUrlAllowed("http://10.0.0.1/b.png")).thenReturn(false);
+            assertThat(
+                            containsBlockedResource(
+                                    "<img src=\"/a.png\"><img src=\"http://10.0.0.1/b.png\">"))
+                    .isTrue();
+        }
+
+        @Test
+        @DisplayName("anchor hrefs are not treated as fetched resources")
+        void anchorHrefIgnored() throws Exception {
+            assertThat(containsBlockedResource("<a href=\"mailto:someone@example.com\">mail</a>"))
+                    .isFalse();
         }
     }
 
