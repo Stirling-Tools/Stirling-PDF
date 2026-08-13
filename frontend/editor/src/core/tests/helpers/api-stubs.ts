@@ -130,7 +130,7 @@ export interface MockAppApiOptions {
     role?: string;
     /** Portal (Processor) access flag — gates the super search's Processor lanes. */
     portalAccess?: boolean;
-  };
+  } | null;
   /** Languages advertised by `/config/app-config`. */
   languages?: string[];
   /** Default locale. */
