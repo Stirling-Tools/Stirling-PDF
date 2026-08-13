@@ -22,14 +22,13 @@ final class TableSpans {
 
     /** Restricts the banner-row merge to rows whose text starts at column 0. */
     private static final boolean BANNER_FROM_FIRST_COLUMN =
-            Boolean.parseBoolean(System.getProperty("stirling.md.bannerFirstColumn", "true"));
+            MdTuning.flag("stirling.md.bannerFirstColumn", true);
 
     /**
      * Off by default: measured against ground truth it mostly fires on tables this converter
      * over-segmented, not on spans the page drew.
      */
-    private static final boolean BANNER_ROW =
-            Boolean.parseBoolean(System.getProperty("stirling.md.bannerRow", "false"));
+    private static final boolean BANNER_ROW = MdTuning.flag("stirling.md.bannerRow", false);
 
     /** One cell of a span-aware grid. {@code null} marks a position covered by another cell. */
     record Cell(String text, int colspan, int rowspan) {}

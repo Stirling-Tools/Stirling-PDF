@@ -62,20 +62,16 @@ final class HeadingDetector {
     private static final float H2_RATIO = 1.3f;
 
     /** Ablation switch: when false only the original size-only rules apply. */
-    private static final boolean ENABLED =
-            Boolean.parseBoolean(System.getProperty("stirling.md.headings", "true"));
+    private static final boolean ENABLED = MdTuning.flag("stirling.md.headings", true);
 
     /** Ablation switch for the run-on-sentence guard. */
-    private static final boolean RUN_ON_GUARD =
-            Boolean.parseBoolean(System.getProperty("stirling.md.runOnGuard", "true"));
+    private static final boolean RUN_ON_GUARD = MdTuning.flag("stirling.md.runOnGuard", true);
 
     /** Ablation switch for extending the run-on guard to bold emphasis. */
-    private static final boolean RUN_ON_BOLD =
-            Boolean.parseBoolean(System.getProperty("stirling.md.runOnBold", "true"));
+    private static final boolean RUN_ON_BOLD = MdTuning.flag("stirling.md.runOnBold", true);
 
     /** Ablation switch: promote an isolated, all-capitals, numbered clause. */
-    private static final boolean ALL_CAPS_HEADINGS =
-            Boolean.parseBoolean(System.getProperty("stirling.md.allCaps", "true"));
+    private static final boolean ALL_CAPS_HEADINGS = MdTuning.flag("stirling.md.allCaps", true);
 
     /**
      * A section number ending in a period. Stricter than {@link #CLAUSE}: this rule has no

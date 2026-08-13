@@ -51,8 +51,7 @@ public class PdfMarkdownConverter {
      * Fraction of the word-grid's rows a ruled grid must also find before its rows are trusted;
      * below it the table is only partly ruled and its rules would merge several rows into one band.
      */
-    private static final float COMPLETE_LATTICE =
-            Float.parseFloat(System.getProperty("stirling.md.completeLattice", "0.5"));
+    private static final float COMPLETE_LATTICE = MdTuning.num("stirling.md.completeLattice", 0.5f);
 
     /** Fraction of the page's text width a table must span to override two-column layout. */
     private static final float FULL_WIDTH = 0.6f;
@@ -62,16 +61,13 @@ public class PdfMarkdownConverter {
     // property to restore the older behaviour.
 
     /** {@code placeholder} (the default), {@code none}, or {@code reference}. */
-    private static final String IMAGE_MODE =
-            System.getProperty("stirling.md.imageMode", "placeholder");
+    private static final String IMAGE_MODE = MdTuning.text("stirling.md.imageMode", "placeholder");
 
     /** Emit AcroForm field values that live only in {@code /V}. */
-    private static final boolean FORM_VALUES =
-            Boolean.parseBoolean(System.getProperty("stirling.md.formValues", "true"));
+    private static final boolean FORM_VALUES = MdTuning.flag("stirling.md.formValues", true);
 
     /** Detect tables from the page's drawn ruling lines as well as from word geometry. */
-    private static final boolean RULED_TABLES =
-            Boolean.parseBoolean(System.getProperty("stirling.md.ruledTables", "true"));
+    private static final boolean RULED_TABLES = MdTuning.flag("stirling.md.ruledTables", true);
 
     /** How a detected table is written out. */
     private enum TableFormat {
@@ -84,33 +80,29 @@ public class PdfMarkdownConverter {
     }
 
     private static final TableFormat TABLE_FORMAT =
-            switch (System.getProperty("stirling.md.tableFormat", "pipe")
-                    .toLowerCase(Locale.ROOT)) {
+            switch (MdTuning.text("stirling.md.tableFormat", "pipe").toLowerCase(Locale.ROOT)) {
                 case "html" -> TableFormat.HTML;
                 case "auto" -> TableFormat.AUTO;
                 default -> TableFormat.PIPE;
             };
 
     /** Use the page's ruling lines to decide where cells are merged, not the grid's shape alone. */
-    private static final boolean SPAN_GEOMETRY =
-            Boolean.parseBoolean(System.getProperty("stirling.md.spanGeometry", "true"));
+    private static final boolean SPAN_GEOMETRY = MdTuning.flag("stirling.md.spanGeometry", true);
 
     /** Drop U+00AD and rejoin extractor line fragments that are really one visual line. */
-    private static final boolean TEXT_REPAIR =
-            Boolean.parseBoolean(System.getProperty("stirling.md.textRepair", "true"));
+    private static final boolean TEXT_REPAIR = MdTuning.flag("stirling.md.textRepair", true);
 
     /** Half of {@link #TEXT_REPAIR}: strip the discretionary hyphen U+00AD. */
     private static final boolean SOFT_HYPHEN_FIX =
-            TEXT_REPAIR || Boolean.parseBoolean(System.getProperty("stirling.md.softHyphen", "f"));
+            TEXT_REPAIR || MdTuning.flag("stirling.md.softHyphen", false);
 
     /** Ablation: judge headings on the first fragment's text rather than the merged line's. */
     private static final boolean DETECT_ON_FRAGMENT =
-            Boolean.parseBoolean(System.getProperty("stirling.md.detectOnFragment", "false"));
+            MdTuning.flag("stirling.md.detectOnFragment", false);
 
     /** Half of {@link #TEXT_REPAIR}: rejoin same-baseline extractor line fragments. */
     private static final boolean MERGE_FRAGMENTS =
-            TEXT_REPAIR
-                    || Boolean.parseBoolean(System.getProperty("stirling.md.mergeFragments", "f"));
+            TEXT_REPAIR || MdTuning.flag("stirling.md.mergeFragments", false);
 
     public String convert(PdfDocument doc) throws IOException {
         List<String> rendered = new ArrayList<>();
@@ -532,8 +524,7 @@ public class PdfMarkdownConverter {
     private static final float NO_SPACE_GAP = 0.30f;
 
     /** Gap above this many average character widths is a real layout gap, so never merged. */
-    private static final float MAX_MERGE_GAP =
-            Float.parseFloat(System.getProperty("stirling.md.maxMergeGap", "1.60"));
+    private static final float MAX_MERGE_GAP = MdTuning.num("stirling.md.maxMergeGap", 1.60f);
 
     /**
      * Rejoins extractor fragments that are really one visual line: PDFium splits on bounding box,
@@ -797,24 +788,19 @@ public class PdfMarkdownConverter {
     // --- Column detection ---------------------------------------------------
 
     /** Ablation switch: off restores the older central-band two-column guard. */
-    private static final boolean GUTTER_SCAN =
-            Boolean.parseBoolean(System.getProperty("stirling.md.gutterScan", "true"));
+    private static final boolean GUTTER_SCAN = MdTuning.flag("stirling.md.gutterScan", true);
 
     /** Order a multi-column page by horizontal band, so a spanning line splits the columns. */
-    private static final boolean BAND_ORDER =
-            Boolean.parseBoolean(System.getProperty("stirling.md.bandOrder", "true"));
+    private static final boolean BAND_ORDER = MdTuning.flag("stirling.md.bandOrder", true);
 
     /** Narrowest run of near-empty x that can separate two columns of prose. */
-    private static final float MIN_GUTTER =
-            Float.parseFloat(System.getProperty("stirling.md.minGutter", "10"));
+    private static final float MIN_GUTTER = MdTuning.num("stirling.md.minGutter", 10f);
 
     /** Narrowest column worth splitting out; below this a "gutter" is just a ragged margin. */
-    private static final float MIN_COLUMN =
-            Float.parseFloat(System.getProperty("stirling.md.minColumn", "70"));
+    private static final float MIN_COLUMN = MdTuning.num("stirling.md.minColumn", 70f);
 
     /** Fraction of a page's lines that may cross a gutter and still leave it a gutter. */
-    private static final float MAX_CROSSING =
-            Float.parseFloat(System.getProperty("stirling.md.maxCrossing", "0.15"));
+    private static final float MAX_CROSSING = MdTuning.num("stirling.md.maxCrossing", 0.15f);
 
     /** Most columns recognised on one page. Beyond this the geometry is a table, not a layout. */
     private static final int MAX_COLUMNS = 4;
@@ -902,7 +888,7 @@ public class PdfMarkdownConverter {
 
     /** Fall back to the central-band verdict when the projection finds no gutter. */
     private static final boolean FALLBACK_GUTTER =
-            Boolean.parseBoolean(System.getProperty("stirling.md.fallbackGutter", "true"));
+            MdTuning.flag("stirling.md.fallbackGutter", true);
 
     /**
      * Rejects page geometry too wide to be real: past 2^24 a float cannot represent x + 1, so a
@@ -948,12 +934,10 @@ public class PdfMarkdownConverter {
     }
 
     /** Lines of at least this fraction of a column's width count as that column's body text. */
-    private static final float BODY_LINE_WIDTH =
-            Float.parseFloat(System.getProperty("stirling.md.bodyLineWidth", "0.5"));
+    private static final float BODY_LINE_WIDTH = MdTuning.num("stirling.md.bodyLineWidth", 0.5f);
 
     /** Body lines a column must hold before it is accepted as a column. */
-    private static final int BODY_LINES =
-            Integer.parseInt(System.getProperty("stirling.md.bodyLines", "4"));
+    private static final int BODY_LINES = MdTuning.count("stirling.md.bodyLines", 4);
 
     /**
      * True when every carved-out column reads as running text. The projection alone cannot tell
@@ -1089,8 +1073,7 @@ public class PdfMarkdownConverter {
     }
 
     /** Fraction of the finished lines that may straddle a gutter and still allow band ordering. */
-    private static final float BAND_CROSSING =
-            Float.parseFloat(System.getProperty("stirling.md.bandCrossing", "0.35"));
+    private static final float BAND_CROSSING = MdTuning.num("stirling.md.bandCrossing", 0.35f);
 
     /** Fallback column split: cut at the widest gap between the lines' left edges. */
     private static List<List<Line>> legacySplit(List<Line> lines) {
@@ -1130,8 +1113,7 @@ public class PdfMarkdownConverter {
      * Keep a run of gutter-spanning lines in one group: a full-width banner heading is several
      * lines, and one group each would break it into that many paragraphs.
      */
-    private static final boolean SPAN_RUNS =
-            Boolean.parseBoolean(System.getProperty("stirling.md.spanRuns", "true"));
+    private static final boolean SPAN_RUNS = MdTuning.flag("stirling.md.spanRuns", true);
 
     /** Longest a line may be and still be a line of a heading rather than of a paragraph. */
     private static final int HEADING_LENGTH_WORDS = 12;
@@ -1311,11 +1293,10 @@ public class PdfMarkdownConverter {
 
     /** Ablation switch for refusing to promote a list item to a heading. */
     private static final boolean BULLET_NEVER_HEADING =
-            Boolean.parseBoolean(System.getProperty("stirling.md.bulletNeverHeading", "true"));
+            MdTuning.flag("stirling.md.bulletNeverHeading", true);
 
     /** Ablation switch for the wider list-marker set. */
-    private static final boolean WIDE_BULLETS =
-            Boolean.parseBoolean(System.getProperty("stirling.md.wideBullets", "true"));
+    private static final boolean WIDE_BULLETS = MdTuning.flag("stirling.md.wideBullets", true);
 
     /** Glyphs a document may set its list markers in beyond the three already recognised. */
     private static final String EXTRA_BULLETS = "‣⁃▶●○■□" + "◆⮚➢➣➤";
@@ -1331,15 +1312,13 @@ public class PdfMarkdownConverter {
     }
 
     /** Ablation switch for joining a display heading that wraps onto further lines. */
-    private static final boolean WRAP_HEADINGS =
-            Boolean.parseBoolean(System.getProperty("stirling.md.wrapHeadings", "true"));
+    private static final boolean WRAP_HEADINGS = MdTuning.flag("stirling.md.wrapHeadings", true);
 
     /** Longest a heading may grow to by absorbing its continuation lines, in words. */
     private static final int MAX_WRAPPED_HEADING_WORDS = 24;
 
     /** How far a continuation line's type size may differ from the line it continues. */
-    private static final float WRAP_SIZE_TOLERANCE =
-            Float.parseFloat(System.getProperty("stirling.md.wrapSize", "0.2"));
+    private static final float WRAP_SIZE_TOLERANCE = MdTuning.num("stirling.md.wrapSize", 0.2f);
 
     /** A full stop that a further sentence follows: the shape of prose, not of a heading. */
     private static final Pattern SENTENCE_BREAK = Pattern.compile("[.!?]\\s+\\p{Lu}");
@@ -1755,8 +1734,7 @@ public class PdfMarkdownConverter {
     }
 
     /** Vertical gaps, in median row gaps, within which a line above a block can be its header. */
-    private static final float HEADER_GAP =
-            Float.parseFloat(System.getProperty("stirling.md.headerGap", "1.6"));
+    private static final float HEADER_GAP = MdTuning.num("stirling.md.headerGap", 1.6f);
 
     /**
      * Runs of words in a line separated by more than a cell gutter: a header row has one per cell,
@@ -1793,12 +1771,10 @@ public class PdfMarkdownConverter {
     }
 
     /** Line heights within which a line above a ruled grid can be its header row. */
-    private static final float HEADER_RULE_GAP =
-            Float.parseFloat(System.getProperty("stirling.md.headerRuleGap", "2.5"));
+    private static final float HEADER_RULE_GAP = MdTuning.num("stirling.md.headerRuleGap", 2.5f);
 
     /** Take a header row from the drawn text above a word-grid block. */
-    private static final boolean HEADER_ABOVE =
-            Boolean.parseBoolean(System.getProperty("stirling.md.headerAbove", "true"));
+    private static final boolean HEADER_ABOVE = MdTuning.flag("stirling.md.headerAbove", true);
 
     /** The nearest line above {@code top} close enough to be the block's header row. */
     private static Line headerAbove(List<Line> lines, float top, float medianGap) {
@@ -2012,11 +1988,11 @@ public class PdfMarkdownConverter {
 
     /** Recover a column that only the header row occupies, inside a ruled region. */
     private static final boolean HEADER_ONLY_COLUMNS =
-            Boolean.parseBoolean(System.getProperty("stirling.md.headerOnlyColumns", "true"));
+            MdTuning.flag("stirling.md.headerOnlyColumns", true);
 
     /** Accept a sparse table when the page draws both its rows and its columns. */
     private static final boolean DRAWN_GRID_SPARSE =
-            Boolean.parseBoolean(System.getProperty("stirling.md.drawnGridSparse", "true"));
+            MdTuning.flag("stirling.md.drawnGridSparse", true);
 
     /** Rows a single-column ruled table needs before it is a table rather than a run of lines. */
     private static final int SINGLE_COLUMN_ROWS = 3;
@@ -2025,16 +2001,13 @@ public class PdfMarkdownConverter {
     private static final float SINGLE_COLUMN_FILLED = 0.8f;
 
     /** Reject a block of prose that the word grid read as a table (contents list, wide columns). */
-    private static final boolean PROSE_GUARD =
-            Boolean.parseBoolean(System.getProperty("stirling.md.proseGuard", "true"));
+    private static final boolean PROSE_GUARD = MdTuning.flag("stirling.md.proseGuard", true);
 
     /** Rows of a two-column block that must end in a page number for it to be a contents list. */
-    private static final float TOC_ROWS =
-            Float.parseFloat(System.getProperty("stirling.md.tocRows", "0.65"));
+    private static final float TOC_ROWS = MdTuning.num("stirling.md.tocRows", 0.65f);
 
     /** Mean filled-cell length above which a two-column block reads as prose, not cells. */
-    private static final float PROSE_CELL =
-            Float.parseFloat(System.getProperty("stirling.md.proseCell", "40"));
+    private static final float PROSE_CELL = MdTuning.num("stirling.md.proseCell", 40f);
 
     private static final Pattern PAGE_NUMBER = Pattern.compile("[0-9]{1,4}|[ivxlcdmIVXLCDM]{1,7}");
 
@@ -2102,6 +2075,15 @@ public class PdfMarkdownConverter {
 
     static List<Float> detectGuttersFromLines(List<TextLine> rows) {
         return detectGutters(rows.stream().map(Line::new).collect(Collectors.toList()));
+    }
+
+    /**
+     * Visible for testing: ruled-table partitioning depends only on rule geometry, so tests can
+     * drive it from synthetic rules to exercise the guards against a pathological ruling grid.
+     */
+    static int ruledComponentCount(List<PageRules.Rule> horizontal, List<PageRules.Rule> vertical) {
+        return RuledTables.partition(RuledTables.cluster(horizontal), RuledTables.cluster(vertical))
+                .size();
     }
 
     /** Character widths of clear space that separate two columns of an unruled block. */
@@ -2428,15 +2410,13 @@ public class PdfMarkdownConverter {
 
     /** Keep an unruled full-width table on a multi-column page. */
     private static final boolean WIDE_UNRULED_TABLES =
-            Boolean.parseBoolean(System.getProperty("stirling.md.wideUnruledTables", "true"));
+            MdTuning.flag("stirling.md.wideUnruledTables", true);
 
     /** Columns a full-width unruled block needs before it can outrank the page's column layout. */
-    private static final int GRID_COLUMNS =
-            Integer.parseInt(System.getProperty("stirling.md.gridColumns", "3"));
+    private static final int GRID_COLUMNS = MdTuning.count("stirling.md.gridColumns", 3);
 
     /** Mean filled-cell length above which a full-width unruled block is prose read across. */
-    private static final float GRID_CELL =
-            Float.parseFloat(System.getProperty("stirling.md.gridCell", "25"));
+    private static final float GRID_CELL = MdTuning.num("stirling.md.gridCell", 25f);
 
     /**
      * True when an unruled full-width block is really a table, not the page's own column gutter
@@ -2994,23 +2974,22 @@ public class PdfMarkdownConverter {
         private static final float FILLED_BANDS = 0.6f;
 
         /** Fraction of the table's width an interior rule must run to be a row boundary. */
-        private static final float ROW_RULE_SPAN =
-                Float.parseFloat(System.getProperty("stirling.md.rowRuleSpan", "0.8"));
+        private static final float ROW_RULE_SPAN = MdTuning.num("stirling.md.rowRuleSpan", 0.8f);
 
         /** Keep only interior rules that run the table's width when reading its row bands. */
         private static final boolean WIDE_ROW_RULES =
-                Boolean.parseBoolean(System.getProperty("stirling.md.wideRowRules", "true"));
+                MdTuning.flag("stirling.md.wideRowRules", true);
 
         /** Keep a one-column-wide interior rule when a spanning cell sits beside it. */
         private static final boolean ROWSPAN_RULES =
-                Boolean.parseBoolean(System.getProperty("stirling.md.rowspanRules", "true"));
+                MdTuning.flag("stirling.md.rowspanRules", true);
 
         /**
          * Interior row rules needed before drawn bands beat text baselines. One is enough: bands
          * keep a multi-line cell whole, where baselines split every wrapped cell into its own row.
          */
         private static final int MIN_INTERIOR_RULES =
-                Integer.parseInt(System.getProperty("stirling.md.minInteriorRules", "1"));
+                MdTuning.count("stirling.md.minInteriorRules", 1);
 
         /** Fraction of a region's width every rule must run for its rows to be a drawn lattice. */
         private static final float FULL_WIDTH_RULE = 0.8f;
@@ -3041,20 +3020,8 @@ public class PdfMarkdownConverter {
                 return List.of();
             }
             List<TableBlock> blocks = new ArrayList<>();
-            for (int[] part : partition(hLevels, vLevels)) {
-                List<Level> h = new ArrayList<>();
-                List<Level> v = new ArrayList<>();
-                for (int i = 0; i < hLevels.size(); i++) {
-                    if (part[i] == part[part.length - 1]) {
-                        h.add(hLevels.get(i));
-                    }
-                }
-                for (int i = 0; i < vLevels.size(); i++) {
-                    if (part[hLevels.size() + i] == part[part.length - 1]) {
-                        v.add(vLevels.get(i));
-                    }
-                }
-                TableBlock b = build(h, v, lines, page);
+            for (Component part : partition(hLevels, vLevels)) {
+                TableBlock b = build(part.h(), part.v(), lines, page);
                 if (b != null) {
                     blocks.add(b);
                 }
@@ -3192,12 +3159,23 @@ public class PdfMarkdownConverter {
             return out;
         }
 
+        /** One connected component of crossing rules: the levels of each family it spans. */
+        private record Component(List<Level> h, List<Level> v) {}
+
         /**
-         * Connected components of crossing rules, one int[] each: entry i is the component id of
-         * {@code hLevels[i]}, then of {@code vLevels[j]}, and the last entry names this component.
+         * Connected components of crossing rules. Membership is read once from a single union-find
+         * array, as materialising an id array per component costs O(components x levels) memory a
+         * crafted ruling grid can drive to out-of-memory.
          */
-        private static List<int[]> partition(List<Level> hLevels, List<Level> vLevels) {
+        private static List<Component> partition(List<Level> hLevels, List<Level> vLevels) {
             int n = hLevels.size() + vLevels.size();
+            if ((long) hLevels.size() * vLevels.size() > MAX_CROSSING_TESTS) {
+                log.debug(
+                        "ruled-table partition skipped: {}x{} rule levels",
+                        hLevels.size(),
+                        vLevels.size());
+                return List.of();
+            }
             int[] parent = new int[n];
             for (int i = 0; i < n; i++) {
                 parent[i] = i;
@@ -3216,22 +3194,33 @@ public class PdfMarkdownConverter {
                     }
                 }
             }
-            List<int[]> out = new ArrayList<>();
-            Set<Integer> seen = new HashSet<>();
+            Map<Integer, Component> byRoot = new LinkedHashMap<>();
             for (int i = 0; i < n; i++) {
                 int root = find(parent, i);
-                if (!seen.add(root)) {
-                    continue;
+                Component c = byRoot.get(root);
+                if (c == null) {
+                    // Past the cap the page is line art, not tables; keep the components already
+                    // found whole rather than truncating them mid-scan.
+                    if (byRoot.size() >= MAX_COMPONENTS) {
+                        continue;
+                    }
+                    c = new Component(new ArrayList<>(), new ArrayList<>());
+                    byRoot.put(root, c);
                 }
-                int[] ids = new int[n + 1];
-                for (int k = 0; k < n; k++) {
-                    ids[k] = find(parent, k);
+                if (i < hLevels.size()) {
+                    c.h().add(hLevels.get(i));
+                } else {
+                    c.v().add(vLevels.get(i - hLevels.size()));
                 }
-                ids[n] = root;
-                out.add(ids);
             }
-            return out;
+            return List.copyOf(byRoot.values());
         }
+
+        /** Crossing tests past which a page is an operator flood rather than a readable grid. */
+        private static final long MAX_CROSSING_TESTS = 4_000_000L;
+
+        /** Rule components past which the extra blocks cannot be real tables. */
+        private static final int MAX_COMPONENTS = 256;
 
         private static int find(int[] parent, int x) {
             while (parent[x] != x) {
@@ -3454,14 +3443,13 @@ public class PdfMarkdownConverter {
 
         /** Split a lattice band into its baselines when each is a complete row. */
         private static final boolean SPLIT_COMPLETE_BANDS =
-                Boolean.parseBoolean(System.getProperty("stirling.md.splitCompleteBands", "true"));
+                MdTuning.flag("stirling.md.splitCompleteBands", true);
 
         /** How near a rule end must be to a vertical rule to count as landing on it. */
         private static final float COLUMN_SNAP = 2.5f;
 
         /** Fraction of the table's height a vertical must run to be a column boundary. */
-        private static final float COLUMN_RUN =
-                Float.parseFloat(System.getProperty("stirling.md.columnRun", "0.5"));
+        private static final float COLUMN_RUN = MdTuning.num("stirling.md.columnRun", 0.5f);
 
         /**
          * True when a rule narrower than the table is still a row boundary: it ends on the grid's

@@ -1,6 +1,7 @@
 package stirling.software.common.pdf;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -116,6 +117,48 @@ class PdfMarkdownConverterTest {
         assertTrue(
                 gutters.isEmpty(),
                 "implausible page span should disable gutter detection, not scan it");
+    }
+
+    /**
+     * A crafted PDF can draw thousands of disjoint rules. Ruled-table detection used to build one
+     * full-length int[] per connected component, so N non-crossing rules cost O(N^2) retained
+     * memory and tens of thousands of rules exhausted the heap. Partitioning must stay linear and
+     * bounded.
+     */
+    @Test
+    @Timeout(20)
+    void ruledTablePartitionSurvivesPathologicalGrid() {
+        // 4000 rules that never cross, so every one is its own component: the shape that made the
+        // old code allocate 4000 arrays of 4001 ints. Stays under the crossing-test budget so it is
+        // the component cap being exercised, not the operator-flood bail-out.
+        List<PageRules.Rule> horizontal = new ArrayList<>();
+        List<PageRules.Rule> vertical = new ArrayList<>();
+        for (int i = 0; i < 2_000; i++) {
+            horizontal.add(new PageRules.Rule(i * 10f, 0f, 20f));
+            vertical.add(new PageRules.Rule(1_000_000f + i * 10f, -50f, -30f));
+        }
+
+        int components =
+                assertDoesNotThrow(
+                        () -> PdfMarkdownConverter.ruledComponentCount(horizontal, vertical));
+        // 4000 disjoint rules would be 4000 components; the cap is what keeps this bounded.
+        assertEquals(256, components, "component count must stay bounded");
+    }
+
+    @Test
+    @Timeout(20)
+    void ruledTablePartitionBailsOutOnOperatorFlood() {
+        // Enough levels that the pairwise crossing scan alone would dominate the request.
+        List<PageRules.Rule> horizontal = new ArrayList<>();
+        List<PageRules.Rule> vertical = new ArrayList<>();
+        for (int i = 0; i < 20_000; i++) {
+            horizontal.add(new PageRules.Rule(i * 10f, 0f, 20f));
+            vertical.add(new PageRules.Rule(1_000_000f + i * 10f, -50f, -30f));
+        }
+
+        assertTrue(
+                PdfMarkdownConverter.ruledComponentCount(horizontal, vertical) == 0,
+                "a rule flood should disable ruled-table detection, not scan it");
     }
 
     private void assertConversionMatchesGolden(String pdfName, String mdName) throws IOException {
