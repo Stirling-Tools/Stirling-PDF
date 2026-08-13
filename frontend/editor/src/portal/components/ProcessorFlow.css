@@ -148,6 +148,7 @@
 .portal-pf__node--soon {
   background: transparent;
   border-style: dashed;
+
   /* The dashed border and muted ink mark this as not-yet-available; fading the
      whole node with opacity would drop its label below the contrast floor. */
   color: var(--c-text-muted);

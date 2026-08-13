@@ -36,6 +36,7 @@
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 1.25rem;
+
   /* Takes whatever the header leaves, and pins the row to exactly that. `minmax(0, 1fr)` rather
      than the implicit `auto` row is what makes the columns' `max-height: 100%` mean anything: an
      auto row is sized BY its tallest item, so a long settings form would size the row to itself and
@@ -76,6 +77,7 @@
 }
 
 /* Tool picker */
+
 /* The picker fills the modal hosting it rather than sitting in a card of its own: same surface,
    same radius, so a bordered box in here would frame nothing. Its rows carry the structure, and
    they run to the panel's edges - which is what lets the search divider span the full width. */

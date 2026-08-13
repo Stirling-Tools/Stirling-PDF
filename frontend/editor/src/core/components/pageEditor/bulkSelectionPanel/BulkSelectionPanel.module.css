@@ -222,6 +222,7 @@
 /* Error helper text above the input */
 .errorText {
   margin-top: 0.25rem;
+
   /* The brand red is a fill; error copy takes the theme's error ink. */
   color: var(--color-red-dark);
 }

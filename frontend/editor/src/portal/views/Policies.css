@@ -70,6 +70,7 @@
 }
 
 .portal-policies__card--locked {
+
   /* Recede via surface and ink rather than opacity, which would fade the
      card's own text below the contrast floor. */
   background: var(--c-surface-sunken);

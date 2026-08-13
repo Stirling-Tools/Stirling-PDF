@@ -64,6 +64,7 @@
   --gray-100: 243 244 246;
   --gray-200: 229 231 235;
   --gray-300: 209 213 219;
+
   /* Channel form of gray-400. Only for decorative fills/borders — as text it
      reaches 2.3:1, so label copy uses --gray-600. */
   --gray-400: 156 163 175;
@@ -138,7 +139,6 @@
   --color-yellow-700: var(--p-amber-600);
   --color-yellow-800: var(--p-amber-600);
   --color-yellow-900: var(--p-amber-600);
-
   --color-red-50: var(--p-red-50);
   --color-red-100: var(--p-red-100);
   --color-red-200: var(--p-red-200);
@@ -583,6 +583,7 @@
 }
 
 /* Plan section card borders - only override in dark mode */
+
 /* Current plan badge - use light mode green in dark mode */
 [data-mantine-color-scheme="dark"] .current-plan-badge {
   background-color: var(--color-green-300) !important;
@@ -596,6 +597,7 @@
 [data-mantine-color-scheme="dark"]
 .plan-button:not(:disabled):not([data-disabled]) {
   background-color: var(--p-royal-700) !important;
+
   /* The fill is set here, so the label has to be set with it — left alone it
      keeps the scheme's default ink and reads as dark-on-deep-blue. */
   color: var(--p-white) !important;

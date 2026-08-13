@@ -36,6 +36,7 @@
 .portal-graph-node__remove.sui-ai {
   position: absolute;
   top: -0.4375rem;
+
   /* Logical, so in RTL the remove sits on the card's trailing (left) corner rather than on top of
      the leading icon badge. */
   inset-inline-end: -0.4375rem;
@@ -128,6 +129,7 @@
   100% {
     opacity: 0.35;
   }
+
   50% {
     opacity: 1;
   }

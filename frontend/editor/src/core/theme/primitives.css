@@ -32,6 +32,7 @@
   --p-zinc-600: #333338;
   --p-zinc-500: #3f3f46;
   --p-zinc-400: #52525b;
+
   /* Subtlest text shade that still clears 4.5:1 on the deepest dark
      surfaces; zinc-300 is a border/icon shade and reads at ~3:1 there. */
   --p-zinc-250: #9a9aa2;

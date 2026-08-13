@@ -64,6 +64,7 @@
 
 .sui-node-card__detail {
   font-size: 0.6875rem;
+
   /* --c-text-subtle does not clear 4.5:1 at this size in either theme (axe: 4.39 light, 3.66
      dark); --c-text-muted is the next rung up and does. */
   color: var(--c-text-muted);

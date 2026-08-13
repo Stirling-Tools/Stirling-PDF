@@ -16,6 +16,7 @@
 }
 
 .text-divider .text-divider__label {
+
   /* A single channel triple cannot follow the colour scheme, and the old
      fallback only reached 3.8:1 on the dark page. The muted text token carries
      the readable shade for each scheme; the opacity hook is kept separate. */
