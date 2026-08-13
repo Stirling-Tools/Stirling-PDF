@@ -54,6 +54,19 @@ public class ModelCatalogEntry {
     private float[] normStd = {1f, 1f, 1f};
 
     // --- Post-processing (parity-critical) ---------------------------------------
+    /**
+     * Which head shape the model emits, and so how its output is read.
+     *
+     * <ul>
+     *   <li>{@code yolo} - one anchor-grid tensor, boxes already in input pixels, scores already
+     *       through their activation. Described by {@link #outputLayout}/{@link #hasObjectness}.
+     *   <li>{@code rfdetr} - two named tensors, {@code dets} (normalised cxcywh) and {@code labels}
+     *       (raw logits, one column per class plus a trailing no-object slot). Query based, so
+     *       there is no anchor grid and the two fields above do not apply.
+     * </ul>
+     */
+    private String decoder = "yolo";
+
     /** "nc_first" => output [1, 4+nc, anchors]; "anchors_first" => [1, anchors, 4+nc]. */
     private String outputLayout = "nc_first";
 

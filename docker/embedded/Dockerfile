@@ -19,14 +19,27 @@ RUN apt-get update \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
-# Pre-download the default Auto Form Detection model (FFDNet-S, ~37MB) so the feature works
-# out-of-the-box. Verified by checksum here; seeded into the writable configs model dir at startup
-# by FormDetectionModelManager (FORMDETECTION_PREINSTALLEDMODELDIR below).
-ARG FORM_DETECTION_MODEL_URL=https://huggingface.co/jbarrow/FFDNet-S-cpu/resolve/d6cb18cb4bf31d7f5adfe8fbc7cc3744b516d1fe/FFDNet-S.onnx
-ARG FORM_DETECTION_MODEL_SHA256=93bccf47c048f9f947f9b1b52d002edf144a8a583dae39f164d9e5725321acc0
+# Optionally bake an Auto Form Detection model into the image, seeded into the writable configs
+# model dir at startup by FormDetectionModelManager (FORMDETECTION_PREINSTALLEDMODELDIR below).
+#
+# Empty by default ON PURPOSE. Baking a model in makes us its distributor, so only weights we
+# hold a redistribution grant for may go here - which the FFDNet checkpoints are not, as their
+# publisher declares no licence at all. Set all three args to pre-bundle a model you may ship:
+#   --build-arg FORM_DETECTION_MODEL_URL=... \
+#   --build-arg FORM_DETECTION_MODEL_SHA256=... \
+#   --build-arg FORM_DETECTION_MODEL_ID=ffdetr
+# Without them the image ships no model and the tile stays dependency-disabled until an admin
+# installs one from the catalogue.
+ARG FORM_DETECTION_MODEL_URL=""
+ARG FORM_DETECTION_MODEL_SHA256=""
+ARG FORM_DETECTION_MODEL_ID="ffdetr"
 RUN mkdir -p /preinstalled-models \
-    && curl -fSL "${FORM_DETECTION_MODEL_URL}" -o /preinstalled-models/ffdnet-s.onnx \
-    && echo "${FORM_DETECTION_MODEL_SHA256}  /preinstalled-models/ffdnet-s.onnx" | sha256sum -c -
+    && if [ -n "${FORM_DETECTION_MODEL_URL}" ]; then \
+         curl -fSL "${FORM_DETECTION_MODEL_URL}" -o "/preinstalled-models/${FORM_DETECTION_MODEL_ID}.onnx" \
+         && echo "${FORM_DETECTION_MODEL_SHA256}  /preinstalled-models/${FORM_DETECTION_MODEL_ID}.onnx" | sha256sum -c -; \
+       else \
+         echo "No form-detection model pre-bundled (FORM_DETECTION_MODEL_URL unset)"; \
+       fi
 
 # JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
 ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \

@@ -5,6 +5,7 @@ import { FormDetectionCatalogEntry } from "@app/hooks/useFormDetectionModelStatu
 
 /** Pipeline spec resolved from the active catalog entry (with backend defaults applied). */
 export interface ModelPipelineSpec {
+  decoder: string; // "yolo" | "rfdetr"
   inputSize: number;
   resizeMode: string; // "stretch" | "letterbox"
   padColor: number[];
@@ -69,6 +70,7 @@ export function resolveSpec(
   entry: FormDetectionCatalogEntry,
 ): ModelPipelineSpec {
   return {
+    decoder: entry.decoder || "yolo",
     inputSize: entry.inputSize > 0 ? entry.inputSize : 1216,
     resizeMode: entry.resizeMode ?? "letterbox",
     padColor: entry.padColor ?? [114, 114, 114],

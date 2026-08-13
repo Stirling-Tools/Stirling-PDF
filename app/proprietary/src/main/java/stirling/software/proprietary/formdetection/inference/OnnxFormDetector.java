@@ -3,6 +3,8 @@ package stirling.software.proprietary.formdetection.inference;
 import java.nio.FloatBuffer;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -45,7 +47,15 @@ public class OnnxFormDetector {
     private volatile String loadedModelId;
     private volatile String inputName;
 
-    public Yolo.RawOutput infer(float[] chw, int inputSize) {
+    /**
+     * Run the model and return every output tensor keyed by its graph name, in graph order.
+     *
+     * <p>Keyed by name rather than position because a query-based head emits two tensors of the
+     * SAME shape - RF-DETR's {@code dets} and {@code labels} are both [1, 300, 4] when there are
+     * three classes, since 4 box values and 3 classes + 1 no-object slot coincide. Picking by index
+     * would silently decode logits as boxes.
+     */
+    public Map<String, Yolo.RawOutput> infer(float[] chw, int inputSize) {
         ensureLoaded();
         concurrency.acquireUninterruptibly();
         lock.readLock().lock();
@@ -55,21 +65,14 @@ public class OnnxFormDetector {
             try (OnnxTensor tensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(chw), shape);
                     OrtSession.Result results =
                             session.run(Collections.singletonMap(inputName, tensor))) {
-                OnnxValue value = results.get(0);
-                Object raw = value.getValue();
-                if (!(raw instanceof float[][][] out3) || out3.length == 0) {
-                    throw new IllegalStateException(
-                            "Unexpected ONNX output type: "
-                                    + (raw == null ? "null" : raw.getClass()));
+                Map<String, Yolo.RawOutput> outputs = new LinkedHashMap<>();
+                for (Map.Entry<String, OnnxValue> entry : results) {
+                    outputs.put(entry.getKey(), toRawOutput(entry.getKey(), entry.getValue()));
                 }
-                float[][] m = out3[0];
-                int d1 = m.length;
-                int d2 = d1 > 0 ? m[0].length : 0;
-                float[] flat = new float[d1 * d2];
-                for (int i = 0; i < d1; i++) {
-                    System.arraycopy(m[i], 0, flat, i * d2, d2);
+                if (outputs.isEmpty()) {
+                    throw new IllegalStateException("ONNX session returned no outputs");
                 }
-                return new Yolo.RawOutput(flat, d1, d2);
+                return outputs;
             }
         } catch (OrtException e) {
             throw new IllegalStateException("ONNX inference failed: " + e.getMessage(), e);
@@ -77,6 +80,26 @@ public class OnnxFormDetector {
             lock.readLock().unlock();
             concurrency.release();
         }
+    }
+
+    /** Flatten a [1, d1, d2] output into the row-major buffer the decoders index into. */
+    private static Yolo.RawOutput toRawOutput(String name, OnnxValue value) throws OrtException {
+        Object raw = value.getValue();
+        if (!(raw instanceof float[][][] out3) || out3.length == 0) {
+            throw new IllegalStateException(
+                    "Unexpected ONNX output type for '"
+                            + name
+                            + "': "
+                            + (raw == null ? "null" : raw.getClass()));
+        }
+        float[][] m = out3[0];
+        int d1 = m.length;
+        int d2 = d1 > 0 ? m[0].length : 0;
+        float[] flat = new float[d1 * d2];
+        for (int i = 0; i < d1; i++) {
+            System.arraycopy(m[i], 0, flat, i * d2, d2);
+        }
+        return new Yolo.RawOutput(flat, d1, d2);
     }
 
     /** Force the next inference to reload from disk (called after install/uninstall). */

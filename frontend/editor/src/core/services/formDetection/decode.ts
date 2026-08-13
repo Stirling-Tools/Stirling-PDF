@@ -121,3 +121,66 @@ export function decode(
   }
   return nms(dets, spec.nms, spec.iou);
 }
+
+/**
+ * Decode an RF-DETR style query head, the browser mirror of RfDetr.java.
+ *
+ * Outputs are looked up by name, never by position: with three classes both tensors are
+ * [queries, 4] - four box values against three classes plus a no-object slot - so they are
+ * indistinguishable by shape and a positional read would decode logits as boxes.
+ */
+export function decodeRfDetr(
+  outputs: Record<string, RawOutput>,
+  spec: ModelPipelineSpec,
+  pre: Preprocessed,
+  scoreThreshold: number,
+): Detection[] {
+  const numClasses = spec.classNames?.length ?? 0;
+  if (numClasses === 0) return [];
+  const boxes = outputs["dets"];
+  const logits = outputs["labels"];
+  if (!boxes || !logits) return [];
+  if (boxes.d2 < 4 || logits.d2 < numClasses) return [];
+  const queries = Math.min(boxes.d1, logits.d1);
+  const size = spec.inputSize;
+
+  const dets: Detection[] = [];
+  for (let q = 0; q < queries; q++) {
+    let bestClass = -1;
+    let bestScore = 0;
+    // Stops at numClasses on purpose, dropping the trailing no-object column.
+    for (let c = 0; c < numClasses; c++) {
+      const s = 1 / (1 + Math.exp(-logits.data[q * logits.d2 + c]));
+      if (s > bestScore) {
+        bestScore = s;
+        bestClass = c;
+      }
+    }
+    if (bestClass < 0 || bestScore < scoreThreshold) continue;
+
+    const base = q * boxes.d2;
+    // Normalised centre form -> input pixels, so the un-projection matches the YOLO path.
+    const cx = boxes.data[base] * size;
+    const cy = boxes.data[base + 1] * size;
+    const w = boxes.data[base + 2] * size;
+    const h = boxes.data[base + 3] * size;
+    const ox = (cx - w / 2 - pre.padX) / pre.scaleX;
+    const oy = (cy - h / 2 - pre.padY) / pre.scaleY;
+    let ow = w / pre.scaleX;
+    let oh = h / pre.scaleY;
+    const cxl = Math.max(0, Math.min(ox, pre.srcW));
+    const cyl = Math.max(0, Math.min(oy, pre.srcH));
+    ow = Math.max(0, Math.min(ow, pre.srcW - cxl));
+    oh = Math.max(0, Math.min(oh, pre.srcH - cyl));
+    if (ow <= 0 || oh <= 0) continue;
+    dets.push({
+      classId: bestClass,
+      score: bestScore,
+      x: cxl,
+      y: cyl,
+      w: ow,
+      h: oh,
+    });
+  }
+  return nms(dets, spec.nms, spec.iou);
+}

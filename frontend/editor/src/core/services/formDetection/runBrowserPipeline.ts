@@ -6,7 +6,7 @@ import { FormDetectionCatalogEntry } from "@app/hooks/useFormDetectionModelStatu
 
 import { applyFields } from "@app/services/formDetection/applyFields";
 import { toPdfPoints } from "@app/services/formDetection/coordinateMapping";
-import { decode } from "@app/services/formDetection/decode";
+import { decode, decodeRfDetr } from "@app/services/formDetection/decode";
 import { loadModelBytes } from "@app/services/formDetection/modelCache";
 import {
   getSession,
@@ -14,7 +14,14 @@ import {
 } from "@app/services/formDetection/onnxSession";
 import { renderPages } from "@app/services/formDetection/pdfRender";
 import { preprocess } from "@app/services/formDetection/preprocess";
-import { DetectedField, resolveSpec } from "@app/services/formDetection/types";
+import {
+  DetectedField,
+  Detection,
+  ModelPipelineSpec,
+  Preprocessed,
+  RawOutput,
+  resolveSpec,
+} from "@app/services/formDetection/types";
 import { DetectionStage } from "@app/services/formDetection/progress";
 
 // Kept in lockstep with FormDetectionController.MAX_PAGES / MAX_FIELDS.
@@ -79,7 +86,7 @@ export async function runBrowserDetection(
     });
     const pre = preprocess(page.rgba, page.widthPx, page.heightPx, spec);
     const out = await runInference(session, pre.chw, spec.inputSize);
-    for (const d of decode(out, spec, pre, score)) {
+    for (const d of decodeFor(spec, out, pre, score)) {
       const rect = toPdfPoints(d, page);
       if (rect.w <= 0 || rect.h <= 0) {
         continue;
@@ -102,4 +109,21 @@ export async function runBrowserDetection(
   onStage?.({ kind: "applying" });
   const appliedPdf = await applyFields(pdfBytes.slice(0), fields);
   return { fields, appliedPdf, pageCount: pages.length };
+}
+
+/**
+ * Pick the decoder the model's head needs, mirroring FormDetectionController.decodeFor.
+ * Unknown values fall back to YOLO, which is what every entry was before a second head existed.
+ */
+function decodeFor(
+  spec: ModelPipelineSpec,
+  outputs: Record<string, RawOutput>,
+  pre: Preprocessed,
+  score: number,
+): Detection[] {
+  if ((spec.decoder ?? "").toLowerCase() === "rfdetr") {
+    return decodeRfDetr(outputs, spec, pre, score);
+  }
+  // Single-output head: take the sole tensor whatever the graph calls it.
+  return decode(Object.values(outputs)[0], spec, pre, score);
 }

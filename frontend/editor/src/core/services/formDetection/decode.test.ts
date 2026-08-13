@@ -13,6 +13,7 @@ import {
 // produce identical detections.
 
 const spec: ModelPipelineSpec = {
+  decoder: "yolo",
   inputSize: 10,
   resizeMode: "letterbox",
   padColor: [114, 114, 114],

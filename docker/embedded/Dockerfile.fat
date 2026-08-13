@@ -20,14 +20,25 @@ RUN apt-get update \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
-# Pre-download the default Auto Form Detection model (FFDNet-S, ~37MB) so the feature works
-# out-of-the-box - especially important for this air-gapped fat image (no runtime internet).
-# Verified by checksum; seeded into the writable configs model dir at startup.
-ARG FORM_DETECTION_MODEL_URL=https://huggingface.co/jbarrow/FFDNet-S-cpu/resolve/d6cb18cb4bf31d7f5adfe8fbc7cc3744b516d1fe/FFDNet-S.onnx
-ARG FORM_DETECTION_MODEL_SHA256=93bccf47c048f9f947f9b1b52d002edf144a8a583dae39f164d9e5725321acc0
+# Optionally bake an Auto Form Detection model into this air-gapped image, seeded into the
+# writable configs model dir at startup.
+#
+# Empty by default ON PURPOSE - see the note in docker/embedded/Dockerfile. Baking a model in
+# makes us its distributor, and it is exactly the air-gapped case that makes an unlicensed
+# bundle hardest to undo. Set all three args to pre-bundle weights you may ship:
+#   --build-arg FORM_DETECTION_MODEL_URL=... \
+#   --build-arg FORM_DETECTION_MODEL_SHA256=... \
+#   --build-arg FORM_DETECTION_MODEL_ID=ffdetr
+ARG FORM_DETECTION_MODEL_URL=""
+ARG FORM_DETECTION_MODEL_SHA256=""
+ARG FORM_DETECTION_MODEL_ID="ffdetr"
 RUN mkdir -p /preinstalled-models \
-    && curl -fSL "${FORM_DETECTION_MODEL_URL}" -o /preinstalled-models/ffdnet-s.onnx \
-    && echo "${FORM_DETECTION_MODEL_SHA256}  /preinstalled-models/ffdnet-s.onnx" | sha256sum -c -
+    && if [ -n "${FORM_DETECTION_MODEL_URL}" ]; then \
+         curl -fSL "${FORM_DETECTION_MODEL_URL}" -o "/preinstalled-models/${FORM_DETECTION_MODEL_ID}.onnx" \
+         && echo "${FORM_DETECTION_MODEL_SHA256}  /preinstalled-models/${FORM_DETECTION_MODEL_ID}.onnx" | sha256sum -c -; \
+       else \
+         echo "No form-detection model pre-bundled (FORM_DETECTION_MODEL_URL unset)"; \
+       fi
 
 # JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
 ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \

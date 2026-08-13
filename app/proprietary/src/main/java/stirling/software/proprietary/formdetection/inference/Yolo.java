@@ -176,7 +176,8 @@ public final class Yolo {
         return ncFirst ? data[c * anchors + a] : data[a * channels + c];
     }
 
-    private static List<Detection> nms(List<Detection> dets, String mode, float iouThreshold) {
+    /** Shared with {@link RfDetr}: identical suppression whatever head produced the boxes. */
+    static List<Detection> nms(List<Detection> dets, String mode, float iouThreshold) {
         if (dets.size() < 2 || "none".equalsIgnoreCase(mode)) {
             return dets;
         }

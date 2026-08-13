@@ -29,6 +29,7 @@ import stirling.software.common.util.FormUtils.NewFormFieldDefinition;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.proprietary.formdetection.inference.OnnxFormDetector;
+import stirling.software.proprietary.formdetection.inference.RfDetr;
 import stirling.software.proprietary.formdetection.inference.Yolo;
 import stirling.software.proprietary.formdetection.model.DetectedField;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
@@ -119,8 +120,8 @@ public class FormDetectionController {
             for (PageRasterizer.RasterPage page : pages) {
                 Yolo.Preprocessed pre =
                         Yolo.preprocess(page.rgba(), page.widthPx(), page.heightPx(), spec);
-                Yolo.RawOutput out = detector.infer(pre.chw(), spec.getInputSize());
-                for (Yolo.Detection d : Yolo.decode(out, spec, pre, score)) {
+                Map<String, Yolo.RawOutput> out = detector.infer(pre.chw(), spec.getInputSize());
+                for (Yolo.Detection d : decodeFor(spec, out, pre, score)) {
                     DetectedField.RectPt rect = CoordinateMapper.toPdfPoints(d, page);
                     if (rect.w() <= 0 || rect.h() <= 0) {
                         continue;
@@ -163,6 +164,22 @@ public class FormDetectionController {
             }
         }
         return ResponseEntity.ok(new DetectResponse(detections));
+    }
+
+    /**
+     * Pick the decoder the model's head needs. Unknown values fall back to YOLO, which is what
+     * every catalogue entry was before a second head shape existed.
+     */
+    private static List<Yolo.Detection> decodeFor(
+            ModelCatalogEntry spec,
+            Map<String, Yolo.RawOutput> outputs,
+            Yolo.Preprocessed pre,
+            float score) {
+        if ("rfdetr".equalsIgnoreCase(spec.getDecoder())) {
+            return RfDetr.decode(outputs, spec, pre, score);
+        }
+        // Single-output head: take the sole tensor whatever the graph happens to call it.
+        return Yolo.decode(outputs.values().iterator().next(), spec, pre, score);
     }
 
     private static String fieldType(ModelCatalogEntry spec, int classId) {
