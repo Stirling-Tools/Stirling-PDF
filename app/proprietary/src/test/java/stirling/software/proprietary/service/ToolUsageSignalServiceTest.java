@@ -1,6 +1,8 @@
 package stirling.software.proprietary.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -15,30 +17,41 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.repository.ToolChainStatRepository;
 import stirling.software.proprietary.repository.ToolUsageStatRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.service.ToolUsageSignalService.TeamScope;
+import stirling.software.proprietary.service.ToolUsageSignalService.ToolChainSummary;
 
 @ExtendWith(MockitoExtension.class)
 class ToolUsageSignalServiceTest {
 
     @Mock private ToolUsageStatRepository usageRepository;
+    @Mock private ToolChainStatRepository chainRepository;
     @Mock private UserRepository userRepository;
 
     private ToolUsageSignalService service;
 
     @BeforeEach
     void setUp() {
-        service = new ToolUsageSignalService(usageRepository, Optional.of(userRepository));
+        service =
+                new ToolUsageSignalService(
+                        usageRepository, chainRepository, Optional.of(userRepository));
     }
 
     private static Object[] row(String tool, long recent, long total) {
         return new Object[] {tool, recent, total};
+    }
+
+    private static Object[] chainRow(String chainKey, int length, long total) {
+        return new Object[] {chainKey, length, total};
     }
 
     private static User user(String username, Team team) {
@@ -136,7 +149,7 @@ class ToolUsageSignalServiceTest {
     @DisplayName("core builds without a user repository never attempt team scoping")
     void noUserRepositoryMeansNoTeam() {
         ToolUsageSignalService coreService =
-                new ToolUsageSignalService(usageRepository, Optional.empty());
+                new ToolUsageSignalService(usageRepository, chainRepository, Optional.empty());
 
         assertThat(coreService.resolveTeamScope("alice")).isEqualTo(TeamScope.none());
         verifyNoInteractions(userRepository);
@@ -168,6 +181,39 @@ class ToolUsageSignalServiceTest {
         assertThat(first).hasSize(500);
         // Row order from the database must not change which members are kept.
         assertThat(second).isEqualTo(first);
+    }
+
+    @Test
+    @DisplayName("chain rows are decoded back into ordered tool lists")
+    void chainRowsDecoded() {
+        when(chainRepository.topByPrincipal(eq("alice"), eq(10L), eq(2), any(Pageable.class)))
+                .thenReturn(List.<Object[]>of(chainRow("compress>watermark", 2, 4)));
+
+        assertThat(service.userChains("alice", 10, 2, 6))
+                .containsExactly(new ToolChainSummary(List.of("compress", "watermark"), 4));
+    }
+
+    @Test
+    @DisplayName("the requested limit bounds the page asked of the database")
+    void chainLimitBoundsThePage() {
+        when(chainRepository.topGlobal(eq(10L), eq(2), any(Pageable.class))).thenReturn(List.of());
+
+        service.globalChains(10, 2, 3);
+
+        ArgumentCaptor<Pageable> page = ArgumentCaptor.forClass(Pageable.class);
+        verify(chainRepository).topGlobal(eq(10L), eq(2), page.capture());
+        assertThat(page.getValue().getPageSize()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("single-tool and zero-count chain rows are not workflows")
+    void nonWorkflowChainRowsDropped() {
+        when(chainRepository.topByPrincipal(eq("alice"), eq(10L), eq(2), any(Pageable.class)))
+                .thenReturn(
+                        List.<Object[]>of(
+                                chainRow("compress", 1, 9), chainRow("compress>ocr", 2, 0)));
+
+        assertThat(service.userChains("alice", 10, 2, 6)).isEmpty();
     }
 
     @Test

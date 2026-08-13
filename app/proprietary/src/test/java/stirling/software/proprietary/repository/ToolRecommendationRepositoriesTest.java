@@ -14,8 +14,10 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
+import stirling.software.proprietary.model.ToolChainStat;
 import stirling.software.proprietary.model.ToolRecommendationDismissal;
 import stirling.software.proprietary.model.ToolRecommendationDismissalId;
 import stirling.software.proprietary.model.ToolUsageStat;
@@ -28,6 +30,7 @@ class ToolRecommendationRepositoriesTest {
     private static final String NONE = ToolUsageStat.NO_PREVIOUS_TOOL;
 
     @Autowired private ToolUsageStatRepository usageRepository;
+    @Autowired private ToolChainStatRepository chainRepository;
     @Autowired private ToolRecommendationDismissalRepository dismissalRepository;
 
     private static Map<String, long[]> byTool(List<Object[]> rows) {
@@ -165,6 +168,111 @@ class ToolRecommendationRepositoriesTest {
 
         assertThat(usageRepository.deleteOlderThan(DAY - 180)).isEqualTo(1);
         assertThat(usageRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("chains rank by total count and respect the minimum length")
+    void chainsRankAndFilterByLength() {
+        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY, 2, 3));
+        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY - 5, 2, 4));
+        chainRepository.save(new ToolChainStat("alice", "split>merge>ocr", DAY, 3, 5));
+        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY - 60, 2, 900));
+
+        List<Object[]> top =
+                chainRepository.topByPrincipal("alice", DAY - 30, 2, PageRequest.of(0, 10));
+        List<Object[]> longOnly =
+                chainRepository.topByPrincipal("alice", DAY - 30, 3, PageRequest.of(0, 10));
+
+        assertThat(top).hasSize(2);
+        assertThat(top.get(0)[0]).isEqualTo("compress>ocr");
+        assertThat(((Number) top.get(0)[2]).longValue()).isEqualTo(7);
+        assertThat(longOnly).hasSize(1);
+        assertThat(longOnly.get(0)[0]).isEqualTo("split>merge>ocr");
+    }
+
+    @Test
+    @DisplayName("the page size caps how many chains come back")
+    void chainsRespectThePageSize() {
+        chainRepository.save(new ToolChainStat("alice", "a>b", DAY, 2, 9));
+        chainRepository.save(new ToolChainStat("alice", "c>d", DAY, 2, 8));
+        chainRepository.save(new ToolChainStat("alice", "e>f", DAY, 2, 7));
+
+        assertThat(chainRepository.topByPrincipal("alice", DAY - 30, 2, PageRequest.of(0, 2)))
+                .hasSize(2);
+    }
+
+    @Test
+    @DisplayName("chain scoping covers a team and the whole install separately")
+    void chainsScopeByPrincipals() {
+        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY, 2, 1));
+        chainRepository.save(new ToolChainStat("bob", "compress>ocr", DAY, 2, 2));
+        chainRepository.save(new ToolChainStat("carol", "compress>ocr", DAY, 2, 4));
+
+        List<Object[]> team =
+                chainRepository.topByPrincipals(
+                        List.of("alice", "bob"), DAY - 30, 2, PageRequest.of(0, 10));
+        List<Object[]> global = chainRepository.topGlobal(DAY - 30, 2, PageRequest.of(0, 10));
+
+        assertThat(((Number) team.get(0)[2]).longValue()).isEqualTo(3);
+        assertThat(((Number) global.get(0)[2]).longValue()).isEqualTo(7);
+    }
+
+    @Test
+    @DisplayName("chain increment updates only the exact row, reporting a miss otherwise")
+    void chainIncrementUpdatesExistingRowOnly() {
+        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY, 2, 1));
+
+        int hit = chainRepository.incrementCount("alice", "compress>ocr", DAY, 4);
+        int missDay = chainRepository.incrementCount("alice", "compress>ocr", DAY + 1, 4);
+        int missChain = chainRepository.incrementCount("alice", "compress>merge", DAY, 4);
+
+        assertThat(hit).isEqualTo(1);
+        assertThat(missDay).isZero();
+        assertThat(missChain).isZero();
+        assertThat(chainRepository.findAll().get(0).getCount()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("inserting over an existing chain fails instead of clobbering its count")
+    void chainInsertNeverOverwritesAnExistingCount() {
+        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY, 2, 500));
+
+        assertThatThrownBy(() -> chainRepository.insertCount("alice", "compress>ocr", DAY, 2, 1))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    @DisplayName("the retention sweep prunes only chains past the cutoff")
+    void chainDeleteOlderThanPrunes() {
+        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY - 200, 2, 1));
+        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY, 2, 1));
+
+        assertThat(chainRepository.deleteOlderThan(DAY - 180)).isEqualTo(1);
+        assertThat(chainRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("erasure removes a principal's chains and leaves everyone else's")
+    void deleteByPrincipalErasesChains() {
+        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY, 2, 1));
+        chainRepository.save(new ToolChainStat("alice", "split>merge", DAY, 2, 1));
+        chainRepository.save(new ToolChainStat("bob", "compress>ocr", DAY, 2, 1));
+
+        assertThat(chainRepository.deleteByPrincipal("alice")).isEqualTo(2);
+
+        assertThat(chainRepository.findAll())
+                .extracting(ToolChainStat::getPrincipal)
+                .containsExactly("bob");
+    }
+
+    @Test
+    @DisplayName("a chain key at the column limit still stores")
+    void maxLengthChainKeyStores() {
+        String key = "a".repeat(ToolChainStat.MAX_CHAIN_KEY_LENGTH);
+
+        chainRepository.saveAndFlush(new ToolChainStat("alice", key, DAY, 6, 1));
+
+        assertThat(chainRepository.findAll().get(0).getChainKey()).hasSize(key.length());
     }
 
     @Test

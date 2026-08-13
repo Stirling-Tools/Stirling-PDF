@@ -22,6 +22,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.model.ToolRecommendationDismissal;
 import stirling.software.proprietary.service.ToolRecommendationService;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
+import stirling.software.proprietary.service.ToolRecommendationService.ToolWorkflow;
 import stirling.software.proprietary.service.ToolUsageTrackingService;
 
 /**
@@ -41,7 +42,13 @@ public class ToolRecommendationController {
 
     public record RecommendationsResponse(List<ToolRecommendation> recommendations) {}
 
-    public record UsageRequest(String toolKey, String previousToolKey) {}
+    public record WorkflowsResponse(List<ToolWorkflow> workflows) {}
+
+    /**
+     * @param priorChains the tools already applied to each input document, oldest step first and
+     *     excluding this run - one entry per input document, empty for a fresh upload.
+     */
+    public record UsageRequest(String toolKey, List<List<String>> priorChains) {}
 
     public record DismissalRequest(String contextTool, String dismissedTool) {}
 
@@ -69,10 +76,36 @@ public class ToolRecommendationController {
         }
     }
 
+    @GetMapping("/tool-recommendations/workflows")
+    @Operation(
+            summary = "Get repeated tool workflows",
+            description =
+                    "Ordered tool sequences that get applied to the same document over and over,"
+                            + " most repeated first. Intended as the basis for suggesting"
+                            + " automations, so each entry says whether the pattern is the"
+                            + " caller's own, their team's, or the whole install's.")
+    public ResponseEntity<WorkflowsResponse> getWorkflows(
+            @RequestParam(value = "minLength", defaultValue = "2") int minLength,
+            @RequestParam(value = "limit", defaultValue = "6") int limit,
+            @RequestHeader(value = "X-Browser-Id", required = false) String browserId) {
+        try {
+            return ResponseEntity.ok(
+                    new WorkflowsResponse(
+                            recommendationService.getWorkflows(
+                                    resolvePrincipal(browserId), minLength, limit)));
+        } catch (Exception e) {
+            log.warn("Failed to load tool workflows: {}", e.getMessage());
+            return ResponseEntity.ok(new WorkflowsResponse(List.of()));
+        }
+    }
+
     @PostMapping("/tool-recommendations/usage")
     @Operation(
             summary = "Record a completed tool run",
-            description = "Safe to call fire-and-forget after every tool completion.")
+            description =
+                    "Safe to call fire-and-forget after every tool completion. priorChains carries"
+                            + " what each input document had already been through, so transitions"
+                            + " and workflows follow the file rather than the click order.")
     public ResponseEntity<Void> recordUsage(
             @RequestBody UsageRequest request,
             @RequestHeader(value = "X-Browser-Id", required = false) String browserId) {
@@ -80,7 +113,7 @@ public class ToolRecommendationController {
             return ResponseEntity.badRequest().build();
         }
         trackingService.recordUsage(
-                resolvePrincipal(browserId), request.toolKey(), request.previousToolKey());
+                resolvePrincipal(browserId), request.toolKey(), request.priorChains());
         return ResponseEntity.noContent().build();
     }
 

@@ -27,8 +27,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.model.ToolChainStat;
 import stirling.software.proprietary.model.ToolRecommendationDismissal;
 import stirling.software.proprietary.model.ToolUsageStat;
+import stirling.software.proprietary.repository.ToolChainStatRepository;
 import stirling.software.proprietary.repository.ToolRecommendationDismissalRepository;
 import stirling.software.proprietary.repository.ToolUsageStatRepository;
 
@@ -48,6 +50,11 @@ class ToolUsagePostgresConcurrencyTest {
     private static final int NODES = 16;
     private static final int RUNS_PER_NODE = 25;
 
+    /** A single input document: fresh, or one that has already been compressed. */
+    private static final List<List<String>> FRESH = List.of(List.of());
+
+    private static final List<List<String>> AFTER_COMPARE = List.of(List.of("compare"));
+
     @Container
     static PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
 
@@ -61,6 +68,7 @@ class ToolUsagePostgresConcurrencyTest {
     }
 
     @Autowired private ToolUsageStatRepository usageRepository;
+    @Autowired private ToolChainStatRepository chainRepository;
     @Autowired private ToolRecommendationDismissalRepository dismissalRepository;
 
     private ToolUsageTrackingService trackingService;
@@ -70,10 +78,12 @@ class ToolUsagePostgresConcurrencyTest {
     void setUp() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getSystem().setEnableAnalytics(true);
-        trackingService = new ToolUsageTrackingService(usageRepository, properties);
+        trackingService =
+                new ToolUsageTrackingService(usageRepository, chainRepository, properties);
         recommendationService =
                 new ToolRecommendationService(
-                        new ToolUsageSignalService(usageRepository, java.util.Optional.empty()),
+                        new ToolUsageSignalService(
+                                usageRepository, chainRepository, java.util.Optional.empty()),
                         dismissalRepository,
                         properties);
     }
@@ -112,7 +122,7 @@ class ToolUsagePostgresConcurrencyTest {
 
         // Every thread starts with no row present, so they all take the insert path at once:
         // exactly one wins the primary key and the rest must fall back to incrementing.
-        int failures = race(NODES, () -> trackingService.recordUsage("alice", "compress", null));
+        int failures = race(NODES, () -> trackingService.recordUsage("alice", "compress", FRESH));
 
         assertThat(failures).isZero();
         List<ToolUsageStat> rows = usageRepository.findAll();
@@ -127,13 +137,14 @@ class ToolUsagePostgresConcurrencyTest {
     @DisplayName("sustained concurrent writes tally exactly, with no lost updates")
     void concurrentIncrementsAreLossless() throws InterruptedException {
         usageRepository.deleteAll();
+        chainRepository.deleteAll();
 
         int failures =
                 race(
                         NODES,
                         () -> {
                             for (int i = 0; i < RUNS_PER_NODE; i++) {
-                                trackingService.recordUsage("alice", "ocr", "compare");
+                                trackingService.recordUsage("alice", "ocr", AFTER_COMPARE);
                             }
                         });
 
@@ -142,6 +153,40 @@ class ToolUsagePostgresConcurrencyTest {
         assertThat(rows).hasSize(1);
         assertThat(rows.get(0).getCount()).isEqualTo((long) NODES * RUNS_PER_NODE);
         assertThat(rows.get(0).getFromTool()).isEqualTo("compare");
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DisplayName("chain rows survive the same first-of-day insert race as usage rows")
+    void concurrentChainWritesKeepEveryCount() throws InterruptedException {
+        chainRepository.deleteAll();
+        long day = ToolUsageTrackingService.currentEpochDay();
+
+        int failures =
+                race(NODES, () -> trackingService.recordUsage("alice", "ocr", AFTER_COMPARE));
+
+        assertThat(failures).isZero();
+        List<ToolChainStat> rows = chainRepository.findAll();
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).getChainKey()).isEqualTo("compare>ocr");
+        assertThat(rows.get(0).getChainLength()).isEqualTo(2);
+        assertThat(rows.get(0).getCount()).isEqualTo(NODES);
+        assertThat(rows.get(0).getEpochDay()).isEqualTo(day);
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DisplayName("the native chain insert matches the schema Hibernate generates on Postgres")
+    void nativeChainInsertMatchesGeneratedSchema() {
+        chainRepository.deleteAll();
+        long day = ToolUsageTrackingService.currentEpochDay();
+
+        chainRepository.insertCount("alice", "compare>ocr", day, 2, 3);
+
+        List<ToolChainStat> rows = chainRepository.findAll();
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).getCount()).isEqualTo(3);
+        assertThat(rows.get(0).getChainLength()).isEqualTo(2);
     }
 
     @Test

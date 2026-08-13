@@ -82,7 +82,13 @@ describe("useToolRecommendations", () => {
     });
     await waitFor(() => expect(mockFetch).toHaveBeenCalledWith(null, 8));
 
-    act(() => notifyToolCompleted("compare"));
+    act(() =>
+      notifyToolCompleted({
+        toolId: "compare",
+        inputs: [],
+        outputFileIds: [],
+      }),
+    );
 
     await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("compare", 8));
     expect(result.current.contextTool).toBe("compare");

@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.repository.ToolChainStatRepository;
 import stirling.software.proprietary.repository.ToolUsageStatRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -39,6 +40,7 @@ import stirling.software.proprietary.service.ToolUsageSignalService.TeamScope;
 class ToolUsageSignalCachingTest {
 
     private static ToolUsageStatRepository usageRepository;
+    private static ToolChainStatRepository chainRepository;
     private static UserRepository userRepository;
 
     private AnnotationConfigApplicationContext context;
@@ -60,13 +62,15 @@ class ToolUsageSignalCachingTest {
 
         @Bean
         ToolUsageSignalService toolUsageSignalService() {
-            return new ToolUsageSignalService(usageRepository, Optional.of(userRepository));
+            return new ToolUsageSignalService(
+                    usageRepository, chainRepository, Optional.of(userRepository));
         }
     }
 
     @BeforeEach
     void setUp() {
         usageRepository = mock(ToolUsageStatRepository.class);
+        chainRepository = mock(ToolChainStatRepository.class);
         userRepository = mock(UserRepository.class);
         when(usageRepository.sumGlobal(anyLong(), anyLong()))
                 .thenReturn(List.<Object[]>of(new Object[] {"compress", 5L, 50L}));

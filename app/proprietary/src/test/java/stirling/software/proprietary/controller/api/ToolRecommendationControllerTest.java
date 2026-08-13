@@ -25,14 +25,22 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.DismissalRequest;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.RecommendationsResponse;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.UsageRequest;
+import stirling.software.proprietary.controller.api.ToolRecommendationController.WorkflowsResponse;
 import stirling.software.proprietary.service.ToolRecommendationService;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
+import stirling.software.proprietary.service.ToolRecommendationService.ToolWorkflow;
+import stirling.software.proprietary.service.ToolRecommendationService.WorkflowScope;
 import stirling.software.proprietary.service.ToolUsageTrackingService;
 
 @ExtendWith(MockitoExtension.class)
 class ToolRecommendationControllerTest {
 
     private static final String BROWSER_ID = "0f8fad5b-d9cb-469f-a165-70867728950e";
+
+    /** One input document that has already been through compress. */
+    private static final List<List<String>> CHAIN = List.of(List.of("compress"));
+
+    private static final List<List<String>> JUNK_CHAIN = List.of(List.of("bad key!"));
 
     @Mock private ToolUsageTrackingService trackingService;
     @Mock private ToolRecommendationService recommendationService;
@@ -105,10 +113,10 @@ class ToolRecommendationControllerTest {
             when(userService.getCurrentUsername()).thenReturn("alice");
 
             ResponseEntity<Void> response =
-                    controller.recordUsage(new UsageRequest("ocr", "compare"), null);
+                    controller.recordUsage(new UsageRequest("ocr", CHAIN), null);
 
             assertThat(response.getStatusCode().value()).isEqualTo(204);
-            verify(trackingService).recordUsage("alice", "ocr", "compare");
+            verify(trackingService).recordUsage("alice", "ocr", CHAIN);
         }
 
         @Test
@@ -122,13 +130,44 @@ class ToolRecommendationControllerTest {
         }
 
         @Test
-        @DisplayName("the previous tool is passed through for the service to validate")
-        void previousToolPassedThrough() {
+        @DisplayName("chains are passed through for the service to validate")
+        void chainsPassedThrough() {
             when(userService.getCurrentUsername()).thenReturn("alice");
 
-            controller.recordUsage(new UsageRequest("ocr", "bad key!"), null);
+            controller.recordUsage(new UsageRequest("ocr", JUNK_CHAIN), null);
 
-            verify(trackingService).recordUsage("alice", "ocr", "bad key!");
+            verify(trackingService).recordUsage("alice", "ocr", JUNK_CHAIN);
+        }
+    }
+
+    @Nested
+    @DisplayName("GET workflows")
+    class GetWorkflows {
+
+        @Test
+        @DisplayName("returns the repeated workflows for the resolved principal")
+        void returnsWorkflows() {
+            when(userService.getCurrentUsername()).thenReturn("alice");
+            ToolWorkflow workflow =
+                    new ToolWorkflow(List.of("compress", "ocr"), 4, WorkflowScope.USER);
+            when(recommendationService.getWorkflows("alice", 2, 6)).thenReturn(List.of(workflow));
+
+            ResponseEntity<WorkflowsResponse> response = controller.getWorkflows(2, 6, null);
+
+            assertThat(response.getBody().workflows()).containsExactly(workflow);
+        }
+
+        @Test
+        @DisplayName("a failure degrades to an empty list rather than breaking the caller")
+        void failureDegrades() {
+            when(userService.getCurrentUsername()).thenReturn("alice");
+            when(recommendationService.getWorkflows(anyString(), anyInt(), anyInt()))
+                    .thenThrow(new RuntimeException("db down"));
+
+            ResponseEntity<WorkflowsResponse> response = controller.getWorkflows(2, 6, null);
+
+            assertThat(response.getStatusCode().value()).isEqualTo(200);
+            assertThat(response.getBody().workflows()).isEmpty();
         }
     }
 

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,11 +8,15 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.model.ToolChainStat;
+import stirling.software.proprietary.repository.ToolChainStatRepository;
 import stirling.software.proprietary.repository.ToolUsageStatRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -36,7 +41,11 @@ public class ToolUsageSignalService {
     private static final int MAX_TEAM_PRINCIPALS = 500;
 
     private final ToolUsageStatRepository usageRepository;
+    private final ToolChainStatRepository chainRepository;
     private final Optional<UserRepository> userRepository;
+
+    /** An observed workflow: the ordered tools, and how many documents took that path. */
+    public record ToolChainSummary(List<String> tools, long count) {}
 
     /**
      * A team's members, resolved once per TTL; empty when the caller has no team. Deliberately
@@ -94,6 +103,47 @@ public class ToolUsageSignalService {
             key = "'globalTrans|' + #fromTool + '|' + #cutoff + '|' + #recentCutoff")
     public Map<String, Double> globalTransitions(String fromTool, long cutoff, long recentCutoff) {
         return weight(usageRepository.sumByFrom(fromTool, cutoff, recentCutoff));
+    }
+
+    public List<ToolChainSummary> userChains(
+            String principal, long cutoff, int minLength, int limit) {
+        return chains(chainRepository.topByPrincipal(principal, cutoff, minLength, page(limit)));
+    }
+
+    @Cacheable(
+            value = CACHE_NAME,
+            key =
+                    "'teamChains|' + #scope.teamId() + '|' + #cutoff + '|' + #minLength + '|' +"
+                            + " #limit")
+    public List<ToolChainSummary> teamChains(
+            TeamScope scope, long cutoff, int minLength, int limit) {
+        return chains(
+                chainRepository.topByPrincipals(
+                        scope.principals(), cutoff, minLength, page(limit)));
+    }
+
+    @Cacheable(
+            value = CACHE_NAME,
+            key = "'globalChains|' + #cutoff + '|' + #minLength + '|' + #limit")
+    public List<ToolChainSummary> globalChains(long cutoff, int minLength, int limit) {
+        return chains(chainRepository.topGlobal(cutoff, minLength, page(limit)));
+    }
+
+    private static Pageable page(int limit) {
+        return PageRequest.of(0, Math.max(1, limit));
+    }
+
+    /** Collapses [chainKey, chainLength, totalCount] rows; the query already ordered them. */
+    private static List<ToolChainSummary> chains(List<Object[]> rows) {
+        List<ToolChainSummary> summaries = new ArrayList<>(rows.size());
+        for (Object[] row : rows) {
+            long count = row[2] == null ? 0 : ((Number) row[2]).longValue();
+            List<String> tools = ToolChainStat.fromChainKey((String) row[0]);
+            if (count > 0 && tools.size() > 1) {
+                summaries.add(new ToolChainSummary(tools, count));
+            }
+        }
+        return List.copyOf(summaries);
     }
 
     /** {@code unless} keeps a transient lookup failure from being cached as "no team". */

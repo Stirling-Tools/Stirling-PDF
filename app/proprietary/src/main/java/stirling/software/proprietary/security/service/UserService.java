@@ -45,6 +45,7 @@ import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.repository.ToolChainStatRepository;
 import stirling.software.proprietary.repository.ToolRecommendationDismissalRepository;
 import stirling.software.proprietary.repository.ToolUsageStatRepository;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
@@ -99,6 +100,7 @@ public class UserService implements UserServiceInterface {
     private final TeamMembershipService teamMembershipService;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
     private final ToolUsageStatRepository toolUsageStatRepository;
+    private final ToolChainStatRepository toolChainStatRepository;
     private final ToolRecommendationDismissalRepository toolRecommendationDismissalRepository;
 
     @Transactional
@@ -269,6 +271,7 @@ public class UserService implements UserServiceInterface {
 
         // Tool usage and dismissals key on the username, so a recreated name would inherit them
         toolUsageStatRepository.deleteByPrincipal(user.getUsername());
+        toolChainStatRepository.deleteByPrincipal(user.getUsername());
         toolRecommendationDismissalRepository.deleteByPrincipal(user.getUsername());
 
         // Drop ACL grants held by this user and detach grants they issued

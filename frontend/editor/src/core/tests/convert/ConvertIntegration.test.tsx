@@ -64,6 +64,7 @@ vi.mock("../../services/apiClient", () => ({
 
 // Import the mocked apiClient
 import apiClient from "@app/services/apiClient";
+import { notifyToolCompleted } from "@app/services/toolUsageTracker";
 const mockedApiClient = vi.mocked(apiClient);
 
 // Usage-recommendation tracking would add its own posts to the apiClient spy.
@@ -222,6 +223,16 @@ describe("Convert Tool Integration Tests", () => {
       // The output file must be persisted via fileStorage.persistVersionedOutputs
       // so downstream tools see it in the registry.
       expect(fileStorage.persistVersionedOutputs).toHaveBeenCalled();
+
+      // The tracker must see the real input document and the output that
+      // replaced it, so the recorded chain follows the file. Convert is exactly
+      // the case that breaks the version chain, so the handover has to be here.
+      const completion = vi.mocked(notifyToolCompleted).mock.calls[0][0];
+      expect(completion.toolId).toBe("convert");
+      expect(completion.inputs.map((input) => input.id)).toEqual([
+        testFile.fileId,
+      ]);
+      expect(completion.outputFileIds).not.toHaveLength(0);
     });
 
     test("should handle API error responses correctly", async () => {

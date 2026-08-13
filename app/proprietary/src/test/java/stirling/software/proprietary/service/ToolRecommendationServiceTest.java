@@ -2,6 +2,7 @@ package stirling.software.proprietary.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -29,7 +30,10 @@ import stirling.software.proprietary.model.ToolRecommendationDismissal;
 import stirling.software.proprietary.model.ToolRecommendationDismissalId;
 import stirling.software.proprietary.repository.ToolRecommendationDismissalRepository;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
+import stirling.software.proprietary.service.ToolRecommendationService.ToolWorkflow;
+import stirling.software.proprietary.service.ToolRecommendationService.WorkflowScope;
 import stirling.software.proprietary.service.ToolUsageSignalService.TeamScope;
+import stirling.software.proprietary.service.ToolUsageSignalService.ToolChainSummary;
 
 @ExtendWith(MockitoExtension.class)
 class ToolRecommendationServiceTest {
@@ -72,6 +76,122 @@ class ToolRecommendationServiceTest {
 
     private static List<String> toolKeys(List<ToolRecommendation> recommendations) {
         return recommendations.stream().map(ToolRecommendation::toolKey).toList();
+    }
+
+    private static ToolChainSummary chain(long count, String... tools) {
+        return new ToolChainSummary(List.of(tools), count);
+    }
+
+    @Nested
+    @DisplayName("Workflows")
+    class Workflows {
+
+        @BeforeEach
+        void noChainsAnywhere() {
+            lenient()
+                    .when(signalService.userChains(anyString(), anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of());
+            lenient()
+                    .when(
+                            signalService.teamChains(
+                                    any(TeamScope.class), anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of());
+            lenient()
+                    .when(signalService.globalChains(anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of());
+        }
+
+        @Test
+        @DisplayName("the caller's own repeated workflows come first")
+        void ownWorkflowsFirst() {
+            when(signalService.userChains(eq(PRINCIPAL), anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(9, "compress", "watermark")));
+            when(signalService.globalChains(anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(400, "split", "merge")));
+
+            List<ToolWorkflow> result = service.getWorkflows(PRINCIPAL, 2, 6);
+
+            assertThat(result)
+                    .containsExactly(
+                            new ToolWorkflow(
+                                    List.of("compress", "watermark"), 9, WorkflowScope.USER),
+                            new ToolWorkflow(List.of("split", "merge"), 400, WorkflowScope.GLOBAL));
+        }
+
+        @Test
+        @DisplayName("a workflow already seen at a narrower scope is not repeated")
+        void narrowerScopeWins() {
+            when(signalService.userChains(eq(PRINCIPAL), anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(2, "compress", "ocr")));
+            when(signalService.globalChains(anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(900, "compress", "ocr")));
+
+            assertThat(service.getWorkflows(PRINCIPAL, 2, 6))
+                    .containsExactly(
+                            new ToolWorkflow(List.of("compress", "ocr"), 2, WorkflowScope.USER));
+        }
+
+        @Test
+        @DisplayName("team workflows are only consulted for a team with other members")
+        void soloTeamIsSkipped() {
+            when(signalService.resolveTeamScope(PRINCIPAL)).thenReturn(TeamScope.none());
+
+            service.getWorkflows(PRINCIPAL, 2, 6);
+
+            verify(signalService, never())
+                    .teamChains(any(TeamScope.class), anyLong(), anyInt(), anyInt());
+        }
+
+        @Test
+        @DisplayName("a team's workflows sit between the caller's own and the install's")
+        void teamWorkflowsRankBetween() {
+            when(signalService.resolveTeamScope(PRINCIPAL)).thenReturn(TEAM);
+            when(signalService.userChains(eq(PRINCIPAL), anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(1, "a", "b")));
+            when(signalService.teamChains(eq(TEAM), anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(2, "c", "d")));
+            when(signalService.globalChains(anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(3, "e", "f")));
+
+            assertThat(service.getWorkflows(PRINCIPAL, 2, 6))
+                    .extracting(ToolWorkflow::scope)
+                    .containsExactly(WorkflowScope.USER, WorkflowScope.TEAM, WorkflowScope.GLOBAL);
+        }
+
+        @Test
+        @DisplayName("a single tool is never returned as a workflow")
+        void minimumLengthIsTwo() {
+            service.getWorkflows(PRINCIPAL, 1, 6);
+
+            verify(signalService)
+                    .userChains(
+                            eq(PRINCIPAL),
+                            anyLong(),
+                            eq(ToolRecommendationService.MIN_WORKFLOW_TOOLS),
+                            anyInt());
+        }
+
+        @Test
+        @DisplayName("the limit is capped and never exceeded across scopes")
+        void limitIsCapped() {
+            when(signalService.userChains(eq(PRINCIPAL), anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(9, "a", "b"), chain(8, "c", "d")));
+            when(signalService.globalChains(anyLong(), anyInt(), anyInt()))
+                    .thenReturn(List.of(chain(7, "e", "f")));
+
+            assertThat(service.getWorkflows(PRINCIPAL, 2, 2)).hasSize(2);
+            assertThat(service.getWorkflows(PRINCIPAL, 2, 999))
+                    .hasSizeLessThanOrEqualTo(ToolRecommendationService.MAX_LIMIT);
+        }
+
+        @Test
+        @DisplayName("withheld analytics consent serves no workflow history")
+        void consentGatesWorkflows() {
+            properties.getSystem().setEnableAnalytics(false);
+
+            assertThat(service.getWorkflows(PRINCIPAL, 2, 6)).isEmpty();
+            verifyNoInteractions(signalService);
+        }
     }
 
     @Nested
