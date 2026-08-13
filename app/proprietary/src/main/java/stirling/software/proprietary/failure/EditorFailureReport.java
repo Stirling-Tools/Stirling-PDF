@@ -18,11 +18,30 @@ import java.util.List;
 public record EditorFailureReport(
         String operation, String errorCode, List<String> fileIds, String detail) {
 
+    /**
+     * Cap on the files one report may name. Each one becomes a permanent incident and this endpoint
+     * is open to any authenticated user, so without a bound a single call can flood a leader's
+     * queue. 200 is several times the largest batch an editor session plausibly fails on, and the
+     * most the review queue shows in one page, so a real report never meets it.
+     *
+     * <p>An oversized report is refused whole rather than trimmed: see {@link
+     * FileRunEventController#report}.
+     */
+    static final int MAX_FILE_IDS = 200;
+
     public EditorFailureReport {
         fileIds = fileIds == null ? List.of() : List.copyOf(fileIds);
     }
 
     boolean hasOperation() {
         return operation != null && !operation.isBlank();
+    }
+
+    /**
+     * Counted before the blank ids are dropped, because this bounds the request rather than the
+     * rows it would produce.
+     */
+    boolean namesTooManyFiles() {
+        return fileIds.size() > MAX_FILE_IDS;
     }
 }
