@@ -20,15 +20,26 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Builds the Pipelines overview: every policy the caller's team owns, each annotated with its
- * referenced sources (resolved to display names), its pipeline steps, and a trigger/output summary.
- * Source names are resolved from the team's sources in memory rather than persisted on the policy,
- * so the view always reflects the live source set. This is the "all pipelines" admin surface; the
- * user-facing Policies page builds only a friendly subset of the same backend policies.
+ * Builds the Pipelines overview: the policies the caller's team built on the Pipelines page, each
+ * annotated with its referenced sources (resolved to display names), its pipeline steps, and a
+ * trigger/output summary. Source names are resolved from the team's sources in memory rather than
+ * persisted on the policy, so the view always reflects the live source set.
+ *
+ * <p>Only policies created from the Pipelines page appear. Frontend/catalogue policies are excluded
+ * even though they share the same {@code Policy} store: they carry a {@code categoryId} in their
+ * output options and are managed by the user-facing Policies page (including the seeded
+ * Classification policy). A pipeline that uses a folder-watch trigger is still a pipeline and
+ * stays; the separate watched-folders feature does not create {@code Policy} records at all.
  */
 @Service
 @RequiredArgsConstructor
 public class PolicyOverviewService {
+
+    /**
+     * Output-options key stamped on frontend/catalogue policies (by the Policies page codec and the
+     * classification seeder). Its presence means the Policies page owns the policy, not this page.
+     */
+    private static final String CATEGORY_OPTION = "categoryId";
 
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
@@ -36,7 +47,10 @@ public class PolicyOverviewService {
     private final SourceAccessGuard sourceAccessGuard;
 
     public PoliciesOverviewResponse overview() {
-        List<Policy> policies = policyAccessGuard.visibleFrom(policyStore);
+        List<Policy> policies =
+                policyAccessGuard.visibleFrom(policyStore).stream()
+                        .filter(PolicyOverviewService::isPipeline)
+                        .toList();
         Map<String, String> sourceNames = sourceNames();
 
         List<PolicyView> views =
@@ -48,6 +62,26 @@ public class PolicyOverviewService {
                         .toList();
 
         return new PoliciesOverviewResponse(buildKpis(policies), views);
+    }
+
+    /**
+     * Whether a policy belongs on the Pipelines page: it was built there, rather than auto-created
+     * for the user-facing Policies page. A pipeline that uses a folder-watch trigger is still a
+     * pipeline and is included.
+     */
+    private static boolean isPipeline(Policy policy) {
+        return !isCataloguePolicy(policy);
+    }
+
+    /**
+     * A frontend/catalogue policy: the Policies page and the classification seeder stamp a {@code
+     * categoryId} into the output options, so its presence means that page owns the policy.
+     */
+    private static boolean isCataloguePolicy(Policy policy) {
+        OutputSpec output = policy.output();
+        return output != null
+                && output.options().get(CATEGORY_OPTION) instanceof String category
+                && !category.isBlank();
     }
 
     /** Display names for every source the caller's team can see, keyed by source id. */

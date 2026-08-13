@@ -152,9 +152,17 @@ function toView(policy: StoredPolicy): PipelineView {
   };
 }
 
-function buildKpis(): PipelineKpi[] {
-  const total = store.length;
-  const active = store.filter((p) => p.enabled).length;
+// Mirrors the backend PolicyOverviewService: only policies built on the Pipelines page appear.
+// Frontend/catalogue policies (a categoryId in output options) are owned by the Policies page and
+// hidden. A folder-watch trigger is no signal - such a policy is still a pipeline.
+function isPipeline(policy: StoredPolicy): boolean {
+  const categoryId = policy.output?.options?.categoryId;
+  return !(typeof categoryId === "string" && categoryId.length > 0);
+}
+
+function buildKpis(policies: StoredPolicy[]): PipelineKpi[] {
+  const total = policies.length;
+  const active = policies.filter((p) => p.enabled).length;
   return [
     { value: total, description: "pipelines" },
     { value: active, description: "running automatically" },
@@ -163,10 +171,11 @@ function buildKpis(): PipelineKpi[] {
 }
 
 function buildOverview(): PipelinesOverviewResponse {
-  const pipelines = store
+  const visible = store.filter(isPipeline);
+  const pipelines = visible
     .map(toView)
     .sort((a, b) => a.name.localeCompare(b.name));
-  return { kpis: buildKpis(), pipelines };
+  return { kpis: buildKpis(visible), pipelines };
 }
 
 export const pipelinesHandlers = [
