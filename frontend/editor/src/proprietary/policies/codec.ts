@@ -6,12 +6,18 @@
  * `Policy.inputs` binds them and triggers/sweeps see them. Mirrors the editor's
  * `buildBackendPolicy` / `fromBackendPolicy` from `policyPipeline.ts`, minus
  * the editor-only `automation` blob.
+ *
+ * `sources` and `inputs` are deliberately separate: `sources` is the display
+ * selection the options bag has always carried unchecked, `inputs` is the
+ * binding the backend validates and caps. The codec round-trips each as it
+ * found it; only `policyInputs` turns a selection into a binding.
  */
 
 import { resolveRunOn } from "@app/policies/runOn";
 import type {
   PolicyDecodedState,
   WireOutputOptions,
+  WirePipelineInput,
   WirePolicy,
 } from "@app/policies/types";
 
@@ -22,6 +28,22 @@ const DEFAULTS = {
 
 /** The virtual editor source: display metadata only, never a wire sourceId. */
 export const EDITOR_SOURCE_ID = "editor";
+
+/**
+ * Bind a source selection as wire inputs: the virtual editor is dropped, and
+ * every real source is paired with the trigger that pulls it. Only a deliberate
+ * edit binds sources, so this is the wizard's call to make - never a re-derive
+ * from a decoded record, whose selection may name more sources than the backend
+ * binds (see `PolicyDecodedState.inputs`).
+ */
+export function policyInputs(
+  sources: string[],
+  trigger: WirePipelineInput["trigger"],
+): WirePipelineInput[] {
+  return sources
+    .filter((id) => id !== EDITOR_SOURCE_ID)
+    .map((sourceId) => ({ sourceId, trigger }));
+}
 
 export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
   const options: WireOutputOptions = {
@@ -42,9 +64,7 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     name: state.name,
     owner: "",
     enabled: state.enabled,
-    inputs: state.sources
-      .filter((id) => id !== EDITOR_SOURCE_ID)
-      .map((sourceId) => ({ sourceId, trigger: state.trigger })),
+    inputs: state.inputs,
     steps: state.steps,
     output: { type: "inline", options },
     outputIds: state.outputIds,
@@ -79,6 +99,7 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     enabled: policy.enabled,
     categoryId,
     sources,
+    inputs,
     scopeTypes: Array.isArray(raw.scopeTypes)
       ? (raw.scopeTypes as string[])
       : [],

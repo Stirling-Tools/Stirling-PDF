@@ -97,7 +97,10 @@ export interface PolicyDecodedState {
   name: string;
   enabled: boolean;
   categoryId: string;
+  /** Display selection, editor included; may exceed what the backend binds. */
   sources: string[];
+  /** The bound inputs exactly as stored; only a wizard save rebinds these. */
+  inputs: WirePipelineInput[];
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
@@ -108,7 +111,7 @@ export interface PolicyDecodedState {
   maxRetries: number;
   retryDelayMinutes: number;
   steps: WirePipelineStep[];
-  /** Trigger for the selected backend source; null = manual / editor-only. */
+  /** Read view of the bound input's trigger; encoding takes it from `inputs`. */
   trigger: WireTriggerConfig | null;
   /** Saved sources the output is also delivered to (write targets). */
   outputIds: string[];

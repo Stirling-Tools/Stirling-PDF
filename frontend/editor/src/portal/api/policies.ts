@@ -11,7 +11,11 @@
 
 import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
-import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
+import {
+  fromWirePolicy,
+  policyInputs,
+  toWirePolicy,
+} from "@app/policies/codec";
 import { resolveRunOn } from "@app/policies/runOn";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
 import { policyStep, type PolicyToolStep } from "@app/policies/operations";
@@ -19,6 +23,7 @@ import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type {
   PolicyDecodedState,
   PolicyRunView,
+  WirePipelineInput,
   WirePipelineStep,
   WirePolicy,
   WireTriggerConfig,
@@ -77,6 +82,8 @@ export interface PolicyState {
   configured: boolean;
   status: PolicyStatus;
   sources: string[];
+  /** The stored input bindings, carried so a lifecycle save can replay them. */
+  inputs?: WirePipelineInput[];
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
@@ -419,6 +426,7 @@ function decoratePolicy(
     configured: true,
     status,
     sources: decoded.sources,
+    inputs: decoded.inputs,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,
@@ -583,6 +591,8 @@ export function buildWireFromSetup(
       enabled,
       categoryId: entry.category.id,
       sources: result.sources,
+      // A wizard save is the one place a policy (re)binds its inputs.
+      inputs: policyInputs(result.sources, result.trigger),
       scopeTypes: result.scopeTypes,
       reviewerEmail: result.reviewerEmail,
       fieldValues: result.fieldValues,
@@ -599,7 +609,12 @@ export function buildWireFromSetup(
   };
 }
 
-/** Build a wire policy from an existing decorated policy (e.g. for pause/resume). */
+/**
+ * Build a wire policy from an existing decorated policy (e.g. for pause/resume).
+ * Lifecycle saves change only `enabled`, so the stored bindings are replayed
+ * as-is: re-deriving them from `sources` would both rebind a legacy record whose
+ * selection names several sources and blow the backend's one-input cap.
+ */
 export function buildWireFromState(
   entry: CatalogueEntry,
   policy: DecoratedPolicy,
@@ -615,6 +630,7 @@ export function buildWireFromState(
       enabled,
       categoryId: entry.category.id,
       sources: s.sources,
+      inputs: s.inputs ?? [],
       scopeTypes: s.scopeTypes,
       reviewerEmail: s.reviewerEmail,
       fieldValues: s.fieldValues,

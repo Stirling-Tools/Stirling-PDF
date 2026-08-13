@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { toWirePolicy, fromWirePolicy } from "@app/policies/codec";
+import {
+  toWirePolicy,
+  fromWirePolicy,
+  policyInputs,
+} from "@app/policies/codec";
 import type { PolicyDecodedState, WirePolicy } from "@app/policies/types";
 // oxlint-disable-next-line no-restricted-imports -- shared cross-language fixture; no alias covers app/
 import wireFixture from "../../../../../app/proprietary/src/test/resources/policy/portal-wire-policy.json";
@@ -10,6 +14,7 @@ const FULL_STATE: PolicyDecodedState = {
   enabled: true,
   categoryId: "security",
   sources: ["editor", "gdrive"],
+  inputs: [{ sourceId: "gdrive", trigger: null }],
   scopeTypes: ["Contracts", "Invoices"],
   reviewerEmail: "admin@example.com",
   fieldValues: { auditTrail: true, frameworks: ["HIPAA"] },
@@ -49,26 +54,50 @@ describe("toWirePolicy", () => {
     expect(wire.steps).toEqual(FULL_STATE.steps);
   });
 
-  it("binds real sources as inputs, excluding the virtual editor", () => {
+  it("emits the bound inputs unchanged", () => {
     const wire = toWirePolicy(FULL_STATE);
     expect(wire.inputs).toEqual([{ sourceId: "gdrive", trigger: null }]);
   });
 
-  it("pairs the trigger with the bound source", () => {
+  it("does not re-derive inputs from the source selection", () => {
     const wire = toWirePolicy({
       ...FULL_STATE,
-      trigger: { type: "folder-watch", options: {} },
-      outputIds: ["src-out"],
+      sources: ["editor", "gdrive", "dropbox"],
     });
-    expect(wire.inputs).toEqual([
-      { sourceId: "gdrive", trigger: { type: "folder-watch", options: {} } },
+    expect(wire.inputs).toEqual([{ sourceId: "gdrive", trigger: null }]);
+    expect(wire.output.options.sources).toEqual([
+      "editor",
+      "gdrive",
+      "dropbox",
     ]);
-    expect(wire.outputIds).toEqual(["src-out"]);
   });
 
   it("emits no inputs for an editor-only policy", () => {
-    const wire = toWirePolicy({ ...FULL_STATE, sources: ["editor"] });
+    const wire = toWirePolicy({
+      ...FULL_STATE,
+      sources: ["editor"],
+      inputs: [],
+    });
     expect(wire.inputs).toEqual([]);
+  });
+});
+
+describe("policyInputs", () => {
+  it("binds real sources, excluding the virtual editor", () => {
+    expect(policyInputs(["editor", "gdrive"], null)).toEqual([
+      { sourceId: "gdrive", trigger: null },
+    ]);
+  });
+
+  it("pairs the trigger with each bound source", () => {
+    const trigger = { type: "folder-watch", options: {} };
+    expect(policyInputs(["editor", "gdrive"], trigger)).toEqual([
+      { sourceId: "gdrive", trigger },
+    ]);
+  });
+
+  it("binds nothing for an editor-only selection", () => {
+    expect(policyInputs(["editor"], null)).toEqual([]);
   });
 });
 
@@ -89,6 +118,7 @@ describe("fromWirePolicy → round-trip", () => {
     expect(decoded.maxRetries).toBe(FULL_STATE.maxRetries);
     expect(decoded.retryDelayMinutes).toBe(FULL_STATE.retryDelayMinutes);
     expect(decoded.steps).toEqual(FULL_STATE.steps);
+    expect(decoded.inputs).toEqual(FULL_STATE.inputs);
   });
 
   it("defaults a missing runOn to the category default (security → export)", () => {
@@ -142,6 +172,7 @@ describe("fromWirePolicy → round-trip", () => {
     });
     expect(decoded.categoryId).toBe("");
     expect(decoded.sources).toEqual([]);
+    expect(decoded.inputs).toEqual([]);
     expect(decoded.runOn).toBe("upload");
     expect(decoded.outputMode).toBe("new_version");
     expect(decoded.trigger).toBeNull();
@@ -161,14 +192,32 @@ describe("fromWirePolicy → round-trip", () => {
     expect(fromWirePolicy(wire).sources).toEqual(["editor", "gdrive"]);
   });
 
+  it("decodes a wider selection than the record binds without inventing inputs", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    // A record saved before inputs existed: selection in options, nothing bound.
+    (wire.output.options as Record<string, unknown>).sources = [
+      "editor",
+      "gdrive",
+      "dropbox",
+    ];
+    wire.inputs = [];
+    const decoded = fromWirePolicy(wire);
+    expect(decoded.sources).toEqual(["editor", "gdrive", "dropbox"]);
+    expect(decoded.inputs).toEqual([]);
+    // Re-encoding it (a pause/resume save) must not bind what was never bound.
+    expect(toWirePolicy(decoded).inputs).toEqual([]);
+  });
+
   it("round-trips trigger and outputIds", () => {
+    const trigger = { type: "webhook", options: {} };
     const wire = toWirePolicy({
       ...FULL_STATE,
-      trigger: { type: "webhook", options: {} },
+      inputs: [{ sourceId: "gdrive", trigger }],
+      trigger,
       outputIds: ["dest-1"],
     });
     const decoded = fromWirePolicy(wire);
-    expect(decoded.trigger).toEqual({ type: "webhook", options: {} });
+    expect(decoded.trigger).toEqual(trigger);
     expect(decoded.outputIds).toEqual(["dest-1"]);
   });
 });
@@ -185,6 +234,15 @@ const ROUTED_STATE: PolicyDecodedState = {
   enabled: true,
   categoryId: "routing",
   sources: ["editor", "src-dropbox"],
+  inputs: [
+    {
+      sourceId: "src-dropbox",
+      trigger: {
+        type: "schedule",
+        options: { schedule: { type: "every", count: 1, unit: "HOURS" } },
+      },
+    },
+  ],
   scopeTypes: [],
   reviewerEmail: "",
   fieldValues: {},
