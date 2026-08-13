@@ -201,7 +201,9 @@ class PdfQuestionAgent:
         provider = self.runtime.settings.chat_provider
         agent = Agent(
             model=self.runtime.smart_model,
-            output_type=structured_output([PdfQuestionAnswerResponse, PdfQuestionNotFoundResponse], chat_provider=provider),
+            output_type=structured_output(
+                [PdfQuestionAnswerResponse, PdfQuestionNotFoundResponse], chat_provider=provider
+            ),
             retries=output_retries(provider),
             system_prompt=PDF_QUESTION_SYSTEM_PROMPT,
             # pydantic-ai accepts a list of (string-or-callable) instruction sources;

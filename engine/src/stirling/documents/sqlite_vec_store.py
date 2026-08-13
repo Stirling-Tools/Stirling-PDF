@@ -130,7 +130,9 @@ class SqliteVecStore(DocumentStore):
             )
             """
         )
-        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_pages_collection_owner ON document_pages(collection, owner_id)")
+        self._conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_pages_collection_owner ON document_pages(collection, owner_id)"
+        )
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS document_acl (
@@ -146,7 +148,9 @@ class SqliteVecStore(DocumentStore):
         )
         # Lookup by principal is the hot path for search/list (every read
         # joins through this index). Composite ordering matches the WHERE.
-        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_acl_principal_permission ON document_acl(principal_id, permission)")
+        self._conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_acl_principal_permission ON document_acl(principal_id, permission)"
+        )
         self._conn.commit()
 
     # ── lifecycle of the (collection, owner_id) row ────────────────────────
@@ -207,7 +211,8 @@ class SqliteVecStore(DocumentStore):
     def _sync_purge_owner(self, owner_id: OwnerId) -> int:
         # Drop all vec0 virtual tables for this owner first (FK cascade can't reach them).
         vec_tables = [
-            r[0] for r in self._conn.execute("SELECT table_name FROM collections WHERE owner_id = ?", (owner_id,)).fetchall()
+            r[0]
+            for r in self._conn.execute("SELECT table_name FROM collections WHERE owner_id = ?", (owner_id,)).fetchall()
         ]
         for name in vec_tables:
             self._conn.execute(f"DROP TABLE IF EXISTS {name}")
@@ -234,7 +239,9 @@ class SqliteVecStore(DocumentStore):
         ]
         for name in vec_tables:
             self._conn.execute(f"DROP TABLE IF EXISTS {name}")
-        cursor = self._conn.execute("DELETE FROM documents_meta WHERE expires_at IS NOT NULL AND expires_at < datetime('now')")
+        cursor = self._conn.execute(
+            "DELETE FROM documents_meta WHERE expires_at IS NOT NULL AND expires_at < datetime('now')"
+        )
         self._conn.commit()
         return cursor.rowcount
 
@@ -337,7 +344,7 @@ class SqliteVecStore(DocumentStore):
         )
         if pages:
             self._conn.executemany(
-                "INSERT INTO document_pages(collection, owner_id, page_number, text, char_count) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO document_pages(collection, owner_id, page_number, text, char_count) VALUES (?, ?, ?, ?, ?)",  # noqa: E501
                 [(collection, owner_id, p.page_number, p.text, p.char_count) for p in pages],
             )
         self._conn.commit()

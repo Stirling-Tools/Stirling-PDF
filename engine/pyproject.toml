@@ -81,7 +81,7 @@ exclude = ["tests"]
 default-groups = []
 
 [tool.ruff]
-line-length = 127
+line-length = 120
 target-version = "py313"
 
 [tool.ruff.lint]

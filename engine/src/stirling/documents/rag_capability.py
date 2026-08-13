@@ -149,5 +149,7 @@ class RagCapability:
             source = result.document.metadata.get("source", "unknown")
             chunk_idx = result.document.metadata.get("chunk_index", "?")
             score = f"{result.score:.3f}"
-            sections.append(f"[Result {i} | source: {source}, chunk: {chunk_idx}, relevance: {score}]\n{result.document.text}")
+            sections.append(
+                f"[Result {i} | source: {source}, chunk: {chunk_idx}, relevance: {score}]\n{result.document.text}"
+            )
         return "\n\n---\n\n".join(sections)

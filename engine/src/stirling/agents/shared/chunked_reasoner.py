@@ -182,7 +182,9 @@ class ChunkedReasoner:
         worker_timeout_seconds: float | None = None,
         notes_char_budget: int | None = None,
     ) -> None:
-        budget = notes_char_budget if notes_char_budget is not None else runtime.settings.chunked_reasoner_notes_char_budget
+        budget = (
+            notes_char_budget if notes_char_budget is not None else runtime.settings.chunked_reasoner_notes_char_budget
+        )
         if budget <= 0:
             raise ValueError("notes_char_budget must be positive")
         self._runtime = runtime

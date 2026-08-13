@@ -154,14 +154,18 @@ def validate_tool_chain(
     return diagnostics
 
 
-def _check_transition(index: int, step: ToolChainStep, spec: ToolIOSpec, previous: ResolvedOutput) -> list[ToolDiagnostic]:
+def _check_transition(
+    index: int, step: ToolChainStep, spec: ToolIOSpec, previous: ResolvedOutput
+) -> list[ToolDiagnostic]:
     if previous.format == ToolFormat.NONE:
         return [
             ToolDiagnostic(
                 step_index=index,
                 severity=DiagnosticSeverity.ERROR,
                 code=DiagnosticCode.FORMAT_MISMATCH,
-                message=(f"The previous step returns a report rather than a file, so {step.operation} has nothing to run on."),
+                message=(
+                    f"The previous step returns a report rather than a file, so {step.operation} has nothing to run on."
+                ),
             )
         ]
 
@@ -184,7 +188,7 @@ def _check_transition(index: int, step: ToolChainStep, spec: ToolIOSpec, previou
                 severity=DiagnosticSeverity.WARN,
                 code=DiagnosticCode.OUTPUT_UNCERTAIN,
                 message=(
-                    f"The previous step's output depends on how it is configured, so {step.operation} may not be able to run."
+                    f"The previous step's output depends on how it is configured, so {step.operation} may not be able to run."  # noqa: E501
                 ),
             )
         ]

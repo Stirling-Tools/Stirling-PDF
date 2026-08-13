@@ -139,8 +139,12 @@ class PdfCommentReport(ApiModel):
     so this never re-enters the orchestrator as a resume artifact).
     """
 
-    annotations_applied: int = Field(ge=0, description="Number of sticky-note annotations actually written into the PDF.")
+    annotations_applied: int = Field(
+        ge=0, description="Number of sticky-note annotations actually written into the PDF."
+    )
     instructions_received: int = Field(
         ge=0, description="Number of comment instructions the engine produced before filtering."
     )
-    rationale: str | None = Field(default=None, description="One-sentence summary the engine emitted alongside the comments.")
+    rationale: str | None = Field(
+        default=None, description="One-sentence summary the engine emitted alongside the comments."
+    )

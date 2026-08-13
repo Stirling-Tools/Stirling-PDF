@@ -35,7 +35,7 @@ _CONTRADICTION_INTENT_SYSTEM_PROMPT = (
 class _ContradictionIntentDecision(ApiModel):
     is_contradiction: bool = Field(
         description=(
-            "True if the prompt is asking about textual contradictions, inconsistencies, or logical conflicts in the document."
+            "True if the prompt is asking about textual contradictions, inconsistencies, or logical conflicts in the document."  # noqa: E501
         ),
     )
 

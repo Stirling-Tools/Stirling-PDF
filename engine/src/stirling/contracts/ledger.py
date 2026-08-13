@@ -88,7 +88,9 @@ class Folio(ApiModel):
     text: str | None = Field(default=None, description="PDFBox plain-text extraction.")
     tables: list[str] | None = Field(default=None, description="Tabula CSV strings, one per table found on the page.")
     ocr_text: str | None = Field(default=None, description="OCRmyPDF output text.")
-    ocr_confidence: float | None = Field(default=None, ge=0.0, le=1.0, description="Mean character confidence from OCRmyPDF.")
+    ocr_confidence: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Mean character confidence from OCRmyPDF."
+    )
 
     @property
     def readable_text(self) -> str:
@@ -108,7 +110,7 @@ class Evidence(ApiModel):
     round: int = Field(ge=1, le=3)
     final_round: bool = Field(
         default=False,
-        description="When True, Java will not honour further Requisitions. The auditor must return a Verdict this round.",
+        description="When True, Java will not honour further Requisitions. The auditor must return a Verdict this round.",  # noqa: E501
     )
     unauditable_pages: list[int] = Field(
         default_factory=list,

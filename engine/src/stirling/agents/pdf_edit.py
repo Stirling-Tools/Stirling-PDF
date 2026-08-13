@@ -59,7 +59,9 @@ class PdfEditNeedContentSelection(ApiModel):
     max_characters: int | None = None
 
 
-type PdfEditPlanOutput = PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse | PdfEditNeedContentSelection
+type PdfEditPlanOutput = (
+    PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse | PdfEditNeedContentSelection
+)
 
 
 class PdfEditSelectionAgent:
@@ -150,7 +152,9 @@ class PdfEditParameterSelector:
         operation_id = operation_plan[operation_index]
         operation_list = ", ".join(operation.name for operation in operation_plan)
         generated_steps_text = (
-            "\n".join(f"- Step {step_index + 1}: {step.model_dump_json()}" for step_index, step in enumerate(generated_steps))
+            "\n".join(
+                f"- Step {step_index + 1}: {step.model_dump_json()}" for step_index, step in enumerate(generated_steps)
+            )
             if generated_steps
             else "None"
         )
@@ -229,7 +233,8 @@ class PdfEditAgent:
                 return EditCannotDoResponse(
                     reason=(
                         "The following operations are not available on this server "
-                        "(either disabled by the administrator or not installed): " + ", ".join(op.name for op in unsupported)
+                        "(either disabled by the administrator or not installed): "
+                        + ", ".join(op.name for op in unsupported)
                     )
                 )
             problems = self._chain_problems(selection.operations)
@@ -238,7 +243,9 @@ class PdfEditAgent:
             logger.warning("[pdf-edit] plan rejected on attempt %d: %s", attempt + 1, problems)
             repair_note = problems
         else:
-            return EditCannotDoResponse(reason=("No workable order of the available operations achieves this: " + repair_note))
+            return EditCannotDoResponse(
+                reason=("No workable order of the available operations achieves this: " + repair_note)
+            )
         logger.info("[pdf-edit] plan: %s", [op.name for op in selection.operations])
         steps: list[ToolOperationStep] = []
         for operation_index, operation_id in enumerate(selection.operations):
@@ -337,7 +344,7 @@ class PdfEditAgent:
             else ""
         )
         unavailable_line = (
-            f"Unavailable operations (exist but not currently usable): {self._get_operations_prompt(unavailable_operations)}\n"
+            f"Unavailable operations (exist but not currently usable): {self._get_operations_prompt(unavailable_operations)}\n"  # noqa: E501
             if unavailable_operations
             else ""
         )

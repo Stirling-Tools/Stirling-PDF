@@ -58,7 +58,9 @@ class AppSettings(BaseSettings):
     # Chunked reasoner settings (whole-document map-reduce).
     chunked_reasoner_chars_per_slice: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_CHARS_PER_SLICE")
     chunked_reasoner_concurrency: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_CONCURRENCY")
-    chunked_reasoner_worker_timeout_seconds: float = Field(validation_alias="STIRLING_CHUNKED_REASONER_WORKER_TIMEOUT_SECONDS")
+    chunked_reasoner_worker_timeout_seconds: float = Field(
+        validation_alias="STIRLING_CHUNKED_REASONER_WORKER_TIMEOUT_SECONDS"
+    )
     # Maximum size, in characters, of the rendered notes block before the
     # reasoner folds slice notes hierarchically. The Anthropic context limit
     # is 200k tokens (~880k chars); we leave a generous margin for the
