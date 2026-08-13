@@ -11367,6 +11367,7 @@ unknownFile = "Unknown file"
 view = "View"
 zoom = "Zoom"
 zoomIn = "Zoom In"
+zoomLevel = "Zoom level"
 zoomOut = "Zoom Out"
 
 [viewer.attachments]

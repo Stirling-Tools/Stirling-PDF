@@ -18,6 +18,8 @@ import { TierProvider, type Tier } from "@portal/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
+import { PreferencesProvider } from "@core/contexts/PreferencesContext";
+import { SidebarProvider } from "@core/contexts/SidebarContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
 import { MantineProvider } from "@mantine/core";
 import {
@@ -269,17 +271,25 @@ const withProviders: Decorator = (Story, context) => {
                   from useLink() (matches App.tsx's nesting). */}
               <LinkProvider key={linkState} initialState={linkState}>
                 <TierKey tier={tier}>
-                  <UIProvider>
-                    <Suspense fallback={null}>
-                      {isPortalStory ? (
-                        <div className="portal-scope">
-                          <Story />
-                        </div>
-                      ) : (
-                        <Story />
-                      )}
-                    </Suspense>
-                  </UIProvider>
+                  {/* Tooltip reads the user's logo preference and the sidebar
+                      geometry it positions against. It is used by ~100
+                      components, so without these a story that renders one
+                      throws. The real app always has both mounted. */}
+                  <PreferencesProvider>
+                    <SidebarProvider>
+                      <UIProvider>
+                        <Suspense fallback={null}>
+                          {isPortalStory ? (
+                            <div className="portal-scope">
+                              <Story />
+                            </div>
+                          ) : (
+                            <Story />
+                          )}
+                        </Suspense>
+                      </UIProvider>
+                    </SidebarProvider>
+                  </PreferencesProvider>
                 </TierKey>
               </LinkProvider>
             </StoryTheme>

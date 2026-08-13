@@ -128,8 +128,11 @@ export interface NavigationContextActionsValue {
   actions: NavigationContextActions;
 }
 
-// Create contexts
-const NavigationStateContext = createContext<
+// Create contexts. The state context is exported so a test or story can mount a
+// component against a slice of it: the provider itself reaches the tool
+// registry, which is far more than a component reading one navigation field
+// needs standing up.
+export const NavigationStateContext = createContext<
   NavigationContextStateValue | undefined
 >(undefined);
 const NavigationActionsContext = createContext<

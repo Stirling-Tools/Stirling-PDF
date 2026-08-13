@@ -334,6 +334,7 @@ export function PdfViewerToolbar({
             max={500}
             step={5}
             onChange={(val) => zoomActions.setZoomLevel?.(val / 100)}
+            thumbLabel={t("viewer.zoomLevel", "Zoom level")}
             size="xs"
             styles={{
               root: { minWidth: "6rem", width: "6rem", flexShrink: 0 },

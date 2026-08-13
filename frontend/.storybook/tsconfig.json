@@ -5,7 +5,16 @@
   // The per-layer typecheck projects also cover story files, but each resolves
   // @app/* its own way - not the way the single Storybook build renders them.
   "extends": "../editor/tsconfig.proprietary.vite.json",
-  "exclude": [],
+  // Stories in the flavour layers import @app/* expecting their own layer's
+  // resolution (cloud -> proprietary -> core, and so on), which a single alias
+  // map cannot express. Each is already typechecked by its own layer project;
+  // checking them again here would only assert the wrong resolution.
+  "exclude": [
+    "../editor/src/cloud/**/*.stories.*",
+    "../editor/src/desktop/**/*.stories.*",
+    "../editor/src/saas/**/*.stories.*",
+    "../editor/src/prototypes/**/*.stories.*"
+  ],
   "include": [
     "./**/*",
     "../editor/src/global.d.ts",

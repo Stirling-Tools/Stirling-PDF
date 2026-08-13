@@ -21,9 +21,11 @@ interface WorkbenchBarContextValue {
   clear: () => void;
 }
 
-const WorkbenchBarContext = createContext<WorkbenchBarContextValue | undefined>(
-  undefined,
-);
+// Exported so a story can supply the bar's buttons without the provider,
+// which derives them from the whole workbench.
+export const WorkbenchBarContext = createContext<
+  WorkbenchBarContextValue | undefined
+>(undefined);
 
 export function WorkbenchBarProvider({
   children,

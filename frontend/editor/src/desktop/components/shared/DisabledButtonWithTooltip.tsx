@@ -20,25 +20,39 @@ export function DisabledButtonWithTooltip({
   className,
   style,
 }: DisabledButtonWithTooltipProps) {
-  const [hovered, setHovered] = React.useState(false);
+  const [shown, setShown] = React.useState(false);
+  const tooltipId = React.useId();
   return (
     <div
       className="relative w-full"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={() => setShown(true)}
+      onMouseLeave={() => setShown(false)}
     >
+      {/* The point of this control is to look disabled while still explaining
+          why. That explanation has to reach a keyboard as well as a pointer, so
+          the element stays focusable and announces itself as a disabled button
+          described by its own tooltip. */}
       <div
         className={`locked-button${className ? ` ${className}` : ""}`}
         style={style}
+        role="button"
+        aria-disabled="true"
+        aria-describedby={tooltipId}
+        tabIndex={0}
+        onFocus={() => setShown(true)}
+        onBlur={() => setShown(false)}
       >
         {children}
       </div>
-      {hovered && (
-        <div className="locked-button-tooltip">
-          {tooltip}
-          <div className="locked-button-tooltip-arrow" />
-        </div>
-      )}
+      <div
+        id={tooltipId}
+        role="tooltip"
+        className="locked-button-tooltip"
+        style={shown ? undefined : { display: "none" }}
+      >
+        {tooltip}
+        <div className="locked-button-tooltip-arrow" />
+      </div>
     </div>
   );
 }
