@@ -36,6 +36,7 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.util.CollectionStore;
 import org.bouncycastle.util.Store;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,11 +47,14 @@ import org.springframework.core.io.ClassPathResource;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+
 /**
  * Additional coverage for {@link CertificateValidationService} that drives the real X.509 /
  * KeyStore machinery with the bundled test fixtures, exercises trust-store initialization, and
- * reaches the private trust-list parsers via reflection. Network paths are only hit with file://
- * URLs so no real connection is ever opened.
+ * reaches the private trust-list parsers via reflection. The only connections opened are to a
+ * loopback {@link MockWebServer}; no real network access occurs.
  */
 @DisplayName("CertificateValidationService (more) Tests")
 class CertificateValidationServiceMoreTest {
@@ -430,7 +434,7 @@ class CertificateValidationServiceMoreTest {
             ApplicationProperties props = defaultProps();
             props.getSecurity().getValidation().getTrust().setUseAATL(true);
             props.getSecurity().getValidation().getTrust().setUseEUTL(true);
-            // file:// is not an HttpURLConnection, so the download helpers return null safely.
+            // file:// fails the trust-list URL guard, so no connection is ever opened.
             props.getSecurity().getValidation().getAatl().setUrl("file:///does-not-exist.pdf");
             props.getSecurity().getValidation().getEutl().setLotlUrl("file:///does-not-exist.xml");
             CertificateValidationService svc = newService(props);
@@ -661,6 +665,149 @@ class CertificateValidationServiceMoreTest {
                     invokePrivate(
                             svc, "parseAATLPdf", new Class<?>[] {byte[].class}, (Object) plainPdf);
             assertThat(added).isZero();
+        }
+    }
+
+    // ---------- SSRF guard on trust-list downloads ----------
+
+    @Nested
+    @DisplayName("Trust-list download SSRF guard")
+    class TrustListSsrfGuardTests {
+
+        private final CertificateValidationService svc = newService(defaultProps());
+
+        private boolean allowed(String url) throws Exception {
+            return invokePrivate(svc, "isTrustListUrlAllowed", new Class<?>[] {String.class}, url);
+        }
+
+        @Test
+        @DisplayName("Public http(s) hosts are still fetched")
+        void allowsPublicHosts() throws Exception {
+            assertThat(allowed("https://93.184.216.34/tsl.xml")).isTrue();
+            assertThat(allowed("http://93.184.216.34:8080/tsl.xml")).isTrue();
+            // Scheme comparison is case-insensitive
+            assertThat(allowed("HTTPS://93.184.216.34/tsl.xml")).isTrue();
+        }
+
+        @Test
+        @DisplayName("Only http and https are fetched")
+        void rejectsOtherSchemes() throws Exception {
+            assertThat(allowed("file:///etc/passwd")).isFalse();
+            assertThat(allowed("ftp://93.184.216.34/tsl.xml")).isFalse();
+            assertThat(allowed("jar:file:///tmp/x.jar!/tsl.xml")).isFalse();
+            assertThat(allowed("/tsl.xml")).isFalse();
+        }
+
+        @Test
+        @DisplayName("URLs without a usable host are rejected")
+        void rejectsMissingHost() throws Exception {
+            assertThat(allowed("http:///tsl.xml")).isFalse();
+            assertThat(allowed("http://exa mple.test/tsl.xml")).isFalse();
+        }
+
+        @Test
+        @DisplayName("Internal IPv4 destinations are rejected")
+        void rejectsInternalIpv4() throws Exception {
+            for (String host :
+                    new String[] {
+                        "127.0.0.1",
+                        "0.0.0.0",
+                        "10.0.0.1",
+                        "172.16.0.1",
+                        "192.168.1.1",
+                        "100.64.0.1",
+                        "169.254.1.1"
+                    }) {
+                assertThat(allowed("http://" + host + "/tsl.xml")).as(host).isFalse();
+            }
+        }
+
+        @Test
+        @DisplayName("Cloud metadata endpoints are rejected")
+        void rejectsCloudMetadata() throws Exception {
+            assertThat(allowed("http://169.254.169.254/latest/meta-data/")).isFalse();
+            assertThat(allowed("http://169.254.169.253/tsl.xml")).isFalse();
+            assertThat(allowed("http://169.254.169.250/tsl.xml")).isFalse();
+        }
+
+        @Test
+        @DisplayName("Internal IPv6 destinations, including transition forms, are rejected")
+        void rejectsInternalIpv6() throws Exception {
+            for (String host :
+                    new String[] {
+                        "[::1]", "[fe80::1]", "[fd00::1]", "[::ffff:127.0.0.1]", "[2002:a00:1::]"
+                    }) {
+                assertThat(allowed("http://" + host + "/tsl.xml")).as(host).isFalse();
+            }
+        }
+    }
+
+    // ---------- redirect handling on trust-list downloads ----------
+
+    @Nested
+    @DisplayName("Trust-list download redirects")
+    class TrustListRedirectTests {
+
+        private MockWebServer server;
+        private CertificateValidationService svc;
+
+        @BeforeEach
+        void startServer() throws Exception {
+            server = new MockWebServer();
+            server.start();
+            // MockWebServer binds to loopback, so only the loopback rules are relaxed here
+            ApplicationProperties props = defaultProps();
+            var urlSecurity = props.getSystem().getHtml().getUrlSecurity();
+            urlSecurity.setBlockLocalhost(false);
+            urlSecurity.setBlockPrivateNetworks(false);
+            svc = newService(props);
+        }
+
+        @AfterEach
+        void stopServer() throws Exception {
+            server.shutdown();
+        }
+
+        private byte[] downloadXml(String url) throws Exception {
+            return invokePrivate(svc, "downloadXml", new Class<?>[] {String.class}, url);
+        }
+
+        @Test
+        @DisplayName("A redirect to an allowed target is followed")
+        void followsAllowedRedirect() throws Exception {
+            server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", "/final"));
+            server.enqueue(new MockResponse().setResponseCode(200).setBody("<TSL/>"));
+
+            byte[] body = downloadXml(server.url("/tsl.xml").toString());
+
+            assertThat(body).isNotNull();
+            assertThat(new String(body, StandardCharsets.UTF_8)).isEqualTo("<TSL/>");
+            assertThat(server.getRequestCount()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("A redirect to a blocked target is not followed")
+        void rejectsRedirectToBlockedTarget() throws Exception {
+            server.enqueue(
+                    new MockResponse()
+                            .setResponseCode(302)
+                            .setHeader("Location", "http://169.254.169.254/latest/meta-data/"));
+
+            assertThat(downloadXml(server.url("/tsl.xml").toString())).isNull();
+            assertThat(server.getRequestCount()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("Redirect chains stop after the hop budget")
+        void stopsAfterRedirectBudget() throws Exception {
+            for (int i = 0; i < 6; i++) {
+                server.enqueue(
+                        new MockResponse().setResponseCode(302).setHeader("Location", "/next"));
+            }
+
+            assertThat(downloadXml(server.url("/tsl.xml").toString())).isNull();
+            // The initial request plus three redirects
+            assertThat(server.getRequestCount()).isEqualTo(4);
         }
     }
 

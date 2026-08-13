@@ -45,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
+import stirling.software.common.service.SsrfProtectionService;
 
 @Service
 @Slf4j
@@ -67,9 +68,13 @@ public class CertificateValidationService {
     private KeyStore signingTrustAnchors; // AATL/EUTL + server cert for PDF signing
     private final ServerCertificateServiceInterface serverCertificateService;
     private final ApplicationProperties applicationProperties;
+    private final SsrfProtectionService ssrfProtectionService;
 
     // EUTL (EU Trusted List) constants
     private static final String NS_TSL = "http://uri.etsi.org/02231/v2#";
+
+    // Redirects are followed by hand, so the SSRF guard runs again on every hop
+    private static final int MAX_TRUST_LIST_REDIRECTS = 3;
 
     // Qualified CA service types to import as trust anchors (per ETSI TS 119 612)
     private static final Set<String> EUTL_SERVICE_TYPES =
@@ -97,6 +102,7 @@ public class CertificateValidationService {
             ApplicationProperties applicationProperties) {
         this.serverCertificateService = serverCertificateService;
         this.applicationProperties = applicationProperties;
+        this.ssrfProtectionService = new SsrfProtectionService(applicationProperties);
     }
 
     @PostConstruct
@@ -513,12 +519,10 @@ public class CertificateValidationService {
     private byte[] downloadTrustList(String urlStr) {
         HttpURLConnection conn = null;
         try {
-            URL url = URI.create(urlStr).toURL();
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout(10_000);
-            conn.setReadTimeout(30_000);
-            conn.setInstanceFollowRedirects(true);
+            conn = openTrustListConnection(urlStr);
+            if (conn == null) {
+                return null;
+            }
 
             int code = conn.getResponseCode();
             if (code == HttpURLConnection.HTTP_OK) {
@@ -539,6 +543,85 @@ public class CertificateValidationService {
         } finally {
             if (conn != null) conn.disconnect();
         }
+    }
+
+    /**
+     * Open a connection to a trust list URL, following redirects manually so the SSRF guard runs on
+     * every hop. Returns null when a hop is rejected or the redirect budget is exhausted.
+     */
+    private HttpURLConnection openTrustListConnection(String urlStr) throws IOException {
+        String currentUrl = urlStr;
+        for (int hop = 0; hop <= MAX_TRUST_LIST_REDIRECTS; hop++) {
+            if (!isTrustListUrlAllowed(currentUrl)) {
+                return null;
+            }
+
+            URL url = URI.create(currentUrl).toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(10_000);
+            conn.setReadTimeout(30_000);
+            conn.setInstanceFollowRedirects(false);
+
+            String location = redirectLocation(conn);
+            if (location == null) {
+                return conn;
+            }
+            conn.disconnect();
+            currentUrl = URI.create(currentUrl).resolve(location).toString();
+        }
+        log.warn("Trust list download exceeded {} redirects: {}", MAX_TRUST_LIST_REDIRECTS, urlStr);
+        return null;
+    }
+
+    /** Location header of a redirect response, or null when the response is not a redirect. */
+    private String redirectLocation(HttpURLConnection conn) throws IOException {
+        int code = conn.getResponseCode();
+        boolean redirect =
+                code == HttpURLConnection.HTTP_MOVED_PERM
+                        || code == HttpURLConnection.HTTP_MOVED_TEMP
+                        || code == HttpURLConnection.HTTP_SEE_OTHER
+                        || code == 307
+                        || code == 308;
+        if (!redirect) {
+            return null;
+        }
+        String location = conn.getHeaderField("Location");
+        return (location == null || location.isBlank()) ? null : location.trim();
+    }
+
+    /**
+     * TSL locations come from a remote XML document, so they get the same SSRF treatment as any
+     * other externally-supplied URL.
+     */
+    private boolean isTrustListUrlAllowed(String urlStr) {
+        URI uri;
+        try {
+            uri = URI.create(urlStr);
+        } catch (IllegalArgumentException e) {
+            log.warn("Trust list URL is not a valid URI: {}", urlStr);
+            return false;
+        }
+
+        String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
+        if (!"http".equals(scheme) && !"https".equals(scheme)) {
+            log.warn("Trust list URL rejected, only http(s) is fetched: {}", urlStr);
+            return false;
+        }
+
+        String host = uri.getHost();
+        if (host == null || host.isBlank()) {
+            log.warn("Trust list URL rejected, no host: {}", urlStr);
+            return false;
+        }
+
+        if (!ssrfProtectionService.isUrlAllowed(urlStr)) {
+            log.warn(
+                    "Trust list URL rejected by SSRF protection (system.html.urlSecurity): {}",
+                    urlStr);
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -705,12 +788,10 @@ public class CertificateValidationService {
     private byte[] downloadXml(String urlStr) {
         HttpURLConnection conn = null;
         try {
-            URL url = URI.create(urlStr).toURL();
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout(10_000);
-            conn.setReadTimeout(30_000);
-            conn.setInstanceFollowRedirects(true);
+            conn = openTrustListConnection(urlStr);
+            if (conn == null) {
+                return null;
+            }
 
             int code = conn.getResponseCode();
             if (code == HttpURLConnection.HTTP_OK) {
