@@ -215,7 +215,8 @@ export function UsersDirectory({
   function renderRow(m: Member) {
     const access = m.portalAccess ?? "none";
     return (
-      <div className="portal-users__row" key={m.id}>
+      // data-member-id lets deep links (?member=<id>) scroll to and flash a row.
+      <div className="portal-users__row" key={m.id} data-member-id={m.id}>
         <div className="portal-users__row-main">
           <Avatar name={m.name} size="sm" tone={avatarToneForMember(m)} />
           <div className="portal-users__row-id">
