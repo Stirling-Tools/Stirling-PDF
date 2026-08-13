@@ -303,5 +303,67 @@ class SsrfProtectionServiceTest {
         void blocksIpv4MappedPrivate() {
             assertThat(service.isUrlAllowed("http://[::ffff:10.0.0.1]")).isFalse();
         }
+
+        @Test
+        @DisplayName("blocks IPv4-compatible ::a.b.c.d of a private address")
+        void blocksIpv4CompatiblePrivate() {
+            // ::a00:1 is ::10.0.0.1
+            assertThat(service.isUrlAllowed("http://[::a00:1]")).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("MEDIUM level - IPv6 transition addresses wrapping IPv4")
+    class MediumIpv6Transition {
+
+        @BeforeEach
+        void medium() {
+            config.setEnabled(true);
+            config.setLevel(SsrfProtectionLevel.MEDIUM);
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "http://[64:ff9b::a00:1]", // NAT64 well-known wrapping 10.0.0.1
+                    "http://[64:ff9b::7f00:1]", // NAT64 well-known wrapping 127.0.0.1
+                    "http://[64:ff9b::a9fe:a9fe]", // NAT64 well-known wrapping 169.254.169.254
+                    "http://[2002:c0a8:5::1]", // 6to4 wrapping 192.168.0.5
+                    "http://[2002:a9fe:a9fe::1]", // 6to4 wrapping 169.254.169.254
+                    "http://[2001:0:a00:1::]", // Teredo server 10.0.0.1
+                    "http://[2001:0:4136:e378:8000:63bf:3f57:fffa]" // Teredo client 192.168.0.5
+                })
+        @DisplayName("blocks transition addresses wrapping an internal IPv4")
+        void blocksWrappedInternalIpv4(String url) {
+            assertThat(service.isUrlAllowed(url)).isFalse();
+        }
+
+        @Test
+        @DisplayName("blocks the local-use NAT64 prefix 64:ff9b:1::/48 outright")
+        void blocksNat64LocalUsePrefix() {
+            assertThat(service.isUrlAllowed("http://[64:ff9b:1::1]")).isFalse();
+            assertThat(service.isUrlAllowed("http://[64:ff9b:1:ffff::5db8:d822]")).isFalse();
+        }
+
+        @ParameterizedTest
+        @ValueSource(
+                strings = {
+                    "http://[64:ff9b::5db8:d822]", // NAT64 well-known wrapping 93.184.216.34
+                    "http://[2002:5db8:d822::1]", // 6to4 wrapping 93.184.216.34
+                    "http://[2001:0:4136:e378:8000:63bf:3fff:fdd2]", // Teredo, both IPv4s public
+                    "http://[2001:db8::1]" // documentation prefix, not Teredo
+                })
+        @DisplayName("allows transition addresses wrapping a public IPv4")
+        void allowsWrappedPublicIpv4(String url) {
+            assertThat(service.isUrlAllowed(url)).isTrue();
+        }
+
+        @Test
+        @DisplayName("blocks cloud metadata behind 6to4 even with private-network checks off")
+        void blocksMetadataBehindSixToFour() {
+            config.setBlockPrivateNetworks(false);
+            config.setBlockLinkLocal(false);
+            assertThat(service.isUrlAllowed("http://[2002:a9fe:a9fe::1]")).isFalse();
+        }
     }
 }

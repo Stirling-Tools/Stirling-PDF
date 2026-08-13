@@ -5,6 +5,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -155,8 +156,7 @@ public class SsrfProtectionService {
                     return false;
                 }
 
-                if (config.isBlockCloudMetadata()
-                        && isCloudMetadataAddress(address.getHostAddress())) {
+                if (config.isBlockCloudMetadata() && isCloudMetadataAddress(address)) {
                     log.debug("URL blocked - cloud metadata endpoint: {}", url);
                     return false;
                 }
@@ -189,16 +189,15 @@ public class SsrfProtectionService {
             }
 
             byte[] bytes = addr6.getAddress();
-            if (isIpv4MappedAddress(bytes)) {
-                String ipv4 =
-                        (bytes[12] & 0xff)
-                                + "."
-                                + (bytes[13] & 0xff)
-                                + "."
-                                + (bytes[14] & 0xff)
-                                + "."
-                                + (bytes[15] & 0xff);
-                return isPrivateIPv4Range(ipv4);
+            // Local-use NAT64 (64:ff9b:1::/48) is internal whatever IPv4 it embeds
+            if (isNat64LocalUsePrefix(bytes)) {
+                return true;
+            }
+
+            for (String ipv4 : extractEmbeddedIpv4(bytes)) {
+                if (isPrivateIPv4Range(ipv4)) {
+                    return true;
+                }
             }
 
             int firstByte = bytes[0] & 0xff;
@@ -211,18 +210,79 @@ public class SsrfProtectionService {
         return false;
     }
 
-    private boolean isIpv4MappedAddress(byte[] addr) {
-        if (addr.length != 16) {
-            return false;
+    /**
+     * Extracts the IPv4 addresses wrapped by IPv6 transition formats so they can be classified by
+     * the IPv4 rules. The wrapping prefixes are globally routable, so only the extracted IPv4
+     * decides whether the destination is internal.
+     */
+    private List<String> extractEmbeddedIpv4(byte[] addr) {
+        if (addr == null || addr.length != 16) {
+            return List.of();
         }
+
+        // ::ffff:w.x.y.z, ::w.x.y.z and well-known NAT64 64:ff9b::/96 all embed at bytes 12-15
+        if (isIpv4MappedOrCompatibleAddress(addr) || isNat64WellKnownPrefix(addr)) {
+            return List.of(toIpv4String(addr, 12, false));
+        }
+
+        // 6to4 (2002::/16) embeds the tunnel endpoint IPv4 at bytes 2-5
+        if ((addr[0] & 0xff) == 0x20 && (addr[1] & 0xff) == 0x02) {
+            return List.of(toIpv4String(addr, 2, false));
+        }
+
+        // Teredo (2001::/32) embeds the server IPv4 at bytes 4-7 and the client IPv4 inverted at
+        // bytes 12-15
+        if ((addr[0] & 0xff) == 0x20 && (addr[1] & 0xff) == 0x01 && addr[2] == 0 && addr[3] == 0) {
+            return List.of(toIpv4String(addr, 4, false), toIpv4String(addr, 12, true));
+        }
+
+        return List.of();
+    }
+
+    private String toIpv4String(byte[] addr, int offset, boolean inverted) {
+        int mask = inverted ? 0xff : 0x00;
+        return ((addr[offset] ^ mask) & 0xff)
+                + "."
+                + ((addr[offset + 1] ^ mask) & 0xff)
+                + "."
+                + ((addr[offset + 2] ^ mask) & 0xff)
+                + "."
+                + ((addr[offset + 3] ^ mask) & 0xff);
+    }
+
+    private boolean isIpv4MappedOrCompatibleAddress(byte[] addr) {
         for (int i = 0; i < 10; i++) {
             if (addr[i] != 0) {
                 return false;
             }
         }
-        // For IPv4-mapped IPv6 addresses, bytes 10 and 11 must be 0xff (i.e., address is
-        // ::ffff:w.x.y.z)
-        return addr[10] == (byte) 0xff && addr[11] == (byte) 0xff;
+        // ::ffff:w.x.y.z is IPv4-mapped, ::w.x.y.z is the deprecated IPv4-compatible form
+        return (addr[10] == (byte) 0xff && addr[11] == (byte) 0xff)
+                || (addr[10] == 0 && addr[11] == 0);
+    }
+
+    private boolean isNat64WellKnownPrefix(byte[] addr) {
+        if (!hasNat64Prefix(addr)) {
+            return false;
+        }
+        for (int i = 4; i < 12; i++) {
+            if (addr[i] != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isNat64LocalUsePrefix(byte[] addr) {
+        return hasNat64Prefix(addr) && addr[4] == 0 && addr[5] == 1;
+    }
+
+    private boolean hasNat64Prefix(byte[] addr) {
+        return addr.length == 16
+                && addr[0] == 0
+                && (addr[1] & 0xff) == 0x64
+                && (addr[2] & 0xff) == 0xff
+                && (addr[3] & 0xff) == 0x9b;
     }
 
     private boolean isPrivateIPv4Range(String ip) {
@@ -258,6 +318,17 @@ public class SsrfProtectionService {
             }
         }
         return false;
+    }
+
+    private boolean isCloudMetadataAddress(InetAddress address) {
+        if (address instanceof Inet6Address addr6) {
+            for (String ipv4 : extractEmbeddedIpv4(addr6.getAddress())) {
+                if (isCloudMetadataAddress(ipv4)) {
+                    return true;
+                }
+            }
+        }
+        return isCloudMetadataAddress(address.getHostAddress());
     }
 
     private boolean isCloudMetadataAddress(String ip) {
