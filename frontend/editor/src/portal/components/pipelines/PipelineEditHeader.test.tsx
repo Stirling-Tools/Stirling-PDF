@@ -66,8 +66,21 @@ describe("PipelineEditHeader", () => {
     });
     fireEvent.change(input, { target: { value: "Discarded" } });
     fireEvent.keyDown(input, { key: "Escape" });
+    // Escape must not commit, even via the blur that unmounting the field fires in a real browser.
+    fireEvent.blur(input);
     expect(handlers.onNameChange).not.toHaveBeenCalled();
     expect(screen.getByText("Claims redaction")).toBeInTheDocument();
+  });
+
+  it("commits a rename when focus leaves the field", () => {
+    const handlers = renderHeader();
+    fireEvent.click(screen.getByLabelText("portal.pipelines.builder.rename"));
+    const input = screen.getByRole("textbox", {
+      name: "portal.pipelines.composer.name",
+    });
+    fireEvent.change(input, { target: { value: "Renamed" } });
+    fireEvent.blur(input);
+    expect(handlers.onNameChange).toHaveBeenCalledWith("Renamed");
   });
 
   it("offers to pause a live pipeline and to activate a paused one", () => {
@@ -112,6 +125,20 @@ describe("PipelineEditHeader", () => {
 
   it("blocks saving until the edits are valid", () => {
     renderHeader({ canSave: false });
+    expect(
+      screen.getByText("portal.pipelines.composer.save").closest("button"),
+    ).toBeDisabled();
+  });
+
+  it("cannot pause while a save is committing", () => {
+    renderHeader({ saving: true });
+    expect(
+      screen.getByText("portal.pipelines.builder.pause").closest("button"),
+    ).toBeDisabled();
+  });
+
+  it("cannot save while a pause is committing", () => {
+    renderHeader({ togglingEnabled: true });
     expect(
       screen.getByText("portal.pipelines.composer.save").closest("button"),
     ).toBeDisabled();

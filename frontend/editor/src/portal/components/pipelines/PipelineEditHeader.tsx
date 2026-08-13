@@ -67,22 +67,41 @@ export function PipelineEditHeader({
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(name);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Enter and Escape both end the rename, which unmounts the input - and unmounting a focused input
+  // fires blur in a real browser (jsdom does not). Without this guard that blur would re-run the
+  // commit, so Escape would save the very draft it was meant to discard. The key handler sets this so
+  // the trailing blur is ignored; a plain click-away leaves it false and blur commits as normal.
+  const keyHandledRef = useRef(false);
 
   useEffect(() => {
     if (renaming) inputRef.current?.select();
   }, [renaming]);
 
   function startRename() {
+    keyHandledRef.current = false;
     setDraft(name);
     setRenaming(true);
   }
 
-  // Commit an edited name only if it is non-empty; an all-whitespace rename would leave the pipeline
-  // titleless. Escape (handled below) exits without touching the name at all.
-  function commitRename() {
-    const next = draft.trim();
-    if (next) onNameChange(next);
+  // End the rename, committing the draft only when asked and only if non-empty (an all-whitespace
+  // rename would leave the pipeline titleless).
+  function finishRename(commit: boolean) {
+    keyHandledRef.current = true;
+    if (commit) {
+      const next = draft.trim();
+      if (next) onNameChange(next);
+    }
     setRenaming(false);
+  }
+
+  // Clicking away commits; the unmount-triggered blur that follows a key press does not (the key
+  // already decided the outcome).
+  function handleBlur() {
+    if (keyHandledRef.current) {
+      keyHandledRef.current = false;
+      return;
+    }
+    finishRename(true);
   }
 
   return (
@@ -104,10 +123,10 @@ export function PipelineEditHeader({
             value={draft}
             aria-label={t("portal.pipelines.composer.name")}
             onChange={(e) => setDraft(e.target.value)}
-            onBlur={commitRename}
+            onBlur={handleBlur}
             onKeyDown={(e) => {
-              if (e.key === "Enter") commitRename();
-              if (e.key === "Escape") setRenaming(false);
+              if (e.key === "Enter") finishRename(true);
+              if (e.key === "Escape") finishRename(false);
             }}
           />
         ) : (
@@ -126,10 +145,13 @@ export function PipelineEditHeader({
       </div>
 
       <div className="portal-pipeline-edit-header__actions">
+        {/* Pause and Save both write the whole policy, so they are mutually exclusive: neither can
+            start while the other is committing, or the two writes race and the loser's version wins. */}
         <Button
           variant="secondary"
           size="sm"
           loading={togglingEnabled}
+          disabled={saving}
           onClick={onTogglePause}
           leftSection={
             enabled ? (
@@ -198,7 +220,7 @@ export function PipelineEditHeader({
               size="sm"
               onClick={onSave}
               loading={saving}
-              disabled={!canSave}
+              disabled={!canSave || togglingEnabled}
             >
               {t("portal.pipelines.composer.save")}
             </Button>

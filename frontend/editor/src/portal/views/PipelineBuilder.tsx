@@ -713,7 +713,9 @@ export function PipelineBuilder() {
    * looks like an unsaved change.
    */
   async function handleTogglePause() {
-    if (togglingEnabled || !policyState.data) return;
+    // Never run alongside a Save: both write the whole policy, and a concurrent pair would race
+    // (the pause carries the persisted steps, so it could clobber the edits Save is committing).
+    if (togglingEnabled || submitting || !policyState.data) return;
     const next = !enabled;
     setTogglingEnabled(true);
     setError(null);
