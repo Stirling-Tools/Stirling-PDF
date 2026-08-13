@@ -11,15 +11,7 @@ import {
   medianLineHeightFromBaselines,
 } from "@app/tools/pdfTextEditor/v2/pdfium/ParagraphGrouper";
 
-/**
- * Merge the selected runs on a single page into one virtual paragraph.
- *
- * The top-most run becomes the representative; the others become its
- * paragraph members. No PDFium edits happen - this only affects how the
- * editor groups the runs visually so subsequent edits treat them as one
- * block. Used when LineGrouper/ParagraphGrouper guesses wrong and the
- * user wants to force a grouping.
- */
+/** Merge the selected runs on a single page into one virtual paragraph. */
 interface RunSnapshot {
   id: string;
   pdfiumObjPtr: number;
@@ -41,10 +33,7 @@ export class MergeRunsCommand implements Command {
   private readonly pageIndex: number;
   private readonly runIds: string[];
   private removedRunSnapshots: RunSnapshot[] = [];
-  // The TextRun instances we removed from page.runs at apply time. Kept
-  // in memory so revert can put them back without needing to re-read the
-  // page from PDFium. Order is preserved so the original render order is
-  // restored.
+  // The TextRun instances we removed from page.runs at apply time.
   private removedRunInstances: TextRun[] = [];
   // Original `page.runs` order at apply time so revert restores the
   // ordering callers depend on (z-order, find-bar iteration order).
@@ -79,8 +68,7 @@ export class MergeRunsCommand implements Command {
     this.prevRunOrder = page.runs.map((r) => r.id);
 
     // A selected run may itself be a multi-line paragraph rep, so flatten the
-    // runs into ONE descriptor per visual line before building slots/members;
-    // otherwise a rep's later lines (embedded "\n") collapse into one slot.
+    // runs into ONE descriptor per visual line before building slots/members.
     const descs: LineDescriptor[] = [];
     for (const r of runs) descs.push(...flattenRunToLines(r));
 
@@ -127,10 +115,7 @@ export class MergeRunsCommand implements Command {
     const removedIds = new Set(members.map((r) => r.id));
     page.setRuns(page.runs.filter((r) => !removedIds.has(r.id)));
     // Bump the page revision so the dirty-only resnapshot in EditorStore
-    // republishes this page. MergeRuns mutates only the in-memory run
-    // model (no PDFium edit), so without an explicit markDirty the
-    // revision wouldn't change and the merged overlay would never reach
-    // the React layer.
+    // republishes this page.
     page.markDirty();
   }
 
@@ -140,10 +125,7 @@ export class MergeRunsCommand implements Command {
     const rep = page.findRun(this.repId);
     if (rep) restoreRun(rep, this.repPrev);
 
-    // Re-attach the member TextRun instances we held aside at apply
-    // time. Rebuild page.runs in the original order; any runs that
-    // appeared on the page from unrelated work since the merge keep
-    // their relative position at the tail.
+    // Re-attach the member TextRun instances we held aside at apply time.
     const byId = new Map<string, TextRun>();
     for (const r of page.runs) byId.set(r.id, r);
     for (const r of this.removedRunInstances) {
@@ -179,12 +161,7 @@ interface LineDescriptor extends LineSlotDescriptor {
   leafPtrs: number[];
 }
 
-/**
- * Expand a run into one descriptor per visual line. A multi-line rep (>=2
- * paragraphLineSlots) yields one descriptor per slot, slicing its text and
- * carrying the slot's own mergedFrom* arrays so the rebuilt slot is identical
- * to the original line. A single-line run yields exactly one descriptor.
- */
+/** Expand a run into one descriptor per visual line. */
 function flattenRunToLines(r: TextRun): LineDescriptor[] {
   if (r.paragraphLineSlots.length >= 2) {
     return r.paragraphLineSlots.map((slot) => ({

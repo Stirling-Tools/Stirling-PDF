@@ -1,13 +1,7 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 
-/**
- * Renders pages to bitmaps for the on-screen preview.
- *
- * V0 just re-renders on demand; a future iteration will add a per-page
- * cache keyed by `(pageIndex, scale, version)` with LRU eviction and a
- * debounce.
- */
+/** Renders pages to bitmaps for the on-screen preview. */
 export class PdfiumPageRenderer {
   static async render(
     doc: EditorDocument,

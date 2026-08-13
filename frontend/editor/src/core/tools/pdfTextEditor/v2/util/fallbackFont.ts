@@ -6,20 +6,7 @@ import { parseTrueTypeCmap } from "@app/tools/pdfTextEditor/v2/charcode/CmapReso
 import { writeUtf16 } from "@app/services/pdfiumService";
 import { BASE_PATH } from "@app/constants/app";
 
-/**
- * Client-side Unicode fallback font.
- *
- * Base-14 PDF fonts only cover Latin-1 (<= U+00FF), so editing text with
- * Cyrillic / Greek / Vietnamese / etc. used to silently DROP those glyphs
- * (`sanitizeForBase14`). We bundle Noto Sans (OFL) and embed it into the
- * document on demand via `FPDFText_LoadFont`, so the emit path can keep those
- * characters instead of losing them.
- *
- * The font is fetched once (async) and embedded per-document the first time a
- * character needs it. If the bytes aren't ready yet, callers fall back to the
- * old drop behaviour - so this is strictly additive (Latin edits are byte-for-
- * byte unchanged; only the previously-broken non-Latin path improves).
- */
+/** Client-side Unicode fallback font. */
 // BASE_PATH-prefixed: a bare "/fonts/..." 404s on subpath deployments
 // (context-path / RUN_SUBPATH installs), permanently disabling the fallback.
 const FALLBACK_FONT_URL = `${BASE_PATH}/fonts/NotoSans-Regular.ttf`;
@@ -32,11 +19,8 @@ let bytesPromise: Promise<Uint8Array | null> | null = null;
 let cachedBytes: Uint8Array | null = null;
 let fallbackCoverage: Map<number, number> | null = null;
 
-/**
- * True if the fallback font has a glyph for every non-whitespace code point of
- * `text`. Fails open (returns true) when the cmap cannot be parsed so the width
- * self-check stays the only backstop, unchanged from prior behaviour.
- */
+// True if the fallback font has a glyph for every non-whitespace code point of
+// `text`.
 function fallbackFontCovers(text: string): boolean {
   if (!fallbackCoverage && cachedBytes) {
     fallbackCoverage = parseTrueTypeCmap(cachedBytes);
@@ -81,11 +65,8 @@ export function isFallbackFontReady(): boolean {
   return !!cachedBytes && cachedBytes.length > 0;
 }
 
-/**
- * Embed the Unicode fallback font into `doc` (once) and return its FPDF font
- * handle, or 0 when the bytes aren't ready or the load failed. The owned font
- * (and its backing WASM buffer) is freed when the document disposes.
- */
+// Embed the Unicode fallback font into `doc` (once) and return its FPDF font
+// handle, or 0 when the bytes aren't ready or the load failed.
 export function loadFallbackFontInto(doc: EditorDocument): number {
   const existing = doc.ownedFont(FALLBACK_FONT_ID);
   if (existing) return existing.pointer;
@@ -178,14 +159,8 @@ interface CreateTextObjModule {
   ) => number;
 }
 
-/**
- * Emit ONE text object for `text` in the embedded Unicode fallback font, placed
- * at (x, y) with `fill`, inserted into the page. Returns the ptr, or 0 when the
- * font isn't available OR doesn't cover the glyphs (Noto Sans lacks CJK /
- * Arabic / Hebrew - a coverage pre-check rejects those so the caller drops
- * them via base-14 instead of persisting tofu). Used for characters base-14
- * (Latin-1) can't represent.
- */
+// Emit ONE text object for `text` in the embedded Unicode fallback font, placed
+// at (x, y) with `fill`, inserted into the page.
 export function emitFallbackTextObject(
   doc: EditorDocument,
   page: Page,

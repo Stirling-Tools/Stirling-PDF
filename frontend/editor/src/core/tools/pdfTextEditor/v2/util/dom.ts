@@ -7,11 +7,8 @@ export function isFocusInContentEditable(): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
-/**
- * True when focus is in a FORM field (Find/Replace/password inputs) as
- * opposed to a run's contenteditable. Form fields keep their native
- * editing shortcuts (Ctrl+Z etc); contenteditables route to the editor.
- */
+// True when focus is in a FORM field (Find/Replace/password inputs) as opposed
+// to a run's contenteditable.
 export function isFocusInFormField(): boolean {
   const el = document.activeElement as HTMLElement | null;
   if (!el) return false;
@@ -19,11 +16,8 @@ export function isFocusInFormField(): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
-/**
- * Find the page index whose midpoint is closest to the viewport's vertical
- * centre. Returns 0 when no `[data-testid="v2-page-N"]` elements are
- * mounted. Used by zoom-target picking, page rotation, and page nav.
- */
+// Find the page index whose midpoint is closest to the viewport's vertical
+// centre.
 export function findVisiblePageIndex(): number {
   const pages = pageElements();
   if (pages.length === 0) return 0;
@@ -41,13 +35,8 @@ export function findVisiblePageIndex(): number {
   return best;
 }
 
-/**
- * The TRUE page index (parsed from `data-testid="v2-page-N"`) of the page
- * nearest the viewport centre - unlike {@link findVisiblePageIndex}, which
- * returns a DOM-array position. Use this when you need the model page index
- * (e.g. choosing where to insert), not a scroll target. Returns 0 when no
- * page surfaces are mounted.
- */
+// The TRUE page index of the page nearest the viewport centre - unlike {@link
+// findVisiblePageIndex}, which returns a DOM-array position.
 export function visiblePageNumber(): number {
   const pages = pageElements();
   if (pages.length === 0) return 0;

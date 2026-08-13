@@ -7,15 +7,8 @@ import {
   saveAndDownload,
 } from "@app/tests/stubbed/v2SaveHelpers";
 
-/**
- * REGRESSION suite for the 12 issues found by the QA sweep of the v2 PDF text
- * editor - all since fixed. Each test asserts the desired behaviour and must
- * pass. They were previously `test.fail()` placeholders documenting the bugs;
- * the markers were removed as each fix landed.
- *
- * Scenarios are weighted to the shipped marketing Sample.pdf (Type3,
- * per-glyph fonts) because that is what users actually load.
- */
+// REGRESSION suite for the 12 issues found by the QA sweep of the v2 PDF text
+// editor - all since fixed.
 const SAMPLE = path.join(
   import.meta.dirname,
   "../../../../public/samples/Sample.pdf",
@@ -209,8 +202,7 @@ async function glyphs(
 
 test.describe("v2 editor - fixed-issue regressions", () => {
   // ISSUE: a single-line run grows past the right page edge when you type a
-  // long string - the overflow is clipped/lost in the saved PDF instead of
-  // wrapping or being clamped to the page.
+  // long string.
   test("typing a long string into a single-line run stays on the page", async ({
     page,
   }) => {
@@ -229,9 +221,8 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     ).toBeLessThanOrEqual(g.pageWidth + 2);
   });
 
-  // ISSUE: typing non-Latin text (CJK / emoji) into a paragraph re-emits the
-  // WHOLE paragraph (surrogate guard bails), so every original line loses its
-  // source font objects.
+  // ISSUE: typing non-Latin text into a paragraph re-emits the WHOLE paragraph,
+  // so every original line loses its source font objects.
   test("typing non-Latin text keeps the paragraph's other lines' objects", async ({
     page,
   }) => {
@@ -263,10 +254,7 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     );
   });
 
-  // ISSUE: typing an emoji (astral / surrogate-pair char) then saving must
-  // round-trip the FULL surrogate pair - a code-unit-level edit could split it
-  // and leave a lone surrogate, and the base-14 fallback must not render it as
-  // U+00FF ("ÿ") tofu. Exercises the surrogate path through a save+reopen.
+  // ISSUE: typing an emoji then saving must round-trip the FULL surrogate pair.
   test("typing an emoji round-trips without a lone surrogate or U+00FF tofu", async ({
     page,
   }) => {
@@ -308,12 +296,8 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     ).toBe(false);
   });
 
-  // NOTE: two more issues are VISUALLY confirmed (see __qa screenshots) but
-  // omitted here because a stable automated assertion is hard:
-  //   - replacing a long Type3 run with a short string leaves the surviving
-  //     glyphs spread out ("He llo  Wo r ld") - kept glyphs are not re-flowed.
-  //   - deleting a word from a Type3 line leaves an internal gap
-  //     ("The Free Adobe Acrob   at" after removing "Alternative").
+  // NOTE: two more issues are VISUALLY confirmed but omitted here because a
+  // stable automated assertion is hard.
 
   // ISSUE: deleting the LEADING word of a paragraph line injects a stray
   // U+00FF ("ÿ") into the model text.
@@ -335,9 +319,8 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     expect(g.text.includes("ÿ"), "model text must not contain 'ÿ'").toBe(false);
   });
 
-  // ISSUE: deleting a single character from the MIDDLE of a Type3 word leaves
-  // a spurious space at the deletion point ("Comprehensive" -> "Compre ensive"
-  // after removing the 'h') - the surviving glyphs are not re-flowed together.
+  // ISSUE: deleting a single character from the MIDDLE of a Type3 word leaves a
+  // spurious space at the deletion point.
   test("deleting a mid-word character does not inject a spurious space", async ({
     page,
   }) => {
@@ -360,10 +343,8 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     ).toBe(false);
   });
 
-  // ISSUE: inserting an image through the toolbar picker (the v2-image-input
-  // file input) does not add an image to the page - the count stays the same.
-  // createImageBitmap works headless (verified), so this is a real no-op, not
-  // an environment limitation.
+  // ISSUE: inserting an image through the toolbar picker does not add an image
+  // to the page.
   test("inserting an image via the picker adds an image to the page", async ({
     page,
   }) => {
@@ -394,10 +375,7 @@ test.describe("v2 editor - fixed-issue regressions", () => {
   });
 
   // ISSUE: injecting several consecutive spaces into a multi-line paragraph
-  // collapses them - the paragraph-edit/overlay path re-derives spacing from
-  // glyph geometry, so "Stirling     PDF" (5 spaces) lands in the model with
-  // fewer spaces and the saved PDF loses the intended gap. (A short single-line
-  // replace preserves them, so this is specific to the multi-line path.)
+  // collapses them.
   test("injecting consecutive spaces into a paragraph preserves them", async ({
     page,
   }) => {
@@ -424,9 +402,7 @@ test.describe("v2 editor - fixed-issue regressions", () => {
   });
 
   // ISSUE: redo after undo-all does NOT reproduce the text the original edit
-  // produced. A simple append to a Type3 paragraph keeps the source glyphs on
-  // first apply, but redo re-emits the whole paragraph through the overlay path
-  // (collapsing the Type3 double-space extraction), so redone != edited.
+  // produced.
   test("redo after undo-all reproduces the originally edited text", async ({
     page,
   }) => {
@@ -446,9 +422,7 @@ test.describe("v2 editor - fixed-issue regressions", () => {
       (window as unknown as V2TestWindow).__v2_editor_store.resetAll(),
     );
     await page.waitForTimeout(400);
-    // Redo until the button is disabled. The edit + its auto-reflow coalesce
-    // into ONE undo/redo step, so this is typically a single click - clicking
-    // a disabled button would hang, so stop once redo is exhausted.
+    // Redo until the button is disabled.
     for (let i = 0; i < 6; i++) {
       const redoBtn = page.getByTestId("v2-redo");
       if (await redoBtn.isDisabled()) break;
@@ -463,11 +437,7 @@ test.describe("v2 editor - fixed-issue regressions", () => {
   });
 
   // ISSUE / LIMITATION: editing embedded / subset / form-xobject text used to
-  // re-font the run to base-14 Helvetica even when the edit only adds chars the
-  // subset already embeds. Appending chars present in the source ("test", all
-  // of which appear in "Subset font sample") must keep the subset font - the
-  // reuse is safe because those glyphs are proven present, and emitTextLine
-  // falls back to base-14 only if a reused glyph fails to render.
+  // re-font the run to base-14 Helvetica even when the edit only adds.
   test("editing a subset-font run keeps a non-base-14 font", async ({
     page,
   }) => {
@@ -483,8 +453,7 @@ test.describe("v2 editor - fixed-issue regressions", () => {
   });
 
   // ISSUE / UX: a single Enter-then-type produces several `input` events, so
-  // several undo steps are needed to revert one logical edit. One undo should
-  // suffice.
+  // several undo steps are needed to revert one logical edit.
   test("one undo reverts a single Enter+type action", async ({ page }) => {
     await open(page, SAMPLE, 1);
     const id = await findId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
@@ -498,11 +467,7 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     await caretEndInsert(page, id, "\n");
     await caretEndInsert(page, id, "Z");
     // Pause past the history coalesce window before clicking away, the way a
-    // real user does. Clicking Undo blurs the run, which fires the wrap
-    // reflow; that reflow must still merge into the typing step. Without the
-    // pause this passed only because a fast machine kept everything inside
-    // the window - which is why CI's slowest browser leg was the one that
-    // caught it.
+    // real user does.
     await page.waitForTimeout(1200);
     await page.getByTestId("v2-undo").click();
     // Poll for the revert rather than a fixed wait - the undo's store update can
@@ -523,8 +488,7 @@ test.describe("v2 editor - fixed-issue regressions", () => {
   });
 
   // ISSUE: opening an ENCRYPTED PDF fails silently - the editor shows "No
-  // document loaded" with no error message and no password prompt. It now
-  // prompts for the password (client-side decrypt) instead of dead-ending.
+  // document loaded" with no error message and no password prompt.
   test("opening an encrypted PDF surfaces an error or password prompt", async ({
     page,
   }) => {

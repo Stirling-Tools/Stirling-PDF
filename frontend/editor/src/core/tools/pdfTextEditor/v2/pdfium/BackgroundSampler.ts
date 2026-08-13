@@ -2,23 +2,8 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { PageRect, RGBA } from "@app/tools/pdfTextEditor/v2/types";
 
-/**
- * Render the area of the page surrounding a text run and pick the
- * dominant background color. Used by EditTextCommand to choose a cover-
- * rectangle fill that matches the page's actual background instead of
- * hardcoding white.
- *
- * Strategy:
- *   1. Render a small bitmap covering the run's bounds plus a margin.
- *   2. Sample pixels along the inflated border (top/bottom/left/right
- *      rings) - those rings are almost always background, while the
- *      interior contains the text glyphs we want to mask.
- *   3. Quantize each ring pixel to a 4-bit-per-channel bucket and pick
- *      the most common bucket. Its mean colour becomes the fill.
- *
- * Falls back to `{255,255,255,255}` (white) if the sample fails or
- * returns no usable colour.
- */
+// Render the area of the page surrounding a text run and pick the dominant
+// background color.
 const MARGIN_POINTS = 6;
 const SAMPLE_SCALE = 1.5; // bitmap resolution (px per PDF point)
 
@@ -39,8 +24,7 @@ export function sampleBackground(
     // so the sample reflects what the user actually sees.
     page.flushGenerate(m);
     // The rendered bitmap is CropBox/rotation (display) space; the run bounds
-    // are raw PDF. Map the bounds AABB into display space so the sample window
-    // lands on the right region of the bitmap. Identity transform => unchanged.
+    // are raw PDF.
     const d = page.display;
     const cs = [
       d.apply(bounds.x, bounds.y),
@@ -64,9 +48,7 @@ export function sampleBackground(
     const w = Math.max(8, Math.round(widthPts * SAMPLE_SCALE));
     const h = Math.max(8, Math.round(heightPts * SAMPLE_SCALE));
 
-    // Render the slice via PDFium. We render the full page bitmap and
-    // shift it so the desired area sits at (0,0). Cheap because we
-    // bound by the run's local size.
+    // Render the slice via PDFium.
     const bitmapPtr = m.FPDFBitmap_Create(w, h, 1);
     if (!bitmapPtr) return { fill: fallback, confident: false };
     try {

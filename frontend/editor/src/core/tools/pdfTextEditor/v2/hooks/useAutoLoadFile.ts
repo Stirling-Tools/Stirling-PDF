@@ -5,11 +5,8 @@ import { useViewer } from "@app/contexts/ViewerContext";
 
 type Loader = (file: File) => unknown;
 
-/**
- * Pick the file the user most likely wants open in the editor and load it
- * exactly once per key. Priority: explicit selection, then viewer's active
- * file, then the only file in the workbench.
- */
+// Pick the file the user most likely wants open in the editor and load it
+// exactly once per key.
 export function useAutoLoadFile(
   load: Loader,
   onFileChosen: (name: string) => void,

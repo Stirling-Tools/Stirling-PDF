@@ -10,11 +10,7 @@ import type { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/Display
 interface ImageHandleProps {
   image: ImageObjectSnapshot;
   pageHeight: number;
-  /**
-   * Raw-PDF -> display (CropBox/rotation) transform. Identity for normal
-   * pages; maps the image's PDF AABB onto the rendered (cropped/rotated)
-   * bitmap and back for drag/resize.
-   */
+  /** Raw-PDF -> display (CropBox/rotation) transform. */
   transform: DisplayTransform;
   scale: number;
   selected: boolean;
@@ -22,14 +18,7 @@ interface ImageHandleProps {
   onTransformCommit: (next: PageRect) => void;
 }
 
-/**
- * Draggable + resizable affordance for an image object.
- *
- * Both drag and resize report their final state (position + size) via a
- * single `onTransformCommit` so the editor can dispatch one absolute-
- * matrix command per gesture, sidestepping the post-multiply drift that
- * caused the original teleport bug.
- */
+/** Draggable + resizable affordance for an image object. */
 export function ImageHandle({
   image,
   pageHeight,
@@ -43,8 +32,7 @@ export function ImageHandle({
   const [hovered, setHovered] = useState(false);
 
   // Map the image's raw-PDF AABB into display-PDF space (4 corners through the
-  // transform, then min/max), then to CSS px. Identity transform reduces this
-  // to the prior `left=x*scale; top=(pageHeight-y-h)*scale` exactly.
+  // transform, then min/max), then to CSS px.
   const b = image.bounds;
   const dispCorners = [
     transform.apply(b.x, b.y),
@@ -68,8 +56,7 @@ export function ImageHandle({
     heightCss: number,
   ): PageRect {
     // CSS rect -> display-PDF AABB (y-up), then invert each corner back to raw
-    // PDF space and re-AABB. Identity transform reduces this to the prior
-    // `x=leftCss/scale; y=pageHeight-topCss/scale-h` exactly.
+    // PDF space and re-AABB.
     const dLeft = leftCss / scale;
     const dRight = (leftCss + widthCss) / scale;
     const dTop = pageHeight - topCss / scale;
@@ -91,9 +78,7 @@ export function ImageHandle({
     return { x: maxX - w, y: maxY - h, width: w, height: h };
   }
 
-  // Locked images are inert: no select, drag, or resize. The PDFium bitmap
-  // still paints them so the user sees what's there; the editor just refuses
-  // to act on them (mirrors TextRunOverlay's locked behaviour).
+  // Locked images are inert: no select, drag, or resize.
   const locked = image.locked === true;
 
   return (

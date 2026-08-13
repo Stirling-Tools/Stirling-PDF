@@ -4,17 +4,8 @@ import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 
 export type LineAlignMode = "left" | "center-h" | "right";
 
-/**
- * Horizontally align the LINES inside a single multi-line paragraph run
- * relative to each other (flush-left, centred, or flush-right) - the
- * familiar paragraph-alignment action, available when just one paragraph
- * is selected (multi-object align still works across a 2+ selection).
- *
- * Each line's glyph objects (`paragraphLineSlots[i].mergedFromPtrs`) are
- * translated by a per-line dx via `FPDFPageObj_Transform` - the same
- * primitive `MoveTextRunCommand` uses - so embedded fonts are preserved
- * (no re-emit). The per-line dx values are recorded for an exact revert.
- */
+// Horizontally align the LINES inside a single multi-line paragraph run
+// relative to each other.
 export class AlignParagraphLinesCommand implements Command {
   readonly type = "align-paragraph-lines";
   private readonly pageIndex: number;

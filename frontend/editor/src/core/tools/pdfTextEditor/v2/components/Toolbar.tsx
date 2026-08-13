@@ -3,7 +3,6 @@ import {
   Group,
   Menu,
   NumberInput,
-  Select,
   Text,
   Tooltip,
 } from "@mantine/core";
@@ -29,19 +28,20 @@ import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import AlignHorizontalLeftIcon from "@mui/icons-material/AlignHorizontalLeftOutlined";
 import AlignHorizontalCenterIcon from "@mui/icons-material/AlignHorizontalCenterOutlined";
 import AlignHorizontalRightIcon from "@mui/icons-material/AlignHorizontalRightOutlined";
-// LinearScale stands in for "distribute" since MUI Material doesn't ship
-// a dedicated DistributeHorizontally / DistributeVertically icon. Rotating
-// it for the vertical case keeps the two buttons visually distinguishable.
+// LinearScale stands in for "distribute" since MUI Material doesn't ship a
+// dedicated DistributeHorizontally / DistributeVertically icon.
 import LinearScaleIcon from "@mui/icons-material/LinearScaleOutlined";
 import RotateLeftIcon from "@mui/icons-material/RotateLeftOutlined";
 import RotateRightIcon from "@mui/icons-material/RotateRightOutlined";
 import FlipIcon from "@mui/icons-material/FlipOutlined";
+import OpenInNewIcon from "@mui/icons-material/OpenInNewOutlined";
 import { useTranslation } from "react-i18next";
 import {
   parseCssColor,
   toCssHex,
 } from "@app/tools/pdfTextEditor/v2/model/Color";
 import type { ToolbarState } from "@app/tools/pdfTextEditor/v2/types";
+import { FontFamilySelect } from "@app/tools/pdfTextEditor/v2/components/FontFamilySelect";
 
 export type ChangeCaseMode = "upper" | "lower" | "title" | "sentence";
 export type AlignMode =
@@ -66,6 +66,8 @@ interface ToolbarProps {
   onRedo: () => void;
   onChangeFontSize: (size: number) => void;
   onChangeFill: (hex: string) => void;
+  /** Null colour clears the outline; width 0 does the same. */
+  onChangeOutline: (hex: string | null, width: number) => void;
   onChangeFontFamily: (family: string) => void;
   onToggleBold: () => void;
   onToggleItalic: () => void;
@@ -76,6 +78,12 @@ interface ToolbarProps {
   onAlign: (mode: AlignMode) => void;
   onDistribute: (axis: "horizontal" | "vertical") => void;
   onTransformImage: (mode: ImageTransformToolbarMode) => void;
+  /** Swap the selected image's pixels, keeping its placement. */
+  onReplaceImage: () => void;
+  /** Hand the selected image to another app and re-import its saves. */
+  onEditImageExternally: () => void;
+  /** False where the browser cannot write a file the user then edits. */
+  externalEditSupported: boolean;
   /** True when every selected run/image is currently locked. */
   selectionAllLocked: boolean;
   /** True when at least one text run is selected. Disables case + lock-for-runs when false. */
@@ -89,16 +97,6 @@ interface ToolbarProps {
   canAlignLines: boolean;
   disabled: boolean;
 }
-
-const FONT_FAMILIES: { value: string; label: string }[] = [
-  { value: "Helvetica", label: "Helvetica" },
-  { value: "Helvetica-Bold", label: "Helvetica Bold" },
-  { value: "Times-Roman", label: "Times Roman" },
-  { value: "Times-Bold", label: "Times Bold" },
-  { value: "Times-Italic", label: "Times Italic" },
-  { value: "Courier", label: "Courier" },
-  { value: "Courier-Bold", label: "Courier Bold" },
-];
 
 function ToolbarSeparator() {
   return (
@@ -116,6 +114,7 @@ export function Toolbar({
   onRedo,
   onChangeFontSize,
   onChangeFill,
+  onChangeOutline,
   onChangeFontFamily,
   onToggleBold,
   onToggleItalic,
@@ -126,6 +125,9 @@ export function Toolbar({
   onAlign,
   onDistribute,
   onTransformImage,
+  onReplaceImage,
+  onEditImageExternally,
+  externalEditSupported,
   selectionAllLocked,
   hasRunSelection,
   hasImageSelection,
@@ -141,15 +143,12 @@ export function Toolbar({
   const hAlignDisabled = disabled || (selectionCount < 2 && !canAlignLines);
   const distributeDisabled = disabled || selectionCount < 3;
   const fillHex = state.fill ? toCssHex(state.fill) : "#000000";
-  // Reflect the selection's font in the Select instead of always showing the
-  // placeholder. Only base-14 families map to an option; embedded/subset
-  // fonts (and mixed selections) have no matching entry, so show placeholder.
-  const fontValue = (() => {
-    const id = state.fontFamily;
-    if (!id || state.mixed.fontFamily) return null;
-    const family = id.startsWith("base14:") ? id.slice("base14:".length) : id;
-    return FONT_FAMILIES.some((f) => f.value === family) ? family : null;
-  })();
+  const outlineHex = state.stroke ? toCssHex(state.stroke) : "#000000";
+  const outlineWidth = state.strokeWidth ?? 0;
+  // v2 tags base-14 ids with a "base14:" prefix; the picker matches family.
+  const fontFamily = state.fontFamily
+    ? state.fontFamily.replace(/^(base14|device):/, "")
+    : null;
   return (
     <Group
       gap="xs"
@@ -188,17 +187,10 @@ export function Toolbar({
         />
       </Tooltip>
       <ToolbarSeparator />
-      <Select
-        size="xs"
-        w={150}
-        placeholder={t("pdfTextEditorV2.toolbar.fontFamily", "Font family")}
-        aria-label={t("pdfTextEditorV2.toolbar.fontFamily", "Font family")}
-        data-testid="v2-font-family"
-        data={FONT_FAMILIES}
-        value={fontValue}
-        onChange={(value) => {
-          if (value) onChangeFontFamily(value);
-        }}
+      <FontFamilySelect
+        value={fontFamily}
+        onChange={onChangeFontFamily}
+        mixed={state.mixed.fontFamily}
         disabled={disabled || !hasRunSelection}
       />
       <NumberInput
@@ -228,6 +220,46 @@ export function Toolbar({
         disabled={disabled || !hasRunSelection}
         aria-label={t("pdfTextEditorV2.toolbar.fontColour", "Font colour")}
         data-testid="v2-colour"
+      />
+      <ColorInput
+        size="xs"
+        w={132}
+        value={outlineHex}
+        onChange={(next) => {
+          if (!next || !parseCssColor(next)) return;
+          // Picking a colour with no width yet is meant as "outline it",
+          // so give it a visible default rather than a silent no-op.
+          onChangeOutline(next, outlineWidth > 0 ? outlineWidth : 0.5);
+        }}
+        disabled={disabled || !hasRunSelection}
+        aria-label={t(
+          "pdfTextEditorV2.toolbar.outlineColour",
+          "Outline colour",
+        )}
+        data-testid="v2-outline-colour"
+      />
+      <NumberInput
+        size="xs"
+        w={76}
+        min={0}
+        max={12}
+        step={0.25}
+        decimalScale={2}
+        value={outlineWidth}
+        onChange={(value) => {
+          const next = typeof value === "number" ? value : Number(value);
+          if (!Number.isFinite(next) || next < 0) return;
+          // With a mixed colour there is no single hex to apply, so only the
+          // "remove the outline" direction is unambiguous.
+          if (next > 0 && state.mixed.stroke) return;
+          onChangeOutline(next > 0 ? outlineHex : null, next);
+        }}
+        disabled={disabled || !hasRunSelection || state.strokeWidth === null}
+        aria-label={t(
+          "pdfTextEditorV2.toolbar.outlineWidth",
+          "Outline width (0 = none)",
+        )}
+        data-testid="v2-outline-width"
       />
       <Tooltip label={t("pdfTextEditorV2.toolbar.bold", "Bold")}>
         <Button
@@ -549,6 +581,29 @@ export function Toolbar({
             data-testid="v2-imgop-flip-v"
           >
             {t("pdfTextEditorV2.toolbar.flipVertical", "Flip vertical")}
+          </Menu.Item>
+          <Menu.Divider />
+          <Menu.Item
+            leftSection={<ImageIcon fontSize="small" />}
+            disabled={imageDisabled}
+            onClick={onReplaceImage}
+            data-testid="v2-imgop-replace"
+          >
+            {t(
+              "pdfTextEditorV2.toolbar.replaceImage",
+              "Replace, keeping placement",
+            )}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<OpenInNewIcon fontSize="small" />}
+            disabled={imageDisabled || !externalEditSupported}
+            onClick={onEditImageExternally}
+            data-testid="v2-imgop-edit-externally"
+          >
+            {t(
+              "pdfTextEditorV2.toolbar.editImageExternally",
+              "Edit in another app",
+            )}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

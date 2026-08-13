@@ -67,8 +67,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   useEffect(() => store.selection.subscribe(setSelection), [store]);
 
   // Warm the Unicode fallback font so a non-Latin edit can embed it instead of
-  // dropping the glyphs. Fire-and-forget; the emit path degrades gracefully if
-  // the bytes haven't arrived yet.
+  // dropping the glyphs.
   useEffect(() => {
     void preloadFallbackFontBytes();
   }, []);
@@ -80,10 +79,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   // Pending save-risk warning (signatures/XFA) shown before the actual save.
   const [saveRisks, setSaveRisks] = useState<SaveRisks | null>(null);
   // docPtr the user already acknowledged risks for, so we don't re-nag.
-  // Keyed by document OBJECT identity + the acked risk SET: the raw docPtr
-  // is allocator-reused across documents (a later doc could inherit the
-  // ack), and a risk that APPEARS after the first ack (e.g. chars dropped
-  // by a later edit) must re-warn.
   const ackedRiskRef = useRef<{ doc: object; sig: string } | null>(null);
 
   const doSave = useCallback(async () => {
@@ -94,7 +89,10 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       // Yield once so React can paint the disabled/saving state before the
       // synchronous PDFium serialize blocks the main thread.
       await new Promise((resolve) => setTimeout(resolve, 0));
-      const { blob, filename } = exportToBlob(store.document, openedFileName);
+      const { blob, filename } = await exportToBlob(
+        store.document,
+        openedFileName,
+      );
       downloadBlob(blob, filename);
       store.markSaved();
     } catch (err) {
@@ -140,10 +138,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       const doc = store.document;
       if (!doc) return;
       // Decode via an <img> element rather than createImageBitmap: the latter
-      // lacks codec support in some environments (and headless Chromium),
-      // throwing "source image could not be decoded". The <img> path decodes
-      // anywhere the browser can render the format. Surface failures instead
-      // of swallowing them so the user isn't left wondering why nothing happened.
+      // lacks codec support in some environments.
       let decoded: { data: ImageData; width: number; height: number };
       try {
         decoded = await decodeImageFile(file);
@@ -165,8 +160,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         try {
           jpegBytes = new Uint8Array(await file.arrayBuffer());
           // The <img> decode above APPLIES EXIF orientation; the raw bytes
-          // don't. Passing rotated bytes through embedded phone photos
-          // sideways with swapped aspect - use the upright bitmap instead.
+          // don't.
           if (jpegExifOrientation(jpegBytes) !== 1) jpegBytes = undefined;
         } catch {
           jpegBytes = undefined; // fall back to the bitmap path
@@ -175,9 +169,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       // The document may have been reloaded while the image decoded; bail
       // rather than insert against geometry from the wrong document.
       if (store.document !== doc) return;
-      // Insert onto the page currently in view, read from fresh store state
-      // (not a stale render closure), so scrolling to page 10 and inserting
-      // doesn't silently drop the image onto page 1 off-screen.
+      // Insert onto the page currently in view, read from fresh store state.
       const pages = store.getState().pages;
       const visibleIndex = visiblePageNumber();
       const page = pages.find((p) => p.pageIndex === visibleIndex) ?? pages[0];
@@ -185,8 +177,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       const w = page.width * INSERTED_IMAGE_RATIO;
       const h = w * (decoded.height / decoded.width);
       // Centre in the VISIBLE (display) page, then invert the CropBox/rotation
-      // transform to raw PDF space (commands store raw coords). Identity on
-      // normal pages => unchanged.
+      // transform to raw PDF space (commands store raw coords).
       const ll = DisplayTransform.fromData(page.display).invert(
         (page.width - w) / 2,
         (page.height - h) / 2,
@@ -234,22 +225,14 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     return s.runIds.length > 0 || s.imageIds.length > 0;
   }, [store]);
 
-  /**
-   * Paste: create a fresh InsertTextCommand on the currently-visible page,
-   * positioned in roughly the centre. The whole clipboard string (newlines
-   * preserved) is inserted as a single multi-line text run.
-   *
-   * Skipped silently when no document is loaded or the text is blank.
-   */
+  // Paste: create a fresh InsertTextCommand on the currently-visible page,
+  // positioned in roughly the centre.
   const insertPastedText = useCallback(
     (text: string, stripFormatting: boolean) => {
       const doc = store.document;
       if (!doc) return;
       // `stripFormatting` is honoured by normalising line endings and
-      // collapsing leading/trailing whitespace - the underlying paste
-      // already drops everything but plain text since the clipboard
-      // API returns a string. The flag is kept so the same handler
-      // can be re-pointed at a richer source later.
+      // collapsing leading/trailing whitespace.
       const normalised = stripFormatting
         ? text.replace(/\r\n?/g, "\n").trim()
         : text.replace(/\r\n?/g, "\n");
@@ -276,9 +259,8 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         }
       }
       const page = doc.page(pageIndex);
-      // Position roughly at the page centre (display space), biased toward the
-      // upper third so multi-line paste has room to flow downward, then invert
-      // the CropBox/rotation transform to raw PDF space. Identity => unchanged.
+      // Position roughly at the page centre, biased toward the upper third so
+      // multi-line paste has room to flow downward.
       const anchor = page.display.invert(
         page.width / 2 - 80,
         page.height * 0.55,
@@ -485,16 +467,13 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         onUngroup={handleUngroupSelection}
         onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
         onSetWidthMode={(m) => store.setWidthMode(m)}
+        onSetShowRulers={(show) => store.setShowRulers(show)}
       />
     </Stack>
   );
 }
 
-/**
- * Decode an image File to RGBA via an <img> element + canvas. Used instead of
- * createImageBitmap, which lacks codec support in some environments. Rejects
- * (so the caller can surface an error) when the image can't be decoded.
- */
+/** Decode an image File to RGBA via an <img> element + canvas. */
 function decodeImageFile(
   file: File,
 ): Promise<{ data: ImageData; width: number; height: number }> {

@@ -3,13 +3,8 @@ import type { Page, Route } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
-/**
- * Editing OBJECT-rotated text (a text run whose matrix is rotated within an
- * upright page) must keep the rotation, not force the re-emitted glyphs upright
- * (finding N). The fixture's "Rotated" run is at 30 degrees (matrix b ~ 0.5).
- *
- * Backend-free: encode-charcodes aborted so the edit takes the client emit path.
- */
+// Editing OBJECT-rotated text must keep the rotation, not force the re-emitted
+// glyphs upright.
 
 const ROTATED = path.join(
   import.meta.dirname,

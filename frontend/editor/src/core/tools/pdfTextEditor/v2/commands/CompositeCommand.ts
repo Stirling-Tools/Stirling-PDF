@@ -1,15 +1,7 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 
-/**
- * Groups several already-applied commands into one undo/redo step.
- *
- * The HistoryStack uses this to coalesce a burst of keystrokes on the same
- * run (contentEditable fires several `input` events per logical action) so a
- * single undo reverts the whole burst. The child commands are applied at
- * dispatch time individually; this wrapper only re-applies (redo, in order)
- * and reverts (undo, in REVERSE order) them as a unit.
- */
+/** Groups several already-applied commands into one undo/redo step. */
 export class CompositeCommand implements Command {
   readonly type = "composite";
   private readonly commands: Command[];

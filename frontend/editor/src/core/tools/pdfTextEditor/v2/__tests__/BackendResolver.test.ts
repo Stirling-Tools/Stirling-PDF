@@ -1,25 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-/**
- * Regression coverage for `BackendResolver`'s HTTP transport.
- *
- * Why this test exists: we previously rolled a custom `fetch()` inside
- * BackendResolver that bypassed every concern the shared `apiClient`
- * already handles (JWT auth header, XSRF, credentials, token refresh).
- * That regressed silently the moment the Spring backend enabled the
- * security profile - every probe returned 401, the prewarm cache
- * stayed empty, and the per-char emit branch in editTextHelpers had
- * nothing to look up. The user reported "the M-glyph fix is broken"
- * and the broken code path had ZERO test coverage.
- *
- * These assertions pin the resolver to the shared apiClient so future
- * refactors can't sneak around it: any encode-charcodes POST must go
- * through `apiClient.post`, which means automatic auth + the
- * `suppressErrorToast` flag we set explicitly to keep prewarm probes
- * from popping toasts. We drive the REAL transport via
- * `prewarmBackendCacheForPage`, which is the only public entry that
- * reaches `postCharcodes`, with a faked PDFium module + editor store.
- */
+/** Regression coverage for `BackendResolver`'s HTTP transport. */
 
 // Mock apiClient BEFORE BackendResolver imports it.
 vi.mock("@app/services/apiClient", () => ({
@@ -27,8 +8,7 @@ vi.mock("@app/services/apiClient", () => ({
 }));
 
 // Stub the document serializer so the prewarm path can produce PDF bytes
-// without a real PDFium file-writer. The bytes themselves are irrelevant
-// to the transport assertions - we just need a non-empty buffer.
+// without a real PDFium file-writer.
 vi.mock("@app/tools/pdfTextEditor/v2/pdfium/PdfiumSave", () => ({
   PdfiumSave: { serialize: vi.fn(() => new Uint8Array([0, 1, 2, 3])) },
 }));
@@ -50,22 +30,15 @@ import type { ResolverContext } from "@app/tools/pdfTextEditor/v2/charcode/Charc
 
 const post = apiClient.post as unknown as ReturnType<typeof vi.fn>;
 
-// Minimal stub for ResolverContext - the resolver path under test
-// never dereferences pagePtr/docPtr/module for cache lookup; the
-// auto-prefetch fall-through DOES, but it's gated by absence of a
-// loaded editor document on window so it bails early in this env.
+// Minimal stub for ResolverContext.
 const fakeCtx: ResolverContext = {
   module: {} as unknown as ResolverContext["module"],
   pagePtr: 0,
   docPtr: 0,
 };
 
-/**
- * Build a fake PDFium module that renders a single char on a page so the
- * prewarm text-walk finds exactly one (font, char) probe to fire. `char`
- * is the Unicode codepoint of the only glyph on the page; `fontPtr` is the
- * font handle the prewarm caches the charcode under.
- */
+// Build a fake PDFium module that renders a single char on a page so the
+// prewarm text-walk finds exactly one probe to fire. `char` is the Unicode.
 function makeFakeModule(char: string, fontPtr: number) {
   const cp = char.codePointAt(0) ?? 0;
   const TEXT_PAGE = 555;
@@ -80,11 +53,8 @@ function makeFakeModule(char: string, fontPtr: number) {
   } as unknown as ResolverContext["module"];
 }
 
-/**
- * Fake PDFium module rendering an arbitrary sequence of glyphs, each with its
- * own font handle. `glyphs` is a list of [char, fontPtr] in page reading order.
- * Used to exercise the prewarm batching + cross-font cache-key paths.
- */
+// Fake PDFium module rendering an arbitrary sequence of glyphs, each with its
+// own font handle. `glyphs` is a list of [char, fontPtr] in page reading order.
 function makeFakeModulePage(glyphs: Array<[string, number]>) {
   const TEXT_PAGE = 555;
   const OBJ_BASE = 1000;
@@ -108,10 +78,8 @@ async function waitUntil(predicate: () => boolean): Promise<void> {
   }
 }
 
-/**
- * Install a fake editor document on window so `prewarmBackendCacheForPage`
- * resolves a page + module instead of bailing on "no-editor-ctx".
- */
+// Install a fake editor document on window so `prewarmBackendCacheForPage`
+// resolves a page + module instead of bailing on "no-editor-ctx".
 function installEditorDocument(
   module: ResolverContext["module"],
   pagePtr: number,
@@ -165,9 +133,7 @@ describe("BackendResolver", () => {
           text: "M",
         }),
         // Top-level axios config, NOT headers: handleHttpError reads
-        // `error.config.<flag>`, so the header spelling was inert. The
-        // behavioural half of this contract is asserted in
-        // services/__tests__/httpErrorHandler.test.ts.
+        // `error.config.<flag>`, so the header spelling was inert.
         { suppressErrorToast: true, skipAuthRedirect: true },
       );
     });
@@ -264,11 +230,8 @@ describe("BackendResolver", () => {
     });
 
     it("includes the primed font-program hash so the backend can pick the exact subset", async () => {
-      // The Mangum-CV corruption: PDFium names every "ABCDEF+Garamond"
-      // subset just "Garamond", so the backend matched a SIBLING subset
-      // whose charcodes hit different glyphs ("RUSSELL" → "US EEL"). The
-      // program-bytes hash is the disambiguator - once the font was primed
-      // (load phase), every prewarm probe must carry it.
+      // The Mangum-CV corruption: PDFium names every "ABCDEF+Garamond" subset
+      // just "Garamond".
       const fontBytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
       // Prime the sha cache for font 7 via the CmapResolver's safe-phase read.
       const heap = new Uint8Array(1 << 12);
@@ -326,9 +289,7 @@ describe("BackendResolver", () => {
 
     it("does not re-POST every keystroke when the queried font differs from the rendering font (H2)", async () => {
       // 'A' is rendered by font 7 on the page, but the run is editing under a
-      // borrowed font handle 99. The first resolve misses and prefetches; the
-      // sentinel it seeds under font 99 must stop every subsequent keystroke
-      // from re-serializing + re-POSTing the whole PDF.
+      // borrowed font handle 99.
       const module = makeFakeModulePage([["A", 7]]);
       installEditorDocument(module, 9200, 4242);
       post.mockResolvedValue({ data: { charcodes: [65] } });
@@ -367,9 +328,8 @@ describe("BackendResolver", () => {
     it("resolve() reports a space as missing and never round-trips it", async () => {
       const r = new BackendResolver();
       const result = r.resolve(99, " ", fakeCtx);
-      // Space must be reported missing (-> emitted as a positional gap),
-      // NOT looked up / cached / sent to the backend (which would paint a
-      // garbage glyph like „ for charcode 0x20 in subset fonts).
+      // Space must be reported missing, NOT looked up / cached / sent to the
+      // backend.
       expect(result?.missing).toEqual([" "]);
       expect(result?.charcodes).toEqual([]);
       await Promise.resolve();

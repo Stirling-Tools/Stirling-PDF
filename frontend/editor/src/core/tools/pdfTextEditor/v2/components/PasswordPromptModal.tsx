@@ -12,10 +12,8 @@ interface PasswordPromptModalProps {
   onCancel: () => void;
 }
 
-/**
- * Asks the user for a password to open an encrypted PDF, then retries the
- * load. `prompt.retry` means the previous password was wrong.
- */
+// Asks the user for a password to open an encrypted PDF, then retries the load.
+// `prompt.retry` means the previous password was wrong.
 export function PasswordPromptModal({
   prompt,
   loading,

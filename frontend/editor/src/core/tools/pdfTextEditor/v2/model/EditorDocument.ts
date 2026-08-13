@@ -7,26 +7,27 @@ import {
 import { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 import { FontRef } from "@app/tools/pdfTextEditor/v2/model/FontRef";
+import { prepareForEditing } from "@app/tools/pdfTextEditor/v2/pdfdoc/prepareForEditing";
 
-/**
- * Lifetime-managed PDFium document wrapper for the v2 text editor.
- *
- * - Opens a raw PDFium document pointer from bytes.
- * - Lazily loads each `Page` on first request (PDFium `FPDF_LoadPage`).
- * - Owns the catalogue of `FontRef`s the user has added (bundled fonts).
- * - On `dispose()` closes every loaded page, every owned font, and the
- *   document itself, releasing all WASM heap memory.
- */
+// Lifetime-managed PDFium document wrapper for the v2 text editor. - Opens a
+// raw PDFium document pointer from bytes.
 export class EditorDocument {
   readonly module: WrappedPdfiumModule;
   readonly docPtr: number;
+  /** Exactly the bytes PDFium was handed: the save-time repairs re-read them. */
+  readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
   private readonly ownedFonts: Map<string, FontRef>;
   private _disposed: boolean;
 
-  private constructor(module: WrappedPdfiumModule, docPtr: number) {
+  private constructor(
+    module: WrappedPdfiumModule,
+    docPtr: number,
+    openedBytes: Uint8Array,
+  ) {
     this.module = module;
     this.docPtr = docPtr;
+    this.openedBytes = openedBytes;
     this.pageCache = new Map();
     this.ownedFonts = new Map();
     this._disposed = false;
@@ -37,8 +38,17 @@ export class EditorDocument {
     password?: string,
   ): Promise<EditorDocument> {
     const module = await getPdfiumModule();
-    const docPtr = await openRawDocument(data, password);
-    return new EditorDocument(module, docPtr);
+    const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+    const prepared = await prepareForEditing(bytes);
+    const docPtr = await openRawDocument(prepared, password);
+    return new EditorDocument(module, docPtr, prepared);
+  }
+
+  /** Page indices whose content stream has been regenerated this session. */
+  regeneratedPages(): number[] {
+    return this.loadedPages()
+      .filter((p) => p.regenerated)
+      .map((p) => p.index);
   }
 
   get pageCount(): number {

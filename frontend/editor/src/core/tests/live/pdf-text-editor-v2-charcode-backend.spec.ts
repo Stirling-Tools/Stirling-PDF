@@ -3,14 +3,8 @@ import { loginAndSetup } from "@app/tests/helpers/login";
 import * as path from "path";
 import * as fs from "fs";
 
-/**
- * In dev environments where the Stirling backend ships with login
- * disabled (anonymous-mode), `loginAndSetup` will throw because /login
- * doesn't render. Detect that and silently skip the call. Live CI
- * still hits the real login flow (login enabled in the CI backend
- * profile), so this conditional only takes effect when running the
- * suite against a no-auth dev backend.
- */
+// In dev environments where the Stirling backend ships with login disabled
+// (anonymous-mode), `loginAndSetup` will throw because /login doesn't render.
 async function loginIfNeeded(
   page: import("@playwright/test").Page,
 ): Promise<void> {
@@ -26,29 +20,7 @@ async function loginIfNeeded(
   }
 }
 
-/**
- * Live e2e coverage for the v2 PDF text editor's `backend` charcode
- * strategy.
- *
- * Unlike the `stubbed` suite, these tests hit the REAL Spring backend
- * (`/api/v1/general/pdf-text-editor-v2/encode-charcodes`) via PDFBox.
- * Sample.pdf is the standout repro: every glyph is a per-char Type3
- * font where naive Helvetica fallback renders "M" as the wrong glyph
- * shape. The backend's ToUnicode-reverse-CMap lookup resolves each
- * char to its native font + charcode, the frontend's per-char emit
- * branch creates one text object per char with the correct font
- * handle + SetCharcodes(charcode), and the result visually matches
- * the source text.
- *
- * The two things this suite guards against:
- *   1. Regression of the per-char emit branch (must fire on the
- *      FIRST keystroke after focus, NOT the second - the prewarm in
- *      TextRunOverlay.onFocus exists precisely to eliminate the
- *      old 2-attempt UX).
- *   2. Wrong charcode being emitted (e.g. M → 0 / .notdef instead of
- *      the real glyph index that PDFBox's ToUnicode reverse map
- *      returns).
- */
+// Live e2e coverage for the v2 PDF text editor's `backend` charcode strategy.
 
 function fixture(filename: string): string {
   const candidates = [
@@ -124,49 +96,32 @@ test.describe("v2 charcode backend strategy (live PDFBox)", () => {
     const runTestId = (await runEl.getAttribute("data-testid")) ?? "";
     expect(runTestId).toMatch(/^v2-run-p\d+-/);
 
-    // Listen for the prewarm-complete console.debug log BEFORE we
-    // focus the run, so we don't race the message.
-    // Match either of:
-    //   "backend prewarm pageIdx=0 probes=N" - the completion log
-    //   "backend prewarm pageIdx=0 probes=0 (already-prewarmed)" -
-    //     cached from a prior test, treat as complete
-    // The prewarm-START log ("prewarm-start pageIdx=") confirms that
-    // the focus actually triggered the lazy-import path even on the
-    // early-return branches.
+    // Listen for the prewarm-complete console.debug log BEFORE we focus the
+    // run, so we don't race the message.
     const prewarmComplete = page.waitForEvent("console", {
       predicate: (msg) =>
         /\[v2\.charcode\] backend prewarm pageIdx=/.test(msg.text()),
       timeout: 90_000,
     });
 
-    // Surface ALL console messages to the test stdout so we can see
-    // what's happening if the prewarm log doesn't fire. Wrapping
-    // page.on now means messages from before THIS line are missed,
-    // but the prewarm fires after focus (below) so we catch it.
+    // Surface ALL console messages to the test stdout so we can see what's
+    // happening if the prewarm log doesn't fire.
     page.on("console", (msg) => {
       if (/v2\.charcode|prewarm/.test(msg.text())) {
         process.stdout.write(`[page-console-${msg.type()}] ${msg.text()}\n`);
       }
     });
 
-    // Use Playwright's physical click - that dispatches real
-    // mousedown/up/click + focus events that React's synthetic
-    // event system catches reliably. Calling el.focus() from
-    // page.evaluate works for native DOM focus but can race React's
-    // focus delegation in unmount/mount transitions.
+    // Use Playwright's physical click - that dispatches real mousedown/up/click
+    // + focus events that React's synthetic event system catches reliably.
     await runEl.click();
 
     // Wait for prewarm to log "[v2.charcode] backend prewarm pageIdx=
-    // probes=N". After this fires the per-char cache for the page is
-    // populated and the next keystroke hits charcodes-ok on the FIRST
-    // try.
+    // probes=N".
     await prewarmComplete;
 
-    // First keystroke: should hit the per-char emit branch on the
-    // FIRST try (no Helvetica fallback). Use execCommand("insertText")
-    // because Playwright's keyboard.type on contenteditable can
-    // occasionally route through synthetic key events that the
-    // editor's onInput debounce drops.
+    // First keystroke: should hit the per-char emit branch on the FIRST try (no
+    // Helvetica fallback).
     await page.evaluate((tid) => {
       const el = document.querySelector<HTMLDivElement>(
         `[data-testid="${tid}"]`,
@@ -184,11 +139,7 @@ test.describe("v2 charcode backend strategy (live PDFBox)", () => {
     }, runTestId);
 
     // The debug HUD was removed from production builds, so verify the emit
-    // through the window-exposed telemetry buffer instead (charcodeRegistry
-    // mirrors recent CharcodeEvents onto window.__v2_charcode_events for
-    // exactly this purpose). Poll for a charcodes-ok event covering the
-    // typed "M": robust to whether prewarm beat the keystroke (1-attempt)
-    // or the resolver's auto-prefetch retried slightly after.
+    // through the window-exposed telemetry buffer instead.
     type CharcodeEmitEvent = {
       text: string;
       outcome: string;
@@ -237,8 +188,7 @@ test.describe("v2 charcode backend strategy (live PDFBox)", () => {
     expect(runText).toBe("10M+M");
 
     // No-regression guard: the MOST RECENT emit covering "M" must be a
-    // source-font charcodes-ok emit, NOT a Helvetica fallback. This is
-    // the "first-keystroke-must-work" assertion.
+    // source-font charcodes-ok emit, NOT a Helvetica fallback.
     const events = await readCharcodeEvents();
     const mEvents = events.filter((e) => e.text.includes("M"));
     const lastM = mEvents[mEvents.length - 1];

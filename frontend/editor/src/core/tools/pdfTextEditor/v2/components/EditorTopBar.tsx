@@ -4,20 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 
-/**
- * Top bar for the v2 text/image editor.
- *
- * This editor is scoped to TEXT and IMAGE editing on top of a PDF
- * substrate. Document-level operations (page rotation, page reorder,
- * page split, print, save-to-workbench-for-another-tool) live in
- * Stirling's dedicated tools and have intentionally been removed
- * from this surface so users don't see overlapping affordances.
- *
- * Kept controls here are app-level chrome only: zoom (editing
- * visibility), save PDF (canonical document output), and keyboard
- * help. The selection controls live in the toolbar below; insert and
- * paragraph actions live in the sidebar.
- */
+/** Top bar for the v2 text/image editor. */
 interface TopBarProps {
   store: EditorStore;
   hasDocument: boolean;

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useSelectionActions } from "@app/tools/pdfTextEditor/v2/hooks/useSelectionActions";
 import { deriveToolbarState } from "@app/tools/pdfTextEditor/v2/util/toolbarState";
 import {
@@ -18,16 +18,22 @@ import {
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { EditorViewState } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
+import {
+  isExternalImageEditSupported,
+  startExternalImageEdit,
+  type ExternalEditWatch,
+} from "@app/tools/pdfTextEditor/v2/util/externalImageEdit";
+import {
+  decodeBytesForEmbed,
+  decodeImageForEmbed,
+  pickImageFile,
+} from "@app/tools/pdfTextEditor/v2/util/imagePicking";
+import { readImageObjectPixels } from "@app/tools/pdfTextEditor/v2/util/imagePixels";
 
 type AlignMode = "left" | "center-h" | "right" | "top" | "middle-v" | "bottom";
 
-/**
- * Everything the contextual `Toolbar` needs, derived from the shared
- * `EditorStore`. Lives in a hook (not the sidebar shell) so the toolbar
- * can be rendered by `PageStage` as a bar across the top of the canvas -
- * the workbench mounts PageStage directly, so it can't take props from
- * the shell and must source the handlers from the store itself.
- */
+// Everything the contextual `Toolbar` needs, derived from the shared
+// `EditorStore`.
 export function useToolbarController(
   store: EditorStore,
   state: EditorViewState,
@@ -132,18 +138,22 @@ export function useToolbarController(
         }
       }
       if (selRuns.size + selImages.size < 2) return;
+      // One gesture must be one undo step, not one per object.
+      const moves: Array<MoveTextRunCommand | SetImageTransformCommand> = [];
       for (const p of doc.loadedPages()) {
         const items: Array<{
           kind: "run" | "image";
           id: string;
           bounds: { x: number; y: number; width: number; height: number };
         }> = [];
+        // Locked objects stay selectable but must never be moved, the
+        // same rule every other bulk path applies.
         for (const r of p.runs) {
-          if (!selRuns.has(r.id)) continue;
+          if (!selRuns.has(r.id) || r.locked) continue;
           items.push({ kind: "run", id: r.id, bounds: r.bounds });
         }
         for (const im of p.images) {
-          if (!selImages.has(im.id)) continue;
+          if (!selImages.has(im.id) || im.locked) continue;
           items.push({ kind: "image", id: im.id, bounds: im.bounds });
         }
         if (items.length < 2) continue;
@@ -183,7 +193,7 @@ export function useToolbarController(
           }
           if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) continue;
           if (it.kind === "run") {
-            store.dispatch(
+            moves.push(
               new MoveTextRunCommand({
                 pageIndex: p.index,
                 runId: it.id,
@@ -192,7 +202,7 @@ export function useToolbarController(
               }),
             );
           } else {
-            store.dispatch(
+            moves.push(
               new SetImageTransformCommand({
                 pageIndex: p.index,
                 imageId: it.id,
@@ -207,6 +217,8 @@ export function useToolbarController(
           }
         }
       }
+      if (moves.length === 1) store.dispatch(moves[0]);
+      else if (moves.length > 1) store.dispatch(new CompositeCommand(moves));
     },
     [store],
   );
@@ -218,18 +230,22 @@ export function useToolbarController(
       const selRuns = new Set(store.selection.value.runIds);
       const selImages = new Set(store.selection.value.imageIds);
       if (selRuns.size + selImages.size < 3) return;
+      // One gesture must be one undo step, not one per object.
+      const moves: Array<MoveTextRunCommand | SetImageTransformCommand> = [];
       for (const p of doc.loadedPages()) {
         const items: Array<{
           kind: "run" | "image";
           id: string;
           bounds: { x: number; y: number; width: number; height: number };
         }> = [];
+        // Locked objects stay selectable but must never be moved, the
+        // same rule every other bulk path applies.
         for (const r of p.runs) {
-          if (!selRuns.has(r.id)) continue;
+          if (!selRuns.has(r.id) || r.locked) continue;
           items.push({ kind: "run", id: r.id, bounds: r.bounds });
         }
         for (const im of p.images) {
-          if (!selImages.has(im.id)) continue;
+          if (!selImages.has(im.id) || im.locked) continue;
           items.push({ kind: "image", id: im.id, bounds: im.bounds });
         }
         if (items.length < 3) continue;
@@ -268,7 +284,7 @@ export function useToolbarController(
           }
           if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) continue;
           if (it.kind === "run") {
-            store.dispatch(
+            moves.push(
               new MoveTextRunCommand({
                 pageIndex: p.index,
                 runId: it.id,
@@ -277,7 +293,7 @@ export function useToolbarController(
               }),
             );
           } else {
-            store.dispatch(
+            moves.push(
               new SetImageTransformCommand({
                 pageIndex: p.index,
                 imageId: it.id,
@@ -292,6 +308,8 @@ export function useToolbarController(
           }
         }
       }
+      if (moves.length === 1) store.dispatch(moves[0]);
+      else if (moves.length > 1) store.dispatch(new CompositeCommand(moves));
     },
     [store],
   );
@@ -390,8 +408,60 @@ export function useToolbarController(
     const run = state.pages
       .flatMap((p) => p.runs)
       .find((r) => r.id === selection.runIds[0]);
-    return !!run && (run.paragraphLineCount ?? 0) > 1;
+    // Mirrors AlignParagraphLinesCommand.canAlign, which gates on SLOTS: line
+    // count enabled the item for paragraphs the command then refused.
+    return !!run && (run.paragraphSlotCount ?? 0) >= 2;
   }, [state.pages, selection]);
+
+  const onReplaceImage = useCallback(() => {
+    void (async () => {
+      const file = await pickImageFile();
+      if (!file) return;
+      try {
+        const picked = await decodeImageForEmbed(file);
+        sel.replaceSelectedImage(picked.decoded, picked.jpegBytes);
+      } catch (err) {
+        store.setError(err instanceof Error ? err.message : String(err));
+      }
+    })();
+  }, [sel, store]);
+
+  const watchRef = useRef<ExternalEditWatch | null>(null);
+  useEffect(() => () => watchRef.current?.stop(), []);
+
+  const onEditImageExternally = useCallback(() => {
+    void (async () => {
+      const doc = store.document;
+      const imageId = selection.imageIds[0];
+      if (!doc || !imageId) return;
+      const target = doc
+        .loadedPages()
+        .flatMap((page) => page.images)
+        .find((img) => img.id === imageId);
+      if (!target?.pdfiumObjPtr) return;
+      const pixels = readImageObjectPixels(
+        doc,
+        target.pageIndex,
+        target.pdfiumObjPtr,
+      );
+      if (!pixels) return;
+      // Only one image can be watched at a time; starting a second replaces
+      // the first rather than leaving two pollers racing over the document.
+      watchRef.current?.stop();
+      const outcome = await startExternalImageEdit({
+        pixels,
+        suggestedName: "pdf-image.png",
+        onChange: (bytes) => {
+          void decodeBytesForEmbed(bytes)
+            .then((decoded) =>
+              sel.replaceImageById(target.pageIndex, imageId, decoded),
+            )
+            .catch(() => undefined);
+        },
+      });
+      if (outcome.status === "watching") watchRef.current = outcome.watch;
+    })();
+  }, [sel, selection.imageIds, store]);
 
   return {
     state: toolbarState,
@@ -401,7 +471,10 @@ export function useToolbarController(
     onRedo: () => store.redo(),
     onChangeFontSize: sel.changeFontSize,
     onChangeFill: sel.changeFill,
-    onChangeFontFamily: sel.changeFontFamily,
+    onChangeOutline: sel.changeOutline,
+    onChangeFontFamily: (family: string) => {
+      void sel.changeFontFamily(family);
+    },
     onToggleBold: sel.toggleBold,
     onToggleItalic: sel.toggleItalic,
     onDelete: sel.deleteSelection,
@@ -411,6 +484,9 @@ export function useToolbarController(
     onAlign,
     onDistribute,
     onTransformImage,
+    onReplaceImage,
+    onEditImageExternally,
+    externalEditSupported: isExternalImageEditSupported(),
     selectionAllLocked,
     hasRunSelection: selection.runIds.length > 0,
     hasImageSelection: selection.imageIds.length > 0,

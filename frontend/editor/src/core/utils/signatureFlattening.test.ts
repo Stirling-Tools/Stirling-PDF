@@ -16,10 +16,8 @@ const ONE_PIXEL_PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 
 beforeAll(async () => {
-  // Resolve through the module system, not process.cwd(): the package is
-  // hoisted to frontend/node_modules while vitest workers may run with cwd
-  // at editor/ (whose node_modules is empty), which 404'd the cwd-relative
-  // path on any --root editor invocation.
+  // Resolve through the module system, not process.cwd: the package is hoisted
+  // to frontend/node_modules while vitest workers may run with cwd at editor/.
   const wasmPath = createRequire(import.meta.url).resolve(
     "@embedpdf/pdfium/pdfium.wasm",
   );

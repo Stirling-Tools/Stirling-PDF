@@ -6,12 +6,8 @@ import type {
   V2TestWindow,
 } from "@app/tests/stubbed/v2EditorTestTypes";
 
-/**
- * Combined-feature regression suite: the new editor features (image
- * rotate/flip, z-order, align/distribute, lock, change-case, cut/paste,
- * find+replace) AND their interaction with the 12 bug fixes. Page-level
- * operations (page rotate/print/reset) are intentionally absent.
- */
+// Combined-feature regression suite: the new editor features AND their
+// interaction with the 12 bug fixes.
 const SAMPLE = path.join(
   import.meta.dirname,
   "../../../../public/samples/Sample.pdf",
@@ -171,8 +167,7 @@ async function undoSize(page: Page): Promise<number> {
 
 test.describe("v2 editor - combined feature set", () => {
   // Editor edits fire encode-charcodes; with no backend an UNMOCKED call 401s
-  // and redirects to login, unmounting the editor (the __v2_editor_store goes
-  // undefined mid-test). Abort it so the resolver sees a clean cold-cache miss.
+  // and redirects to login, unmounting the editor.
   test.beforeEach(async ({ page }) => {
     await page.route("**/encode-charcodes", (route) => route.abort());
   });
@@ -328,16 +323,12 @@ test.describe("v2 editor - combined feature set", () => {
     const cutText = await runText(page, 1, id);
     await selectRun(page, id);
     // Cut is suppressed while focus is inside a contentEditable run (so the
-    // browser's native cut wins there). The real editor-level cut path fires
-    // from a marquee/store selection with focus outside any run - mirror that.
+    // browser's native cut wins there).
     await page.evaluate(() =>
       (document.activeElement as HTMLElement | null)?.blur(),
     );
     // Ctrl+X / Ctrl+V ride the native cut/paste ClipboardEvent, which needs no
-    // permission grant and behaves identically on every engine. Do NOT add
-    // context.grantPermissions back here: it is Chromium-only, and it hid a
-    // real bug where the editor could not paste on WebKit or on any
-    // plain-HTTP origin (where navigator.clipboard is undefined).
+    // permission grant and behaves identically on every engine.
     await page.keyboard.press("Control+x");
     await expect
       .poll(() => totalRuns(page), { message: "cut removes the run" })
@@ -694,9 +685,8 @@ test.describe("v2 editor - combined feature set", () => {
   test("distribute-v equalizes the vertical gaps across three runs", async ({
     page,
   }) => {
-    // Page text runs are stacked vertically (one per line/paragraph), so
-    // vertical distribution is the natural axis - they don't overlap on y,
-    // so the middle run stays between its neighbours and gaps equalize.
+    // Page text runs are stacked vertically, so vertical distribution is the
+    // natural axis.
     await open(page, 1);
     const ids = await firstRunIds(page, 1, 3);
     expect(ids.length, "need three runs to distribute").toBe(3);

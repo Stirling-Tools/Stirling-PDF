@@ -3,21 +3,8 @@ import type { Page, Route } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
-/**
- * Letter-spacing (Tc) preservation through an edit.
- *
- * letter-spacing-sample.pdf has an 18pt "SPACED HEADING" drawn with `2 Tc`
- * plus a normal 12pt body line. Editing the heading re-emits it (the modify
- * path bails on whitespace, exactly like the Mangum CV title), and before the
- * fix the re-emit used the font's natural advances - the wide tracking
- * collapsed. The reader now infers each run's effective letter-spacing from
- * its on-page char geometry and the emit re-applies it.
- *
- * The round-trip assertion is the crisp signal: after delete-one-char, save,
- * and reopen, the reloaded heading's inferred `charSpacingPt` must still be
- * ~2pt (the re-emitted per-char objects carry the tracking), while the
- * body line stays at 0 (no spacing invented for normal text).
- */
+// Letter-spacing (Tc) preservation through an edit. letter-spacing-sample.pdf
+// has an 18pt "SPACED HEADING" drawn with `2 Tc` plus a normal 12pt body line.
 
 const FIXTURE = path.join(
   import.meta.dirname,

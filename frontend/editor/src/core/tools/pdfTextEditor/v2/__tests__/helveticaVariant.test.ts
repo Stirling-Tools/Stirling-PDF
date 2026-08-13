@@ -1,13 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
 
-/**
- * The base-14 fallback used to map EVERY source font to a Helvetica variant, so
- * a serif LaTeX body or a monospace code listing flipped to sans-serif on any
- * re-emit. These pin the class-aware mapping (serif->Times, mono->Courier) plus
- * each family's CANONICAL bold/italic spelling (Times: Italic/BoldItalic;
- * Helvetica/Courier: Oblique/BoldOblique).
- */
+// The base-14 fallback used to map EVERY source font to a Helvetica variant.
 describe("helveticaVariantFor", () => {
   it("keeps sans-serif sources on Helvetica with canonical styles", () => {
     expect(helveticaVariantFor("ABCDEF+Arial")).toBe("Helvetica");

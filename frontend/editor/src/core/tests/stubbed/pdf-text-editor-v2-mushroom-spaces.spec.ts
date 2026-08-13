@@ -2,21 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Route } from "@playwright/test";
 import path from "path";
 
-/**
- * Regression for the mushroom-life.pdf reports (backend charcode strategy):
- *
- *   1. Editing inserted „ (U+201E) where spaces should be. The LMRoman subset
- *      font has no space glyph but encode(" ") returns charcode 0x20, which
- *      SetCharcodes paints as the quotedblbase glyph at that subset code.
- *   2. Continuous edits collapsed the paragraph onto one baseline on blur.
- *
- * This test stubs the encode-charcodes endpoint with a DELIBERATELY BUGGY
- * backend that hands back a charcode for EVERY char including whitespace
- * (0x20 for a space - exactly the old behaviour). The fixed frontend must
- * never reuse whitespace anyway: the resolver, prewarm and word-splitter all
- * refuse it, so no emit event ever resolves more charcodes than it has
- * non-whitespace chars, and the paragraph keeps all its lines.
- */
+// Regression for the mushroom-life.pdf reports (backend charcode strategy): 1.
 
 const MUSHROOM = path.join(
   import.meta.dirname,
@@ -104,21 +90,34 @@ test("mushroom first-line edits never reuse whitespace (no „) and keep the par
   await prewarm.catch(() => undefined);
 
   // MID-LINE replace: select a span that spans several words (so it includes
-  // spaces) and replace it. This forces the whole-line sub-run (one PDFium
-  // object covering many words) to be re-emitted - the exact path that used
-  // to SetText whitespace onto the no-space-glyph subset font and paint „.
+  // spaces) and replace it.
   await page.evaluate((rid) => {
     const el = document.querySelector<HTMLDivElement>(
       `[data-testid="v2-run-${rid}"]`,
     );
     if (!el) return;
     el.focus();
-    const tn = el.firstChild ?? el;
-    const len = (tn.textContent ?? "").length;
+    // The overlay may render words in boxes, so the editable's first
+    // child is not necessarily the text node holding character N.
+    const at = (offset: number): { node: Node; offset: number } => {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let seen = 0;
+      let node = walker.nextNode();
+      while (node) {
+        const len = (node.textContent ?? "").length;
+        if (seen + len >= offset) return { node, offset: offset - seen };
+        seen += len;
+        node = walker.nextNode();
+      }
+      return { node: el, offset: 0 };
+    };
+    const len = (el.textContent ?? "").length;
     const sel = window.getSelection()!;
     const range = document.createRange();
-    range.setStart(tn, Math.min(5, len));
-    range.setEnd(tn, Math.min(20, len)); // "ooms represent " - has spaces
+    const start = at(Math.min(5, len));
+    const end = at(Math.min(20, len)); // "ooms represent " - has spaces
+    range.setStart(start.node, start.offset);
+    range.setEnd(end.node, end.offset);
     sel.removeAllRanges();
     sel.addRange(range);
     document.execCommand("insertText", false, "X");
@@ -143,8 +142,7 @@ test("mushroom first-line edits never reuse whitespace (no „) and keep the par
   expect(after.lineCount).toBeGreaterThan(1);
 
   // Decisive: no emit event ever resolved MORE charcodes than it had
-  // non-whitespace chars - i.e. whitespace was never charcode-reused (which
-  // is what painted „), even though the stubbed backend offered a code for it.
+  // non-whitespace chars.
   const events: CharcodeEvent[] = await page.evaluate(
     () =>
       (window as unknown as { __v2_charcode_events?: CharcodeEvent[] })

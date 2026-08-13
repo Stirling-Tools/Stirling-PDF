@@ -1,13 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 
-/**
- * Unit coverage for the raw-PDF <-> display (CropBox/rotation) transform that
- * fixes the spirit-sx positioning bug. Pure math, no PDFium. Pins the
- * rotation/crop affine, the apply/invert round-trip, and - critically - the
- * identity (CropBox==MediaBox, /Rotate==0) byte-exact pass-through so the
- * common case cannot drift.
- */
+// Unit coverage for the raw-PDF <-> display (CropBox/rotation) transform that
+// fixes the spirit-sx positioning bug.
 
 const CROP = { cl: 36, cb: 72, cw: 540, ch: 720 };
 const ROTATIONS = [0, 1, 2, 3];
@@ -78,9 +73,8 @@ describe("DisplayTransform", () => {
   });
 
   it("matches PDFium ground truth for all rotations (pins orientation; det +1)", () => {
-    // Ground truth from the real PDFium engine (FPDF_PageToDevice -> display-PDF
-    // y-up) for CropBox [50,20,350,370] and raw user-space point (60,350).
-    // This is what catches a 90/270 reflection (det -1) flip.
+    // Ground truth from the real PDFium engine for CropBox [50,20,350,370] and
+    // raw user-space point.
     const c = { cl: 50, cb: 20, cw: 300, ch: 350 };
     const cases: Array<[number, [number, number]]> = [
       [0, [10, 330]],

@@ -4,48 +4,14 @@ import type {
   TextRun,
 } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 
-/**
- * Cluster consecutive `LineGroup` representatives (already produced by
- * `LineGrouper`) into "paragraphs" - vertically-adjacent runs that share
- * the same font, size, fill colour, and roughly the same left margin.
- *
- * The motivation: a PDF emits one text object per visual line, so a
- * five-line body paragraph appears as five separate editable overlays.
- * Editing each line independently means the user has to reflow text by
- * hand. Grouping them into one tall editable block makes the editor
- * behave like a word processor for the common case.
- *
- * Heuristic (all conditions must hold for two adjacent line groups to
- * join the same paragraph):
- *   1. Same `fontId` (typography + size match).
- *   2. Same fill colour.
- *   3. Vertical gap (baseline delta) is plausible for body text. Start
- *      with the wide bootstrap range [0.6, 2.0] of the font size for the
- *      FIRST pair; once two lines have joined, the paragraph locks onto
- *      the observed median delta and admits subsequent lines only when
- *      |delta - median| <= MEDIAN_TOLERANCE * median. This catches paragraphs whose
- *      first line is followed by a slightly larger spacing (drop cap,
- *      figure rule) while still rejecting an actual paragraph break.
- *   4. Left margin matches the established paragraph left edge. The
- *      tolerance is asymmetric: up to +12 PDF points to the right of the
- *      paragraph left (allows hanging indent / first-line indent), but
- *      only -2 PDF points to the left (a noticeable outdent breaks the
- *      paragraph; minor float noise does not).
- *
- * Output: each input run becomes the representative of a paragraph;
- * lines that joined it are removed from `page.runs` but their bounds
- * are folded into the representative's `bounds` and the representative
- * gains a `lineHeight` / `paragraphMemberPtrs` snapshot the editor uses
- * for multi-line rendering and edit-time line reflow.
- */
+/** Cluster consecutive `LineGroup` representatives into "paragraphs". */
 const MIN_LINE_FACTOR = 0.6;
 const MAX_LINE_FACTOR = 2.0;
 const MEDIAN_TOLERANCE = 0.25;
 const MARGIN_INDENT_RIGHT = 12;
 const MARGIN_OUTDENT_LEFT = 2;
-// Two runs are "side by side" (column peers) when their baselines are
-// within this fraction of a line and a horizontal gap this wide sits
-// between them. Used to detect multi-column layouts.
+// Two runs are "side by side" (column peers) when their baselines are within
+// this fraction of a line and a horizontal gap this wide sits between them.
 const COLUMN_BASELINE_FRAC = 0.6;
 const COLUMN_MIN_GAP_PT = 24;
 // Left-edge clustering tolerance when splitting runs into columns.
@@ -61,12 +27,7 @@ export class ParagraphGrouper {
     const allLines = [...page.runs];
     const paragraphs: ParagraphInfo[] = [];
 
-    // Segment into columns FIRST. A naive y-then-x sort interleaves the
-    // columns of a 2-column layout (left line, right line, left line, ...)
-    // which makes vertical paragraph grouping impossible - the next line
-    // of a column is never adjacent in the sort order. Grouping within
-    // each column fixes that. Single-column docs fall through to one
-    // column, so this is a no-op for them.
+    // Segment into columns FIRST.
     for (const column of segmentColumns(allLines)) {
       const sorted = column.sort((a, b) => {
         const yDiff = b.matrix.f - a.matrix.f;
@@ -76,18 +37,14 @@ export class ParagraphGrouper {
       groupColumnLines(sorted, paragraphs);
     }
 
-    // Fold member bounds + text into the representative and drop the
-    // member runs from the page so the editor sees one overlay per
-    // paragraph.
+    // Fold member bounds + text into the representative and drop the member
+    // runs from the page so the editor sees one overlay per paragraph.
     for (const para of paragraphs) {
       if (para.members.length === 1) continue;
       const rep = para.representative;
 
       // Snapshot per-line sub-run arrays BEFORE the rep.text mutation
-      // overwrites members[0]'s state (rep IS members[0] by reference,
-      // so any field we read off members[0] after the mutation is the
-      // joined-paragraph value, not the line-level value we need for
-      // partial editing).
+      // overwrites members[0]'s state.
       const memberLineTexts = para.members.map((m) => m.text);
       const slots = buildLineSlots(para.members, memberLineTexts);
 
@@ -107,16 +64,14 @@ export class ParagraphGrouper {
         width: maxRight - minX,
         height: topY - bottomY,
       };
-      // Stash per-line metadata on the representative so the React layer
-      // can render with the correct line-height and the edit command can
-      // emit one text object per line on commit.
+      // Stash per-line metadata on the representative so the React layer can
+      // render with the correct line-height and the edit command can emit one.
       rep.paragraphLineHeight = computeMedianLineHeight(para.members);
       rep.paragraphMemberPtrs = para.members.map((m) => m.pdfiumObjPtr);
       rep.paragraphMemberContainers = para.members.map((m) => m.containerPtr);
       rep.paragraphMemberFs = para.members.map((m) => m.matrix.f);
       // Track every leaf ptr so EditTextCommand can remove the original
-      // sub-words (LineGrouper merges multiple PDFium objects into each
-      // line; without this, removal misses everything except the first).
+      // sub-words.
       const leafPtrs: number[] = [];
       const leafContainers: number[] = [];
       for (const m of para.members) {
@@ -141,13 +96,7 @@ export class ParagraphGrouper {
   }
 }
 
-/**
- * Build a `ParagraphLineSlot[]` from the paragraph's member runs. Each
- * slot copies the line-level `mergedFrom*` arrays so the partial-edit
- * planner can treat the slot as a self-contained mini-TextRun. Called
- * with snapshotted line texts so mutating the rep doesn't poison
- * `members[0]`.
- */
+/** Build a `ParagraphLineSlot[]` from the paragraph's member runs. */
 export function buildLineSlots(
   members: TextRun[],
   lineTexts: string[],
@@ -158,12 +107,8 @@ export function buildLineSlots(
     const m = members[i];
     const text = lineTexts[i];
     const len = text.length;
-    // A line that LineGrouper merged from several source objects already
-    // has per-sub-run arrays. A line that is a SINGLE PDFium text object
-    // (the common case for cleanly-authored PDFs) has empty mergedFrom*
-    // arrays - fall back to treating the whole line as one sub-run keyed
-    // on its own `pdfiumObjPtr`, so paragraph-partial editing can still
-    // keep the source font instead of bailing to the overlay path.
+    // A line that LineGrouper merged from several source objects already has
+    // per-sub-run arrays.
     const hasSubRuns = m.mergedFromPtrs.length > 0;
     const mergedFromPtrs = hasSubRuns
       ? [...m.mergedFromPtrs]
@@ -196,12 +141,7 @@ export function buildLineSlots(
   return slots;
 }
 
-/**
- * One visual line's worth of slot source, used when a merged run is itself a
- * multi-line paragraph rep: each descriptor already carries its own
- * `mergedFrom*` arrays so the slot is built straight from it, with no throwaway
- * TextRun objects.
- */
+/** One visual line's worth of slot source. */
 export interface LineSlotDescriptor {
   text: string;
   baselineY: number;
@@ -216,11 +156,8 @@ export interface LineSlotDescriptor {
   mergedFromCharStarts: number[];
 }
 
-/**
- * Same cursor walk as `buildLineSlots` but pulls each line's `mergedFrom*`
- * directly from a descriptor instead of a TextRun. Used by MergeRunsCommand to
- * keep multi-line paragraph reps from collapsing to one slot per run.
- */
+// Same cursor walk as `buildLineSlots` but pulls each line's `mergedFrom*`
+// directly from a descriptor instead of a TextRun.
 export function buildLineSlotsFromDescriptors(
   descs: LineSlotDescriptor[],
 ): ParagraphLineSlot[] {
@@ -248,29 +185,14 @@ export function buildLineSlotsFromDescriptors(
   return slots;
 }
 
-/**
- * A run's visual font identity for grouping: family + rounded size.
- *
- * `run.fontId` is `pdf:<fontHandlePtr>:<family>`, and PDFium often hands
- * out a DIFFERENT font-handle pointer per text object even when the
- * objects share the same actual font - so comparing full fontIds makes
- * almost every adjacent line look like a font change and nothing groups.
- * Comparing family + size instead reflects what the user sees.
- */
+// A run's visual font identity for grouping: family + rounded size.
+// `run.fontId` is `pdf:<fontHandlePtr>:<family>`.
 function fontKey(run: TextRun): string {
   const family = run.fontId.slice(run.fontId.lastIndexOf(":") + 1);
   return `${family}@${Math.round(run.fontSize)}`;
 }
 
-/**
- * Split a page's line-runs into columns.
- *
- * Returns a single column (all lines) unless the page clearly has a
- * multi-column layout - proven by the presence of "side by side" runs
- * (two runs that share a baseline but sit apart horizontally with a wide
- * gutter between them). Gating on that evidence avoids mis-splitting
- * ordinary single-column text whose paragraphs happen to be indented.
- */
+/** Split a page's line-runs into columns. */
 function segmentColumns(lines: TextRun[]): TextRun[][] {
   if (lines.length < 4) return [lines];
 
@@ -320,13 +242,8 @@ function segmentColumns(lines: TextRun[]): TextRun[][] {
   return columns.filter((c) => c.length > 0);
 }
 
-/**
- * Sequentially group one column's already-sorted (top-to-bottom) lines
- * into paragraphs, appending each paragraph to `out`. A line joins the
- * current paragraph when it shares the visual font, fill colour, a
- * plausible line-height (bootstrapped, then median-locked), and left
- * margin; otherwise it starts a new paragraph.
- */
+// Sequentially group one column's already-sorted (top-to-bottom) lines into
+// paragraphs, appending each paragraph to `out`.
 function groupColumnLines(sorted: TextRun[], out: ParagraphInfo[]): void {
   let current: ParagraphInfo | null = null;
   let currentDeltas: number[] = [];
@@ -394,11 +311,8 @@ function computeMedianLineHeight(members: TextRun[]): number {
   );
 }
 
-/**
- * Median of consecutive baseline deltas; falls back to 1.2em when there is
- * fewer than one delta. Lets callers compute line-height from per-visual-line
- * baselines, not just whole runs.
- */
+// Median of consecutive baseline deltas; falls back to 1.2em when there is
+// fewer than one delta.
 export function medianLineHeightFromBaselines(
   baselines: number[],
   fallbackFontSize: number,

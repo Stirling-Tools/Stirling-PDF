@@ -87,12 +87,8 @@ describe("HistoryStack", () => {
   });
 });
 
-/**
- * Coalescing is what decides how much one Ctrl+Z reverts, and until now it
- * was only ever exercised through the browser suite - where it turned on
- * real wall-clock timing and so failed on whichever engine happened to
- * render slowest. These drive the clock directly.
- */
+// Coalescing is what decides how much one Ctrl+Z reverts, and until now it was
+// only ever exercised through the browser suite.
 describe("HistoryStack coalescing", () => {
   /** A command that groups with others sharing `key`. */
   function keyed(key: string | null, opts: { ignoresWindow?: boolean } = {}) {
@@ -195,9 +191,7 @@ describe("HistoryStack coalescing", () => {
     const h = new HistoryStack();
     h.execute(keyed("run:1"), fakeDoc);
     vi.advanceTimersByTime(300);
-    // A slow command: 500ms of PDFium/render work inside apply(). The gap the
-    // user actually left is 300ms, so this must still coalesce - measuring
-    // both ends after apply() would see 800ms and wrongly split the step.
+    // A slow command: 500ms of PDFium/render work inside apply().
     const slow: Command = {
       type: "slow",
       apply: () => vi.advanceTimersByTime(500),

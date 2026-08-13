@@ -400,9 +400,7 @@ export default function WorkbenchBar({
   );
 
   // View options
-  // Tools that own a custom workbench (e.g. the v2 PDF text editor) ship
-  // their own canvas; the generic Viewer tab is redundant noise while
-  // those tools are active. Hide it for those tools.
+  // Tools that own a custom workbench ship their own canvas.
   const ownsCustomWorkbenchAsDefault = selectedTool === "pdfTextEditor";
   const viewOptions: ViewOption[] = [
     ...(ownsCustomWorkbenchAsDefault

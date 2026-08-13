@@ -1,11 +1,15 @@
 import { useCallback } from "react";
 import { DeleteImageCommand } from "@app/tools/pdfTextEditor/v2/commands/DeleteImageCommand";
+import { ReplaceImageCommand } from "@app/tools/pdfTextEditor/v2/commands/ReplaceImageCommand";
+import type { DecodedImage } from "@app/utils/pdfiumBitmapUtils";
 import { DeleteObjectCommand } from "@app/tools/pdfTextEditor/v2/commands/DeleteObjectCommand";
 import { DuplicateRunCommand } from "@app/tools/pdfTextEditor/v2/commands/DuplicateRunCommand";
 import { SetColourCommand } from "@app/tools/pdfTextEditor/v2/commands/SetColourCommand";
+import { SetTextOutlineCommand } from "@app/tools/pdfTextEditor/v2/commands/SetTextOutlineCommand";
 import { SetFontFamilyCommand } from "@app/tools/pdfTextEditor/v2/commands/SetFontFamilyCommand";
 import { SetFontSizeCommand } from "@app/tools/pdfTextEditor/v2/commands/SetFontSizeCommand";
 import { parseCssColor } from "@app/tools/pdfTextEditor/v2/model/Color";
+import { ensureDeviceFontReady } from "@app/tools/pdfTextEditor/v2/util/deviceFontEmbed";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import {
   familyOf,
@@ -17,11 +21,7 @@ import {
 } from "@app/tools/pdfTextEditor/v2/util/fontFamily";
 import { CompositeCommand } from "@app/tools/pdfTextEditor/v2/commands/CompositeCommand";
 
-/**
- * Bundle of callbacks that operate on the current selection. Centralising
- * them here keeps `PdfTextEditorV2.tsx` free of the run/page traversal
- * boilerplate that every per-attribute mutation otherwise repeats.
- */
+/** Bundle of callbacks that operate on the current selection. */
 export function useSelectionActions(store: EditorStore) {
   const forEachSelectedRun = useCallback(
     (
@@ -39,9 +39,7 @@ export function useSelectionActions(store: EditorStore) {
       const selIds = new Set(sel.runIds);
       for (const page of doc.loadedPages()) {
         for (const run of page.runs) {
-          // Locked runs are selectable (Ctrl+A/marquee) but must not
-          // mutate - the overlay blocks direct edits, and these bulk
-          // paths previously bypassed the lock entirely.
+          // Locked runs are selectable but must not mutate.
           if (selIds.has(run.id) && !run.locked) visit(run);
         }
       }
@@ -83,8 +81,28 @@ export function useSelectionActions(store: EditorStore) {
     [store, forEachSelectedRun],
   );
 
+  const changeOutline = useCallback(
+    (hex: string | null, width: number) => {
+      const stroke = hex ? parseCssColor(hex) : null;
+      forEachSelectedRun((run) =>
+        store.dispatch(
+          new SetTextOutlineCommand({
+            pageIndex: run.pageIndex,
+            runId: run.id,
+            stroke: stroke ? { ...stroke, a: 255 } : null,
+            width,
+          }),
+        ),
+      );
+    },
+    [store, forEachSelectedRun],
+  );
+
   const changeFontFamily = useCallback(
-    (family: string) => {
+    async (family: string) => {
+      // Embedding is async and Command.apply is not, so warm the bytes first.
+      // A no-op for the built-in families.
+      await ensureDeviceFontReady(family);
       forEachSelectedRun((run) =>
         store.dispatch(
           new SetFontFamilyCommand({
@@ -100,17 +118,11 @@ export function useSelectionActions(store: EditorStore) {
 
   const toggleBold = useCallback(() => {
     forEachSelectedRun((run) => {
-      // For base-14 source fonts, flip the variant in place
-      // (Helvetica → Helvetica-Bold). For embedded source fonts (the
-      // dominant case for real PDFs - Word / InDesign / Quark output),
-      // flipBold returns null because the family isn't one we know how
-      // to bold. Fall back to swapping the run wholesale to Helvetica-
-      // Bold so the user CAN actually bold their text. Earlier this
-      // path silently no-op'd and the Bold button appeared dead.
+      // For base-14 source fonts, flip the variant in place (Helvetica →
+      // Helvetica-Bold).
       const isOn = isBoldFamily(run.fontId);
       // Preserve the OTHER style axis in the wholesale fallback: bolding an
-      // italic embedded font must land on Helvetica-BoldOblique, not strip
-      // the italic.
+      // italic embedded font must land on Helvetica-BoldOblique.
       const next =
         flipBold(familyOf(run.fontId), !isOn) ??
         helveticaWith(!isOn, isItalicFamily(run.fontId));
@@ -147,9 +159,8 @@ export function useSelectionActions(store: EditorStore) {
     const doc = store.document;
     if (!doc) return;
     if (sel.runIds.length === 0 && sel.imageIds.length === 0) return;
-    // Collect one command per object but dispatch them as ONE composite:
-    // a 30-object delete must be a single undo step, not 30. Locked
-    // objects stay selectable but are never mutated.
+    // Collect one command per object but dispatch them as ONE composite: a
+    // 30-object delete must be a single undo step, not 30.
     const cmds: Array<DeleteObjectCommand | DeleteImageCommand> = [];
     for (const page of doc.loadedPages()) {
       for (const run of page.runs) {
@@ -178,6 +189,47 @@ export function useSelectionActions(store: EditorStore) {
     store.selection.clear();
   }, [store]);
 
+  const replaceImageById = useCallback(
+    (
+      pageIndex: number,
+      imageId: string,
+      image: DecodedImage,
+      jpegBytes?: Uint8Array,
+    ) => {
+      const doc = store.document;
+      if (!doc) return;
+      // By id, not the live selection: an external edit can land long after
+      // the user selected something else, or opened another document.
+      const page = doc.loadedPages().find((p) => p.index === pageIndex);
+      const img = page?.images.find((i) => i.id === imageId);
+      if (!img || img.locked) return;
+      store.dispatch(
+        new ReplaceImageCommand({
+          pageIndex: img.pageIndex,
+          imageId: img.id,
+          image,
+          jpegBytes,
+        }),
+      );
+    },
+    [store],
+  );
+
+  const replaceSelectedImage = useCallback(
+    (image: DecodedImage, jpegBytes?: Uint8Array) => {
+      const sel = store.selection.value;
+      if (sel.imageIds.length !== 1) return;
+      const doc = store.document;
+      const img = doc
+        ?.loadedPages()
+        .flatMap((p) => p.images)
+        .find((i) => i.id === sel.imageIds[0]);
+      if (!img) return;
+      replaceImageById(img.pageIndex, img.id, image, jpegBytes);
+    },
+    [store, replaceImageById],
+  );
+
   const duplicateFirstSelected = useCallback(() => {
     const sel = store.selection.value;
     if (sel.runIds.length === 0) return;
@@ -201,10 +253,13 @@ export function useSelectionActions(store: EditorStore) {
   return {
     changeFontSize,
     changeFill,
+    changeOutline,
     changeFontFamily,
     toggleBold,
     toggleItalic,
     deleteSelection,
+    replaceSelectedImage,
+    replaceImageById,
     duplicateFirstSelected,
   };
 }

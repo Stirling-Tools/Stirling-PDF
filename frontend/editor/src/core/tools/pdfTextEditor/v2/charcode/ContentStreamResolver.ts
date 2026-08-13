@@ -4,40 +4,8 @@ import type {
   ResolverContext,
 } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 
-/**
- * Strategy 2: scrape Unicode→charcode mappings by walking the page's
- * existing text via PDFium's text page API, then matching against
- * `FPDFText_GetTextObject` to pin each char to a font.
- *
- * The key insight: `FPDFText_CountChars(textPage)` returns every
- * char on the page in reading order. For each char index we can ask:
- *   - `FPDFText_GetUnicode(textPage, idx)` → the Unicode codepoint
- *   - `FPDFText_GetTextObject(textPage, idx)` → the text object
- *     backing that char
- *   - `FPDFTextObj_GetFont(obj)` → the font handle
- *
- * Internally, PDFium iterates chars in the SAME order they appear
- * in the content stream's Tj/TJ operators, so the Nth Unicode at a
- * given text object IS the Nth charcode that text object was
- * written with. We don't get the raw charcode out of the public
- * API - but we DON'T NEED IT for CIDFontType2 / TrueType subset
- * fonts, because for those PDFium uses the glyph index as the
- * charcode, and the glyph index = position in the text object's
- * char sequence ONLY for the simplest fonts.
- *
- * In practice this strategy works as follows: for each (font, char)
- * pair seen on the page, we record "the char at position N inside
- * text-object T has Unicode U". When the user asks for a charcode
- * for Unicode U in font F, we look up any matching (T, N) and
- * return N as a guess. This is brittle (assumes 1:1
- * charcode-to-glyph-index for subset fonts) but works on a lot of
- * Word/Acrobat-emitted subset fonts where the embedding is
- * straightforward.
- *
- * When this strategy disagrees with the cmap strategy on a
- * specific font, that's a useful signal that the font's encoding
- * is non-trivial and only the backend (PDFBox) will get it right.
- */
+// Strategy 2: scrape Unicode→charcode mappings by walking the page's existing
+// text via PDFium's text page API.
 
 interface TextPageModule {
   FPDFText_LoadPage?: (page: number) => number;
@@ -122,17 +90,8 @@ function buildPageMap(ctx: ResolverContext): Map<number, Map<number, number>> {
   if (!textPage) return out;
   try {
     const count = tpMod.FPDFText_CountChars(textPage);
-    // Per-FONT counter (not per-text-object): every unique Unicode
-    // we encounter in a given font gets the next sequential CID
-    // starting at 1. This matches what most font subsetters do
-    // (CID 0 = .notdef, CID 1 = first glyph used in the document,
-    // CID 2 = second, etc.). For Word/InDesign/Acrobat-emitted CID
-    // subsets this often produces the correct mapping; for
-    // hand-rolled or re-encoded subsets it'll guess wrong.
-    //
-    // We dedupe so each Unicode gets ONE CID (its first appearance
-    // index). A later appearance of the same Unicode is the SAME
-    // glyph so the same CID is correct.
+    // Per-FONT counter (not per-text-object): every unique Unicode we encounter
+    // in a given font gets the next sequential CID starting at 1.
     const perFontNext = new Map<number, number>();
     for (let i = 0; i < count; i++) {
       const unicode = tpMod.FPDFText_GetUnicode(textPage, i);
@@ -169,12 +128,7 @@ function buildPageMap(ctx: ResolverContext): Map<number, Map<number, number>> {
   return out;
 }
 
-/**
- * Clear the per-page Unicode→charcode cache. MUST be called on document switch:
- * the cache is keyed by raw PDFium page pointers, which PDFium reuses across
- * documents - a stale entry would serve the previous document's charcode guess
- * for a reused page pointer.
- */
+/** Clear the per-page Unicode→charcode cache. */
 export function resetContentStreamCache(): void {
   perPageCache.clear();
 }

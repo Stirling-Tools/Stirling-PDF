@@ -1,17 +1,5 @@
-/**
- * Map a source font id to the base-14 family + style that best preserves its
- * broad class. We fall back to a base-14 font when the source is a subset /
- * form-xobject we can't reuse; picking Times for serif sources and Courier for
- * monospace ones (instead of always Helvetica) keeps a re-emitted run from
- * flipping to sans-serif - a serif LaTeX body or a monospace code listing keeps
- * its character. Bold/italic are preserved with each family's CANONICAL
- * base-14 spelling (Times uses Italic/BoldItalic; Helvetica/Courier use
- * Oblique/BoldOblique) so no viewer silently substitutes a missing name.
- *
- * Class + weight are sniffed from the font id string (the only signal available
- * here). A weight that lives solely in the FontDescriptor flags - not the name -
- * can't be seen and falls back to regular.
- */
+// Map a source font id to the base-14 family + style that best preserves its
+// broad class.
 export function helveticaVariantFor(fontId: string): string {
   const bold = /bold|black|heavy/i.test(fontId);
   const italic = /italic|oblique/i.test(fontId);

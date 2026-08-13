@@ -3,6 +3,7 @@ import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import type { RGBA } from "@app/tools/pdfTextEditor/v2/types";
 import {
   emitCharcodeEvent,
   findFontForChar,
@@ -11,16 +12,11 @@ import {
 } from "@app/tools/pdfTextEditor/v2/charcode/charcodeRegistry";
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/v2/util/fallbackFont";
+import { emitDeviceFontTextObject } from "@app/tools/pdfTextEditor/v2/util/deviceFontEmbed";
+import { nearestStandardFont } from "@app/tools/pdfTextEditor/v2/util/fontFamily";
 
-/**
- * Remove a PAGE-level object and FREE its PDFium allocation.
- *
- * `FPDFPage_RemoveObject` only detaches the object - it transfers ownership to
- * the caller, who must `FPDFPageObj_Destroy` it (or re-insert) or it leaks for
- * the document's lifetime. ONLY use this for objects that are permanently
- * discarded; destroying an object still referenced by an undo snapshot would be
- * a use-after-free.
- */
+// Remove a PAGE-level object and FREE its PDFium allocation.
+// `FPDFPage_RemoveObject` only detaches the object.
 export function removeAndDestroyObject(
   m: WrappedPdfiumModule,
   pagePtr: number,
@@ -39,32 +35,11 @@ export function removeAndDestroyObject(
   }
 }
 
-/**
- * Pointers freshly created by the per-char BACKEND emit branch in
- * `emitTextLine`. The partial-edit measure-and-fallback in
- * `applyPartialEditPlan` consults `isVerifiedPerCharPtr` before
- * deciding whether to remove + retry a "tofu" emit: ptrs in this set
- * were created with known-good (font, charcode) pairs from the
- * backend resolver cache, so a 0-width measurement just means the
- * page content stream hasn't been regenerated yet, NOT that the
- * glyph is broken. Without this signal the retry creates a duplicate
- * per-char text object and the original .notdef-stripe ptr can't
- * always be cleanly removed (FPDFPage_RemoveObject silently fails
- * for some Type3 / form-xobject combinations).
- *
- * Entries are weak by convention: the Set grows over the session but
- * each per-char emit is a small int (PDFium handle), so even after a
- * long edit session the memory footprint is negligible. We don't
- * bother removing entries on object delete because the check is
- * one-shot (right after emit) - stale entries are harmless.
- */
+// Pointers freshly created by the per-char BACKEND emit branch in
+// `emitTextLine`.
 const perCharBranchPtrs = new Set<number>();
 
-/**
- * (fontPtr:char) pairs a read-back has PROVEN render faithfully via SetText.
- * Lets repeat emits of already-validated chars skip the text-page reload.
- * Doc-scoped: font pointers are reused across documents.
- */
+// (fontPtr:char) pairs a read-back has PROVEN render faithfully via SetText.
 const readBackValidated = new Set<string>();
 
 /** Caller check: was this ptr produced by the per-char emit branch? */
@@ -83,15 +58,8 @@ export function _clearVerifiedPerCharPtrsForTests(): void {
   resetPerCharBranchPtrs();
 }
 
-/**
- * Characters that an edit could NOT represent and silently dropped: the source
- * font couldn't render them, the bundled Unicode fallback (Noto Sans) didn't
- * cover them either, and base-14 has no glyph, so `sanitizeForBase14` removed
- * them rather than persist tofu. Accumulated across a session so the save flow
- * can WARN the user instead of the characters vanishing without a trace (a new
- * CJK / Arabic char typed into a doc whose fonts don't cover it). Doc-scoped:
- * cleared on document switch alongside the pointer caches.
- */
+// Characters that an edit could NOT represent and silently dropped: the source
+// font couldn't render them.
 const droppedBase14Chars = new Set<string>();
 
 /** Visible chars dropped this session because nothing could render them. */
@@ -124,17 +92,7 @@ export function everyCharIn(text: string, pool: string): boolean {
   return true;
 }
 
-/**
- * Strip characters a base-14 (WinAnsi) font cannot render. PDFium's
- * FPDFText_SetText silently maps anything outside Latin-1 to U+00FF
- * (ydieresis) "tofu", so for the base-14 fallback we DROP non-representable
- * code points (CJK, emoji, etc.) rather than persist garbage glyphs.
- *
- * Iterates by code POINT so an astral char (surrogate pair) is dropped whole -
- * a lone surrogate is never left behind. NBSP becomes a normal space (base-14
- * maps U+00A0 to ydieresis too). C0 controls, DEL and C1 controls are dropped
- * since WinAnsi has no glyphs for them (tab/newline/CR are kept).
- */
+/** Strip characters a base-14 (WinAnsi) font cannot render. */
 export function sanitizeForBase14(text: string): string {
   let out = "";
   for (const ch of text) {
@@ -154,15 +112,7 @@ export function sanitizeForBase14(text: string): string {
   return out;
 }
 
-/**
- * Every PDFium pointer that backs a run. A run can be one of:
- *  - paragraph (multi-line) → `paragraphLeafPtrs` (every leaf across every line)
- *  - merged line group     → `mergedFromPtrs`
- *  - singleton             → `[pdfiumObjPtr]`
- *
- * Prefers the leaf list for paragraphs so removal hits every original
- * sub-word, not just the first ptr of each line.
- */
+/** Every PDFium pointer that backs a run. */
 export function collectMemberPtrs(run: TextRun): number[] {
   if (run.paragraphLeafPtrs.length > 0) return run.paragraphLeafPtrs;
   if (run.paragraphMemberPtrs.length > 0) return run.paragraphMemberPtrs;
@@ -170,11 +120,8 @@ export function collectMemberPtrs(run: TextRun): number[] {
   return [run.pdfiumObjPtr];
 }
 
-/**
- * Parallel map from member pointer to its form-xobject container (zero
- * for page-level members). Lets the caller pick FPDFFormObj_RemoveObject
- * vs FPDFPage_RemoveObject per pointer.
- */
+// Parallel map from member pointer to its form-xobject container (zero for
+// page-level members).
 export function collectContainersByPtr(run: TextRun): Map<number, number> {
   const map = new Map<number, number>();
   if (run.paragraphLeafPtrs.length > 0) {
@@ -198,10 +145,7 @@ interface FormRemovalModule {
   FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
 }
 
-/**
- * Best-effort removal of every pointer in `ptrs`. Returns true only if
- * the caller can skip the cover rect (every pointer actually removed).
- */
+/** Best-effort removal of every pointer in `ptrs`. */
 export function removeMemberPtrs(
   m: WrappedPdfiumModule,
   page: Page,
@@ -248,39 +192,19 @@ interface CreatedTextOptions {
   fill: { r: number; g: number; b: number; a: number };
   /** When non-zero, reuse the source font instead of base-14. */
   originalFontPtr: number;
-  /**
-   * Whether the reused source font is a SUBSET font. Gates the untrusted
-   * content-stream charcode guess: only subset fonts (where FPDFText_SetText's
-   * reverse Unicode→charcode lookup fails) fall back to the guess. Non-subset
-   * fonts render correctly via SetText, so the guess - which picks wrong
-   * glyphs for re-encoded fonts - is never used for them.
-   */
+  /** Whether the reused source font is a SUBSET font. */
   originalFontSubset?: boolean;
   /** Base-14 family used when `originalFontPtr` is zero. Defaults to Helvetica. */
   fallbackFamily?: string;
-  /**
-   * The source run's PDF text render mode (Tr). When set and non-zero,
-   * every emitted object gets it re-applied - without this, re-emitting
-   * INVISIBLE (mode 3) OCR text stamps visible glyphs over the scan, and
-   * stroke-mode text silently turns filled.
-   */
+  /** The source run's PDF text render mode (Tr). */
   renderMode?: number;
-  /**
-   * The run's on-page rotation (normalised cos/sin of its text matrix). When
-   * set, every emitted object is rotated about the line anchor (opts.x, opts.y)
-   * so an edit keeps the run's orientation instead of forcing it upright.
-   * Omit (or undefined) for axis-aligned text - then emit is unchanged.
-   */
+  /** Glyph outline colour; only paints under a stroking render mode. */
+  stroke?: RGBA | null;
+  strokeWidth?: number;
+  /** The run's on-page rotation (normalised cos/sin of its text matrix). */
   rotation?: { cos: number; sin: number };
-  /**
-   * Extra advance per glyph in PDF points - the source run's rendered
-   * letter-spacing (Tc), inferred at read time. The per-char emit adds it
-   * between glyphs and word gaps widen by it per whitespace char, so an
-   * edited spaced-caps heading keeps its tracking. PDFium exposes no Tc
-   * setter, so single-object (SetText) emits can't reproduce it internally -
-   * they keep natural tracking (the pre-existing behaviour). 0/undefined =
-   * no change to any emit path.
-   */
+  // Extra advance per glyph in PDF points - the source run's rendered
+  // letter-spacing (Tc), inferred at read time.
   charSpacingPt?: number;
 }
 
@@ -292,12 +216,8 @@ interface CreateTextObjModule {
   ) => number;
 }
 
-// NOTE on spaces: PDFium normalises consecutive ASCII spaces inside a
-// single text object (FPDFText_SetText / FPDFText_SetCharcodes both
-// collapse them), and base-14 Helvetica maps NBSP (U+00A0) to 0xFF
-// (ydieresis), which renders as junk. The only reliable way to preserve
-// runs of spaces is to emit one text object per WORD with explicit
-// x-positioning between them - see `splitIntoWordChunks` / `emitTextLine`.
+// NOTE on spaces: PDFium normalises consecutive ASCII spaces inside a single
+// text object, and base-14 Helvetica maps NBSP to 0xFF, which renders as junk.
 
 let measureCanvas: HTMLCanvasElement | null = null;
 
@@ -308,11 +228,7 @@ function measureCtx(): CanvasRenderingContext2D | null {
   return measureCanvas.getContext("2d");
 }
 
-/**
- * Map a base-14 PostScript name to a CSS font spec the browser actually
- * has. PS names ("Times-Roman", "Courier-BoldOblique") are not CSS
- * families, so using them verbatim measured the default fallback font.
- */
+// Map a base-14 PostScript name to a CSS font spec the browser actually has.
 export function cssFontSpecFor(fontFamily: string, sizePx: number): string {
   const f = fontFamily.toLowerCase();
   const bold = f.includes("bold") ? "bold " : "";
@@ -323,12 +239,7 @@ export function cssFontSpecFor(fontFamily: string, sizePx: number): string {
   return `${italic}${bold}${sizePx}px ${stack}`;
 }
 
-/**
- * Measure the natural advance width of `s` in PDF points. The canvas is
- * sized in px on purpose: a `${n}px` font measured in px returns the same
- * NUMBER as an n-pt font measured in pt (advance scales linearly), whereas
- * a `${n}pt` font returns CSS px = 4/3x the point width.
- */
+/** Measure the natural advance width of `s` in PDF points. */
 function measureAdvancePt(
   text: string,
   fontFamily: string,
@@ -341,11 +252,7 @@ function measureAdvancePt(
 }
 
 // Per-page cache of each char's ON-PAGE rendered advance (per em), keyed
-// pagePtr -> fontPtr -> unicode -> advanceEm. Built once by walking the
-// PDFium text page. Used to self-validate a content-stream charcode GUESS:
-// after emitting a reused glyph we compare its measured advance to the
-// advance the SAME char actually renders at on the page; a wrong CID guess
-// produces a grossly different advance and is rejected (-> Helvetica).
+// pagePtr -> fontPtr -> unicode -> advanceEm.
 const onPageAdvCache = new Map<number, Map<number, Map<number, number>>>();
 
 interface LooseBoxModule {
@@ -422,12 +329,8 @@ function buildOnPageAdvMap(
   }
   const tp = mod.FPDFText_LoadPage(pagePtr);
   if (!tp) return out;
-  // FPDFText_GetFontSize returns the raw Tf operand, but many producers
-  // (Quartz/Word) set Tf 1 and carry the real size in the text matrix -
-  // dividing by 1 made "advance per em" actually "advance in points", and
-  // consumers multiplying by the EFFECTIVE size scattered glyphs by the
-  // matrix scale (an 18pt run advanced ~18x too far per char). Normalise
-  // by the effective size: Tf size x the object's matrix scale.
+  // FPDFText_GetFontSize returns the raw Tf operand, but many producers set Tf
+  // 1 and carry the real size in the text matrix.
   const scaleByObj = new Map<number, number>();
   try {
     const count = mod.FPDFText_CountChars(tp);
@@ -489,12 +392,7 @@ function onPageAdvanceEm(
   return pageMap.get(font)?.get(cp) ?? null;
 }
 
-/**
- * Drop the per-page on-page-advance cache. MUST be called on document switch:
- * it's keyed by raw PDFium page/font pointers, which PDFium reuses across
- * documents - a stale advance would mis-validate the next document's reused-
- * glyph charcode guesses (accept a wrong glyph or reject a correct one).
- */
+/** Drop the per-page on-page-advance cache. */
 export function resetOnPageAdvCache(): void {
   onPageAdvCache.clear();
 }
@@ -504,27 +402,12 @@ export function _clearOnPageAdvCacheForTests(): void {
   resetOnPageAdvCache();
 }
 
-/**
- * Split a line into one chunk per word with the trailing whitespace
- * stored as an explicit `gapAfterPt`. This is the ONLY reliable way to
- * preserve inter-word spaces in a PDFium-written text object - the
- * library's text-storage layer collapses ASCII spaces inside a single
- * text object (even single inter-word spaces in some font / encoding
- * configurations), so the caller emits one text object per word and
- * advances the cursor by the measured gap width between them.
- *
- * Empty chunks (consecutive whitespace, leading whitespace) are dropped
- * - their visual width is folded into the previous chunk's `gapAfterPt`
- * so positioning still tracks the source text.
- */
+// Split a line into one chunk per word with the trailing whitespace stored as
+// an explicit `gapAfterPt`.
 export interface WordChunk {
   text: string;
   gapAfterPt: number;
-  /**
-   * How many whitespace chars the gap after this chunk represents. Lets the
-   * emit widen each gap by the run's letter-spacing per whitespace char (a
-   * Tc applies to space glyphs too), keeping word gaps proportional.
-   */
+  /** How many whitespace chars the gap after this chunk represents. */
   gapCharCount: number;
 }
 export function splitIntoWordChunks(
@@ -533,11 +416,7 @@ export function splitIntoWordChunks(
   fontSizePt: number,
 ): WordChunk[] {
   const chunks: WordChunk[] = [];
-  // Any run of 1+ whitespace becomes a chunk boundary. Earlier versions
-  // only split on 2+ spaces (assuming PDFium preserved single spaces in
-  // the text object) - that assumption turned out to be unreliable, so
-  // every whitespace run is now an explicit positional jump. \s (not just
-  // [ \t]) so non-breaking / unicode spaces also become gaps, never glyphs.
+  // Any run of 1+ whitespace becomes a chunk boundary.
   const gapRe = /\s+/g;
   let leadingGapPt = 0;
   let leadingGapChars = 0;
@@ -549,9 +428,7 @@ export function splitIntoWordChunks(
     const gapPt = measureAdvancePt(gapText, fontFamily, fontSizePt);
     if (before.length === 0) {
       // Whitespace at the very start of `line`, or two whitespace runs
-      // back-to-back with no non-space char between. Fold the gap into
-      // the next chunk's leading offset rather than emitting an empty
-      // text object PDFium would reject.
+      // back-to-back with no non-space char between.
       leadingGapPt += gapPt;
       leadingGapChars += gapText.length;
     } else {
@@ -578,28 +455,8 @@ export function splitIntoWordChunks(
   return chunks;
 }
 
-/**
- * Insert one or more text objects representing `opts.text`. Text with
- * no whitespace becomes a single PDFium text object. Text with any
- * whitespace becomes one text object per word, with the inter-word
- * gaps emitted as explicit positional jumps via x-offset.
- *
- * The per-word path is the only reliable way to keep PDFium from
- * collapsing inter-word spaces during its text-object serialisation
- * (single AND consecutive spaces can both be stripped depending on
- * font / encoding combination). One text object per word sidesteps the
- * question entirely - PDFium has no spaces to collapse.
- *
- * The first returned pointer is the "anchor" (the model run's
- * `pdfiumObjPtr`); the rest live alongside it and must be tracked for
- * revert.
- */
-/**
- * Normalised rotation of a text matrix, or undefined for upright text. Strips
- * the scale (which already lives in the emitted font size) so only the
- * rotation/flip is re-applied at emit time. Upright runs return undefined so
- * the emit path stays byte-for-byte unchanged.
- */
+/** Insert one or more text objects representing `opts.text`. */
+/** Normalised rotation of a text matrix, or undefined for upright text. */
 export function rotationFromMatrix(matrix: {
   a: number;
   b: number;
@@ -610,16 +467,8 @@ export function rotationFromMatrix(matrix: {
   if (!scale) return undefined;
   const cos = matrix.a / scale;
   const sin = matrix.b / scale;
-  // A mirrored generator (negative determinant - e.g. a y-flipped text matrix
-  // [1 0 0 -1]) reads as sin~=0 / cos>0 from a,b ALONE and used to be mistaken
-  // for plain upright text, then edited by the horizontal surgical path which
-  // assumes a non-flipped y axis. Fold c,d into the check (defaulting to the
-  // upright identity when omitted, keeping the {a,b}-only callers unchanged) so
-  // a flip routes to the rotation-aware full re-emit instead. Pure shear
-  // (oblique-via-matrix: c!=0 with a POSITIVE determinant) is deliberately NOT
-  // treated as rotated - the surgical path preserves the shear on surviving
-  // glyphs, whereas a re-emit would drop it, so flagging it would regress
-  // synthetic-italic edits.
+  // A mirrored generator reads as sin~=0 / cos>0 from a,b ALONE and used to be
+  // mistaken for plain upright text.
   const c = matrix.c ?? 0;
   const d = matrix.d ?? scale;
   const mirrored = matrix.a * d - matrix.b * c < 0;
@@ -627,12 +476,8 @@ export function rotationFromMatrix(matrix: {
   return { cos, sin };
 }
 
-/**
- * The rotation a NEW object needs so it reads upright on a page displayed with
- * `/Rotate` (quarter-turns CW). The object is counter-rotated in raw space so
- * the page's display rotation nets it back to horizontal. Undefined for an
- * unrotated page (so insertion stays axis-aligned / unchanged).
- */
+// The rotation a NEW object needs so it reads upright on a page displayed with
+// `/Rotate` (quarter-turns CW).
 export function counterPageRotation(
   rotateQuarterTurnsCw: number,
 ): { cos: number; sin: number } | undefined {
@@ -675,10 +520,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   const m2 = m as unknown as CreateTextObjModule;
   const canReuse = opts.originalFontPtr !== 0 && !!m2.FPDFPageObj_CreateTextObj;
 
-  // Words are laid out horizontally from (opts.x, opts.y). When the run is
-  // rotated, rotate every emitted object about that anchor so the line keeps
-  // its orientation AND its words march along the rotated baseline. No-op for
-  // upright text (rotation undefined), so axis-aligned emits are unchanged.
+  // Words are laid out horizontally from (opts.x, opts.y).
   const withRotation = (ptrs: number[]): number[] => {
     const rot = opts.rotation;
     if (rot) {
@@ -686,56 +528,44 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         if (p) rotateObjectAbout(m, p, opts.x, opts.y, rot.cos, rot.sin);
       }
     }
-    // Every successful emit path funnels through here, so this is the one
-    // choke point to re-apply the source run's render mode (Tr) - new
-    // objects default to fill mode 0.
-    const mode = opts.renderMode ?? 0;
-    if (mode !== 0) {
-      const setMode = (
-        m as unknown as {
-          FPDFTextObj_SetTextRenderMode?: (
-            obj: number,
-            mode: number,
-          ) => boolean;
-        }
-      ).FPDFTextObj_SetTextRenderMode;
-      if (setMode) {
-        for (const p of ptrs) {
-          if (!p) continue;
-          try {
-            setMode(p, mode);
-          } catch {
-            /* best-effort */
-          }
-        }
-      }
-    }
+    // Every successful emit funnels through here, so this is the one place to
+    // re-apply the source run's ink state - new objects default to a flat fill.
+    applyInkState(m, ptrs, opts);
     return ptrs;
   };
 
   // Emit ONE word at (x, y) and return its pointer (0 on failure).
-  //
-  // When reusing the source font, VALIDATE that it actually rendered visible
-  // glyphs: subset / CID fonts without a usable Unicode->glyph map return
-  // ~0-width `.notdef` glyphs from `FPDFText_SetText`, which is how a font
-  // re-emit "rewrites a whole paragraph with broken glyphs". If the rendered
-  // width is sub-threshold we drop the object and re-emit the word in base-14
-  // Helvetica, so a rewrite NEVER persists invisible / garbled text - it
-  // keeps the source font only where that font genuinely renders the chars.
   const emitWord = (text: string, x: number): number => {
     // base-14 can only render Latin-1; drop the rest so PDFium never emits
-    // U+00FF tofu. The reused source font keeps the raw text (it may have the
-    // glyphs); only the fallback path sanitises.
+    // U+00FF tofu.
     const base14Text = sanitizeForBase14(text);
-    const newBase14 = (): number =>
-      m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
+    const newBase14 = (): number => {
+      const ptr = m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
+      if (ptr) return ptr;
+      // PDFium only knows the standard font names, so any other family fails
+      // here. Substituting is what editors do; returning 0 would drop the text.
+      const substitute = nearestStandardFont(family);
+      return substitute === family
+        ? 0
+        : m.FPDFPageObj_NewTextObj(opts.doc.docPtr, substitute, size);
+    };
     const emitBase14 = (): number => {
-      // Some chars are outside base-14's Latin-1 range. Before dropping them,
-      // emit via the bundled Unicode fallback font (Noto Sans, embedded on
-      // demand) so non-Latin text is KEPT rather than silently lost. Only
-      // kicks in when sanitising actually removed chars, so pure-Latin emits
-      // are byte-for-byte unchanged. Returns 0 if the font isn't ready or
-      // didn't render (then we fall through to the sanitised base-14 drop).
+      // A pre-warmed device font emits with its REAL face. Standard names skip
+      // this and a cold cache returns 0, so existing emits are unchanged.
+      if (nearestStandardFont(family) !== family) {
+        const dp = emitDeviceFontTextObject(
+          opts.doc,
+          opts.page,
+          family,
+          text,
+          size,
+          opts.fill,
+          x,
+          opts.y,
+        );
+        if (dp) return dp;
+      }
+      // Some chars are outside base-14's Latin-1 range.
       if ([...text].length > [...base14Text].length) {
         const fp = emitFallbackTextObject(
           opts.doc,
@@ -748,8 +578,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         );
         if (fp) return fp;
         // The bundled Noto fallback couldn't render the non-Latin chars either,
-        // so the base-14 emit below drops them. Record them so the save flow can
-        // warn instead of losing them silently.
+        // so the base-14 emit below drops them.
         recordDroppedChars(text, base14Text);
       }
       if (base14Text.length === 0) return 0; // nothing representable - drop
@@ -767,20 +596,12 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       size,
     );
     if (!ptr) return emitBase14();
-    // Reuse path: resolve real font charcodes (backend/cmap/content-stream)
-    // so the embedded subset font renders the chars; falls back to SetText
-    // internally. The width check below still catches any .notdef result and
-    // re-emits in base-14, so a broken reuse never persists.
+    // Reuse path: resolve real font charcodes so the embedded subset font
+    // renders the chars; falls back to SetText internally.
     const strategyUsed = writeViaCharcodesOrSetText(ptr, text);
     applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
     // A whole-word SetCharcodes write via the BACKEND resolver used known-good
-    // (font, charcode) pairs PDFBox validated, so the glyph is real. Its bounds
-    // can still read ~0 right here because PDFium hasn't regenerated the page
-    // content stream yet - the SAME not-yet-generated false positive the per-char
-    // branch guards with `perCharBranchPtrs`. Trust it and skip the destructive
-    // width re-emit below; otherwise a correct source-font word gets thrown away
-    // and re-emitted in Helvetica. cmap / content-stream charcodes are GUESSES
-    // (see below) so they stay subject to the validation checks.
+    // (font, charcode) pairs PDFBox validated, so the glyph is real.
     if (strategyUsed === "backend") return ptr;
     const right = measureObjRightEdgePt(m, ptr);
     const visible = text.replace(/\s+/g, "").length;
@@ -792,27 +613,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       removeAndDestroyObject(m, opts.page.pagePtr, ptr);
       return emitBase14();
     }
-    // Read-back validation for a source-font SetText. When PDFium's reverse
-    // Unicode lookup misses a char (not in the font's ToUnicode), SetText
-    // silently keeps the RAW code point as the charcode - and a re-encoded
-    // font renders whatever glyph it parks at that code. That is a full-width
-    // VALID glyph ("Zahid" -> "Lahid": Z=0x5A hit the glyph the subset stores
-    // at 0x5A), invisible to the width check above. The text page decodes the
-    // object's charcodes through the font's own ToUnicode - the ground truth -
-    // so a mismatch against the intended text means wrong glyphs: drop the
-    // object and re-emit in base-14 (right letters, safe font).
-    //
-    // Gated on the SetText path only (warm backend emits returned earlier),
-    // but NOT on `originalFontSubset`: a merged run's flag comes from its
-    // FIRST fragment's font (often a bullet glyph's), while the borrowed emit
-    // font can be a different, re-encoded subset - exactly the case that
-    // scrambled rare chars. A correct SetText just passes the compare.
+    // Read-back validation for a source-font SetText.
     if (strategyUsed === null) {
       // Throttle: chars a previous read-back already proved this font renders
-      // faithfully never need re-checking - without this, char-by-char typing
-      // re-validated every word on every keystroke (a full text-page load
-      // each), tripling emit cost and timing out stress tests under parallel
-      // suite load. First occurrence per (font, char) still validates.
+      // faithfully never need re-checking.
       const visibleChars = [...text].filter((c) => c.trim().length > 0);
       const allProven =
         opts.originalFontPtr !== 0 &&
@@ -835,15 +639,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         }
       }
     }
-    // Self-validate an UNTRUSTED charcode GUESS. Two strategies produce
-    // valid-but-possibly-WRONG (non-.notdef) glyphs: content-stream maps
-    // Unicode->CID by page glyph order, and cmap assumes glyph-index==charcode
-    // which only holds for Identity-encoded CIDFontType2 (a Type0 with a
-    // predefined CMap or non-Identity CIDToGIDMap, or a simple TrueType, gets a
-    // wrong glyph). Compare the emitted advance to the advance the SAME chars
-    // render at on the page; a gross mismatch means a wrong glyph, so drop it and
-    // re-emit in base-14 (right letter, safe font). Trusted backend charcodes
-    // returned above and never reach here.
+    // Self-validate an UNTRUSTED charcode GUESS.
     if (
       (strategyUsed === "content-stream" || strategyUsed === "cmap") &&
       opts.originalFontPtr
@@ -875,23 +671,14 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     return ptr;
   };
 
-  // Try-charcodes wrapper: when we're reusing a source font AND the
-  // active charcode strategy can resolve EVERY char in the chunk,
-  // call FPDFText_SetCharcodes directly. Otherwise fall through to
-  // FPDFText_SetText (the legacy path). Returns the strategy that
-  // successfully wrote charcodes (so the caller can self-validate an
-  // untrusted "content-stream" guess), or null when it fell to SetText.
+  // Try-charcodes wrapper: when we're reusing a source font AND the active
+  // charcode strategy can resolve EVERY char in the chunk.
   function writeViaCharcodesOrSetText(
     ptr: number,
     text: string,
   ): string | null {
     const strategy = getActiveCharcodeStrategy();
-    // The content-stream resolver is an untrusted sequential-CID GUESS. When it
-    // is the ACTIVE strategy (diagnostic builds) it would otherwise bypass the
-    // subset+single-codepoint gate that guards it as a fallback - so apply the
-    // same gate here. Anything outside it routes to SetText, which the width
-    // self-check above backstops with a base-14 re-emit. Without this, a
-    // re-encoded multi-char run could be scrambled by a same-width wrong glyph.
+    // The content-stream resolver is an untrusted sequential-CID GUESS.
     if (
       strategy === "content-stream" &&
       !(!!opts.originalFontSubset && [...text].length === 1)
@@ -925,28 +712,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       setTextOn(m, ptr, text);
       return null;
     }
-    // allowContentStreamFallback: if the active resolver (e.g. backend with
-    // a cold cache) misses, reuse the on-page glyph via the client-side
-    // content-stream resolver.
-    //
-    // GATED TO SUBSET FONTS, SINGLE CODE POINTS. The content-stream resolver
-    // GUESSES each glyph's charcode as its sequential order of first
-    // appearance on the page. For re-encoded / non-subset fonts (e.g. LaTeX
-    // LMRoman) that guess picks valid-but-WRONG glyphs (e.g. "a"→"fi",
-    // "occupying"→garbage), and its only self-check - the per-emit advance
-    // ratio - can't tell a same-width wrong glyph apart. Two gates make this
-    // safe:
-    //   * SUBSET only: non-subset fonts render correctly via SetText (their
-    //     reverse Unicode→charcode lookup works), so they never need - and
-    //     must never use - the guess. Only subset fonts (where SetText returns
-    //     .notdef) fall back to it.
-    //   * SINGLE code point only: the advance self-check is a true per-char
-    //     check for one char but averages per-char errors across a multi-char
-    //     word, so a whole-line re-emit could scramble every word while
-    //     passing. Multi-char text uses SetText (correct for non-subset) or
-    //     the width check's base-14 re-emit (correct letters for subset).
-    // Net: the result is always real glyphs - the original font where it
-    // renders, base-14 otherwise - never a scramble.
+    // allowContentStreamFallback: if the active resolver misses, reuse the
+    // on-page glyph via the client-side content-stream resolver.
     const allowGuessFallback =
       !!opts.originalFontSubset && [...text].length === 1;
     const resolved = tryResolveCharcodes(
@@ -1015,37 +782,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     return null;
   }
 
-  // Per-char emit branch for the BACKEND strategy. When the active
-  // strategy is 'backend', each char's font may be DIFFERENT (Chrome/
-  // Skia-style per-glyph-per-font PDFs). For each char we ask the
-  // resolver for a charcode AND probe PDFium for the font handle that
-  // renders that char on the page. We then create one text object per
-  // char with the CORRECT font + charcode, positioning them adjacently
-  // so the visual output matches the source font.
-  //
-  // Fires whenever the backend strategy is active AND every char has
-  // both a per-char font handle on the page AND a backend-resolved
-  // charcode. The result ptrs are recorded in `perCharBranchPtrs` so
-  // the partial-edit measure-and-fallback knows to TRUST them and
-  // skip its tofu retry. Without that signal the retry would fire a
-  // second per-char emit on top of the first - the F-duplication bug
-  // from before.
-  //
-  // The earlier `!reuse` gate (intended to avoid the double-emit) was
-  // too restrictive: with a borrowed font supplied, the per-char
-  // branch bailed, the legacy SetText path produced .notdef glyphs
-  // (visible as horizontal-bar stripes for Type3 fonts on Sample.pdf),
-  // FPDFPage_RemoveObject silently failed to clear those for
-  // form-xobject text, and the second consecutive M edit left visible
-  // stripes around BOTH the first and the second M. Per-char branch
-  // always firing (when it CAN) + verified-ptr signal to skip the
-  // retry sidesteps both failure modes.
-  //
-  // Bails out (falls through to the normal path) when:
-  //   - text contains whitespace (whitespace doesn't have a per-char
-  //     font on the page; the normal per-chunk path already handles it)
-  //   - we're not in backend strategy mode
-  //   - ANY char fails to resolve both a font handle AND a charcode
+  // Per-char emit branch for the BACKEND strategy.
   const isBackendStrategy = getActiveCharcodeStrategy() === "backend";
   const hasAnyWhitespaceForBranch = /\s/.test(opts.text);
   if (
@@ -1059,19 +796,13 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       pagePtr: opts.page.pagePtr,
       docPtr: opts.doc.docPtr,
     };
-    // Probe per char first. If any char fails resolution, fall through
-    // to the normal write path (which will surface the failure via
-    // emitCharcodeEvent's outcome:partial-coverage-fallback path).
+    // Probe per char first.
     const perChar: Array<{ ch: string; font: number; charcodes: number[] }> =
       [];
     let allOk = true;
     for (const ch of opts.text) {
       // Prefer the run's OWN font when it renders this char: it is the
-      // authoritative font for the run's text, so it can't alias to a
-      // different font that happens to render the same Unicode elsewhere on the
-      // page (the cross-font wrong-glyph bug). The cache is keyed by the font a
-      // charcode is valid for, so a hit on originalFontPtr means it genuinely
-      // renders ch. Fall back to scanning the page when it doesn't.
+      // authoritative font for the run's text.
       let charFont = 0;
       let resolved = null;
       if (opts.originalFontPtr) {
@@ -1118,10 +849,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           size,
         );
         if (!ptr) {
-          // CreateTextObj failed mid-word. Tear down every per-char object
-          // already emitted, exactly like the setCharcodesOn failure below -
-          // leaving them would double-render the word when the fall-through
-          // re-emits it.
+          // CreateTextObj failed mid-word.
           for (const p of ptrs) {
             perCharBranchPtrs.delete(p);
             removeAndDestroyObject(m, opts.page.pagePtr, p);
@@ -1131,11 +859,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         }
         const ok = setCharcodesOn(m, ptr, pc.charcodes);
         if (!ok) {
-          // Couldn't set charcodes - rare but possible. Tear down the
-          // current orphan AND every per-char object already emitted this
-          // loop before bailing to the normal path. Leaving the earlier
-          // ptrs on the page would double-render the word (the fall-through
-          // re-emits it) and leak them.
+          // Couldn't set charcodes - rare but possible.
           removeAndDestroyObject(m, opts.page.pagePtr, ptr);
           for (const p of ptrs) {
             perCharBranchPtrs.delete(p);
@@ -1145,12 +869,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           break;
         }
         applyFillAndPos(m, opts.page, ptr, opts.fill, cursor, opts.y);
-        // Advance by the char's REAL on-page advance width (right side bearing
-        // included), read from the same font+char already on the page, rather
-        // than its ink bounding box (measureObjRightEdgePt) which drops the
-        // bearing and cramps/unevens per-char tracking. Fall back to the ink
-        // right edge, then to Helvetica metrics, when no on-page advance exists
-        // (e.g. a brand-new char not yet rendered anywhere).
+        // Advance by the char's REAL on-page advance width, read from the same
+        // font+char already on the page.
         const advEm = onPageAdvanceEm(m, opts.page.pagePtr, pc.font, pc.ch);
         if (advEm != null) {
           cursor += advEm * size;
@@ -1161,9 +881,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
               ? measured
               : cursor + measureAdvancePt(pc.ch, family, size);
         }
-        // Reproduce the source run's letter-spacing (Tc): the glyph advance
-        // above is the font's natural width, so a spaced-caps heading would
-        // otherwise collapse to normal tracking on edit.
+        // Reproduce the source run's letter-spacing: the glyph advance above is
+        // the font's natural width.
         cursor += opts.charSpacingPt ?? 0;
         emitCharcodeEvent({
           timestamp: 0,
@@ -1176,15 +895,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           outcome: "charcodes-ok",
         });
         ptrs.push(ptr);
-        // Mark this ptr as verified - it was created via the per-char
-        // branch with a known-good (font, charcode) pair from the
-        // backend resolver cache. Downstream callers (the
-        // partial-edit measure-and-fallback in applyPartialEditPlan)
-        // check this set and SKIP their tofu retry for these ptrs,
-        // because the retry would emit a second per-char text object
-        // on top and the duplicates can't all be cleanly removed
-        // (FPDFPage_RemoveObject silently fails for some Type3 /
-        // form-xobject combinations, leaving visible stripes).
+        // Mark this ptr as verified - it was created via the per-char branch
+        // with a known-good pair from the backend resolver cache.
         perCharBranchPtrs.add(ptr);
       }
       if (ptrs.length === opts.text.length) return withRotation(ptrs);
@@ -1198,13 +910,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // fall through to the normal path if per-char attempt didn't work
   }
 
-  // Letter-spaced runs: a single text object cannot carry Tc (PDFium exposes
-  // no setter), so when the per-char backend branch above didn't run (cold
-  // cache, backend down) a whole-word emit would collapse the tracking. Emit
-  // one object per char instead, spacing the cursor manually - each char
-  // still goes through emitWord's full resolve/validate/fallback chain.
-  // Unspaced runs (spacing 0) never enter this branch, keeping the normal
-  // single-object fast path byte-for-byte unchanged.
+  // Letter-spaced runs: a single text object cannot carry Tc.
   const hasAnyWhitespace = /\s/.test(opts.text);
   const spacingPt = opts.charSpacingPt ?? 0;
   if (
@@ -1219,8 +925,6 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       if (ptr) ptrs.push(ptr);
       // Advance by the char's true advance width: the on-page advance of the
       // same char+font when it is still measurable, else canvas font metrics.
-      // NOT the emitted object's ink bounds - those exclude side bearings
-      // (and can over-read), which would warp the reproduced tracking.
       const advEm = opts.originalFontPtr
         ? onPageAdvanceEm(m, opts.page.pagePtr, opts.originalFontPtr, ch)
         : null;
@@ -1237,10 +941,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     return withRotation(ptr ? [ptr] : []);
   }
 
-  // Per-chunk emit (split on ANY whitespace run). After each emit we
-  // read the actual right edge from PDFium so the next chunk's x is
-  // exact; canvas measurement only feeds the inter-chunk gaps and the
-  // no-ink fallback.
+  // Per-chunk emit (split on ANY whitespace run).
   const chunks = splitIntoWordChunks(opts.text, family, size) as WordChunk[] & {
     leadingGapPt?: number;
     leadingGapChars?: number;
@@ -1253,12 +954,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     spacing * (chunks.leadingGapChars ?? 0);
   for (const chunk of chunks) {
     if (chunk.text.length > 0) {
-      // Recurse per word (a chunk has no whitespace, so this hits the
-      // fast path incl. the per-char backend branch - previously only
-      // whole whitespace-free inserts got per-char font resolution and
-      // multi-word text degraded straight to the fallback family).
-      // Rotation stays undefined here: the outer withRotation rotates
-      // every collected ptr about the LINE anchor exactly once.
+      // Recurse per word.
       const wordPtrs = emitTextLine({
         ...opts,
         text: chunk.text,
@@ -1276,8 +972,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       ptrs.push(...wordPtrs);
     }
     // Word gaps stretch with the run's letter-spacing too: the source layout
-    // applies Tc after the glyph preceding the gap AND after each space, so
-    // an N-space gap carries N+1 spacing contributions.
+    // applies Tc after the glyph preceding the gap AND after each space.
     cursor +=
       chunk.gapAfterPt +
       (chunk.gapCharCount > 0 ? spacing * (chunk.gapCharCount + 1) : 0);
@@ -1296,12 +991,8 @@ interface TextObjReadModule {
   ) => number;
 }
 
-/**
- * Decode a just-inserted text object's content through the font's ToUnicode
- * (what any PDF reader will see), or null when unavailable. Loads a fresh
- * text page - PDFium builds it from the live object list, so no content
- * regeneration is needed. Only called on the cold subset-font SetText path.
- */
+// Decode a just-inserted text object's content through the font's ToUnicode
+// (what any PDF reader will see), or null when unavailable.
 function readBackTextObj(
   m: WrappedPdfiumModule,
   pagePtr: number,
@@ -1363,6 +1054,74 @@ function setTextOn(m: WrappedPdfiumModule, ptr: number, text: string): void {
     m.FPDFText_SetText(ptr, textPtr);
   } finally {
     m.pdfium.wasmExports.free(textPtr);
+  }
+}
+
+interface InkState {
+  renderMode?: number;
+  stroke?: RGBA | null;
+  strokeWidth?: number;
+}
+
+interface InkModule {
+  FPDFTextObj_SetTextRenderMode?: (obj: number, mode: number) => boolean;
+  FPDFPageObj_SetStrokeColor?: (
+    obj: number,
+    r: number,
+    g: number,
+    b: number,
+    a: number,
+  ) => boolean;
+  FPDFPageObj_SetStrokeWidth?: (obj: number, width: number) => boolean;
+}
+
+// How a run's glyphs are painted, other than the fill. Spread as a unit so a
+// call site cannot carry the render mode and forget the outline.
+export function inkFromRun(run: {
+  renderMode?: number;
+  stroke?: RGBA | null;
+  strokeWidth?: number;
+}): InkState {
+  return {
+    renderMode: run.renderMode,
+    stroke: run.stroke ?? null,
+    strokeWidth: run.strokeWidth,
+  };
+}
+
+/** Re-apply render mode and outline to freshly created text objects. */
+export function applyInkState(
+  m: WrappedPdfiumModule,
+  ptrs: number[],
+  ink: InkState,
+): void {
+  const mod = m as unknown as InkModule;
+  const mode = ink.renderMode ?? 0;
+  const stroke = ink.stroke ?? null;
+  const width = ink.strokeWidth ?? 0;
+  for (const p of ptrs) {
+    if (!p) continue;
+    try {
+      // Written unconditionally: skipping mode 0 means nothing could ever put
+      // an object back to fill-only, so undoing an outline left it stroked.
+      mod.FPDFTextObj_SetTextRenderMode?.(p, mode);
+      if (stroke) {
+        mod.FPDFPageObj_SetStrokeColor?.(
+          p,
+          stroke.r,
+          stroke.g,
+          stroke.b,
+          stroke.a,
+        );
+        mod.FPDFPageObj_SetStrokeWidth?.(p, width);
+      } else {
+        // A transparent zero-width stroke is how "no outline" is expressed.
+        mod.FPDFPageObj_SetStrokeWidth?.(p, 0);
+        mod.FPDFPageObj_SetStrokeColor?.(p, 0, 0, 0, 0);
+      }
+    } catch {
+      /* best-effort */
+    }
   }
 }
 

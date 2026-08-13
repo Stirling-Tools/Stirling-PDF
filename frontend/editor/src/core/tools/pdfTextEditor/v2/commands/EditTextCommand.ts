@@ -7,6 +7,7 @@ import {
   collectMemberPtrs,
   emitFillRect,
   emitTextLine,
+  inkFromRun,
   everyCharIn,
   removeMemberPtrs,
   rotationFromMatrix,
@@ -68,32 +69,15 @@ interface RunModelSnapshot {
   pdfiumObjPtr: number;
 }
 
-/**
- * True when a partial-edit plan only ADDED objects (no original object was
- * freed via removePtrs, none mutated in place via a "modify" op). Such an
- * apply is fully reversible by restoring the pre-edit model + deleting the
- * inserted objects - so redo can re-engage the SAME path and reproduce
- * byte-identical output (used to keep redo faithful, issue: redo-after-undo).
- */
+// True when a partial-edit plan only ADDED objects (no original object was
+// freed via removePtrs, none mutated in place via a "modify" op).
 function planIsPureInsert(plan: PartialEditPlan): boolean {
   return (
     plan.removePtrs.length === 0 && plan.ops.every((op) => op.type !== "modify")
   );
 }
 
-/**
- * Edit a text run.
- *
- * Two paths: plain in-place SetText (singleton base-14), and
- * collapse-and-overlay. The overlay path paints a cover rect over the
- * original bounds (because PDFium can't remove text from inside a form
- * xobject) and stacks fresh page-level text objects on top.
- *
- * The replacement keeps the original font when every new character was
- * already present in the source string AND the source is neither a
- * subset font nor nested in a form xobject; otherwise it falls back to
- * base-14 Helvetica so the user always sees real glyphs.
- */
+/** Edit a text run. */
 export class EditTextCommand implements Command {
   readonly type = "edit-text";
   private readonly pageIndex: number;
@@ -120,12 +104,8 @@ export class EditTextCommand implements Command {
   private paragraphPlan: ParagraphEditPlan | null = null;
   private paragraphInsertedPtrs: number[] = [];
   private prevParagraphSlots: ParagraphLineSlot[] = [];
-  /**
-   * Full pre-edit model snapshot, captured by the partial / paragraph-partial
-   * apply paths. When the edit only inserted objects (see planIsPureInsert),
-   * revert restores this snapshot instead of flattening to an overlay model -
-   * so redo re-engages the same path and reproduces identical output.
-   */
+  // Full pre-edit model snapshot, captured by the partial / paragraph-partial
+  // apply paths.
   private editSnapshot: RunModelSnapshot | null = null;
   /** Set when the apply path took the paragraph line add/remove shortcut. */
   private lineEdit: {
@@ -149,24 +129,17 @@ export class EditTextCommand implements Command {
     const run = page.findRun(this.runId);
     if (!run) return;
     if (this.prevText === null) this.prevText = run.text;
-    // No-op edit: a contentEditable insert can fire several `input` events
-    // for one keystroke burst, re-dispatching the SAME final text. Re-running
-    // the overlay re-emit for an unchanged string would needlessly destroy
-    // and rebuild every object (flipping fonts). Nothing changed - bail.
+    // No-op edit: a contentEditable insert can fire several `input` events for
+    // one keystroke burst, re-dispatching the SAME final text.
     if (this.prevText === this.nextText) return;
 
     const alreadyBase14 = /^base14:/.test(run.fontId);
-    // A run rotated within the page (text matrix has rotation/skew) can't use
-    // the surgical partial/paragraph paths - those assume horizontal layout
-    // (axis-aligned offsets, x-only kept-object shifts). Route rotated runs to
-    // the full re-emit below, which is rotation-aware (rotationFromMatrix).
+    // A run rotated within the page can't use the surgical partial/paragraph
+    // paths - those assume horizontal layout.
     const isRotated = !!rotationFromMatrix(run.matrix);
 
-    // PARAGRAPH-AWARE PARTIAL PATH: paragraphs (multi-line runs) keep
-    // per-line sub-run data in `paragraphLineSlots`. Walk each slot,
-    // run the LCS path per line, keep fonts where survival is clean.
-    // Bails to overlay when line count changes (typed Enter / deleted a
-    // newline) or any slot's per-line plan fails.
+    // PARAGRAPH-AWARE PARTIAL PATH: paragraphs (multi-line runs) keep per-line
+    // sub-run data in `paragraphLineSlots`.
     if (
       this.partialPlan === null &&
       this.paragraphPlan === null &&
@@ -214,13 +187,7 @@ export class EditTextCommand implements Command {
       }
     }
 
-    // PARAGRAPH LINE ADD/REMOVE PATH. Typing or deleting a newline changes
-    // the paragraph's line count; planParagraphEdit bails on that and the
-    // overlay path would re-typeset the WHOLE paragraph in a fallback font,
-    // destroying the font + layout of every UNEDITED line. Instead diff the
-    // lines (LCS): each unchanged line keeps its existing glyph objects
-    // (translated to its new baseline, fonts intact); only new/changed lines
-    // are emitted fresh. ReflowWrapCommand re-lines the paragraph on blur.
+    // PARAGRAPH LINE ADD/REMOVE PATH.
     if (
       this.partialPlan === null &&
       this.paragraphPlan === null &&
@@ -246,10 +213,7 @@ export class EditTextCommand implements Command {
           this.nextText.startsWith(this.prevText) &&
           /^\r?\n/.test(this.nextText.slice(this.prevText.length))
         ) {
-          // Soft-wrapped paragraph (slots != lines): can't diff per line, but
-          // a pure newline-prefixed append keeps every existing object and only
-          // adds the new lines at the end. A suffix that adds chars to the
-          // current last line before the break falls through to the overlay.
+          // Soft-wrapped paragraph: can't diff per line.
           this.applyParagraphAppend(doc, page, run);
           run.text = this.nextText;
           run.dirty = true;
@@ -260,17 +224,7 @@ export class EditTextCommand implements Command {
       }
     }
 
-    // SURGICAL DIFF PATH (single-line). Skipped when:
-    //   - the run is a paragraph (paragraphLineSlots > 1): the rep's own
-    //     mergedFromPtrs mirror only line 0, so a planner against the
-    //     whole paragraph text would emit wrong output.
-    //   - nextText contains a newline that prevText doesn't: the LCS
-    //     would classify the `\n` and everything after it as inserted,
-    //     and `applyPartialEditPlan` emits inserts at `run.matrix.f` -
-    //     the SAME baseline as the original line, so the would-be
-    //     second-line text lands past the right edge of line 1 and is
-    //     mostly clipped. Force overlay (which splits by `\n` and emits
-    //     each line at a real second baseline).
+    // SURGICAL DIFF PATH (single-line).
     if (
       this.partialPlan === null &&
       run.mergedFromPtrs.length > 0 &&
@@ -280,8 +234,7 @@ export class EditTextCommand implements Command {
     ) {
       const partial = planPartialEdit(run, this.prevText ?? "", this.nextText);
       // An in-place "modify" op that re-SetTexts whitespace paints „ on an
-      // embedded subset font with no space glyph. Skip the partial path for
-      // those so the overlay re-emit (word-split, font-reused) handles it.
+      // embedded subset font with no space glyph.
       if (partial && !planModifiesWhitespace(partial)) {
         this.partialPlan = partial;
         this.prevMergedFromPtrs = [...run.mergedFromPtrs];
@@ -313,14 +266,8 @@ export class EditTextCommand implements Command {
       }
     }
 
-    // Force overlay whenever the in-place SetText path can't keep every
-    // PDFium object up to date:
-    //   - paragraphs (multiple line objects) or newline-containing text
-    //   - text with consecutive spaces (per-word emit produced extra
-    //     ptrs in `paragraphLeafPtrs`; an in-place SetText would only
-    //     update the first chunk and leave the rest stale)
-    //   - any run that has more than one leaf ptr in the model (e.g.
-    //     because a previous edit went through per-word emit)
+    // Force overlay whenever the in-place SetText path can't keep every PDFium
+    // object up to date: - paragraphs or newline-containing text.
     const needsMultiObjectEmit =
       run.paragraphMemberPtrs.length > 1 ||
       run.paragraphLeafPtrs.length > 1 ||
@@ -349,31 +296,16 @@ export class EditTextCommand implements Command {
     const m = doc.module;
 
     const bg = sampleBackground(m, page, run.bounds);
-    // \r/\n are split into separate output lines (never emitted as glyphs), so
-    // they must NOT gate font reuse - otherwise pressing Enter alone (which
-    // adds a \n the source font never "contained") flips the whole line to
-    // base-14 Helvetica even though every visible glyph is reusable.
+    // \r/\n are split into separate output lines, so they must NOT gate font
+    // reuse.
     const safeChars = everyCharIn(
       this.nextText.replace(/[\r\n]/g, ""),
       this.prevText ?? "",
     );
-    // Reusing the source font handle works when:
-    //   * Every nextText char already appears in prevText (`safeChars`)
-    //     - guarantees the font has a glyph for each char (it just
-    //       rendered them). This holds for SUBSET fonts too: if a char was
-    //       in prevText, the subset embedded a glyph for it.
-    //   * The run lives at page level (FPDFPageObj_CreateTextObj only
-    //     accepts page-level docPtr; form-xobject text needs a different
-    //     code path that PDFium doesn't expose cleanly).
-    //
-    // emitTextLine validates the reused font actually renders visible glyphs
-    // (measures width, falls back to base-14 on .notdef), so dropping the old
-    // `!run.fontSubset` guard is safe and keeps subset/embedded fonts on edit
-    // instead of always flipping to Helvetica.
+    // Reusing the source font handle works when: * Every nextText char already
+    // appears in prevText - guarantees the font has a glyph for each char.
     const canReuseFont = safeChars && run.containerPtr === 0;
-    // Borrow the font of the member sharing the most chars with the new
-    // text - the primary object is the BULLET on bulleted lines, and its
-    // symbol-only subset boxes every re-emitted word.
+    // Borrow the font of the member sharing the most chars with the new text.
     const borrowPtrs = collectMemberPtrs(run);
     const borrowTexts =
       run.mergedFromTexts.length === borrowPtrs.length
@@ -388,10 +320,6 @@ export class EditTextCommand implements Command {
     this.revertRotation = rotationFromMatrix(run.matrix) ?? null;
 
     // Detach any cover rect that a PRIOR overlay edit left on the page.
-    // The previous EditTextCommand instance recorded its own coverRectPtr
-    // in its `createdPtrs`, but those references die with the command -
-    // PDFium still owns the rect. Without per-run tracking, a sequence
-    // of overlay edits stacks rects on top of each other.
     if (run.coverRectPtr) {
       try {
         m.FPDFPage_RemoveObject(page.pagePtr, run.coverRectPtr);
@@ -412,10 +340,7 @@ export class EditTextCommand implements Command {
     );
 
     // Only stamp a cover rect when the sampler is CONFIDENT it found a uniform
-    // background colour. When it isn't (gradient / image / branded region, or a
-    // failed sample), bg.fill defaults to white - painting that as an opaque box
-    // over a coloured or dark background is a worse, very visible artefact than
-    // the residual form-xobject glyphs it would mask. So skip it when unsure.
+    // background colour.
     if (!allRemoved && bg.confident) {
       this.coverRectPtr = emitFillRect(m, page, run.bounds, bg.fill);
       if (this.coverRectPtr) {
@@ -429,32 +354,20 @@ export class EditTextCommand implements Command {
       run.paragraphLineHeight > 0
         ? run.paragraphLineHeight
         : run.fontSize * 1.2;
-    // One "line anchor" ptr per output line (first ptr emitted for that
-    // line); plus any extra per-word ptrs from space preservation, kept
-    // for leaf removal on subsequent edits.
+    // One "line anchor" ptr per output line; plus any extra per-word ptrs from
+    // space preservation, kept for leaf removal on subsequent edits.
     const lineAnchorPtrs: number[] = [];
     const allEmittedPtrs: number[] = [];
-    // Per-line emit metadata used to rebuild paragraphLineSlots so the
-    // NEXT edit can route back through paragraph-aware partial-edit
-    // (font-preserving) instead of falling to overlay again forever.
+    // Per-line emit metadata used to rebuild paragraphLineSlots so the NEXT
+    // edit can route back through paragraph-aware partial-edit instead of.
     const perLineEmits: Array<{ ptrs: number[]; text: string; y: number }> = [];
     // Step each line along the run's rotated down-axis: the (0,-lineHeight)
-    // stepping vector transformed by [cos,-sin] gives (sin*L, -cos*L). Upright
-    // (cos=1,sin=0) reduces to (e, f-i*L), so unrotated output is unchanged.
+    // stepping vector transformed by [cos,-sin] gives (sin*L, -cos*L).
     const rot = rotationFromMatrix(run.matrix);
     for (let i = 0; i < outputLines.length; i++) {
       const x = run.matrix.e + (rot ? i * rot.sin * lineHeight : 0);
       const y = run.matrix.f - i * lineHeight * (rot ? rot.cos : 1);
-      // Empty lines (a newline at end-of-text, or a blank line inserted
-      // mid-paragraph) get a placeholder slot - no PDFium object is
-      // emitted, because an empty text object's reported bounds are
-      // implementation-defined: `FPDFPageObj_GetBounds` can return
-      // {0,0,0,0} or fail, and either flavour breaks the next edit's
-      // anchor calculation (typed chars land at x=0 instead of at the
-      // line's intended left margin). The slot's `matrixE` carries the
-      // expected anchor; `planParagraphEdit` bails (mergedFromPtrs===0)
-      // on a type-into-empty-line edit so the overlay path handles it,
-      // and the overlay path emits at `run.matrix.e` directly.
+      // Empty lines get a placeholder slot.
       if (outputLines[i].length === 0) {
         perLineEmits.push({ ptrs: [], text: "", y });
         continue;
@@ -467,7 +380,7 @@ export class EditTextCommand implements Command {
         y,
         fontSize: run.fontSize,
         fill: run.fill,
-        renderMode: run.renderMode,
+        ...inkFromRun(run),
         originalFontPtr,
         originalFontSubset: run.fontSubset,
         charSpacingPt: run.charSpacingPt,
@@ -490,10 +403,6 @@ export class EditTextCommand implements Command {
         run.fontSubset = false;
       } else {
         // Borrow path: the new objects use the borrowed font handle.
-        // Mark fontSubset=false so the NEXT edit's `canReuseFont` check
-        // (which gates on `!run.fontSubset`) doesn't block the borrow
-        // even though the borrowed handle came from a subset source.
-        // The next edit re-validates via safeChars regardless.
         run.fontSubset = false;
       }
       run.paragraphMemberPtrs = lineAnchorPtrs;
@@ -513,19 +422,12 @@ export class EditTextCommand implements Command {
     }
 
     run.mergedFromPtrs = [];
-    // Clear the parallel arrays too: planPartialEdit bails on length
-    // mismatch, so leaving stale text/bounds/char-starts when ptrs is
-    // reset to [] would force every SUBSEQUENT edit to fall to the
-    // overlay path and flip the font again - a self-reinforcing
-    // regression where one overlay edit poisons the run for life.
+    // Clear the parallel arrays too: planPartialEdit bails on length mismatch.
     run.mergedFromTexts = [];
     run.mergedFromBounds = [];
     run.mergedFromCharStarts = [];
-    // Rebuild paragraphLineSlots from the fresh emit so the next edit on
-    // this paragraph can re-engage the font-preserving partial path.
-    // Each slot owns one output line; its `mergedFromPtrs` carry the
-    // freshly emitted per-word ptrs and `mergedFromBounds` are read
-    // directly from PDFium so subsequent inserts anchor correctly.
+    // Rebuild paragraphLineSlots from the fresh emit so the next edit on this
+    // paragraph can re-engage the font-preserving partial path.
     if (perLineEmits.length > 1) {
       run.paragraphLineSlots = buildSlotsFromOverlayEmit(
         m,
@@ -534,10 +436,7 @@ export class EditTextCommand implements Command {
         originalFontPtr === 0 ? `base14:${fallbackFamily}` : run.fontId,
       );
     } else {
-      // Single-line emit. Skip slots; the single-line partial path
-      // works off mergedFromPtrs, which the overlay path deliberately
-      // clears (above) since the new emit may not carry per-sub-run
-      // bounds for the single-line case.
+      // Single-line emit.
       run.paragraphLineSlots = [];
     }
     // Don't reset paragraphLeafPtrs here - we just set them above to the
@@ -548,10 +447,8 @@ export class EditTextCommand implements Command {
     page.markNeedsGenerate();
   }
 
-  /**
-   * Exactly one revert strategy member may be set per apply. Enforced only by
-   * guard ordering, so fail fast in dev if two paths ran or a member leaked.
-   */
+  // Exactly one revert strategy member may be set per apply. Enforced only by
+  // guard ordering, so fail fast in dev if two paths ran or a member leaked.
   private assertSingleRevertPath(): void {
     const set =
       (this.lineEdit !== null ? 1 : 0) +
@@ -573,8 +470,7 @@ export class EditTextCommand implements Command {
     const m = doc.module;
 
     // Paragraph line add/remove revert: move matched lines back to their
-    // original baselines, drop the freshly-emitted new/changed lines, re-emit
-    // any deleted lines, then restore the pre-edit run model.
+    // original baselines, drop the freshly-emitted new/changed lines.
     if (this.lineEdit) {
       for (let i = this.lineEdit.moves.length - 1; i >= 0; i--) {
         const mv = this.lineEdit.moves[i];
@@ -606,7 +502,7 @@ export class EditTextCommand implements Command {
             y: rem.y,
             fontSize: rem.fontSize,
             fill: run.fill,
-            renderMode: run.renderMode,
+            ...inkFromRun(run),
             originalFontPtr: 0,
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
@@ -623,12 +519,8 @@ export class EditTextCommand implements Command {
       return;
     }
 
-    // Paragraph-aware partial revert: remove every per-slot insert ptr,
-    // re-emit fallback chunks at each removed sub-run's original spot.
-    // The original PDFium sub-objects are gone permanently (PDFium has
-    // no insert-into-page-at-position API that restores byte-identical
-    // glyphs) so the revert reads as the prev text in a base-14
-    // fallback font - matches what the overlay-revert path does too.
+    // Paragraph-aware partial revert: remove every per-slot insert ptr, re-emit
+    // fallback chunks at each removed sub-run's original spot.
     if (this.paragraphPlan) {
       // Remove the chunks the forward apply inserted.
       for (const ptr of this.paragraphInsertedPtrs) {
@@ -641,9 +533,7 @@ export class EditTextCommand implements Command {
       }
       this.paragraphInsertedPtrs = [];
       // Pure-insert edit (no original object freed/mutated): every original
-      // object is still alive, so restore the exact pre-edit model. This lets
-      // a later redo re-engage the paragraph-partial path and reproduce
-      // byte-identical output instead of re-emitting via the overlay path.
+      // object is still alive, so restore the exact pre-edit model.
       const pureInsert = this.paragraphPlan.perSlot.every(
         (e) => e.plan !== null && planIsPureInsert(e.plan),
       );
@@ -657,11 +547,8 @@ export class EditTextCommand implements Command {
         return;
       }
       const revertFallback = helveticaVariantFor(this.prevFontId ?? run.fontId);
-      // Rebuild every line from the pre-edit slots: kept/modified sub-runs
-      // keep their live original object; all-deleted ones are re-emitted as
-      // Helvetica fallback chunks. The result is registered as the run's
-      // live overlay model so a later redo/edit removes exactly these live
-      // objects (never the freed originals, never orphaning the chunks).
+      // Rebuild every line from the pre-edit slots: kept/modified sub-runs keep
+      // their live original object.
       const lines: RebuildLine[] = [];
       for (let s = 0; s < this.prevParagraphSlots.length; s++) {
         const prevSlot = this.prevParagraphSlots[s];
@@ -706,11 +593,8 @@ export class EditTextCommand implements Command {
       return;
     }
 
-    // Partial-edit fast path revert: the removed sub-objects are gone
-    // from PDFium permanently, so we re-emit Helvetica fallback chunks
-    // at their original positions to give the user back the visible
-    // chars (in a different font). Inserted Helvetica chunks from the
-    // forward apply are removed.
+    // Partial-edit fast path revert: the removed sub-objects are gone from
+    // PDFium permanently.
     if (this.partialPlan) {
       for (const ptr of this.partialInsertedPtrs) {
         if (!ptr) continue;
@@ -732,11 +616,8 @@ export class EditTextCommand implements Command {
           );
         }
       }
-      // No original objects were destroyed (pure insert, or in-place modifies
-      // whose objects we just restored above): restore the EXACT pre-edit model
-      // so undo keeps the original embedded fonts AND redo re-engages the
-      // partial path identically. Only edits that actually freed objects fall
-      // through to the Helvetica overlay rebuild below (their glyphs are gone).
+      // No original objects were destroyed: restore the EXACT pre-edit model so
+      // undo keeps the original embedded fonts AND redo re-engages the.
       if (this.partialPlan.removePtrs.length === 0 && this.editSnapshot) {
         restoreRunModel(run, this.editSnapshot);
         run.text = this.prevText;
@@ -795,9 +676,7 @@ export class EditTextCommand implements Command {
     this.createdPtrs = [];
 
     // PDFium has no insert-into-form-xobject API, so the truly-original
-    // pointers (if they lived in a form) are gone forever. Re-emit a
-    // visually-equivalent paragraph at page level using the snapshot
-    // captured during apply.
+    // pointers (if they lived in a form) are gone forever.
     const revertFallback = helveticaVariantFor(this.prevFontId ?? "");
     const lineAnchorPtrs: number[] = [];
     const allRestoredPtrs: number[] = [];
@@ -839,13 +718,8 @@ export class EditTextCommand implements Command {
     page.markNeedsGenerate();
   }
 
-  /**
-   * Apply a paragraph edit that changed the LINE COUNT (Enter typed or a
-   * newline deleted) where slots map 1:1 to lines. Diffs prev vs next lines
-   * (LCS): each unchanged line keeps its existing glyph objects (translated
-   * to its new baseline, font intact); new/changed lines are emitted fresh;
-   * deleted lines' objects are removed. ReflowWrap re-lines on blur.
-   */
+  // Apply a paragraph edit that changed the LINE COUNT (Enter typed or a
+  // newline deleted) where slots map 1:1 to lines.
   private applyParagraphLineEdit(
     doc: EditorDocument,
     page: Page,
@@ -923,7 +797,7 @@ export class EditTextCommand implements Command {
           y,
           fontSize: run.fontSize,
           fill: run.fill,
-          renderMode: run.renderMode,
+          ...inkFromRun(run),
           originalFontPtr: 0,
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
@@ -1004,12 +878,7 @@ export class EditTextCommand implements Command {
     };
   }
 
-  /**
-   * Apply a paragraph edit that APPENDED lines (Enter + text at the end).
-   * Keeps every existing glyph object untouched - preserving the font and
-   * layout of all original text - and emits only the appended lines. The
-   * subsequent ReflowWrapCommand (on blur) re-lines the whole paragraph.
-   */
+  /** Apply a paragraph edit that APPENDED lines (Enter + text at the end). */
   private applyParagraphAppend(
     doc: EditorDocument,
     page: Page,
@@ -1065,7 +934,7 @@ export class EditTextCommand implements Command {
           y,
           fontSize: run.fontSize,
           fill: run.fill,
-          renderMode: run.renderMode,
+          ...inkFromRun(run),
           originalFontPtr: 0,
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
@@ -1112,15 +981,8 @@ export class EditTextCommand implements Command {
     };
   }
 
-  /**
-   * After an undo of a partial/paragraph edit, re-register the run's live
-   * PDFium objects (surviving originals + freshly re-emitted fallback
-   * chunks) as a flat overlay model. Clearing the mergedFrom* / slot
-   * arrays forces the next apply (redo or a fresh edit) down the overlay
-   * path, which removes exactly these live objects - never the freed
-   * pointers a stale partial model would reference, and never leaving the
-   * re-emitted fallback chunks orphaned on the page.
-   */
+  // After an undo of a partial/paragraph edit, re-register the run's live
+  // PDFium objects as a flat overlay model.
   private rebuildAsOverlayModel(
     doc: EditorDocument,
     page: Page,
@@ -1144,7 +1006,7 @@ export class EditTextCommand implements Command {
             y: line.baselineY,
             fontSize: line.fontSize,
             fill: run.fill,
-            renderMode: run.renderMode,
+            ...inkFromRun(run),
             originalFontPtr: 0,
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
@@ -1176,12 +1038,7 @@ export class EditTextCommand implements Command {
     return `Type into ${this.runId}`;
   }
 
-  /**
-   * Consecutive typing on the SAME run coalesces into one undo step. A blur
-   * (ReflowWrapCommand), selection change, move, etc. are different commands
-   * with no/other key, so they break the burst - giving natural undo
-   * granularity (one undo per typing session, not per keystroke event).
-   */
+  /** Consecutive typing on the SAME run coalesces into one undo step. */
   coalesceKey(): string {
     return `edit-text:${this.pageIndex}:${this.runId}`;
   }
@@ -1191,37 +1048,16 @@ export class EditTextCommand implements Command {
     return this.nextText;
   }
 
-  /**
-   * True when this edit's ENTIRE delta was one or more line breaks, i.e. the
-   * user pressed Enter and changed nothing else.
-   */
+  // True when this edit's ENTIRE delta was one or more line breaks, i.e. the
+  // user pressed Enter and changed nothing else.
   private isLineBreakOnlyInsertion(): boolean {
     if (this.prevText === null) return false;
     const inserted = insertedChunk(this.prevText, this.nextText);
     return inserted !== null && /^(?:\r?\n)+$/.test(inserted);
   }
 
-  /**
-   * "Press Enter, then type" is ONE logical action, so it must cost one
-   * undo - which is what makes a bare line break merge forward here.
-   *
-   * The 600ms window cannot express that. `onEdit` is dispatched
-   * synchronously from the run's `input` event, so the gap the window sees
-   * is the app's own render + PDFium latency between the two input events,
-   * not the user's think-time. That is engine-dependent (measured on the
-   * same Linux container: ~220ms on Chromium, ~270ms on Firefox, 700ms-1.7s
-   * on WebKit under load), so whether Enter+type took one undo or two came
-   * down to how fast the browser was. Widening the window would only move
-   * the threshold; keying off what the previous command actually did
-   * removes timing from the decision entirely.
-   *
-   * Deliberately narrow: it fires only when the immediately preceding
-   * command was itself a bare line-break insertion that this edit continues
-   * from character-for-character. Ordinary typing granularity and the 600ms
-   * window are untouched, and the merge stops as soon as one edit carries
-   * real text - so "Enter Enter type" is one step, but the next keystroke
-   * after that is governed by the window again.
-   */
+  // "Press Enter, then type" is ONE logical action, so it must cost one undo -
+  // which is what makes a bare line break merge forward here.
   coalesceIgnoresTimeWindow(previous: Command | null): boolean {
     if (!(previous instanceof EditTextCommand)) return false;
     if (this.prevText === null) return false;
@@ -1231,11 +1067,8 @@ export class EditTextCommand implements Command {
   }
 }
 
-/**
- * The text `next` adds to `prev` when the change is a pure insertion at a
- * single point, or null when it is anything else (a deletion, a replacement,
- * or two separate insertions).
- */
+// The text `next` adds to `prev` when the change is a pure insertion at a
+// single point, or null when it is anything else.
 function insertedChunk(prev: string, next: string): string | null {
   if (next.length <= prev.length) return null;
   let head = 0;
@@ -1252,16 +1085,10 @@ function insertedChunk(prev: string, next: string): string | null {
   return next.slice(head, next.length - tail);
 }
 
-/**
- * Keep a run's model width from claiming space past the page's right edge.
- * The glyphs of a long grow-mode line can still extend right (the editing box
- * caps to the page and wraps via CSS), but the run's reported bounds must never
- * exceed the page so selection / layout logic stays on-page.
- */
+/** Keep a run's model width from claiming space past the page's right edge. */
 function clampWidthToPage(x: number, width: number, page: Page): number {
-  // x/width are RAW PDF (MediaBox) space, so the right edge is the CropBox
-  // right edge in raw space (cropLeft+cropWidth); for identity pages this is
-  // page.width, so the common case is unchanged.
+  // x/width are RAW PDF space, so the right edge is the CropBox right edge in
+  // raw space.
   const rawRightEdge = page.display.cropLeft + page.display.cropWidth;
   const maxWidth = Math.max(0, rawRightEdge - x);
   return Math.min(width, maxWidth);
@@ -1298,17 +1125,7 @@ function snapshotRevertLines(
   }));
 }
 
-/**
- * Reconstruct `paragraphLineSlots` from the data the overlay loop
- * just emitted, so a subsequent edit on this paragraph can re-engage
- * `planParagraphEdit` (font-preserving per-line LCS) instead of
- * falling to the overlay path again forever.
- *
- * Each slot owns one output line. `mergedFromPtrs` carries the per-word
- * ptrs we created via `emitTextLine`; `mergedFromBounds` is read straight
- * from PDFium so subsequent inserts anchor at the exact glyph positions
- * the renderer used.
- */
+// Reconstruct `paragraphLineSlots` from the data the overlay loop just emitted.
 function buildSlotsFromOverlayEmit(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   run: import("@app/tools/pdfTextEditor/v2/model/TextRun").TextRun,
@@ -1321,12 +1138,8 @@ function buildSlotsFromOverlayEmit(
     const text = emit.text;
     const startChar = cursor;
     const endChar = startChar + text.length;
-    // Empty-line slot: no PDFium sub-objects, no bounds. matrixE +
-    // baselineY carry the expected anchor for the next edit. The next
-    // keystroke on this line triggers `planParagraphEdit`, which bails
-    // when slot.mergedFromPtrs is empty - the overlay path then runs
-    // and emits at run.matrix.e (correct), and the rebuilt slot picks
-    // up real bounds from the fresh emit.
+    // Empty-line slot: no PDFium sub-objects, no bounds. matrixE + baselineY
+    // carry the expected anchor for the next edit.
     if (emit.ptrs.length === 0 || text.length === 0) {
       slots.push({
         startChar,
@@ -1346,10 +1159,7 @@ function buildSlotsFromOverlayEmit(
       continue;
     }
     // Distribute the text across the emitted ptrs by character-count
-    // proportion. emitTextLine emits one ptr per whitespace-separated
-    // word, so partition `text` on whitespace runs and align with ptrs.
-    // For lines without whitespace, ptrs.length === 1 and the whole
-    // line is one sub-run.
+    // proportion. emitTextLine emits one ptr per whitespace-separated word.
     const mergedFromTexts: string[] = [];
     const mergedFromPtrs: number[] = [];
     const mergedFromBounds: Array<{ x: number; right: number }> = [];

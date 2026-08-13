@@ -3,18 +3,7 @@ import type { Page } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
-/**
- * Regression coverage for three user-reported issues:
- *  1. Align/distribute buttons stayed disabled because shift-click did not
- *     reliably add a 2nd run to the selection (TextRunOverlay focused the
- *     run before selecting and never preventDefault'd). FIXED - these tests
- *     drive the REAL shift-click DOM gesture (not store.selectMany).
- *  2. Inserting a character must keep the run text correct and must never
- *     emit the U+00FF "ydieresis" tofu, across different page sections.
- *  3. Bullet glyphs on the "Plus Many More" page are detached from their
- *     list items into an orphan bullet-only run - documented as a known
- *     grouping bug via test.fail until the grouper is reworked.
- */
+/** Regression coverage for three user-reported issues: 1. */
 const SAMPLE = path.join(
   import.meta.dirname,
   "../../../../public/samples/Sample.pdf",
@@ -129,9 +118,7 @@ test.describe("v2 editor - reported issue: align multi-select (real UI)", () => 
     page,
   }) => {
     // Use page-0 SINGLE-LINE runs at different x: a single one keeps align
-    // disabled (single paragraphs enable it - covered in the paragraph
-    // suite), and the two sit at different left edges so align-left is a
-    // real move, not a no-op.
+    // disabled.
     await open(page, 0);
     const a = await runId(page, 0, "10M\\+");
     const b = await runId(page, 0, "Downloads");
@@ -298,10 +285,7 @@ test.describe("v2 editor - reported issue: align a single paragraph's lines", ()
 
 test.describe("v2 editor - reported issue: character insertion + font integrity", () => {
   // Editor edits fire encode-charcodes; with no backend in the stubbed project
-  // an UNMOCKED call 401s and redirects to login (unmounting the editor mid-
-  // edit). Abort it so the resolver sees a clean cold-cache miss - the exact
-  // path these tests exercise (font reuse via SetText / the single-char
-  // content-stream fallback).
+  // an UNMOCKED call 401s and redirects to login.
   test.beforeEach(async ({ page }) => {
     await page.route("**/encode-charcodes", (route) => route.abort());
   });
@@ -347,14 +331,7 @@ test.describe("v2 editor - reported issue: character insertion + font integrity"
   test("inserting a duplicate char into a non-subset font reuses the embedded glyph via SetText, not the content-stream guess", async ({
     page,
   }) => {
-    // "Multi-Language Support" uses a NON-SUBSET embedded font. For those,
-    // FPDFText_SetText's reverse Unicode->charcode lookup works, so the
-    // inserted 'S' reuses the embedded glyph directly. The content-stream
-    // GUESS (sequential CID by page order) is gated OFF for non-subset fonts:
-    // it picks valid-but-wrong glyphs on re-encoded fonts (the paragraph
-    // scramble), and its advance self-check can't catch a same-width wrong
-    // glyph. So no content-stream charcode write must happen here - the result
-    // is the correct glyph via SetText, never a guessed one.
+    // "Multi-Language Support" uses a NON-SUBSET embedded font.
     await open(page, 1);
     const id = await runId(page, 1, "Multi-Language\\s+Support");
     await page.evaluate(
@@ -379,9 +356,7 @@ test.describe("v2 editor - reported issue: character insertion + font integrity"
   test("character insertion telemetry records an emit attempt (font-reuse vs fallback)", async ({
     page,
   }) => {
-    // The window telemetry buffer records the outcome of every emit. We
-    // assert an emit happened and (in the no-backend stubbed env) it is one
-    // of the known outcomes - documenting that the path runs without error.
+    // The window telemetry buffer records the outcome of every emit.
     await open(page, 1);
     const id = await runId(page, 1, "Multi-Language\\s+Support");
     await page.evaluate(
@@ -422,9 +397,8 @@ test.describe("v2 editor - reported issue: bullet-to-item mapping", () => {
     await page.waitForTimeout(2000);
   }
 
-  // FIXED by the LineGrouper rework (font-scaled sort band + bullet-indent
-  // gap): bullets now attach to their list items instead of forming an
-  // orphan stacked bullet-only run.
+  // FIXED by the LineGrouper rework: bullets now attach to their list items
+  // instead of forming an orphan stacked bullet-only run.
   test("bullets attach to their list items (not an orphan bullet-only run)", async ({
     page,
   }) => {

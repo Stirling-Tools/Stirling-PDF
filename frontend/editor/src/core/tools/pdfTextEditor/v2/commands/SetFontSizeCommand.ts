@@ -2,21 +2,7 @@ import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { collectMemberPtrs } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
-/**
- * Scale a text run so its effective on-page size matches `nextSize`.
- *
- * PDFium does not expose a public setter for a text object's font size;
- * the recommended path is to scale the object's matrix by the ratio of
- * the new size to the current effective size. The visible bitmap then
- * re-renders at the requested size when `FPDFPage_GenerateContent` runs.
- *
- * For LineGrouper-merged runs and paragraphs (which back the rep with
- * multiple PDFium sub-objects), Transform is applied to EVERY sub-ptr -
- * scaling only `run.pdfiumObjPtr` would leave the other sub-words at
- * their original size.
- *
- * `nextSize` is in points (matches what the user types in the toolbar).
- */
+/** Scale a text run so its effective on-page size matches `nextSize`. */
 export class SetFontSizeCommand implements Command {
   readonly type = "set-font-size";
   private readonly pageIndex: number;
@@ -40,8 +26,7 @@ export class SetFontSizeCommand implements Command {
     }
     const ratio = this.nextSize / Math.max(0.01, run.fontSize);
     // Scale about the run's own baseline anchor, NOT the page origin - scaling
-    // about (0,0) moves the glyphs diagonally (toward/away from the corner) and
-    // the move persists on save. Anchor stays fixed; only the size changes.
+    // about moves the glyphs diagonally and the move persists on save.
     this.scaleAllPtrs(
       doc,
       collectMemberPtrs(run),
@@ -117,16 +102,14 @@ export class SetFontSizeCommand implements Command {
       }
     }
   }
+
+  /** The stepper fires per tick; coalesce so one adjustment is one undo step. */
+  coalesceKey(): string {
+    return `set-font-size:${this.pageIndex}:${this.runId}`;
+  }
 }
 
-/**
- * Mirror the PDFium object scaling in the run's model bookkeeping. The
- * object transform maps every point p -> s*p + (1-s)*anchor, so bounds,
- * per-line baselines, slot anchors and the paragraph line height must map
- * the same way - otherwise the NEXT edit/family change re-emits at the old
- * baseline grid (overlapping or gapped lines) and hit-testing uses a stale
- * box.
- */
+/** Mirror the PDFium object scaling in the run's model bookkeeping. */
 function rescaleRunModel(
   run: import("@app/tools/pdfTextEditor/v2/model/TextRun").TextRun,
   s: number,

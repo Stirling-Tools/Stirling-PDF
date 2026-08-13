@@ -8,21 +8,7 @@ import {
   removeMemberPtrs,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
-/**
- * Remove a run from the page model and from PDFium.
- *
- * For LineGrouper-merged runs and paragraphs (where the rep is backed by
- * many per-word / per-line PDFium text objects), EVERY sub-object is
- * detached - not just `run.pdfiumObjPtr`. The previous version removed
- * only the rep ptr and left ghost text (every non-anchor sub-word) on
- * the page even though the model dropped the run.
- *
- * Revert re-inserts every snapshotted ptr via `FPDFPage_InsertObject`.
- * For sub-objects originally inside a form xobject (containerPtr != 0),
- * PDFium has no insert-into-form API, so revert re-inserts them at the
- * page level - the visual position is unchanged but the structural
- * nesting is gone. Acceptable for a delete-then-undo round-trip.
- */
+/** Remove a run from the page model and from PDFium. */
 interface CapturedPtr {
   ptr: number;
   containerPtr: number;
@@ -84,10 +70,7 @@ export class DeleteObjectCommand implements Command {
     const formMod = m as unknown as {
       FPDFFormObj_InsertObject?: (form: number, obj: number) => boolean;
     };
-    // Re-insert every captured sub-object. Sub-objects that originally
-    // lived inside a form xobject get re-inserted at the page level when
-    // PDFium doesn't expose a form-insert API - structural nesting is
-    // lost but the on-page rendering stays right.
+    // Re-insert every captured sub-object.
     for (const { ptr, containerPtr } of this.cachedPtrs) {
       if (!ptr) continue;
       try {

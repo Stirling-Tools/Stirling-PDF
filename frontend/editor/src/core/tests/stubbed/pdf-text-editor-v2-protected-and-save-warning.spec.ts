@@ -2,19 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
 
-/**
- * Coverage for two save/open safety features:
- *  - Encrypted PDFs prompt for a password and decrypt client-side (PDFium),
- *    re-prompting on a wrong password rather than dead-ending.
- *  - Saving a document that carries digital signatures (or XFA) warns first,
- *    because PDFium's full rewrite would invalidate them.
- *
- * Assertions target the modals' inner controls (buttons / inputs / text),
- * not the Mantine Modal ROOT wrapper - that root persists in the DOM and is a
- * zero-size positioning element, so toBeVisible()/count() on it is unreliable.
- *
- * Backend-free: encode-charcodes is aborted so nothing depends on a server.
- */
+/** Coverage for two save/open safety features. */
 
 const ENCRYPTED = path.join(
   import.meta.dirname,

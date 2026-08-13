@@ -5,11 +5,8 @@ import { ImageObject } from "@app/tools/pdfTextEditor/v2/model/ImageObject";
 import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 
-/**
- * Fake PDFium module backing the page object list with a plain array of
- * pointers (index 0 = painted first = bottom, last = top). Enough surface for
- * ChangeZOrderCommand: count / get / remove / insert-at-index.
- */
+// Fake PDFium module backing the page object list with a plain array of
+// pointers (index 0 = painted first = bottom, last = top).
 function fakeDoc(objs: number[], page: Page): EditorDocument {
   const module = {
     FPDFPage_CountObjects: () => objs.length,
@@ -112,8 +109,7 @@ describe("ChangeZOrderCommand", () => {
 
   it("send-to-back moves a NON-CONTIGUOUS member group whose bottom sits at index 0", () => {
     // Run leaf objects M1=5, M2=9 at page indices [0, 2] with unrelated X=7
-    // between them: [M1, X, M2]. A blanket `bottomIdx===0` no-op guard wrongly
-    // skipped this; the whole group must land at the back -> [M1, M2, X].
+    // between them: [M1, X, M2].
     const page = new Page({ index: 0, pagePtr: 1, width: 100, height: 100 });
     const run = new TextRun({
       id: "run1",

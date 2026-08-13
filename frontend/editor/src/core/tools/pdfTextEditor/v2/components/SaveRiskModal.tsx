@@ -13,11 +13,7 @@ interface SaveRiskModalProps {
   onCancel: () => void;
 }
 
-/**
- * Warns before a save that would damage signatures / XFA. Saving re-writes
- * the whole file, so those can't survive - the user decides whether to
- * download the edited copy anyway.
- */
+/** Warns before a save that would damage signatures / XFA. */
 export function SaveRiskModal({
   risks,
   onConfirm,
@@ -37,7 +33,7 @@ export function SaveRiskModal({
         <Text size="sm">
           {t(
             "pdfTextEditorV2.saveRisk.intro",
-            "Downloading the edited copy rewrites the whole file. That means:",
+            "Downloading the edited copy changes the file. That means:",
           )}
         </Text>
         <List size="sm" spacing="xs">

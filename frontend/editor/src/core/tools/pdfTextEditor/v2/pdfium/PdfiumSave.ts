@@ -1,23 +1,29 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 
-/**
- * Serialise the current edited document back to a `Uint8Array`.
- *
- * Calls `FPDFPage_GenerateContent` on every loaded page first as a
- * belt-and-braces guard against forgotten commits, then uses the EmbedPDF
- * file-writer shim (already wrapped by `pdfiumService.saveRawDocument` but
- * inlined here to avoid extra deps).
- */
+/** `FPDF_SaveAsCopy` flags. */
+const FPDF_INCREMENTAL = 1;
+
+interface SaveFlagsModule {
+  FPDF_SaveAsCopy?: (doc: number, writer: number, flags: number) => boolean;
+}
+
+export interface SerializeOptions {
+  // Append a revision instead of rewriting: the only way a signature stays
+  // verifiable for the revision it signed.
+  incremental?: boolean;
+}
+
+/** Serialise the current edited document back to a `Uint8Array`. */
 export class PdfiumSave {
-  static serialize(doc: EditorDocument): Uint8Array {
+  static serialize(
+    doc: EditorDocument,
+    options: SerializeOptions = {},
+  ): Uint8Array {
     const m = doc.module;
     const failedPages: number[] = [];
     for (const page of doc.loadedPages()) {
       try {
-        // Always force a flush before save - the deferred flag may be
-        // false because a render already flushed, but mark+flush is
-        // idempotent and the safe default for any page that's still
-        // marked dirty.
+        // Always force a flush before save.
         if (page.dirty) page.markNeedsGenerate();
         page.flushGenerate(m);
         page.clearDirty();
@@ -36,7 +42,14 @@ export class PdfiumSave {
 
     const writerPtr = m.PDFiumExt_OpenFileWriter();
     try {
-      m.PDFiumExt_SaveAsCopy(doc.docPtr, writerPtr);
+      // The writer the shim hands back is the FPDF_FILEWRITE the flagged
+      // entry point expects, so incremental mode needs no extra plumbing.
+      const withFlags = (m as unknown as SaveFlagsModule).FPDF_SaveAsCopy;
+      if (options.incremental && typeof withFlags === "function") {
+        withFlags(doc.docPtr, writerPtr, FPDF_INCREMENTAL);
+      } else {
+        m.PDFiumExt_SaveAsCopy(doc.docPtr, writerPtr);
+      }
       const size = m.PDFiumExt_GetFileWriterSize(writerPtr);
       const outBuf = m.pdfium.wasmExports.malloc(size);
       try {

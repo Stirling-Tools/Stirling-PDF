@@ -10,29 +10,15 @@ import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 
 const EAGER_PAGE_LIMIT = 5;
 
-/**
- * Yield to the event loop so the React layer can paint progress.
- * Use setTimeout(0) directly - requestAnimationFrame can be throttled
- * to ~1Hz (or paused) in background tabs or embedded iframes (e.g.
- * the Claude preview tool), which would stall the loader.
- */
+/** Yield to the event loop so the React layer can paint progress. */
 const yieldToBrowser = () =>
   new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-/**
- * Open a PDF in PDFium and lazily populate pages on first visibility.
- *
- * Reports detailed progress to the store so the React layer can paint a
- * "Loading page 3/60" overlay rather than freezing during the parse.
- * The eager pages (`EAGER_PAGE_LIMIT`) are read with a yield between
- * each page so the browser repaints the progress bar.
- */
+/** Open a PDF in PDFium and lazily populate pages on first visibility. */
 export function useDocumentLoader(store: EditorStore) {
   return useCallback(
     async (file: File, password?: string): Promise<void> => {
-      // Each load claims a token. A newer load() bumps it, so this run can
-      // detect after every await that it lost the race and bail - never
-      // disposing or publishing over the document the newer load installed.
+      // Each load claims a token.
       const token = store.beginLoad();
       store.setLoading(true);
       store.setProgress({
@@ -73,9 +59,8 @@ export function useDocumentLoader(store: EditorStore) {
             total,
           });
           await yieldToBrowser();
-          // The check + synchronous read below run in one tick (no await
-          // between), so a superseding load can only interpose here, before
-          // we touch the possibly-disposed doc.
+          // The check + synchronous read below run in one tick, so a
+          // superseding load can only interpose here.
           if (!store.isCurrentLoad(token)) return;
           const page = doc.page(i);
           PdfiumTextReader.populate(doc, page, store.groupingMode);
@@ -112,9 +97,7 @@ export function useDocumentLoader(store: EditorStore) {
         });
       } catch (err) {
         if (store.isCurrentLoad(token)) {
-          // A password-protected PDF isn't a hard error - prompt for the
-          // password and retry rather than dead-ending. `password !== undefined`
-          // means this WAS a retry, so flag it as a wrong-password reprompt.
+          // A password-protected PDF isn't a hard error.
           if (
             err instanceof PdfiumOpenError &&
             err.code === FPDF_ERR_PASSWORD
@@ -136,11 +119,7 @@ export function useDocumentLoader(store: EditorStore) {
   );
 }
 
-/**
- * Read EVERY not-yet-loaded page in one pass and publish once. Used by the
- * find bar so a search covers the whole document, not just the eager/
- * scrolled-into-view pages (otherwise find silently misses later pages).
- */
+/** Read EVERY not-yet-loaded page in one pass and publish once. */
 export function ensureAllPagesRead(store: EditorStore): void {
   const doc = store.document;
   if (!doc) return;
@@ -169,11 +148,7 @@ export function ensureAllPagesRead(store: EditorStore): void {
   store.publishPages(next);
 }
 
-/**
- * Ensure a page's runs/images are loaded. Cheap no-op if already loaded.
- * Pushes the updated snapshot through the store so the React layer
- * re-renders that page with its overlays populated.
- */
+/** Ensure a page's runs/images are loaded. */
 export function ensurePageRead(store: EditorStore, pageIndex: number): void {
   const doc = store.document;
   if (!doc) return;

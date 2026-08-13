@@ -3,15 +3,7 @@ import type { Page } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
-/**
- * UI-layout coverage for the menu-grouped editor chrome:
- *  - the toolbar holds the per-selection controls, with z-order / align /
- *    distribute collapsed under an "Arrange" menu and rotate/flip under an
- *    "Image" menu (icon-only lock + delete);
- *  - the sidebar holds the general editor tools (Insert, Paragraph, Editor
- *    settings) - NOT in the toolbar;
- *  - the slim app top bar holds only chrome (zoom / save / help).
- */
+/** UI-layout coverage for the menu-grouped editor chrome. */
 const SAMPLE = path.join(
   import.meta.dirname,
   "../../../../public/samples/Sample.pdf",
@@ -92,8 +84,7 @@ test.describe("v2 editor - menu-grouped layout", () => {
     const id = await runId(page, 0, "Downloads");
     await selectOne(page, id);
     // Enabled because something is selected, but the transforms are disabled
-    // and an in-dropdown label explains why (reachable, unlike a tooltip on a
-    // disabled button).
+    // and an in-dropdown label explains why.
     await expect(page.getByTestId("v2-imgop-menu")).toBeEnabled();
     await page.getByTestId("v2-imgop-menu").click();
     await expect(page.getByText("Select an image first")).toBeVisible();

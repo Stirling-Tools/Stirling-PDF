@@ -2,33 +2,8 @@ import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { Affine } from "@app/tools/pdfTextEditor/v2/types";
 
-/**
- * Apply an in-place transform to an image: rotate by 90° (CW or CCW),
- * flip horizontally, or flip vertically. All transforms pivot about
- * the image's CURRENT centre so the user's mental model is "the image
- * stays where I see it, just turned/mirrored".
- *
- * Implementation uses `FPDFImageObj_SetMatrix` to write the composed
- * matrix absolutely (not `FPDFPageObj_Transform`'s post-multiply)
- * because the model's `img.matrix` snapshot must match what PDFium
- * has after the op - otherwise re-rotation drifts.
- *
- * Revert restores the pre-apply matrix.
- *
- * Math for the matrix composition: each transform pivots about the
- * image centre (cx, cy) computed from the current matrix's e/f and
- * a/d (the image's 1x1 unit square corners are at (e,f), (e+a, f+b),
- * (e+c, f+d), (e+a+c, f+b+d) - the centre is (e + (a+c)/2,
- * f + (b+d)/2)). The new matrix is:
- *   - rotate90-cw:  [-c -d  a  b  cx+(a+c)/2  cy-(a+c)/2*(?)] - see code
- *   - rotate90-ccw: [ c  d -a -b  ...]
- *   - flip-h:       [-a  b -c  d  cx-(- (a+c)/2)  ...] - mirror image x
- *   - flip-v:       [ a -b  c -d  ...]
- *
- * Rather than memorise these by hand, we apply `T(cx, cy) * Op *
- * T(-cx, -cy)` directly in code (Op is the rotation/flip about the
- * origin) and read the resulting matrix.
- */
+// Apply an in-place transform to an image: rotate by 90° (CW or CCW), flip
+// horizontally, or flip vertically.
 export type ImageTransformMode =
   | "rotate-cw"
   | "rotate-ccw"
@@ -93,24 +68,13 @@ export class TransformImageObjectCommand implements Command {
   }
 }
 
-/**
- * Compose `T(cx, cy) * Op * T(-cx, -cy) * M` where M is the input
- * matrix, Op is the rotation/flip, and (cx, cy) is M's image-centre
- * in page space. Returns the resulting 2D affine.
- *
- * PDF matrices are [a b c d e f] meaning point (x, y) maps to
- *   (a*x + c*y + e, b*x + d*y + f)
- * The image's 1x1 unit square corners therefore project to
- *   (e, f), (e+a, f+b), (e+c, f+d), (e+a+c, f+b+d).
- * Centre = (e + (a+c)/2, f + (b+d)/2).
- */
+// Compose `T(cx, cy) * Op * T(-cx, -cy) * M` where M is the input matrix, Op is
+// the rotation/flip, and (cx, cy) is M's image-centre in page space.
 function composeAboutCentre(m: Affine, mode: ImageTransformMode): Affine {
   const cx = m.e + (m.a + m.c) / 2;
   const cy = m.f + (m.b + m.d) / 2;
-  // Op transforms image-space (post-rotation/flip is applied to
-  // page-space output). Concretely we compute the operator's 2x2 plus
-  // translation, then multiply with M, then offset by (cx, cy) -
-  // (centred-op output).
+  // Op transforms image-space (post-rotation/flip is applied to page-space
+  // output).
   let oa: number, ob: number, oc: number, od: number;
   switch (mode) {
     case "rotate-ccw":
@@ -138,14 +102,8 @@ function composeAboutCentre(m: Affine, mode: ImageTransformMode): Affine {
       od = -1;
       break;
   }
-  // M' = T(cx, cy) * O * T(-cx, -cy) * M
-  // = ((O - I) acts about centre)
-  // Concretely: new_a = oa*m.a + oc*m.b
-  //             new_b = ob*m.a + od*m.b
-  //             new_c = oa*m.c + oc*m.d
-  //             new_d = ob*m.c + od*m.d
-  //             new_e = oa*(m.e - cx) + oc*(m.f - cy) + cx
-  //             new_f = ob*(m.e - cx) + od*(m.f - cy) + cy
+  // M' = T * O * T * M = Concretely: new_a = oa*m.a + oc*m.b new_b = ob*m.a +
+  // od*m.b new_c = oa*m.c + oc*m.d new_d = ob*m.c + od*m.d.
   return {
     a: oa * m.a + oc * m.b,
     b: ob * m.a + od * m.b,
@@ -156,11 +114,7 @@ function composeAboutCentre(m: Affine, mode: ImageTransformMode): Affine {
   };
 }
 
-/**
- * Axis-aligned bounding box of the image's projected 1x1 square
- * under matrix m. Used to refresh `img.bounds` after a non-bounds-
- * preserving transform (rotate, flip can both swap width/height).
- */
+// Axis-aligned bounding box of the image's projected 1x1 square under matrix m.
 function matrixBoundsAxisAligned(m: Affine): {
   x: number;
   y: number;

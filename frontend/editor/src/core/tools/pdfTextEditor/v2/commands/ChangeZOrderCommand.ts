@@ -19,22 +19,7 @@ interface InsertAtModule {
 /** One warning per session, not one per apply() - a drag can fire dozens. */
 let warnedMissingInsertAt = false;
 
-/**
- * Re-order a text run or image within its page's content-stream stack.
- * PDF's painter model means later objects render on top of earlier
- * ones, so "bring to front" = move to the LAST index in the page's
- * object list. The op uses `FPDFPage_RemoveObject` + the newer
- * `FPDFPage_InsertObjectAtIndex` binding (when available). If the
- * binding isn't exposed by this PDFium build the command becomes a
- * no-op (a diagnostic warning is logged once per session).
- *
- * Merged/paragraph runs are backed by MULTIPLE page objects; the whole
- * member group moves as a contiguous block (relative paint order kept).
- * Moving only the anchor lifted one word and left the rest behind.
- *
- * Revert restores every member to its original index by the inverse
- * remove+insert. The original indices are captured on apply.
- */
+/** Re-order a text run or image within its page's content-stream stack. */
 export class ChangeZOrderCommand implements Command {
   readonly type = "change-z-order";
   private readonly pageIndex: number;
@@ -85,10 +70,7 @@ export class ChangeZOrderCommand implements Command {
     const bottomIdx = located[0].idx;
     const topIdx = located[k - 1].idx;
     // The group is only "already in place" when it is contiguous AND at the
-    // target edge - a member group is not always content-stream-contiguous
-    // (spatial grouping can interleave unrelated objects), so a per-mode
-    // endpoint check is needed. A blanket `insertAt === bottomIdx` wrongly
-    // treated any group whose bottom member sat at index 0 as already-at-back.
+    // target edge.
     const contiguous = topIdx - bottomIdx === k - 1;
     let insertAt: number;
     switch (this.mode) {
@@ -118,10 +100,7 @@ export class ChangeZOrderCommand implements Command {
     located.forEach(({ ptr }, j) => {
       ext.FPDFPage_InsertObjectAtIndex!(page.pagePtr, ptr, insertAt + j);
     });
-    // markDirty() bumps the revision so PageView re-renders the bitmap, and
-    // markNeedsGenerate() regenerates the content stream so the new paint order
-    // shows on screen AND survives save. A bare `dirty = true` did neither, so a
-    // reorder silently had no visible effect (and was lost on save).
+    // markDirty bumps the revision so PageView re-renders the bitmap.
     page.markDirty();
     page.markNeedsGenerate();
   }

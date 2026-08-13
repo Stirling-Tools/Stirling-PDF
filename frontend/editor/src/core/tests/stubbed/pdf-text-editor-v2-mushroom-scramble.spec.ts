@@ -3,24 +3,7 @@ import type { Route } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
-/**
- * Regression for the mushroom-life.pdf "paragraph scramble" report.
- *
- * Body lines in this PDF are each ONE PDFium text object in a NON-SUBSET
- * LMRoman font. A mid-line edit forces the whole line to be re-emitted
- * (planParagraphEdit nulls the slot plan to avoid SetText-ing whitespace).
- * With a cold/offline backend the emit path used to fall back to the
- * client-side content-stream resolver, which GUESSES each glyph's charcode
- * by its sequential order on the page - correct for many subset fonts but
- * WRONG for this re-encoded font. The wrong-but-valid glyphs (e.g.
- * "occupying" -> "Λffff´`ˇΘΞΩ", "a" -> "fi") passed the advance self-check
- * and scrambled every unchanged word on the edited line.
- *
- * The fix gates the content-stream guess to SUBSET fonts + SINGLE code
- * points. A non-subset font now re-emits via FPDFText_SetText (whose reverse
- * Unicode->charcode lookup is correct for non-subset fonts), so the line's
- * unchanged words keep their real glyphs - readable, font preserved.
- */
+/** Regression for the mushroom-life.pdf "paragraph scramble" report. */
 
 const MUSHROOM = path.join(
   import.meta.dirname,
@@ -78,12 +61,27 @@ test("mid-line paragraph edit does not scramble unchanged words (cold backend, n
     );
     if (!el) throw new Error("overlay missing");
     el.focus();
-    const tn = el.firstChild ?? el;
-    const len = (tn.textContent ?? "").length;
+    // The overlay may render words in boxes, so the editable's first
+    // child is not necessarily the text node holding character N.
+    const at = (offset: number): { node: Node; offset: number } => {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let seen = 0;
+      let node = walker.nextNode();
+      while (node) {
+        const len = (node.textContent ?? "").length;
+        if (seen + len >= offset) return { node, offset: offset - seen };
+        seen += len;
+        node = walker.nextNode();
+      }
+      return { node: el, offset: 0 };
+    };
+    const len = (el.textContent ?? "").length;
     const sel = window.getSelection()!;
     const range = document.createRange();
-    range.setStart(tn, Math.min(5, len));
-    range.setEnd(tn, Math.min(20, len)); // "ooms represent " - has spaces
+    const start = at(Math.min(5, len));
+    const end = at(Math.min(20, len)); // "ooms represent " - has spaces
+    range.setStart(start.node, start.offset);
+    range.setEnd(end.node, end.offset);
     sel.removeAllRanges();
     sel.addRange(range);
     document.execCommand("insertText", false, "X");
@@ -99,8 +97,7 @@ test("mid-line paragraph edit does not scramble unchanged words (cold backend, n
   await page.waitForTimeout(1200);
 
   // The model text reflects the RENDERED glyphs after the blur reflow re-reads
-  // the page - so a scramble would surface here as garbage glyphs in place of
-  // the unchanged words. After the fix the words past the edit are intact.
+  // the page.
   const after = await probe();
   const firstLine = after.firstLine;
 

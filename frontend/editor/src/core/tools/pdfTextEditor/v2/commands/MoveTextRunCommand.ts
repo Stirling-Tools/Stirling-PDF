@@ -2,22 +2,7 @@ import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { collectMemberPtrs } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
-/**
- * Translate a text run by (dx, dy) in PDF page-space points.
- *
- * Uses post-multiply `FPDFPageObj_Transform(obj, 1, 0, 0, 1, dx, dy)`
- * which preserves any scale/rotation already baked into the run's
- * matrix and just moves it.
- *
- * Text runs are often composites - LineGrouper merges many per-glyph PDFium
- * text objects into one logical run, and paragraph recognition merges per-line
- * objects. Translating only `run.pdfiumObjPtr` would move just the anchor leaf
- * and leave the rest in place (partial drag), so we translate EVERY leaf the
- * run owns (`collectMemberPtrs`: paragraphLeafPtrs / mergedFromPtrs / the
- * single ptr) and remember exactly which ptrs we moved so revert is precise.
- * The per-line baselines and sub-run bounds are shifted too so the
- * partial-edit path stays round-trippable after a move.
- */
+/** Translate a text run by (dx, dy) in PDF page-space points. */
 export class MoveTextRunCommand implements Command {
   readonly type = "move-text-run";
   private readonly pageIndex: number;

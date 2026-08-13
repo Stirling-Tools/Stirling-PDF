@@ -312,11 +312,8 @@ function pdfiumOpenErrorMessage(err: number): string {
 /** FPDF_GetLastError() code for a missing/incorrect document password. */
 export const FPDF_ERR_PASSWORD = 4;
 
-/**
- * Open failure carrying the raw FPDF_GetLastError() code so callers can tell a
- * password prompt (code 4) apart from a corrupt file. Still an `Error`, so
- * existing `instanceof Error` handlers keep working.
- */
+// Open failure carrying the raw FPDF_GetLastError() code so callers can tell a
+// password prompt (code 4) apart from a corrupt file.
 export class PdfiumOpenError extends Error {
   readonly code: number;
   constructor(code: number) {

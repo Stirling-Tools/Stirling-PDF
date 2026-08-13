@@ -6,15 +6,7 @@ interface HelpOverlayProps {
   onClose: () => void;
 }
 
-/**
- * Keyboard + click reference for the v2 text/image editor. Update this
- * list when shortcuts change or features are added/removed - it's the
- * single user-visible reference for editor capabilities.
- *
- * Document-level actions (page rotation, print, page reorder) live in
- * Stirling's dedicated PDF tools and have been intentionally removed
- * from this editor's surface.
- */
+/** Keyboard + click reference for the v2 text/image editor. */
 export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
   const { t } = useTranslation();
   const SHORTCUTS: Array<{

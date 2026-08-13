@@ -10,11 +10,7 @@ export class SetColourCommand implements Command {
   private readonly runId: string;
   private readonly nextFill: RGBA;
   private prevFill: RGBA | null;
-  /**
-   * Each member object's OWN pre-apply fill. LineGrouper merges runs with
-   * different fills into one rep, so restoring the single rep fill on
-   * revert permanently flattened multi-colour lines to one colour.
-   */
+  /** Each member object's OWN pre-apply fill. */
   private prevMemberFills: Array<{ ptr: number; fill: RGBA }> | null;
 
   constructor(opts: { pageIndex: number; runId: string; nextFill: RGBA }) {
@@ -79,13 +75,7 @@ export class SetColourCommand implements Command {
     else PdfiumTextWriter.commitRunFill(doc, page, run);
   }
 
-  /**
-   * One colour-picker DRAG fires dozens of commands; coalesce them into a
-   * single undo step so the drag doesn't flood the 200-entry history and
-   * evict the user's earlier edits. The key is deliberately NOT per-run:
-   * a multi-select recolour dispatches one command per run in the same
-   * burst and must still collapse to one undo step.
-   */
+  /** One colour-picker DRAG fires dozens of commands. */
   coalesceKey(): string {
     return "set-colour";
   }

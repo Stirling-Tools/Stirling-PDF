@@ -11,6 +11,7 @@ import {
 import { Button } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
+import { SpellcheckControl } from "@app/tools/pdfTextEditor/v2/components/SpellcheckControl";
 import type { TFunction } from "i18next";
 import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
 import ImageIcon from "@mui/icons-material/ImageOutlined";
@@ -35,16 +36,7 @@ import {
   type PageFont,
 } from "@app/tools/pdfTextEditor/v2/util/pageFonts";
 
-/**
- * Sidebar for the v2 text/image editor.
- *
- * Scope: the general (non-selection) editor tools - insert (add text /
- * image), paragraph grouping (group / ungroup), and the editor settings
- * (text grouping, text-box width) - plus a compact selection status and
- * the Ctrl+drag move tip. The per-selection formatting controls live in
- * the toolbar above; document-level page operations live in Stirling's
- * dedicated page tools.
- */
+/** Sidebar for the v2 text/image editor. */
 interface SidebarProps {
   state: EditorViewState;
   selection: SelectionState;
@@ -57,6 +49,7 @@ interface SidebarProps {
   onUngroup: () => void;
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
+  onSetShowRulers: (show: boolean) => void;
 }
 
 export function EditorSidebar({
@@ -71,6 +64,7 @@ export function EditorSidebar({
   onUngroup,
   onSetGroupingMode,
   onSetWidthMode,
+  onSetShowRulers,
 }: SidebarProps) {
   return (
     <Box p="md" style={{ flex: 1, overflow: "auto" }}>
@@ -87,6 +81,7 @@ export function EditorSidebar({
           onUngroup={onUngroup}
           onSetGroupingMode={onSetGroupingMode}
           onSetWidthMode={onSetWidthMode}
+          onSetShowRulers={onSetShowRulers}
         />
       ) : (
         <EmptySidebar progress={state.progress} loading={state.loading} />
@@ -124,17 +119,12 @@ const FONT_STATUS_META: Record<
   },
 };
 
-/**
- * Lists the fonts found across the loaded pages with an at-a-glance status
- * (standard / embedded / subset) so the user knows up front how each font
- * behaves when editing - subset (and, for rare glyphs, embedded) fonts are the
- * ones that can drop a brand-new character to a standard fallback font.
- */
+// Lists the fonts found across the loaded pages with an at-a-glance status so
+// the user knows up front how each font behaves when editing.
 function FontsSection({ pages }: { pages: PageSnapshot[] }) {
   const { t } = useTranslation();
   // Pure: the font list AND coverage both come from snapshot data + the cmap
-  // cache the loader primed during its serialized read. No WASM here, so it's
-  // safe to run on every render.
+  // cache the loader primed during its serialized read.
   const fonts = analyzePageFonts(pages);
   if (fonts.length === 0) return null;
   return (
@@ -157,12 +147,8 @@ function formatMissing(missing: string[]): string {
   return missing.length > 12 ? `${shown} +${missing.length - 12}` : shown;
 }
 
-/**
- * One font row: name + type badge, plus - when the font's glyphs were read -
- * a concrete a-zA-Z0-9 coverage line ("all letters & numbers" or the specific
- * missing ones). Fonts whose coverage is unknown (Type3 etc.) show just the
- * type badge.
- */
+// One font row: name + type badge, plus - when the font's glyphs were read - a
+// concrete a-zA-Z0-9 coverage line.
 function FontRow({ font }: { font: PageFont }) {
   const { t } = useTranslation();
   const meta = FONT_STATUS_META[font.status];
@@ -230,15 +216,7 @@ function FontRow({ font }: { font: PageFont }) {
   );
 }
 
-/**
- * Top-level editor-compatibility summary for the Fonts section. Every font
- * edits its EXISTING text perfectly; the nuance is what happens to a BRAND-NEW
- * character. Coverage-driven, preferring the CONCRETE glyph probe over the
- * font-type heuristic:
- *  - any font with confirmed-missing a-zA-Z0-9 -> yellow (how many).
- *  - every font confirmed to have the full alphabet+digits -> green.
- *  - otherwise (some coverage unknown, e.g. Type3) -> blue info.
- */
+/** Top-level editor-compatibility summary for the Fonts section. */
 function FontCompatibilitySummary({ fonts }: { fonts: PageFont[] }) {
   const { t } = useTranslation();
   const withGaps = fonts.filter(
@@ -311,11 +289,8 @@ function FontCompatibilitySummary({ fonts }: { fonts: PageFont[] }) {
   );
 }
 
-/**
- * Info (i) popover that explains, in one place, how the editor treats fonts:
- * existing text vs. brand-new characters, and what each status badge means.
- * Surfaced next to the Fonts header so the badges/summary stay terse.
- */
+// Info (i) popover that explains, in one place, how the editor treats fonts:
+// existing text vs. brand-new characters, and what each status badge means.
 function FontsHelp() {
   const { t } = useTranslation();
   return (
@@ -467,6 +442,7 @@ function LoadedSidebar({
   onUngroup,
   onSetGroupingMode,
   onSetWidthMode,
+  onSetShowRulers,
 }: Omit<SidebarProps, never>) {
   const { t } = useTranslation();
   const selectionLabel = formatSelection(selection, t);
@@ -492,6 +468,16 @@ function LoadedSidebar({
           onChange={onSetGroupingMode}
         />
         <WidthModeControl mode={state.widthMode} onChange={onSetWidthMode} />
+        <Button
+          type="button"
+          size="sm"
+          variant={state.showRulers ? "primary" : "secondary"}
+          onClick={() => onSetShowRulers(!state.showRulers)}
+          data-testid="v2-toggle-rulers"
+        >
+          {t("pdfTextEditorV2.sidebar.rulers", "Rulers and guides")}
+        </Button>
+        <SpellcheckControl />
       </Stack>
       <FontsSection pages={state.pages} />
       <MoveTip />
@@ -623,10 +609,8 @@ function ParagraphSection({
   );
 }
 
-/**
- * Reminder that text boxes are repositioned with Ctrl + drag (the same
- * gesture the overlay listens for).
- */
+// Reminder that text boxes are repositioned with Ctrl + drag (the same gesture
+// the overlay listens for).
 function MoveTip() {
   const { t } = useTranslation();
   return (
@@ -651,11 +635,8 @@ function MoveTip() {
   );
 }
 
-/**
- * Toggle between Auto (detect equal-spaced lines as paragraphs) and
- * Line (every source line is its own run). Switching re-reads the
- * document under the new grouping and clears the undo history.
- */
+// Toggle between Auto (detect equal-spaced lines as paragraphs) and Line (every
+// source line is its own run).
 function GroupingModeControl({
   mode,
   onChange,
@@ -702,11 +683,8 @@ function GroupingModeControl({
   );
 }
 
-/**
- * Toggle how a text box resizes as you type past its current width.
- *  - Grow: the box widens to the right and never wraps.
- *  - Wrap: the box keeps its width and overflow wraps onto new lines.
- */
+// Toggle how a text box resizes as you type past its current width. - Grow: the
+// box widens to the right and never wraps.
 function WidthModeControl({
   mode,
   onChange,

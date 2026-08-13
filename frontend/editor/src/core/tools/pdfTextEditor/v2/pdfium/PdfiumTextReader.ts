@@ -14,27 +14,12 @@ import type {
 } from "@app/tools/pdfTextEditor/v2/types";
 import { readUtf16 } from "@app/services/pdfiumService";
 
-/**
- * PDFium page-object type constants - mirrors `public/fpdf_edit.h`.
- *   FPDF_PAGEOBJ_UNKNOWN = 0
- *   FPDF_PAGEOBJ_TEXT    = 1
- *   FPDF_PAGEOBJ_PATH    = 2
- *   FPDF_PAGEOBJ_IMAGE   = 3
- *   FPDF_PAGEOBJ_SHADING = 4
- *   FPDF_PAGEOBJ_FORM    = 5
- */
+/** PDFium page-object type constants - mirrors `public/fpdf_edit.h`. */
 const FPDF_PAGEOBJ_TEXT = 1;
 const FPDF_PAGEOBJ_IMAGE = 3;
 const FPDF_PAGEOBJ_FORM = 5;
 
-/**
- * Reads the editable objects out of a PDFium page.
- *
- * The public entry point - `populate(doc, page)` - walks the page's object
- * list, extracts every text and image object's content, position, font,
- * and colour, and writes the resulting `TextRun` / `ImageObject` arrays
- * into the `Page`.
- */
+/** Reads the editable objects out of a PDFium page. */
 export class PdfiumTextReader {
   static populate(
     doc: EditorDocument,
@@ -44,8 +29,6 @@ export class PdfiumTextReader {
     if (page.loaded) return;
     const m = doc.module;
     // FPDFText_LoadPage / FPDFTextObj_GetText read the content stream.
-    // Flush any deferred mutations so the populated runs reflect the
-    // current edit state.
     page.flushGenerate(m);
     const pagePtr = page.pagePtr;
     const count = m.FPDFPage_CountObjects(pagePtr);
@@ -53,16 +36,12 @@ export class PdfiumTextReader {
     const runs: TextRun[] = [];
     const images: ImageObject[] = [];
 
-    // ONE text page for the whole walk: FPDFText_LoadPage runs full page
-    // text extraction, so opening it per text object made population
-    // O(objects x page chars) - seconds of frozen UI on dense pages.
+    // ONE text page for the whole walk: FPDFText_LoadPage runs full page text
+    // extraction, so opening it per text object made population O.
     const textPagePtr = m.FPDFText_LoadPage(pagePtr);
     try {
       // Recurse into form xobjects: InDesign/Quark wrap content in
-      // FPDF_PAGEOBJ_FORM containers and the real text/images only show
-      // up when we descend with FPDFFormObj_GetObject. The identity
-      // transform accumulates each form's matrix so nested objects'
-      // form-local bounds are lifted into page space.
+      // FPDF_PAGEOBJ_FORM containers and the real text/images only show up.
       walkObjects(
         m,
         pagePtr,
@@ -79,15 +58,13 @@ export class PdfiumTextReader {
 
       page.setRuns(runs);
       page.setImages(images);
-      // LineGrouper always runs (merges per-glyph/per-word source objects
-      // into one line). ParagraphGrouper only runs in "auto" mode, where
-      // vertically-adjacent equal-spaced lines fold into one paragraph.
+      // LineGrouper always runs (merges per-glyph/per-word source objects into
+      // one line).
       LineGrouper.apply(page);
       if (mode === "auto") ParagraphGrouper.apply(page);
-      // Grouping is done, the text page is still open: infer each run's
-      // effective letter-spacing from its rendered char geometry so edits
-      // can reproduce the tracking (PDFium exposes no Tc getter).
+      // Grouping is done.
       inferRunCharSpacing(m, page, textPagePtr);
+      captureCharPositions(m, page, textPagePtr);
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
     }
@@ -95,29 +72,9 @@ export class PdfiumTextReader {
   }
 }
 
-/**
- * Infer each run's effective character spacing (the rendered footprint of the
- * PDF's Tc operator) from on-page char geometry: for consecutive text-page
- * chars inside one run, `extra = nextOrigin.x - origin.x - glyphAdvance`. The
- * loose char box excludes Tc while origin deltas include it, so the median
- * `extra` over the run's letter pairs recovers Tc in page points regardless
- * of how the producer split size between Tf and the text matrix.
- *
- * Median (not mean) so kerning-pair adjustments and the odd outlier don't
- * skew the estimate. Whitespace-adjacent pairs are excluded (word spacing Tw
- * would contaminate them), as are pairs spanning different runs. Rotated runs
- * are skipped - the axis-aligned box math doesn't apply. Runs with fewer than
- * two usable pairs, or a sub-noise median, keep spacing 0 (status quo).
- */
-function inferRunCharSpacing(
-  m: WrappedPdfiumModule,
-  page: Page,
-  textPagePtr: number,
-): void {
-  const runs = page.runs;
-  if (runs.length === 0) return;
-  // Map every backing object ptr to its (post-grouping) rep run.
-  const ptrToRun = new Map<number, TextRun>();
+/** Every backing PDFium object pointer mapped to its post-grouping run. */
+function indexRunsByObjectPtr(runs: TextRun[]): Map<number, TextRun> {
+  const map = new Map<number, TextRun>();
   for (const run of runs) {
     const members =
       run.paragraphLeafPtrs.length > 0
@@ -125,8 +82,21 @@ function inferRunCharSpacing(
         : run.mergedFromPtrs.length > 0
           ? run.mergedFromPtrs
           : [run.pdfiumObjPtr];
-    for (const ptr of members) if (ptr) ptrToRun.set(ptr, run);
+    for (const ptr of members) if (ptr) map.set(ptr, run);
   }
+  return map;
+}
+
+// Infer each run's effective character spacing from on-page char geometry: for
+// consecutive text-page chars inside one run, `extra = nextOrigin.x - origin.x.
+function inferRunCharSpacing(
+  m: WrappedPdfiumModule,
+  page: Page,
+  textPagePtr: number,
+): void {
+  const runs = page.runs;
+  if (runs.length === 0) return;
+  const ptrToRun = indexRunsByObjectPtr(runs);
 
   const charCount = m.FPDFText_CountChars(textPagePtr);
   if (charCount <= 1) return;
@@ -156,13 +126,7 @@ function inferRunCharSpacing(
       const run = objPtr ? ptrToRun.get(objPtr) : undefined;
       if (isWs) {
         // A REAL space glyph (belongs to a text object) ends the pair chain -
-        // pairs across it would fold word spacing (Tw) into the estimate. A
-        // SYNTHESIZED space (no backing object in any run - PDFium inserts
-        // these between per-glyph objects whose letter-spaced gaps look
-        // space-like) is transparent: the letters on either side still form
-        // a pair, with the word-gap guard below rejecting genuine gaps. This
-        // keeps inference working on documents whose spaced runs are built
-        // from one object per char - including our own re-emits.
+        // pairs across it would fold word spacing (Tw) into the estimate.
         if (run) prev = null;
         continue;
       }
@@ -181,8 +145,7 @@ function inferRunCharSpacing(
         const delta = cur.left - prev.left;
         const extra = delta - advance;
         // Same visual line, forward advance only, and NOT a word gap: real
-        // letter-spacing stays well under ~0.6em, while an inter-word gap
-        // (space advance + spacing) lands above it.
+        // letter-spacing stays well under ~0.6em.
         if (
           delta > 0 &&
           advance > 0 &&
@@ -222,13 +185,119 @@ function inferRunCharSpacing(
   }
 }
 
-/**
- * Walk a list of PDFium page objects, collecting text and image objects.
- * Recurses into form xobjects (FPDF_PAGEOBJ_FORM) via the experimental
- * `FPDFFormObj_*` APIs. The `path` array uniquely identifies nested
- * objects so we can give every TextRun a stable id even when two
- * different form xobjects emit text at the same page-level index.
- */
+// Record where the engine put every glyph, indexed by code unit of `text`.
+// Both units of a surrogate pair share a value; synthesised spaces stay NaN.
+function captureCharPositions(
+  m: WrappedPdfiumModule,
+  page: Page,
+  textPagePtr: number,
+): void {
+  const probe = m as unknown as {
+    FPDFText_GetCharOrigin?: (
+      tp: number,
+      index: number,
+      x: number,
+      y: number,
+    ) => boolean;
+    FPDFText_GetLooseCharBox?: (tp: number, i: number, rect: number) => boolean;
+  };
+  if (!probe.FPDFText_GetCharOrigin || !probe.FPDFText_GetLooseCharBox) return;
+
+  const ptrToRun = indexRunsByObjectPtr(page.runs);
+  if (ptrToRun.size === 0) return;
+
+  const charCount = m.FPDFText_CountChars(textPagePtr);
+  if (charCount <= 0) return;
+  const wasm = m.pdfium.wasmExports;
+  const xPtr = wasm.malloc(8);
+  const yPtr = wasm.malloc(8);
+  const rectBuf = wasm.malloc(16);
+  const glyphs = new Map<
+    TextRun,
+    Array<{ cp: number; x: number; end: number }>
+  >();
+  try {
+    for (let i = 0; i < charCount; i += 1) {
+      const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
+      const run = objPtr ? ptrToRun.get(objPtr) : undefined;
+      if (!run) continue;
+      const cp = m.FPDFText_GetUnicode(textPagePtr, i);
+      if (!cp) continue;
+      if (!probe.FPDFText_GetCharOrigin(textPagePtr, i, xPtr, yPtr)) continue;
+      if (!probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf)) continue;
+      const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
+      const rect = new Float32Array(heap.buffer, rectBuf, 4);
+      const x = m.pdfium.getValue(xPtr, "double");
+      // The loose box's right edge is the pen position after the glyph,
+      // which is what makes consecutive word boxes tile without drift.
+      const end = rect[2];
+      if (!Number.isFinite(x) || !Number.isFinite(end) || end < x) continue;
+      let list = glyphs.get(run);
+      if (!list) {
+        list = [];
+        glyphs.set(run, list);
+      }
+      list.push({ cp, x, end });
+    }
+  } finally {
+    wasm.free(xPtr);
+    wasm.free(yPtr);
+    wasm.free(rectBuf);
+  }
+
+  for (const [run, list] of glyphs) {
+    // Upright runs only: an origin's X is the advance direction only when the
+    // baseline is horizontal.
+    const scale = Math.hypot(run.matrix.a, run.matrix.b);
+    if (!scale || Math.abs(run.matrix.b) / scale > 0.02 || run.matrix.a <= 0) {
+      continue;
+    }
+    const aligned = alignToText(run.text, list);
+    if (!aligned) continue;
+    run.charStartsX = aligned.starts;
+    run.charEndsX = aligned.ends;
+    run.charPositionsText = run.text;
+  }
+}
+
+// Line up the engine's glyph list with the run's text - they are not
+// index-for-index, and anything unplaceable is left unknown, not guessed.
+function alignToText(
+  text: string,
+  glyphs: Array<{ cp: number; x: number; end: number }>,
+): { starts: number[]; ends: number[] } | null {
+  const starts = new Array<number>(text.length).fill(Number.NaN);
+  const ends = new Array<number>(text.length).fill(Number.NaN);
+  let g = 0;
+  let placed = 0;
+  for (let i = 0; i < text.length; ) {
+    const cp = text.codePointAt(i) ?? 0;
+    const units = cp > 0xffff ? 2 : 1;
+    if (g < glyphs.length && glyphs[g].cp === cp) {
+      for (let u = 0; u < units; u += 1) {
+        starts[i + u] = glyphs[g].x;
+        ends[i + u] = glyphs[g].end;
+      }
+      g += 1;
+      placed += 1;
+    } else if (g < glyphs.length && cp !== 0x20 && cp !== 0x0a) {
+      // The text has a character the glyph list does not: skip one glyph in
+      // case the engine emitted an extra, else give up on this character.
+      const next = glyphs.findIndex((entry, at) => at > g && entry.cp === cp);
+      if (next > 0 && next - g <= 2) {
+        g = next;
+        continue;
+      }
+    }
+    i += units;
+  }
+  // A capture that placed almost nothing is not worth trusting.
+  return placed >= Math.max(1, Math.floor(text.replace(/\s/g, "").length * 0.6))
+    ? { starts, ends }
+    : null;
+}
+
+/** Walk a list of PDFium page objects, collecting text and image objects. */
 type PdfiumWithForms = WrappedPdfiumModule & {
   FPDFFormObj_CountObjects: (formObj: number) => number;
   FPDFFormObj_GetObject: (formObj: number, index: number) => number;
@@ -314,10 +383,8 @@ function walkObjects(
 /** Identity affine - the page-level transform. */
 const IDENTITY: Affine = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
 
-/**
- * Compose two affines: returns `parent ∘ child` (child applied first,
- * then parent). PDF matrices map (x,y) -> (a·x + c·y + e, b·x + d·y + f).
- */
+// Compose two affines: returns `parent ∘ child` (child applied first, then
+// parent).
 function composeAffine(parent: Affine, child: Affine): Affine {
   return {
     a: parent.a * child.a + parent.c * child.b,
@@ -338,10 +405,8 @@ function applyAffine(
   return { x: t.a * x + t.c * y + t.e, y: t.b * x + t.d * y + t.f };
 }
 
-/**
- * Transform an axis-aligned rect by an affine and return the new AABB
- * (all four corners mapped, then min/max).
- */
+// Transform an axis-aligned rect by an affine and return the new AABB (all four
+// corners mapped, then min/max).
 function transformRect(t: Affine, r: PageRect): PageRect {
   const c0 = applyAffine(t, r.x, r.y);
   const c1 = applyAffine(t, r.x + r.width, r.y);
@@ -366,11 +431,8 @@ function isIdentity(t: Affine): boolean {
   );
 }
 
-/**
- * Re-walk to the form container at the given index path so the recursive
- * call can index its children. PDFium doesn't expose a parent pointer so
- * we replay the path from the root each time.
- */
+// Re-walk to the form container at the given index path so the recursive call
+// can index its children.
 function getFormContainer(
   m: WrappedPdfiumModule,
   pagePtr: number,
@@ -450,6 +512,65 @@ function readFill(m: WrappedPdfiumModule, objPtr: number): RGBA {
   }
 }
 
+interface StrokeReaderModule {
+  FPDFPageObj_GetStrokeColor?: (
+    obj: number,
+    r: number,
+    g: number,
+    b: number,
+    a: number,
+  ) => boolean;
+  FPDFPageObj_GetStrokeWidth?: (obj: number, out: number) => boolean;
+}
+
+/** Render modes that actually put stroke ink on the page. */
+const STROKING_MODES = new Set([1, 2, 5, 6]);
+
+// Outline colour and width, or null when the object does not stroke. PDFium
+// reports a stroke colour for every text object, so the render mode decides.
+function readStroke(
+  m: WrappedPdfiumModule,
+  objPtr: number,
+  renderMode: number,
+): { stroke: RGBA | null; strokeWidth: number } {
+  if (!STROKING_MODES.has(renderMode)) return { stroke: null, strokeWidth: 0 };
+  const mod = m as unknown as StrokeReaderModule;
+  const getColor = mod.FPDFPageObj_GetStrokeColor;
+  const getWidth = mod.FPDFPageObj_GetStrokeWidth;
+  if (!getColor) return { stroke: null, strokeWidth: 0 };
+  const r = m.pdfium.wasmExports.malloc(4);
+  const g = m.pdfium.wasmExports.malloc(4);
+  const b = m.pdfium.wasmExports.malloc(4);
+  const a = m.pdfium.wasmExports.malloc(4);
+  const w = m.pdfium.wasmExports.malloc(4);
+  try {
+    if (!getColor(objPtr, r, g, b, a)) return { stroke: null, strokeWidth: 0 };
+    const alpha = m.pdfium.getValue(a, "i32") & 0xff;
+    let strokeWidth = 0;
+    if (getWidth && getWidth(objPtr, w)) {
+      const raw = m.pdfium.getValue(w, "float");
+      if (Number.isFinite(raw) && raw > 0) strokeWidth = raw;
+    }
+    return {
+      stroke: {
+        r: m.pdfium.getValue(r, "i32") & 0xff,
+        g: m.pdfium.getValue(g, "i32") & 0xff,
+        b: m.pdfium.getValue(b, "i32") & 0xff,
+        a: alpha,
+      },
+      strokeWidth,
+    };
+  } catch {
+    return { stroke: null, strokeWidth: 0 };
+  } finally {
+    m.pdfium.wasmExports.free(r);
+    m.pdfium.wasmExports.free(g);
+    m.pdfium.wasmExports.free(b);
+    m.pdfium.wasmExports.free(a);
+    m.pdfium.wasmExports.free(w);
+  }
+}
+
 function readTextObjString(
   m: WrappedPdfiumModule,
   textPagePtr: number,
@@ -497,10 +618,8 @@ function readFontFamily(
   const tagged = SUBSET_TAG_RE.test(familyRaw);
   const family = tagged ? familyRaw.slice(7) : familyRaw;
   if (tagged) return { family, subset: true };
-  // Some PDFs carry the 6-letter subset tag only on /BaseFont, not the
-  // embedded name table. Consult it as a fallback so those subsets aren't
-  // mislabeled as full fonts (which would wrongly let an edit reuse a font
-  // that lacks most glyphs).
+  // Some PDFs carry the 6-letter subset tag only on /BaseFont, not the embedded
+  // name table.
   const baseRaw = readFontNameVia(m, fontPtr, m.FPDFFont_GetBaseFontName);
   return { family, subset: baseRaw != null && SUBSET_TAG_RE.test(baseRaw) };
 }
@@ -518,8 +637,7 @@ function readTextRun(
     const text = readTextObjString(m, textPagePtr, objPtr);
     if (!text || text.length === 0) return null;
     // Whitespace-only objects (positional space glyphs) would surface as
-    // invisible, selectable, editable ghost runs - skip them. The PDF
-    // objects themselves stay untouched.
+    // invisible, selectable, editable ghost runs - skip them.
     if (text.trim().length === 0) return null;
 
     const localBounds = readBounds(m, objPtr);
@@ -542,11 +660,7 @@ function readTextRun(
     } finally {
       m.pdfium.wasmExports.free(sizePtr);
     }
-    // The on-page visible font size is `rawFontSize * |matrix scale|`. PDFium
-    // encodes the size split between a unit font and a scaling matrix; users
-    // think in points, so we expose the product as the run's fontSize. Use
-    // the PAGE-space (composed) matrix so a form's own scale is included -
-    // otherwise a form-nested label reports its unscaled font size.
+    // The on-page visible font size is `rawFontSize * |matrix scale|`.
     const matrixScale =
       Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b) || 1;
     const fontSize = rawFontSize * matrixScale;
@@ -554,18 +668,13 @@ function readTextRun(
     const fontPtr = m.FPDFTextObj_GetFont(objPtr);
     const { family, subset } = readFontFamily(m, fontPtr);
     // Prime this font's glyph cmap here, in the loader's SERIALIZED text-read
-    // phase (before the page rasterizes). Reading embedded font data while
-    // PDFium renders corrupts the module, so the fonts panel must never do it
-    // at render time - it reads the cache primed here instead. Cached per font,
-    // so repeats across runs are free.
+    // phase (before the page rasterizes).
     if (fontPtr) primeFontGlyphMap(fontPtr, m);
     // Treat the PDFium font handle pointer as a unique id within the doc.
     const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${index}`;
 
-    // Text render mode (PDF Tr): 0 fill (default), 1/2 stroke variants,
-    // 3 invisible (OCR text layers over scans), 4-7 clipping variants.
-    // Captured so re-emits can re-apply it - otherwise editing invisible
-    // OCR text stamps VISIBLE glyphs over the scan.
+    // Text render mode (PDF Tr): 0 fill (default), 1/2 stroke variants, 3
+    // invisible (OCR text layers over scans), 4-7 clipping variants.
     let renderMode = 0;
     const rm = (
       m as unknown as {
@@ -581,6 +690,8 @@ function readTextRun(
       }
     }
 
+    const { stroke, strokeWidth } = readStroke(m, objPtr, renderMode);
+
     return new TextRun({
       id: `p${page.index}-t${index}`,
       pageIndex: page.index,
@@ -593,6 +704,8 @@ function readTextRun(
       fill,
       fontSubset: subset,
       renderMode,
+      stroke: stroke ?? undefined,
+      strokeWidth,
     });
   }
 }

@@ -1,8 +1,4 @@
-/**
- * Shared types for the v2 PDF text editor.
- *
- * Plain data shapes only. Model classes live under `model/`.
- */
+/** Shared types for the v2 PDF text editor. */
 
 import type { DisplayTransformData } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 
@@ -32,21 +28,12 @@ export interface Affine {
 export type FontStyle = "normal" | "italic";
 export type FontWeight = "normal" | "bold";
 
-/**
- * How the reader clusters source text objects into editable runs.
- *  - "auto": run `LineGrouper` then `ParagraphGrouper` - vertically
- *    adjacent equal-spaced lines fold into one multi-line paragraph
- *    overlay (word-processor-like editing).
- *  - "line": run `LineGrouper` only - every source line stays a
- *    separate single-line run (closer to the raw PDF structure).
- */
+// How the reader clusters source text objects into editable runs. - "auto": run
+// `LineGrouper` then `ParagraphGrouper`.
 export type GroupingMode = "auto" | "line";
 
-/**
- * How an editable text box grows when its content exceeds the source
- * width: "grow" widens to the right (no wrap); "wrap" keeps the source
- * width and word-wraps, growing downward.
- */
+// How an editable text box grows when its content exceeds the source width:
+// "grow" widens to the right.
 export type WidthMode = "grow" | "wrap";
 
 export interface FontDescriptor {
@@ -73,17 +60,23 @@ export interface TextRunSnapshot {
   fontSubset: boolean;
   /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
   renderMode?: number;
+  /** Outline colour, when the run's render mode strokes its glyphs. */
+  stroke?: RGBA;
+  /** Outline width in PDF points; 0/absent = hairline or unstroked. */
+  strokeWidth?: number;
+  /** Engine pen origins/ends per code unit; present only while still current. */
+  charStartsX?: number[];
+  charEndsX?: number[];
   /** Inferred letter-spacing (Tc footprint) in PDF points; 0/absent = none. */
   charSpacingPt?: number;
   /** > 0 when this run represents a multi-line paragraph. */
   paragraphLineHeight?: number;
   /** Member-line count when paragraph (== 1 implies a single line). */
   paragraphLineCount?: number;
-  /**
-   * Editor-only metadata: when true the run cannot be selected or
-   * edited via mouse/keyboard. Not serialized to the PDF on save;
-   * lock is a session-time UX flag (re-opens with all runs unlocked).
-   */
+  /** Line-slot count; what line alignment actually requires 2 of. */
+  paragraphSlotCount?: number;
+  // Editor-only metadata: when true the run cannot be selected or edited via
+  // mouse/keyboard.
   locked?: boolean;
 }
 
@@ -106,11 +99,7 @@ export interface PageSnapshot {
   revision: number;
   runs: TextRunSnapshot[];
   images: ImageObjectSnapshot[];
-  /**
-   * Raw-PDF -> display (CropBox/rotation) transform for the screen boundary.
-   * Plain data; reconstruct a DisplayTransform with `DisplayTransform.fromData`.
-   * Identity for normal pages.
-   */
+  // Raw-PDF -> display (CropBox/rotation) transform for the screen boundary.
   display: DisplayTransformData;
 }
 
@@ -128,6 +117,10 @@ export interface ToolbarState {
   fill: RGBA | null;
   bold: boolean;
   italic: boolean;
+  /** Glyph outline colour across the selection; null when unset or mixed. */
+  stroke: RGBA | null;
+  /** Glyph outline width in points; null when mixed. 0 means no outline. */
+  strokeWidth: number | null;
   /** Mixed-value indicator for multi-select */
   mixed: {
     fontFamily: boolean;
@@ -135,5 +128,7 @@ export interface ToolbarState {
     fill: boolean;
     bold: boolean;
     italic: boolean;
+    stroke: boolean;
+    strokeWidth: boolean;
   };
 }

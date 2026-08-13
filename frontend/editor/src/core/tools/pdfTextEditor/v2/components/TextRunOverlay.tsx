@@ -6,18 +6,20 @@ import type {
 } from "@app/tools/pdfTextEditor/v2/types";
 import { toCssHex } from "@app/tools/pdfTextEditor/v2/model/Color";
 import type { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
+import {
+  resolveLang,
+  useSpellcheckPreference,
+} from "@app/tools/pdfTextEditor/v2/util/spellcheck";
+import {
+  buildExactLines,
+  type ExactLine,
+} from "@app/tools/pdfTextEditor/v2/util/exactLayout";
 
 // React + contentEditable do not play well together when JSX manages the
-// element's children: React reconciles the children on every render and can
-// blow away mid-typing input. The fix is to render an empty element and
-// drive its `innerText` from a `useEffect` that respects focus.
+// element's children: React reconciles the children on every render and can.
 
-/**
- * Map a font id like "base14:Helvetica-Bold" or "pdf:1234:Arial" to a
- * CSS font-family stack that visually approximates the PDFium-rendered
- * glyphs while the user is typing. Source PDF fonts aren't web-loaded,
- * so the closest match comes from common system stacks.
- */
+// Map a font id like "base14:Helvetica-Bold" or "pdf:1234:Arial" to a CSS
+// font-family stack that visually approximates the PDFium-rendered glyphs.
 function cssFontFamilyFor(fontId: string): string {
   const idx = fontId.lastIndexOf(":");
   const family = idx >= 0 ? fontId.slice(idx + 1) : fontId;
@@ -44,11 +46,7 @@ function cssStyleFor(fontId: string): "italic" | "normal" {
   return /italic|oblique/i.test(fontId) ? "italic" : "normal";
 }
 
-/**
- * Pick an editing-mask color that always contrasts with the text fill.
- * White text on a white mask would be invisible; perceived-luminance
- * picks white-for-dark-text and dark-for-light-text.
- */
+/** Pick an editing-mask color that always contrasts with the text fill. */
 function contrastingMaskFor(fill: {
   r: number;
   g: number;
@@ -62,14 +60,8 @@ function contrastingMaskFor(fill: {
 
 let sharedMeasureCanvas: HTMLCanvasElement | null = null;
 
-/**
- * Measure each line of `text` at the given CSS font / size and return
- * the widest one in CSS pixels. PDF metrics and CSS metrics diverge
- * (Arial fallback is wider than the source Helvetica), so the overlay
- * must be sized to the CSS-measured max - otherwise the last word of
- * each line wraps onto a new visual row and a 6-line paragraph reads
- * as 10 lines.
- */
+// Measure each line of `text` at the given CSS font / size and return the
+// widest one in CSS pixels.
 function measureMaxLineWidth(
   text: string,
   fontFamily: string,
@@ -91,12 +83,7 @@ function measureMaxLineWidth(
   return max;
 }
 
-/**
- * Measure the font's ascent / descent (px) for the given CSS font, so the
- * overlay can place its first text line's alphabetic baseline exactly on
- * the PDF baseline. Falls back to typical sans ratios if the browser
- * doesn't expose `fontBoundingBox*` (it does in Chromium).
- */
+/** Measure the font's ascent / descent for the given CSS font. */
 function measureFontMetrics(
   fontFamily: string,
   fontWeight: number,
@@ -119,19 +106,76 @@ function measureFontMetrics(
   return { ascent, descent };
 }
 
-/**
- * Read the editable element's hard-break text.
- *
- * `innerText` already represents user-typed Enter as `\n`. We deliberately
- * do NOT synthesise newlines for browser soft-wraps: the wrap point in CSS
- * is determined by Liberation Sans / Arial advance widths, which diverge
- * from the source PDF font by 5-20%. Inserting a `\n` at the CSS wrap
- * point persists a hard break the user never typed; after save + reload
- * the paragraph reads with phantom breaks and the next edit compounds the
- * drift. Hard-break-only is the only round-trip-safe choice.
- */
+// Read the editable element's hard-break text. `innerText` already represents
+// user-typed Enter as `\n`.
 function extractHardBreaks(element: HTMLElement): string {
   return element.innerText.replace(/\u00A0/g, " ");
+}
+
+const LINE_BREAK = String.fromCharCode(10);
+
+// One inline-block box per word at the engine's own advance, so words sit back
+// on the glyphs underneath. `innerText` still round-trips through it.
+function paintExactLines(
+  el: HTMLElement,
+  lines: ExactLine[],
+  originX: number,
+  scale: number,
+): void {
+  const fragment = document.createDocumentFragment();
+  lines.forEach((line, index) => {
+    if (index > 0) fragment.appendChild(document.createTextNode(LINE_BREAK));
+    // A line may start right of the box origin (an indent, or a centred
+    // line), and that offset is part of what the capture preserves.
+    const indent = (line.left - originX) * scale;
+    if (indent > 0.5) fragment.appendChild(box("", indent));
+    for (const token of line.tokens) {
+      fragment.appendChild(box(token.text, token.width * scale));
+    }
+  });
+  el.replaceChildren(fragment);
+}
+
+function box(text: string, width: number): HTMLSpanElement {
+  const span = document.createElement("span");
+  span.style.display = "inline-block";
+  span.style.width = `${Math.max(0, width)}px`;
+  span.style.whiteSpace = "pre";
+  span.dataset.exact = "1";
+  if (text) span.textContent = text;
+  return span;
+}
+
+/** Caret offset in plain-text terms, so flattening can restore it. */
+function caretOffset(el: HTMLElement): number | null {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  const range = sel.getRangeAt(0);
+  if (!el.contains(range.startContainer)) return null;
+  const probe = range.cloneRange();
+  probe.selectNodeContents(el);
+  probe.setEnd(range.startContainer, range.startOffset);
+  return probe.toString().length;
+}
+
+function setCaret(el: HTMLElement, offset: number): void {
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  let seen = 0;
+  let node = walker.nextNode() as Text | null;
+  while (node) {
+    const len = node.data.length;
+    if (seen + len >= offset) {
+      const range = document.createRange();
+      range.setStart(node, Math.max(0, offset - seen));
+      range.collapse(true);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      return;
+    }
+    seen += len;
+    node = walker.nextNode() as Text | null;
+  }
 }
 
 interface TextRunOverlayProps {
@@ -139,11 +183,7 @@ interface TextRunOverlayProps {
   pageHeight: number;
   /** Page width in PDF points - caps the box so it never runs off-page. */
   pageWidth: number;
-  /**
-   * Raw-PDF -> display (CropBox/rotation) transform. Identity for normal
-   * pages; applied to the run's anchor so the overlay lands on the rendered
-   * (cropped/rotated) bitmap.
-   */
+  /** Raw-PDF -> display (CropBox/rotation) transform. */
   transform: DisplayTransform;
   scale: number;
   /** "grow": box widens to the right. "wrap": locked width, wraps down. */
@@ -155,21 +195,12 @@ interface TextRunOverlayProps {
   onEdit: (nextText: string) => void;
   /** Fires when the user Ctrl+drags the run to a new position. dx/dy are PDF points. */
   onMove?: (dx: number, dy: number) => void;
-  /**
-   * Fires on blur in Wrap mode when the edited content overflows the locked
-   * box width - asks the editor to reflow the run's glyphs to `maxWidthPt`
-   * (PDF points) by repositioning them, so the wrap persists without
-   * re-setting (and garbling) the embedded font.
-   */
+  // Fires on blur in Wrap mode when the edited content overflows the locked box
+  // width.
   onWrap?: (maxWidthPt: number) => void;
 }
 
-/**
- * One editable HTML element per PDF text run.
- *
- * Position is computed by converting the run's PDF-space bounds (origin
- * lower-left) into CSS pixels (origin upper-left).
- */
+/** One editable HTML element per PDF text run. */
 export function TextRunOverlay({
   run,
   pageHeight,
@@ -185,6 +216,8 @@ export function TextRunOverlay({
   onWrap,
 }: TextRunOverlayProps) {
   const { t } = useTranslation();
+  // Subscribed, so toggling the preference re-renders every overlay.
+  const spellcheck = useSpellcheckPreference();
   const ref = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -194,33 +227,62 @@ export function TextRunOverlay({
   // Text content captured when the box gains focus, so blur can tell whether
   // the user actually edited it (and a Wrap reflow is warranted).
   const focusTextRef = useRef<string>("");
-  // Ctrl+drag-to-move state. `dragOffset` is the live cursor delta (px)
-  // applied as a CSS transform so the box follows the cursor during the
-  // drag; it's committed to a real move (and reset) on mouseup.
+  // Ctrl+drag-to-move state. `dragOffset` is the live cursor delta applied as a
+  // CSS transform so the box follows the cursor during the drag.
   const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
     null,
   );
-  // The run's text and bounds width on first render - the stable baselines
-  // for the wrap-mode lock width (see below). The component is keyed by
-  // run.id, so these refs are per-run and never cross to a different run.
+  // The run's text and bounds width on first render - the stable baselines for
+  // the wrap-mode lock width (see below).
   const originalTextRef = useRef<string>(run.text);
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
-  // Whether this run was a real (multi-line) paragraph when it first
-  // mounted. Only those force a re-flow on click-off; a single-line run
-  // (e.g. a heading) that merely gained a manual break must NOT be
-  // re-flowed - that would collapse its original spacing.
+  // Whether this run was a real (multi-line) paragraph when it first mounted.
   const wasParagraphRef = useRef<boolean>((run.paragraphLineCount ?? 1) > 1);
+  // True while the box is showing engine-exact word boxes; the first edit
+  // flattens them because a typed character would overflow its fixed box.
+  const exactPaintedRef = useRef(false);
 
-  // Sync the contenteditable's text with the snapshot on external
-  // changes (undo/redo, multi-select). We never render the text via
-  // JSX children - React fights contentEditable when it does.
+  // Single-line runs only: fixed-width boxes fight a paragraph's wrap,
+  // manual-break and re-flow paths, which rewrite this element constantly.
+  const exactLines =
+    run.charStartsX && run.charEndsX && (run.paragraphLineCount ?? 1) <= 1
+      ? buildExactLines(run.text, {
+          starts: run.charStartsX,
+          ends: run.charEndsX,
+        })
+      : null;
+
+  const flattenExact = (el: HTMLDivElement): void => {
+    if (!exactPaintedRef.current) return;
+    exactPaintedRef.current = false;
+    const offset = caretOffset(el);
+    el.innerText = extractHardBreaks(el);
+    if (offset !== null) setCaret(el, offset);
+  };
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !focused || !exactLines) return;
+    if (exactPaintedRef.current) return;
+    if (extractHardBreaks(el) !== run.text) return;
+    const offset = caretOffset(el);
+    paintExactLines(el, exactLines, run.bounds.x, scale);
+    exactPaintedRef.current = true;
+    if (offset !== null) setCaret(el, offset);
+  });
+
+  // Sync the contenteditable's text with the snapshot on external changes
+  // (undo/redo, multi-select).
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (document.activeElement === el) return;
-    if (el.innerText !== run.text) el.innerText = run.text;
+    if (el.innerText !== run.text) {
+      exactPaintedRef.current = false;
+      el.innerText = run.text;
+    }
   }, [run.text]);
 
   useEffect(() => {
@@ -229,8 +291,7 @@ export function TextRunOverlay({
   }, []);
 
   // Map the run's raw-PDF anchor (left edge x, baseline f) into display-PDF
-  // space (CropBox/rotation). Identity transform => (bounds.x, matrix.f), so
-  // `left`/`baselineScreen` below reduce to the exact prior arithmetic.
+  // space (CropBox/rotation).
   const anchor = transform.apply(run.bounds.x, run.matrix.f);
   const left = anchor.x * scale;
 
@@ -241,22 +302,14 @@ export function TextRunOverlay({
   const fontStyle = cssStyleFor(run.fontId);
   const fontSizePx = Math.max(4, run.fontSize * scale);
 
-  // Line height (px). Paragraphs use the measured inter-baseline spacing;
-  // single lines get light leading. The same value drives this layout
-  // math AND the CSS `line-height`, so per-line baselines stay aligned.
+  // Line height (px).
   const lineHeightPx =
     run.paragraphLineHeight && run.paragraphLineHeight > 0
       ? run.paragraphLineHeight * scale
       : fontSizePx * 1.2;
 
   // VERTICAL PLACEMENT - anchor the first line's CSS alphabetic baseline
-  // exactly onto the PDF baseline (`run.matrix.f`). PDFium's bounds.height
-  // is only the visible glyph extent, so the old "top = pageHeight -
-  // bounds.y - inflatedHeight" placed the top-aligned text well above the
-  // real glyph and every run read slightly high. Using the font's real
-  // ascent plus the CSS half-leading lands the baseline on the mark, and
-  // because line spacing matches paragraphLineHeight every subsequent
-  // line lines up too.
+  // exactly onto the PDF baseline (`run.matrix.f`).
   const { ascent, descent } = measureFontMetrics(
     fontFamily,
     fontWeight,
@@ -268,15 +321,12 @@ export function TextRunOverlay({
   const baselineScreen = (pageHeight - anchor.y) * scale;
   const top = baselineScreen - firstBaselineFromTop;
 
-  // Height covers every (typed) line plus descender slack, so the
-  // contenteditable hit area matches what's drawn and typed extra lines
-  // aren't clipped by `overflow: hidden`.
+  // Height covers every line plus descender slack.
   const lineCount = Math.max(1, run.text.split(/\r?\n/).length);
   const height = lineCount * lineHeightPx + descent;
 
   const pdfWidth = run.bounds.width * scale;
-  // Widen the overlay so every source line still fits in CSS metrics
-  // (the Arial fallback is slightly wider than the source font), and so
+  // Widen the overlay so every source line still fits in CSS metrics, and so
   // typed text wider than the original bounds isn't clipped.
   const measuredWidth = measureMaxLineWidth(
     run.text,
@@ -285,27 +335,11 @@ export function TextRunOverlay({
     fontStyle,
     fontSizePx,
   );
-  // Width behaviour is user-controlled:
-  //  - "grow": box widens to the right to fit the content (no wrap).
-  //  - "wrap": box width is LOCKED to the source width; content word-
-  //    wraps and the box grows downward instead. A small floor keeps
-  //    very narrow source runs usable.
+  // Width behaviour is user-controlled: - "grow": box widens to the right to
+  // fit the content.
   const isParagraph = (run.paragraphLineCount ?? 1) > 1;
   const wrapMode = widthMode === "wrap";
-  // Wrap-mode lock width. Lock to the CSS width the run's ORIGINAL text
-  // needs - NOT the PDF bounds width. The CSS fallback font is wider than
-  // the embedded PDF font, so locking to the (narrower) PDF width instantly
-  // wraps the existing line the moment the box is focused, and the text
-  // appears to jump ("teleport"). Measuring the original text in the SAME
-  // CSS font the box renders with guarantees the existing content stays on
-  // its line; only text the user adds beyond it wraps onto new lines. The
-  // small pad absorbs sub-pixel rounding between canvas and layout metrics.
-  // Lock to the ORIGINAL box: the wider of the run's original bounds width
-  // and the CSS width its original text needs. Both are captured on first
-  // render, so neither grows as the user types. Using the LIVE `pdfWidth`
-  // here would be wrong - committing one-line text grows `run.bounds.width`
-  // to fit it, so the box (and the wrap point) would widen with every
-  // keystroke and only the final word would ever wrap.
+  // Wrap-mode lock width.
   const wrapLockWidth = Math.max(
     originalBoundsWidthRef.current * scale,
     measureMaxLineWidth(
@@ -317,25 +351,26 @@ export function TextRunOverlay({
     ) +
       fontSizePx * 0.5,
   );
-  // A multi-line paragraph always WRAPS (never grows off to the right) - it
-  // is body text, not a single-line label. "grow" only applies to genuine
-  // single-line runs. Without this, focusing a paragraph and typing made
-  // the box widen to the (double-spaced, CSS-font) widest line, which blew
-  // out past the page edge and clipped text the user never touched.
+  // A multi-line paragraph always WRAPS - it is body text, not a single-line
+  // label. "grow" only applies to genuine single-line runs.
   const wantWrap = wrapMode || isParagraph;
-  // Never let the box extend past the page's right edge. The available width
-  // from this run's left edge to the page margin caps every mode, so the
-  // editing box always stays on-page and the content wraps to fit.
+  // Never let the box extend past the page's right edge.
   const maxOnPageWidth = Math.max(fontSizePx * 4, pageWidth * scale - left - 4);
   const naturalWidth = wantWrap
     ? wrapLockWidth
     : Math.max(pdfWidth, measuredWidth + fontSizePx);
   const width = Math.min(naturalWidth, maxOnPageWidth);
-  // `min-height` (not a fixed height) is used below, so the box grows
-  // DOWNWARD when content needs it. Wrap whenever wrapping is wanted OR the
-  // box had to be capped to the page (so the clipped content reflows).
+  // `min-height` (not a fixed height) is used below, so the box grows DOWNWARD
+  // when content needs it.
   const whiteSpace: "pre" | "pre-wrap" =
     wantWrap || width < naturalWidth - 0.5 ? "pre-wrap" : "pre";
+
+  // Which dictionary the browser should load. "auto" falls back to the
+  // page's own language, which is what the element would inherit anyway.
+  const spellcheckLang = resolveLang(
+    spellcheck,
+    typeof document === "undefined" ? null : document.documentElement.lang,
+  );
 
   return (
     <div
@@ -343,7 +378,8 @@ export function TextRunOverlay({
       data-testid={`v2-run-${run.id}`}
       contentEditable={!run.locked}
       suppressContentEditableWarning
-      spellCheck={false}
+      spellCheck={spellcheck.enabled}
+      lang={spellcheckLang ?? undefined}
       data-locked={run.locked ? "true" : undefined}
       title={
         run.locked
@@ -354,23 +390,16 @@ export function TextRunOverlay({
           : undefined
       }
       onPaste={(e) => {
-        // Paste as PLAIN TEXT. Rich HTML (coloured spans, images) renders
-        // in the contentEditable but can never survive into the PDF - the
-        // overlay would lie about what gets saved.
+        // Paste as PLAIN TEXT.
         e.preventDefault();
         const text = e.clipboardData?.getData("text/plain");
         if (text) document.execCommand("insertText", false, text);
       }}
       onPointerDown={(e) => {
-        // Ctrl+Shift+drag is the marquee multi-select gesture. Bail BEFORE
-        // stopPropagation so the stage's MarqueeSelector receives it -
-        // claiming it here silently MOVED the run instead.
+        // Ctrl+Shift+drag is the marquee multi-select gesture.
         if ((e.ctrlKey || e.metaKey) && e.shiftKey) return;
         e.stopPropagation();
-        // Locked runs are inert: no select, no drag, no edit. They
-        // remain visible (the PDFium bitmap renders the source glyphs)
-        // and hit-test-able only as a no-op blocker so the user can
-        // tell something is there - but no command fires.
+        // Locked runs are inert: no select, no drag, no edit.
         if (run.locked) return;
         if ((e.ctrlKey || e.metaKey) && onMove) {
           dragOriginRef.current = { x: e.clientX, y: e.clientY };
@@ -395,9 +424,8 @@ export function TextRunOverlay({
             const origin = dragOriginRef.current;
             dragOriginRef.current = null;
             if (!origin) return;
-            // Screen delta -> display-PDF delta (y inverted), then invert the
-            // linear part of the CropBox/rotation transform to a raw-PDF delta
-            // (the model is raw). Identity transform => (dx, dy) unchanged.
+            // Screen delta -> display-PDF delta, then invert the linear part of
+            // the CropBox/rotation transform to a raw-PDF delta.
             const ddx = (ev.clientX - origin.x) / scale;
             const ddy = -(ev.clientY - origin.y) / scale;
             const v = transform.invertVector(ddx, ddy);
@@ -410,12 +438,7 @@ export function TextRunOverlay({
           window.addEventListener("pointerup", onPointerUp);
           return;
         }
-        // Shift-click EXTENDS the multi-object selection. Focusing the run
-        // (a text-edit action) fights multi-select and lets the browser
-        // start a cross-run text-range drag, so the 2nd run often failed to
-        // add and the align/distribute buttons stayed disabled. For a
-        // shift-click, preventDefault + select-only makes the toggle into
-        // selection.runIds authoritative; only a plain click focuses to edit.
+        // Shift-click EXTENDS the multi-object selection.
         if (e.shiftKey) {
           e.preventDefault();
           onSelect(true);
@@ -438,13 +461,8 @@ export function TextRunOverlay({
           sel.removeAllRanges();
           sel.addRange(range);
         }
-        // Backend strategy: pre-warm the per-char charcode cache for the
-        // whole page in the background. By the time the user types their
-        // first char, the cache is populated and the per-char emit branch
-        // in editTextHelpers fires on the FIRST keystroke - no more
-        // "type once for Helvetica, retype for the real font" UX. This
-        // is a one-shot per page per session (idempotent guard in
-        // BackendResolver).
+        // Backend strategy: pre-warm the per-char charcode cache for the whole
+        // page in the background.
         void (async () => {
           try {
             const [
@@ -462,12 +480,10 @@ export function TextRunOverlay({
         })();
       }}
       onBlur={(e) => {
+        flattenExact(e.currentTarget as HTMLDivElement);
         setFocused(false);
         // Wrap mode: when the just-edited content overflows the locked box
-        // width, persist the wrap by REPOSITIONING the run's existing glyph
-        // objects onto new lines (ReflowWrapCommand) - never by re-setting
-        // text, which garbles embedded fonts. Only fires when the user
-        // actually changed the box and a line now exceeds the box width.
+        // width.
         if (!wantWrap || !onWrap) return;
         const el = e.currentTarget as HTMLDivElement;
         const domText = extractHardBreaks(el);
@@ -479,11 +495,7 @@ export function TextRunOverlay({
           fontStyle,
           fontSizePx,
         );
-        // Runs that were paragraphs on mount always re-flow when edited (an
-        // edit re-emits a line at PDF metrics that can overflow the page even
-        // when the CSS measure says it fits). Other runs (a heading that just
-        // gained a manual break, or a single-line wrap run) re-flow only when
-        // they actually overflow the box - so their spacing is left intact.
+        // Runs that were paragraphs on mount always re-flow when edited.
         if (!wasParagraphRef.current && widest <= width + 1) return;
         onWrap(width / scale);
       }}
@@ -496,25 +508,24 @@ export function TextRunOverlay({
         const el = e.currentTarget as HTMLDivElement;
         onEdit(extractHardBreaks(el).replace(/\u00A0/g, " "));
       }}
+      onBeforeInput={(e) => {
+        flattenExact(e.currentTarget as HTMLDivElement);
+      }}
       onInput={(e) => {
         // Skip intermediate IME steps; compositionend commits the result.
         if (composingRef.current || (e.nativeEvent as InputEvent).isComposing)
           return;
         const el = e.currentTarget as HTMLDivElement;
-        // Always read hard breaks only - never synthesise newlines from
-        // browser soft-wraps. Visual CSS wraps come from Liberation Sans
-        // advance widths, which differ from the source PDF font; inserting
-        // a `\n` at the CSS wrap persists a hard break the user never
-        // typed. Strip NBSP (U+00A0) because base-14 Helvetica maps it to
-        // 0xFF (ydieresis) and renders as junk through PDFium SetText.
+        // Back to ordinary flow before anything reads the text, or a typed
+        // character stays in its fixed-width box and the line can never wrap.
+        flattenExact(el);
+        // Always read hard breaks only - never synthesise newlines from browser
+        // soft-wraps.
         const raw = extractHardBreaks(el);
         const text = raw.replace(/\u00A0/g, " ");
         onEdit(text);
-        // No per-keystroke reflow: while focused, the box is CAPPED to the
-        // page and wraps via CSS, so the editing view is always on-page (any
-        // underlying glyphs that grew past the page sit off the page canvas
-        // and aren't visible). The reflow that bakes the real wrapped layout
-        // runs once on blur - keeping the undo history one step per edit.
+        // No per-keystroke reflow: while focused, the box is CAPPED to the page
+        // and wraps via CSS, so the editing view is always on-page.
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -531,25 +542,16 @@ export function TextRunOverlay({
           : undefined,
         opacity: dragging ? 0.75 : 1,
         zIndex: dragging ? 20 : undefined,
-        // Only the opacity settle is animated. The transform must NOT be
-        // transitioned: on drop, `dragOffset` resets to null in the same
-        // commit that `left`/`top` jump to the committed position, so a
-        // transform transition would animate the box from double-offset
-        // back to the drop point - it "flew in from the edge". Resetting
-        // transform instantly keeps the drop crisp.
+        // Only the opacity settle is animated.
         transition: dragging ? "none" : "opacity 120ms ease-out",
-        // While focused: real glyphs in a CSS-stack approximation of
-        // the PDFium font, so the user sees their input before the
-        // bitmap re-renders. While unfocused: transparent so the PDFium
-        // bitmap shows through (the source of truth between edits).
+        // While focused: real glyphs in a CSS-stack approximation of the PDFium
+        // font, so the user sees their input before the bitmap re-renders.
         fontFamily,
         fontWeight,
         fontStyle,
         fontSize: fontSizePx,
-        // Mirror the run's letter-spacing (Tc) so the editing view tracks
-        // the wide-set glyphs underneath - the caret lands on the glyph
-        // being edited instead of drifting left of it. Unset for normal
-        // runs (charSpacingPt 0), keeping their layout untouched.
+        // Mirror the run's letter-spacing so the editing view tracks the
+        // wide-set glyphs underneath.
         letterSpacing: run.charSpacingPt
           ? `${run.charSpacingPt * scale}px`
           : undefined,
@@ -560,10 +562,7 @@ export function TextRunOverlay({
         // Show the glyphs while focused OR mid-drag so the Ctrl+drag
         // preview is a visible chip that follows the cursor.
         color: focused || dragging ? toCssHex(run.fill) : "transparent",
-        // Mask the underlying bitmap while editing. Light text needs a
-        // dark mask and vice versa - white text on a white mask would
-        // be invisible. Use the perceived luminance of the text color
-        // to pick which side of the contrast to land on.
+        // Mask the underlying bitmap while editing.
         backgroundColor: focused
           ? contrastingMaskFor(run.fill)
           : highlighted

@@ -12,12 +12,8 @@ interface MarqueeRect {
   height: number;
 }
 
-/**
- * Ctrl+Shift+drag a rectangle on the page stack. Every text run whose
- * bounding box intersects the rectangle is added to the selection on
- * mouseup. Lets the user override line/paragraph auto-grouping when it
- * gets the structure wrong.
- */
+// Ctrl+Shift+drag a rectangle on the page stack. Lets the user override
+// line/paragraph auto-grouping when it gets the structure wrong.
 export function MarqueeSelector({ store }: MarqueeSelectorProps) {
   const [rect, setRect] = useState<MarqueeRect | null>(null);
   const startRef = useRef<{ x: number; y: number } | null>(null);

@@ -1,12 +1,7 @@
 import type { FontDescriptor } from "@app/tools/pdfTextEditor/v2/types";
 
-/**
- * A handle to a font inside a PDFium document.
- *
- * `pointer` is the FPDF_FONT handle. `owned` decides whether `dispose()`
- * should call `FPDFFont_Close` (true for fonts loaded via FPDFText_LoadFont,
- * false for fonts borrowed via FPDFTextObj_GetFont).
- */
+// A handle to a font inside a PDFium document. `pointer` is the FPDF_FONT
+// handle. `owned` decides whether `dispose` should call `FPDFFont_Close`.
 export class FontRef {
   readonly id: string;
   readonly descriptor: FontDescriptor;

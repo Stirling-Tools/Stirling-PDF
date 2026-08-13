@@ -1,12 +1,4 @@
-/**
- * Structural test-only types for the v2 PDF text editor Playwright specs.
- *
- * These describe ONLY the members the stubbed specs touch on the window-exposed
- * `__v2_editor_store` (and friends). They are deliberately not the real
- * `EditorStore`/`PdfDocument` classes - those have private members the specs
- * cannot reach - so this is a minimal structural view used for annotations
- * inside `page.evaluate` closures.
- */
+/** Structural test-only types for the v2 PDF text editor Playwright specs. */
 
 /** Affine matrix on runs/images. */
 export interface V2Matrix {
@@ -46,6 +38,17 @@ export interface V2Run {
   paragraphLineSlots?: V2LineSlot[];
   /** Inferred letter-spacing (Tc footprint) in PDF points. */
   charSpacingPt: number;
+  /** Glyph outline state; null when the run paints no outline. */
+  stroke: { r: number; g: number; b: number; a: number } | null;
+  strokeWidth: number;
+  /** PDF text render mode (Tr). */
+  renderMode: number;
+  /** Captured engine pen origins / ends per code unit of `text`. */
+  charStartsX: number[] | null;
+  charEndsX: number[] | null;
+  charPositionsText: string | null;
+  /** Member-line count; > 1 means a multi-line paragraph. */
+  paragraphLineCount?: number;
 }
 
 export interface V2Image {

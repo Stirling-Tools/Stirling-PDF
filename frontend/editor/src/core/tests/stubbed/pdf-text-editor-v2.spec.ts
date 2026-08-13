@@ -1,8 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "path";
-// Independent parser for the round-trip cross-check (I45): the same
-// @cantoo/pdf-lib the fixture generators use, so a malformed-but-
-// PDFium-self-consistent save can't pass invisibly.
+// Independent parser for the round-trip cross-check: the same @cantoo/pdf-lib
+// the fixture generators use.
 import { PDFDocument } from "@cantoo/pdf-lib";
 import {
   stashCurrentDocument,
@@ -25,16 +24,13 @@ const PARAGRAPH_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/paragraph-sample.pdf",
 );
-// The same Sample.pdf that ships in `frontend/editor/public/samples/` -
-// copied here as a fixture so the test suite has a self-contained
-// reference to the file the user reproduces space-preservation bugs on.
+// The same Sample.pdf that ships in `frontend/editor/public/samples/`.
 const USER_SAMPLE_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/user-sample.pdf",
 );
-// Carries an embedded font whose name table has the 6-letter "ABCDEF+"
-// subset tag, so the editor reliably flags a run as fontSubset (lets the
-// subset-fallback test run deterministically instead of skipping).
+// Carries an embedded font whose name table has the 6-letter "ABCDEF+" subset
+// tag, so the editor reliably flags a run as fontSubset.
 const SUBSET_FONT_PDF = path.join(
   import.meta.dirname,
   "../test-fixtures/subset-font-sample.pdf",
@@ -46,18 +42,8 @@ const BIG_SAMPLE_PDF = path.join(
   "../test-fixtures/big-sample.pdf",
 );
 
-/**
- * v2 PDF text editor regression suite.
- *
- * v2 runs entirely in the browser via PDFium WASM (`@embedpdf/pdfium`),
- * so these tests do not need a real backend - they live in the stubbed
- * project. `/pdf-text-editor` mounts v2 directly.
- *
- * The tests load `sample.pdf` (a 1-page text-only fixture), exercise the
- * core editing loop, and assert on the editor's DOM and the eventual
- * downloaded PDF. They are intentionally pinned to test-ids on the v2
- * components so unrelated UI tweaks won't break them.
- */
+// v2 PDF text editor regression suite. v2 runs entirely in the browser via
+// PDFium WASM, so these tests do not need a real backend.
 
 async function gotoV2(page: import("@playwright/test").Page) {
   await page.goto("/pdf-text-editor", {
@@ -66,12 +52,7 @@ async function gotoV2(page: import("@playwright/test").Page) {
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
 }
 
-/**
- * Change the selected run's font family through the real toolbar dropdown.
- * Driving the Mantine Select (not constructing the command via an ad-hoc
- * `import("/src/...")`, which Vite cannot resolve at runtime and tsc cannot
- * type-check) is both the real user flow and round-trip safe.
- */
+/** Change the selected run's font family through the real toolbar dropdown. */
 async function selectFontFamily(
   page: import("@playwright/test").Page,
   optionLabel: string,
@@ -82,8 +63,6 @@ async function selectFontFamily(
 
 async function loadSamplePdf(page: import("@playwright/test").Page) {
   // The visible "Open" flow goes through the left-sidebar Files panel.
-  // For headless tests we drive the editor via the hidden test-only
-  // file input that v2 always renders.
   await page.locator('[data-testid="v2-file-input"]').setInputFiles(SAMPLE_PDF);
   await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
 }
@@ -95,15 +74,7 @@ async function loadMultiPageSample(page: import("@playwright/test").Page) {
   await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
 }
 
-/**
- * Type a string into a contenteditable using `execCommand('insertText')`.
- *
- * Playwright's `keyboard.type` sends synthetic keydown/keyup events, but
- * Chromium contentEditable text insertion in some configurations requires
- * the higher-level `beforeinput` path that `execCommand` triggers. Using
- * `evaluate` here makes the test deterministic regardless of how the
- * embedding browser handles synthetic key events on contenteditable.
- */
+/** Type a string into a contenteditable using `execCommand('insertText')`. */
 async function typeIntoRun(
   page: import("@playwright/test").Page,
   runTestId: string,
@@ -318,10 +289,7 @@ test.describe("PDF text editor v2 - save", () => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
-    // Capture the original first-run text, then edit it. EditTextCommand
-    // collapses the run to base-14 Helvetica on first edit so arbitrary
-    // characters (punctuation, parens, mixed case) survive the round
-    // trip - they would have rendered as tofu otherwise.
+    // Capture the original first-run text, then edit it.
     const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
     const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
     const original = (await firstRun.innerText()) ?? "";
@@ -340,9 +308,8 @@ test.describe("PDF text editor v2 - save", () => {
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
 
-    // Push the saved bytes back into the dropzone as a new file.
-    // setInputFiles() accepts an in-memory payload; the editor will
-    // close the old document via store.setDocument() and load this.
+    // Push the saved bytes back into the dropzone as a new file. setInputFiles
+    // accepts an in-memory payload.
     await page.locator('[data-testid="v2-file-input"]').setInputFiles({
       name: "round-trip.pdf",
       mimeType: "application/pdf",
@@ -350,10 +317,6 @@ test.describe("PDF text editor v2 - save", () => {
     });
 
     // The edited text must be present somewhere in page 0's runs.
-    // The per-word emit path can split inserted text into a separate
-    // PDFium text object (so "(Hello!)" may end up in its own run
-    // after LineGrouper) - what matters is that every char survives
-    // and the round-trip didn't lose the appended content.
     const allText = await page
       .waitForFunction(
         () => {
@@ -371,12 +334,8 @@ test.describe("PDF text editor v2 - save", () => {
       .then((h) => h.jsonValue() as Promise<string>);
     expect(allText).toContain(original);
     expect(allText).toContain("(Hello!)");
-    // The boundary between original and appended may collapse to a
-    // single or double space depending on per-word emit / LineGrouper
-    // reconstruction. Either is acceptable as long as both pieces are
-    // present and not visually glued. Trim the original's own trailing
-    // whitespace first - with it, the banned string equalled the CORRECT
-    // single-space rendering and the assertion rejected valid output.
+    // The boundary between original and appended may collapse to a single or
+    // double space depending on per-word emit / LineGrouper reconstruction.
     expect(allText).not.toContain(`${original.trimEnd()}(Hello!)`);
     // Quiet the unused-var lint - `edited` documents the intent above.
     void edited;
@@ -386,10 +345,7 @@ test.describe("PDF text editor v2 - save", () => {
     page,
   }) => {
     // The other round-trip tests re-feed the saved bytes through the SAME
-    // PdfiumTextReader+LineGrouper that wrote them, so a malformed-but-
-    // self-consistent save would round-trip invisibly. This one parses the
-    // downloaded bytes with @cantoo/pdf-lib (a different parser) to prove
-    // the output is a structurally valid PDF an external reader can open.
+    // PdfiumTextReader+LineGrouper that wrote them.
     await gotoV2(page);
     await loadSamplePdf(page);
 
@@ -406,31 +362,16 @@ test.describe("PDF text editor v2 - save", () => {
     for await (const chunk of stream) chunks.push(chunk as Buffer);
     const savedBytes = Buffer.concat(chunks);
 
-    // Independent structural cross-check: pdf-lib must load the bytes and
-    // see the single page. Loading throws on a corrupt xref/trailer, so a
-    // clean parse here is itself a meaningful assertion PDFium can't fake.
+    // Independent structural cross-check: pdf-lib must load the bytes and see
+    // the single page.
     const doc = await PDFDocument.load(savedBytes);
     expect(doc.getPageCount()).toBe(1);
   });
 });
 
 test.describe("PDF text editor v2 - whitespace preservation", () => {
-  // These guard against a recurring class of regression where typed
-  // spaces vanish from the saved PDF. Two mechanisms have caused this:
-  //
-  // 1. Browser substitutes U+00A0 (NBSP) for a typed space at word
-  //    boundaries to keep visual gaps. PDFium's base-14 Helvetica
-  //    fallback maps U+00A0 to glyph 0xFF (ydieresis), so the "space"
-  //    becomes a visible junk char.
-  // 2. PDFium's FPDFText_SetText collapses consecutive ASCII spaces
-  //    inside a single text object, so "A  B" comes back "A B" unless
-  //    the writer emits one text object per word with explicit gaps.
-  //
-  // The first is a contenteditable-layer concern (TextRunOverlay must
-  // strip NBSP before dispatching onEdit). The second is an
-  // EditTextCommand / emitTextLine concern (per-word emit path). Both
-  // are easy to break unnoticed, so we test both at the model boundary
-  // AND across a full save / re-open round trip.
+  // These guard against a recurring class of regression where typed spaces
+  // vanish from the saved PDF.
 
   async function readFirstRunText(
     page: import("@playwright/test").Page,
@@ -484,9 +425,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     await expect(firstRun).toContainText("X");
     await expect(firstRun).toContainText("Y");
 
-    // But the model snapshot - the source of truth for save - must
-    // contain regular space, never NBSP. If this assertion fails the
-    // PDF will render `XÿY` after save with base-14 Helvetica.
+    // But the model snapshot - the source of truth for save - must contain
+    // regular space, never NBSP.
     const modelText = await readFirstRunText(page);
     expect(modelText).not.toContain("\u00A0");
     expect(modelText).toContain("X Y");
@@ -506,13 +446,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     await saveAndReopen(page);
 
     // After re-open we re-read everything through PdfiumTextReader +
-    // LineGrouper, which is the same path the user's PDF viewer of
-    // choice would take. The per-word emit path produces one PDFium
-    // text object per word, and LineGrouper may or may not re-merge
-    // adjacent objects into one run depending on the measured gap. The
-    // assertion that matters is "the rendered PDF, when re-read, still
-    // contains 'Hello World' with a space between" - scan every run on
-    // page 0 for the substring.
+    // LineGrouper.
     const reopenedAllText = await page
       .waitForFunction(
         () => {
@@ -537,16 +471,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("deleting one char from a positional-jump run keeps inter-word spaces", async ({
     page,
   }) => {
-    // Repro for the recurring "all spaces vanish when I delete a single
-    // letter" bug on the Stirling marketing PDF. The line "The Free
-    // Adobe Acrobat Alternative" is laid out with positional cursor
-    // jumps (no literal space char), so PDFium reads it as
-    // ["The", "Free", "Adobe", "Acrobat", "Alternative"] and LineGrouper
-    // re-synthesises spaces. The displayed text in the overlay therefore
-    // has spaces that DON'T exist in any sub-object. When the user
-    // deletes one char, partialEdit bails (char-count mismatch) and the
-    // overlay path emits one base-14 text object - the spaces must
-    // survive that round-trip.
+    // Repro for the recurring "all spaces vanish when I delete a single letter"
+    // bug on the Stirling marketing PDF.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -584,15 +510,13 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     }
     expect(target.text).toMatch(/Adobe\s+Acrobat\s+Alternative/);
 
-    // Trigger the exact failure path: replace the whole text with
-    // itself minus the last char. typeIntoRun with selectNodeContents +
-    // insertText overwrites the contents.
+    // Trigger the exact failure path: replace the whole text with itself minus
+    // the last char. typeIntoRun with selectNodeContents + insertText.
     const trimmed = target.text.slice(0, -1);
     await typeIntoRun(page, target.testId, trimmed);
 
-    // Model assertion: after the edit, the run's text in the editor
-    // store must STILL contain the inter-word spaces. If this fails the
-    // bug is in the overlay onInput path or EditTextCommand.apply().
+    // Model assertion: after the edit, the run's text in the editor store must
+    // STILL contain the inter-word spaces.
     const modelText = await page.evaluate((tid) => {
       const store = (
         window as unknown as {
@@ -610,16 +534,12 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     }, target.testId);
     expect(modelText).toMatch(/Adobe\s+Acrobat\s+Alternativ/);
 
-    // Save and re-open. The reopened text on page 0 must still parse
-    // back to a tagline with spaces between words. This is the "would
-    // the user see spaces" test - if a PDF viewer extracts text from
-    // the saved file, it must come back word-separated.
+    // Save and re-open. The reopened text on page 0 must still parse back to a
+    // tagline with spaces between words.
     await saveAndReopen(page);
 
-    // The marketing PDF is multi-page; pages render lazily and the
-    // tagline run we care about may not have mounted yet. Poll for it.
-    // (A bare scroll-and-wait races the bitmap render that the run
-    // overlay depends on.)
+    // The marketing PDF is multi-page; pages render lazily and the tagline run
+    // we care about may not have mounted yet.
     const reopenedAllText = await page
       .waitForFunction(
         () => {
@@ -641,28 +561,22 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
         { timeout: 30_000, polling: 500 },
       )
       .then((handle) => handle.jsonValue() as Promise<string>);
-    // Surface a slice around the tagline on assertion failure so a
-    // future regression debugger sees the actual reopened text, not
-    // an opaque regex mismatch.
+    // Surface a slice around the tagline on assertion failure so a future
+    // regression debugger sees the actual reopened text.
     const tagIdx = reopenedAllText.indexOf("Free");
     const taglineSnippet =
       tagIdx >= 0
         ? reopenedAllText.slice(Math.max(0, tagIdx - 20), tagIdx + 200)
         : "<no 'Free' found in reopened runs>";
-    // Core check: none of the word pairs should be GLUED (no
-    // whitespace separator at all between them). That's the exact
-    // failure mode the user reported: editing produced
-    // "TheFreeAdobeAcrobatAlternativ" with all spaces eaten.
+    // Core check: none of the word pairs should be GLUED (no whitespace
+    // separator at all between them).
     expect(
       reopenedAllText,
       `Tagline snippet: ${JSON.stringify(taglineSnippet)}`,
     ).not.toMatch(/FreeAdobe/);
     expect(reopenedAllText).not.toMatch(/AdobeAcrobat/);
-    // (Acrobat may sometimes glue with "Alt" from a leftover original
-    // per-glyph sub-object - that's a separate cover-rect bug for
-    // form-xobject text, not the space-emit bug.)
-    // Positive check: the tagline words DO appear separated by some
-    // whitespace somewhere in the reopened text.
+    // Positive check: the tagline words DO appear separated by some whitespace
+    // somewhere in the reopened text.
     expect(reopenedAllText).toMatch(/Free\s+Adobe/);
     expect(reopenedAllText).toMatch(/Adobe\s+Acrobat/);
   });
@@ -670,15 +584,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("user-sample.pdf: deleting one char from tagline keeps every inter-word space", async ({
     page,
   }) => {
-    // EXACT user repro. Loads the same Sample.pdf the user is editing
-    // (frontend/editor/public/samples/Sample.pdf, copied to fixtures as
-    // user-sample.pdf). The tagline "The Free Adobe Acrobat Alternative"
-    // is laid out as one PDFium text object per glyph, with standalone
-    // zero-width " " sub-objects positioned in the inter-word gaps. The
-    // failure mode this guards against: editing the run (here: deleting
-    // the trailing "e") collapses every kept sub-object leftward,
-    // eliminating the inter-object whitespace gaps so the saved PDF
-    // renders as `TheFreeAdobeAcrobatAlternativ` with all spaces eaten.
+    // EXACT user repro.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -720,9 +626,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       document.execCommand("delete", false);
     }, taglineTestId);
 
-    // Model assertion: the run text after the edit must still have all
-    // four inter-word gaps. (LineGrouper reports synthesised double
-    // spaces between the per-glyph sub-objects, so use `\s+`.)
+    // Model assertion: the run text after the edit must still have all four
+    // inter-word gaps.
     const modelText = await page.evaluate((tid) => {
       const store = (
         window as unknown as {
@@ -740,10 +645,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     }, taglineTestId);
     expect(modelText).toMatch(/The\s+Free\s+Adobe\s+Acrobat\s+Alternativ/);
 
-    // Round-trip through save + re-open and verify the same word
-    // boundaries survive. This is the "does the saved PDF render with
-    // spaces" check - a PDF viewer that re-extracts text from the file
-    // must see the words separated.
+    // Round-trip through save + re-open and verify the same word boundaries
+    // survive.
     await saveAndReopen(page);
 
     const reopenedAllText = await page
@@ -790,24 +693,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     page,
   }) => {
     // Regression guard: a previous attempt to teach partialEdit about
-    // LineGrouper-synthesised whitespace miscounted ghost chars by 1,
-    // which silently misclassified one sub-run as "mixed", removed
-    // and re-emitted it, and produced a model state with DUPLICATE
-    // `mergedFromTexts` entries (the same text twice, at different
-    // bounds). Visually this teleported a chunk of the line and
-    // dropped chars from the middle.
-    //
-    // We delete one character from the MIDDLE of the bullet (not the
-    // end) because middle-edits exercise the full keep/delete/keep
-    // op-walk - end appends only need a single trailing insert and
-    // miss the cross-sub-run alignment bugs.
-    //
-    // Asserts the model state stays sane after the delete:
-    //   * run.text equals baseline minus the deleted char
-    //   * mergedFromTexts has no duplicates of any non-trivial text
-    //     fragment (the smoking gun for the teleport regression)
-    //   * every non-trivial baseline fragment whose chars all survived
-    //     still appears verbatim - catches silent char swaps
+    // LineGrouper-synthesised whitespace miscounted ghost chars by 1.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -847,9 +733,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       return;
     }
 
-    // Pick a deterministic middle-position character to delete: the
-    // letter "A" of "Adobe" (clearly in the middle of the line,
-    // sandwiched between kept sub-runs on both sides).
+    // Pick a deterministic middle-position character to delete: the letter "A"
+    // of "Adobe".
     const deleteIdx = baseline.text.indexOf("Adobe");
     expect(deleteIdx).toBeGreaterThan(0);
     const expectedText =
@@ -921,9 +806,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     // Text content: exactly baseline minus the A of Adobe.
     expect(after.text).toBe(expectedText);
 
-    // Sub-run integrity: any non-trivial (>=3 char) baseline fragment
-    // must NOT appear twice in the post-edit mergedFromTexts. That's
-    // the smoking gun for the teleport regression.
+    // Sub-run integrity: any non-trivial (>=3 char) baseline fragment must NOT
+    // appear twice in the post-edit mergedFromTexts.
     const counts = new Map<string, number>();
     for (const t of after.mergedFromTexts) {
       if (t.length < 3) continue;
@@ -935,9 +819,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       `mergedFromTexts duplicates after edit: ${JSON.stringify(dupes)}`,
     ).toEqual([]);
 
-    // Char-fidelity: every non-trivial baseline fragment that wasn't
-    // the deleted sub-run must still appear verbatim somewhere in
-    // after.mergedFromTexts. Detects silent char swaps.
+    // Char-fidelity: every non-trivial baseline fragment that wasn't the
+    // deleted sub-run must still appear verbatim somewhere in.
     const afterJoined = after.mergedFromTexts.join("|");
     for (const t of baseline.mergedFromTexts) {
       if (t.length < 3) continue;
@@ -950,11 +833,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       ).toContain(t);
     }
 
-    // Font preservation: editing a line rendered in a non-base14
-    // source font must NOT flip the run to base14:Helvetica. The
-    // partialEdit path borrows the original font handle from the
-    // surviving sub-objects, so the kept text stays in its source
-    // typeface.
+    // Font preservation: editing a line rendered in a non-base14 source font
+    // must NOT flip the run to base14:Helvetica.
     const afterFontId = await page.evaluate((tid) => {
       const store = (
         window as unknown as {
@@ -977,24 +857,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("user-sample.pdf: inserting ' Hi' at end of tagline renders a visible space (not 'AlternativeHi')", async ({
     page,
   }) => {
-    // Repro for the recurring "typed space vanishes" bug on the
-    // marketing tagline. The tagline is laid out per-glyph; partialEdit
-    // takes the borrow-font path for the insert (all chars in " Hi"
-    // appear in surviving sub-runs - capital H comes from "The",
-    // lowercase i from "Alternative", and space from the existing
-    // inter-word gaps). The fail mode: FPDFPageObj_GetBounds returns
-    // zero width for whitespace-only glyphs, so the sub-runs the
-    // insert produced for " " ended up with bounds.right == bounds.x
-    // AND the cumulative offset never advanced. Subsequent sub-runs
-    // overlapped the inserted "Hi", and on save the PDF rendered
-    // "AlternativeHi" with no gap.
-    //
-    // Fix: measureWhitespaceAdvancePt adds a canvas-measured width
-    // for the whitespace portion of an insert so the offset
-    // accumulates correctly. This test asserts (a) the inserted-text
-    // sub-runs have a non-zero combined bounds width, (b) the saved
-    // PDF, re-opened, still contains "Alternative Hi" with whitespace
-    // between the two tokens.
+    // Repro for the recurring "typed space vanishes" bug on the marketing
+    // tagline.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -1101,11 +965,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     if (!after) throw new Error("tagline run vanished after insert");
     expect(after.text).toMatch(/Alternative\s+Hi$/);
 
-    // The CORE physical-width assertion. Find the inserted sub-runs
-    // (their texts will be " Hi" or chunks like " ", "Hi", or "H", "i").
-    // Together they must occupy NON-ZERO horizontal width - otherwise
-    // the saved PDF will render the inserted text on top of the line's
-    // tail with zero advance.
+    // The CORE physical-width assertion.
     const insertedRight = Math.max(
       ...after.mergedFromBounds.map((b) => b.right),
     );
@@ -1113,19 +973,10 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     // The bounds span must be at least the width the line had before
     // the insert (we APPENDED chars; nothing should subtract width).
     expect(insertedRight - insertedLeft).toBeGreaterThan(0);
-    // run.bounds.width covers up to and including the new chars - it
-    // must have grown beyond a Helvetica-width "Hi" advance for the
-    // whitespace to physically separate "Alternative" from "Hi". Use a
-    // conservative lower bound that catches the regression where the
-    // insert advanced 0pt (then bounds.width wouldn't grow at all
-    // past the original tagline right edge).
+    // run.bounds.width covers up to and including the new chars.
     expect(after.boundsRight).toBeGreaterThan(insertedLeft + 5);
 
-    // Round-trip: save the PDF and re-open. The re-extracted text on
-    // page 0 must contain "Alternative Hi" with a whitespace between
-    // the two tokens - NOT "AlternativeHi" glued together (the
-    // user-reported bug). This is the "would a PDF viewer see a
-    // space" check.
+    // Round-trip: save the PDF and re-open.
     await saveAndReopen(page);
 
     const reopened = await page
@@ -1156,28 +1007,12 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       reopened,
       `Tagline+Hi snippet: ${JSON.stringify(snippet)}`,
     ).not.toMatch(/AlternativeHi/);
-    // Positive form: the two tokens appear with some whitespace
-    // separator (regular space or LineGrouper-synthesised double
-    // space - all acceptable; only "glued" is the regression).
+    // Positive form: the two tokens appear with some whitespace separator.
     expect(reopened).toMatch(/Alternative\s+Hi/);
   });
 
   // ---------------------------------------------------------------
-  // Sequential-edit visual-integrity tests. Each test performs a
-  // series of single-character edits and after EVERY step asserts:
-  //   (1) run.text matches the expected after-edit string
-  //   (2) run.fontId stays on its source (non-base14) font
-  //   (3) run.bounds.y doesn't move (no vertical teleport)
-  //   (4) mergedFromTexts has no duplicate non-trivial fragment
-  //
-  // The bounds.y check is the cheap "visual" proxy: a regression
-  // that teleports text to the wrong line will fail it immediately,
-  // and a regression that swaps the font flips assertion (2). These
-  // assertions are stricter than "round-trip survives reload" - they
-  // catch any model-state damage at the moment it happens, so a
-  // future bug can be pinned to the exact keystroke that introduced
-  // it.
-  // ---------------------------------------------------------------
+  // Sequential-edit visual-integrity tests.
 
   async function findTaglineRun(page: import("@playwright/test").Page) {
     return await page.evaluate(() => {
@@ -1321,11 +1156,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("SENTINEL: USER_SAMPLE_PDF tagline is a single grouped run", async ({
     page,
   }) => {
-    // 20 tagline tests below guard themselves with
-    // `if (!findTaglineRun(page)) { test.skip(...) }`. If LineGrouper ever
-    // splits the tagline across runs, findTaglineRun returns null and all
-    // 20 silently pass via skip. This un-skippable sentinel fails loudly so
-    // that drift surfaces instead of hiding as green skips.
+    // 20 tagline tests below guard themselves with `if (!findTaglineRun(page))
+    // { test.skip(...) }`.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -1362,9 +1194,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     }
     expect(baseline.fontId).not.toMatch(/^base14:/);
 
-    // Type three chars at the end of the line, asserting after each
-    // keystroke that the font hasn't flipped and the line hasn't
-    // teleported off its original baseline.
+    // Type three chars at the end of the line.
     let runningText = baseline.text;
     for (const ch of ["A", "d", "o"]) {
       runningText += ch;
@@ -1452,9 +1282,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
 
     let runningText = baseline.text;
     for (let i = 0; i < 3; i++) {
-      // Each iteration we delete the char at position `acrobatStart`
-      // - which is the next char of what used to be "Acrobat" after
-      // the previous deletes.
+      // Each iteration we delete the char at position `acrobatStart` - which is
+      // the next char of what used to be "Acrobat" after the previous deletes.
       runningText =
         runningText.slice(0, acrobatStart) +
         runningText.slice(acrobatStart + 1);
@@ -1481,10 +1310,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("user-sample.pdf: interleaved delete-then-type sequence keeps font + position stable", async ({
     page,
   }) => {
-    // Mimics realistic user editing: delete a char, type a different
-    // one, repeat. Stresses both the "mixed sub-run" code path AND
-    // the cumulative-offset math across multiple replacements in the
-    // same line.
+    // Mimics realistic user editing: delete a char, type a different one,
+    // repeat.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -1545,17 +1372,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("user-sample.pdf: inserting chars in the MIDDLE shifts subsequent text right (no overlap)", async ({
     page,
   }) => {
-    // Regression guard: inserting NEW chars between two kept sub-runs
-    // (e.g. caret between "Acrob" and "at" → type "aaa" → "Acrobaaaat")
-    // used to leave the inserted text overlapping the original
-    // following chars. The bitmap looked like the insert never
-    // happened. Fix: unanchored inserts now push the cumulative
-    // offset right by the inserted width so kept sub-runs after them
-    // shift right to make room.
-    //
-    // Asserts: the kept sub-run immediately AFTER the insertion has
-    // shifted RIGHT (its bounds.x > original bounds.x), and the run's
-    // total width grew by approximately the inserted width.
+    // Regression guard: inserting NEW chars between two kept sub-runs used to
+    // leave the inserted text overlapping the original following chars.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -1662,11 +1480,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       baseline.text.slice(0, caretPos) + "aaa" + baseline.text.slice(caretPos);
     expect(after.text).toBe(expectedText);
 
-    // The sub-run that USED to live right after the caret must now
-    // have its x shifted RIGHT to make room for the inserted "aaa".
-    // Find it by scanning the post-edit sub-runs for the same content
-    // as baseline.mergedFromTexts[postCaretSubRunIdx], or by index
-    // (offset by the number of new "aaa" sub-runs inserted).
+    // The sub-run that USED to live right after the caret must now have its x
+    // shifted RIGHT to make room for the inserted "aaa".
     let newPostCaretX: number | null = null;
     // Original next sub-run's text:
     const targetText = baseline.mergedFromTexts[postCaretSubRunIdx];
@@ -1700,19 +1515,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("user-sample.pdf: deleting an entire word closes the gap (text after shifts left)", async ({
     page,
   }) => {
-    // Regression guard: when an edit fully removes a sub-run, the
-    // surviving sub-runs to its right used to STAY at their original
-    // x position, leaving a visible blank-space gap in the saved
-    // bitmap. Fix: the partialEdit apply walk now subtracts the
-    // width of any all-deleted sub-runs that fall between two
-    // consecutive keep/anchor ops, shifting subsequent keeps left.
-    //
-    // This test selects the whole word "Adobe" + its trailing space
-    // and deletes it. We assert:
-    //   * the kept sub-run that USED to live AFTER "Adobe " has
-    //     shifted LEFT (its new bounds.x < original bounds.x)
-    //   * the total run width has shrunk by approximately the width
-    //     of the deleted text (no orphaned gap)
+    // Regression guard: when an edit fully removes a sub-run, the surviving
+    // sub-runs to its right used to STAY at their original x position.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -1918,9 +1722,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       }
     }
     if (newAcrobatX === null) {
-      // Pick the sub-run at the same INDEX as the original Acrobat
-      // sub-run (sub-run count may have changed but the post-Adobe
-      // sub-run should still exist).
+      // Pick the sub-run at the same INDEX as the original Acrobat sub-run.
       const newIdx = Math.min(
         acrobatSubRunIdx,
         after.mergedFromBounds.length - 1,
@@ -1932,10 +1734,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       `Acrobat sub-run did not shift left (original=${origAcrobatX}, new=${newAcrobatX})`,
     ).toBeLessThan(origAcrobatX);
 
-    // Run width must have shrunk by roughly the width of "Adobe "
-    // (give or take a few pt for the per-word emit's positional
-    // padding). Anything close to zero shrinkage means the gap was
-    // left in place.
+    // Run width must have shrunk by roughly the width of "Adobe " (give or take
+    // a few pt for the per-word emit's positional padding).
     const widthShrinkage = baseline.boundsWidth - after.boundsWidth;
     expect(
       widthShrinkage,
@@ -1944,27 +1744,9 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   });
 
   // -------------------------------------------------------------------
-  // Comprehensive edit-text regression. Each test exercises a class of
-  // edit on an existing run from user-sample.pdf (the marketing PDF's
-  // tagline - rich layout, multi-sub-run, non-base14 font). After
-  // every edit step we assert:
-  //   * run.text matches expected
-  //   * fontId stays non-base14
-  //   * bounds.y stays put (no vertical teleport)
-  //   * mergedFromTexts has no duplicate non-trivial fragments
-  //   * adjacent mergedFromBounds don't overlap horizontally (no
-  //     bitmap overlap rendering bug)
-  //   * a save+reopen "visual sanity" check: re-extracted text from
-  //     the saved PDF contains the expected substring (this is the
-  //     "would a PDF viewer render the right text" assertion)
-  // -------------------------------------------------------------------
+  // Comprehensive edit-text regression.
 
-  /**
-   * Walk adjacent merged-from-bounds and assert no horizontal
-   * overlap. If two sub-runs overlap, the bitmap will render
-   * stacked glyphs at the overlap point - the exact bug class the
-   * "Acrobaaaat" insert was hitting.
-   */
+  /** Walk adjacent merged-from-bounds and assert no horizontal overlap. */
   function assertNoBoundsOverlap(
     bounds: Array<{ x: number; right: number }>,
     label: string,
@@ -2166,9 +1948,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       return;
     }
 
-    // Backspace 10 chars from end. Stops when text is fully empty
-    // or when the run vanishes (partialEdit returns null for empty
-    // nextText - which is fine; we stop before then).
+    // Backspace 10 chars from end.
     let running = baseline.text;
     const totalDeletes = Math.min(10, running.length - 1);
     for (let i = 0; i < totalDeletes; i++) {
@@ -2234,9 +2014,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       return;
     }
 
-    // Delete the letter at position N for each word: "Free" → "Fre"
-    // (delete 'e' at idx 3), "Adobe" → "dobe" (delete 'A' at start
-    // of word), "Alternative" → "Altrntiv" (delete vowels mid-word).
+    // Delete the letter at position N for each word: "Free" → "Fre", "Adobe" →
+    // "dobe", "Alternative" → "Altrntiv".
     const targets: Array<{
       word: string;
       offsetInWord: number;
@@ -2284,16 +2063,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     }
 
     let running = baseline.text;
-    // 6-step interleaved sequence. Each step picks a position
-    // dynamically based on `running`. Some of the inserts land
-    // INSIDE a sub-run's char range (e.g. between 'e' and ' ' of a
-    // sub-run that contains "e ") - the partialEdit path can't
-    // preserve the original font for those (the sub-run's chars get
-    // split in nextText and the LCS alignment falls through to the
-    // overlay path). We assert text-integrity (no teleport, no dupe
-    // sub-runs, expected text) but tolerate the font-flip on those
-    // specific steps - documented as a known architectural limit of
-    // the LCS approach.
+    // 6-step interleaved sequence.
     const steps: Array<{ op: "ins" | "del"; pos: () => number; ch?: string }> =
       [
         { op: "ins", pos: () => running.length, ch: "Z" },
@@ -2332,11 +2102,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("comprehensive regression: save+reopen text-content round-trip", async ({
     page,
   }) => {
-    // The "would a PDF viewer render the right text" assertion. We
-    // type some chars, delete some chars, save the PDF, re-open it,
-    // and assert the re-extracted text from PDFium still contains
-    // the expected pattern. This is the closest test we can get to
-    // OCR without actually shipping tesseract.
+    // The "would a PDF viewer render the right text" assertion.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -2374,10 +2140,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     ).toBeVisible({ timeout: 30_000 });
     await page.waitForTimeout(1500);
 
-    // Scan EVERY run on EVERY page - the saved-PDF reopen often
-    // splits the tagline across multiple runs because the inserted
-    // chunks land at positional offsets LineGrouper doesn't always
-    // re-merge.
+    // Scan EVERY run on EVERY page.
     const allText = await page.evaluate(() => {
       const store = (
         window as unknown as {
@@ -2391,12 +2154,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
         .join("\n");
     });
     const debugSnippet = allText.slice(0, 500);
-    // The inserted "aaa" must appear near "Acrob". LineGrouper on
-    // reload may synthesise a small whitespace gap between "Acrob"
-    // and the inserted Helvetica chunk when their bounds don't quite
-    // touch - that's a model-text artifact, the actual bitmap renders
-    // the glyphs contiguously (verified visually). Accept up to a few
-    // synth-chars of slack between "Acrob" and the "aaa".
+    // The inserted "aaa" must appear near "Acrob".
     expect(
       allText,
       `reopened did not contain "Acrob...aaa". snippet: ${debugSnippet}`,
@@ -2411,37 +2169,13 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   });
 
   // -------------------------------------------------------------------
-  // Font-fallback regression tests. The editor has TWO insert paths
-  // (partialEdit for LineGrouper-merged runs, overlay for single-
-  // object runs) and BOTH need to handle the case where the source
-  // font might not have a glyph for the inserted char. The default
-  // safe answer is "use base-14 Helvetica fallback" - which guarantees
-  // the inserted glyph renders correctly even if the source font is
-  // a CID font with a custom encoding that would return 0-width or
-  // garbage glyphs for arbitrary Unicode.
-  //
-  // These tests pin the behaviour so a future "optimisation" that
-  // tries to borrow the source font without proper glyph-availability
-  // checks (and ends up rendering tofu) gets caught immediately.
-  // -------------------------------------------------------------------
+  // Font-fallback regression tests.
 
   test("font-fallback: Helvetica fallback for inserted text produces a visible glyph (width > 0)", async ({
     page,
   }) => {
     // The marketing PDF tagline uses an embedded non-standard font
-    // ("pdf:...:Unknown"). Our current behaviour is to ALWAYS emit
-    // inserted chars in base-14 Helvetica fallback (originalFontPtr=0
-    // in applyPartialEditPlan). This test pins the contract: the
-    // user must see a real, non-zero-width glyph after typing - which
-    // Helvetica guarantees.
-    //
-    // Note: this test does NOT prove that borrowing the source font
-    // would have failed - typing 'X' here goes through the fallback
-    // path by design. The follow-up SetCharcodes work (see comment
-    // in partialEdit.ts) would let us borrow the source font for
-    // chars demonstrably present in the source line. That's a
-    // separate improvement; the contract this test pins is "fallback
-    // path always produces a renderable glyph".
+    // ("pdf:...:Unknown").
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -2500,17 +2234,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("font-borrow: typing same-char-as-original uses the SOURCE font (width matches original)", async ({
     page,
   }) => {
-    // The "try borrow, detect, fall back" path: when every inserted
-    // char already appears in the source line, partialEdit tries the
-    // source font handle. If PDFium successfully renders the glyph,
-    // the inserted char looks IDENTICAL to the original (same width,
-    // same weight, same typeface).
-    //
-    // This test types 'a' right after the 'a' of "Acrobat" → "Acrobaat".
-    // The inserted 'a' must have approximately the same rendered
-    // width as the source's 'a'. If we fall back to Helvetica (the
-    // narrower fallback), the inserted width is significantly smaller
-    // (~8pt) than the source font's bold 'a' (~12pt at this size).
+    // The "try borrow, detect, fall back" path: when every inserted char
+    // already appears in the source line.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -2545,9 +2270,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       ).__v2_editor_store;
       const r = store.doc.page(0).runs.find((x) => x.id === tid);
       if (!r) return null;
-      // Find the FIRST sub-run whose text is exactly 'a'. The
-      // marketing tagline's per-glyph layout makes 'a' its own
-      // sub-run.
+      // Find the FIRST sub-run whose text is exactly 'a'.
       for (let i = 0; i < r.mergedFromTexts.length; i++) {
         if (r.mergedFromTexts[i] === "a") {
           const b = r.mergedFromBounds[i];
@@ -2565,9 +2288,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     const caretPos = baseline.text.indexOf("Acrobat") + 6;
     await execAt(page, baseline.id, caretPos, "insertText", "a");
 
-    // Read the INSERTED 'a' sub-run's width. It's the most recently
-    // added 'a' single-char sub-run that wasn't there before. We
-    // identify it as "the last 'a' sub-run in order".
+    // Read the INSERTED 'a' sub-run's width.
     const insertedAWidth = await page.evaluate((tid) => {
       const store = (
         window as unknown as {
@@ -2597,10 +2318,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     }, baseline.id);
     if (insertedAWidth === null) throw new Error("inserted 'a' not found");
 
-    // The inserted 'a' must be approximately the same width as the
-    // original 'a' (within 30% - a generous bound that catches the
-    // Helvetica fallback while tolerating PDFium's measurement
-    // quirks).
+    // The inserted 'a' must be approximately the same width as the original
+    // 'a'.
     const ratio = insertedAWidth / origAWidth;
     expect(
       ratio,
@@ -2612,12 +2331,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("font-fallback: typing same-char-as-original keeps text content correct (no garbage glyph)", async ({
     page,
   }) => {
-    // Even when the inserted char IS already present in the source
-    // text (e.g. typing 'd' next to existing 'd' in "Adobe"), the
-    // result must remain text-content-correct: run.text equals
-    // baseline + 'd', no other chars mangled, no 0-width sub-runs.
-    // Catches a future "optimisation" that borrows the source font
-    // without verifying the encoding round-trip survives.
+    // Even when the inserted char IS already present in the source text, the
+    // result must remain text-content-correct: run.text equals baseline + 'd'.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -2658,9 +2373,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       ).__v2_editor_store;
       const r = store.doc.page(0).runs.find((x) => x.id === tid);
       if (!r) return null;
-      // Find the inserted 'd' sub-run - it's the one whose text is
-      // exactly "d" added between "Ad" and "obe" of the original.
-      // Filter to sub-runs containing 'd' that have non-zero width.
+      // Find the inserted 'd' sub-run - it's the one whose text is exactly "d"
+      // added between "Ad" and "obe" of the original.
       const dSubRuns = r.mergedFromTexts
         .map((t, i) => ({ text: t, bounds: r.mergedFromBounds[i] }))
         .filter((s) => s.text.includes("d"));
@@ -2682,16 +2396,7 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("font-fallback: subset-font run falls back to Helvetica on edit (no garbage)", async ({
     page,
   }) => {
-    // Subset fonts only embed the glyphs the source PDF originally
-    // used. Inserting a NEW char (not in the source) can't reuse the
-    // subset font - it must fall back to Helvetica. The user sees
-    // the new char rendered correctly; the rest of the line may flip
-    // to Helvetica as documented (subset fonts can't be partial-
-    // edited because they lack a stable Unicode→glyph mapping).
-    //
-    // Loads the dedicated subset-font fixture (its embedded font name
-    // table carries the "ABCDEF+" subset tag) so a subset run is always
-    // present - no opportunistic skip.
+    // Subset fonts only embed the glyphs the source PDF originally used.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -2777,20 +2482,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
   test("font-fallback: overlay path's canReuseFont gate documented", async ({
     page,
   }) => {
-    // Belt-and-suspenders test: confirms the EditTextCommand overlay
-    // path (taken when partialEdit can't run, e.g. single-object
-    // runs) reuses the source font ONLY when (a) every new char
-    // exists in the original text (safeChars) AND (b) the font
-    // isn't a subset AND (c) the run lives at page level (not
-    // inside a form-xobject). If a future change loosens any of
-    // these without proper glyph-availability detection, the user
-    // would see tofu / 0-width glyphs.
-    //
-    // We exercise this by reading the source code's gate via a
-    // self-test: load a doc, find a single-object non-base14 run,
-    // edit it with a char NOT in the original (`X` is rare in
-    // sample.pdf's body text), and assert the run.fontId flips to
-    // base14:Helvetica (proving the fallback fired).
+    // Belt-and-suspenders test: confirms the EditTextCommand overlay path
+    // reuses the source font ONLY when every new char exists in the.
     await gotoV2(page);
     await loadSamplePdf(page);
     await page.waitForTimeout(500);
@@ -2855,24 +2548,13 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
     const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
 
-    // Three consecutive spaces between A and B. PDFium's text object
-    // storage collapses these unless the writer emits per-word chunks
-    // - this is what the "Preserve consecutive spaces via per-word
-    // emit" path in editTextHelpers exists to defend.
+    // Three consecutive spaces between A and B.
     await typeIntoRun(page, runTestId, " A   B");
     await expect(firstRun).toContainText("A   B");
 
     await saveAndReopen(page);
 
-    // The per-word emit writes "A" + gap + "B" as separate PDFium
-    // text objects, and LineGrouper on reload may or may not re-merge
-    // them depending on the measured gap vs ABS_MAX_GAP_PT. Either way,
-    // both halves and the inter-word gap must survive somewhere on
-    // page 0 - collect every run's text and look for the pattern.
-    // After reopen the document re-reads asynchronously; saveAndReopen only
-    // waits for the first run to paint, so poll the model until BOTH halves
-    // of the edit are back (re-read settled) before asserting - otherwise the
-    // run carrying "B" may not exist yet and the test flakes.
+    // The per-word emit writes "A" + gap + "B" as separate PDFium text objects.
     const allText = await page
       .waitForFunction(
         () => {
@@ -2895,10 +2577,8 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     // Both letters came back - no text object was lost in the round trip.
     expect(allText).toContain("A");
     expect(allText).toContain("B");
-    // Multiple consecutive spaces must survive in at least one run
-    // (LineGrouper rebuilds them from cursor-jump positions). A complete
-    // collapse to a single space means PDFium ate them inside one
-    // text object - the failure mode this test guards against.
+    // Multiple consecutive spaces must survive in at least one run (LineGrouper
+    // rebuilds them from cursor-jump positions).
     expect(allText).toMatch(/ {2,}/);
   });
 });
@@ -2919,19 +2599,15 @@ test.describe("PDF text editor v2 - colour", () => {
     });
     await firstRun.click();
 
-    // Mantine's ColorInput stamps the testid on the wrapper, not the
-    // underlying <input>. We match by aria-label and use evaluate() to
-    // fire React's onChange via fill+blur in one shot - the input is
-    // type=text under the hood.
+    // Mantine's ColorInput stamps the testid on the wrapper, not the underlying
+    // <input>.
     const colourInput = page.getByLabel("Font colour").first();
     await expect(colourInput).toBeEnabled();
     await colourInput.fill("#ff0000"); // theme-allow-color test input value
     await colourInput.press("Enter");
     await expect(page.getByTestId("v2-undo")).toBeEnabled();
 
-    // The undo button being enabled only proves SOMETHING dispatched. Read
-    // the run's fill from the model and assert SetColour actually landed
-    // red on the run we selected.
+    // The undo button being enabled only proves SOMETHING dispatched.
     const fill = await page.evaluate((id) => {
       const store = (
         window as unknown as {
@@ -2989,11 +2665,8 @@ test.describe("PDF text editor v2 - delete + multi-select", () => {
     await runs.nth(0).click();
     await runs.nth(1).click({ modifiers: ["Shift"] });
 
-    // After a multi-select with two different fills, the colour input is
-    // null (mixed). The font-size input is enabled in either case. The
-    // simplest assertion: undo isn't enabled (no dispatches yet) and the
-    // toolbar accepts a colour to apply to both. We then check that two
-    // edits land in history via canRedo after one undo.
+    // After a multi-select with two different fills, the colour input is null
+    // (mixed).
     const colourInput = page.getByLabel("Font colour").first();
     await expect(colourInput).toBeEnabled();
     await colourInput.fill("#00aa00"); // theme-allow-color test input value
@@ -3112,9 +2785,8 @@ test.describe("PDF text editor v2 - multi-page", () => {
     const target = runs.first();
     const runTestId = (await target.getAttribute("data-testid")) ?? "";
     const runId = runTestId.replace(/^v2-run-/, "");
-    // Capture the page-2 run's model text before the edit so we can prove
-    // the appended char survives a full round-trip, not just lands in DOM.
-    // Read by id (DOM order may differ from model run order).
+    // Capture the page-2 run's model text before the edit so we can prove the
+    // appended char survives a full round-trip, not just lands in DOM.
     const textBefore = await page.evaluate((id) => {
       const store = (
         window as unknown as {
@@ -3130,9 +2802,7 @@ test.describe("PDF text editor v2 - multi-page", () => {
     await expect(target).toContainText("e");
     await expect(page.getByTestId("v2-undo")).toBeEnabled();
 
-    // Save the edited document and capture the bytes. Inlined (not via the
-    // shared saveAndReopen, which only waits for page-0 runs) so we can
-    // wait for page 2 to re-render.
+    // Save the edited document and capture the bytes.
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("v2-save").click();
     const download = await downloadPromise;
@@ -3142,9 +2812,7 @@ test.describe("PDF text editor v2 - multi-page", () => {
     const savedBytes = Buffer.concat(chunks);
 
     // Remember the document we are replacing: after the re-upload the OLD
-    // document's page-2 runs are still mounted, so DOM visibility alone is
-    // satisfied instantly and the model below can still be empty. Gate on a
-    // changed document identity plus a populated page 2 instead.
+    // document's page-2 runs are still mounted.
     await stashCurrentDocument(page);
     await page.locator('[data-testid="v2-file-input"]').setInputFiles({
       name: "round-trip.pdf",
@@ -3157,8 +2825,6 @@ test.describe("PDF text editor v2 - multi-page", () => {
     await waitForReopenedPage(page, 2);
 
     // Re-read the page-2 run text through PdfiumTextReader + LineGrouper.
-    // The per-word emit path may split the line into multiple runs, so
-    // scan every page-2 run for the appended 'e' against the prior text.
     const page2Text = await page.evaluate(() => {
       const store = (
         window as unknown as {
@@ -3169,10 +2835,7 @@ test.describe("PDF text editor v2 - multi-page", () => {
       ).__v2_editor_store;
       return (store.state.pages[2]?.runs ?? []).map((r) => r.text).join("\n");
     });
-    // The edit appended 'e' to the run's last token. After the per-word
-    // emit + LineGrouper the line may split on spaces, so assert on the
-    // last whitespace-delimited token (the one that grew) rather than the
-    // whole string: that token + 'e' must survive the round-trip.
+    // The edit appended 'e' to the run's last token.
     const lastToken = textBefore.trim().split(/\s+/).pop() ?? textBefore;
     expect(page2Text).toContain(`${lastToken}e`);
   });
@@ -3188,9 +2851,8 @@ test.describe("PDF text editor v2 - bold/italic", () => {
       (el.getAttribute("data-testid") ?? "").replace(/^v2-run-/, ""),
     );
     await firstRun.click();
-    // First we must swap to a base-14 font (Helvetica) since the source
-    // PDF's runs use unknown families that the bold flip doesn't know
-    // how to map.
+    // First we must swap to a base-14 font (Helvetica) since the source PDF's
+    // runs use unknown families that the bold flip doesn't know how to map.
     const family = page.getByLabel("Font family").first();
     await family.click();
     await page
@@ -3237,24 +2899,8 @@ test.describe("PDF text editor v2 - bold/italic", () => {
   test("user-sample.pdf: Bold on a LineGrouper-merged tagline removes every per-glyph original (no ghost layers)", async ({
     page,
   }) => {
-    // Regression for the user-reported "I hit bold and unbold and it
-    // broke the text and made multiple layers" bug. The marketing
-    // tagline in user-sample.pdf is laid out as one PDFium text object
-    // PER GLYPH (34+ objects) which LineGrouper merges into one editable
-    // run with `mergedFromPtrs` listing the originals. SetFontFamily
-    // used to remove only `run.pdfiumObjPtr` (the primary) and leave
-    // every per-glyph original on the page - the new Helvetica-Bold
-    // emit landed ON TOP of them and the bitmap showed BOTH layers
-    // overlapping. Fix: SetFontFamily removes EVERY member ptr.
-    //
-    // Asserts after the bold-then-unbold sequence:
-    //   - run.text is preserved
-    //   - mergedFromPtrs is cleared (the run is now a single base-14
-    //     object, no more per-glyph references)
-    //   - run.fontId reflects the toggle-final family
-    //   - After save+reopen, page 0 has ONLY ONE run carrying the
-    //     tagline text (the bug would surface as duplicate runs from
-    //     the leftover per-glyph objects re-grouping on read).
+    // Regression for the user-reported "I hit bold and unbold and it broke the
+    // text and made multiple layers" bug.
     await gotoV2(page);
     await page
       .locator('[data-testid="v2-file-input"]')
@@ -3304,9 +2950,7 @@ test.describe("PDF text editor v2 - bold/italic", () => {
     // fixture is still emitting one ptr per glyph.
     expect(baseline.mergedCount).toBeGreaterThan(10);
 
-    // Select the tagline via the store API (the contenteditable's click
-    // handler can flake in stubbed env; programmatic selection is the
-    // same path the toolbar wires through).
+    // Select the tagline via the store API.
     await page.evaluate((id) => {
       const store = (
         window as unknown as {
@@ -3356,21 +3000,11 @@ test.describe("PDF text editor v2 - bold/italic", () => {
     expect(after.text).toBe(baseline.text);
     // Run swapped to a base-14 font.
     expect(after.fontId).toMatch(/^base14:Helvetica/);
-    // mergedFromPtrs MUST be cleared - the run is now one base-14
-    // object, not a per-glyph cluster. A non-zero count means
-    // SetFontFamily forgot to clear the bookkeeping and the next edit
-    // would either re-process stale ptrs or leave them painted.
+    // mergedFromPtrs MUST be cleared - the run is now one base-14 object, not a
+    // per-glyph cluster.
     expect(after.mergedCount).toBe(0);
 
-    // Round-trip through save+reopen and check no ghost text. The bug
-    // would leave 34+ per-glyph objects PLUS the new Helvetica object, so
-    // on reload each tagline word would appear TWICE (once from the new
-    // base-14 emit, once from the surviving per-glyph cluster). The base-14
-    // re-emit is one PDFium object per WORD (the deliberate space-
-    // preservation path), so on reopen the line reads back as separate
-    // word runs - that is expected and fine. The real ghost-layer check is
-    // therefore per-token: each distinctive tagline word must appear in
-    // EXACTLY ONE run. Two+ = leftover per-glyph originals survived.
+    // Round-trip through save+reopen and check no ghost text.
     const saveBtn = page.getByTestId("v2-save");
     const downloadPromise = page.waitForEvent("download");
     await saveBtn.click();
@@ -3399,9 +3033,8 @@ test.describe("PDF text editor v2 - bold/italic", () => {
       ).__v2_editor_store;
       return store.doc.page(0).runs.map((r) => r.text);
     });
-    // The CORE assertion: each distinctive tagline word appears in
-    // EXACTLY ONE run. Two+ for any word = the ghost-layer bug (per-glyph
-    // originals survived the save and re-clustered alongside the new emit).
+    // The CORE assertion: each distinctive tagline word appears in EXACTLY ONE
+    // run.
     const countCarrying = (word: string) =>
       reopenedRuns.filter((t) => t.includes(word)).length;
     for (const word of ["Adobe", "Acrobat", "Alternative"]) {
@@ -3448,10 +3081,8 @@ test.describe("PDF text editor v2 - line grouping", () => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
-    // The raw PDFium read of sample.pdf produced 9 separate text
-    // objects (one per word/letter). After LineGrouper we expect
-    // strictly fewer overlays - the table cells with " as " merge into
-    // their line.
+    // The raw PDFium read of sample.pdf produced 9 separate text objects (one
+    // per word/letter).
     const runs = page.locator('[data-testid^="v2-run-p0-"]');
     const count = await runs.count();
     expect(count).toBeGreaterThan(0);
@@ -3467,9 +3098,8 @@ test.describe("PDF text editor v2 - line grouping", () => {
     const target = page.locator('[data-testid^="v2-run-p0-"]').first();
     const runTestId = (await target.getAttribute("data-testid")) ?? "";
     const original = (await target.innerText()) ?? "";
-    // Typing any character into a merged group falls through to the
-    // base-14 Helvetica fallback - it survives the round-trip even if
-    // the source PDF used a subset font.
+    // Typing any character into a merged group falls through to the base-14
+    // Helvetica fallback.
     await typeIntoRun(page, runTestId, "ZZZ");
     await expect(target).toContainText(`${original}ZZZ`);
 
@@ -3492,10 +3122,7 @@ test.describe("PDF text editor v2 - glyph fallback", () => {
     await loadSamplePdf(page);
 
     // The merged-collapse path swaps the run to Helvetica (base-14) so
-    // arbitrary Latin characters can be typed. This test asserts the
-    // overlay reflects what the user typed - the round-trip into the
-    // saved PDF is exercised by the dedicated save-round-trip test
-    // which uses subset-safe chars.
+    // arbitrary Latin characters can be typed.
     const target = page.locator('[data-testid^="v2-run-p0-"]').first();
     const runTestId = (await target.getAttribute("data-testid")) ?? "";
     await typeIntoRun(page, runTestId, "x!@#");
@@ -3622,9 +3249,8 @@ test.describe("PDF text editor v2 - render throttling", () => {
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(MULTI_PAGE_PDF);
 
-    // Page 0 is at the top of the stage and within the viewport on
-    // first render. The intersection observer should clear its
-    // placeholder shortly after mount.
+    // Page 0 is at the top of the stage and within the viewport on first
+    // render.
     await expect(page.getByTestId("v2-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -3632,12 +3258,8 @@ test.describe("PDF text editor v2 - render throttling", () => {
       timeout: 10_000,
     });
 
-    // Page 2 is below the fold for a 1080-tall viewport (each page is
-    // 792 PDF points * 1.5 scale ≈ 1188 CSS pixels). With our 800px
-    // rootMargin it MAY or MAY NOT be near-viewport depending on the
-    // exact layout, so we don't assert a placeholder, only that the
-    // page itself eventually becomes visible (which only happens once
-    // the user scrolls).
+    // Page 2 is below the fold for a 1080-tall viewport (each page is 792 PDF
+    // points * 1.5 scale ≈ 1188 CSS pixels).
     await expect(page.getByTestId("v2-page-2")).toBeVisible();
   });
 });
@@ -3646,10 +3268,8 @@ test.describe("PDF text editor v2 - lazy page loading", () => {
   test("multi-page docs render their pages without blocking on every read", async ({
     page,
   }) => {
-    // We don't have a 60-page fixture in the repo so we time the load
-    // of the existing multi-page fixture as a guardrail. The lazy path
-    // doesn't read all pages on load so this stays well under the
-    // baseline that v1 was hitting.
+    // We don't have a 60-page fixture in the repo so we time the load of the
+    // existing multi-page fixture as a guardrail.
     await gotoV2(page);
     const started = Date.now();
     await page
@@ -3659,19 +3279,16 @@ test.describe("PDF text editor v2 - lazy page loading", () => {
       timeout: 30_000,
     });
     const elapsedMs = Date.now() - started;
-    // Generous bound - the lazy load is a fraction of this in practice
-    // but CI machines vary. The point is the test catches a regression
-    // that pushes this over 10s for a 3-page doc.
+    // Generous bound - the lazy load is a fraction of this in practice but CI
+    // machines vary.
     expect(elapsedMs).toBeLessThan(10_000);
   });
 
   test("big-sample.pdf renders within a bounded time, edits, and round-trips", async ({
     page,
   }) => {
-    // The 80-page big-sample fixture is the largest input in the suite and
-    // had zero coverage. Proves the loading overlay + lazy page reader
-    // cope with a big doc: page 0 renders under a bounded timeout, a later
-    // page lazily renders on scroll, and an edit survives save + reopen.
+    // The 80-page big-sample fixture is the largest input in the suite and had
+    // zero coverage.
     test.setTimeout(120_000);
     await gotoV2(page);
     await page
@@ -3694,9 +3311,7 @@ test.describe("PDF text editor v2 - lazy page loading", () => {
       timeout: 30_000,
     });
 
-    // Make a trivial edit on page 0, then save + reopen and assert it
-    // survived. Scroll page 0 back into view first so its run overlay is
-    // mounted and editable.
+    // Make a trivial edit on page 0, then save + reopen and assert it survived.
     await page.evaluate(() => {
       const el = document.querySelector<HTMLElement>(
         '[data-testid="v2-page-0"]',
@@ -3831,12 +3446,6 @@ test.describe("PDF text editor v2 - form xobject recursion", () => {
 
     // The fixture is generated by
     // src/core/tests/test-fixtures/generate-form-xobject-sample.mjs.
-    // It contains a single page whose only content object is an
-    // FPDF_PAGEOBJ_FORM (created via pdf-lib's embedPdf+drawPage), and
-    // that form contains four text objects ("Magazine cover title",
-    // "Subheading line below", "Inner body paragraph one.", "Inner body
-    // paragraph two."). Our reader must recurse into the form to
-    // surface the runs.
     await page
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(FORM_XOBJECT_PDF);
@@ -3857,11 +3466,7 @@ test.describe("PDF text editor v2 - load progress overlay", () => {
     page,
   }) => {
     await gotoV2(page);
-    // Kick off the load and immediately capture the stage element. We
-    // race the small fixture's load against the assertion timeout; the
-    // overlay is so short-lived for tiny files we use a non-strict
-    // visible check that tolerates either "still visible" or "already
-    // gone but progress fired at least once".
+    // Kick off the load and immediately capture the stage element.
     const overlayPromise = page
       .getByTestId("v2-stage-loading")
       .waitFor({ state: "visible", timeout: 5_000 })
@@ -3871,9 +3476,8 @@ test.describe("PDF text editor v2 - load progress overlay", () => {
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(MULTI_PAGE_PDF);
     const sawOverlay = await overlayPromise;
-    // Either the overlay appeared, or the load finished too fast for
-    // the observer to catch it. In both cases the editor should now
-    // show pages.
+    // Either the overlay appeared, or the load finished too fast for the
+    // observer to catch it.
     await expect(page.getByTestId("v2-page-0")).toBeVisible({
       timeout: 30_000,
     });
@@ -3992,9 +3596,7 @@ test.describe("PDF text editor v2 - undo restores form-xobject text", () => {
     await expect(target).toContainText("ZZZ");
 
     await page.getByTestId("v2-undo").click();
-    // After undo, a run on page 0 contains the original text (the
-    // model has been re-emitted as a fresh page-level run carrying
-    // the original characters).
+    // After undo, a run on page 0 contains the original text.
     const undoneRuns = page.locator('[data-testid^="v2-run-p0-"]');
     const undoneTexts = await Promise.all(
       (await undoneRuns.all()).map((r) => r.innerText()),
@@ -4008,9 +3610,8 @@ test.describe("PDF text editor v2 - workbench tab UX", () => {
     page,
   }) => {
     await gotoV2(page);
-    // The WorkbenchBar exposes its tab buttons with the tab label as
-    // the accessible text. While our tool is active the Viewer tab is
-    // dropped from the list.
+    // The WorkbenchBar exposes its tab buttons with the tab label as the
+    // accessible text.
     const viewerTab = page
       .locator(".workbench-bar-views, .workbench-bar-center")
       .getByRole("button", { name: /^Viewer$/ });
@@ -4025,10 +3626,8 @@ test.describe("PDF text editor v2 - workbench tab UX", () => {
     // Simulate the FileContext side-effect that pushes to viewer on
     // file preview. The pin-effect should immediately switch back.
     await page.evaluate(() => {
-      // Best-effort hack: find any "Active Files" / "Files" tab and
-      // click it, then expect we bounce back. Since the actual
-      // pin-effect is hard to drive deterministically from a stub,
-      // we assert the stage stays visible after a setTimeout cycle.
+      // Best-effort hack: find any "Active Files" / "Files" tab and click it,
+      // then expect we bounce back.
     });
     await new Promise((resolve) => setTimeout(resolve, 500));
     await expect(page.getByTestId("v2-stage")).toBeVisible();
@@ -4061,10 +3660,8 @@ test.describe("PDF text editor v2 - toolbar tooltips", () => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
-    // After the text/image-editor scope cleanup, the rotate, print,
-    // reset, and save-to-workbench toolbar entries are gone. These
-    // belong in Stirling's dedicated PDF tools; the v2 editor's
-    // surface focuses on text + image manipulation.
+    // After the text/image-editor scope cleanup, the rotate, print, reset, and
+    // save-to-workbench toolbar entries are gone.
     await expect(page.getByTestId("v2-add-text")).toBeVisible();
     await expect(page.getByTestId("v2-add-image")).toBeVisible();
     await expect(page.getByTestId("v2-save")).toBeVisible();
@@ -4444,9 +4041,8 @@ test.describe("PDF text editor v2 - Ctrl+A select all", () => {
     const total = await page.locator('[data-testid^="v2-run-p0-"]').count();
 
     await page.evaluate(() => {
-      // Dispatch the keydown on window directly so we exercise the
-      // same listener the user's Ctrl+A would hit, without depending
-      // on which element the OS clipboard handler grabs first.
+      // Dispatch the keydown on window directly so we exercise the same
+      // listener the user's Ctrl+A would hit.
       window.dispatchEvent(
         new KeyboardEvent("keydown", {
           key: "a",
@@ -4473,22 +4069,8 @@ test.describe("PDF text editor v2 - Ctrl+A select all", () => {
   });
 });
 
-// ============================================================
-// Stress + edge-case battery
-// ------------------------------------------------------------
-// This block exists because every "fixed" regression in the v2
-// editor has come back at least once when a different code path
-// stopped honouring the invariant. The tests here exercise many
-// variations of the SAME few primitives (insert whitespace, swap
-// font, add/remove cycles, round-trip) so a regression in any
-// branch trips a test, not just the one happy path we last cared
-// about.
-//
-// All tests load `user-sample.pdf` (the marketing PDF with a
-// per-glyph LineGrouper tagline) because that fixture exposes the
-// worst-case bookkeeping: 30+ sub-objects, embedded subset font,
-// positional whitespace, form xobjects.
-// ============================================================
+// ============================================================ Stress +
+// edge-case battery.
 
 test.describe("PDF text editor v2 - stress: whitespace insertion variations", () => {
   /** Caret at char index `pos` inside `runTestId`. */
@@ -4613,9 +4195,7 @@ test.describe("PDF text editor v2 - stress: whitespace insertion variations", ()
       if (!after) throw new Error("tagline vanished");
       // Text content gained the payload verbatim.
       expect(after.text).toBe(before.text + payload);
-      // The tagline's right edge advanced (model bounds widen). Without
-      // this check, a zero-advance whitespace insert would silently
-      // pile chars on top of each other.
+      // The tagline's right edge advanced (model bounds widen).
       expect(after.boundsRight).toBeGreaterThan(before.boundsRight);
     });
   }
@@ -4641,9 +4221,8 @@ test.describe("PDF text editor v2 - stress: whitespace insertion variations", ()
   test("whitespace stress: ten alternating insert-space / type-char operations don't compound drift", async ({
     page,
   }) => {
-    // Reach: the cumulative offset / merged-from-bookkeeping must stay
-    // accurate over many ops, not just one. A single off-by-one each
-    // op accumulates into a visible cliff after 10 edits.
+    // Reach: the cumulative offset / merged-from-bookkeeping must stay accurate
+    // over many ops, not just one.
     await loadFixture(page);
     const start = await readTagline(page);
     if (!start) {
@@ -4681,9 +4260,7 @@ test.describe("PDF text editor v2 - stress: whitespace insertion variations", ()
     await page.waitForTimeout(250);
     const after = await readTagline(page);
     if (!after) throw new Error("tagline vanished");
-    // Net: text identical, bounds back to ~original (within a few pts
-    // of the bookkeeping; partialEdit may leave tiny residuals for
-    // closed-gap sub-runs - tolerate up to a few percent).
+    // Net: text identical, bounds back to ~original.
     expect(after.text).toBe(before.text);
     const widthDelta = Math.abs(after.boundsRight - before.boundsRight);
     expect(widthDelta).toBeLessThan(before.boundsRight * 0.05);
@@ -4798,11 +4375,7 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
     }
     const before = await readRun(page, id);
     if (!before) throw new Error("baseline read failed");
-    // Re-select before each toolbar click - SetFontFamily replaces
-    // the run's PDFium object, which can race with the selection
-    // observer in headless mode and leave the toolbar buttons
-    // operating on a stale selection. Forcing selection each time
-    // makes the toggle sequence deterministic.
+    // Re-select before each toolbar click.
     await selectTagline(page);
     await page.getByTestId("v2-bold").click();
     await page.waitForTimeout(250);
@@ -4816,12 +4389,8 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
     if (!after) throw new Error("run vanished after cross-axis toggles");
     expect(after.text).toBe(before.text);
     expect(after.merged).toBe(0);
-    // Final state: SOMETHING swapped (the run is no longer in the
-    // embedded source font) and the swap left no ghost layers.
-    // Accept any base14 family - the exact bold/italic axis state
-    // depends on flipBold/flipItalic's regex handling of the
-    // "Helvetica-BoldOblique" intermediate form, which we don't
-    // care about as a contract for THIS test.
+    // Final state: SOMETHING swapped (the run is no longer in the embedded
+    // source font) and the swap left no ghost layers.
     expect(after.fontId).toMatch(/^base14:Helvetica/);
     expect(after.fontId).not.toBe(before.fontId);
   });
@@ -4909,11 +4478,8 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
       ).__v2_editor_store;
       return store.doc.page(0).runs.map((r) => r.text);
     });
-    // After save+reopen the LineGrouper may or may not re-merge the
-    // tagline's per-word emits into one run depending on inter-word
-    // gap vs ABS_MAX_GAP_PT. Either way, the "EXTRA" marker MUST
-    // appear in exactly ONE run on page 0 - more than one means the
-    // bolded tagline got duplicated (the ghost-layer bug).
+    // After save+reopen the LineGrouper may or may not re-merge the tagline's
+    // per-word emits into one run depending on inter-word gap vs.
     const extraCarriers = reopenedRuns.filter((t) => /EXTRA/.test(t));
     expect(
       extraCarriers.length,
@@ -4970,23 +4536,23 @@ test.describe("PDF text editor v2 - stress: add / remove cycles (no leaks)", () 
     page,
   }) => {
     await loadFixture(page);
-    const start = await page.locator('[data-testid^="v2-run-p0-"]').count();
+    const runs = page.locator('[data-testid^="v2-run-p0-"]');
+    const start = await runs.count();
     for (let i = 0; i < 3; i++) {
       // Add text mode + click on page to insert.
       await page.getByTestId("v2-add-text").click();
       await page
         .getByTestId("v2-page-0")
         .click({ position: { x: 100, y: 600 - i * 20 } });
-      await page.waitForTimeout(250);
+      // Wait for the insert to actually land: a fixed delay is a bet on
+      // machine speed, and it lost under parallel load.
+      await expect(runs).toHaveCount(start + 1);
       // Select the most recently inserted run and delete it.
-      const allRuns = page.locator('[data-testid^="v2-run-p0-"]');
-      await allRuns.last().click();
-      await page.waitForTimeout(150);
+      await runs.last().click();
       await page.getByTestId("v2-delete").click();
-      await page.waitForTimeout(250);
+      await expect(runs).toHaveCount(start);
     }
-    const end = await page.locator('[data-testid^="v2-run-p0-"]').count();
-    expect(end).toBe(start);
+    expect(await runs.count()).toBe(start);
   });
 
   test("type-then-backspace to empty three times keeps mergedFromPtrs in sync", async ({
@@ -5158,9 +4724,7 @@ test.describe("PDF text editor v2 - stress: add / remove cycles (no leaks)", () 
       );
       await page.waitForTimeout(180);
     }
-    // Undo the whole burst. Rapid same-run edits coalesce into one undo step
-    // (typing-session granularity), so undo until the button is disabled
-    // rather than assuming a fixed count.
+    // Undo the whole burst.
     for (let i = 0; i < 6; i++) {
       const undoBtn = page.getByTestId("v2-undo");
       if (await undoBtn.isDisabled()) break;
@@ -5192,15 +4756,8 @@ test.describe("PDF text editor v2 - stress: add / remove cycles (no leaks)", () 
     if (!after) throw new Error("post-undo read failed");
     expect(after.text).toBe(baseline.text);
     expect(after.fontId).toBe(baseline.fontId);
-    // NOTE: `run.bounds.width` does NOT restore perfectly after
-    // multi-cycle undo - the partialEdit revert leaves stale
-    // per-sub-run bounds in `mergedFromBounds` that the run-level
-    // bounds aggregator still sums. This is a known bookkeeping
-    // limitation, not a data-corruption bug: the text content and
-    // font are correct, the saved PDF round-trips properly. We
-    // intentionally don't assert width here to avoid false
-    // regressions; the saved-PDF round-trip tests cover what
-    // actually matters end-to-end.
+    // NOTE: `run.bounds.width` does NOT restore perfectly after multi-cycle
+    // undo.
   });
 });
 
@@ -5238,11 +4795,8 @@ test.describe("PDF text editor v2 - stress: save+reopen multi-cycle", () => {
   test("save+reopen three times in a row (with one edit each) doesn't compound ghost objects", async ({
     page,
   }) => {
-    // Reach: a leak that adds one ghost text object per round-trip
-    // would grow page 0's run count linearly with cycles. After 3
-    // cycles with a single-char append each, the page should have at
-    // most the baseline + a few new runs (each cycle adds one short
-    // text object). No order-of-magnitude blowup.
+    // Reach: a leak that adds one ghost text object per round-trip would grow
+    // page 0's run count linearly with cycles.
     await loadFixture(page);
     const baselineCount = await page
       .locator('[data-testid^="v2-run-p0-"]')
@@ -5291,9 +4845,8 @@ test.describe("PDF text editor v2 - stress: save+reopen multi-cycle", () => {
       await saveAndReopenLocal(page);
     }
     const endCount = await page.locator('[data-testid^="v2-run-p0-"]').count();
-    // After 3 cycles the run count should be within a small multiplier
-    // of baseline - not 3x or 10x as a leak would produce. Allow some
-    // headroom since each edit may split off a per-word emit.
+    // After 3 cycles the run count should be within a small multiplier of
+    // baseline - not 3x or 10x as a leak would produce.
     expect(endCount).toBeLessThan(baselineCount * 2 + 5);
     // The tagline carrier appears at most once with the appended chars.
     const reopenedTexts = await page.evaluate(() => {
@@ -5378,20 +4931,8 @@ test.describe("PDF text editor v2 - stress: save+reopen multi-cycle", () => {
 });
 
 test.describe("PDF text editor v2 - stress: AddText box content fidelity", () => {
-  // The AddText flow has its own input path (singleton run, base-14
-  // Helvetica from the start, no LineGrouper). The user reported a
-  // specific reordering bug ("be  aaA" rendered as "beaa A") that we
-  // couldn't reproduce in synthetic tests - this battery exercises
-  // every reasonable typing pattern through that path to catch the
-  // regression class.
-  //
-  // All tests follow the same shape:
-  //   1. Add a new text box at a page-position
-  //   2. Type into it (with various sequences / orderings)
-  //   3. Assert run.text matches the typed sequence exactly
-  //   4. Verify NO sub-runs got reordered (mergedFromTexts in left-to-
-  //      right x order equals the run's text)
-  //   5. Save+reopen and verify text survives
+  // The AddText flow has its own input path (singleton run, base-14 Helvetica
+  // from the start, no LineGrouper).
 
   async function loadFixture(page: import("@playwright/test").Page) {
     await gotoV2(page);
@@ -5580,10 +5121,8 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
       // Model contains the typed text verbatim (modulo CSS whitespace
       // normalization that maps NBSP back to space).
       expect(after.text.replace(/\u00A0/g, " ")).toBe(payload);
-      // Sub-runs (paragraphLeafPtrs in left-to-right x order) match
-      // the model text when joined with the inter-chunk gaps.
-      // Concretely: every char in `payload` (sorted by x position in
-      // the saved output) appears in the SAME order as `payload`.
+      // Sub-runs (paragraphLeafPtrs in left-to-right x order) match the model
+      // text when joined with the inter-chunk gaps.
       if (after.mergedFromTexts.length > 0) {
         const sortedByX = after.mergedFromTexts
           .map((t, i) => ({ t, x: after.mergedFromBounds[i]?.x ?? 0 }))
@@ -5598,9 +5137,7 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
     });
   }
 
-  // ---- Char-by-char typing path (matches real keyboard input more
-  // closely than bulk insertText; this is the path most likely to
-  // produce intermediate states that confuse the per-word emit). ----
+  // ---- Char-by-char typing path. ----
 
   for (const payload of ["be  aaA", "Hi  there", "x y z", "a  b  c"] as const) {
     test(`AddText char-by-char typing: ${JSON.stringify(payload)} produces correct final state + order`, async ({
@@ -5668,8 +5205,6 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
       const joined = reopened.map((r) => r.text).join(" ");
       const onlyLetters = (s: string) => s.replace(/\s/g, "");
       // The reopened joined text contains payload's letters in order.
-      // Allow other doc text to interleave by checking with .includes
-      // after extracting only matching chars.
       const payloadLetters = onlyLetters(payload);
       const joinedLetters = onlyLetters(joined);
       expect(
@@ -5716,8 +5251,7 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
     if (!final) throw new Error("final read failed");
     expect(final.text.replace(/\u00A0/g, " ")).toBe("hello  world");
     // Order check: hello letters precede world letters in x-sorted
-    // mergedFromTexts. (Singleton runs may have empty mergedFromTexts;
-    // skip the order check in that case.)
+    // mergedFromTexts.
     if (final.mergedFromTexts.length > 0) {
       const sorted = final.mergedFromTexts
         .map((t, i) => ({ t, x: final.mergedFromBounds[i]?.x ?? 0 }))
@@ -5759,9 +5293,7 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
   test("AddText: 'be  aaA' chars appear left-to-right in saved object positions (no reorder)", async ({
     page,
   }) => {
-    // The user's exact reported repro. Asserts the strongest invariant:
-    // every visible char in the saved output appears at a strictly
-    // increasing x position matching the typed order.
+    // The user's exact reported repro.
     await loadFixture(page);
     const id = await addNewTextBox(page);
     await clearAndType(page, id, "be  aaA");
@@ -5770,9 +5302,8 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
     const after = await readRun(page, id);
     if (!after) throw new Error("run vanished");
     expect(after.text.replace(/\u00A0/g, " ")).toBe("be  aaA");
-    // If the emit split into per-word chunks, the two chunks must be
-    // "be" (leftmost) and "aaA" (rightmost). Anything else (e.g.
-    // "beaa" + " A") means the per-word splitter reordered the input.
+    // If the emit split into per-word chunks, the two chunks must be "be"
+    // (leftmost) and "aaA" (rightmost).
     if (after.mergedFromTexts.length >= 2) {
       const sorted = after.mergedFromTexts
         .map((t, i) => ({ t, x: after.mergedFromBounds[i]?.x ?? 0 }))
@@ -5791,16 +5322,8 @@ test.describe("PDF text editor v2 - stress: AddText box content fidelity", () =>
 });
 
 test.describe("PDF text editor v2 - stress: deletion shrinks bounds (no stuck-wide overlay)", () => {
-  // User-reported: "I can add spaces but after adding them I can't
-  // remove them" - the actual mechanism was that backspacing trailing
-  // spaces updated `run.text` (correct) but left `run.bounds.width` at
-  // the wider pre-deletion value. The CSS-positioned TextRunOverlay
-  // selection/hover rectangle is sized off bounds.width, so the box
-  // visually "stayed wide" after backspace, making the user think the
-  // spaces hadn't actually been deleted.
-  //
-  // Fix: PdfiumTextWriter.commitRunText re-measures the PDFium text
-  // object's bbox after every SetText so model bounds stay honest.
+  // User-reported: "I can add spaces but after adding them I can't remove
+  // them".
 
   async function loadFixture(page: import("@playwright/test").Page) {
     await gotoV2(page);
@@ -6030,11 +5553,8 @@ test.describe("PDF text editor v2 - stress: deletion shrinks bounds (no stuck-wi
   test("typing a tagline edit then backspacing the appended char shrinks the run's bounds", async ({
     page,
   }) => {
-    // Same fix surface but exercised through the partialEdit path (the
-    // tagline is a LineGrouper-merged run). The partial-edit apply
-    // already returns the new bounds via newBoundsWidth, so this test
-    // is a regression guard against future code accidentally bypassing
-    // that field.
+    // Same fix surface but exercised through the partialEdit path (the tagline
+    // is a LineGrouper-merged run).
     await loadFixture(page);
     const id = await page.evaluate(() => {
       const store = (
@@ -6087,9 +5607,7 @@ test.describe("PDF text editor v2 - stress: deletion shrinks bounds (no stuck-wi
     const back = await readRun(page, id);
     if (!back) throw new Error("back read failed");
     expect(back.text).toBe(before.text);
-    // Within a few points of original (partialEdit's per-sub-run
-    // bookkeeping may leave a hair of drift; tolerance keeps this from
-    // becoming a flake but still catches a stuck-wide regression).
+    // Within a few points of original.
     const drift = Math.abs(back.width - before.width);
     expect(
       drift,
@@ -6099,12 +5617,8 @@ test.describe("PDF text editor v2 - stress: deletion shrinks bounds (no stuck-wi
 });
 
 test.describe("PDF text editor v2 - stress: overlay box width hugs the text", () => {
-  // User reported the textbox visually "doesn't have the same width
-  // as the text" - the overlay div had a permanent +1em buffer past
-  // measureText so the selection / hover rectangle always extended
-  // past the right edge of the rendered glyphs. The buffer is now
-  // focused-only (room to type one more char while editing) so an
-  // unfocused / selected / hovered run hugs its text.
+  // User reported the textbox visually "doesn't have the same width as the
+  // text".
 
   async function loadFixture(page: import("@playwright/test").Page) {
     await gotoV2(page);
@@ -6132,9 +5646,8 @@ test.describe("PDF text editor v2 - stress: overlay box width hugs the text", ()
     page: import("@playwright/test").Page,
     runTestId: string,
   ): Promise<number> {
-    // Measure the text content's intrinsic CSS width via the same
-    // canvas measureText the overlay component uses (Liberation Sans
-    // stack, same font-size).
+    // Measure the text content's intrinsic CSS width via the same canvas
+    // measureText the overlay component uses.
     return await page.evaluate((tid) => {
       const el = document.querySelector<HTMLElement>(`[data-testid="${tid}"]`);
       if (!el) return -1;
@@ -6186,11 +5699,8 @@ test.describe("PDF text editor v2 - stress: overlay box width hugs the text", ()
       document.execCommand("insertText", false, "hello");
     }, id);
     await page.waitForTimeout(400);
-    // Defocus explicitly. `document.body.click()` alone doesn't drop
-    // contentEditable focus in all Chromium configurations, so the
-    // overlay would stay in its focused branch and the test would
-    // measure the +1em buffer width (false negative). Force blur on
-    // the run element.
+    // Defocus explicitly. `document.body.click` alone doesn't drop
+    // contentEditable focus in all Chromium configurations.
     await page.evaluate((rid) => {
       const el = document.querySelector<HTMLElement>(
         `[data-testid="v2-run-${rid}"]`,
@@ -6202,13 +5712,7 @@ test.describe("PDF text editor v2 - stress: overlay box width hugs the text", ()
     const textW = await cssTextWidth(page, `v2-run-${id}`);
     expect(overlayW).toBeGreaterThan(0);
     expect(textW).toBeGreaterThan(0);
-    // The overlay hugs the text: at most ~15px of slack (font-metric
-    // fuzz between PDFium bbox and CSS measureText - the PDFium bbox
-    // sometimes runs a hair wider than measureText for short text).
-    // The regression we're guarding against had a permanent +1em
-    // buffer ON TOP OF this slack so the slack would be ~30px+ at
-    // default zoom. Failing this assertion means that buffer crept
-    // back in.
+    // The overlay hugs the text: at most ~15px of slack.
     const slack = overlayW - textW;
     expect(
       slack,
@@ -6219,10 +5723,8 @@ test.describe("PDF text editor v2 - stress: overlay box width hugs the text", ()
   test("focused AddText box: overlay grows past the text width so caret has room", async ({
     page,
   }) => {
-    // Counter-test: while typing, the overlay SHOULD have a buffer so
-    // the next char isn't clipped by overflow:hidden. If a future
-    // change removed both the always-on and the focused-only buffers,
-    // this test would catch the regression in the other direction.
+    // Counter-test: while typing, the overlay SHOULD have a buffer so the next
+    // char isn't clipped by overflow:hidden.
     await loadFixture(page);
     await page.getByTestId("v2-add-text").click();
     await page.getByTestId("v2-page-0").click({ position: { x: 300, y: 500 } });
@@ -6297,11 +5799,8 @@ test.describe("PDF text editor v2 - stress: overlay box width hugs the text", ()
     const textW = await cssTextWidth(page, `v2-run-${id}`);
     expect(overlayW).toBeGreaterThan(0);
     expect(textW).toBeGreaterThan(0);
-    // The tagline has a wider pdfWidth (it's per-glyph laid out and
-    // the rep's bounds.width spans the whole line), so the overlay
-    // can be modestly wider than the CSS-measured text width (CSS
-    // collapses LineGrouper-synthesised double spaces visually). Cap
-    // at 30% slack as a sanity bound.
+    // The tagline has a wider pdfWidth, so the overlay can be modestly wider
+    // than the CSS-measured text width.
     const slack = overlayW - textW;
     const ratio = slack / Math.max(1, textW);
     expect(
@@ -6313,18 +5812,7 @@ test.describe("PDF text editor v2 - stress: overlay box width hugs the text", ()
 
 test.describe("PDF text editor v2 - F-duplication regression (Sample.pdf tagline)", () => {
   // This regression guards against the bug fixed by gating the per-char
-  // backend-emit branch on `!reuse`. Before the fix, typing F at the
-  // end of "The Free Adobe Acrobat Alternative" with backend strategy
-  // active produced "The FFrFee Adobe AcFFFfffffrobat Alternative" -
-  // the partial-edit insert path's measure-and-fallback fired the
-  // per-char branch twice, stacking new F's on top of un-removed
-  // originals at the existing F positions.
-  //
-  // The test runs in stubbed mode (no real backend); the backend
-  // resolver's cache miss makes the per-char branch bail and the
-  // partial-edit borrow path keeps the originals + emits one new F.
-  // After the fix the model run text MUST equal exactly the original
-  // tagline + one F.
+  // backend-emit branch on `!reuse`.
   test("typing a single F at end of tagline produces exactly one F", async ({
     page,
   }) => {
@@ -6377,14 +5865,8 @@ test.describe("PDF text editor v2 - F-duplication regression (Sample.pdf tagline
     const newFCount = (modelText.match(/F/g) ?? []).length;
     expect(newFCount).toBe(originalFCount + 1);
 
-    // EMIT-PATH assertion: the original test only checked model text,
-    // which updates on every keystroke regardless of what PDFium
-    // actually emitted. A regression that re-introduced the double-
-    // fire bug or routed the emit through Helvetica fallback would
-    // STILL update the model to `original + 'F'` because that's a
-    // pure JS string concat in onInput. To catch render regressions
-    // we scrape the emit-event registry and assert no duplicate
-    // per-text emits happened for this run.
+    // EMIT-PATH assertion: the original test only checked model text, which
+    // updates on every keystroke regardless of what PDFium actually emitted.
     const fEmits = await page.evaluate(() => {
       const w = window as unknown as {
         __v2_charcode_events?: Array<{
@@ -6401,28 +5883,8 @@ test.describe("PDF text editor v2 - F-duplication regression (Sample.pdf tagline
     ).toBeLessThanOrEqual(1);
   });
 
-  // Consecutive-edit regression: a second M typed at the end of
-  // "10M+M" used to corrupt the rendering of the FIRST M too,
-  // because the legacy SetText borrow attempt produced .notdef
-  // stripes that FPDFPage_RemoveObject silently failed to clear
-  // for Type3 form-xobject ptrs, and the per-char retry then
-  // emitted a second text object on top. The fix routes every
-  // backend-strategy emit through the per-char branch unconditionally
-  // and signals the partial-edit measure-and-fallback to skip its
-  // tofu retry for verified ptrs.
-  //
-  // This test focuses on the EMIT PATH (not model text): typing two
-  // consecutive chars must produce at most 2 distinct emit events
-  // for "M". More than 2 means the measure-and-fallback fired a
-  // duplicate per-char retry on top of the first emit - exactly the
-  // failure mode that produced the visible .notdef-stripe artefacts
-  // on Sample.pdf's 10M+ run.
-  //
-  // Stubbed-mode caveat: without a real backend the per-char branch
-  // can't actually fire (cache stays empty). The assertion is
-  // therefore "no MORE than 2 emits for M across two keystrokes"
-  // which catches the duplicate-fire regression regardless of which
-  // code path is active.
+  // Consecutive-edit regression: a second M typed at the end of "10M+M" used to
+  // corrupt the rendering of the FIRST M too.
   test("two consecutive M edits on 10M+ produce ≤2 emit events for 'M' (no duplicate fire)", async ({
     page,
   }) => {
@@ -6470,9 +5932,8 @@ test.describe("PDF text editor v2 - F-duplication regression (Sample.pdf tagline
     }, tid);
     expect(modelText).toBe("10M+MM");
 
-    // EMIT-PATH assertion: at most 2 emits for "M" (one per
-    // keystroke). >2 means the tofu measure-and-fallback re-fired
-    // the per-char branch.
+    // EMIT-PATH assertion: at most 2 emits for "M" (one per keystroke). >2
+    // means the tofu measure-and-fallback re-fired the per-char branch.
     const mEmits = await page.evaluate(() => {
       const w = window as unknown as {
         __v2_charcode_events?: Array<{ outcome: string; text: string }>;

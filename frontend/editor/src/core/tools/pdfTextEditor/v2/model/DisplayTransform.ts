@@ -1,24 +1,6 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
-/**
- * Maps a page's raw PDF object coordinates (PDFium user space: MediaBox
- * origin, y-up, NOT cropped, NOT rotated) to "display-PDF" space - the
- * coordinate frame of the rendered bitmap (CropBox-cropped + /Rotate-applied)
- * still in PDF points and y-up, with its origin at the visible page's
- * lower-left after rotation.
- *
- * Why this exists: `FPDF_GetPageWidthF/HeightF` and `FPDF_RenderPageBitmap`
- * are CropBox-clipped and rotation-aware, but `FPDFPageObj_GetBounds` /
- * `FPDFText_GetCharBox` return raw MediaBox user space. The editor stores the
- * raw coords (so every command keeps composing in one space and the save path
- * stays untouched) and applies THIS transform only at the screen boundary -
- * the overlay placement (forward) and screen-derived inputs like page-click
- * insert and image drag (inverse). When CropBox==MediaBox and /Rotate==0 the
- * transform is the identity, so the common case is byte-identical to before.
- *
- * The transform is a pure affine `A` (Q = A·P) whose linear part is one of
- * {I, 90, 180, 270 rotation}; only `e`/`f` carry the CropBox origin.
- */
+/** Maps a page's raw PDF object coordinates to "display-PDF" space. */
 export interface DisplayTransformData {
   a: number;
   b: number;
@@ -179,11 +161,8 @@ export class DisplayTransform implements DisplayTransformData {
     return { x: ia * vx + ic * vy, y: ib * vx + id * vy };
   }
 
-  /**
-   * Build the transform for a page by reading its CropBox + rotation from
-   * PDFium. Falls back to identity (today's behaviour) when neither box is
-   * readable, so a malformed page never throws.
-   */
+  // Build the transform for a page by reading its CropBox + rotation from
+  // PDFium.
   static fromPage(
     m: WrappedPdfiumModule,
     pagePtr: number,
@@ -214,11 +193,8 @@ export class DisplayTransform implements DisplayTransformData {
     );
   }
 
-  /**
-   * Pure constructor from CropBox extents + rotation (exposed for tests).
-   * `rotate` is quarter-turns clockwise (0..3). Affine coefficients per the
-   * four cases; only e/f carry the crop origin so cl=cb=0,rotate=0 => identity.
-   */
+  // Pure constructor from CropBox extents + rotation (exposed for tests).
+  // `rotate` is quarter-turns clockwise (0..3).
   static fromCropAndRotate(
     cl: number,
     cb: number,

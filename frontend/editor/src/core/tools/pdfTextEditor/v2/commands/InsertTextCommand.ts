@@ -13,14 +13,8 @@ import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/v2/util/fallbac
 const DEFAULT_FAMILY = "Helvetica";
 const DEFAULT_SIZE = 12;
 
-/**
- * Create a brand-new text object on the given page at the given page-space
- * point. Uses the base-14 Helvetica font so the text supports any Latin
- * character without bundling.
- *
- * The created `TextRun` is appended to the page's runs list and the new
- * PDFium object is inserted into the page's content stream.
- */
+// Create a brand-new text object on the given page at the given page-space
+// point.
 export class InsertTextCommand implements Command {
   readonly type = "insert-text";
   private readonly pageIndex: number;
@@ -53,10 +47,7 @@ export class InsertTextCommand implements Command {
     const page = doc.page(this.pageIndex);
     const m = doc.module;
 
-    // Base-14 (WinAnsi) can't render >U+00FF. For text with non-Latin code
-    // points, embed the bundled Unicode fallback font (Noto Sans) so they're
-    // kept instead of dropped; otherwise use base-14 Helvetica. Pure-Latin
-    // text takes the unchanged base-14 path.
+    // Base-14 (WinAnsi) can't render >U+00FF.
     const sanitized = sanitizeForBase14(this.text);
     let objPtr = 0;
     if ([...this.text].length > [...sanitized].length) {
@@ -89,8 +80,7 @@ export class InsertTextCommand implements Command {
     }
 
     // On a /Rotate page, counter-rotate the new object about its anchor so it
-    // reads upright in the displayed (rotated) orientation rather than landing
-    // sideways. No-op on an unrotated page, so the common case is unchanged.
+    // reads upright in the displayed orientation rather than landing sideways.
     const rot = counterPageRotation(page.display.rotate);
     if (rot) rotateObjectAbout(m, objPtr, this.x, this.y, rot.cos, rot.sin);
     const matrix = rot

@@ -4,21 +4,10 @@ import { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 let __singleton: EditorStore | null = null;
 let __disposeTimer: ReturnType<typeof setTimeout> | null = null;
 
-/**
- * Grace period before a fully-unmounted editor frees its PDFium document.
- * Long enough to ride out a StrictMode double-mount or a sidebar/workbench
- * remount (which re-runs the effect and cancels the timer), short enough
- * that genuinely navigating away reclaims the WASM doc + history buffers.
- */
+/** Grace period before a fully-unmounted editor frees its PDFium document. */
 const DISPOSE_GRACE_MS = 1500;
 
-/**
- * Returns the singleton editor store, plus the current view state.
- *
- * The store survives StrictMode double-mounts and tool remounts so an
- * in-progress edit isn't wiped if the user toggles a sidebar or switches
- * between tools that share the workbench area.
- */
+/** Returns the singleton editor store, plus the current view state. */
 export function useEditorStore(): {
   store: EditorStore;
   state: ReturnType<EditorStore["getState"]>;
@@ -39,9 +28,8 @@ export function useEditorStore(): {
     const unsubscribe = store.subscribe(setState);
     return () => {
       unsubscribe();
-      // Defer disposal: if the component remounts (the effect above runs
-      // again) the timer is cancelled. If it stays unmounted (navigated
-      // away), free the PDFium document and history-pinned image buffers.
+      // Defer disposal: if the component remounts (the effect above runs again)
+      // the timer is cancelled.
       if (__disposeTimer) clearTimeout(__disposeTimer);
       __disposeTimer = setTimeout(() => {
         __disposeTimer = null;

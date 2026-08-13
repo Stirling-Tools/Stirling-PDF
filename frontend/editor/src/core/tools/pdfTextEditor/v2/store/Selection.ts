@@ -1,10 +1,7 @@
 import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
 
-/**
- * Singleton "find highlight" state, kept off the SelectionState (which
- * is used for edit commands) so search highlights survive normal
- * selection changes. Subscribers update via `Selection.highlight$`.
- */
+// Singleton "find highlight" state, kept off the SelectionState (which is used
+// for edit commands) so search highlights survive normal selection changes.
 export class FindHighlight {
   private id: string | null = null;
   private listeners: Set<(id: string | null) => void> = new Set();

@@ -1,24 +1,8 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { getDroppedBase14Chars } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
-/**
- * Things a save would damage. PDFium's `SaveAsCopy` does a full rewrite, so
- * we only flag losses that are HIGH-confidence under that path:
- *  - digital signatures: any byte-level rewrite invalidates them.
- *  - XFA forms: PDFium does not round-trip XFA, so the dynamic form is lost.
- *  - encryption: SaveAsCopy writes the copy UNENCRYPTED and drops the
- *    permission bits, so an encrypted source loses its protection - we warn.
- *  - droppedChars: chars an EDIT couldn't represent in any available font and
- *    silently discarded (a new CJK / Arabic char typed into a doc whose fonts
- *    don't cover it, with no bundled fallback). This is real data loss the user
- *    just typed, so - unlike the passive risks above - we always surface it.
- * Plain AcroForm fields ARE preserved by SaveAsCopy, so they are deliberately
- * not flagged - warning on them would be crying wolf. Tagged/structure data is
- * likewise not flagged: a bare struct tree is common and content regeneration
- * does not reliably break it, so a warning would cry wolf. (A precise
- * tagged/OCG warning would require detecting a StructTreeRoot / OCProperties
- * AND that an edited page actually referenced them - deferred as low-priority.)
- */
+// Only losses that are HIGH-confidence under the save path: signatures (the
+// save goes incremental), XFA, encryption, and characters an edit had to drop.
 export interface SaveRisks {
   signatures: number;
   xfaForm: boolean;
@@ -70,10 +54,13 @@ export function hasSaveRisks(r: SaveRisks): boolean {
 export function describeSaveRisks(r: SaveRisks): string[] {
   const out: string[] = [];
   if (r.signatures > 0) {
-    out.push(
+    const subject =
       r.signatures === 1
-        ? "1 digital signature will be invalidated."
-        : `${r.signatures} digital signatures will be invalidated.`,
+        ? "This document carries a digital signature"
+        : `This document carries ${r.signatures} digital signatures`;
+    out.push(
+      `${subject}. Your changes are appended as a new revision, so the signed version stays ` +
+        "verifiable, but the document will report as modified since it was signed.",
     );
   }
   if (r.xfaForm) out.push("Interactive XFA form data may be lost.");

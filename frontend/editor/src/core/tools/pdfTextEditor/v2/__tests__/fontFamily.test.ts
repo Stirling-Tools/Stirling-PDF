@@ -2,15 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   flipBold,
   flipItalic,
+  nearestStandardFont,
 } from "@app/tools/pdfTextEditor/v2/util/fontFamily";
 
-/**
- * The base-14 combined styles have EXACT PostScript spellings (Times uses
- * Roman/Italic/BoldItalic; Helvetica/Courier use Oblique/BoldOblique). The old
- * implementation string-spliced "-Bold" onto "-Italic"/"-Oblique", producing
- * non-existent names (e.g. "Times-Italic-Bold", "Helvetica-Oblique-Bold") that
- * a viewer silently substitutes - a font flip. These pin the correct names.
- */
+// The base-14 combined styles have EXACT PostScript spellings (Times uses
+// Roman/Italic/BoldItalic; Helvetica/Courier use Oblique/BoldOblique).
 describe("fontFamily base-14 style flips", () => {
   it("bold-on preserves italic with the canonical combined name", () => {
     expect(flipBold("Times-Italic", true)).toBe("Times-BoldItalic");
@@ -38,5 +34,33 @@ describe("fontFamily base-14 style flips", () => {
   it("returns null for non-base-14 families", () => {
     expect(flipBold("LMRoman12", true)).toBeNull();
     expect(flipItalic("ABCDEF+CustomFont", true)).toBeNull();
+  });
+});
+
+/** An unknown family must be substituted, not dropped along with the text. */
+describe("nearestStandardFont", () => {
+  it("passes a standard font through untouched", () => {
+    expect(nearestStandardFont("Helvetica")).toBe("Helvetica");
+    expect(nearestStandardFont("Times-BoldItalic")).toBe("Times-BoldItalic");
+    expect(nearestStandardFont("Courier-Oblique")).toBe("Courier-Oblique");
+  });
+
+  it("maps a device sans-serif family onto Helvetica", () => {
+    expect(nearestStandardFont("Segoe UI")).toBe("Helvetica");
+    expect(nearestStandardFont("Arial")).toBe("Helvetica");
+  });
+
+  it("recognises serif and monospace families by name", () => {
+    expect(nearestStandardFont("Georgia")).toBe("Times-Roman");
+    expect(nearestStandardFont("Garamond")).toBe("Times-Roman");
+    expect(nearestStandardFont("Consolas")).toBe("Courier");
+    expect(nearestStandardFont("JetBrains Mono")).toBe("Courier");
+  });
+
+  it("carries weight and slant across the substitution", () => {
+    expect(nearestStandardFont("Segoe UI Bold")).toBe("Helvetica-Bold");
+    expect(nearestStandardFont("Georgia Bold Italic")).toBe("Times-BoldItalic");
+    expect(nearestStandardFont("Consolas Italic")).toBe("Courier-Oblique");
+    expect(nearestStandardFont("Inter SemiBold")).toBe("Helvetica-Bold");
   });
 });

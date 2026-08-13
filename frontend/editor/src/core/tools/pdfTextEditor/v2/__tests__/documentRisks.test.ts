@@ -47,7 +47,7 @@ describe("detectSaveRisks", () => {
     expect(r.signatures).toBe(2);
     expect(hasSaveRisks(r)).toBe(true);
     expect(describeSaveRisks(r)).toEqual([
-      "2 digital signatures will be invalidated.",
+      "This document carries 2 digital signatures. Your changes are appended as a new revision, so the signed version stays verifiable, but the document will report as modified since it was signed.",
     ]);
   });
 
@@ -65,7 +65,9 @@ describe("detectSaveRisks", () => {
         encrypted: false,
         droppedChars: [],
       }),
-    ).toEqual(["1 digital signature will be invalidated."]);
+    ).toEqual([
+      "This document carries a digital signature. Your changes are appended as a new revision, so the signed version stays verifiable, but the document will report as modified since it was signed.",
+    ]);
   });
 
   it("flags characters dropped because no font could render them", () => {
@@ -102,7 +104,7 @@ describe("detectSaveRisks", () => {
   it("combines both risks", () => {
     const r = detectSaveRisks(mkDoc({ signatures: 1, formType: 2 }));
     expect(describeSaveRisks(r)).toEqual([
-      "1 digital signature will be invalidated.",
+      "This document carries a digital signature. Your changes are appended as a new revision, so the signed version stays verifiable, but the document will report as modified since it was signed.",
       "Interactive XFA form data may be lost.",
     ]);
   });

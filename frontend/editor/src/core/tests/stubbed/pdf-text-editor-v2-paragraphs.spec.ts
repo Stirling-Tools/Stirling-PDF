@@ -8,16 +8,7 @@ const SAMPLE = path.join(
   "../../../../public/samples/Sample.pdf",
 );
 
-/**
- * Comprehensive paragraph-editing battery for the v2 editor.
- *
- * These exercise the hard cases the user hit: typing into wrapped
- * paragraphs, manual Enter line breaks surviving a wrap, live wrapping
- * while typing (no off-page overflow), and text-content integrity. Many
- * tests read the run's ACTUAL glyph layout (position + baseline + text)
- * straight from PDFium so the assertions describe what renders, not the
- * in-memory model only.
- */
+/** Comprehensive paragraph-editing battery for the v2 editor. */
 
 async function gotoWrap(page: Page): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
@@ -219,9 +210,6 @@ test.describe("PDF text editor v2 - paragraph editing battery", () => {
       " ZZZZ YYYY XXXX WWWW VVVV UUUU TTTT SSSS RRRR QQQQ PPPP OOOO",
     );
     // NO blur - the box the user SEES while editing must stay within the page.
-    // The editing box is capped to the page width and wraps via CSS, so it can
-    // never grow off the right edge (the heavy reflow that bakes the wrapped
-    // layout into glyphs runs once on click-off, not on every keystroke).
     await page.waitForTimeout(120);
     const box = await page.evaluate((rid: string) => {
       const el = document.querySelector<HTMLElement>(
@@ -435,15 +423,20 @@ test.describe("PDF text editor v2 - paragraph editing battery", () => {
       " OMEGA SIGMA PSICHI TAUTAU RHORHO PHIPHI UPSILON",
     );
     await blurRun(page, id);
-    // Undo every command from this edit.
-    for (let i = 0; i < 60; i++) {
-      await page.keyboard.press("Control+z");
-      await page.waitForTimeout(15);
-    }
-    await page.waitForTimeout(200);
+    // Undo until the edit is actually gone. A fixed press count with a fixed
+    // gap drops presses under load, and then the edit survives.
+    await expect
+      .poll(
+        async () => {
+          await page.keyboard.press("Control+z");
+          const now = await readGlyphs(page, id);
+          return now?.text.replace(/\s+/g, " ") ?? "";
+        },
+        { timeout: 30_000, intervals: [50] },
+      )
+      .not.toContain("OMEGA");
     const after = await readGlyphs(page, id);
     if (!after) throw new Error("vanished after undo");
-    expect(after.text.replace(/\s+/g, " ")).not.toContain("OMEGA");
     expect(after.text.replace(/\s+/g, " ")).toMatch(/Stirling.*robust/);
     expect(Math.abs(lineCount(after) - beforeLines)).toBeLessThanOrEqual(1);
   });
@@ -580,10 +573,8 @@ test.describe("PDF text editor v2 - paragraph editing battery", () => {
   test("grow mode: editing a paragraph (Enter + type) never blows the box off the page", async ({
     page,
   }) => {
-    // The reported bug: clicking a paragraph in the DEFAULT (grow) mode,
-    // pressing Enter and typing made the editing box expand past the page's
-    // right edge, clipping text the user never touched. A paragraph must
-    // wrap within the page even in grow mode.
+    // The reported bug: clicking a paragraph in the DEFAULT mode, pressing
+    // Enter and typing made the editing box expand past the page's right edge.
     await gotoGrow(page);
     const id = await findPara(page, new RegExp(INTRO));
     if (!id) {

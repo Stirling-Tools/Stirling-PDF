@@ -4,6 +4,7 @@ import {
 } from "@app/tools/pdfTextEditor/v2/util/fontFamily";
 import type {
   PageSnapshot,
+  RGBA,
   SelectionState,
   ToolbarState,
 } from "@app/tools/pdfTextEditor/v2/types";
@@ -14,12 +15,16 @@ export const EMPTY_TOOLBAR: ToolbarState = {
   fill: null,
   bold: false,
   italic: false,
+  stroke: null,
+  strokeWidth: null,
   mixed: {
     fontFamily: false,
     fontSize: false,
     fill: false,
     bold: false,
     italic: false,
+    stroke: false,
+    strokeWidth: false,
   },
 };
 
@@ -43,6 +48,14 @@ export function deriveToolbarState(
       r.fill.b === first.fill.b &&
       r.fill.a === first.fill.a,
   );
+  const firstStroke = first.stroke ?? null;
+  const sameStroke = selected.every((r) =>
+    sameRgba(r.stroke ?? null, firstStroke),
+  );
+  const firstStrokeWidth = first.strokeWidth ?? 0;
+  const sameStrokeWidth = selected.every(
+    (r) => (r.strokeWidth ?? 0) === firstStrokeWidth,
+  );
   const firstBold = isBoldFamily(first.fontId);
   const firstItalic = isItalicFamily(first.fontId);
   const sameBold = selected.every((r) => isBoldFamily(r.fontId) === firstBold);
@@ -55,12 +68,21 @@ export function deriveToolbarState(
     fill: sameFill ? first.fill : null,
     bold: firstBold,
     italic: firstItalic,
+    stroke: sameStroke ? firstStroke : null,
+    strokeWidth: sameStrokeWidth ? firstStrokeWidth : null,
     mixed: {
       fontFamily: !sameFamily,
       fontSize: !sameSize,
       fill: !sameFill,
       bold: !sameBold,
       italic: !sameItalic,
+      stroke: !sameStroke,
+      strokeWidth: !sameStrokeWidth,
     },
   };
+}
+
+function sameRgba(a: RGBA | null, b: RGBA | null): boolean {
+  if (a === null || b === null) return a === b;
+  return a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a;
 }

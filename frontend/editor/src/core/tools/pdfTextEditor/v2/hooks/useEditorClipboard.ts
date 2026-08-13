@@ -31,32 +31,7 @@ function getSink(): HTMLTextAreaElement | null {
   return document.getElementById(SINK_ID) as HTMLTextAreaElement | null;
 }
 
-/**
- * Object-level cut/copy/paste for the editor (whole runs and images, as
- * opposed to a caret sitting inside one run - that stays with the browser
- * and TextRunOverlay's own onPaste).
- *
- * Neither half goes through navigator.clipboard. Its read side is refused
- * outright by WebKit even under a user gesture, is prompt-gated in Firefox,
- * needs an explicit permission in Chromium, and the whole object is
- * undefined on a non-secure origin - i.e. every plain-HTTP self-host - so
- * Ctrl+V was a silent no-op nearly everywhere.
- *
- * Both halves therefore route through an off-screen textarea ("the sink")
- * that is focused synchronously from the Ctrl+X/C/V keydown, letting the
- * browser's OWN cut/copy/paste do the privileged work:
- *
- * - Write: park the selected text in the sink and select it. Measured:
- *   WebKit ignores a script-authored `clipboardData.setData()` entirely
- *   (the clipboard ends up empty) but honours a real DOM selection.
- * - Read: the native paste ClipboardEvent, whose `clipboardData` is
- *   populated on every engine, secure context or not. The sink must be
- *   FOCUSED for it: WebKit only dispatches `paste` into an editable target,
- *   so with the editor's usual "nothing focused" selection state Ctrl+V
- *   produced no paste event at all and the key was dead. (Measured on Linux
- *   WebKit; Chromium and Firefox do fire it at `<body>`, which is the only
- *   reason the sink-less version appeared to work.)
- */
+/** Object-level cut/copy/paste for the editor. */
 export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
   const ref = useRef(cbs);
   ref.current = cbs;
@@ -72,11 +47,7 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
     let pendingRelease: (() => void) | null = null;
     let pendingTimer: ReturnType<typeof setTimeout> | null = null;
 
-    /**
-     * Finish the previous clipboard keystroke NOW. Ctrl+X immediately
-     * followed by Ctrl+V would otherwise let the cut's deferred blur land in
-     * the middle of the paste and steal the sink's focus.
-     */
+    /** Finish the previous clipboard keystroke NOW. */
     function flushPending(): void {
       if (pendingTimer !== null) clearTimeout(pendingTimer);
       pendingTimer = null;
@@ -85,18 +56,8 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
       run?.();
     }
 
-    /**
-     * Runs after the keystroke's default action, so the browser's own
-     * cut/copy/paste of the sink has already happened. Verified on all three
-     * engines: the `cut`/`paste` event is delivered BEFORE this timeout.
-     *
-     * Scheduled unconditionally (never from the paste handler) so a paste
-     * that never arrives - empty clipboard, image-only clipboard, an engine
-     * that declines - cannot leave the invisible sink holding focus. That
-     * would read as a frozen editor: `isFocusInContentEditable()` is true for
-     * a TEXTAREA, so every later shortcut would early-return and typed
-     * characters would vanish off-screen.
-     */
+    // Runs after the keystroke's default action, so the browser's own
+    // cut/copy/paste of the sink has already happened.
     function scheduleRelease(fn: () => void): void {
       pendingRelease = fn;
       pendingTimer = setTimeout(() => {
@@ -126,15 +87,12 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
 
     function onPaste(e: ClipboardEvent) {
       // Consume the modifier state captured by the keystroke that opened this
-      // paste, whoever ends up handling it, so a later context-menu paste
-      // can't inherit a stale Shift from an in-run Ctrl+Shift+V.
+      // paste, whoever ends up handling it.
       const stripFormatting = pastePlain;
       pastePlain = false;
       const sink = getSink();
       // Our own sink IS an editable element, so the guard below would eat the
-      // very paste we set it up to receive. Engines differ on whether the
-      // event is retargeted to the focused element or dispatched at the
-      // document, so accept either.
+      // very paste we set it up to receive.
       const intoSink =
         sink !== null && (e.target === sink || document.activeElement === sink);
       // A caret inside a run (or in Find/Replace/password) keeps native paste.
@@ -159,9 +117,8 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
         const restoreTo = document.activeElement as HTMLElement | null;
         const sink = ensureSink();
         sink.value = "";
-        // Synchronous, and deliberately NOT preventDefault: the keystroke's
-        // own default action is the paste, and it needs the sink focused to
-        // have somewhere to land.
+        // Synchronous, and deliberately NOT preventDefault: the keystroke's own
+        // default action is the paste.
         sink.focus({ preventScroll: true });
         scheduleRelease(() => {
           // No paste arrived (empty clipboard, image-only, engine declined):
@@ -193,12 +150,7 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
         const clipboardWritten = sinkCutObserved;
         releaseSink(restoreTo);
         window.getSelection()?.removeAllRanges();
-        // Only destroy the selection once the text is safely on the
-        // clipboard. An image-only selection carries no text (`text === null`
-        // means the sink was never filled or selected, so no `cut` could
-        // fire), and it has nothing to lose - it still deletes. Without this
-        // split, a clipboard write the browser silently refused still wiped
-        // the user's content with no way to paste it back.
+        // Only destroy the selection once the text is safely on the clipboard.
         if (key === "x" && (text === null || clipboardWritten)) {
           ref.current.deleteSelection();
         }

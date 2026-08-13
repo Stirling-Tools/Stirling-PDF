@@ -13,11 +13,8 @@ import {
   embedJpegImageOnPage,
 } from "@app/utils/pdfiumBitmapUtils";
 
-/**
- * Insert a decoded raster image onto a page at the given lower-left
- * coordinate, scaled to `(width, height)` PDF points. The decode runs
- * in the React layer so this command stays synchronous.
- */
+// Insert a decoded raster image onto a page at the given lower-left coordinate,
+// scaled to `(width, height)` PDF points.
 export class InsertImageCommand implements Command {
   readonly type = "insert-image";
   private readonly pageIndex: number;
@@ -99,9 +96,6 @@ export class InsertImageCommand implements Command {
     }
     // JPEG sources embed as-is (DCTDecode) to keep the output small; fall back
     // to the RGBA bitmap path if the JPEG API is unavailable or the load fails.
-    // The embed helper returns the new object pointer directly. Looking it up
-    // afterwards via FPDFPage_GetObject failed because the content stream
-    // isn't regenerated until save, so the object index wasn't yet resolvable.
     let newObjPtr = this.jpegBytes
       ? embedJpegImageOnPage(
           m,
@@ -157,9 +151,8 @@ export class InsertImageCommand implements Command {
       id: imageId,
       pageIndex: page.index,
       pdfiumObjPtr: newObjPtr,
-      // On a /Rotate page the counter-rotated object's real AABB has
-      // swapped width/height vs the pre-rotation rect - storing the raw
-      // rect misplaced the selection handles until reload.
+      // On a /Rotate page the counter-rotated object's real AABB has swapped
+      // width/height vs the pre-rotation rect.
       bounds: rot
         ? imageMatrixBounds(matrix)
         : {

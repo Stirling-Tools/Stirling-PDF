@@ -7,6 +7,7 @@ import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 import { TextRunOverlay } from "@app/tools/pdfTextEditor/v2/components/TextRunOverlay";
 import { ImageHandle } from "@app/tools/pdfTextEditor/v2/components/ImageHandle";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
+import { PageGuides } from "@app/tools/pdfTextEditor/v2/components/PageRulers";
 
 interface PageViewProps {
   document: EditorDocument;
@@ -17,6 +18,8 @@ interface PageViewProps {
   onFirstRendered?: (pageIndex: number) => void;
   scale: number;
   widthMode: import("@app/tools/pdfTextEditor/v2/types").WidthMode;
+  /** Show the page rulers and alignment guides. */
+  showRulers?: boolean;
   selectedRunIds: string[];
   selectedImageIds: string[];
   /** Run id currently highlighted by the find-bar (yellow). */
@@ -35,10 +38,7 @@ interface PageViewProps {
   onWrapRun?: (pageIndex: number, runId: string, maxWidthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */
   onPageClick?: (pageIndex: number, pageX: number, pageY: number) => void;
-  /**
-   * Fires when an image's drag OR resize completes. The bounds are
-   * absolute PDF page-space coords (origin lower-left).
-   */
+  /** Fires when an image's drag OR resize completes. */
   onTransformImage?: (
     pageIndex: number,
     imageId: string,
@@ -46,15 +46,14 @@ interface PageViewProps {
   ) => void;
 }
 
-/**
- * One PDF page: a PDFium-rendered bitmap plus an HTML overlay layer
- * with one positioned, editable element per text run.
- */
+// One PDF page: a PDFium-rendered bitmap plus an HTML overlay layer with one
+// positioned, editable element per text run.
 export function PageView({
   document,
   page,
   scale,
   widthMode,
+  showRulers,
   selectedRunIds,
   selectedImageIds,
   highlightedRunId,
@@ -79,8 +78,6 @@ export function PageView({
   const [renderError, setRenderError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
   // True when this page is within ~one viewport of the visible area.
-  // Rendering only starts when this flips, so an 80-page doc doesn't
-  // fire 80 concurrent PDFium renders into the same WASM heap.
   const [nearViewport, setNearViewport] = useState(false);
 
   // First-visible: lazy-populate the page's runs/images.
@@ -105,10 +102,7 @@ export function PageView({
   }, [page.pageIndex, onFirstVisible]);
 
   // Near-viewport observer drives rendering with a wide rootMargin so the
-  // bitmap is ready just before the page scrolls in. It tracks BOTH enter
-  // and leave: pages that scroll far away release their (multi-MB) canvas
-  // bitmap and fall back to the placeholder, so memory stays bounded on
-  // long documents instead of accumulating one full-res bitmap per page.
+  // bitmap is ready just before the page scrolls in.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -127,9 +121,7 @@ export function PageView({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!nearViewport) {
-      // Far from the viewport: free the bitmap (a 4x-zoom A4 canvas is
-      // ~32MB). The placeholder shows until the page nears view again and
-      // this effect re-renders at the current scale.
+      // Far from the viewport: free the bitmap (a 4x-zoom A4 canvas is ~32MB).
       if (canvas) {
         canvas.width = 0;
         canvas.height = 0;
@@ -205,9 +197,7 @@ export function PageView({
         ).getBoundingClientRect();
         const cssX = e.clientX - rect.left;
         const cssY = e.clientY - rect.top;
-        // CSS px -> display-PDF (y-up), then invert the CropBox/rotation
-        // transform to raw PDF page space so the new object lands under the
-        // click on cropped/rotated pages. Identity transform => unchanged.
+        // CSS px -> display-PDF.
         const xd = cssX / scale;
         const yd = page.height - cssY / scale;
         const p = transform.invert(xd, yd);
@@ -319,6 +309,15 @@ export function PageView({
             }
           />
         ))}
+        {showRulers && (
+          <PageGuides
+            pageIndex={page.pageIndex}
+            width={page.width}
+            height={page.height}
+            scale={scale}
+            transform={transform}
+          />
+        )}
       </Box>
     </Box>
   );

@@ -1,21 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-/**
- * Unit coverage for the embedded-font cmap strategy.
- *
- * `parseTrueTypeCmap` and `CmapResolver.resolve()` had ZERO direct test
- * coverage: the only path that built a cmap read font bytes via PDFium
- * (WASM), so nothing exercised the byte parser or the resolve lookup in
- * isolation. These tests:
- *   - parse a hand-built minimal sfnt with a format-4 cmap and assert the
- *     Unicode->glyphId Map (the happy path the whole strategy rests on);
- *   - assert the parser returns null for non-sfnt and truncated blobs;
- *   - drive `resolve()` against a cmap primed through the real
- *     `primeFontGlyphMap` path (a faked PDFium module feeds the same
- *     synthetic font bytes), proving covered chars resolve and uncovered
- *     chars land in `missing`, and that a font with no cmap reports the
- *     "cmap unavailable" result.
- */
+// Unit coverage for the embedded-font cmap strategy. `parseTrueTypeCmap` and
+// `CmapResolver.resolve` had ZERO direct test coverage: the only path.
 
 import {
   CmapResolver,
@@ -27,22 +13,15 @@ import {
 import { sha256Hex } from "@app/tools/pdfTextEditor/v2/util/sha256";
 import type { ResolverContext } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 
-/**
- * Build a minimal TrueType sfnt carrying a single format-4 cmap subtable
- * that maps each [codepoint => glyphId] entry. Each entry becomes its own
- * one-char segment (idRangeOffset=0, idDelta=gid-code) plus the mandatory
- * terminal 0xFFFF segment. Entries are sorted by codepoint as format 4
- * requires ascending endCode order.
- */
+// Build a minimal TrueType sfnt carrying a single format-4 cmap subtable that
+// maps each [codepoint => glyphId] entry.
 function buildSfntWithFormat4(entries: Array<[number, number]>): Uint8Array {
   const sorted = [...entries].sort((a, b) => a[0] - b[0]);
   const segCount = sorted.length + 1; // + terminal 0xFFFF segment
   const segCountX2 = segCount * 2;
 
-  // format(2) length(2) language(2) segCountX2(2) searchRange(2)
-  // entrySelector(2) rangeShift(2) = 14 header bytes, then the 4 parallel
-  // arrays of segCountX2 bytes each, plus the 2-byte reservedPad after
-  // endCodes. No glyphIdArray needed (all idRangeOffset=0).
+  // format length language segCountX2 searchRange entrySelector rangeShift = 14
+  // header bytes, then the 4 parallel arrays of segCountX2 bytes each.
   const subtableLen = 14 + 2 + segCountX2 * 4;
 
   const HEADER = 12;
@@ -106,11 +85,8 @@ function buildSfntWithFormat4(entries: Array<[number, number]>): Uint8Array {
   return new Uint8Array(buf);
 }
 
-/**
- * Fake PDFium module whose `FPDFFont_GetFontData` copies `fontBytes` into a
- * scratch heap, mirroring the two-call (size probe, then read) contract
- * `buildCmap` uses. Lets `primeFontGlyphMap` build a real cmap with no WASM.
- */
+// Fake PDFium module whose `FPDFFont_GetFontData` copies `fontBytes` into a
+// scratch heap, mirroring the two-call contract `buildCmap` uses.
 function makeFontDataModule(
   fontBytes: Uint8Array | null,
 ): ResolverContext["module"] {
@@ -229,10 +205,7 @@ describe("font program hash (cross-subset identity)", () => {
   const FONT = 21;
 
   it("caches the program bytes' SHA-256 at prime time", () => {
-    // PDFium reports every "ABCDEF+Family" subset as bare "Family", so the
-    // program hash is the only identity the backend can trust to pick the
-    // exact subset. It must be the digest of the same bytes GetFontData
-    // returns - i.e. of the decoded FontFile stream.
+    // PDFium reports every "ABCDEF+Family" subset as bare "Family".
     const bytes = buildSfntWithFormat4([[65, 3]]);
     const module = makeFontDataModule(bytes);
     primeFontGlyphMap(FONT, module);

@@ -1,11 +1,4 @@
-/**
- * Read a JPEG's EXIF orientation (1-8); 1 when absent or unreadable.
- *
- * The insert path decodes via <img>, which APPLIES EXIF orientation, but
- * the DCTDecode passthrough embeds the RAW bytes - so a phone photo with
- * orientation != 1 would insert sideways with a swapped aspect. Callers
- * use this to route rotated JPEGs to the bitmap path instead.
- */
+/** Read a JPEG's EXIF orientation (1-8); 1 when absent or unreadable. */
 export function jpegExifOrientation(bytes: Uint8Array): number {
   if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return 1;
   let off = 2;

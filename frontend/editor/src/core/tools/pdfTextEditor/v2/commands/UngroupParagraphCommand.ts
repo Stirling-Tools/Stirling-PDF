@@ -6,11 +6,7 @@ import {
   TextRun,
 } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 
-/**
- * Split a paragraph-grouped run back into one editable run per source
- * line. Undoes either an auto-grouping by ParagraphGrouper or a manual
- * MergeRunsCommand. No PDFium mutation - just rebuilds the page's model.
- */
+/** Split a paragraph-grouped run back into one editable run per source line. */
 interface RepSnapshot {
   text: string;
   bounds: { x: number; y: number; width: number; height: number };
@@ -62,9 +58,7 @@ export class UngroupParagraphCommand implements Command {
     const fs = rep.paragraphMemberFs;
     const containers = rep.paragraphMemberContainers;
     // Prefer per-line slots: their startChar/endChar ranges split the text
-    // correctly even for SOFT-wrapped paragraphs (visual lines joined by a
-    // space, not "\n"). A bare "\n" split under-counts those and mis-maps
-    // lines to ptrs/baselines. Fall back to "\n" only when slots are absent.
+    // correctly even for SOFT-wrapped paragraphs.
     const slots = rep.paragraphLineSlots;
     const useSlots = slots.length >= 2 && slots.length === ptrs.length;
     const lines = useSlots

@@ -8,20 +8,7 @@ import {
   type ParagraphLineSlot,
 } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 
-/**
- * Regression coverage for the mushroom-life.pdf "line collapse" bug.
- *
- * A paragraph's `run.text` joins VISUAL lines with one-char separators:
- * "\n" for hard (user) breaks, " " for soft word-wraps. `planParagraphEdit`
- * used to derive its per-line view via `run.text.split("\n")`, which
- * UNDER-COUNTS lines the moment a paragraph soft-wraps - then bailed on
- * `prevLines.length !== paragraphLineSlots.length`, routing the edit to the
- * whole-paragraph overlay re-emit which collapsed every visual line onto a
- * single baseline.
- *
- * The fix derives per-line text from the slot CHAR RANGES instead, so a
- * soft-wrapped paragraph edits in place (font-preserving) like any other.
- */
+/** Regression coverage for the mushroom-life.pdf "line collapse" bug. */
 
 let nextPtr = 100;
 function slot(
@@ -46,10 +33,8 @@ function slot(
   };
 }
 
-/**
- * Build a paragraph run whose `text` is the visual lines joined by the
- * given separators (one per gap, "\n" or " ").
- */
+// Build a paragraph run whose `text` is the visual lines joined by the given
+// separators (one per gap, "\n" or " ").
 function makeParagraph(lines: string[], separators: string[]): TextRun {
   let text = lines[0];
   const slots: ParagraphLineSlot[] = [slot(lines[0], 0, 800)];
@@ -77,11 +62,8 @@ function makeParagraph(lines: string[], separators: string[]): TextRun {
   return run;
 }
 
-/**
- * Build a single-sub-run TextRun whose own `mergedFrom*` arrays carry `text`
- * as one object - the shape `planPartialEdit` diffs against. Used to exercise
- * the surrogate-pair bailout directly.
- */
+// Build a single-sub-run TextRun whose own `mergedFrom*` arrays carry `text` as
+// one object - the shape `planPartialEdit` diffs against.
 function makeSingleSubRun(text: string): TextRun {
   const run = new TextRun({
     id: "p0-t0",
@@ -104,9 +86,7 @@ function makeSingleSubRun(text: string): TextRun {
 
 describe("planPartialEdit surrogate-pair guard (astral chars)", () => {
   it("bails (returns null) when prevText already contains an emoji surrogate pair", () => {
-    // "🎉" is two UTF-16 code units; the LCS indexes by code unit, so an
-    // existing astral char could split across keep/drop and emit a lone
-    // surrogate. The guard at partialEdit.ts must null the plan instead.
+    // "🎉" is two UTF-16 code units.
     const run = makeSingleSubRun("🎉ab");
     expect(planPartialEdit(run, "🎉ab", "🎉abc")).toBeNull();
   });
@@ -122,10 +102,7 @@ describe("planPartialEdit surrogate-pair guard (astral chars)", () => {
 describe("planPartialEdit interior-insert guard (single word object)", () => {
   it("bails when an inserted char splits a multi-char object's kept chars", () => {
     // "world" is ONE object; inserting "a" mid-word ("world"->"worald") leaves
-    // the survivors at non-contiguous new-text positions (0,1,2,4,5). PDFium
-    // can't inject a glyph into an existing object, so the surgical path would
-    // append "a" after "world" and render "worlda". Bail so the caller
-    // re-emits the whole line in reading order.
+    // the survivors at non-contiguous new-text positions (0,1,2,4,5).
     const run = makeSingleSubRun("world");
     expect(planPartialEdit(run, "world", "worald")).toBeNull();
   });
@@ -202,10 +179,6 @@ describe("planParagraphEdit slot-range line mapping", () => {
 
   it("forces a fresh word-split re-emit when a mid-line edit would SetText whitespace (the „ bug)", () => {
     // A whole line as ONE sub-run carrying spaces (LaTeX one-object-per-line).
-    // A mid-line edit makes planPartialEdit a "modify" op whose surviving text
-    // still has spaces - SetText-ing that onto a no-space-glyph subset font
-    // paints „. planParagraphEdit must null the slot plan so the apply step
-    // re-emits the line word-split (spaces become positional gaps) instead.
     const run = makeParagraph(["aaa bbb ccc", "ddd eee"], ["\n"]);
     const prev = run.text; // "aaa bbb ccc\nddd eee"
     const next = "aaa Xbb ccc\nddd eee"; // replace one char mid-line-0
@@ -233,12 +206,7 @@ describe("planParagraphEdit slot-range line mapping", () => {
 
   it("re-emits a mid-word char replace instead of scrambling it (interior-insert guard)", () => {
     // Replacing a char in the MIDDLE of a single word object ("world"->"worXd")
-    // deletes 'l' and inserts 'X' between the surviving 'r' and 'd'. A PDFium
-    // text object is atomic - the inserted glyph can't go inside it, so the
-    // old surgical path SetText the survivors "word" and appended "X",
-    // rendering "wordX". The interior-insert guard detects the non-contiguous
-    // survivors and nulls the slot plan so the apply step re-emits the whole
-    // line in reading order.
+    // deletes 'l' and inserts 'X' between the surviving 'r' and 'd'.
     const run = makeParagraph(["hello", "world"], ["\n"]);
     const prev = run.text; // "hello\nworld"
     const next = "hello\nworXd";
@@ -252,9 +220,8 @@ describe("planParagraphEdit slot-range line mapping", () => {
   });
 
   it("handles an all-hard-break paragraph (initial-load shape) too", () => {
-    // Every visual line a hard break: this is the shape ParagraphGrouper
-    // builds at load. split("\n") == slots here, so it always worked - pin
-    // it so the slot-range path stays equivalent for the common case.
+    // Every visual line a hard break: this is the shape ParagraphGrouper builds
+    // at load. split == slots here, so it always worked.
     const run = makeParagraph(["one", "two", "three"], ["\n", "\n"]);
     const prev = run.text;
     expect(prev).toBe("one\ntwo\nthree");

@@ -158,15 +158,8 @@ export function createBitmapImageObject(
   }
 }
 
-/**
- * Create a PDFium bitmap from decoded RGBA pixels, attach it to a new image
- * page object, position it via an affine matrix, and insert it into the page.
- *
- * Returns the new image object pointer on success, or 0 on failure. The
- * caller can use the pointer directly instead of re-looking it up by index
- * (FPDFPage_GetObject returns null until GenerateContent runs).
- * All intermediate WASM resources are cleaned up on failure.
- */
+// Create a PDFium bitmap from decoded RGBA pixels, attach it to a new image
+// page object, position it via an affine matrix, and insert it into the page.
 export function embedBitmapImageOnPage(
   m: WrappedPdfiumModule,
   docPtr: number,
@@ -207,16 +200,8 @@ interface JpegImageModule {
   ) => boolean;
 }
 
-/**
- * Embed `jpegBytes` as an image object WITHOUT re-encoding - the original JPEG
- * stream is stored directly (DCTDecode), so the output stays small. Contrast
- * `embedBitmapImageOnPage`, which uploads decoded RGBA (Flate-compressed pixels,
- * typically several times larger for a photo).
- *
- * Returns the new object pointer, or 0 if the JPEG API is unavailable or the
- * load failed (caller falls back to the bitmap path). Uses an FPDF_FILEACCESS
- * shim backed by an emscripten function pointer over the JS byte array.
- */
+// Embed `jpegBytes` as an image object WITHOUT re-encoding - the original JPEG
+// stream is stored directly (DCTDecode), so the output stays small.
 export function embedJpegImageOnPage(
   m: WrappedPdfiumModule,
   docPtr: number,
@@ -237,8 +222,7 @@ export function embedJpegImageOnPage(
 
   const len = jpegBytes.length;
   // m_GetBlock(param, position, pBuf, size): copy the requested slice into the
-  // WASM heap. PDFium guarantees the range stays within [0, len). Returns a
-  // non-zero byte count on success, 0 on an out-of-range request (error).
+  // WASM heap.
   const getBlock = (
     _param: number,
     position: number,

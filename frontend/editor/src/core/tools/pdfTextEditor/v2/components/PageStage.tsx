@@ -24,12 +24,8 @@ import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
 
 const DEFAULT_SCALE = 1.5;
 
-/**
- * Custom workbench view: the contextual formatting toolbar as a bar across
- * the top, then the scrollable pages stack with editable overlays beneath.
- * The shell (`PdfTextEditorV2`) owns the side panel (app chrome + insert /
- * paragraph / settings). Both subscribe to the same `EditorStore`.
- */
+// Custom workbench view: the contextual formatting toolbar as a bar across the
+// top, then the scrollable pages stack with editable overlays beneath.
 export function PageStage() {
   const { t } = useTranslation();
   const { store, state } = useEditorStore();
@@ -49,10 +45,7 @@ export function PageStage() {
     [store],
   );
 
-  // Ctrl/Cmd+wheel zooms the document. Scoped to the stage element (not
-  // window) so it doesn't hijack trackpad pinch / browser zoom elsewhere
-  // on the page and doesn't leave a non-passive wheel handler on window
-  // for the whole component lifetime.
+  // Ctrl/Cmd+wheel zooms the document.
   useEffect(() => {
     const el = stageRootRef.current;
     if (!el) return;
@@ -71,9 +64,8 @@ export function PageStage() {
     return () => el.removeEventListener("wheel", onWheel);
   }, [store, state.hasDocument, state.loading]);
 
-  // The contextual formatting toolbar is a bar across the TOP of the canvas
-  // (under the workbench tabs), not in the side panel - sourced from the
-  // shared store so this workbench-mounted view can render it.
+  // The contextual formatting toolbar is a bar across the TOP of the canvas,
+  // not in the side panel.
   const toolbar = useToolbarController(store, state, selection);
 
   if (!state.hasDocument && !state.loading) {
@@ -98,8 +90,7 @@ export function PageStage() {
   }
 
   // Loading overlay is layered on TOP of the pages stack: PageView's
-  // IntersectionObserver only fires when PageView is mounted, so an
-  // early-return loader leaves page 0 stuck "not yet rendered".
+  // IntersectionObserver only fires when PageView is mounted.
   const showLoading =
     state.loading || (state.hasDocument && !state.firstPageRendered);
   const p = state.progress;
@@ -134,9 +125,8 @@ export function PageStage() {
           if (dragCountRef.current === 0) setDraggingFile(false);
         }}
         onDrop={(e) => {
-          // ALWAYS claim the drop: without preventDefault the browser
-          // navigates the tab to the dropped file, discarding the editor
-          // (and any unsaved edits) - even for non-PDF files.
+          // ALWAYS claim the drop: without preventDefault the browser navigates
+          // the tab to the dropped file, discarding the editor.
           e.preventDefault();
           dragCountRef.current = 0;
           setDraggingFile(false);
@@ -261,6 +251,7 @@ export function PageStage() {
                     page={page}
                     scale={state.renderScale || DEFAULT_SCALE}
                     widthMode={state.widthMode}
+                    showRulers={state.showRulers}
                     selectedRunIds={selection.runIds}
                     selectedImageIds={selection.imageIds}
                     highlightedRunId={highlightedRunId}
@@ -273,8 +264,7 @@ export function PageStage() {
                     }
                     onEditRun={(pageIndex, runId, nextText) => {
                       // contentEditable can fire several input events per
-                      // keystroke burst; skip dispatching when nothing changed
-                      // so no-op edits don't pollute the undo history.
+                      // keystroke burst.
                       const current = store.document
                         ?.page(pageIndex)
                         .findRun(runId);

@@ -5,30 +5,7 @@ import type {
 } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 import { sha256Hex } from "@app/tools/pdfTextEditor/v2/util/sha256";
 
-/**
- * Strategy 1: parse the embedded font's cmap table.
- *
- * The PDF's embedded font (TrueType/OpenType) carries a `cmap` table
- * whose subtables map Unicode codepoints to font-internal glyph
- * indices. For subset fonts the cmap is trimmed to just the chars
- * the original text used - but PDFium's `FPDFText_SetCharcodes` uses
- * those same indices as the "charcode" argument for CIDFontType2
- * subset fonts, so the glyph_index from the cmap IS the value we
- * want to pass.
- *
- * We support the two cmap subtable formats that cover ~99% of real
- * PDF fonts:
- *   - Format 4 (segmented mappings to 16-bit glyph indices) - the
- *     default for BMP-only TrueType fonts, most modern Western
- *     fonts.
- *   - Format 6 (trimmed 16-bit table) - simpler, sometimes used for
- *     subsetted fonts where the codepoint range is small.
- *   - Format 12 (sparse 32-bit ranges) - for fonts that need
- *     codepoints above U+FFFF (emoji, CJK extension B+).
- *
- * Subtables we don't try to parse (rare in real PDFs):
- *   - Formats 0, 2, 8, 10, 13, 14 - return null, caller falls back.
- */
+/** Strategy 1: parse the embedded font's cmap table. */
 
 interface FontDataModule {
   FPDFFont_GetFontData?: (
@@ -42,24 +19,11 @@ interface FontDataModule {
 /** Per-font cmap cache. Keyed by font pointer (stable per document). */
 const cmapCache = new Map<number, Map<number, number> | null>();
 
-/**
- * Per-font SHA-256 (hex) of the embedded font PROGRAM bytes, computed from the
- * same FPDFFont_GetFontData read that feeds the cmap parse. This is the ONLY
- * unambiguous cross-side font identity: PDFium's FPDFFont_GetBaseFontName
- * strips the "ABCDEF+" subset tag, so every subset of one family reports the
- * SAME name ("Garamond") and the backend's name-based lookup can pick the
- * WRONG subset - whose charcode space differs - producing valid-but-wrong
- * glyphs ("RUSSELL" → "US EEL"). The backend matches this hash against each
- * candidate's decoded FontFile/FontFile2/FontFile3 stream instead.
- * `null` = font has no readable data (not embedded / API missing).
- */
+// Per-font SHA-256 (hex) of the embedded font PROGRAM bytes, computed from the
+// same FPDFFont_GetFontData read that feeds the cmap parse.
 const fontShaCache = new Map<number, string | null>();
 
-/**
- * Don't hash font programs above this size. Hashing is a one-time sync cost in
- * the load phase; per-glyph subset fonts (the case the hash exists for) are
- * tiny, while a multi-MB pan-CJK font would add noticeable load latency.
- */
+/** Don't hash font programs above this size. */
 const MAX_HASH_BYTES = 8 * 1024 * 1024;
 
 export class CmapResolver implements CharcodeResolver {
@@ -111,13 +75,7 @@ function getOrBuildCmap(
   return built;
 }
 
-/**
- * Build + cache a font's cmap. Call this ONLY from the document loader's
- * (serialized) text-read phase - reading embedded font data via PDFium while
- * it concurrently rasterizes a page corrupts the WASM module. Priming during
- * load (before raster) keeps the read safe and lets the fonts panel read the
- * result with zero render-time WASM. No-op for fonts already cached.
- */
+/** Build + cache a font's cmap. */
 export function primeFontGlyphMap(
   font: number,
   module: import("@embedpdf/pdfium").WrappedPdfiumModule,
@@ -126,24 +84,15 @@ export function primeFontGlyphMap(
   getOrBuildCmap(font, { module, pagePtr: 0, docPtr: 0 });
 }
 
-/**
- * Read a font's cached Unicode→glyphId cmap WITHOUT touching PDFium. Safe to
- * call during render. Returns the cmap if {@link primeFontGlyphMap} cached one,
- * or null if the font wasn't primed or has no parseable cmap (Type3 /
- * custom-encoded Type1) - both mean "coverage unknown" to the caller.
- */
+/** Read a font's cached Unicode→glyphId cmap WITHOUT touching PDFium. */
 export function getCachedFontGlyphMap(
   font: number,
 ): Map<number, number> | null {
   return cmapCache.get(font) ?? null;
 }
 
-/**
- * SHA-256 hex of the font's embedded program bytes, cached by
- * {@link primeFontGlyphMap} during the load phase. Safe to call any time
- * (never touches PDFium). Null when the font wasn't primed, has no readable
- * data, or exceeded the hashing size cap.
- */
+// SHA-256 hex of the font's embedded program bytes, cached by {@link
+// primeFontGlyphMap} during the load phase. Safe to call any time.
 export function getCachedFontProgramSha256(font: number): string | null {
   return fontShaCache.get(font) ?? null;
 }
@@ -153,9 +102,7 @@ function buildCmap(
   ctx: ResolverContext,
 ): Map<number, number> | null {
   const bytes = readFontData(font, ctx.module);
-  // Hash alongside the cmap parse - same single PDFium read serves both. The
-  // hash is cached even when the cmap is unparseable (CFF/Type1 scalers): the
-  // backend font-identity lookup works for any embedded program.
+  // Hash alongside the cmap parse - same single PDFium read serves both.
   if (!fontShaCache.has(font)) {
     let sha: string | null = null;
     if (bytes && bytes.length > 0 && bytes.length <= MAX_HASH_BYTES) {
@@ -201,13 +148,7 @@ function readFontData(
   }
 }
 
-/**
- * Minimal TrueType / OpenType cmap parser. Returns a Map of
- * Unicode codepoint → glyph index, or null if the font has no
- * usable cmap.
- *
- * Reference: https://learn.microsoft.com/en-us/typography/opentype/spec/cmap
- */
+/** Minimal TrueType / OpenType cmap parser. */
 export function parseTrueTypeCmap(
   bytes: Uint8Array,
 ): Map<number, number> | null {
@@ -273,9 +214,8 @@ export function parseTrueTypeCmap(
 }
 
 function rankSubtable(platformId: number, encodingId: number): number {
-  // Microsoft Unicode UCS-4 (3, 10) is the highest priority -
-  // covers chars above U+FFFF. Then Microsoft Unicode BMP (3, 1).
-  // Then Unicode platform (0, any). Everything else lowest.
+  // Microsoft Unicode UCS-4 (3, 10) is the highest priority - covers chars
+  // above U+FFFF.
   if (platformId === 3 && encodingId === 10) return 100;
   if (platformId === 0 && encodingId === 4) return 90;
   if (platformId === 0 && encodingId === 6) return 90;
@@ -333,14 +273,7 @@ function parseFormat4(
   return out;
 }
 
-// Hard cap on entries built from any one cmap. This parser runs SYNCHRONOUSLY
-// in the loader's text-read phase; a corrupt/hostile font with a giant format-6
-// entryCount or a format-12 group spanning the whole plane (0..0x10FFFF) would
-// otherwise allocate ~1.1M entries and freeze the load. Sized to hold a real
-// pan-Unicode font (Noto Sans CJK is ~44-65k BMP glyphs plus several thousand
-// in the SIP planes) without truncating its high codepoints in insertion order
-// - the old 70k cap dropped them, so a covered CJK char read back as uncovered
-// in the fonts panel. A hostile font still can't blow past this bound.
+// Hard cap on entries built from any one cmap.
 const MAX_CMAP_ENTRIES = 200_000;
 
 /** Format 6: trimmed table mapping. Compact contiguous range. */
@@ -392,13 +325,7 @@ function parseFormat12(dv: DataView, offset: number): Map<number, number> {
   return out;
 }
 
-/**
- * Clear the per-font cmap + program-hash caches. MUST be called on document
- * switch: both are keyed by raw PDFium font pointers, which PDFium reuses
- * across documents - a stale entry would serve the previous document's glyph
- * map / font identity (wrong coverage / wrong subset charcodes) for a reused
- * pointer.
- */
+/** Clear the per-font cmap + program-hash caches. */
 export function resetCmapCache(): void {
   cmapCache.clear();
   fontShaCache.clear();

@@ -1,13 +1,4 @@
-/**
- * Synchronous pure-JS SHA-256 (FIPS 180-4), returning lowercase hex.
- *
- * Used to fingerprint embedded font programs so the backend can identify
- * the EXACT font (subset) a charcode request targets. crypto.subtle is not
- * an option here: it's async (the hash is computed inside the synchronous
- * font-prime phase) and unavailable on insecure origins (plain-http
- * self-hosted deployments), where a silently-missing hash would reopen the
- * cross-subset wrong-glyph bug this fingerprint exists to prevent.
- */
+/** Synchronous pure-JS SHA-256 (FIPS 180-4), returning lowercase hex. */
 
 // First 32 bits of the fractional parts of the cube roots of primes 2..311.
 const K = new Uint32Array([

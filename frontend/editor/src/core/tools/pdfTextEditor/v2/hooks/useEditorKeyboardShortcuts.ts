@@ -43,10 +43,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     function onMetaKey(e: KeyboardEvent) {
       const meta = e.ctrlKey || e.metaKey;
       if (!meta) return;
-      // Normalise: with Shift or CapsLock the letter arrives UPPERCASE, so
-      // matching e.key verbatim made every Shift-modified shortcut
-      // (Ctrl+Shift+Z redo, Ctrl+Shift+V paste-plain, Ctrl+Shift+G) dead
-      // and CapsLock leaked Ctrl+S to the browser's save-page dialog.
+      // Normalise: with Shift or CapsLock the letter arrives UPPERCASE.
       switch (e.key.toLowerCase()) {
         case "z":
           // Form fields (Find/Replace/password) keep their NATIVE undo.
@@ -80,8 +77,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           return;
         case "d":
           // No focus guard: duplicate must work while a run's editable is
-          // focused. Always claim the key - leaking it opens the browser
-          // bookmark dialog mid-session.
+          // focused.
           e.preventDefault();
           if (store.selection.value.runIds.length === 0) return;
           onDuplicate();
@@ -92,10 +88,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           e.preventDefault();
           onSelectAll();
           return;
-        // c / x / v are deliberately NOT handled here. Calling
-        // preventDefault on them stops the browser dispatching the native
-        // cut/copy/paste ClipboardEvent, which is the only clipboard route
-        // that works outside Chromium-on-HTTPS. See useEditorClipboard.
+        // c / x / v are deliberately NOT handled here.
         case "f":
           e.preventDefault();
           onOpenFind();

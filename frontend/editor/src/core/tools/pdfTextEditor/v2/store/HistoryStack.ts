@@ -4,23 +4,12 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 
 const DEFAULT_LIMIT = 200;
 
-/**
- * Commands sharing a coalesce key that execute within this many ms of each
- * other are grouped into one undo step. contentEditable fires several `input`
- * events per logical keystroke (e.g. Enter then a letter), so without this a
- * single typed action would need several undos to reverse.
- */
+// Commands sharing a coalesce key that execute within this many ms of each
+// other are grouped into one undo step. contentEditable fires several `input`.
 const COALESCE_WINDOW_MS = 600;
 
-/**
- * LIFO command history for undo/redo.
- *
- * - `execute(cmd, doc)` applies the command and pushes it.
- * - `undo(doc)` reverts the top of the stack and moves it to the redo stack.
- * - `redo(doc)` re-applies the top of the redo stack.
- * - Any new `execute` after an `undo` clears the redo stack (standard
- *   editor semantics).
- */
+// LIFO command history for undo/redo. - `execute` applies the command and
+// pushes it.
 export class HistoryStack {
   private readonly undoStack: Command[];
   private readonly redoStack: Command[];
@@ -54,12 +43,8 @@ export class HistoryStack {
   }
 
   execute(cmd: Command, doc: EditorDocument): void {
-    // Read the clock BEFORE apply(): the window is meant to measure the
-    // user's idle time between edits, and `lastExecuteAt` is stamped after
-    // the previous apply(), so `startedAt - lastExecuteAt` is the gap with
-    // neither command's own work in it. Timing both ends after apply() also
-    // charged this command's PDFium/render cost to the user's think-time
-    // budget, which made undo granularity depend on how fast the engine is.
+    // Read the clock BEFORE apply: the window is meant to measure the user's
+    // idle time between edits.
     const startedAt = Date.now();
     cmd.apply(doc);
     const key = cmd.coalesceKey?.() ?? null;
@@ -68,8 +53,7 @@ export class HistoryStack {
     // child so the hook compares against a real edit, not the wrapper.
     const previous = (top instanceof CompositeCommand ? top.last : top) ?? null;
     // Group with the previous command when it shares a coalesce key and ran
-    // within the time window. The child was already applied above; the group
-    // only re-applies / reverts as a unit.
+    // within the time window.
     const inWindow =
       startedAt - this.lastExecuteAt <= COALESCE_WINDOW_MS ||
       cmd.coalesceIgnoresTimeWindow?.(previous) === true;
@@ -124,11 +108,7 @@ export class HistoryStack {
     this.lastCoalesceKey = null;
   }
 
-  /**
-   * Revert every command currently on the undo stack, in reverse order.
-   * Equivalent to repeated `undo()` calls until empty. After the call
-   * the redo stack contains every reverted command in original order.
-   */
+  /** Revert every command currently on the undo stack, in reverse order. */
   undoAll(
     doc: import("@app/tools/pdfTextEditor/v2/model/EditorDocument").EditorDocument,
   ): number {

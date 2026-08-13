@@ -6,25 +6,7 @@ import {
   remapImageMatrix,
 } from "@app/tools/pdfTextEditor/v2/model/affine";
 
-/**
- * Set an image object's transform to an absolute target.
- *
- * The new matrix is derived by remapping the image's DISPLAY-space AABB from
- * its previous extent to `nextBounds` while preserving the orientation baked
- * into the previous matrix (see {@link remapImageMatrix}). This keeps a moved
- * image upright and same-sized even on /Rotate / CropBox pages, where the raw
- * AABB's width/height are swapped relative to what the user sees - the earlier
- * "rebuild as axis-aligned `(w,0,0,h,x,y)` then counter-rotate" approach swapped
- * the image's width/height and flipped it on every move of a rotated page.
- *
- * Using `FPDFImageObj_SetMatrix` (absolute) instead of
- * `FPDFPageObj_Transform` (post-multiply) avoids the "teleport" bug
- * where drag-from-non-bottom-right resizes left the Rnd UI and the
- * PDFium model disagreeing on where the image actually was.
- *
- * Revert restores the matrix and bounds the command captured on first
- * apply.
- */
+/** Set an image object's transform to an absolute target. */
 export class SetImageTransformCommand implements Command {
   readonly type = "set-image-transform";
   private readonly pageIndex: number;
@@ -57,9 +39,8 @@ export class SetImageTransformCommand implements Command {
       this.prevBounds = prevBounds;
       this.prevMatrix = prevMatrix;
     }
-    // Remap the image's display AABB from prevBounds -> nextBounds while keeping
-    // the orientation/aspect of prevMatrix, then write the result absolutely.
-    // Reduces to the axis-aligned (w,0,0,h,x,y) placement on an unrotated page.
+    // Remap the image's display AABB from prevBounds -> nextBounds while
+    // keeping the orientation/aspect of prevMatrix.
     const next = remapImageMatrix(
       prevMatrix,
       prevBounds,

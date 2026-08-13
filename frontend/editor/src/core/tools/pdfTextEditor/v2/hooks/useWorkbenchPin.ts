@@ -14,12 +14,8 @@ interface PinOptions {
   component: CustomWorkbenchViewRegistration["component"];
 }
 
-/**
- * Register the custom workbench view and keep it pinned while the editor
- * tool is selected. Other contexts (FileContext, ViewerContext) routinely
- * push the workbench back to "viewer" on file events; the effect here
- * undoes that whenever the user is still inside the editor.
- */
+// Register the custom workbench view and keep it pinned while the editor tool
+// is selected.
 export function useWorkbenchPin({
   workbenchId,
   workbenchViewId,
@@ -37,9 +33,8 @@ export function useWorkbenchPin({
   const { actions: navigationActions } = useNavigationActions();
   const navigationState = useNavigationState();
 
-  // Stash the per-render values that aren't dependable identities (icon
-  // is a fresh JSX node every render) so the effect can read them on
-  // mount without re-running on every parent render.
+  // Stash the per-render values that aren't dependable identities so the effect
+  // can read them on mount without re-running on every parent render.
   const viewRef = useRef({
     workbenchId,
     workbenchViewId,

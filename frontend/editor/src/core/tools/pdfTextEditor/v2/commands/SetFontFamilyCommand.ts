@@ -9,26 +9,14 @@ import {
   collectContainersByPtr,
   collectMemberPtrs,
   emitTextLine,
+  inkFromRun,
   removeMemberPtrs,
   rotationFromMatrix,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import { deviceFontEmitCount } from "@app/tools/pdfTextEditor/v2/util/deviceFontEmbed";
 
-/**
- * Swap a text run's font to one of PDFium's base-14 standard fonts.
- *
- * Removes the existing FPDF_PAGEOBJ_TEXT object(s) and re-emits the run's text
- * in the requested base-14 family at the same position, size and fill. PDFium's
- * C API has no SetFont accessor, so re-emit is the recommended path.
- *
- * Re-emit goes through {@link emitTextLine}, which (a) emits ONE object PER
- * VISUAL LINE at descending baselines - so a multi-line paragraph keeps its
- * lines instead of collapsing onto one baseline - and (b) sanitizes the text
- * for the base-14 (WinAnsi) charset, so a non-Latin character is dropped rather
- * than persisted as a U+00FF ydieresis tofu glyph.
- *
- * Every member pointer (paragraph leaves / merged per-glyph originals) is
- * removed first; leaving them would paint the old glyphs UNDER the new font.
- */
+// Re-emit a run's text in another family: PDFium has no SetFont accessor.
+// Device fonts embed when pre-warmed, else the nearest standard face.
 export class SetFontFamilyCommand implements Command {
   readonly type = "set-font-family";
   private readonly pageIndex: number;
@@ -81,9 +69,7 @@ export class SetFontFamilyCommand implements Command {
     const dcos = rot ? rot.cos : 1;
     const dsin = rot ? rot.sin : 0;
     // Prefer per-line SLOT ranges: run.text joins SOFT-wrapped lines with
-    // separators a \n split can't see, so splitting on \n collapsed every
-    // soft-wrapped paragraph onto one baseline per hard line. Slots also
-    // carry each line's true anchor, preserving indents/centering.
+    // separators a \n split can't see.
     const slots = run.paragraphLineSlots;
     const emitLines: Array<{ text: string; x: number; y: number }> =
       slots.length > 0
@@ -106,6 +92,9 @@ export class SetFontFamilyCommand implements Command {
     const memberFs: number[] = [];
     const leaf: number[] = [];
     const created: number[] = [];
+    // Emits with the embedded device face are counted, so the font id below
+    // can say what actually rendered rather than what was requested.
+    const deviceEmitsBefore = deviceFontEmitCount(doc, this.nextFamily);
     for (const line of emitLines) {
       memberFs.push(line.y);
       if (line.text.length === 0) {
@@ -120,7 +109,7 @@ export class SetFontFamilyCommand implements Command {
         y: line.y,
         fontSize: run.fontSize,
         fill: run.fill,
-        renderMode: run.renderMode,
+        ...inkFromRun(run),
         originalFontPtr: 0, // base-14: never reuse the source font
         charSpacingPt: run.charSpacingPt,
         fallbackFamily: this.nextFamily,
@@ -136,20 +125,22 @@ export class SetFontFamilyCommand implements Command {
       // Nothing emitted (e.g. all-whitespace dropped) - restore and bail.
       this.reinsertOriginals(m, page);
       restoreRun(run, this.prev);
-      // Neutralise the command: it still lands in history, and a revert
-      // with `prev` set would reinsert the originals a SECOND time
-      // (double-inserted page objects, double paint).
+      // Neutralise the command: it still lands in history, and a revert with
+      // `prev` set would reinsert the originals a SECOND time.
       this.prev = null;
       return;
     }
 
     this.createdPtrs = created;
     run.pdfiumObjPtr = lineAnchors.find((p) => p) ?? leaf[0];
-    run.fontId = `base14:${this.nextFamily}`;
+    // `device:` marks glyphs from an embedded device font; a substituted run
+    // keeps `base14:`, so nothing keying off that prefix changes meaning.
+    const embedded =
+      deviceFontEmitCount(doc, this.nextFamily) > deviceEmitsBefore;
+    run.fontId = `${embedded ? "device" : "base14"}:${this.nextFamily}`;
     run.fontSubset = false;
     // Reset ALL model bookkeeping to the freshly-emitted objects so later
-    // commands (recolor, resize, next edit) act on the live objects, not the
-    // removed originals.
+    // commands act on the live objects, not the removed originals.
     run.mergedFromPtrs = [];
     run.mergedFromTexts = [];
     run.mergedFromBounds = [];

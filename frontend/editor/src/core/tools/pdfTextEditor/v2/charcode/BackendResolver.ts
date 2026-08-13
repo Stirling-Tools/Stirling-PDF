@@ -7,40 +7,13 @@ import type {
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 import { getCachedFontProgramSha256 } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 
-/**
- * Strategy 3: ask the Spring backend (PDFBox) to encode chars.
- *
- * The resolver itself is SYNCHRONOUS (called inside the PDFium emit
- * path which can't await), but it works via a pre-fetched cache:
- *
- *   1. `prefetchBackendEncoding(...)` is called BEFORE the user
- *      starts typing (e.g. when they focus a text run). It POSTs the
- *      source PDF + a locator pointing at an existing rendering of
- *      each surviving char + the candidate alphabet (a-z A-Z 0-9 +
- *      punctuation, or a user-supplied set) to the Spring endpoint
- *      and stores the returned charcode arrays per (fontId, char).
- *
- *   2. When `resolve()` later runs synchronously inside the emit
- *      path, it just looks up each char in the cache.
- *
- * The endpoint lives at
- * `POST /api/v1/general/pdf-text-editor-v2/encode-charcodes` and
- * returns `{ charcodes: number[], missing: string[], note, error }`.
- * See `PdfTextEditorV2CharcodeController.java`.
- */
+/** Strategy 3: ask the Spring backend (PDFBox) to encode chars. */
 
-/**
- * Cache: per (fontPtr, char) → charcode integer (or null = missing). Browser-side
- * and per-tab; cleared per document by `resetBackendResolverCaches`.
- */
+/** Cache: per (fontPtr, char) → charcode integer (or null = missing). */
 const charCache = new Map<string, number | null>();
 
-/**
- * Expiry timestamps for TRANSIENT-failure nulls (network error, backend
- * down, serialize hiccup). Without a TTL one flaky request permanently
- * forced Helvetica for those chars for the whole session. Genuine
- * "font lacks this char" answers stay permanent (no entry here).
- */
+// Expiry timestamps for TRANSIENT-failure nulls (network error, backend down,
+// serialize hiccup).
 const negativeUntil = new Map<string, number>();
 const NEGATIVE_TTL_MS = 30_000;
 
@@ -52,23 +25,11 @@ function setTransientNull(key: string): void {
 /** Track in-flight prefetches so we don't double-fire. */
 const inFlight = new Set<string>();
 
-/**
- * Hard cap on CONCURRENT auto-prefetches. Every prefetch serializes the whole
- * PDF to base64 and POSTs it (~MBs); a burst of edits across many runs used
- * to fan out hundreds of such uploads at once, exhausting the browser's
- * request slots (net::ERR_INSUFFICIENT_RESOURCES) and destabilising the tab.
- * Excess requests are simply dropped - the chars stay cache-miss and a later
- * keystroke re-fires when a slot is free.
- */
+/** Hard cap on CONCURRENT auto-prefetches. */
 const MAX_CONCURRENT_AUTO_PREFETCH = 2;
 let autoPrefetchActive = 0;
 
-/**
- * Short-lived cache of the serialized document, shared by prefetch bursts.
- * The backend only needs the bytes to LOCATE fonts - fonts don't change
- * between keystrokes - so a few-seconds-stale copy is fine and saves one
- * full PdfiumSave serialize per missing char.
- */
+/** Short-lived cache of the serialized document, shared by prefetch bursts. */
 let serializedCache: { bytes: Uint8Array; at: number } | null = null;
 const SERIALIZE_TTL_MS = 4000;
 
@@ -97,31 +58,8 @@ interface EncodeCharcodesResponse {
   error?: string;
 }
 
-/**
- * POST JSON to the charcode endpoint via the shared `apiClient`.
- *
- * `apiClient` (axios) is the canonical Stirling HTTP helper - it
- * already attaches the session JWT, XSRF token, and credentials, and
- * transparently refreshes the token on 401 (in proprietary builds).
- * Earlier this resolver rolled its own `fetch()` and shipped without
- * any of that, which silently produced 401s the moment the backend
- * security profile was enabled.
- *
- * Returns the parsed body or `null` if the call failed (HTTP error,
- * network error, etc.) - callers treat null as "no charcode for this
- * char, fall through".
- *
- * `suppressErrorToast` keeps an individual probe failure quiet: we fire
- * dozens of probes in parallel during prewarm, and a single one going
- * sideways shouldn't pop a toast at the user. It also short-circuits the
- * handler ahead of its 401 branch, so it already stops a background probe's
- * 401 from navigating the whole app to /login (which would unmount the
- * editor and throw away the user's unsaved edits). `skipAuthRedirect` is
- * belt-and-braces for that same redirect, independent of where the toast
- * check sits. Both are top-level axios config, NOT headers - the
- * interceptor reads `error.config.<flag>` (see services/httpErrorHandler.ts),
- * so a header of the same name is inert.
- */
+// POST JSON to the charcode endpoint via the shared `apiClient`. `apiClient` is
+// the canonical Stirling HTTP helper.
 async function postCharcodes(
   body: Record<string, unknown>,
 ): Promise<EncodeCharcodesResponse | null> {
@@ -150,8 +88,7 @@ export class BackendResolver implements CharcodeResolver {
     const cacheMisses: string[] = [];
     for (const ch of text) {
       // Whitespace is never charcode-reused (no real space glyph in subset
-      // fonts; SetCharcodes(0x20) paints garbage like „). Report it missing
-      // so the emit path renders a positional gap, and never round-trip it.
+      // fonts; SetCharcodes(0x20) paints garbage like „).
       if (/\s/.test(ch)) {
         missing.push(ch);
         continue;
@@ -177,10 +114,8 @@ export class BackendResolver implements CharcodeResolver {
       }
       if (typeof code === "number") charcodes.push(code);
     }
-    // Auto-kick a background prefetch for the cache-miss chars so the
-    // next time the user types them (or any chunk containing them)
-    // we have charcodes to use. This is a fire-and-forget side
-    // effect - resolve() still returns synchronously for THIS call.
+    // Auto-kick a background prefetch for the cache-miss chars so the next time
+    // the user types them we have charcodes to use.
     if (cacheMisses.length > 0) {
       maybeAutoPrefetch(font, cacheMisses, ctx);
     }
@@ -196,21 +131,8 @@ export class BackendResolver implements CharcodeResolver {
   }
 }
 
-/**
- * Fire-and-forget prefetch triggered from inside `resolve()` when
- * the cache doesn't yet have the chars the user just typed. The
- * locator is derived from the current page + the font handle:
- *
- *   - We scan the page for the first existing text object that uses
- *     this font, read its first char's Unicode + x/y via PDFium.
- *   - We extract the full PDF bytes via `PdfiumSave.serialize` of
- *     the document.
- *   - We POST those plus the missing chars to the encode endpoint.
- *
- * The first time the user types into a new font this is a real
- * round-trip (Spring start + PDFBox parse + encode). Subsequent
- * keystrokes hit the cache.
- */
+// Fire-and-forget prefetch triggered from inside `resolve()` when the cache
+// doesn't yet have the chars the user just typed.
 function maybeAutoPrefetch(
   fontPtr: number,
   chars: string[],
@@ -250,13 +172,7 @@ function maybeAutoPrefetch(
       const pageIdx = pageIdxOfPagePtr(ctx);
 
       // Per-char prefetch: for each missing char, resolve the font that
-      // actually renders it on the page (findFontForChar), name that font, and
-      // ask the backend for THAT font's charcode. The result is cached ONLY
-      // under the rendering font - never the borrowed querying font, whose
-      // charcode would be a different font's (the cross-font wrong-glyph bug).
-      // Naming the font also disambiguates pages where two fonts render the
-      // same char. Single-font pages and Sample.pdf's per-glyph fonts are
-      // unaffected (rendering font == the only font with the char).
+      // actually renders it on the page, name that font.
       await Promise.all(
         chars.map(async (ch) => {
           const perCharFont = findFontForChar(ch, ctx) || fontPtr;
@@ -266,10 +182,7 @@ function maybeAutoPrefetch(
             locatorChar: ch,
             fontName: readFontName(ctx.module, perCharFont),
             // Program-bytes hash: the only identity that survives PDFium's
-            // subset-tag stripping (every "ABCDEF+Garamond" subset names
-            // itself just "Garamond"). Lets the backend encode against the
-            // EXACT subset instead of a same-name sibling with a different
-            // charcode space.
+            // subset-tag stripping.
             fontSha256: getCachedFontProgramSha256(perCharFont) ?? undefined,
             text: ch,
           });
@@ -284,16 +197,8 @@ function maybeAutoPrefetch(
           } else {
             charCache.set(cacheKey(perCharFont, ch), code);
           }
-          // Stop the per-keystroke prefetch storm. resolve() looks this char up
-          // under the QUERIED font (the run's own/borrowed handle), not
-          // perCharFont. When they differ - a borrowed font that isn't the one
-          // rendering ch - the queried key would never get populated, so every
-          // keystroke would re-serialize and re-POST the entire PDF. Seed a null
-          // sentinel under the queried font so resolve() reports the char missing
-          // (the emit then defers to the perCharFont entry we just cached) instead
-          // of re-firing forever. We deliberately DON'T copy perCharFont's code
-          // here: it is valid only for perCharFont's subset, so reusing it under a
-          // different font would be the cross-font wrong-glyph bug.
+          // Stop the per-keystroke prefetch storm. resolve looks this char up
+          // under the QUERIED font, not perCharFont.
           if (perCharFont !== fontPtr) {
             charCache.set(cacheKey(fontPtr, ch), null);
           }
@@ -304,9 +209,8 @@ function maybeAutoPrefetch(
       if (typeof console !== "undefined") {
         console.warn("[v2.charcode] backend prefetch threw:", err);
       }
-      // Negative-cache with TTL so we don't retry the same chars in a
-      // tight loop but DO recover once the backend is reachable again;
-      // the HUD event below surfaces the real reason.
+      // Negative-cache with TTL so we don't retry the same chars in a tight
+      // loop but DO recover once the backend is reachable again.
       for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
       // Lazy-import charcodeRegistry to avoid the cyclic
       // BackendResolver ↔ charcodeRegistry module init.
@@ -344,20 +248,8 @@ interface FontReadModule {
   FPDFTextObj_GetFont?: (obj: number) => number;
 }
 
-/**
- * Find an existing char on the current page whose text object uses the
- * given font, returning its Unicode + position so we can pass it as a
- * locator to the backend. Returns null if no such char exists (the
- * font isn't used on this page).
- */
-/**
- * Walk the page's text and return the FIRST PDFium font handle whose existing text object
- * renders `wantChar`. Used by the emit path when the backend strategy is active: we need
- * the font handle that owns the glyph the user is typing, not the borrowed font handle
- * from the partial-edit (which may be a different font for per-glyph-per-font PDFs).
- *
- * Caches per (pagePtr, char) so the text-page walk happens once per char per page.
- */
+// Find an existing char on the current page whose text object uses the given
+// font.
 const fontForCharCache = new Map<string, number | null>();
 
 export function findFontForChar(
@@ -426,11 +318,8 @@ interface FontNameModule {
   FPDFFont_GetBaseFontName?: (font: number, buf: number, len: number) => number;
 }
 
-/**
- * Read a font's /BaseFont name so the backend can disambiguate WHICH font to
- * encode against when two fonts on the page render the same char. Returns
- * undefined if unavailable (then the backend keeps its first-match behaviour).
- */
+// Read a font's /BaseFont name so the backend can disambiguate WHICH font to
+// encode against when two fonts on the page render the same char.
 function readFontName(
   m: ResolverContext["module"],
   fontPtr: number,
@@ -453,37 +342,16 @@ function readFontName(
   }
 }
 
-/**
- * Per-page idempotency guard for `prewarmBackendCacheForPage`. Tracks
- * which page pointers have already fired (or are firing) a prewarm so
- * the same page never round-trips twice in a session.
- */
+/** Per-page idempotency guard for `prewarmBackendCacheForPage`. */
 const prewarmedPages = new Set<number>();
 
-/**
- * Pre-warm the backend cache for every Unicode char that already lives on
- * the given page. Called from `TextRunOverlay`'s focus handler so the
- * user's FIRST keystroke hits a populated cache, not the
- * "miss → prefetch → retry the keystroke" 2-attempt UX.
- *
- * Implementation:
- *   1. Walk the PDFium text page to collect (unicode, perCharFont) for
- *      every char on the page.
- *   2. For each unique char that's not already cached under its
- *      perCharFont, fire one encode-charcodes request and cache the
- *      result.
- *
- * Idempotent per page-pointer. Safe to call from many overlay focus
- * handlers - only the first call does work.
- */
+// Pre-warm the backend cache for every Unicode char that already lives on the
+// given page.
 export async function prewarmBackendCacheForPage(
   pageIndex: number,
 ): Promise<void> {
-  // Always log entry so tests + debug have a single signal that
-  // "prewarm was at least invoked for page N" regardless of which
-  // early-return path the body takes. The trailing log (after the
-  // fetch fan-out) is the "prewarm COMPLETED" signal that tests
-  // wait on - this is the "prewarm STARTED" counterpart.
+  // Always log entry so tests + debug have a single signal that "prewarm was at
+  // least invoked for page N" regardless of which early-return path the body.
   if (typeof console !== "undefined") {
     console.log(`[v2.charcode] backend prewarm-start pageIdx=${pageIndex}`);
   }
@@ -562,10 +430,7 @@ export async function prewarmBackendCacheForPage(
   }
   if (probes.length === 0) return;
 
-  // Guard the page only once we're committed to the fetch fan-out. Marking
-  // earlier left the page guarded on cheap early-returns (missing PDFium
-  // funcs, no text page, nothing to probe), silently skipping all future
-  // retries. We un-mark below if every probe failed so a later focus retries.
+  // Guard the page only once we're committed to the fetch fan-out.
   prewarmedPages.add(pagePtr);
 
   try {
@@ -578,12 +443,7 @@ export async function prewarmBackendCacheForPage(
     const pdfBase64 = uint8ToBase64(bytes);
 
     // Batch by font: fire ONE encode-charcodes request per font carrying ALL of
-    // that font's page chars, instead of one request per (font, char). The
-    // endpoint already accepts a multi-char `text` and returns its charcodes in
-    // request order; since we never probe whitespace here, the response has no
-    // gaps. This collapses an N-glyph page from N full-PDF uploads to roughly one
-    // per font - the dominant cost (uploading + re-parsing the whole document) is
-    // paid a handful of times, not once per character.
+    // that font's page chars, instead of one request per (font, char).
     const byFont = new Map<number, string[]>();
     for (const { ch, perCharFont } of probes) {
       const arr = byFont.get(perCharFont);
@@ -616,21 +476,16 @@ export async function prewarmBackendCacheForPage(
                 pdfBase64,
                 pageIndex,
                 // Any of this font's chars is a valid locator (the font renders
-                // them all). Name the font so a page with two fonts rendering the
-                // same char encodes against THIS one, not whichever appears first.
+                // them all).
                 locatorChar: chars[0],
                 fontName: readFontName(m, font),
-                // Program-bytes hash beats the name: PDFium strips subset tags,
-                // so all subsets of one family share a name and a name-only
-                // match can hit a sibling subset with a different charcode
-                // space (the "RUSSELL" → "US EEL" corruption).
+                // Program-bytes hash beats the name: PDFium strips subset tags.
                 fontSha256: getCachedFontProgramSha256(font) ?? undefined,
                 text: chars.join(""),
               });
               if (!json || json.error) continue;
               // Map returned charcodes back to chars: the backend appends one
-              // charcode per NON-missing char in request order, so walk chars in
-              // order and consume codes for the ones not reported missing.
+              // charcode per NON-missing char in request order.
               const missing = new Set(json.missing ?? []);
               const codes = json.charcodes ?? [];
               let k = 0;
@@ -655,9 +510,8 @@ export async function prewarmBackendCacheForPage(
       );
     }
     await Promise.all(workers);
-    // Expose cache state for tests so a failing assertion can dump
-    // exactly what got cached vs. what was missed. Window-only side
-    // effect; harmless in production.
+    // Expose cache state for tests so a failing assertion can dump exactly what
+    // got cached vs. what was missed.
     if (typeof window !== "undefined") {
       const w = window as unknown as {
         __v2_charcode_cache_dump?: () => Record<string, number | null>;
@@ -673,12 +527,8 @@ export async function prewarmBackendCacheForPage(
         `[v2.charcode] backend prewarm pageIdx=${pageIndex} probes=${probes.length} succeeded=${probesSucceeded}`,
       );
     }
-    // If EVERY probe failed (auth, backend down, all 500s) un-mark the
-    // page so a subsequent focus can retry instead of silently
-    // returning early forever. We deliberately keep the guard set
-    // when at least one probe succeeded - those entries are now in
-    // the cache and re-firing the prewarm would just waste round-
-    // trips re-fetching what we already have.
+    // If EVERY probe failed (auth, backend down, all 500s) un-mark the page so
+    // a subsequent focus can retry instead of silently returning early forever.
     if (probesSucceeded === 0) {
       prewarmedPages.delete(pagePtr);
     }
@@ -711,11 +561,8 @@ function getEditorContextForPage(pageIndex: number): {
 }
 
 function pageIdxOfPagePtr(ctx: ResolverContext): number {
-  // The ResolverContext only carries pagePtr; map back to index by
-  // asking the doc model. We piggyback on the window-attached editor
-  // store the tests already use. EditorStore.doc is TS-private, so
-  // we read through the public `document` getter; Page exposes
-  // `.index`, not `.pageIndex`.
+  // The ResolverContext only carries pagePtr; map back to index by asking the
+  // doc model.
   const w = window as unknown as {
     __v2_editor_store?: {
       document?: {
@@ -769,13 +616,8 @@ export function _clearBackendCacheForTests(): void {
   inFlight.clear();
 }
 
-/**
- * Reset ALL module-level caches keyed by raw PDFium pointers (per-char
- * charcodes, per-page prewarm guard, per-char font handles, in-flight set).
- * MUST be called whenever the editor switches documents: PDFium can reuse a
- * freed font/page pointer for a different font in the next document, so a
- * stale entry would otherwise serve the wrong charcode/glyph across docs.
- */
+// Reset ALL module-level caches keyed by raw PDFium pointers (per-char
+// charcodes, per-page prewarm guard, per-char font handles, in-flight set).
 export function resetBackendResolverCaches(): void {
   charCache.clear();
   negativeUntil.clear();

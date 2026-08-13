@@ -3,16 +3,7 @@ import type { Page, Route } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
-/**
- * Cross-font charcode disambiguation (H1H2/U).
- *
- * The backend encode-charcodes endpoint now accepts a `fontName` so a page with
- * two fonts rendering the same char encodes against the RIGHT one. This test
- * mocks the endpoint and asserts the frontend reads the run's /BaseFont name
- * (FPDFFont_GetBaseFontName) and sends it - the wiring that makes the backend
- * disambiguation reachable. The backend half is covered by the Java unit test
- * (fontNameDisambiguatesBetweenTwoFontsRenderingTheSameChar).
- */
+/** Cross-font charcode disambiguation (H1H2/U). */
 
 const SUBSET = path.join(
   import.meta.dirname,
@@ -79,10 +70,7 @@ test("editor sends the run's font name to encode-charcodes", async ({
   ).toBeGreaterThan(0);
 
   // The program-bytes hash must ride along too: PDFium reports every
-  // "ABCDEF+Family" subset as bare "Family", so the name alone cannot pick
-  // between sibling subsets (the Mangum-CV "RUSSELL" → "US EEL" corruption).
-  // The hash is read from the REAL embedded font via FPDFFont_GetFontData
-  // during document load, so this asserts the whole prime→prewarm wiring.
+  // "ABCDEF+Family" subset as bare "Family".
   const hashed = bodies.filter(
     (b) =>
       typeof b.fontSha256 === "string" &&

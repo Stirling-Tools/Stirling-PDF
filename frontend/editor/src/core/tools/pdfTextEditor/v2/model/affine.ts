@@ -68,22 +68,8 @@ export function imageMatrixBounds(m: Affine): PageRect {
   };
 }
 
-/**
- * New RAW image matrix when the user moves/resizes the image's display-space
- * AABB from `prevBounds` to `nextBounds`. The image's *displayed* footprint is
- * scaled+translated from one AABB to the other while its internal orientation
- * (any rotation/flip baked into `prev`) is PRESERVED - so a move never
- * re-orients the image and a resize never swaps its width/height.
- *
- * It works in display space (where the editor's drag UI operates) then maps
- * back to raw via the page's display transform `A`, so /Rotate + CropBox pages
- * are handled intrinsically rather than with a separate counter-rotation that
- * mishandled the raw-vs-display dimension swap.
- *
- * When `A` is identity and `prev` is an axis-aligned `(w,0,0,h,x,y)` matrix the
- * result is exactly `(nextW,0,0,nextH,nextX,nextY)` - byte-identical to the
- * pre-fix axis-aligned placement, so the common (unrotated) case is unchanged.
- */
+// New RAW image matrix when the user moves/resizes the image's display-space
+// AABB from `prevBounds` to `nextBounds`.
 export function remapImageMatrix(
   prev: Affine,
   prevBounds: PageRect,

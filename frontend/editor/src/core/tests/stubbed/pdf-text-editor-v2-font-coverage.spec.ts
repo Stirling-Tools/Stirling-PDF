@@ -2,18 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
 
-/**
- * End-to-end coverage for the fonts panel's client-side glyph-coverage probe.
- *
- * The document loader primes each embedded font's cmap into a cache during its
- * SERIALIZED text-read phase (reading font data at render time corrupts PDFium
- * - that path is deliberately avoided). The panel then reports, per font, which
- * of a-z A-Z 0-9 the font actually has glyphs for, with zero render-time WASM.
- *
- * subset-font-sample.pdf embeds a TrueType subset whose cmap omits most
- * alphanumerics, so the panel must surface concrete "Missing: ..." chars and a
- * yellow summary - all without backend help (encode-charcodes is aborted).
- */
+// End-to-end coverage for the fonts panel's client-side glyph-coverage probe.
 
 const SUBSET = path.join(
   import.meta.dirname,

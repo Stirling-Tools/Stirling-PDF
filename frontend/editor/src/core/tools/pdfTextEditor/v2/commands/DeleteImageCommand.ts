@@ -3,24 +3,14 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 import { ImageObject } from "@app/tools/pdfTextEditor/v2/model/ImageObject";
 import type { ImageObjectSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 
-/**
- * Remove an image object from a page. The PDFium object is detached via
- * `FPDFPage_RemoveObject` but kept alive so `revert` can re-attach it.
- */
+/** Remove an image object from a page. */
 export class DeleteImageCommand implements Command {
   readonly type = "delete-image";
   private readonly pageIndex: number;
   private readonly imageId: string;
   private snapshot: ImageObjectSnapshot | null;
   private cachedObjPtr: number;
-  /**
-   * Index in the page's object list at the moment of deletion. PDFium's
-   * `FPDFPage_InsertObject` appends to the end of the list, which puts
-   * the restored object on top of the z-order. We don't expose an
-   * "insert at index" API on PDFium directly - on revert we re-insert
-   * via the experimental Z-order helper if available, otherwise we
-   * accept the end-of-list placement and document it.
-   */
+  /** Index in the page's object list at the moment of deletion. */
   private originalIndex: number;
 
   constructor(opts: { pageIndex: number; imageId: string }) {
@@ -85,18 +75,13 @@ export class DeleteImageCommand implements Command {
       }
     }
     if (!inserted) {
-      // Fallback: re-insert at end. We then bubble it back down to its
-      // original z-order by rotating subsequent objects. This is O(N) in
-      // the page's object count but is rarely the hot path (a user
-      // pressing Reset on a magazine page).
+      // Fallback: re-insert at end.
       doc.module.FPDFPage_InsertObject(page.pagePtr, this.cachedObjPtr);
       if (this.originalIndex >= 0) {
         const total = doc.module.FPDFPage_CountObjects(page.pagePtr);
         const lastIdx = total - 1;
-        // Step the newly-inserted object down by removing+reinserting
-        // the objects that should be ABOVE it. Each iteration moves
-        // the target object effectively one step lower in z-order.
-        // This works because FPDFPage_InsertObject appends to the end.
+        // Step the newly-inserted object down by removing+reinserting the
+        // objects that should be ABOVE it.
         for (let i = this.originalIndex; i < lastIdx; i++) {
           const ptr = doc.module.FPDFPage_GetObject(
             page.pagePtr,

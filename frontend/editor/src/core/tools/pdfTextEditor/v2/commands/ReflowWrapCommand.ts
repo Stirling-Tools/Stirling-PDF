@@ -8,34 +8,7 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@app/services/pdfiumService";
 import { rotationFromMatrix } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
-/**
- * Reflow a text run's EXISTING glyph objects to fit within `maxWidthPt`,
- * persisting the wrap by REPOSITIONING the objects rather than re-setting
- * their text.
- *
- * The naive approach - baking the visual wrap into `\n` and re-emitting each
- * line via `FPDFText_SetText` - garbles fonts whose Unicode->glyph mapping
- * isn't reliable on a re-set (the same reason the partial-edit path keeps
- * original objects instead of re-setting them). Here every original object
- * is kept and only moved, so the embedded glyphs are never disturbed.
- *
- * Geometry and text are read DIRECTLY from PDFium per object, never from the
- * run's `mergedFrom*` arrays: those record approximate bounds and a shared
- * full-string text for multi-word inserts, which would scramble the layout
- * and duplicate the reconstructed text. The line a glyph belongs to is keyed
- * off its text-matrix baseline (`f`), NOT its bounding-box bottom - bottoms
- * dip below the baseline for descenders (g, p, y) and would split them onto a
- * phantom line, scrambling the reading order.
- *
- * Algorithm:
- *   1. Read each leaf object's actual bounds (x/right) + baseline + text.
- *   2. Group consecutive same-baseline glyphs into WORDS by gap.
- *   3. Greedily place words left-to-right, wrapping when the next word would
- *      exceed `maxWidthPt`.
- *   4. Translate every glyph of a word by the same delta so the word moves as
- *      a unit and intra-word spacing is preserved.
- *   5. Rebuild `paragraphLineSlots` / `text` / member + leaf arrays.
- */
+/** Reflow a text run's EXISTING glyph objects to fit within `maxWidthPt`. */
 
 interface Leaf {
   ptr: number;
@@ -115,27 +88,14 @@ export class ReflowWrapCommand implements Command {
       run.paragraphLineHeight > 0 ? run.paragraphLineHeight : fontSize * 1.2;
     const startX = Math.min(...leaves.map((l) => l.x));
     const topBaseline = Math.max(...leaves.map((l) => l.baseline));
-    // Clamp the wrap width to the page measured from OUR OWN left edge, so
-    // glyphs never spill off the right margin even if the caller's box width
-    // was computed from a slightly different left (run.bounds.x vs the actual
-    // leftmost glyph). One font-size of right margin keeps the last word in.
-    // startX/glyphs are RAW PDF x, so the right edge is the CropBox right edge
-    // in raw space (cropLeft+cropWidth); for identity pages this is page.width.
+    // Clamp the wrap width to the page measured from OUR OWN left edge.
     const rawRightEdge = page.display.cropLeft + page.display.cropWidth;
     const maxWidth = Math.min(
       this.maxWidthPt,
       Math.max(fontSize * 4, rawRightEdge - startX - fontSize),
     );
 
-    // Reflow is only NEEDED when some line actually overflows the wrap
-    // width. When everything already fits, repositioning is pure loss: the
-    // greedy placer re-lines the paragraph at its AVERAGE line height
-    // (destroying intentional irregular spacing - e.g. the larger gaps above
-    // headings, which visibly shifted every line of a CV block after a
-    // one-char deletion) and re-spaces words at estimated gaps (scattering
-    // per-fragment kerned text like "Executive" into "Execut ive"). Group
-    // leaves by baseline and bail before touching anything if every line
-    // fits - the common case for deletions and small in-line edits.
+    // Reflow is only NEEDED when some line actually overflows the wrap width.
     {
       const rightByLine = new Map<number, number>();
       for (const l of leaves) {
@@ -156,19 +116,12 @@ export class ReflowWrapCommand implements Command {
     const words = groupWords(leaves, fontSize * 0.18);
     const spaceWidth = estimateSpaceWidth(words, fontSize);
     // Manual line breaks the user typed (Enter) live in run.text as "\n".
-    // The reflow must FORCE a new line at each, on top of width wrapping, or
-    // a later word-wrap would re-flow straight through them and silently
-    // delete the break. Keyed by non-whitespace char count so it lines up
-    // with the glyph stream regardless of collapsed spaces.
     const hardBreaks = hardBreakNonWsCounts(run.text);
 
     this.prev = snapshotRun(run);
 
     // Blank lines BEFORE the first word have no glyphs, so topBaseline (the
-    // highest glyph) is already the first CONTENT line. Treating them as
-    // in-loop breaks pushed the content one lineHeight down on EVERY reflow
-    // (cumulative drift). Model them as virtual lines above the anchor:
-    // the content stays put and the blanks live in the text/slots only.
+    // highest glyph) is already the first CONTENT line.
     const leadingBreaks = hardBreaks.get(0) ?? 0;
     if (leadingBreaks > 0) hardBreaks.delete(0);
     const virtualTop = topBaseline + leadingBreaks * lineHeight;
@@ -233,8 +186,7 @@ export class ReflowWrapCommand implements Command {
       cumNonWs += wordNonWs;
     }
     // Hard breaks AFTER the last word (Enter at paragraph end) were never
-    // reached by the loop, so blur silently deleted the trailing blank
-    // lines. Emit them as empty lines below the content.
+    // reached by the loop, so blur silently deleted the trailing blank lines.
     const trailingBreaks = hardBreaks.get(cumNonWs) ?? 0;
     for (let k = 0; k < trailingBreaks; k++) {
       lineIdx += 1;
@@ -284,21 +236,14 @@ export class ReflowWrapCommand implements Command {
     return `Wrap ${this.runId}`;
   }
 
-  /**
-   * Share the edit coalesce key for this run so the auto-reflow that fires on
-   * blur merges into the preceding typing burst's single undo step - otherwise
-   * an undo right after editing reverts only the reflow, not the text change.
-   */
+  // Share the edit coalesce key for this run so the auto-reflow that fires on
+  // blur merges into the preceding typing burst's single undo step.
   coalesceKey(): string {
     return `edit-text:${this.pageIndex}:${this.runId}`;
   }
 
-  /**
-   * The gap between the last keystroke and the blur is the user's think-time,
-   * so the 600ms coalesce window must not apply here. Without this, pausing
-   * before clicking away splits one edit into two undo steps and the first
-   * Ctrl+Z reverts only the invisible reflow - it reads as a dead undo.
-   */
+  // The gap between the last keystroke and the blur is the user's think-time,
+  // so the 600ms coalesce window must not apply here.
   coalesceIgnoresTimeWindow(): boolean {
     return true;
   }
@@ -344,11 +289,7 @@ function extractLeaves(
   return leaves;
 }
 
-/**
- * Group consecutive same-baseline leaves into words. A new word starts when
- * the baseline changes or the gap from the previous glyph exceeds
- * `gapThreshold` (an inter-word space).
- */
+/** Group consecutive same-baseline leaves into words. */
 function groupWords(leaves: Leaf[], gapThreshold: number): Word[] {
   const words: Word[] = [];
   let cur: Leaf[] = [];
@@ -376,11 +317,7 @@ function groupWords(leaves: Leaf[], gapThreshold: number): Word[] {
   return words;
 }
 
-/**
- * The non-whitespace char counts at which `text` has a hard "\n" break.
- * Keyed by non-ws count (not raw index) so it aligns with the glyph stream,
- * whose whitespace may be collapsed / positional rather than literal.
- */
+/** The non-whitespace char counts at which `text` has a hard "\n" break. */
 function hardBreakNonWsCounts(text: string): Map<number, number> {
   const out = new Map<number, number>();
   let nonWs = 0;
@@ -485,18 +422,10 @@ function rebuildRunFromLines(
   run.paragraphLeafPtrs = leafPtrs;
   run.paragraphLeafContainers = leafContainers;
   // run.text joins visual lines with ONE-char separators ("\n" hard, " " soft).
-  // The slot char ranges index into run.text, so the two MUST stay aligned -
-  // a desync makes paragraph edits under-count soft-wrapped lines and collapse
-  // the paragraph onto one baseline.
   const glyphDerived = lineTexts
     .map((t, i) => (i === 0 ? t : (lineIsHardStart[i] ? "\n" : " ") + t))
     .join("");
-  // PDFium collapses runs of intra-line spaces in the glyph stream, so
-  // glyphDerived loses user-typed multi-spaces. When the pre-reflow text has
-  // the SAME non-whitespace content, re-segment IT per visual line (keeping
-  // intra-line spaces, collapsing inter-line separators to one char) and
-  // RE-ALIGN the slot ranges + char-starts to it - preserving typed spaces
-  // WITHOUT desyncing the slots. Otherwise fall back to glyphDerived.
+  // PDFium collapses runs of intra-line spaces in the glyph stream.
   const stripWs = (s: string): string => s.replace(/\s+/g, "");
   if (
     preReflowText.length > 0 &&
@@ -656,11 +585,8 @@ function nonWsLen(s: string): number {
   return s.replace(/\s+/g, "").length;
 }
 
-/**
- * Position in `text` of the `idx`-th (0-based) non-whitespace char; `text.length`
- * when `idx` is past the end. Lets us map a glyph's position between two strings
- * that share the same non-whitespace sequence but differ in whitespace.
- */
+// Position in `text` of the `idx`-th (0-based) non-whitespace char;
+// `text.length` when `idx` is past the end.
 function posAtNonWsIndex(text: string, idx: number): number {
   let n = 0;
   for (let i = 0; i < text.length; i++) {
@@ -672,14 +598,8 @@ function posAtNonWsIndex(text: string, idx: number): number {
   return text.length;
 }
 
-/**
- * Re-segment `preReflowText` into per-visual-line texts that share the same
- * non-whitespace content as `lineTexts` (the glyph-derived, space-collapsed
- * lines). Each output line spans from its first non-ws char to its last,
- * KEEPING intra-line whitespace (user-typed multi-spaces) but dropping the
- * inter-line separator whitespace (re-added as a single canonical char by the
- * caller). Requires stripWs(join(lineTexts)) === stripWs(preReflowText).
- */
+// Re-segment `preReflowText` into per-visual-line texts that share the same
+// non-whitespace content as `lineTexts`.
 function resegmentByLines(
   lineTexts: string[],
   preReflowText: string,

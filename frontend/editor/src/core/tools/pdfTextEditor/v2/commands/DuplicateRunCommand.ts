@@ -5,14 +5,8 @@ import { writeUtf16 } from "@app/services/pdfiumService";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
 import { sanitizeForBase14 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
-/**
- * Clone a text run at a fixed offset (default 12pt right + 12pt down)
- * so the user can quickly stamp the same text elsewhere on the page.
- *
- * The clone uses base-14 Helvetica so it never fails to render its
- * characters (the original may have been a subset font that doesn't
- * round-trip through FPDFText_SetText).
- */
+// Clone a text run at a fixed offset (default 12pt right + 12pt down) so the
+// user can quickly stamp the same text elsewhere on the page.
 const OFFSET = 12;
 
 export class DuplicateRunCommand implements Command {

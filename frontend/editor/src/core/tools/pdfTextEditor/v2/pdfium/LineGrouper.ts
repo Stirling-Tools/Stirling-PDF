@@ -1,26 +1,7 @@
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 
-/**
- * Cluster adjacent text runs on a page into "line groups".
- *
- * PDFium emits one PDF text object per Tj/TJ operator. PDFs produced by
- * Word / LibreOffice / table generators often emit one object per
- * character or per small word, which makes single-letter overlays in our
- * editor. This grouper merges runs that share roughly the same baseline
- * AND sit close together horizontally into one virtual TextRun the user
- * can edit as a single block.
- *
- * Heuristic:
- *  - Two runs share a "line" if their baselines (matrix.f) differ by
- *    less than `baselineTolerance * referenceFontSize`.
- *  - Within a line, runs join the same group if the gap between the
- *    previous run's right edge and this run's left edge is less than
- *    `wordGapFactor * fontSize` (default 0.6 - roughly an em-space).
- *  - Each output group's representative `TextRun` carries the merged
- *    text. The list of underlying TextRun ids is stored so the editor
- *    can replace them all on edit via `ReplaceLineGroupCommand`.
- */
+/** Cluster adjacent text runs on a page into "line groups". */
 export interface LineGroupInfo {
   /** The merged "virtual" run shown in the overlay. */
   representative: TextRun;
@@ -29,27 +10,12 @@ export interface LineGroupInfo {
 }
 
 const BASELINE_TOLERANCE = 0.4;
-// Two runs on the same baseline join the same line only when the
-// horizontal gap between them is below this absolute cap. Catches
-// column gutters that would otherwise merge across the column break.
+// Two runs on the same baseline join the same line only when the horizontal gap
+// between them is below this absolute cap.
 const ABS_MAX_GAP_PT = 12;
 
-/**
- * True when a same-baseline cluster's glyphs overlap so heavily that it
- * can't be normal running text - the x-positions barely advance (or go
- * backwards) between consecutive glyphs, the hallmark of layered /
- * stacked decorative big text (gradient fills, outline+fill passes,
- * drop shadows). Merging + x-sorting such glyphs interleaves the layers
- * into scrambled output, so the caller keeps them as individual runs.
- *
- * `members` are already x-sorted. A pair "barely advances" when the next
- * glyph starts less than 12% of the font size to the right of the
- * previous glyph's start. Normal running text advances by roughly a
- * glyph width every step (~0.2-0.7em), so it has essentially zero such
- * pairs; a layered/overlapping cluster has many. The 30% threshold
- * cleanly separates the two (stacked headings run 40-90%) while leaving
- * even tightly-kerned real text untouched.
- */
+// True when a same-baseline cluster's glyphs overlap so heavily that it can't
+// be normal running text.
 function isDecorativeOverlap(members: TextRun[]): boolean {
   if (members.length < 3) return false;
   let overlapping = 0;
@@ -62,28 +28,19 @@ function isDecorativeOverlap(members: TextRun[]): boolean {
   return overlapping / (members.length - 1) > 0.3;
 }
 
-// A run that is just a list bullet (and a narrow glyph). Bullets are emitted
-// as their own text object, indented to the LEFT of the item text by more
-// than an inter-word space - so the merge step lets the item attach across
-// that wider indent when the previous run is a bullet.
+// A run that is just a list bullet (and a narrow glyph).
 const BULLET_GLYPHS = /^[\s]*[•·∙▪●○◦‣⁃・‧°]+[\s]*$/;
 function isBulletLead(run: TextRun): boolean {
   return BULLET_GLYPHS.test(run.text) && run.bounds.width <= run.fontSize;
 }
 
-/**
- * Sort one container's runs top-to-bottom / left-to-right and merge
- * same-baseline, close-together runs into line groups, appending each
- * group to `out`. Only ever called with runs that share a coordinate
- * space (one form xobject, or page level), so `bounds.x` is comparable.
- */
+// Sort one container's runs top-to-bottom / left-to-right and merge
+// same-baseline, close-together runs into line groups.
 function groupPartitionIntoLines(runs: TextRun[], out: LineGroupInfo[]): void {
   const sorted = [...runs].sort((a, b) => {
     const yDiff = b.matrix.f - a.matrix.f;
-    // Same-line band scaled to font size (matches the merge baseline
-    // tolerance) so a list bullet sitting a couple of points above its item
-    // still x-sorts onto the item's line, instead of a flat 1pt band that
-    // split the bullet onto its own line (orphan bullet column).
+    // Same-line band scaled to font size so a list bullet sitting a couple of
+    // points above its item still x-sorts onto the item's line.
     const band =
       BASELINE_TOLERANCE * Math.max(Math.min(a.fontSize, b.fontSize), 4);
     if (Math.abs(yDiff) > Math.max(1, band)) return yDiff;
@@ -102,22 +59,16 @@ function groupPartitionIntoLines(runs: TextRun[], out: LineGroupInfo[]): void {
     const sameLine = baseDiff <= BASELINE_TOLERANCE * Math.max(ref.fontSize, 4);
     const prev = current.members[current.members.length - 1];
     const gap = run.bounds.x - (prev.bounds.x + prev.bounds.width);
-    // The gap cap must scale with font size: an inter-word space in a
-    // 50pt heading is ~15-25pt, which a flat 12pt cap would treat as a
-    // line break (splitting "Open Source" into "Open" + "Source"). Allow
-    // the larger of the absolute cap (for small per-word save chunks) and
-    // half the font size (for large display text). Column gutters stay
-    // wider than this in practice, so they still split correctly.
+    // The gap cap must scale with font size: an inter-word space in a 50pt
+    // heading is ~15-25pt, which a flat 12pt cap would treat as a line break.
     const maxGap = Math.max(ABS_MAX_GAP_PT, 0.5 * Math.max(ref.fontSize, 4));
     // A leading bullet is indented from its item by more than an inter-word
-    // space; let the item attach across that wider indent. Still far below a
-    // column gutter (~200pt+), so columns never merge.
+    // space; let the item attach across that wider indent.
     const effMaxGap = isBulletLead(prev)
       ? Math.max(maxGap, 2 * Math.max(ref.fontSize, 4))
       : maxGap;
     // Reject joining a run that starts far to the LEFT of the previous run's
-    // right edge (a hugely negative gap) - a right-column run must never
-    // absorb the left column. Tolerate small kerning overlap only.
+    // right edge - a right-column run must never absorb the left column.
     const minNegGap = 0.25 * Math.max(ref.fontSize, 4);
     const close = gap <= effMaxGap && gap >= -minNegGap;
 
@@ -131,20 +82,9 @@ function groupPartitionIntoLines(runs: TextRun[], out: LineGroupInfo[]): void {
 }
 
 export class LineGrouper {
-  /**
-   * Group a page's runs and store the result back onto the page.
-   * Returns the list of LineGroup metadata for downstream commands.
-   */
+  /** Group a page's runs and store the result back onto the page. */
   static apply(page: Page): LineGroupInfo[] {
-    // Partition by form-xobject container BEFORE grouping. Objects inside
-    // a form xobject report their bounds in the form's LOCAL coordinate
-    // space, not page space - so glyphs from three side-by-side form
-    // "pills" (e.g. Open Source / Privacy First / Self-Hosted) all read
-    // near the same x and, when merged + x-sorted together, interleave
-    // into gibberish ("OSPrepivlefa-n Hc"). Grouping each container
-    // independently keeps every form's text intact and correctly ordered.
-    // Page-level objects (container 0) all share one partition and behave
-    // exactly as before.
+    // Partition by form-xobject container BEFORE grouping.
     const partitions = new Map<number, TextRun[]>();
     for (const run of page.runs) {
       const key = run.containerPtr || 0;
@@ -158,15 +98,8 @@ export class LineGrouper {
       groupPartitionIntoLines(partition, groups);
     }
 
-    // Refine: a "line" whose glyphs heavily OVERLAP in x (consecutive
-    // glyphs barely advancing, or starting at/before the previous one)
-    // is not real running text - it's decorative / layered / multi-pass
-    // big text (drop shadows, gradient fills, outline+fill, etc.) that a
-    // typesetter stacks at near-identical positions. Merging + x-sorting
-    // those interleaves the layers into scrambled gibberish
-    // ("OSPrepivlefa-n Hc"). Keep such clusters as their individual
-    // single-glyph runs instead so the editor never surfaces a garbled
-    // merged run. Normal text advances monotonically and is untouched.
+    // Refine: a "line" whose glyphs heavily OVERLAP in x is not real running
+    // text.
     const refined: LineGroupInfo[] = [];
     for (const group of groups) {
       if (group.members.length > 2 && isDecorativeOverlap(group.members)) {
@@ -180,25 +113,19 @@ export class LineGrouper {
     groups.length = 0;
     groups.push(...refined);
 
-    // Mutate the representative's text/bounds to reflect the merged group
-    // and remember the underlying object pointers so ReplaceLineGroupCommand
-    // can delete them on first edit.
+    // Mutate the representative's text/bounds to reflect the merged group and
+    // remember the underlying object pointers so ReplaceLineGroupCommand can.
     for (const group of groups) {
       if (group.members.length === 1) continue;
       // Snapshot per-member texts and bounds BEFORE we mutate the
-      // representative - the representative IS members[0], so any later
-      // mutation to rep.text/bounds would overwrite member[0]'s
-      // original values via shared reference.
+      // representative.
       const memberTexts = group.members.map((m) => m.text);
       const memberBounds = group.members.map((m) => ({
         x: m.bounds.x,
         right: m.bounds.x + m.bounds.width,
       }));
-      // When the typesetter emitted a cursor jump instead of a literal
-      // space character, the two runs end up with content like ["Hello",
-      // "World"] separated by a positional gap. Re-insert a space when
-      // the previous run's text didn't already end in whitespace and
-      // the next run's text doesn't already start with one.
+      // When the typesetter emitted a cursor jump instead of a literal space
+      // character, the two runs end up with content like ["Hello".
       const parts: string[] = [memberTexts[0]];
       const memberCharStarts: number[] = [0];
       let cumulativeLen = memberTexts[0].length;
@@ -208,14 +135,7 @@ export class LineGrouper {
         const gap = cur.bounds.x - (prev.bounds.x + prev.bounds.width);
         const prevTail = memberTexts[i - 1].slice(-1);
         const curHead = memberTexts[i].slice(0, 1);
-        // Typographic space advance is ~0.28*fontSize for Helvetica, but
-        // PDFium-reported bounds.x is the leftmost glyph edge (after side
-        // bearings) so the visible gap runs wider. 0.4 calibrates so a
-        // 2-space typed gap reads back as 2 spaces after the round trip.
-        // floor(+0.25) instead of round: JUSTIFIED text stretches single
-        // spaces to ~1.2-1.7x, which round() turned into phantom double
-        // spaces baked into run.text (corrupting find + re-emits). A real
-        // 2-space gap (~2x) still reads back as 2.
+        // Typographic space advance is ~0.28*fontSize for Helvetica.
         const spaceWidth = 0.4 * Math.max(prev.fontSize, 4);
         const extraSpaces =
           gap > 0.2 * Math.max(prev.fontSize, 4)
@@ -245,9 +165,7 @@ export class LineGrouper {
         width: Math.max(group.representative.bounds.width, right - left),
       };
       // Per-sub-run texts + bounds so EditTextCommand's pure-deletion
-      // optimization can map joined-text chars back to their source
-      // sub-objects. Use the snapshots captured at the top of the loop -
-      // m.text would now read the joined string for member[0].
+      // optimization can map joined-text chars back to their source.
       group.representative.mergedFromTexts = memberTexts;
       group.representative.mergedFromBounds = memberBounds;
       group.representative.mergedFromCharStarts = memberCharStarts;
@@ -256,9 +174,7 @@ export class LineGrouper {
       );
     }
 
-    // Replace the page's runs with just the representatives. The originals
-    // remain reachable through `group.members` so commands can find them
-    // by pdfium pointer.
+    // Replace the page's runs with just the representatives.
     page.setRuns(groups.map((g) => g.representative));
     return groups;
   }

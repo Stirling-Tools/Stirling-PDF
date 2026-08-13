@@ -5,11 +5,7 @@ import { LineGrouper } from "@app/tools/pdfTextEditor/v2/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@app/tools/pdfTextEditor/v2/pdfium/ParagraphGrouper";
 
 // Reproduces the "Plus Many More" two-column bulleted-list geometry from
-// public/samples/Sample.pdf page 3 (probed from the live editor): bullets are
-// separate text objects indented ~14pt left of their item text, and in the
-// bottom section the bullet font (13.5) sits ~2.3pt above the item font (11.3).
-// The grouper must pair each bullet with its OWN item (one run per item,
-// bullet at the start) and must NOT merge across the column gutter.
+// public/samples/Sample.pdf page 3: bullets are separate text objects.
 
 let ptr = 1000;
 function mkRun(opts: {
@@ -46,9 +42,8 @@ function group(runs: TextRun[]): TextRun[] {
 describe("bullet-to-item grouping (Plus Many More)", () => {
   it("pairs each bullet with its own item and keeps columns separate", () => {
     const runs: TextRun[] = [
-      // Bottom "Plus Many More" section: bullet fs13.5, item fs11.3,
-      // bullet baseline ~2.3pt above the item, ~14-17pt indent.
-      // LEFT column
+      // Bottom "Plus Many More" section: bullet fs13.5, item fs11.3, bullet
+      // baseline ~2.3pt above the item, ~14-17pt indent.
       mkRun({ x: 66, width: 3, f: 178.9, fs: 13.5, text: "• " }),
       mkRun({
         x: 83,

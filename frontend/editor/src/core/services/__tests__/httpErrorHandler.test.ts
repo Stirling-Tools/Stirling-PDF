@@ -20,13 +20,8 @@ function axiosError(config: Record<string, unknown>, status = 500) {
   };
 }
 
-/**
- * Pins the half of the `suppressErrorToast` contract that a request-side
- * assertion cannot see: that the interceptor reads the flag off the
- * top-level axios CONFIG, and that the header of the same name does
- * nothing. Callers such as the v2 editor's BackendResolver depend on it to
- * keep dozens of parallel background probes from popping toasts.
- */
+// Pins the half of the `suppressErrorToast` contract that a request-side
+// assertion cannot see: that the interceptor reads the flag off the.
 describe("handleHttpError - suppressErrorToast", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -46,9 +41,8 @@ describe("handleHttpError - suppressErrorToast", () => {
   });
 
   it("ignores the flag when it is spelled as a request HEADER", async () => {
-    // The header form is inert - it ships a junk header to the backend and
-    // the interceptor never looks at it. This is the regression that let a
-    // stale test pass while the flag did nothing.
+    // The header form is inert - it ships a junk header to the backend and the
+    // interceptor never looks at it.
     await handleHttpError(
       axiosError({ headers: { suppressErrorToast: "true" } }),
     );

@@ -2,11 +2,8 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
 
-/**
- * Inserting a JPEG embeds the original JPEG stream (DCTDecode) instead of
- * re-encoding decoded RGBA pixels (FlateDecode), so the output stays small
- * (finding R). Verified by scanning the saved PDF for the DCTDecode filter.
- */
+// Inserting a JPEG embeds the original JPEG stream instead of re-encoding
+// decoded RGBA pixels, so the output stays small.
 
 const SAMPLE_PDF = path.join(
   import.meta.dirname,

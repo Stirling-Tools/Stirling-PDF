@@ -1,43 +1,11 @@
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 import { getCachedFontGlyphMap } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 
-/**
- * Editability status of a font as the v2 editor can determine it purely
- * client-side (from PDFium), without the backend JSON font model.
- *
- * In ALL three cases the EXISTING text edits perfectly - every glyph already
- * on the page is reused as-is. The status describes what happens to BRAND-NEW
- * characters the user types that the document didn't already contain:
- *
- *  - "standard": one of the base-14 PDF fonts (Helvetica/Times/Courier/...).
- *    The full standard (WinAnsi/Latin-1) character set is always available, so
- *    typing common new characters renders in the same font.
- *  - "embedded": a full (non-subset) embedded font. Its glyph repertoire ships
- *    in the PDF, but that repertoire is whatever the font file happens to hold
- *    - NOT every possible character. A new character the font includes renders
- *    in it; one it lacks (e.g. an accented or non-Latin glyph in a Latin-only
- *    font) falls back to a standard font.
- *  - "subset": only the glyphs the document already uses are embedded. A new
- *    character the document never used is almost always absent, so it falls
- *    back to a standard font.
- *
- * So "embedded" is NOT a guarantee of perfect new-character editing - it's
- * "better than subset, not as universal as standard". The UI labels it
- * accordingly rather than claiming zero issues.
- */
+// Editability status of a font as the v2 editor can determine it purely
+// client-side (from PDFium), without the backend JSON font model.
 export type FontStatusV2 = "standard" | "embedded" | "subset";
 
-/**
- * Whether the font has real glyphs for the basic alphanumerics (a-z A-Z 0-9).
- * Read CLIENT-SIDE from the embedded font's cmap, which the document loader
- * primes into a cache during its serialized text-read phase (reading font data
- * at render time corrupts PDFium - see CmapResolver.primeFontGlyphMap).
- *  - `known: true`  -> the cmap was available; `missing` lists the
- *    alphanumerics with no glyph (empty = full coverage).
- *  - `known: false` -> coverage couldn't be read (font not primed, or a Type3 /
- *    custom-encoded Type1 font with no parseable cmap).
- * Standard (base-14) fonts are always `known` with full coverage.
- */
+// Whether the font has real glyphs for the basic alphanumerics (a-z A-Z 0-9).
 export interface GlyphCoverage {
   known: boolean;
   missing: string[];
@@ -64,10 +32,7 @@ const ALNUM_CODEPOINTS: readonly number[] = (() => {
   return out;
 })();
 
-/**
- * Pure: which of a-z A-Z 0-9 are absent from a Unicode→glyphId cmap. Split out
- * so the (font-free) logic is unit-testable without a real PDFium font.
- */
+/** Pure: which of a-z A-Z 0-9 are absent from a Unicode→glyphId cmap. */
 export function missingAlnumFromCmap(cmap: Map<number, number>): string[] {
   const out: string[] = [];
   for (const cp of ALNUM_CODEPOINTS)
@@ -94,8 +59,7 @@ function coverageFor(fontId: string, status: FontStatusV2): GlyphCoverage {
 }
 
 // Symbol/ZapfDingbats are intentionally excluded: their a-z/A-Z slots are Greek
-// letters / dingbats, not Latin alphanumerics, so they are not safe-fallback
-// families and must not be badged "standard" with full alnum coverage.
+// letters / dingbats, not Latin alphanumerics.
 const STANDARD_14 = [
   "helvetica",
   "arial",
@@ -123,9 +87,7 @@ function stripSubsetTag(name: string): string {
 }
 
 // Weight/width modifiers that mark a DIFFERENT font even when the name starts
-// with a base-14 root (e.g. "Arial Black", "Helvetica Neue Condensed"). Such a
-// font is NOT guaranteed to be the always-available base-14 family, so it must
-// fall through to the real coverage probe rather than be labelled "standard".
+// with a base-14 root (e.g. "Arial Black", "Helvetica Neue Condensed").
 const NON_BASE14_MODIFIERS = [
   "black",
   "rounded",
@@ -152,8 +114,7 @@ function isStandard14(fontId: string): boolean {
     .replace(/[-_\s]/g, "");
   if (NON_BASE14_MODIFIERS.some((mod) => f.includes(mod))) return false;
   // Exact match, or a base-14 root whose remainder is ONLY a recognised style
-  // suffix (Bold/Italic/Oblique/MT/PS...). An open-ended startsWith would absorb
-  // distinct families like "TimesTen-Roman" or "Courier Prime".
+  // suffix (Bold/Italic/Oblique/MT/PS...).
   return STANDARD_14.some(
     (p) =>
       f === p ||
@@ -161,12 +122,8 @@ function isStandard14(fontId: string): boolean {
   );
 }
 
-/**
- * Group every run across the given (loaded) pages into a de-duplicated list of
- * fonts with an editability status. A subset of a standard family (e.g.
- * "ABCDEF+Helvetica") is reported as "standard" because new characters can
- * safely fall back to the base-14 full font.
- */
+// Group every run across the given (loaded) pages into a de-duplicated list of
+// fonts with an editability status.
 export function analyzePageFonts(pages: PageSnapshot[]): PageFont[] {
   const map = new Map<string, PageFont>();
   for (const page of pages) {

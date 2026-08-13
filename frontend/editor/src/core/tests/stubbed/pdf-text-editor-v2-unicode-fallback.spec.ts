@@ -7,18 +7,7 @@ import {
   saveAndDownload,
 } from "@app/tests/stubbed/v2SaveHelpers";
 
-/**
- * Client-side Unicode fallback font (Noto Sans, embedded on demand).
- *
- * Base-14 PDF fonts only cover Latin-1. The editor embeds Noto Sans (Latin,
- * Greek, Cyrillic) via FPDFText_LoadFont so those scripts survive a
- * save+reopen round-trip. Scripts the bundled font does NOT cover (CJK, Arabic,
- * Hebrew, emoji) are dropped on save - but cleanly: no U+00FF tofu and no lone
- * surrogate, and surrounding Latin text is preserved.
- *
- * Backend-free: encode-charcodes is aborted, so the edit takes the base-14
- * re-emit path where the fallback kicks in.
- */
+/** Client-side Unicode fallback font (Noto Sans, embedded on demand). */
 
 const SAMPLE = path.join(
   import.meta.dirname,
@@ -54,9 +43,7 @@ async function gotoEditor(page: Page): Promise<Promise<unknown>> {
 }
 
 // Load SAMPLE, append `text` to the first run, blur, save, and reopen the
-// produced bytes. Returns the reopened page-0 model text plus any page errors.
-// `expectRisk` says whether this text is droppable and so must raise the
-// save-risk modal - covered scripts embed cleanly and never raise it.
+// produced bytes.
 async function appendSaveReopen(
   page: Page,
   text: string,
@@ -151,9 +138,7 @@ for (const { name, text } of UNCOVERED) {
     // save-risk modal always gates the save.
     const { reopened, errs } = await appendSaveReopen(page, text, true);
 
-    // The bundled font lacks this script, so it is dropped on save - but
-    // without injecting U+00FF tofu or a lone surrogate, and the original
-    // Latin text must remain intact.
+    // The bundled font lacks this script, so it is dropped on save.
     expect(reopened).not.toContain(text);
     expect(reopened).not.toContain("ÿ");
     expect(LONE_SURROGATE.test(reopened)).toBe(false);
@@ -162,14 +147,7 @@ for (const { name, text } of UNCOVERED) {
   });
 }
 
-/**
- * RTL / bidi insertion.
- *
- * RTL scripts (Arabic, Hebrew) need the Noto fallback since base-14 lacks them.
- * The editor positions runs by left-x/advance, so RTL/bidi is a classic source
- * of caret/bounds/save-order bugs. These assert model correctness, an in-bounds
- * run, save+reopen survival, and logical character order for a bidi mix.
- */
+/** RTL / bidi insertion. */
 
 const RTL_SAMPLES = [
   { name: "Arabic", text: "مرحبا" },
