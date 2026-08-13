@@ -29,6 +29,7 @@ import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import {
   FilesPageProvider,
@@ -117,7 +118,7 @@ export default function HomePage() {
   const handleCloseConfig = useCallback(() => {
     setConfigModalOpen(false);
     if (location.pathname.startsWith("/settings")) {
-      navigate("/", { replace: true });
+      navigate(EDITOR_BASENAME, { replace: true });
     }
   }, [location.pathname, navigate]);
 
@@ -534,7 +535,7 @@ export default function HomePage() {
               }
               onToggleCollapse={() => {
                 if (navigationState.workbench === "myFiles") {
-                  navigate("/");
+                  navigate(EDITOR_BASENAME);
                   return;
                 }
                 setFileSidebarCollapsed((c) => {
