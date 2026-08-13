@@ -3132,27 +3132,37 @@ test.describe("PDF text editor v2 - glyph fallback", () => {
 });
 
 test.describe("PDF text editor v2 - typing fidelity", () => {
-  test("focused overlay shows visible glyphs in a matching CSS font", async ({
+  test("a clicked run keeps its original ink until it is actually edited", async ({
     page,
   }) => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
     const target = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const read = () =>
+      target.evaluate((el) => {
+        const cs = window.getComputedStyle(el);
+        return {
+          color: cs.color,
+          background: cs.backgroundColor,
+          fontFamily: cs.fontFamily,
+        };
+      });
+
     await target.click();
-    // After focus, color and background flip from transparent to a
-    // visible state. Assert by computed style.
-    const visible = await target.evaluate((el) => {
-      const cs = window.getComputedStyle(el);
-      return {
-        color: cs.color,
-        background: cs.backgroundColor,
-        fontFamily: cs.fontFamily,
-      };
-    });
-    expect(visible.color).not.toBe("rgba(0, 0, 0, 0)");
-    expect(visible.background).not.toBe("rgba(0, 0, 0, 0)");
-    expect(visible.fontFamily.length).toBeGreaterThan(0);
+    // Clicking only places a caret, so the PDF's own glyphs stay on screen
+    // rather than being covered by a CSS approximation of them.
+    const clicked = await read();
+    expect(clicked.color).toBe("rgba(0, 0, 0, 0)");
+    // The faint selection tint is fine; what must not appear is the opaque
+    // mask, which would hide the PDF's own glyphs behind a CSS rendering.
+    expect(clicked.background).toBe("rgba(44, 123, 229, 0.08)");
+
+    await page.keyboard.type("X");
+    const typed = await read();
+    expect(typed.color).not.toBe("rgba(0, 0, 0, 0)");
+    expect(typed.background).not.toBe("rgba(0, 0, 0, 0)");
+    expect(typed.fontFamily.length).toBeGreaterThan(0);
   });
 });
 
@@ -4841,7 +4851,31 @@ test.describe("PDF text editor v2 - stress: save+reopen multi-cycle", () => {
         },
         { tid: id, c: String.fromCharCode(65 + cycle) },
       );
-      await page.waitForTimeout(250);
+      // Wait for the edit to reach the MODEL, not a fixed delay: saving before
+      // the command commits silently drops this cycle's character.
+      await expect
+        .poll(
+          () =>
+            page.evaluate(() => {
+              const store = (
+                window as unknown as {
+                  __v2_editor_store: {
+                    doc: {
+                      page: (i: number) => { runs: Array<{ text: string }> };
+                    };
+                  };
+                }
+              ).__v2_editor_store;
+              return (
+                store.doc
+                  .page(0)
+                  .runs.find((x) => /Adobe.*Acrobat.*Alternative/.test(x.text))
+                  ?.text ?? ""
+              );
+            }),
+          { timeout: 10_000 },
+        )
+        .toContain(String.fromCharCode(65 + cycle));
       await saveAndReopenLocal(page);
     }
     const endCount = await page.locator('[data-testid^="v2-run-p0-"]').count();

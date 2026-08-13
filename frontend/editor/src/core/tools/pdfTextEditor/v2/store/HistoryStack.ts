@@ -8,6 +8,19 @@ const DEFAULT_LIMIT = 200;
 // other are grouped into one undo step. contentEditable fires several `input`.
 const COALESCE_WINDOW_MS = 600;
 
+/** A command threw mid-step, so the document no longer matches the history. */
+export class HistoryStepError extends Error {
+  readonly phase: "apply" | "revert";
+  readonly cause: unknown;
+
+  constructor(phase: "apply" | "revert", cause: unknown) {
+    super(`Command failed to ${phase}`);
+    this.name = "HistoryStepError";
+    this.phase = phase;
+    this.cause = cause;
+  }
+}
+
 // LIFO command history for undo/redo. - `execute` applies the command and
 // pushes it.
 export class HistoryStack {
@@ -81,7 +94,14 @@ export class HistoryStack {
   undo(doc: EditorDocument): Command | null {
     const cmd = this.undoStack.pop();
     if (!cmd) return null;
-    cmd.revert(doc);
+    try {
+      cmd.revert(doc);
+    } catch (err) {
+      // The command is already popped and the document is in an unknown
+      // state, so the caller has to rebuild rather than keep undoing.
+      this.lastCoalesceKey = null;
+      throw new HistoryStepError("revert", err);
+    }
     this.redoStack.push(cmd);
     // End the coalescing burst - a later edit starts a fresh undo step.
     this.lastCoalesceKey = null;
@@ -91,7 +111,12 @@ export class HistoryStack {
   redo(doc: EditorDocument): Command | null {
     const cmd = this.redoStack.pop();
     if (!cmd) return null;
-    cmd.apply(doc);
+    try {
+      cmd.apply(doc);
+    } catch (err) {
+      this.lastCoalesceKey = null;
+      throw new HistoryStepError("apply", err);
+    }
     this.undoStack.push(cmd);
     this.lastCoalesceKey = null;
     return cmd;

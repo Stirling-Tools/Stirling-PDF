@@ -1,6 +1,7 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { Affine } from "@app/tools/pdfTextEditor/v2/types";
+import { retargetClipPath } from "@app/tools/pdfTextEditor/v2/util/objectTransform";
 
 // Apply an in-place transform to an image: rotate by 90° (CW or CCW), flip
 // horizontally, or flip vertically.
@@ -47,11 +48,12 @@ export class TransformImageObjectCommand implements Command {
     if (this.prevMatrix === null) this.prevMatrix = { ...img.matrix };
     const next = composeAboutCentre(img.matrix, this.mode);
     setMatrix(doc, img.pdfiumObjPtr, next);
+    retargetClipPath(doc.module, img.pdfiumObjPtr, img.matrix, next);
     img.matrix = next;
     img.bounds = matrixBoundsAxisAligned(next);
     img.dirty = true;
     page.markDirty();
-    doc.module.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 
   revert(doc: EditorDocument): void {
@@ -60,11 +62,12 @@ export class TransformImageObjectCommand implements Command {
     const img = page.findImage(this.imageId);
     if (!img || !img.pdfiumObjPtr) return;
     setMatrix(doc, img.pdfiumObjPtr, this.prevMatrix);
+    retargetClipPath(doc.module, img.pdfiumObjPtr, img.matrix, this.prevMatrix);
     img.matrix = { ...this.prevMatrix };
     img.bounds = matrixBoundsAxisAligned(this.prevMatrix);
     img.dirty = true;
     page.markDirty();
-    doc.module.FPDFPage_GenerateContent(page.pagePtr);
+    page.markNeedsGenerate();
   }
 }
 

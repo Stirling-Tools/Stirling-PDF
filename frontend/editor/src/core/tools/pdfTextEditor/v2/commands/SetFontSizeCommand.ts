@@ -1,6 +1,7 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { collectMemberPtrs } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import { transformObject } from "@app/tools/pdfTextEditor/v2/util/objectTransform";
 
 /** Scale a text run so its effective on-page size matches `nextSize`. */
 export class SetFontSizeCommand implements Command {
@@ -88,7 +89,9 @@ export class SetFontSizeCommand implements Command {
       if (!ptr || seen.has(ptr)) continue;
       seen.add(ptr);
       try {
-        m.FPDFPageObj_Transform(
+        transformObject(
+          m,
+
           ptr,
           relativeScale,
           0,

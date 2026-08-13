@@ -1,6 +1,7 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { collectMemberPtrs } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import { transformObject } from "@app/tools/pdfTextEditor/v2/util/objectTransform";
 
 /** Translate a text run by (dx, dy) in PDF page-space points. */
 export class MoveTextRunCommand implements Command {
@@ -34,7 +35,7 @@ export class MoveTextRunCommand implements Command {
       if (!ptr || seen.has(ptr)) continue;
       seen.add(ptr);
       try {
-        m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, this.dx, this.dy);
+        transformObject(m, ptr, 1, 0, 0, 1, this.dx, this.dy);
         this.appliedPtrs.push(ptr);
       } catch {
         /* skip leaks; revert only undoes the ptrs we actually moved */
@@ -55,7 +56,7 @@ export class MoveTextRunCommand implements Command {
     for (const ptr of this.appliedPtrs) {
       if (!ptr) continue;
       try {
-        m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, -this.dx, -this.dy);
+        transformObject(m, ptr, 1, 0, 0, 1, -this.dx, -this.dy);
       } catch {
         /* best-effort */
       }

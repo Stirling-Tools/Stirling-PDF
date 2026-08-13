@@ -13,6 +13,7 @@ import {
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
 import { writeUtf16 } from "@app/services/pdfiumService";
+import { transformObject } from "@app/tools/pdfTextEditor/v2/util/objectTransform";
 
 /** Set the text of an EXISTING PDFium text object, preserving its font. */
 export function setObjText(
@@ -585,7 +586,7 @@ export function applyPartialEditPlan(
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
       if (Math.abs(offset) > 0.05) {
         try {
-          m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, offset, 0);
+          transformObject(m, ptr, 1, 0, 0, 1, offset, 0);
         } catch {
           /* best-effort */
         }
@@ -615,7 +616,7 @@ export function applyPartialEditPlan(
       setObjText(m, ptr, modText);
       if (Math.abs(offset) > 0.05) {
         try {
-          m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, offset, 0);
+          transformObject(m, ptr, 1, 0, 0, 1, offset, 0);
         } catch {
           /* best-effort */
         }

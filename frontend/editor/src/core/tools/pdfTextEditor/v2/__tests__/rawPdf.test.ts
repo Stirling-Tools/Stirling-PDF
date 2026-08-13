@@ -120,6 +120,35 @@ describe("RawPdf streams and pages", () => {
     );
   });
 
+  it("prefers the ObjStm copy when the newest xref calls the object compressed", async () => {
+    // A stale top-level body for the same number must not win.
+    const inner = "<< /Type /Page /Parent 2 0 R /Contents 9 0 R >>";
+    const first = `3 0 ${inner}`;
+    const objStm =
+      `<< /Type /ObjStm /N 1 /First ${"3 0 ".length} \n/Length ${first.length} >>` +
+      `\nstream\n${first}\nendstream`;
+    const bytes = buildXrefStreamPdf(
+      [
+        { num: 1, body: "<< /Type /Catalog /Pages 2 0 R >>" },
+        { num: 2, body: "<< /Type /Pages /Kids [3 0 R] /Count 1 >>" },
+        { num: 3, body: "<< /Type /Page /Contents 4 0 R /Stale true >>" },
+        { num: 8, body: objStm },
+      ],
+      1,
+      new Map([[3, 8]]),
+    );
+    const pdf = await RawPdf.parse(bytes);
+    expect(pdf?.objectBody(3)).toContain("/Contents 9 0 R");
+    expect(pdf?.objectBody(3)).not.toContain("/Stale");
+  });
+
+  it("reads a direct /Filter name rather than treating it as unreadable", async () => {
+    const pdf = await RawPdf.parse(singleContentPdf("BT ET"));
+    expect(toLatin1((await pdf?.streamData(4)) ?? new Uint8Array())).toBe(
+      "BT ET",
+    );
+  });
+
   it("walks the page tree in document order, through intermediate nodes", async () => {
     const pdf = await RawPdf.parse(
       buildClassicPdf(

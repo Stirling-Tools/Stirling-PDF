@@ -45,6 +45,8 @@ export function buildClassicPdf(
 export function buildXrefStreamPdf(
   objects: FixtureObject[],
   rootNum: number,
+  /** objNum -> containing ObjStm number, emitted as a type-2 xref row. */
+  compressed?: Map<number, number>,
 ): Uint8Array {
   const sorted = [...objects].sort((a, b) => a.num - b.num);
   let out = "%PDF-1.7\n";
@@ -59,6 +61,20 @@ export function buildXrefStreamPdf(
   offsets.set(xrefNum, xrefAt);
   let rows = "";
   for (let num = 0; num < size; num += 1) {
+    const container = compressed?.get(num);
+    if (container !== undefined) {
+      // Type 2: field 2 is the container number, field 3 the index within it.
+      rows += String.fromCharCode(
+        2,
+        (container >>> 24) & 0xff,
+        (container >>> 16) & 0xff,
+        (container >>> 8) & 0xff,
+        container & 0xff,
+        0,
+        0,
+      );
+      continue;
+    }
     const off = offsets.get(num) ?? 0;
     const type = num === 0 ? 0 : offsets.has(num) ? 1 : 0;
     rows += String.fromCharCode(

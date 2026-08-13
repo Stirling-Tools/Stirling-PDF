@@ -16,7 +16,9 @@ export class PdfiumTextWriter {
     } finally {
       m.pdfium.wasmExports.free(ptr);
     }
-    m.FPDFPage_GenerateContent(page.pagePtr);
+    // Defer the regen: FPDFPageObj_GetBounds reads the object, not the
+    // stream, and a direct call here would skip the page's regenerated flag.
+    page.markNeedsGenerate();
     // Re-measure the run's bounds. Stale width corrupts all of those.
     const bbox = measureObjBboxPt(m, run.pdfiumObjPtr);
     if (bbox) {

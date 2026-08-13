@@ -20,9 +20,7 @@ export function sampleBackground(
 ): SampleResult {
   const fallback: RGBA = { r: 255, g: 255, b: 255, a: 255 };
   try {
-    // Render path reads the content stream - flush any deferred edits
-    // so the sample reflects what the user actually sees.
-    page.flushGenerate(m);
+    // No flush needed: the render path draws from the in-memory object list.
     // The rendered bitmap is CropBox/rotation (display) space; the run bounds
     // are raw PDF.
     const d = page.display;

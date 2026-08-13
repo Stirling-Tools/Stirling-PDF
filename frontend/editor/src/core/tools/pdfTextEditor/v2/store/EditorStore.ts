@@ -17,6 +17,7 @@ import type {
   PageSnapshot,
   WidthMode,
 } from "@app/tools/pdfTextEditor/v2/types";
+import { resetEmbeddedFaces } from "@app/tools/pdfTextEditor/v2/util/embeddedFace";
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {
@@ -28,6 +29,8 @@ function resetCharcodeCaches(): void {
   resetPerCharBranchPtrs();
   // The dropped-char record is per-session/per-document, not pointer-keyed.
   resetDroppedBase14Chars();
+  // FontFaces are keyed by font pointer, which PDFium reuses across documents.
+  resetEmbeddedFaces();
 }
 
 export type InteractionMode = "select" | "addText";
@@ -200,16 +203,8 @@ export class EditorStore {
     // Re-reading rebuilds run IDs, so the undo history can't survive the switch
     // and is cleared.
     const wasDirty = this.isDirty();
-    for (const page of doc.loadedPages()) {
-      if (!page.loaded) continue;
-      // Flush deferred edits into the content stream before re-reading
-      // so the rebuilt runs reflect the user's current edits.
-      page.flushGenerate(doc.module);
-      page.loaded = false;
-      page.setRuns([]);
-      page.setImages([]);
-      PdfiumTextReader.populate(doc, page, mode);
-    }
+    // Flushes first: the rebuilt runs must reflect the user's current edits.
+    this.repopulateAllPages(doc, mode);
     this.history.clear();
     this.savedTop = null;
     this.bakedDirty = wasDirty;
@@ -289,16 +284,53 @@ export class EditorStore {
 
   undo(): void {
     if (!this.doc) return;
-    this.history.undo(this.doc);
+    try {
+      this.history.undo(this.doc);
+    } catch {
+      this.recoverFromBrokenStep();
+      return;
+    }
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
   }
 
   redo(): void {
     if (!this.doc) return;
-    this.history.redo(this.doc);
+    try {
+      this.history.redo(this.doc);
+    } catch {
+      this.recoverFromBrokenStep();
+      return;
+    }
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
+  }
+
+  // A half-applied command leaves the run model describing objects that no
+  // longer match the page, so rebuild it from PDFium rather than guess.
+  private recoverFromBrokenStep(): void {
+    const doc = this.doc;
+    if (!doc) return;
+    this.repopulateAllPages(doc, this.state.groupingMode);
+    // Rebuilt runs get fresh ids, so no existing history entry can apply.
+    this.history.clear();
+    this.savedTop = null;
+    this.bakedDirty = true;
+    this.selection.clear();
+    this.resnapshot();
+    this.patch({ dirty: true });
+  }
+
+  /** Drop every page's run model and read it back from the document. */
+  private repopulateAllPages(doc: EditorDocument, mode: GroupingMode): void {
+    for (const page of doc.loadedPages()) {
+      if (!page.loaded) continue;
+      page.flushGenerate(doc.module);
+      page.loaded = false;
+      page.setRuns([]);
+      page.setImages([]);
+      PdfiumTextReader.populate(doc, page, mode);
+    }
   }
 
   /** Revert every edit in history; document returns to its load state. */

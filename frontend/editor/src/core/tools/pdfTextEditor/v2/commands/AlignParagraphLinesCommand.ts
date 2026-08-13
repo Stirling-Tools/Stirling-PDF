@@ -1,6 +1,7 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
+import { transformObject } from "@app/tools/pdfTextEditor/v2/util/objectTransform";
 
 export type LineAlignMode = "left" | "center-h" | "right";
 
@@ -123,7 +124,7 @@ export class AlignParagraphLinesCommand implements Command {
       if (!ptr || seen.has(ptr)) continue;
       seen.add(ptr);
       try {
-        m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, dx, 0);
+        transformObject(m, ptr, 1, 0, 0, 1, dx, 0);
       } catch {
         /* best-effort */
       }

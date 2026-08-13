@@ -14,6 +14,7 @@ import {
   buildExactLines,
   type ExactLine,
 } from "@app/tools/pdfTextEditor/v2/util/exactLayout";
+import { embeddedFaceFamily } from "@app/tools/pdfTextEditor/v2/util/embeddedFace";
 
 // React + contentEditable do not play well together when JSX manages the
 // element's children: React reconciles the children on every render and can.
@@ -23,6 +24,9 @@ import {
 function cssFontFamilyFor(fontId: string): string {
   const idx = fontId.lastIndexOf(":");
   const family = idx >= 0 ? fontId.slice(idx + 1) : fontId;
+  // The document's own face, when PDFium gave us bytes a FontFace accepts.
+  // An unresolved name costs nothing: the browser moves on to the next entry.
+  const own = ownFaceFor(fontId);
   const lc = family.toLowerCase();
   if (
     lc.includes("times") ||
@@ -30,12 +34,18 @@ function cssFontFamilyFor(fontId: string): string {
     lc.includes("liberation serif") ||
     lc.includes("dejavu serif")
   ) {
-    return '"Liberation Serif", "Times New Roman", Times, serif';
+    return `${own}"Liberation Serif", "Times New Roman", Times, serif`;
   }
   if (lc.includes("courier") || lc.includes("mono")) {
-    return '"Liberation Mono", "Courier New", Courier, monospace';
+    return `${own}"Liberation Mono", "Courier New", Courier, monospace`;
   }
-  return '"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif';
+  return `${own}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
+}
+
+/** `"pdfface-N", ` for a `pdf:<ptr>:<family>` id, else the empty string. */
+function ownFaceFor(fontId: string): string {
+  const m = /^pdf:(\d+):/.exec(fontId);
+  return m ? `"${embeddedFaceFamily(Number(m[1]))}", ` : "";
 }
 
 function cssWeightFor(fontId: string): number {
@@ -221,6 +231,9 @@ export function TextRunOverlay({
   const ref = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  // Masking a run the user has only clicked into swaps real PDF ink for a
+  // CSS approximation, so hold the pristine bitmap until an actual edit.
+  const [touched, setTouched] = useState(false);
   // True between compositionstart and compositionend (IME). While composing
   // onInput must not dispatch per-keystroke edits; we commit once on end.
   const composingRef = useRef(false);
@@ -266,14 +279,6 @@ export function TextRunOverlay({
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    const onNativeBeforeInput = (): void => flattenExact(el);
-    el.addEventListener("beforeinput", onNativeBeforeInput);
-    return () => el.removeEventListener("beforeinput", onNativeBeforeInput);
-  });
-
-  useEffect(() => {
-    const el = ref.current;
     if (!el || !focused || !exactLines) return;
     if (exactPaintedRef.current) return;
     if (extractHardBreaks(el) !== run.text) return;
@@ -307,6 +312,9 @@ export function TextRunOverlay({
 
   // CSS font for the overlay - derived before the vertical math because
   // baseline placement needs the font's measured ascent.
+  // Once an edit commits, the bitmap underneath matches again, so the mask
+  // is only needed between the keystroke and the re-render.
+  const edited = focused && touched;
   const fontFamily = cssFontFamilyFor(run.fontId);
   const fontWeight = cssWeightFor(run.fontId);
   const fontStyle = cssStyleFor(run.fontId);
@@ -459,6 +467,7 @@ export function TextRunOverlay({
       }}
       onFocus={(e) => {
         setFocused(true);
+        setTouched(false);
         const el = e.currentTarget as HTMLDivElement;
         // Remember the text at focus so blur can tell if the user edited it.
         focusTextRef.current = extractHardBreaks(el);
@@ -490,6 +499,7 @@ export function TextRunOverlay({
         })();
       }}
       onBlur={(e) => {
+        setTouched(false);
         flattenExact(e.currentTarget as HTMLDivElement);
         setFocused(false);
         // Wrap mode: when the just-edited content overflows the locked box
@@ -518,16 +528,16 @@ export function TextRunOverlay({
         const el = e.currentTarget as HTMLDivElement;
         onEdit(extractHardBreaks(el).replace(/\u00A0/g, " "));
       }}
-      onBeforeInput={(e) => {
-        flattenExact(e.currentTarget as HTMLDivElement);
-      }}
       onInput={(e) => {
+        setTouched(true);
         // Skip intermediate IME steps; compositionend commits the result.
         if (composingRef.current || (e.nativeEvent as InputEvent).isComposing)
           return;
         const el = e.currentTarget as HTMLDivElement;
         // Back to ordinary flow before anything reads the text, or a typed
         // character stays in its fixed-width box and the line can never wrap.
+        // This must NOT move to `beforeinput`: rewriting the editing host
+        // during that event makes WebKit abandon the insertion outright.
         flattenExact(el);
         // Always read hard breaks only - never synthesise newlines from browser
         // soft-wraps.
@@ -569,11 +579,11 @@ export function TextRunOverlay({
         // baselines land exactly where we computed `top`.
         lineHeight: `${lineHeightPx}px`,
         whiteSpace,
-        // Show the glyphs while focused OR mid-drag so the Ctrl+drag
-        // preview is a visible chip that follows the cursor.
-        color: focused || dragging ? toCssHex(run.fill) : "transparent",
-        // Mask the underlying bitmap while editing.
-        backgroundColor: focused
+        // Show the glyphs once the run is really being changed, or mid-drag so
+        // the Ctrl+drag preview is a visible chip that follows the cursor.
+        color: edited || dragging ? toCssHex(run.fill) : "transparent",
+        // Mask the underlying bitmap only once it no longer matches the text.
+        backgroundColor: edited
           ? contrastingMaskFor(run.fill)
           : highlighted
             ? "rgba(255,217,0,0.45)"

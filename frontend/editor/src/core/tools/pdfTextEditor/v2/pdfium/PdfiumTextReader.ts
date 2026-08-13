@@ -13,6 +13,7 @@ import type {
   RGBA,
 } from "@app/tools/pdfTextEditor/v2/types";
 import { readUtf16 } from "@app/services/pdfiumService";
+import { registerEmbeddedFace } from "@app/tools/pdfTextEditor/v2/util/embeddedFace";
 
 /** PDFium page-object type constants - mirrors `public/fpdf_edit.h`. */
 const FPDF_PAGEOBJ_TEXT = 1;
@@ -28,8 +29,6 @@ export class PdfiumTextReader {
   ): void {
     if (page.loaded) return;
     const m = doc.module;
-    // FPDFText_LoadPage / FPDFTextObj_GetText read the content stream.
-    page.flushGenerate(m);
     const pagePtr = page.pagePtr;
     const count = m.FPDFPage_CountObjects(pagePtr);
 
@@ -679,6 +678,8 @@ function readTextRun(
     // Prime this font's glyph cmap here, in the loader's SERIALIZED text-read
     // phase (before the page rasterizes).
     if (fontPtr) primeFontGlyphMap(fontPtr, m);
+    // Make the same face available to the overlay as a CSS FontFace.
+    if (fontPtr) registerEmbeddedFace(m, fontPtr);
     // Treat the PDFium font handle pointer as a unique id within the doc.
     const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${index}`;
 

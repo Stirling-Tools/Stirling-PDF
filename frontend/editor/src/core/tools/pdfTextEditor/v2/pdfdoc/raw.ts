@@ -207,6 +207,8 @@ export class RawPdf {
           gen: 0,
           body: text.slice(first + off, end),
         });
+        // The container scan above cached the stale top-level body.
+        this.bodyCache.delete(objNum);
         if (objNum > this.highestObj) this.highestObj = objNum;
       }
     }
@@ -217,13 +219,13 @@ export class RawPdf {
   private async compressedInNewestXref(): Promise<Set<number>> {
     const out = new Set<number>();
     if (this.startXref < 0 || !this.usesXrefStream) return out;
-    const header = /^(\d+)\s+(\d+)\s+obj/.exec(
+    const header = /^(\d+)\s+(\d+)\s+obj\b/.exec(
       this.src.slice(this.startXref, this.startXref + 64),
     );
     if (!header) return out;
     const num = parseInt(header[1], 10);
     const body = this.objectBody(num);
-    if (!body || !/\/Type\s*\/XRef/.test(body)) return out;
+    if (!body || !/\/Type\s*\/XRef\b/.test(body)) return out;
     const data = await this.streamData(num);
     if (!data) return out;
 
@@ -438,7 +440,7 @@ export class RawPdf {
     if (!span) return [];
     // An indirect /Filter would otherwise look like no filter at all, and the
     // still-compressed bytes would be handed back as decoded content.
-    if (/^\d+\s+\d+\s+R/.test(span.text)) return null;
+    if (/^\d+\s+\d+\s+R\b/.test(span.text)) return null;
     if (span.text.startsWith("/")) {
       const m = span.text.match(/^\/([^\s/<>()[\]{}%]*)/);
       return m ? [m[1]] : [];
@@ -452,7 +454,7 @@ export class RawPdf {
   private applyPredictor(body: string, data: Uint8Array): Uint8Array | null {
     const parms = this.valueSpan(body, "DecodeParms");
     if (!parms) return data;
-    if (/^\d+\s+\d+\s+R/.test(parms.text)) return null;
+    if (/^\d+\s+\d+\s+R\b/.test(parms.text)) return null;
     const dict = parms.text;
     const int = (key: string, dflt: number): number => {
       const m = dict.match(new RegExp(`/${key}\\s+(\\d+)`));

@@ -29,6 +29,7 @@ import type {
   ParagraphLineSlot,
   TextRun,
 } from "@app/tools/pdfTextEditor/v2/model/TextRun";
+import { transformObject } from "@app/tools/pdfTextEditor/v2/util/objectTransform";
 
 interface RevertLine {
   text: string;
@@ -475,7 +476,7 @@ export class EditTextCommand implements Command {
       for (let i = this.lineEdit.moves.length - 1; i >= 0; i--) {
         const mv = this.lineEdit.moves[i];
         try {
-          m.FPDFPageObj_Transform(mv.ptr, 1, 0, 0, 1, 0, -mv.dy);
+          transformObject(m, mv.ptr, 1, 0, 0, 1, 0, -mv.dy);
         } catch {
           /* best-effort */
         }
@@ -766,7 +767,7 @@ export class EditTextCommand implements Command {
           for (const ptr of src.mergedFromPtrs) {
             if (!ptr) continue;
             try {
-              m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, 0, dy);
+              transformObject(m, ptr, 1, 0, 0, 1, 0, dy);
             } catch {
               /* best-effort - stale ptr */
             }

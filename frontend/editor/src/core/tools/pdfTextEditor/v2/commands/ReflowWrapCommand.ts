@@ -7,6 +7,7 @@ import type {
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@app/services/pdfiumService";
 import { rotationFromMatrix } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import { transformObject } from "@app/tools/pdfTextEditor/v2/util/objectTransform";
 
 /** Reflow a text run's EXISTING glyph objects to fit within `maxWidthPt`. */
 
@@ -171,7 +172,7 @@ export class ReflowWrapCommand implements Command {
       if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
         for (const g of w.glyphs) {
           try {
-            m.FPDFPageObj_Transform(g.ptr, 1, 0, 0, 1, dx, dy);
+            transformObject(m, g.ptr, 1, 0, 0, 1, dx, dy);
           } catch {
             /* best-effort - stale ptr */
           }
@@ -219,7 +220,7 @@ export class ReflowWrapCommand implements Command {
     for (let i = this.moves.length - 1; i >= 0; i--) {
       const mv = this.moves[i];
       try {
-        m.FPDFPageObj_Transform(mv.ptr, 1, 0, 0, 1, -mv.dx, -mv.dy);
+        transformObject(m, mv.ptr, 1, 0, 0, 1, -mv.dx, -mv.dy);
       } catch {
         /* best-effort */
       }

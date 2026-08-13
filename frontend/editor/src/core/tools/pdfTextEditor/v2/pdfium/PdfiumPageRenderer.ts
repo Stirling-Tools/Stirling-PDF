@@ -9,9 +9,8 @@ export class PdfiumPageRenderer {
     scale: number,
   ): Promise<ImageData> {
     const m = doc.module;
-    // Flush any deferred mutations so the bitmap reflects the current
-    // edit state. Cheap no-op when nothing has changed.
-    page.flushGenerate(m);
+    // No flush: FPDF_RenderPageBitmap draws from the in-memory object list, so
+    // the preview is current without rewriting the content stream.
     const rawW = page.width;
     const rawH = page.height;
     const w = Math.max(1, Math.round(rawW * scale));
