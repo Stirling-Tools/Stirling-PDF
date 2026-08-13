@@ -751,7 +751,7 @@ public class ExceptionUtils {
         String targetDescription;
         if (errorInfo.affectedPages() != null && !errorInfo.affectedPages().isEmpty()) {
             if (errorInfo.affectedPages().size() == 1) {
-                targetDescription = "page " + errorInfo.affectedPages().get(0);
+                targetDescription = "page " + errorInfo.affectedPages().getFirst();
             } else {
                 targetDescription =
                         "pages "
@@ -848,7 +848,7 @@ public class ExceptionUtils {
             }
 
             // Use the first page number, or null if none found
-            Integer pageNumber = affectedPages.isEmpty() ? null : affectedPages.get(0);
+            Integer pageNumber = affectedPages.isEmpty() ? null : affectedPages.getFirst();
 
             return new GhostscriptErrorInfo(
                     ErrorCode.GHOSTSCRIPT_PAGE_DRAWING,

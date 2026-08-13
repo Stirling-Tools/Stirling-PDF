@@ -67,6 +67,7 @@ import {
   parseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
 import { clearFilesPageReturnRoute } from "@app/components/filesPage/filesPageReturnRoute";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import "@app/components/filesPage/FilesPage.css";
 
 export default function FileManagerView() {
@@ -578,7 +579,7 @@ export default function FileManagerView() {
         } else if (materialized.length > 1) {
           navActions.setWorkbench("fileEditor");
         }
-        navigate("/");
+        navigate(EDITOR_BASENAME);
       };
 
       requestNavigation(() => {
@@ -681,7 +682,7 @@ export default function FileManagerView() {
   const handleClose = useCallback(() => {
     // Drop the return-route hint so the workbench doesn't show a stale back.
     clearFilesPageReturnRoute();
-    navigate("/");
+    navigate(EDITOR_BASENAME);
   }, [navigate]);
 
   // ─── keyboard shortcuts ─────────────────────────────────────────────────

@@ -137,7 +137,7 @@ public class JobController {
         if (result.hasFiles() && !result.hasMultipleFiles()) {
             try {
                 List<ResultFile> files = result.getAllResultFiles();
-                ResultFile singleFile = files.get(0);
+                ResultFile singleFile = files.getFirst();
 
                 byte[] fileContent = fileStorage.retrieveBytes(singleFile.getFileId());
                 return ResponseEntity.ok()

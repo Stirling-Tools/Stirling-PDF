@@ -126,7 +126,7 @@ export interface MockAppApiOptions {
     username?: string;
     email?: string;
     roles?: string[];
-  };
+  } | null;
   /** Languages advertised by `/config/app-config`. */
   languages?: string[];
   /** Default locale. */

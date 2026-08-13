@@ -97,7 +97,7 @@ export class AutomationFileProcessor {
     try {
       const response = await apiClient.post(endpoint, formData, {
         responseType: options.responseType || "blob",
-        timeout: options.timeout || AUTOMATION_CONSTANTS.OPERATION_TIMEOUT,
+        ...(options.timeout !== undefined ? { timeout: options.timeout } : {}),
       });
 
       if (response.status !== 200) {
@@ -143,7 +143,7 @@ export class AutomationFileProcessor {
     try {
       const response = await apiClient.post(endpoint, formData, {
         responseType: options.responseType || "blob",
-        timeout: options.timeout || AUTOMATION_CONSTANTS.OPERATION_TIMEOUT,
+        ...(options.timeout !== undefined ? { timeout: options.timeout } : {}),
       });
 
       if (response.status !== 200) {

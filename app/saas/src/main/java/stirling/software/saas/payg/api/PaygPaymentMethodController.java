@@ -85,7 +85,7 @@ public class PaygPaymentMethodController {
         if (rows.isEmpty()) {
             return ResponseEntity.ok(PaymentMethodResponse.absent());
         }
-        Long teamId = rows.get(0).getTeam().getId();
+        Long teamId = rows.getFirst().getTeam().getId();
 
         Optional<PaygTeamExtensions> ext = extRepo.findById(teamId);
         if (ext.isEmpty() || ext.get().getStripeCustomerId() == null) {

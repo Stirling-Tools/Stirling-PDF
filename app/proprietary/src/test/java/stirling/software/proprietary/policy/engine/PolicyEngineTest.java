@@ -55,6 +55,8 @@ import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
+import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -124,7 +126,8 @@ class PolicyEngineTest {
                         List.of(sink, recordingSink),
                         outputResolver,
                         resourceMonitor,
-                        jobQueue);
+                        jobQueue,
+                        new PolicyAssetResolver(new InProcessPolicyAssetStore()));
 
         // Identity scoping: the run id is the generated UUID unchanged. Lenient because the
         // resume/cancel tests do not submit a run.

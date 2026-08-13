@@ -634,7 +634,7 @@ class RedactExecuteService {
         PageColumnLayout layout =
                 PageColumnLayout.fromLineBoxes(extractor.getLineBoxes(), pageWidth);
         if (layout.columnCount() > 1) {
-            float[] g = layout.gutters().get(0);
+            float[] g = layout.gutters().getFirst();
             log.info(
                     "[redact/execute] page {} layout: 2 cols, gutter x=[{}, {}]",
                     pageIdx + 1,
