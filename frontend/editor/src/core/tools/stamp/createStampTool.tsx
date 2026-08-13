@@ -75,6 +75,7 @@ export const createStampTool = (config: StampToolConfig) => {
       setSignaturesApplied,
       setPlacementMode,
       setPlaceMultiple,
+      setAutoExitAfterStampPlacement,
     } = useSignature();
     const { consumeFiles, selectors } = useFileContext();
     const {
@@ -144,6 +145,13 @@ export const createStampTool = (config: StampToolConfig) => {
     useEffect(() => {
       setSignatureConfig(base.params.parameters);
     }, [base.params.parameters, setSignatureConfig]);
+
+    // Opt this tool into single-placement. Annotate shares the "stamp" tool id
+    // and must keep its own placement flow.
+    useEffect(() => {
+      setAutoExitAfterStampPlacement(true);
+      return () => setAutoExitAfterStampPlacement(false);
+    }, [setAutoExitAfterStampPlacement]);
 
     // When the tool unmounts (user navigates to a different tool), leave
     // placement mode and clear any active stamp/ink tool. Otherwise the

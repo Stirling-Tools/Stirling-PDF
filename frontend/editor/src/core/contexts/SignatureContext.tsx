@@ -27,6 +27,9 @@ interface SignatureState {
   // dropped so users don't accidentally place duplicates. When true, the user
   // opted into staying in placement mode and can drop multiple stamps in a row.
   placeMultiple: boolean;
+  // Opt-in from the stamp/sign tools only. Annotate shares the "stamp" tool id
+  // and must not be kicked out of its own placement flow.
+  autoExitAfterStampPlacement: boolean;
 }
 
 // Signature actions interface
@@ -47,6 +50,7 @@ interface SignatureActions {
     size: { width: number; height: number } | null,
   ) => void;
   setPlaceMultiple: (enabled: boolean) => void;
+  setAutoExitAfterStampPlacement: (enabled: boolean) => void;
 }
 
 // Combined context interface
@@ -68,6 +72,7 @@ const initialState: SignatureState = {
   signaturesApplied: true, // Start as true (no signatures placed yet)
   placementPreviewSize: null,
   placeMultiple: false,
+  autoExitAfterStampPlacement: false,
 };
 
 // Provider component
@@ -187,6 +192,13 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     }));
   }, []);
 
+  const setAutoExitAfterStampPlacement = useCallback((enabled: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      autoExitAfterStampPlacement: enabled,
+    }));
+  }, []);
+
   // No auto-activation - all modes use manual buttons
 
   const contextValue: SignatureContextValue = {
@@ -208,6 +220,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     setSignaturesApplied,
     setPlacementPreviewSize,
     setPlaceMultiple,
+    setAutoExitAfterStampPlacement,
   };
 
   return (
