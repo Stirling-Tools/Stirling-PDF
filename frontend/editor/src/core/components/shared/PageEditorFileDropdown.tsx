@@ -175,7 +175,12 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
   return (
     <Menu trigger="click" position="bottom" width="40rem">
       <Menu.Target>
+        {/* role="button" so the aria-haspopup/aria-expanded Menu.Target stamps on
+            this element are permitted. It stays a div because it renders inside
+            the workbench SegmentedControl's <label>, which may not contain
+            interactive content. */}
         <div
+          role="button"
           className="ph-no-capture"
           style={{ ...viewOptionStyle, cursor: "pointer" }}
         >
