@@ -419,7 +419,12 @@ function actions<T>(o: {
 }
 
 function progress<T>(
-  o: Common & { get: (row: T) => { value: number; label?: string } },
+  o: Common & {
+    get: (row: T) => { value: number; label?: string };
+    /** Accessible name for the bar (it has no visible text). Defaults to the
+     *  shown percent; pass a description like "Load for us-east-1" when useful. */
+    ariaLabel?: (row: T) => string;
+  },
 ): DataTableColumn<T> {
   return base<T>(o, {
     align: "left",
@@ -429,14 +434,18 @@ function progress<T>(
     sortFn: "basic",
     renderCell: (r) => {
       const p = o.get(r);
+      const shown = p.label ?? `${Math.round(p.value * 100)}%`;
       return (
         <div className="sui-dtc__progress">
           <span className="sui-dtc__progress-bar">
-            <ProgressBar value={p.value} thresholded height={6} />
+            <ProgressBar
+              value={p.value}
+              thresholded
+              height={6}
+              label={o.ariaLabel?.(r) ?? shown}
+            />
           </span>
-          <span className="sui-dtc__progress-pct">
-            {p.label ?? `${Math.round(p.value * 100)}%`}
-          </span>
+          <span className="sui-dtc__progress-pct">{shown}</span>
         </div>
       );
     },

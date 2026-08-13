@@ -48,6 +48,8 @@ export function DeploymentsTab() {
       header: t("portal.infrastructure.deployments.regionColumns.load"),
       sortable: true,
       get: (r) => ({ value: r.load, label: pct(r.load) }),
+      ariaLabel: (r) =>
+        t("portal.infrastructure.deployments.loadAria", { name: r.name }),
     }),
     column.badge({
       key: "status",

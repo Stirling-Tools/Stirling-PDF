@@ -282,7 +282,7 @@ const LATIN_LETTER = /[a-z]/gi;
 const WORD = /[\p{L}']+/gu;
 
 // ASCII whitespace plus the no-break spaces pdf.js extraction commonly emits.
-// eslint-disable-next-line no-control-regex -- vertical tab is intentional ASCII whitespace
+// oxlint-disable-next-line no-control-regex -- vertical tab is intentional ASCII whitespace
 const WHITESPACE = /[\t\n\x0B\f\r \u00A0\u2007\u202F]+/g;
 
 // Structural signal patterns. Boolean-presence ones stay non-global (safe .test()),

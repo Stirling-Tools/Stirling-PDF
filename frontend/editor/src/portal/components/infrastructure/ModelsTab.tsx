@@ -67,6 +67,8 @@ export function ModelsTab() {
       header: t("portal.infrastructure.models.columns.load"),
       sortable: true,
       get: (m) => ({ value: m.load, label: pct(m.load) }),
+      ariaLabel: (m) =>
+        t("portal.infrastructure.models.loadAria", { name: m.name }),
     }),
     column.number({
       key: "latency",
