@@ -3,6 +3,7 @@ import { Tooltip } from "@mantine/core";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import { ActionIcon, Button, Input } from "@app/ui";
+import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
 import "@portal/components/pipelines/PipelineCreateHeader.css";
 
 export interface PipelineCreateHeaderProps {
@@ -10,6 +11,8 @@ export interface PipelineCreateHeaderProps {
   onNameChange: (name: string) => void;
 
   canSave: boolean;
+  /** Everything still owed before the pipeline can be created, shown on the disabled create button. */
+  blockers: string[];
   saving: boolean;
   /** Which create action is mid-save, so only the button that was clicked shows its spinner. */
   pendingCreateEnabled: boolean | null;
@@ -24,13 +27,14 @@ export interface PipelineCreateHeaderProps {
 /**
  * The create-mode toolbar. Mirrors the edit header's shape - a back arrow and the name on the left,
  * actions on the right - so the two modes read as the same page in two states rather than two
- * different screens. The right commits the pipeline live or paused; the create buttons disable until
- * it is valid, so a click always does something.
+ * different screens. The right commits the pipeline live or paused; while it can't yet, the disabled
+ * create buttons carry a tooltip listing exactly what is still owed, so "disabled" is never a dead end.
  */
 export function PipelineCreateHeader({
   name,
   onNameChange,
   canSave,
+  blockers,
   saving,
   pendingCreateEnabled,
   onCreate,
@@ -75,23 +79,32 @@ export function PipelineCreateHeader({
           </ActionIcon>
         </Tooltip>
 
-        <Button
-          variant="secondary"
-          size="sm"
-          loading={saving && pendingCreateEnabled === false}
-          disabled={!canSave}
-          onClick={onCreatePaused}
+        {/* The pair share one tooltip target because a disabled button swallows its own hover - the
+            wrapper is what the pointer lands on. */}
+        <PipelineBlockerTooltip
+          heading={t("portal.pipelines.builder.blocker.heading")}
+          blockers={blockers}
         >
-          {t("portal.pipelines.composer.createPaused")}
-        </Button>
-        <Button
-          size="sm"
-          loading={saving && pendingCreateEnabled === true}
-          disabled={!canSave}
-          onClick={onCreate}
-        >
-          {t("portal.pipelines.composer.create")}
-        </Button>
+          <div className="portal-pipeline-create-header__create">
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={saving && pendingCreateEnabled === false}
+              disabled={!canSave}
+              onClick={onCreatePaused}
+            >
+              {t("portal.pipelines.composer.createPaused")}
+            </Button>
+            <Button
+              size="sm"
+              loading={saving && pendingCreateEnabled === true}
+              disabled={!canSave}
+              onClick={onCreate}
+            >
+              {t("portal.pipelines.composer.create")}
+            </Button>
+          </div>
+        </PipelineBlockerTooltip>
       </div>
     </section>
   );

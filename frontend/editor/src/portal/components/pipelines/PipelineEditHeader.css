@@ -53,6 +53,12 @@
   white-space: nowrap;
 }
 
+/* Save is wrapped so its disabled hover reaches the blocker tooltip; the wrapper must not shrink. */
+.portal-pipeline-edit-header__save {
+  display: inline-flex;
+  flex: none;
+}
+
 /* Destructive item in the overflow tray: red label and icon, so it reads as the exception among
    the neutral entries above it. */
 .portal-pipeline-edit-header__delete-item .sui-dd__item-label,

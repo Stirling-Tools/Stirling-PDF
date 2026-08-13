@@ -11,6 +11,7 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import { ActionIcon, Button, Dropdown, Input } from "@app/ui";
+import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
 import "@portal/components/pipelines/PipelineEditHeader.css";
 
 export interface PipelineEditHeaderProps {
@@ -25,6 +26,8 @@ export interface PipelineEditHeaderProps {
   onBack: () => void;
 
   canSave: boolean;
+  /** Everything still owed before the edits can be saved, shown on the disabled Save button. */
+  blockers: string[];
   saving: boolean;
   onSave: () => void;
 
@@ -52,6 +55,7 @@ export function PipelineEditHeader({
   togglingEnabled,
   onBack,
   canSave,
+  blockers,
   saving,
   onSave,
   onRun,
@@ -201,9 +205,22 @@ export function PipelineEditHeader({
           </Dropdown.Menu>
         </Dropdown.Root>
 
-        <Button size="sm" onClick={onSave} loading={saving} disabled={!canSave}>
-          {t("portal.pipelines.composer.save")}
-        </Button>
+        {/* Wrapped in a span so the disabled button's hover still reaches the tooltip. */}
+        <PipelineBlockerTooltip
+          heading={t("portal.pipelines.builder.blocker.saveHeading")}
+          blockers={blockers}
+        >
+          <span className="portal-pipeline-edit-header__save">
+            <Button
+              size="sm"
+              onClick={onSave}
+              loading={saving}
+              disabled={!canSave}
+            >
+              {t("portal.pipelines.composer.save")}
+            </Button>
+          </span>
+        </PipelineBlockerTooltip>
       </div>
     </section>
   );

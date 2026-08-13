@@ -628,6 +628,37 @@ export function PipelineBuilder() {
     !hasIncompatibleSteps &&
     !submitting;
 
+  // Every reason the pipeline can't be committed yet, in the order they appear down the form, so a
+  // disabled Create / Save button can say exactly what is still owed rather than just refusing.
+  // Mirrors the canSave conditions above (submitting aside - that is transient, not something to fix).
+  const blockers: string[] = [];
+  if (name.trim() === "")
+    blockers.push(t("portal.pipelines.builder.blocker.name"));
+  if (input.sourceId === "")
+    blockers.push(t("portal.pipelines.builder.blocker.source"));
+  else if (input.triggerType === "schedule" && Number(input.scheduleCount) <= 0)
+    blockers.push(t("portal.pipelines.builder.blocker.schedule"));
+  if (!outputValid)
+    blockers.push(t("portal.pipelines.builder.blocker.destination"));
+  if (hasUnconfiguredSteps)
+    blockers.push(
+      t("portal.pipelines.builder.blocker.setup", {
+        tools: unconfiguredStepLabels.join(", "),
+      }),
+    );
+  if (hasUploadSteps)
+    blockers.push(
+      t("portal.pipelines.builder.blocker.upload", {
+        tools: uploadStepLabels.join(", "),
+      }),
+    );
+  if (hasIncompatibleSteps)
+    blockers.push(
+      t("portal.pipelines.builder.blocker.incompatible", {
+        tools: blockingSteps.join(", "),
+      }),
+    );
+
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
 
   function close() {
@@ -1107,6 +1138,7 @@ export function PipelineBuilder() {
           togglingEnabled={togglingEnabled}
           onBack={() => attemptLeave(listPath)}
           canSave={canSave}
+          blockers={blockers}
           saving={submitting}
           onSave={() => save(listPath)}
           onRun={handleRun}
@@ -1121,6 +1153,7 @@ export function PipelineBuilder() {
           name={name}
           onNameChange={setName}
           canSave={canSave}
+          blockers={blockers}
           saving={submitting}
           pendingCreateEnabled={pendingCreateEnabled}
           onCreate={() => submitCreate(true)}

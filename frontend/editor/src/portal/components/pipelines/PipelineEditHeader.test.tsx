@@ -34,6 +34,7 @@ function renderHeader(overrides: Partial<PipelineEditHeaderProps> = {}) {
       enabled
       togglingEnabled={false}
       canSave
+      blockers={[]}
       saving={false}
       running={false}
       clearingHistory={false}
@@ -119,5 +120,15 @@ describe("PipelineEditHeader", () => {
     expect(
       screen.getByText("portal.pipelines.composer.save").closest("button"),
     ).toBeDisabled();
+  });
+
+  it("explains, on hover, why Save is disabled", async () => {
+    renderHeader({ canSave: false, blockers: ["Choose a destination"] });
+    const save = document.querySelector(
+      ".portal-pipeline-edit-header__save",
+    ) as HTMLElement;
+    fireEvent.pointerEnter(save);
+    fireEvent.mouseEnter(save);
+    expect(await screen.findByText("Choose a destination")).toBeInTheDocument();
   });
 });

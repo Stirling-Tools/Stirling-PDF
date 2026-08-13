@@ -17,10 +17,12 @@ function Playground({
   initialName,
   initialEnabled = true,
   canSave = true,
+  blockers = [],
 }: {
   initialName: string;
   initialEnabled?: boolean;
   canSave?: boolean;
+  blockers?: string[];
 }) {
   const [name, setName] = useState(initialName);
   const [enabled, setEnabled] = useState(initialEnabled);
@@ -33,6 +35,7 @@ function Playground({
       togglingEnabled={false}
       onBack={noop}
       canSave={canSave}
+      blockers={blockers}
       saving={false}
       onSave={noop}
       onRun={noop}
@@ -57,7 +60,13 @@ export const Paused: Story = {
   ),
 };
 
-/** Edits that cannot yet be saved (e.g. the name has been cleared). */
+/** Edits that cannot yet be saved: Save is disabled and hovering it lists what's still needed. */
 export const CannotSave: Story = {
-  render: () => <Playground initialName="Claims redaction" canSave={false} />,
+  render: () => (
+    <Playground
+      initialName="Claims redaction"
+      canSave={false}
+      blockers={["Choose a destination", "Finish setting up: Redact"]}
+    />
+  ),
 };

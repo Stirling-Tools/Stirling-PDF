@@ -7866,6 +7866,17 @@ uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these 
 usesDefaults = "Runs with default settings"
 viewDefinition = "View definition"
 
+[portal.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
+upload = "Remove steps that need an uploaded file: {{tools}}"
+
 [portal.pipelines.builder.diagnostic]
 fan-in = "Combines every incoming file"
 fan-out = "Runs once per incoming file"

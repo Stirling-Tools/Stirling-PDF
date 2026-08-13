@@ -38,3 +38,10 @@
   flex: none;
   white-space: nowrap;
 }
+
+/* The two create buttons share one tooltip target, so they sit in their own inline group. */
+.portal-pipeline-create-header__create {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}

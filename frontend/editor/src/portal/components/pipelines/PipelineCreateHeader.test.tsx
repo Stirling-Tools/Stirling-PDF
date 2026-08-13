@@ -29,6 +29,7 @@ function renderHeader(overrides: Partial<PipelineCreateHeaderProps> = {}) {
     <PipelineCreateHeader
       name="Claims redaction"
       canSave
+      blockers={[]}
       saving={false}
       pendingCreateEnabled={null}
       {...handlers}
@@ -59,7 +60,7 @@ describe("PipelineCreateHeader", () => {
   });
 
   it("blocks both create actions until the pipeline is valid", () => {
-    renderHeader({ canSave: false });
+    renderHeader({ canSave: false, blockers: ["Choose a destination"] });
     expect(
       screen.getByText("portal.pipelines.composer.create").closest("button"),
     ).toBeDisabled();
@@ -68,6 +69,20 @@ describe("PipelineCreateHeader", () => {
         .getByText("portal.pipelines.composer.createPaused")
         .closest("button"),
     ).toBeDisabled();
+  });
+
+  it("explains, on hover, why the create buttons are disabled", async () => {
+    renderHeader({
+      canSave: false,
+      blockers: ["Give the pipeline a name", "Choose a destination"],
+    });
+    const group = document.querySelector(
+      ".portal-pipeline-create-header__create",
+    ) as HTMLElement;
+    fireEvent.pointerEnter(group);
+    fireEvent.mouseEnter(group);
+    expect(await screen.findByText("Choose a destination")).toBeInTheDocument();
+    expect(screen.getByText("Give the pipeline a name")).toBeInTheDocument();
   });
 
   it("opens the definition from the icon", () => {
