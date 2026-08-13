@@ -3,6 +3,7 @@
   flex: 1 1 auto;
   min-width: 0;
   max-width: 560px;
+
   --super-search-input-border: color-mix(
     in srgb,
     var(--c-text) 14%,
@@ -25,6 +26,7 @@
   border-radius: var(--radius-md);
   background-color: var(--c-input-bg);
   box-shadow: 0 0 0 1px var(--super-search-input-outline);
+
   /* Tighter than the shared TextInput default (8px/14px) for a compact,
      professional bar — height lands in line with the 28px action icons. */
   padding-top: 6px;
@@ -50,6 +52,7 @@
   color: var(--c-text-subtle);
   background: var(--c-hover);
   border: 1px solid var(--c-border-subtle);
+
   /* Tiny breathing room between the ⌘ glyph and the K. */
   letter-spacing: 0.06em;
 }
@@ -119,6 +122,7 @@
 .super-search-section-toggle.mantine-Button-root {
   --button-height: auto;
   --button-padding-x: 0;
+
   min-height: 0;
   padding-block: 0;
   flex: 0 0 auto;
@@ -140,11 +144,13 @@
 /* Per-group "show N more" / "show less" toggle. */
 .super-search-show-more.mantine-Button-root {
   --button-height: auto;
+
   min-height: 0;
   padding: 0.25rem 0.5rem 0.35rem;
   font-size: 0.78rem;
   color: var(--c-text-subtle);
 }
+
 .super-search-show-more.mantine-Button-root:hover,
 .super-search-show-more.mantine-Button-root:focus-visible {
   background: transparent;

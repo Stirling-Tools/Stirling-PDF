@@ -11,6 +11,7 @@
       transparent
     );
   }
+
   100% {
     box-shadow: 0 0 0 6px transparent;
     background: transparent;

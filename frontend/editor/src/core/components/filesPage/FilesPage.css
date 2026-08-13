@@ -56,9 +56,9 @@
 }
 
 [data-mantine-color-scheme="dark"]
-  .files-page-header-search
-  .super-search
-  input {
+.files-page-header-search
+.super-search
+input {
   background-color: transparent;
 }
 
