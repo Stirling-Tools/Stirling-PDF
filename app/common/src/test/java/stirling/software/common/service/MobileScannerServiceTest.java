@@ -156,12 +156,28 @@ class MobileScannerServiceTest {
         }
 
         @Test
-        @DisplayName("auto-creates a session when uploading to an unregistered session ID")
-        void autoCreatesSession() throws IOException {
-            service.uploadFiles("new-session", List.of(file("a.txt", "data")));
+        @DisplayName("rejects uploads to a session no desktop client registered")
+        void rejectsUnknownSession() {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> service.uploadFiles("new-session", List.of(file("a.txt", "data"))));
 
-            List<FileMetadata> metas = service.getSessionFiles("new-session");
-            assertEquals(1, metas.size());
+            assertTrue(service.getSessionFiles("new-session").isEmpty());
+            assertFalse(Files.exists(tempDir.resolve("new-session")));
+        }
+
+        @Test
+        @DisplayName("rejects uploads to an expired session and clears it")
+        void rejectsExpiredSession() {
+            service.createSession("stale");
+            forceLastAccess("stale", System.currentTimeMillis() - (20 * 60 * 1000L));
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> service.uploadFiles("stale", List.of(file("a.txt", "data"))));
+
+            assertNull(service.validateSession("stale"));
+            assertFalse(Files.exists(tempDir.resolve("stale")));
         }
 
         @Test

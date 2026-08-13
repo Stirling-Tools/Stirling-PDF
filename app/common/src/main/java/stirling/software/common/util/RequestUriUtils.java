@@ -6,6 +6,11 @@ public class RequestUriUtils {
 
     private static final Pattern SHARE_LINK_PATTERN = Pattern.compile("^/share/[^/]+/?$");
 
+    // Only the phone side of the QR pairing is anonymous: it checks the session, then uploads.
+    // Every other mobile-scanner path is desktop-side and stays behind authentication.
+    private static final Pattern MOBILE_SCANNER_PUBLIC_PATTERN =
+            Pattern.compile("^/api/v1/mobile-scanner/(?:upload|validate-session)/[a-zA-Z0-9-]+/?$");
+
     public static boolean isStaticResource(String requestURI) {
         return isStaticResource("", requestURI);
     }
@@ -202,8 +207,8 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/healthz")
                 || trimmedUri.startsWith("/liveness")
                 || trimmedUri.startsWith("/readiness")
-                || trimmedUri.startsWith(
-                        "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
+                // Phone-side mobile scanner/signature calls only (see pattern above)
+                || MOBILE_SCANNER_PUBLIC_PATTERN.matcher(trimmedUri).matches()
                 || trimmedUri.startsWith("/api/v1/webhooks/")
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login

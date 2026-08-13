@@ -89,13 +89,22 @@ public class MobileScannerService {
      *
      * @param sessionId Unique session identifier
      * @param files Files to upload
+     * @throws IllegalArgumentException If the session is unknown or expired
      * @throws IOException If file storage fails
      */
     public void uploadFiles(String sessionId, List<MultipartFile> files) throws IOException {
         validateSessionId(sessionId);
 
-        SessionData session =
-                activeSessions.computeIfAbsent(sessionId, id -> new SessionData(sessionId));
+        // Uploads only land in a session a desktop client actually created, never conjure one
+        SessionData session = activeSessions.get(sessionId);
+        if (session == null
+                || System.currentTimeMillis() > session.getLastAccessTime() + SESSION_TIMEOUT_MS) {
+            if (session != null) {
+                deleteSession(sessionId);
+            }
+            log.warn("Rejected mobile scanner upload for unknown session: {}", sessionId);
+            throw new IllegalArgumentException("Session not found or expired");
+        }
 
         // Create session directory
         Path sessionDir = getSafeSessionDirectory(sessionId);

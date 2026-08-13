@@ -190,6 +190,55 @@ class RequestUriUtilsTest {
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/api/v1/webhooks/whk_abc123", "/app"));
     }
 
+    // --- mobile scanner / mobile signature QR pairing ---
+
+    @Test
+    void testIsPublicAuthEndpoint_mobileScannerPhoneEndpoints() {
+        // The phone has no login: it validates the QR session, then uploads to it.
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/validate-session/2f1c9a3b-4d5e", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/2f1c9a3b-4d5e", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/app/api/v1/mobile-scanner/upload/2f1c9a3b-4d5e", "/app"));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_mobileScannerDesktopEndpointsProtected() {
+        // Desktop calls these through the authenticated api client - they must not be anonymous
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/create-session/abc-123", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/files/abc-123", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/download/abc-123/scan.jpg", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/session/abc-123", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_mobileScannerCraftedPathsNotPublic() {
+        // A prefix match on the public paths must not smuggle in a download
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/../download/abc-123/scan.jpg", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/abc-123/../../download/abc-123/scan.jpg",
+                        ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/validate-session/abc-123/files", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/upload", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/uploads/abc", ""));
+        assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/mobile-scanner/", ""));
+    }
+
     @Test
     void testIsPublicAuthEndpoint_withContextPath() {
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/login", "/app"));
