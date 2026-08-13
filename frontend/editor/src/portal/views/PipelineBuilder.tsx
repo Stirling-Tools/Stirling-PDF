@@ -1149,7 +1149,6 @@ export function PipelineBuilder() {
           onReprocess={handleReprocessAll}
           reprocessing={reprocessing}
           onDelete={() => setPendingDelete(true)}
-          onViewDefinition={() => setDefinitionOpen(true)}
         />
       ) : (
         <PipelineCreateHeader
@@ -1162,7 +1161,6 @@ export function PipelineBuilder() {
           onCreate={() => submitCreate(true)}
           onCreatePaused={() => submitCreate(false)}
           onBack={() => attemptLeave(listPath)}
-          onViewDefinition={() => setDefinitionOpen(true)}
         />
       )}
 
@@ -1203,6 +1201,7 @@ export function PipelineBuilder() {
             testing={testing}
             runResult={testSummary}
             onDownloadOutput={downloadOutput}
+            onViewDefinition={() => setDefinitionOpen(true)}
           />
           <PipelineGraph
             // An end is on the chain once it has been asked for or already holds a value, so a

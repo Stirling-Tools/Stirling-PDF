@@ -26,7 +26,6 @@ function renderHeader(overrides: Partial<PipelineEditHeaderProps> = {}) {
     onRun: vi.fn(),
     onReprocess: vi.fn(),
     onDelete: vi.fn(),
-    onViewDefinition: vi.fn(),
   };
   render(
     <PipelineEditHeader
@@ -82,14 +81,10 @@ describe("PipelineEditHeader", () => {
     ).toBeInTheDocument();
   });
 
-  it("runs the saved pipeline and reads its definition from the row", () => {
+  it("runs the saved pipeline from the row", () => {
     const handlers = renderHeader();
     fireEvent.click(screen.getByText("portal.pipelines.detail.run"));
     expect(handlers.onRun).toHaveBeenCalled();
-    fireEvent.click(
-      screen.getByLabelText("portal.pipelines.builder.viewDefinition"),
-    );
-    expect(handlers.onViewDefinition).toHaveBeenCalled();
   });
 
   it("keeps clear-history and delete behind the overflow tray", () => {

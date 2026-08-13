@@ -23,7 +23,6 @@ function renderHeader(overrides: Partial<PipelineCreateHeaderProps> = {}) {
     onCreate: vi.fn(),
     onCreatePaused: vi.fn(),
     onBack: vi.fn(),
-    onViewDefinition: vi.fn(),
   };
   render(
     <PipelineCreateHeader
@@ -83,13 +82,5 @@ describe("PipelineCreateHeader", () => {
     fireEvent.mouseEnter(group);
     expect(await screen.findByText("Choose a destination")).toBeInTheDocument();
     expect(screen.getByText("Give the pipeline a name")).toBeInTheDocument();
-  });
-
-  it("opens the definition from the icon", () => {
-    const handlers = renderHeader();
-    fireEvent.click(
-      screen.getByLabelText("portal.pipelines.builder.viewDefinition"),
-    );
-    expect(handlers.onViewDefinition).toHaveBeenCalled();
   });
 });

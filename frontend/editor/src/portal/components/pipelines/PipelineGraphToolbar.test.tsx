@@ -18,7 +18,11 @@ vi.mock("react-i18next", () => ({
 }));
 
 function renderToolbar(overrides: Partial<PipelineGraphToolbarProps> = {}) {
-  const handlers = { onTest: vi.fn(), onDownloadOutput: vi.fn() };
+  const handlers = {
+    onTest: vi.fn(),
+    onDownloadOutput: vi.fn(),
+    onViewDefinition: vi.fn(),
+  };
   render(
     <PipelineGraphToolbar
       stepCount={2}
@@ -47,6 +51,14 @@ describe("PipelineGraphToolbar", () => {
     expect(
       screen.getByText("portal.pipelines.builder.testRun").closest("button"),
     ).toBeDisabled();
+  });
+
+  it("opens the definition from its icon", () => {
+    const handlers = renderToolbar();
+    fireEvent.click(
+      screen.getByLabelText("portal.pipelines.builder.viewDefinition"),
+    );
+    expect(handlers.onViewDefinition).toHaveBeenCalled();
   });
 
   it("shows no result strip until a test has been run", () => {

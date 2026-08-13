@@ -1,7 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@mantine/core";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import { ActionIcon, Button, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
 import "@portal/components/pipelines/PipelineCreateHeader.css";
@@ -19,9 +17,6 @@ export interface PipelineCreateHeaderProps {
   onCreate: () => void;
   onCreatePaused: () => void;
   onBack: () => void;
-
-  /** Opens the definition (JSON + cURL). Rarely used, so it is an icon, not a labelled button. */
-  onViewDefinition: () => void;
 }
 
 /**
@@ -40,7 +35,6 @@ export function PipelineCreateHeader({
   onCreate,
   onCreatePaused,
   onBack,
-  onViewDefinition,
 }: PipelineCreateHeaderProps) {
   const { t } = useTranslation();
 
@@ -64,21 +58,6 @@ export function PipelineCreateHeader({
       />
 
       <div className="portal-pipeline-create-header__actions">
-        <Tooltip
-          label={t("portal.pipelines.builder.viewDefinition")}
-          position="bottom"
-          withinPortal
-        >
-          <ActionIcon
-            variant="tertiary"
-            size="sm"
-            onClick={onViewDefinition}
-            aria-label={t("portal.pipelines.builder.viewDefinition")}
-          >
-            <CodeRoundedIcon style={{ fontSize: "1.125rem" }} />
-          </ActionIcon>
-        </Tooltip>
-
         {/* The pair share one tooltip target because a disabled button swallows its own hover - the
             wrapper is what the pointer lands on. */}
         <PipelineBlockerTooltip

@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@mantine/core";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
-import { Button, FilePicker, Spinner } from "@app/ui";
+import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
+import { ActionIcon, Button, FilePicker, Spinner } from "@app/ui";
 import "@portal/components/pipelines/PipelineGraphToolbar.css";
 
 /** One file a test run produced, downloadable from the result strip. */
@@ -33,14 +35,15 @@ export interface PipelineGraphToolbarProps {
   /** The last test run in this session, or null if there has not been one. */
   runResult: RunResultSummary | null;
   onDownloadOutput: (output: RunOutputFile) => void;
+  /** Opens the definition (JSON + cURL) - an inspect action, sibling to Test, hence its home here. */
+  onViewDefinition: () => void;
 }
 
 /**
- * Testing sits directly above the graph, in both create and edit: it is a build activity - trying
- * the chain as it stands against one file - not an operational action on a saved pipeline. That is
- * why it lives here and not beside "Run now", which fires the real, saved pipeline at its real
- * sources. A run's progress shows on the graph's nodes, so the strip that summarises it belongs
- * next to the graph too.
+ * The graph's own toolbar, above the canvas in both create and edit. It gathers the two ways to
+ * *inspect* what you are building - testing the chain against one file, and reading its definition -
+ * as opposed to committing (Save/Create) or operating on the live pipeline (Run now). A test run's
+ * progress shows on the graph's nodes, so the strip that summarises it belongs next to the graph too.
  */
 export function PipelineGraphToolbar({
   stepCount,
@@ -48,6 +51,7 @@ export function PipelineGraphToolbar({
   testing,
   runResult,
   onDownloadOutput,
+  onViewDefinition,
 }: PipelineGraphToolbarProps) {
   const { t } = useTranslation();
 
@@ -69,6 +73,23 @@ export function PipelineGraphToolbar({
       {runResult && (
         <RunResultStrip result={runResult} onDownload={onDownloadOutput} />
       )}
+
+      {/* The graph is the visual definition; reading it as JSON/cURL sits at the far end of its bar. */}
+      <Tooltip
+        label={t("portal.pipelines.builder.viewDefinition")}
+        position="bottom"
+        withinPortal
+      >
+        <ActionIcon
+          variant="tertiary"
+          size="sm"
+          className="portal-pipeline-toolbar__definition"
+          onClick={onViewDefinition}
+          aria-label={t("portal.pipelines.builder.viewDefinition")}
+        >
+          <CodeRoundedIcon style={{ fontSize: "1.125rem" }} />
+        </ActionIcon>
+      </Tooltip>
     </div>
   );
 }

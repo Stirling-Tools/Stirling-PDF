@@ -37,7 +37,6 @@ function Playground({ initialName }: { initialName: string }) {
       onCreate={noop}
       onCreatePaused={noop}
       onBack={noop}
-      onViewDefinition={noop}
     />
   );
 }

@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@mantine/core";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
 import PowerSettingsNewRoundedIcon from "@mui/icons-material/PowerSettingsNewRounded";
-import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
@@ -38,15 +36,15 @@ export interface PipelineEditHeaderProps {
   onReprocess: () => void;
   reprocessing: boolean;
   onDelete: () => void;
-  onViewDefinition: () => void;
 }
 
 /**
  * Edit mode's toolbar over an existing, live pipeline. The left is what it *is* - a back arrow, its
  * name as the page title, a pencil to rename in place. The right is what you can *do to it*: pause
  * or activate it (an operational toggle that acts at once, matching the Policies vocabulary), run it
- * now, read its definition, and - behind an overflow, since they are rare or destructive - clear its
- * processed history or delete it. Saving the chain edits is the primary action, on the far right.
+ * now, and - behind an overflow, since they are rare or destructive - reprocess its sources or delete
+ * it. Saving the chain edits is the primary action, on the far right. (Reading the definition is an
+ * inspect action, so it lives in the graph toolbar beside Test, not here.)
  */
 export function PipelineEditHeader({
   name,
@@ -64,7 +62,6 @@ export function PipelineEditHeader({
   onReprocess,
   reprocessing,
   onDelete,
-  onViewDefinition,
 }: PipelineEditHeaderProps) {
   const { t } = useTranslation();
   const [renaming, setRenaming] = useState(false);
@@ -158,21 +155,6 @@ export function PipelineEditHeader({
         >
           {t("portal.pipelines.detail.run")}
         </Button>
-
-        <Tooltip
-          label={t("portal.pipelines.builder.viewDefinition")}
-          position="bottom"
-          withinPortal
-        >
-          <ActionIcon
-            variant="tertiary"
-            size="sm"
-            onClick={onViewDefinition}
-            aria-label={t("portal.pipelines.builder.viewDefinition")}
-          >
-            <CodeRoundedIcon style={{ fontSize: "1.125rem" }} />
-          </ActionIcon>
-        </Tooltip>
 
         {/* Rare and destructive actions kept off the row so they do not compete with running. */}
         <Dropdown.Root align="end">
