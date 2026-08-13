@@ -51,12 +51,15 @@ public record ShareEgressDecision(
                 null);
     }
 
-    /** Whether the copy that leaves must be processed before it is served. */
+    /** Whether a policy tool chain runs over the copy that leaves. */
     public boolean transforms() {
         return !transformPolicyIds.isEmpty();
     }
 
-    /** Must stream through the app: a signed URL would bypass this. */
+    /**
+     * Must stream through the egress processor: a signed URL would hand over the stored original,
+     * and a view-only copy is rasterised rather than served as-is.
+     */
     public boolean requiresManagedDelivery() {
         return viewOnly || transforms();
     }

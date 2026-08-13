@@ -550,13 +550,9 @@ public class FileStorageService {
 
         // Egress gate, before anything is written: a Sharing policy may refuse this recipient
         // outright, or cap the access they are granted.
+        ShareChannel channel = isEmail ? ShareChannel.EMAIL_SHARE : ShareChannel.USER_SHARE;
         ShareEgressDecision decision =
-                requireEgressAllowed(
-                        isEmail ? ShareChannel.EMAIL_SHARE : ShareChannel.USER_SHARE,
-                        file,
-                        owner,
-                        normalizedUsername,
-                        role);
+                requireEgressAllowed(channel, file, owner, normalizedUsername, role);
         ShareAccessRole effectiveRole = decision.role();
 
         if (targetUserOpt.isPresent()) {
@@ -572,6 +568,7 @@ public class FileStorageService {
                             .map(
                                     existingShare -> {
                                         existingShare.setAccessRole(effectiveRole);
+                                        existingShare.setEgressChannel(channel);
                                         return fileShareRepository.save(existingShare);
                                     })
                             .orElseGet(
@@ -580,6 +577,7 @@ public class FileStorageService {
                                         newShare.setFile(file);
                                         newShare.setSharedWithUser(targetUser);
                                         newShare.setAccessRole(effectiveRole);
+                                        newShare.setEgressChannel(channel);
                                         return fileShareRepository.save(newShare);
                                     });
 
@@ -594,7 +592,7 @@ public class FileStorageService {
                             "Share links must be enabled for email sharing");
                 }
                 // Already decided above as an email share; don't re-evaluate as a link share.
-                FileShare linkShare = mintShareLink(file, effectiveRole, decision);
+                FileShare linkShare = mintShareLink(file, effectiveRole, decision, channel);
                 sendShareNotification(
                         owner,
                         file,
@@ -617,7 +615,7 @@ public class FileStorageService {
                     HttpStatus.BAD_REQUEST, "Share links must be enabled for email sharing");
         }
 
-        FileShare linkShare = mintShareLink(file, effectiveRole, decision);
+        FileShare linkShare = mintShareLink(file, effectiveRole, decision, channel);
         sendShareNotification(
                 owner, file, normalizedUsername, effectiveRole, buildShareLinkUrl(linkShare));
         return linkShare;
@@ -666,16 +664,22 @@ public class FileStorageService {
         // per-recipient rules bite when someone opens it (see decideDelivery).
         ShareEgressDecision decision =
                 requireEgressAllowed(ShareChannel.SHARE_LINK, file, owner, null, role);
-        return mintShareLink(file, decision.role(), decision);
+        return mintShareLink(file, decision.role(), decision, ShareChannel.SHARE_LINK);
     }
 
     /** Writes the link row for an egress decision that has already been made. */
     private FileShare mintShareLink(
-            StoredFile file, ShareAccessRole role, ShareEgressDecision decision) {
+            StoredFile file,
+            ShareAccessRole role,
+            ShareEgressDecision decision,
+            ShareChannel channel) {
         FileShare share = new FileShare();
         share.setFile(file);
         share.setShareToken(UUID.randomUUID().toString());
         share.setAccessRole(role);
+        // Stamped so the link an email share mints is still judged as an email share when it is
+        // opened; otherwise a policy narrowed to that channel would never bite at delivery.
+        share.setEgressChannel(channel);
         share.setExpiresAt(resolveShareLinkExpiration(decision));
         return fileShareRepository.save(share);
     }
@@ -697,7 +701,15 @@ public class FileStorageService {
 
     /** The egress decision for a delivery; an owner fetching their own file never reaches here. */
     public ShareEgressDecision decideDelivery(FileShare share, User accessor) {
-        return shareEgressPolicyService.evaluateDelivery(share, accessor);
+        return shareEgressPolicyService.evaluateDelivery(attachedForEgress(share), accessor);
+    }
+
+    /** The same row re-read inside this transaction with file, owner and team already fetched. */
+    private FileShare attachedForEgress(FileShare share) {
+        if (share == null || share.getId() == null) {
+            return share;
+        }
+        return fileShareRepository.findByIdForEgress(share.getId()).orElse(share);
     }
 
     /** The share row backing a non-owner's access to a file, if there is one. */

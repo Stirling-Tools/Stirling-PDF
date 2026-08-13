@@ -105,11 +105,17 @@ function PolicyTagsField({
   value,
   placeholder,
   onChange,
+  id,
+  "aria-describedby": describedBy,
 }: {
   value: string[];
   placeholder?: string;
   onChange: (next: string[]) => void;
+  /** FormField hands these to its child; they belong on the input the label points at. */
+  id?: string;
+  "aria-describedby"?: string;
 }) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState("");
 
   function commit() {
@@ -137,6 +143,7 @@ function PolicyTagsField({
             <Chip
               key={entry}
               size="sm"
+              removeLabel={t("common.remove", "Remove") + " " + entry}
               onRemove={() => onChange(value.filter((v) => v !== entry))}
             >
               {entry}
@@ -145,6 +152,8 @@ function PolicyTagsField({
         </div>
       )}
       <Input
+        id={id}
+        aria-describedby={describedBy}
         inputSize="sm"
         value={draft}
         placeholder={placeholder}

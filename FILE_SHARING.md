@@ -30,6 +30,7 @@ The File Sharing feature enables users to store files server-side and share them
 
 **`file_shares`**
 - One record per sharing relationship
+- `egress_channel` - the share channel this row was granted through, so a delivery is judged the way the grant was (an email share mints a link, and that link is still an email share)
 - `egress_file_id` / `egress_fingerprint` — cache of the processed copy a Sharing policy produced for this share (see [Sharing Policies](#sharing-policies-egress-enforcement))
 - Two share types, distinguished by which fields are set:
   - **User share**: `shared_with_user_id` is set, `share_token` is null
@@ -313,6 +314,8 @@ The governing policies are always the **file owner's team's**, never the accesso
 | Email share | `POST /files/{id}/shares/users` (email address) | as above, judged as its own channel |
 | Recipient opens it | `GET /share-links/{token}`, `GET /files/{id}/download` | force view-only; serve a processed copy |
 
+The channel is stamped on the share row when it is granted (`file_shares.egress_channel`), so the link an email share mints is still evaluated as `emailShare` when the recipient opens it. Without that stamp a policy narrowed to the email channel would gate the grant and then let the delivery through untouched.
+
 The owner downloading their own file is not egress and is never gated.
 
 ### Settings
@@ -323,7 +326,7 @@ The owner downloading their own file is not egress and is never gated.
 | External recipients | `allow` / `restrict` / `block`. Restrict grants read-only, view-only access on a one-day link. |
 | Internal domains | Email domains counted as inside the org. Empty falls back to the file owner's own domain. |
 | Share link expiry | Ceiling on link lifetime. Can only shorten the configured `linkExpirationDays`, never extend it. |
-| Downloads | `viewOnly` serves the document inline and refuses attachment downloads (`403`). |
+| Downloads | `viewOnly` always serves the document inline, never as an attachment, and rasterises the copy that leaves. |
 
 Narrowing: **Runs on** limits the policy to particular share channels (`userShare`, `shareLink`, `emailShare`); empty means every channel.
 
@@ -335,10 +338,13 @@ Several sharing policies compose to the most restrictive outcome: lowest role, s
 
 If the policy has any enabled tools (watermark, redact, strip active content), the recipient gets a **processed copy**; the stored original is untouched. It is derived on first delivery and cached against the share (`file_shares.egress_file_id`), keyed by a fingerprint over the transforming policies, their steps, and the source document's version — so editing the policy or replacing the document invalidates it automatically. The copy lives in the shared job file store, so it inherits that store's retention sweep and does not count against the owner's quota.
 
-Two behaviours worth knowing:
+Three behaviours worth knowing:
 
 - **Fails closed.** If the tool chain errors or does not finish inside 120s, the delivery is refused rather than falling back to the unprocessed original.
 - **No signed-URL shortcut.** When a policy applies view-only or a transform, delivery always streams through the application. A provider-signed URL points straight at the stored object and would bypass both.
+- **View-only is decided by the server.** `?inline` is a client hint about the disposition; it cannot decide whether the policy applies. A view-only delivery is always served inline, always processed, and its final pass rasterises the pages, so what leaves is a rendition rather than the stored document. Recipients still see the file; they do not receive a working copy of it.
+
+The cached copy is read back through the low-level file store rather than the job-ownership-checked wrapper: the share has already authorised the recipient, and the ownership check would refuse every recipient except the one whose download happened to derive the copy.
 
 ### Configuration
 

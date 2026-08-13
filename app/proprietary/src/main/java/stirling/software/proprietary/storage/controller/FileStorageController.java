@@ -289,41 +289,28 @@ public class FileStorageController {
         if (!decision.allowed()) {
             throw new ShareEgressException(decision);
         }
-        if (decision.viewOnly() && !inline) {
-            throw new ShareEgressException(
-                    new ShareEgressDecision(
-                            false,
-                            "This document may be viewed but not downloaded",
-                            decision.role(),
-                            decision.maxLinkDays(),
-                            true,
-                            decision.external(),
-                            decision.policyId(),
-                            decision.policyName(),
-                            List.of(),
-                            null));
-        }
+        // `inline` is a client hint. Under a view-only policy the server picks the disposition
+        // instead, so appending ?inline cannot decide whether the policy applies.
+        boolean servedInline = inline || decision.viewOnly();
         // Record the access only once the policy has let it through, so a refused attempt does not
         // appear in the owner's access log as a successful view.
         if (shareLinkAuth != null) {
-            fileStorageService.recordShareAccess(share, shareLinkAuth, inline);
+            fileStorageService.recordShareAccess(share, shareLinkAuth, servedInline);
         }
         if (!decision.requiresManagedDelivery()) {
             Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
-                    tryRedirectToSignedUrl(file, inline);
+                    tryRedirectToSignedUrl(file, servedInline);
             if (redirect.isPresent()) {
                 return redirect.get();
             }
-            return buildFileResponse(file, inline);
+            return buildFileResponse(file, servedInline);
         }
         // A signed URL would point straight at the stored object, bypassing both the processed copy
         // and the view-only disposition, so managed deliveries always stream through here.
         org.springframework.core.io.Resource stored = fileStorageService.loadFile(file);
         org.springframework.core.io.Resource served =
-                decision.transforms()
-                        ? shareEgressProcessor.resolve(share, stored, decision)
-                        : stored;
-        return buildFileResponse(file, served, inline);
+                shareEgressProcessor.resolve(share, stored, decision);
+        return buildFileResponse(file, served, servedInline);
     }
 
     private ResponseEntity<org.springframework.core.io.Resource> buildFileResponse(

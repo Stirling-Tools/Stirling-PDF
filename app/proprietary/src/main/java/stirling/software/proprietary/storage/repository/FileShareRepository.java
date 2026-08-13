@@ -23,6 +23,18 @@ public interface FileShareRepository extends JpaRepository<FileShare, Long> {
                     + "WHERE s.shareToken = :shareToken")
     Optional<FileShare> findByShareTokenWithFile(@Param("shareToken") String shareToken);
 
+    /**
+     * With everything an egress decision reads. open-in-view is off, so a share handed in from an
+     * earlier transaction is detached and would throw on file/owner/team.
+     */
+    @Query(
+            "SELECT s FROM FileShare s "
+                    + "JOIN FETCH s.file f "
+                    + "LEFT JOIN FETCH f.owner o "
+                    + "LEFT JOIN FETCH o.team "
+                    + "WHERE s.id = :id")
+    Optional<FileShare> findByIdForEgress(@Param("id") Long id);
+
     @Query("SELECT s FROM FileShare s WHERE s.file = :file AND s.shareToken IS NOT NULL")
     List<FileShare> findShareLinks(@Param("file") StoredFile file);
 

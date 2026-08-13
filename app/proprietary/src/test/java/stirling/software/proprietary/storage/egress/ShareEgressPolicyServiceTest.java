@@ -261,31 +261,65 @@ class ShareEgressPolicyServiceTest {
     }
 
     @Test
-    void aPolicyWithNoStepsGovernsAccessWithoutTouchingTheBytes() {
-        policyStore.save(
-                new Policy(
-                        null,
-                        "Sharing Policy",
-                        owner.getUsername(),
-                        true,
-                        List.of(),
-                        List.of(),
-                        new OutputSpec(
-                                "inline",
-                                Map.of(
-                                        "categoryId",
-                                        "sharing",
-                                        "fieldValues",
-                                        Map.of("downloads", "viewOnly"))),
-                        TEAM));
+    void viewOnlyWithNoStepsStillProcessesTheCopyThatLeaves() {
+        policyStore.save(stepless(Map.of("downloads", "viewOnly")));
 
         ShareEgressDecision decision = grant("bob@example.com", ShareAccessRole.VIEWER);
 
         assertTrue(decision.viewOnly());
         assertFalse(decision.transforms());
-        assertNull(decision.transformFingerprint());
-        // Still has to stream through the app, or view-only would be bypassed by a signed URL.
+        // The rasterising pass is what makes view-only mean anything, so it caches like a chain.
+        assertNotNull(decision.transformFingerprint());
         assertTrue(decision.requiresManagedDelivery());
+    }
+
+    @Test
+    void aPolicyWithNoStepsAndNoViewOnlyGovernsAccessWithoutTouchingTheBytes() {
+        policyStore.save(stepless(Map.of("defaultAccess", "restricted")));
+
+        ShareEgressDecision decision = grant("bob@example.com", ShareAccessRole.VIEWER);
+
+        assertFalse(decision.viewOnly());
+        assertFalse(decision.transforms());
+        assertNull(decision.transformFingerprint());
+        assertFalse(decision.requiresManagedDelivery());
+    }
+
+    @Test
+    void anEmailShareIsStillJudgedAsOneWhenTheLinkItMintedIsOpened() {
+        savePolicy(sharing(Map.of("externalRecipients", "block"), List.of("emailShare"), TEAM));
+        FileShare share = new FileShare();
+        share.setFile(file);
+        share.setShareToken("token");
+        share.setAccessRole(ShareAccessRole.VIEWER);
+        share.setEgressChannel(ShareChannel.EMAIL_SHARE);
+
+        // Without the stamped channel this reads as a plain link share and the policy never bites.
+        assertFalse(service.evaluateDelivery(share, user("bob@partner.com", 99L)).allowed());
+    }
+
+    @Test
+    void aLinkShareIsNotGovernedByAnEmailOnlyPolicy() {
+        savePolicy(sharing(Map.of("externalRecipients", "block"), List.of("emailShare"), TEAM));
+        FileShare share = new FileShare();
+        share.setFile(file);
+        share.setShareToken("token");
+        share.setAccessRole(ShareAccessRole.VIEWER);
+        share.setEgressChannel(ShareChannel.SHARE_LINK);
+
+        assertTrue(service.evaluateDelivery(share, user("bob@partner.com", 99L)).allowed());
+    }
+
+    @Test
+    void aUserShareIsJudgedOnTheUserShareChannel() {
+        savePolicy(sharing(Map.of("externalRecipients", "block"), List.of("userShare"), TEAM));
+        FileShare share = new FileShare();
+        share.setFile(file);
+        share.setSharedWithUser(user("bob@partner.com", 99L));
+        share.setAccessRole(ShareAccessRole.VIEWER);
+        share.setEgressChannel(ShareChannel.USER_SHARE);
+
+        assertFalse(service.evaluateDelivery(share, user("bob@partner.com", 99L)).allowed());
     }
 
     @Test
@@ -321,6 +355,20 @@ class ShareEgressPolicyServiceTest {
 
     private Policy savePolicy(Policy policy) {
         return policyStore.save(policy);
+    }
+
+    /** A Sharing policy that governs access only: no tool chain to run over the copy. */
+    private Policy stepless(Map<String, Object> fieldValues) {
+        return new Policy(
+                null,
+                "Sharing Policy",
+                owner.getUsername(),
+                true,
+                List.of(),
+                List.of(),
+                new OutputSpec(
+                        "inline", Map.of("categoryId", "sharing", "fieldValues", fieldValues)),
+                TEAM);
     }
 
     private Policy sharing(Map<String, Object> fieldValues, List<String> channels, Long teamId) {

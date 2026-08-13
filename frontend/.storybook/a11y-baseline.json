@@ -1,13 +1,1 @@
-{
-  "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: Sharing Every Channel": [
-    "color-contrast"
-  ],
-  "editor/src/portal/components/policies/PolicyDetailPanel.stories.tsx :: Sharing Narrowed": [
-    "color-contrast"
-  ],
-  "editor/src/portal/components/policies/PolicySetupWizard.stories.tsx :: Sharing": [
-    "button-name",
-    "color-contrast",
-    "label"
-  ]
-}
+{}

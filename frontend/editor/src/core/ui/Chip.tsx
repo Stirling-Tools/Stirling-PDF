@@ -33,6 +33,8 @@ export interface ChipProps extends Omit<
   /** Shows a spinner and dims the chip. */
   loading?: boolean;
   onRemove?: () => void;
+  /** Accessible name for the remove button; the icon alone gives it none. */
+  removeLabel?: string;
   onClick?: () => void;
   /** Leading status dot. Use for status-style chips. */
   showDot?: boolean;
@@ -52,6 +54,7 @@ export function Chip({
   trailingIcon,
   loading = false,
   onRemove,
+  removeLabel,
   onClick,
   showDot,
   dashed,
@@ -104,6 +107,7 @@ export function Chip({
       size={size}
       withRemoveButton={removable}
       onRemove={onRemove}
+      removeButtonProps={{ "aria-label": removeLabel ?? "Remove" }}
       {...rootProps}
     >
       {showDot && <span className="sui-chip__dot" aria-hidden />}

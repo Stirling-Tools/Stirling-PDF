@@ -54,8 +54,11 @@ public class ShareEgressPolicyService {
                 share.getAccessRole());
     }
 
-    /** An email share mints a link, so narrowing to email governs the grant, not delivery. */
+    /** The channel stamped when the share was granted; older rows fall back to their shape. */
     private static ShareChannel channelOf(FileShare share) {
+        if (share.getEgressChannel() != null) {
+            return share.getEgressChannel();
+        }
         return share.getSharedWithUser() != null
                 ? ShareChannel.USER_SHARE
                 : ShareChannel.SHARE_LINK;
@@ -124,8 +127,13 @@ public class ShareEgressPolicyService {
         if (decidingPolicyId == null) {
             return ShareEgressDecision.unrestricted(requestedRole);
         }
+        // View-only rasterises the copy even with no tool chain, so it is processed too and needs a
+        // fingerprint of its own to cache under.
+        if (viewOnly) {
+            fingerprintSource.append("viewOnly\n");
+        }
         String fingerprint =
-                transformPolicyIds.isEmpty()
+                transformPolicyIds.isEmpty() && !viewOnly
                         ? null
                         : fingerprint(fingerprintSource.toString(), sourceVersion(file));
         return new ShareEgressDecision(

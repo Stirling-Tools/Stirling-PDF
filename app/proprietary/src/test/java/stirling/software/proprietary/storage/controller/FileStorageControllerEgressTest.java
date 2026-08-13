@@ -77,18 +77,35 @@ class FileStorageControllerEgressTest {
     }
 
     @Test
-    void aViewOnlyPolicyRefusesAnAttachmentDownload() {
+    void aViewOnlyPolicyNeverServesAnAttachment() {
         when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(viewOnly());
+        when(shareEgressProcessor.resolve(eq(share), any(), any()))
+                .thenReturn(new ByteArrayResource(new byte[] {7}));
 
-        assertThatThrownBy(() -> controller.downloadShareLink(TOKEN, authentication, false))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
-                .isEqualTo(403);
+        // Asking for an attachment is a client hint; the policy decides the disposition.
+        ResponseEntity<Resource> response =
+                controller.downloadShareLink(TOKEN, authentication, false);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getHeaders().getContentDisposition().isInline()).isTrue();
     }
 
     @Test
-    void aRefusedDownloadIsNotRecordedAsAnAccess() {
-        when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(viewOnly());
+    void aViewOnlyDeliveryIsProcessedWhicheverDispositionIsAskedFor() {
+        ShareEgressDecision decision = viewOnly();
+        when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(decision);
+        when(shareEgressProcessor.resolve(eq(share), any(), eq(decision)))
+                .thenReturn(new ByteArrayResource(new byte[] {7}));
+
+        // The bypass this closes: ?inline=true used to skip the gate and hand back the original.
+        controller.downloadShareLink(TOKEN, authentication, true);
+
+        verify(shareEgressProcessor).resolve(eq(share), any(), eq(decision));
+    }
+
+    @Test
+    void aRefusedDeliveryIsNotRecordedAsAnAccess() {
+        when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(blocked());
 
         assertThatThrownBy(() -> controller.downloadShareLink(TOKEN, authentication, false))
                 .isInstanceOf(ResponseStatusException.class);
@@ -98,19 +115,21 @@ class FileStorageControllerEgressTest {
     }
 
     @Test
-    void aViewOnlyPolicyStillAllowsViewingInTheBrowser() {
+    void aViewOnlyAccessIsLoggedAsAViewNotADownload() {
         when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(viewOnly());
+        when(shareEgressProcessor.resolve(eq(share), any(), any()))
+                .thenReturn(new ByteArrayResource(new byte[] {7}));
 
-        ResponseEntity<Resource> response =
-                controller.downloadShareLink(TOKEN, authentication, true);
+        controller.downloadShareLink(TOKEN, authentication, false);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(fileStorageService).recordShareAccess(share, authentication, true);
     }
 
     @Test
     void aGovernedDeliveryNeverRedirectsToASignedUrl() throws Exception {
         when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(viewOnly());
+        when(shareEgressProcessor.resolve(eq(share), any(), any()))
+                .thenReturn(new ByteArrayResource(new byte[] {7}));
         when(storageProvider.signedDownloadUrl(
                         eq(STORAGE_KEY), any(Duration.class), anyBoolean(), anyString()))
                 .thenReturn(Optional.of(URI.create("https://bucket.example/signed")));
@@ -189,6 +208,31 @@ class FileStorageControllerEgressTest {
         verify(fileStorageService, never()).recordShareAccess(any(), any(), anyBoolean());
     }
 
+    @Test
+    void twoDifferentRecipientsOnOneLinkAreBothServed() {
+        ShareEgressDecision decision = transforming();
+        Authentication second =
+                new UsernamePasswordAuthenticationToken(secondRecipient(), "n/a", List.of());
+        when(fileStorageService.canAccessShareLink(share, second)).thenReturn(true);
+        when(fileStorageService.decideDelivery(eq(share), any())).thenReturn(decision);
+        when(shareEgressProcessor.resolve(eq(share), any(), eq(decision)))
+                .thenReturn(new ByteArrayResource(new byte[] {9}));
+
+        assertThat(controller.downloadShareLink(TOKEN, authentication, false).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        // The processed copy is cached against the share, so the second identity reads a copy the
+        // first one's run produced.
+        assertThat(controller.downloadShareLink(TOKEN, second, false).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+    }
+
+    private static User secondRecipient() {
+        User user = new User();
+        user.setId(33L);
+        user.setUsername("carol@partner.com");
+        return user;
+    }
+
     private static ShareEgressDecision viewOnly() {
         return new ShareEgressDecision(
                 true,
@@ -196,6 +240,20 @@ class FileStorageControllerEgressTest {
                 ShareAccessRole.VIEWER,
                 1,
                 true,
+                true,
+                "policy-1",
+                "Sharing Policy",
+                List.of(),
+                null);
+    }
+
+    private static ShareEgressDecision blocked() {
+        return new ShareEgressDecision(
+                false,
+                "This document may not be shared outside your organisation",
+                null,
+                null,
+                false,
                 true,
                 "policy-1",
                 "Sharing Policy",
