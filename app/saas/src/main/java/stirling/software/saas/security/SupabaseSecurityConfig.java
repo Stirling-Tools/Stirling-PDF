@@ -288,6 +288,10 @@ public class SupabaseSecurityConfig {
                         : List.of(
                                 "http://localhost:3000",
                                 "http://localhost:5173",
+                                // The saas-flavour frontend dev server. 5173 is taken by the
+                                // self-hosted editor when both run together, which is the normal
+                                // setup for anything spanning instance and cloud.
+                                "http://localhost:5174",
                                 "http://localhost:8080",
                                 "https://stirling.com",
                                 "https://app.stirling.com",

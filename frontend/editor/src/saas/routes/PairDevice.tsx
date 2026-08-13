@@ -5,6 +5,7 @@ import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { withBasePath } from "@app/constants/app";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import {
   PairDeviceView,
@@ -113,6 +114,22 @@ export default function PairDevice() {
 
   return (
     <AuthLayout>
+      {/* Same header the sibling auth pages use: an admin arriving from a code on
+          another screen should be able to tell at a glance they are in the right
+          place, and on ours rather than somewhere that just looks like it. */}
+      <div className="auth-logo-block">
+        <img
+          src={loginHeader}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--light"
+        />
+        <img
+          src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--dark"
+        />
+      </div>
+
       <PairDeviceView
         phase={phase}
         code={code}

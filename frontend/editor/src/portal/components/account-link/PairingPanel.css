@@ -14,10 +14,23 @@
 }
 
 .portal-pairing__uri {
+  /* Now an <a>. Body colour rather than --c-primary: this is 0.875rem mono text, and
+     --c-primary (and its --c-accent-fg alias) only reaches ~3.1:1 on the light
+     surface, which the a11y gate rejects for text this size. The underline carries
+     the affordance instead of colour, so it does not depend on hue at all. */
+  display: block;
   margin: 0;
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 0.875rem;
   color: var(--c-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+
+.portal-pairing__uri:hover,
+.portal-pairing__uri:focus-visible {
+  text-decoration-thickness: 2px;
 }
 
 .portal-pairing__code {

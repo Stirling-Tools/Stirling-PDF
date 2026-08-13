@@ -20,6 +20,25 @@ function formatCountdown(seconds: number): string {
 }
 
 /**
+ * The approval URL with the code prefilled.
+ *
+ * <p>Built with URL rather than string concatenation so a verification URI that
+ * already carries a query or a path (a deployment under a subpath, say) gains the
+ * parameter instead of ending up with two question marks. A URI we cannot parse
+ * is returned untouched: a plain link the admin can still follow beats a dead one.
+ */
+function approvalHref(uri: string, userCode: string | null): string {
+  if (!userCode) return uri;
+  try {
+    const url = new URL(uri);
+    url.searchParams.set("code", userCode);
+    return url.toString();
+  } catch {
+    return uri;
+  }
+}
+
+/**
  * Presentation for the pairing panel. Pure: every state is reachable by props
  * alone, so Storybook and the a11y scan cover the whole flow without mocking a
  * network or waiting out a countdown. {@link PairingPanel} supplies the data.
@@ -122,7 +141,20 @@ export function PairingPanelView({
         )}
       </p>
 
-      <p className="portal-pairing__uri">{view.verificationUri}</p>
+      {/* A real link, opened in a new tab with the code already in the query, so the
+          common case is one click rather than reading a URL across to another window
+          and typing eight characters. The code stays on screen because the admin may
+          be approving on a phone, where this tab is no help. */}
+      {view.verificationUri ? (
+        <a
+          className="portal-pairing__uri"
+          href={approvalHref(view.verificationUri, view.userCode)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {view.verificationUri}
+        </a>
+      ) : null}
 
       <p
         className="portal-pairing__code"
