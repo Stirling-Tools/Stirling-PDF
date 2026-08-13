@@ -2024,6 +2024,7 @@ missingToken = "OAuth login failed - no token received."
 oauthFailed = "OAuth login failed. Please try again."
 pleaseWait = "Please wait while we finish signing you in."
 signedOut = "You have been signed out. Please sign in again."
+unsolicited = "Login could not be completed because it was not started from this browser. Please sign in again."
 windowMayClose = "You can close this window once it completes."
 
 [auth.displayName]
