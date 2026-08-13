@@ -327,16 +327,30 @@
   justify-content: flex-end;
   gap: 0.75rem;
 }
+/* Neutral chip-style link (matches the invoice-link look): the colour is not an
+ * accent - the trailing glyph + hover fill carry the affordance. */
 .sui-dtc__link {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  color: var(--c-accent-text);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--c-text);
   text-decoration: none;
   font-weight: 500;
+  border: 1px solid transparent;
+  transition:
+    background var(--motion-fast),
+    border-color var(--motion-fast);
 }
 .sui-dtc__link:hover {
-  text-decoration: underline;
+  background: var(--c-surface-sunken);
+  border-color: var(--c-border);
+}
+.sui-dtc__link:focus-visible {
+  outline: none;
+  border-color: var(--c-primary);
+  background: var(--c-surface-sunken);
 }
 
 .sui-dtc__select {
