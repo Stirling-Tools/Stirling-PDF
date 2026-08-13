@@ -305,6 +305,8 @@ class UserServiceTest {
         // Both tables key on the username, so a recreated name would inherit the old profile
         verify(toolUsageStatRepository).deleteByPrincipal("tracked");
         verify(toolRecommendationDismissalRepository).deleteByPrincipal("tracked");
+        // The erasures must not displace the user row itself
+        verify(userRepository).delete(user);
     }
 
     @Test

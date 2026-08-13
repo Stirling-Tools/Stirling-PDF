@@ -18,8 +18,9 @@ public interface ToolRecommendationDismissalRepository
 
     List<ToolRecommendationDismissal> findByPrincipal(String principal);
 
-    /** Erasure: rows key on the raw username, so a recreated name would inherit the opt-outs. */
-    @Modifying(clearAutomatically = true)
+    // Erasure: rows key on the raw username, so a recreated name would inherit the opt-outs.
+    // No clearAutomatically: a clear would detach the User deleteUser deletes right after this.
+    @Modifying
     @Transactional
     @Query("DELETE FROM ToolRecommendationDismissal d WHERE d.principal = :principal")
     int deleteByPrincipal(@Param("principal") String principal);
