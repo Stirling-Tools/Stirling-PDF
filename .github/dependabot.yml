@@ -12,6 +12,7 @@ updates:
       - "/app/core"
       - "/app/proprietary"
       - "/app/saas"
+      - "/buildSrc"
     schedule:
       interval: "weekly"
     cooldown:
