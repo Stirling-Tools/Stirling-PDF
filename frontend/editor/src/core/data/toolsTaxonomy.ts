@@ -148,8 +148,6 @@ export const getSubcategoryIcon = (
   }
 };
 
-export const getCategoryLabel = (t: TFunction, id: ToolCategoryId): string =>
-  t(`toolPicker.categories.${id}`, id);
 export const getSubcategoryLabel = (t: TFunction, id: SubcategoryId): string =>
   t(`toolPicker.subcategories.${id}`, id);
 export const getSubcategoryColor = (subcategory: SubcategoryId): string =>
@@ -217,6 +215,17 @@ export const isValidToolId = (
 ): boolean => {
   return toolId in registry;
 };
+
+/**
+ * A "coming soon" placeholder: listed in the catalogue but not openable — no
+ * UI component and no external link. "read" and "multiTool" are exempt as
+ * workbench-only tools that render without a component.
+ */
+export const isComingSoonTool = (
+  toolId: string,
+  tool: ToolRegistryEntry,
+): boolean =>
+  !tool.component && !tool.link && toolId !== "read" && toolId !== "multiTool";
 
 /**
  * Check if a tool supports automation (defaults to true)

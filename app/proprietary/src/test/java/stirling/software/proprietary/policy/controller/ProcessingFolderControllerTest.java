@@ -67,6 +67,8 @@ class ProcessingFolderControllerTest {
     @Mock private FolderAccessGuard folderAccessGuard;
     @Mock private PolicyTrigger folderWatchTrigger;
     @Mock private InputSource diskFolderSource;
+    @Mock private stirling.software.proprietary.policy.asset.PolicyAssetStore assetStore;
+    @Mock private stirling.software.common.service.ToolChainValidator toolChainValidator;
     @Mock private PolicyOutputSink diskFolderSink;
 
     private final InProcessPolicyStore policyStore = new InProcessPolicyStore();
@@ -146,7 +148,9 @@ class ProcessingFolderControllerTest {
                                         properties),
                                 diskFolderSink),
                         List.of(),
-                        sourceStore);
+                        sourceStore,
+                        assetStore,
+                        toolChainValidator);
         controller =
                 new ProcessingFolderController(
                         policyStore,
@@ -171,8 +175,8 @@ class ProcessingFolderControllerTest {
         assertThat(ProcessingFolderController.isProcessingFolder(stored)).isTrue();
         assertThat(stored.owner()).isEqualTo("reece");
         assertThat(stored.teamId()).isEqualTo(3L);
-        assertThat(stored.sourceIds()).hasSize(1);
-        var source = sourceStore.get(stored.sourceIds().get(0)).orElseThrow();
+        assertThat(stored.inputs()).hasSize(1);
+        var source = sourceStore.get(stored.inputs().get(0).sourceId()).orElseThrow();
         assertThat(source.type()).isEqualTo("storage-folder");
         assertThat(source.options()).containsEntry("folderId", FOLDER_ID.toString());
         verify(policyRunner).run(stored);
@@ -199,9 +203,10 @@ class ProcessingFolderControllerTest {
         Policy stored = policyStore.get(view.id()).orElseThrow();
         // Without a trigger the engine treats the policy as manual-only: the creating sweep would
         // run and the directory would never be processed again.
-        assertThat(stored.trigger()).isNotNull();
-        assertThat(stored.trigger().type()).isEqualTo("folder-watch");
-        var source = sourceStore.get(stored.sourceIds().get(0)).orElseThrow();
+        assertThat(stored.inputs()).hasSize(1);
+        assertThat(stored.inputs().get(0).trigger()).isNotNull();
+        assertThat(stored.inputs().get(0).trigger().type()).isEqualTo("folder-watch");
+        var source = sourceStore.get(stored.inputs().get(0).sourceId()).orElseThrow();
         assertThat(source.type()).isEqualTo("folder");
         // Never "consume": the directory is the user's own and must stay intact.
         assertThat(source.options()).containsEntry("mode", "track");
@@ -283,7 +288,7 @@ class ProcessingFolderControllerTest {
     void aStorageFolderStaysManualUntilTheArrivalTriggerExists() {
         var view = controller.save(request(null, "new_version")).getBody();
 
-        assertThat(policyStore.get(view.id()).orElseThrow().trigger()).isNull();
+        assertThat(policyStore.get(view.id()).orElseThrow().inputs().get(0).trigger()).isNull();
     }
 
     @Test
@@ -329,7 +334,6 @@ class ProcessingFolderControllerTest {
                         "Security Policy",
                         "reece",
                         true,
-                        null,
                         List.of(),
                         List.of(),
                         stirling.software.proprietary.policy.model.OutputSpec.inline(),

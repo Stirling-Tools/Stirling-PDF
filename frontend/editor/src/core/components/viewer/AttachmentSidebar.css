@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  animation: attachment-fade-in 0.2s ease;
 }
 
 /* Attachment Items */
@@ -54,7 +55,7 @@
 }
 
 .attachment-item:hover .attachment-item__download-icon {
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
   transform: scale(1.1);
 }
 
@@ -89,10 +90,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.attachment-list {
-  animation: attachment-fade-in 0.2s ease;
 }
 
 /* Accessibility & Reduced Motion */

@@ -132,8 +132,9 @@ public class FolderInputSource implements InputSource {
             }
             String claimedGate = gate;
             work.add(
-                    new ResolvedInput(
+                    ResolvedInput.forFile(
                             PolicyInputs.of(List.of(fileResource(file))),
+                            identity,
                             success -> {
                                 if (config.track()) {
                                     // Track mode never removes the input: the directory belongs to

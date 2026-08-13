@@ -28,6 +28,7 @@ import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import {
   FilesPageProvider,
@@ -116,7 +117,7 @@ export default function HomePage() {
   const handleCloseConfig = useCallback(() => {
     setConfigModalOpen(false);
     if (location.pathname.startsWith("/settings")) {
-      navigate("/", { replace: true });
+      navigate(EDITOR_BASENAME, { replace: true });
     }
   }, [location.pathname, navigate]);
 
@@ -499,6 +500,7 @@ export default function HomePage() {
             gap={0}
             h="100%"
             className="flex-nowrap flex"
+            bg="var(--c-bg)"
           >
             <MyFilesAwareFileSidebar
               ref={quickAccessRef}
@@ -522,7 +524,7 @@ export default function HomePage() {
               }
               onToggleCollapse={() => {
                 if (navigationState.workbench === "myFiles") {
-                  navigate("/");
+                  navigate(EDITOR_BASENAME);
                   return;
                 }
                 setFileSidebarCollapsed((c) => {
@@ -597,11 +599,6 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       <FileSidebar
         ref={ref}
         {...props}
-        onSearchClick={() => {
-          // Just focus the central search field; don't toggle collapse
-          // (which on /files navigates back home).
-          window.dispatchEvent(new Event("files-page:focus-search"));
-        }}
         onUploadFiles={handleUpload}
         onPickGoogleDriveFiles={handleUpload}
         extraAction={{

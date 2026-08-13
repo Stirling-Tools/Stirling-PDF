@@ -34,13 +34,17 @@ export default function ToolSelector({
   const [shouldAutoFocus, setShouldAutoFocus] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Filter out excluded tools (like 'automate' itself) and tools that don't support automation
+  // Filter out excluded tools (like 'automate' itself), tools that don't support
+  // automation, and tools with no operationConfig - the executor resolves a step
+  // through operationConfig, so offering one without it fails only at run time.
   const baseFilteredTools = useMemo(() => {
     return (
       Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]
     ).filter(
       ([key, tool]) =>
-        !excludeTools.includes(key) && getToolSupportsAutomate(tool),
+        !excludeTools.includes(key) &&
+        getToolSupportsAutomate(tool) &&
+        Boolean(tool.operationConfig),
     );
   }, [toolRegistry, excludeTools]);
 

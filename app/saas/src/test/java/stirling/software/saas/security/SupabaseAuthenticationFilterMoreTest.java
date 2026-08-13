@@ -315,14 +315,13 @@ class SupabaseAuthenticationFilterMoreTest {
             local.setSupabaseId(supabaseId);
             local.setAuthenticationType(AuthenticationType.ANONYMOUS);
             when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
-            when(userService.saveUser(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(saasTeamService.ensurePersonalTeam(any(User.class))).thenReturn(new Team());
+            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            verify(userService).saveUser(any(User.class));
-            verify(saasTeamService).ensurePersonalTeam(any(User.class));
+            verify(saasTeamService).saveUserWithPersonalTeam(any(User.class));
             assertThat(local.getEmail()).isEqualTo("real@example.com");
             assertThat(local.getUsername()).isEqualTo("real@example.com");
             assertThat(local.getAuthenticationType())
@@ -342,8 +341,8 @@ class SupabaseAuthenticationFilterMoreTest {
             local.setSupabaseId(supabaseId);
             local.setAuthenticationType(AuthenticationType.ANONYMOUS);
             when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
-            when(userService.saveUser(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(saasTeamService.ensurePersonalTeam(any(User.class))).thenReturn(new Team());
+            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
@@ -365,7 +364,7 @@ class SupabaseAuthenticationFilterMoreTest {
             local.setSupabaseId(supabaseId);
             local.setAuthenticationType(AuthenticationType.ANONYMOUS);
             when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
-            when(userService.saveUser(any(User.class)))
+            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                     .thenThrow(new DataIntegrityViolationException("email exists"));
 
             bearer("tok");
@@ -489,12 +488,13 @@ class SupabaseAuthenticationFilterMoreTest {
             org.mockito.Mockito.doThrow(new DataIntegrityViolationException("dup"))
                     .when(supabaseUserService)
                     .createSupabaseUser(eq(supabaseId), any(), eq(false));
-            when(userService.saveUser(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            verify(userService, times(1)).saveUser(any(User.class));
+            verify(saasTeamService, times(1)).saveUserWithPersonalTeam(any(User.class));
             assertThat(SecurityContextHolder.getContext().getAuthentication())
                     .isInstanceOf(EnhancedJwtAuthenticationToken.class);
         }
@@ -516,7 +516,7 @@ class SupabaseAuthenticationFilterMoreTest {
             filter.doFilter(request, response, chain);
 
             assertThat(response.getStatus()).isEqualTo(401);
-            verify(userService, never()).saveUser(any());
+            verify(saasTeamService, never()).saveUserWithPersonalTeam(any());
         }
 
         @Test
@@ -533,13 +533,13 @@ class SupabaseAuthenticationFilterMoreTest {
             when(userService.findBySupabaseId(supabaseId))
                     .thenReturn(Optional.empty())
                     .thenReturn(Optional.of(winner));
-            when(userService.saveUser(any(User.class)))
+            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                     .thenThrow(new DataIntegrityViolationException("dup user"));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            // Race loser does not run first-time init (ensurePersonalTeam).
+            // The winner committed user and team together, so the loser just adopts its row.
             verify(saasTeamService, never()).ensurePersonalTeam(any());
             assertThat(SecurityContextHolder.getContext().getAuthentication())
                     .isInstanceOf(EnhancedJwtAuthenticationToken.class);
@@ -554,7 +554,7 @@ class SupabaseAuthenticationFilterMoreTest {
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, "lost@example.com", false));
             when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-            when(userService.saveUser(any(User.class)))
+            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                     .thenThrow(new DataIntegrityViolationException("dup user"));
 
             bearer("tok");
@@ -564,25 +564,99 @@ class SupabaseAuthenticationFilterMoreTest {
         }
 
         @Test
-        @DisplayName("personal team creation failure for a new user is swallowed")
-        void personalTeamFailureSwallowed() throws Exception {
+        @DisplayName("personal team creation failure fails the request, it is not swallowed")
+        void personalTeamFailureFailsAuth() throws Exception {
             UUID supabaseId = UUID.randomUUID();
             Jwt jwt = fullJwt(supabaseId, "team@example.com", false, "email");
             when(jwtDecoder.decode("tok")).thenReturn(jwt);
             when(supabaseUserService.getUser(supabaseId))
                     .thenReturn(supabaseUser(supabaseId, "team@example.com", false));
             when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-            when(userService.saveUser(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(saasTeamService.ensurePersonalTeam(any(User.class)))
+            when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                     .thenThrow(new IllegalStateException("team boom"));
 
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            // Auth still succeeds even though team creation failed.
-            assertThat(SecurityContextHolder.getContext().getAuthentication())
-                    .isInstanceOf(EnhancedJwtAuthenticationToken.class);
-            verify(userService, times(1)).saveUser(any(User.class));
+            // A teamless account has no portal access, so a failed provision must surface
+            // rather than admit a half-built user.
+            assertThat(response.getStatus()).isEqualTo(401);
+            assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("Existing accounts are never re-provisioned on the request path")
+    class ExistingAccountProvisioning {
+
+        private User existingWebUser(UUID supabaseId) {
+            User local = newUser("real@example.com");
+            local.setSupabaseId(supabaseId);
+            local.setAuthenticationType(AuthenticationType.WEB);
+            return local;
+        }
+
+        @Test
+        @DisplayName("a teamless account is left alone, not healed on every request")
+        void teamlessAccountIsNotHealed() throws Exception {
+            UUID supabaseId = UUID.randomUUID();
+            when(jwtDecoder.decode("tok"))
+                    .thenReturn(fullJwt(supabaseId, "real@example.com", false, "email"));
+            when(supabaseUserService.getUser(supabaseId))
+                    .thenReturn(supabaseUser(supabaseId, "real@example.com", false));
+
+            User local = existingWebUser(supabaseId);
+            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+
+            bearer("tok");
+            filter.doFilter(request, response, chain);
+
+            // Healing here would run per request with no mutual exclusion, so parallel
+            // requests would mint duplicate teams. Provisioning belongs to signup alone.
+            verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
+            verify(saasTeamService, never()).saveUserWithPersonalTeam(any(User.class));
+            assertThat(local.getTeam()).isNull();
+        }
+
+        @Test
+        @DisplayName("an account that already has a team is left alone")
+        void noOpWhenTeamPresent() throws Exception {
+            UUID supabaseId = UUID.randomUUID();
+            when(jwtDecoder.decode("tok"))
+                    .thenReturn(fullJwt(supabaseId, "real@example.com", false, "email"));
+            when(supabaseUserService.getUser(supabaseId))
+                    .thenReturn(supabaseUser(supabaseId, "real@example.com", false));
+
+            User local = existingWebUser(supabaseId);
+            Team existing = new Team();
+            local.setTeam(existing);
+            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+
+            bearer("tok");
+            filter.doFilter(request, response, chain);
+
+            verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
+            assertThat(local.getTeam()).isSameAs(existing);
+        }
+
+        @Test
+        @DisplayName("a guest session is never given a team")
+        void guestStaysTeamless() throws Exception {
+            UUID supabaseId = UUID.randomUUID();
+            when(jwtDecoder.decode("tok")).thenReturn(fullJwt(supabaseId, null, true, "email"));
+            when(supabaseUserService.getUser(supabaseId))
+                    .thenReturn(supabaseUser(supabaseId, null, true));
+
+            User local = newUser("anon_guest");
+            local.setSupabaseId(supabaseId);
+            local.setAuthenticationType(AuthenticationType.ANONYMOUS);
+            when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
+
+            bearer("tok");
+            filter.doFilter(request, response, chain);
+
+            verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
+            assertThat(local.getTeam()).isNull();
         }
     }
 }

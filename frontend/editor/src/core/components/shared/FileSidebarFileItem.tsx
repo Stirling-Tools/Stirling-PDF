@@ -9,6 +9,7 @@ import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import CloudDoneIcon from "@mui/icons-material/CloudDone";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import HistoryIcon from "@mui/icons-material/History";
 import type { FileId } from "@app/types/file";
@@ -33,14 +34,6 @@ export type DateGroup =
   | "thisWeek"
   | "thisMonth"
   | "older";
-
-export const DATE_GROUP_ORDER: DateGroup[] = [
-  "today",
-  "yesterday",
-  "thisWeek",
-  "thisMonth",
-  "older",
-];
 
 export function getDateGroup(lastModified: number | undefined): DateGroup {
   if (!lastModified) return "older";
@@ -171,11 +164,16 @@ export interface FileItemProps {
   onVersionHistory?: (fileId: FileId) => void;
   /** Whether this file has more than one version (drives the menu item). */
   hasVersionHistory?: boolean;
+  /** The stored bytes are gone (WebKit lost the blob's backing store). The row
+   *  says so instead of pretending the file can open. */
+  dataUnavailable?: boolean;
 }
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
 
-export function FileItem({
+// Memoized: sidebar rows bail out unless THEIR props change, so one file's
+// update (e.g. a new version landing) re-renders one row, not the whole list.
+export const FileItem = React.memo(function FileItem({
   fileId,
   name,
   size,
@@ -183,6 +181,7 @@ export function FileItem({
   isSelected,
   isActive,
   isViewedInViewer,
+  dataUnavailable,
   thumbnailUrl,
   onClick,
   onEyeClick,
@@ -300,6 +299,21 @@ export function FileItem({
                 </>
               )}
             </span>
+            {dataUnavailable && (
+              <Tooltip
+                label={t(
+                  "fileSidebar.fileItem.dataLostTooltip",
+                  "This browser lost this file's contents. Upload it again to keep working with it.",
+                )}
+                withArrow
+                position="top"
+              >
+                <span className="file-sidebar-datalost-badge" data-no-select>
+                  <ErrorOutlineIcon sx={{ fontSize: "0.85rem" }} />
+                  {t("fileSidebar.fileItem.dataLost", "Data lost")}
+                </span>
+              </Tooltip>
+            )}
             {isUploadedToCloud && (
               <Tooltip
                 label={t(
@@ -517,4 +531,4 @@ export function FileItem({
         )}
     </>
   );
-}
+});

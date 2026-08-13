@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,6 @@ import stirling.software.proprietary.policy.controller.ProcessingFolderControlle
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
-import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -78,16 +78,35 @@ public class PolicyOverviewService {
                 policy.name(),
                 policy.enabled(),
                 policy.enabled() ? "active" : "paused",
-                triggerSummary(policy.trigger()),
+                triggerSummary(policy),
                 sources,
                 steps,
-                outputSummary(policy.output()),
+                outputSummary(policy, sourceNames),
                 policy.owner());
     }
 
-    /** A null trigger is a manual-only policy; otherwise the trigger's type keys the summary. */
-    private static String triggerSummary(TriggerConfig trigger) {
-        return trigger == null ? "manual" : trigger.type();
+    /**
+     * A policy that delivers to sources shows those locations' display names, comma-joined (each
+     * falling back to its id if it's since been deleted or isn't visible); otherwise the inline
+     * output's type.
+     */
+    private static String outputSummary(Policy policy, Map<String, String> sourceNames) {
+        List<String> outputIds = policy.outputIds();
+        if (!outputIds.isEmpty()) {
+            return outputIds.stream()
+                    .map(id -> sourceNames.getOrDefault(id, id))
+                    .collect(Collectors.joining(", "));
+        }
+        return outputSummary(policy.output());
+    }
+
+    /**
+     * Summarise a policy's triggers for the overview row: "manual" when no input is triggered,
+     * otherwise the distinct trigger types across its inputs (e.g. "folder-watch, schedule").
+     */
+    private static String triggerSummary(Policy policy) {
+        List<String> types = policy.triggerTypes();
+        return types.isEmpty() ? "manual" : String.join(", ", types);
     }
 
     private static String outputSummary(OutputSpec output) {

@@ -48,20 +48,55 @@ jobs:
       proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Check for file changes
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: changes
         with:
           filters: .github/config/.files.yaml
 
-  build:
+  gradle-cache-prime:
+    name: Prime shared Gradle cache
     needs: [files-changed]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+      - name: Cache Gradle User Home
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
+            gradle-${{ runner.os }}-${{ runner.arch }}-
+      - name: Resolve backend dependencies
+        run: ./gradlew :stirling-pdf:classes -PnoSpotless --no-daemon
+        env:
+          STIRLING_FLAVOR: saas
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+  build:
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: read
       contents: read
@@ -76,7 +111,7 @@ jobs:
     # works after Hibernate's ddl-auto=update migrates the schema. Gated on
     # the `project` filter so doc-only PRs skip this ~5-minute job.
     if: needs.files-changed.outputs.project == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/db-migration-test.yml
@@ -84,7 +119,7 @@ jobs:
 
   check-generateOpenApiDocs:
     if: needs.files-changed.outputs.openapi == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/check-openapi.yml
@@ -99,6 +134,17 @@ jobs:
     uses: ./.github/workflows/frontend-validation.yml
     secrets: inherit
 
+  # Advisory: deliberately NOT in all-checks-passed. It reports on the stories a
+  # branch touches so a regression is visible in review, but a browser scan is
+  # too new here to block merges on. Promote it once its pass/fail proves stable.
+  frontend-a11y:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/frontend-a11y.yml
+    secrets: inherit
+
   playwright-e2e:
     if: needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed]
@@ -109,7 +155,7 @@ jobs:
 
   playwright-e2e-live:
     if: needs.files-changed.outputs.frontend == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/e2e-live.yml
@@ -117,7 +163,7 @@ jobs:
 
   playwright-e2e-enterprise:
     if: needs.files-changed.outputs.proprietary == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/build-enterprise.yml
@@ -125,7 +171,7 @@ jobs:
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
-    needs: [files-changed, build]
+    needs: [files-changed, build, gradle-cache-prime]
     permissions:
       contents: read
     uses: ./.github/workflows/check-licence.yml
@@ -133,7 +179,7 @@ jobs:
 
   docker-compose-tests:
     if: needs.files-changed.outputs.project == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: write
       contents: read
@@ -145,7 +191,7 @@ jobs:
 
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
-    needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
+    needs: [files-changed, build, check-generateOpenApiDocs, check-licence, gradle-cache-prime]
     permissions:
       contents: read
       packages: read
@@ -163,13 +209,14 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
-    # PR smoke build: Linux only (fastest + cheapest to compile), unsigned,
-    # deb-only, no AppImage. The full signed multi-OS matrix runs on release;
+    # PR smoke build: macOS + Windows (the platforms our developers use).
+    # sign: true only reaches macOS - tauri-build's per-platform gate keeps
+    # Windows/Linux signing on main, and an unsigned .dmg cannot be opened.
+    # The full signed multi-OS matrix runs on release;
     # nightly still warms the Rust cache with all-OS defaults.
     with:
-      platform: linux
-      sign: false
-      minimal: true
+      platform: windows-macos
+      sign: true
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'
@@ -187,7 +234,7 @@ jobs:
   # frontend filter, so a CSS-only PR does not pay for a backend build.
   generated-models:
     if: needs.files-changed.outputs.generated-models == 'true'
-    needs: [files-changed]
+    needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
       pull-requests: write
@@ -257,7 +304,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 

@@ -37,6 +37,7 @@ import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
@@ -224,12 +225,16 @@ public class ProcessingFolderController {
                         policyAccessGuard.ownerForNewPolicy(),
                         request.enabled() == null || request.enabled(),
                         // A disk directory is watched, so the folder reacts to arrivals on its own.
-                        // A null trigger would make it manual-only: the create-time backlog sweep
-                        // would run and nothing would ever process again. Storage-backed folders
-                        // stay manual until the storage arrival trigger exists — folder-watch only
-                        // supports directory sources.
-                        onDisk ? new TriggerConfig(WATCH_TRIGGER, Map.of()) : null,
-                        List.of(source.id()),
+                        // A null trigger would make the input manual-only: the create-time backlog
+                        // sweep would run and nothing would ever process again. Storage-backed
+                        // folders stay manual until the storage arrival trigger exists —
+                        // folder-watch only supports directory sources.
+                        List.of(
+                                new PipelineInput(
+                                        source.id(),
+                                        onDisk
+                                                ? new TriggerConfig(WATCH_TRIGGER, Map.of())
+                                                : null)),
                         request.steps() == null ? List.of() : request.steps(),
                         outputSpecFor(request, folder, diskOutputFolder),
                         policyAccessGuard.teamForNewPolicy());
@@ -337,7 +342,7 @@ public class ProcessingFolderController {
         User user = fileStorageService.requireAuthenticatedUser();
         Policy policy = requireOwn(id, user);
         policyStore.delete(policy.id());
-        policy.sourceIds().forEach(sourceStore::delete);
+        policy.inputs().stream().map(PipelineInput::sourceId).forEach(sourceStore::delete);
         processedLedger.clearPolicy(policy.id());
         policyTriggerManager.notifyPoliciesChanged();
         return ResponseEntity.noContent().build();
@@ -389,7 +394,7 @@ public class ProcessingFolderController {
 
     /** The pair's source id; the compose invariant is exactly one source per processing folder. */
     private static String soleSourceId(Policy policy) {
-        return policy.sourceIds().isEmpty() ? null : policy.sourceIds().get(0);
+        return policy.inputs().isEmpty() ? null : policy.inputs().get(0).sourceId();
     }
 
     /** Whether a policy record belongs to this surface (and so is hidden from the others). */

@@ -45,6 +45,12 @@ export interface ExecutableTool {
   subcategoryId: SubcategoryId;
   /** Endpoint resolved from default parameters, for display/inclusion. The stored step's endpoint is re-resolved from the configured parameters at serialization time. */
   endpoint: ToolEndpoint;
+  /**
+   * For a format-routed tool (one dynamic endpoint over a declared set, e.g. convert), the full set
+   * it may resolve to. A picker can then judge compatibility against any of them rather than the one
+   * representative `endpoint`. Absent for a single-endpoint tool.
+   */
+  endpoints?: readonly ToolEndpoint[];
   support: ToolStepSupport;
 }
 
@@ -138,9 +144,30 @@ export function stepRequiresUpload(step: WorkingToolStep): boolean {
 }
 
 /**
- * The tools that can be run as a backend operation step, sorted by name. Includes only automatable
- * tools whose endpoint resolves from defaults (so they can become a backend step); this drops
- * tools with no operationConfig and tools whose endpoint needs runtime input (e.g. convert).
+ * True if a step still needs the user to make a choice before it can run - the tool declares some
+ * of its parameters mandatory and this step has not filled them in yet.
+ *
+ * This asks the tool the same question its own Run button asks (`validateParams` is the predicate
+ * the tool passes `useBaseParameters` as `validateFn`), so a step is "configured" in a pipeline
+ * exactly when it would be runnable in the editor. Tools that declare no predicate run happily on
+ * their defaults, and an unknown step is nobody's to judge.
+ */
+export function stepNeedsConfiguring(
+  step: WorkingToolStep,
+  registry: Partial<ToolRegistry>,
+): boolean {
+  if (step.toolId === null) return false;
+  const config = registry[step.toolId]?.operationConfig;
+  if (!config?.validateParams) return false;
+  const merged = { ...(config.defaultParameters ?? {}), ...step.params };
+  return !config.validateParams(merged);
+}
+
+/**
+ * The tools that can be run as a backend operation step, sorted by name. Includes automatable tools
+ * whose endpoint resolves from defaults, plus format-routed tools (e.g. convert) whose endpoint only
+ * resolves once configured but that declare their routing set - represented by the first endpoint of
+ * that set. Drops tools with no operationConfig and no way to name a backend endpoint at all.
  */
 export function getExecutableTools(
   registry: Partial<ToolRegistry>,
@@ -150,7 +177,11 @@ export function getExecutableTools(
     if (!entry || !getToolSupportsAutomate(entry)) continue;
     const config = entry.operationConfig;
     if (!config) continue;
-    const endpoint = resolveEndpoint(config, config.defaultParameters ?? {});
+    // A configured endpoint from defaults, else the routing set's first member as a stand-in so a
+    // tool that only resolves once the user picks (convert's from/to) can still be offered.
+    const endpoint =
+      resolveEndpoint(config, config.defaultParameters ?? {}) ??
+      config.endpoints?.find(isToolEndpoint);
     if (!endpoint) continue;
     tools.push({
       toolId: id as ToolId,
@@ -158,6 +189,7 @@ export function getExecutableTools(
       icon: entry.icon,
       subcategoryId: entry.subcategoryId,
       endpoint,
+      endpoints: config.endpoints,
       support: classifyToolStepSupport(entry),
     });
   }
@@ -176,6 +208,27 @@ export function newWorkingToolStep(
     params: { ...(config?.defaultParameters ?? {}) },
     support: tool.support,
   };
+}
+
+/**
+ * Apply edited parameters to a working step, re-resolving its endpoint from them. A format-routed
+ * tool changes which endpoint it targets as its routing parameters change (convert's from/to,
+ * split's method), so the working step's `operation` must track the params to keep live chain
+ * validation and the carried output format honest - not just at serialization time. The operation
+ * is left unchanged when the new params don't resolve one, or the step maps to no known tool.
+ */
+export function updateWorkingStepParams(
+  step: WorkingToolStep,
+  params: ErasedToolParams,
+  registry: Partial<ToolRegistry>,
+): WorkingToolStep {
+  const next = { ...step, params };
+  if (next.toolId === null) return next;
+  const config = registry[next.toolId]?.operationConfig;
+  if (!config) return next;
+  const merged = { ...(config.defaultParameters ?? {}), ...params };
+  const operation = resolveEndpoint(config, merged);
+  return operation ? { ...next, operation } : next;
 }
 
 /** Serialize a working step into the backend step contract (endpoint + backend parameters). */
@@ -206,11 +259,13 @@ function findToolByEndpoint(
   step: ToolApiStep,
   registry: Partial<ToolRegistry>,
 ): [ToolId, ToolRegistryEntry] | undefined {
+  const staticMatches: [ToolId, ToolRegistryEntry][] = [];
   let dynamic: [ToolId, ToolRegistryEntry] | undefined;
   for (const [id, entry] of Object.entries(registry)) {
     const endpoint = entry?.operationConfig?.endpoint;
     if (typeof endpoint === "string") {
-      if (endpoint === step.operation) return [id as ToolId, entry];
+      if (endpoint === step.operation)
+        staticMatches.push([id as ToolId, entry]);
     } else if (typeof endpoint === "function" && !dynamic) {
       const declared = entry?.operationConfig?.endpoints;
       const matched = declared
@@ -219,7 +274,31 @@ function findToolByEndpoint(
       if (matched) dynamic = [id as ToolId, entry];
     }
   }
+  if (staticMatches.length > 0) {
+    return disambiguateStaticMatches(staticMatches, step.parameters);
+  }
   return dynamic;
+}
+
+/**
+ * Most endpoints belong to one tool, so the single match is returned unchanged. When several
+ * share an endpoint (Add Password and its permissions-only alias Change Permissions), prefer the
+ * specialised tool that claims the stored parameters; otherwise fall back to the general owner
+ * that declares no such claim.
+ */
+function disambiguateStaticMatches(
+  matches: [ToolId, ToolRegistryEntry][],
+  parameters: Record<string, unknown>,
+): [ToolId, ToolRegistryEntry] {
+  if (matches.length === 1) return matches[0];
+  const claimed = matches.find(([, entry]) =>
+    entry.operationConfig?.claimsStoredStep?.(parameters),
+  );
+  if (claimed) return claimed;
+  const general = matches.find(
+    ([, entry]) => !entry.operationConfig?.claimsStoredStep,
+  );
+  return general ?? matches[0];
 }
 
 /** A stored step kept verbatim because its endpoint maps to no known tool. */
@@ -245,12 +324,22 @@ export function deserializeToolStep(
   if (!match) return unmappedStep(step);
   const [toolId, entry] = match;
   const config = entry.operationConfig;
-  const params: ErasedToolParams = config?.fromApiParams
-    ? {
-        ...(config.defaultParameters ?? {}),
-        ...config.fromApiParams(step.parameters as never),
-      }
-    : { ...(config?.defaultParameters ?? {}) };
+  // Mappers echo missing stored fields as explicit `undefined`, which would
+  // clobber the default underneath; strip those so defaults always win.
+  const mapped = config?.fromApiParams
+    ? Object.fromEntries(
+        Object.entries(
+          config.fromApiParams(step.parameters as never) as Record<
+            string,
+            unknown
+          >,
+        ).filter(([, value]) => value !== undefined),
+      )
+    : {};
+  const params: ErasedToolParams = {
+    ...(config?.defaultParameters ?? {}),
+    ...mapped,
+  } as ErasedToolParams;
   // Validate against the generated endpoint set instead of casting the matched string.
   const operation =
     resolveEndpoint(config, params) ??

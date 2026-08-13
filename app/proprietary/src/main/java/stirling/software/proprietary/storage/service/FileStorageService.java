@@ -32,6 +32,8 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.storage.crypto.StorageEncryptionErrors;
+import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.FileShareAccess;
 import stirling.software.proprietary.storage.model.FileShareAccessType;
@@ -143,6 +145,7 @@ public class FileStorageService {
             storedFile.setContentType(mainObject.getContentType());
             storedFile.setSizeBytes(mainObject.getSizeBytes());
             storedFile.setStorageKey(mainObject.getStorageKey());
+            storedFile.setEncryptionKeyId(mainObject.getEncryptionKeyId());
             applyHistoryMetadata(storedFile, historyObject);
             applyAuditMetadata(storedFile, auditObject);
             try {
@@ -207,6 +210,7 @@ public class FileStorageService {
             existing.setContentType(mainObject.getContentType());
             existing.setSizeBytes(mainObject.getSizeBytes());
             existing.setStorageKey(mainObject.getStorageKey());
+            existing.setEncryptionKeyId(mainObject.getEncryptionKeyId());
             if (historyObject != null) {
                 applyHistoryMetadata(existing, historyObject);
             }
@@ -492,6 +496,12 @@ public class FileStorageService {
         ensureStorageEnabled();
         try {
             return storageProvider.load(file.getStorageKey());
+        } catch (StorageKeyRevokedException e) {
+            log.warn(
+                    "Access to stored file {} denied: {}",
+                    file != null ? file.getId() : null,
+                    e.getMessage());
+            throw StorageEncryptionErrors.revoked(e);
         } catch (IOException e) {
             log.error(
                     "Failed to load stored file {} (key: {})",

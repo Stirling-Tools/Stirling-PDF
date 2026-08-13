@@ -100,6 +100,7 @@
     color-mix(in srgb, var(--c-border-subtle) 60%, transparent);
   margin-left: 0.875rem;
   padding-left: 0.25rem;
+  animation: layer-fade-in 0.15s ease;
 }
 
 /* Footer with Apply button */
@@ -131,10 +132,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.layer-item__children {
-  animation: layer-fade-in 0.15s ease;
 }
 
 /* Accessibility & Reduced Motion */
