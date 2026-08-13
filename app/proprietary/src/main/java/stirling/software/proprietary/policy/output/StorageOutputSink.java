@@ -21,6 +21,8 @@ import stirling.software.proprietary.policy.input.StoredFileBacked;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.model.Folder;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.FolderRepository;
@@ -42,7 +44,8 @@ import stirling.software.proprietary.storage.service.FileStorageService;
  * </ul>
  *
  * <p>Ownership follows the input: outputs are stored as the input file's owner, within their quota.
- * A run with no storage-backed input (nothing to anchor ownership) is refused.
+ * A run fed from outside storage — a directory on disk — has no such anchor, so it is stored as the
+ * owner of the {@code folderId} its outputs are placed in, and must name one.
  */
 @Slf4j
 @Service
@@ -92,9 +95,13 @@ public class StorageOutputSink implements PolicyOutputSink {
     public List<ResultFile> deliver(
             OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
         StoredFile origin = originOf(delivery);
+        UUID folderId = folderIdOf(spec);
+        User owner = ownerFor(origin, folderId);
         List<ResultFile> results = new ArrayList<>();
 
-        boolean replaceInPlace = NEW_VERSION.equals(modeOf(spec)) && outputs.size() == 1;
+        // Replacing in place needs a stored row to replace, which a run fed from disk has not got.
+        boolean replaceInPlace =
+                origin != null && NEW_VERSION.equals(modeOf(spec)) && outputs.size() == 1;
         for (int i = 0; i < outputs.size(); i++) {
             Resource output = outputs.get(i);
             StoredFile stored;
@@ -105,7 +112,7 @@ public class StorageOutputSink implements PolicyOutputSink {
                                 origin,
                                 new ResourceMultipartFile(output, origin.getOriginalFilename()));
             } else {
-                stored = storeIntoFolder(delivery, output, i, origin, folderIdOf(spec));
+                stored = storeIntoFolder(delivery, output, i, owner, origin, folderId);
             }
             results.add(
                     ResultFile.builder()
@@ -157,18 +164,22 @@ public class StorageOutputSink implements PolicyOutputSink {
      * folder sink's stage-record-rename order.
      */
     private StoredFile storeIntoFolder(
-            OutputDelivery delivery, Resource output, int index, StoredFile origin, UUID folderId)
+            OutputDelivery delivery,
+            Resource output,
+            int index,
+            User owner,
+            StoredFile origin,
+            UUID folderId)
             throws IOException {
         String name = OutputNames.safeName(output.getFilename(), index);
         StoredFile stored =
-                fileStorageService.storeFile(
-                        origin.getOwner(), new ResourceMultipartFile(output, name));
+                fileStorageService.storeFile(owner, new ResourceMultipartFile(output, name));
         // Read the origin's placement as a plain id: it is detached here, so touching its lazy
         // folder association would fail.
-        UUID targetFolder =
-                folderId != null
-                        ? folderId
-                        : storedFileRepository.findFolderIdByFileId(origin.getId()).orElse(null);
+        UUID targetFolder = folderId;
+        if (targetFolder == null && origin != null) {
+            targetFolder = storedFileRepository.findFolderIdByFileId(origin.getId()).orElse(null);
+        }
         if (targetFolder == null) {
             return stored;
         }
@@ -185,18 +196,37 @@ public class StorageOutputSink implements PolicyOutputSink {
         return storedFileRepository.save(stored);
     }
 
-    /** The stored file the run's primary input came from; storage outputs are anchored to it. */
+    /**
+     * The stored file the run's primary input came from, or null when the input came from outside
+     * storage (a directory on disk). Storage outputs anchor to it whenever it exists.
+     */
     private StoredFile originOf(OutputDelivery delivery) {
         return delivery.inputs().primary().stream()
                 .filter(StoredFileBacked.class::isInstance)
                 .map(resource -> ((StoredFileBacked) resource).storedFileId())
                 .flatMap(id -> storedFileRepository.findById(id).stream())
                 .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Who the outputs are stored as, and therefore whose quota they count against. A storage-backed
+     * run follows its input's owner. A run fed from disk has nobody to follow, so it takes the
+     * owner of the folder it is writing into — which is why such a policy must name one.
+     */
+    private User ownerFor(StoredFile origin, UUID folderId) {
+        if (origin != null) {
+            return origin.getOwner();
+        }
+        if (folderId == null) {
+            throw new IllegalStateException(
+                    "storage output from a non-storage input needs a folderId to anchor ownership");
+        }
+        return folderRepository
+                .findById(folderId)
+                .map(Folder::getOwner)
                 .orElseThrow(
-                        () ->
-                                new IllegalStateException(
-                                        "storage output needs a storage-backed input to anchor"
-                                                + " ownership"));
+                        () -> new IllegalStateException("unknown storage folder: " + folderId));
     }
 
     private static String modeOf(OutputSpec spec) {

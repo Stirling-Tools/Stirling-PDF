@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -76,9 +77,6 @@ public class ProcessingFolderController {
 
     /** A processing folder over a directory on the server's disk (desktop / self-hosted). */
     static final String DISK_SOURCE_TYPE = FolderAccessGuard.FOLDER_TYPE;
-
-    /** Where a disk-backed folder's results land, relative to the directory it watches. */
-    static final String DISK_OUTPUT_SUBDIR = "Stirling Processed";
 
     /**
      * How many files one sweep of a disk-backed folder takes on. A Downloads directory can hold
@@ -204,6 +202,8 @@ public class ProcessingFolderController {
         boolean isCreate = request.id() == null || request.id().isBlank();
         Policy existing = isCreate ? null : requireOwn(request.id(), user);
         String name = onDisk ? diskFolderName(request.directory()) : folder.getName();
+        Folder diskOutputFolder =
+                onDisk ? diskOutputFolderFor(existing, request.directory(), user) : null;
 
         Source source =
                 sourceStore.save(
@@ -231,7 +231,7 @@ public class ProcessingFolderController {
                         onDisk ? new TriggerConfig(WATCH_TRIGGER, Map.of()) : null,
                         List.of(source.id()),
                         request.steps() == null ? List.of() : request.steps(),
-                        outputSpecFor(request, folder),
+                        outputSpecFor(request, folder, diskOutputFolder),
                         policyAccessGuard.teamForNewPolicy());
         try {
             policyValidator.validate(policy);
@@ -426,13 +426,21 @@ public class ProcessingFolderController {
     }
 
     /**
-     * Where results go. A storage-backed folder writes back into app storage. A disk-backed one
-     * writes to a subdirectory of the directory it watches, so the user's own files are never
-     * rewritten and the results land next to them; the subdirectory is outside the (non-recursive)
-     * scan, and the folder sink records each output in the ledger, so results are never
-     * re-ingested.
+     * Where results go. Both kinds write into app storage, so a run's output is a first-class
+     * Stirling file the user can open and run tools on.
+     *
+     * <p>A storage-backed folder writes back into itself. A disk-backed one writes into a storage
+     * folder created to receive its results — the watched directory holds the user's own files and
+     * is never written to, and storage is the only place an output is kept, so there is no second
+     * copy to diverge from. Outputs are recorded in the ledger before they become visible, so the
+     * producing policy can never claim its own output as new work.
+     *
+     * <p>TEMPORARY: results being separated from the directory they came from is a stopgap until
+     * files carry a link to their location on disk. Once that lands, the results belong in the
+     * mounted view alongside their originals, and this branch collapses back into the one above.
      */
-    private OutputSpec outputSpecFor(SaveProcessingFolderRequest request, Folder folder) {
+    private OutputSpec outputSpecFor(
+            SaveProcessingFolderRequest request, Folder folder, Folder diskOutputFolder) {
         Map<String, Object> options =
                 new HashMap<>(request.output() == null ? Map.of() : request.output());
         options.put(SURFACE_OPTION, SURFACE);
@@ -440,10 +448,47 @@ public class ProcessingFolderController {
             options.putIfAbsent("folderId", folder.getId().toString());
             return new OutputSpec("storage", options);
         }
-        options.put(
-                "directory",
-                Path.of(request.directory().trim()).resolve(DISK_OUTPUT_SUBDIR).toString());
-        return new OutputSpec("folder", options);
+        options.put("folderId", diskOutputFolder.getId().toString());
+        // Nothing to version: the input is a file on disk with no stored row behind it, so each
+        // result has to land as a new file rather than replacing something.
+        options.put("mode", "new_file");
+        return new OutputSpec("storage", options);
+    }
+
+    /**
+     * The storage folder a disk-backed processing folder delivers its results into, created on
+     * first save and reused afterwards. Named after the directory being watched, since that is what
+     * the user is looking for when they go hunting for the results.
+     */
+    private Folder diskOutputFolderFor(Policy existing, String directory, User user) {
+        UUID reused = storageFolderIdOf(existing);
+        if (reused != null) {
+            Optional<Folder> found = folderRepository.findById(reused);
+            if (found.isPresent()) {
+                return found.get();
+            }
+        }
+        Folder created = new Folder();
+        created.setId(UUID.randomUUID());
+        created.setOwner(user);
+        created.setName(diskFolderName(directory));
+        return folderRepository.saveAndFlush(created);
+    }
+
+    /** The storage folder a policy already delivers into, or null if it has none. */
+    private static UUID storageFolderIdOf(Policy policy) {
+        if (policy == null || policy.output() == null) {
+            return null;
+        }
+        Object raw = policy.output().options().get("folderId");
+        if (raw == null || String.valueOf(raw).isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(String.valueOf(raw));
+        } catch (IllegalArgumentException notAnId) {
+            return null;
+        }
     }
 
     private static ProcessingFolderView toView(Policy policy) {

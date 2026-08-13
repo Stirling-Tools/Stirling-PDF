@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -90,8 +91,26 @@ class ProcessingFolderControllerTest {
         folder.setOwner(user);
 
         lenient().when(fileStorageService.requireAuthenticatedUser()).thenReturn(user);
-        lenient().when(folderRepository.findById(FOLDER_ID)).thenReturn(Optional.of(folder));
-        lenient().when(folderRepository.existsById(FOLDER_ID)).thenReturn(true);
+        // A disk-backed folder creates a storage folder to deliver its results into, then looks it
+        // up again on the next save. The double has to remember what it stored for that second
+        // lookup to find anything — otherwise every save mints a fresh folder.
+        Map<UUID, Folder> folders = new HashMap<>();
+        folders.put(FOLDER_ID, folder);
+        lenient()
+                .when(folderRepository.saveAndFlush(any(Folder.class)))
+                .thenAnswer(
+                        invocation -> {
+                            Folder saved = invocation.getArgument(0);
+                            folders.put(saved.getId(), saved);
+                            return saved;
+                        });
+        lenient()
+                .when(folderRepository.findById(any(UUID.class)))
+                .thenAnswer(
+                        invocation -> Optional.ofNullable(folders.get(invocation.getArgument(0))));
+        lenient()
+                .when(folderRepository.existsById(any(UUID.class)))
+                .thenAnswer(invocation -> folders.containsKey(invocation.getArgument(0)));
         lenient().when(userService.getCurrentUsername()).thenReturn("reece");
         lenient().when(policyManagementAuthority.currentUserTeamId()).thenReturn(3L);
         lenient()
@@ -187,6 +206,77 @@ class ProcessingFolderControllerTest {
         // Never "consume": the directory is the user's own and must stay intact.
         assertThat(source.options()).containsEntry("mode", "track");
         assertThat(source.options()).containsEntry("limit", 100);
+    }
+
+    @Test
+    void aDiskFolderDeliversItsResultsIntoAppStorage() {
+        var view =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        null,
+                                        "/tmp/Downloads",
+                                        true,
+                                        List.of(
+                                                new PipelineStep(
+                                                        "/api/v1/misc/flatten",
+                                                        Map.of("flattenOnlyForms", false),
+                                                        Map.of())),
+                                        Map.of()))
+                        .getBody();
+
+        Policy stored = policyStore.get(view.id()).orElseThrow();
+        // Results are Stirling files, not a "Stirling Processed" directory the user has to go
+        // find in their file explorer.
+        assertThat(stored.output().type()).isEqualTo("storage");
+        assertThat(stored.output().options()).doesNotContainKey("directory");
+        // Nothing to version: the input is a file on disk with no stored row behind it.
+        assertThat(stored.output().options()).containsEntry("mode", "new_file");
+        // The folder results land in has to be named, since it is also what the sink reads the
+        // owner from — a disk-fed run has no input file to inherit ownership from.
+        assertThat(stored.output().options().get("folderId")).isNotNull();
+    }
+
+    @Test
+    void updatingADiskFolderKeepsDeliveringIntoTheSameStorageFolder() {
+        var created =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        null,
+                                        "/tmp/Downloads",
+                                        true,
+                                        List.of(
+                                                new PipelineStep(
+                                                        "/api/v1/misc/flatten",
+                                                        Map.of("flattenOnlyForms", false),
+                                                        Map.of())),
+                                        Map.of()))
+                        .getBody();
+        Object first =
+                policyStore.get(created.id()).orElseThrow().output().options().get("folderId");
+
+        var updated =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        created.id(),
+                                        null,
+                                        "/tmp/Downloads",
+                                        true,
+                                        List.of(
+                                                new PipelineStep(
+                                                        "/api/v1/misc/flatten",
+                                                        Map.of("flattenOnlyForms", true),
+                                                        Map.of())),
+                                        Map.of()))
+                        .getBody();
+
+        // A second folder per save would scatter one folder's results across many.
+        assertThat(policyStore.get(updated.id()).orElseThrow().output().options())
+                .containsEntry("folderId", first);
     }
 
     @Test
