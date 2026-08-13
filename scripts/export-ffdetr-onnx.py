@@ -56,9 +56,7 @@ def fetch_checkpoint(dest: Path) -> Path:
 
     actual = sha256_of(dest)
     if actual != CHECKPOINT_SHA256:
-        raise SystemExit(
-            f"checkpoint sha256 mismatch\n  expected {CHECKPOINT_SHA256}\n  actual   {actual}"
-        )
+        raise SystemExit(f"checkpoint sha256 mismatch\n  expected {CHECKPOINT_SHA256}\n  actual   {actual}")
     print(f"checkpoint verified ({dest.stat().st_size / 1e6:.1f} MB)")
     return dest
 
@@ -111,9 +109,7 @@ def verify(model: Path) -> None:
     if names != ["dets", "labels"]:
         raise SystemExit(f"unexpected output names {names}; the decoder binds by name")
 
-    outputs = session.run(
-        None, {session.get_inputs()[0].name: np.zeros((1, 3, INPUT_SIZE, INPUT_SIZE), np.float32)}
-    )
+    outputs = session.run(None, {session.get_inputs()[0].name: np.zeros((1, 3, INPUT_SIZE, INPUT_SIZE), np.float32)})
     for name, value in zip(names, outputs):
         if np.isnan(value).any():
             raise SystemExit(f"output {name} contains NaN")
