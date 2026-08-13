@@ -7817,7 +7817,6 @@ addAnother = "Add another"
 availableHeading = "Available"
 comingSoonHeading = "Coming soon"
 connect = "Connect"
-connectedHeading = "Connected"
 connectionCount_one = "{{count}} connection"
 connectionCount_other = "{{count}} connections"
 customApi = "Custom API"
@@ -7834,6 +7833,10 @@ notify = "Notify"
 security = "Security"
 signing = "Signing"
 storage = "Storage"
+
+[portal.integrations.noResults]
+description = "No integrations match your filters. Try a different category or search."
+title = "No matches"
 
 [portal.integrations.status]
 connected = "Connected"
