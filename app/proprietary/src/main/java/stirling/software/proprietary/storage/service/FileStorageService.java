@@ -40,7 +40,6 @@ import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.FileShareAccess;
 import stirling.software.proprietary.storage.model.FileShareAccessType;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
-import stirling.software.proprietary.storage.model.StorageCleanupEntry;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.model.api.ShareLinkAccessResponse;
 import stirling.software.proprietary.storage.model.api.ShareLinkMetadataResponse;
@@ -51,7 +50,6 @@ import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
-import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
 @Service
@@ -71,7 +69,7 @@ public class FileStorageService {
     private final ApplicationProperties applicationProperties;
     private final StorageProvider storageProvider;
     private final Optional<EmailService> emailService;
-    private final StorageCleanupEntryRepository storageCleanupEntryRepository;
+    private final StorageCleanupQueue storageCleanupQueue;
 
     public void ensureStorageEnabled() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
@@ -1230,9 +1228,17 @@ public class FileStorageService {
             storageProvider.delete(storageKey);
         } catch (IOException e) {
             log.warn("Failed to delete storage key {}. Scheduling cleanup.", storageKey, e);
-            StorageCleanupEntry entry = new StorageCleanupEntry();
-            entry.setStorageKey(storageKey);
-            storageCleanupEntryRepository.save(entry);
+            scheduleCleanup(storageKey);
+        }
+    }
+
+    // Reached from afterCommit, so a failure here must not turn an already-committed request into
+    // an error; the blob is then orphaned with only this log to find it by.
+    private void scheduleCleanup(String storageKey) {
+        try {
+            storageCleanupQueue.enqueue(storageKey);
+        } catch (RuntimeException e) {
+            log.error("Could not schedule cleanup for storage key {}", storageKey, e);
         }
     }
 
