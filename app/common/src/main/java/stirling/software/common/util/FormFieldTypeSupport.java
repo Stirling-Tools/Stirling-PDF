@@ -136,7 +136,7 @@ public enum FormFieldTypeSupport {
                     return;
                 }
 
-                PDAnnotationWidget widget = checkBox.getWidgets().get(0);
+                PDAnnotationWidget widget = checkBox.getWidgets().getFirst();
 
                 PDAppearanceCharacteristicsDictionary appearanceChars =
                         widget.getAppearanceCharacteristics();
