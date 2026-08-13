@@ -8,12 +8,16 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +32,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.pdf.parser.TableExtractionService;
@@ -215,6 +220,83 @@ class ExtractCSVControllerMoreTest {
         // QuoteMode.ALL wraps every field in double quotes.
         assertThat(body).contains("\"x\"").contains("\"y\"");
         assertThat(body.getBytes(StandardCharsets.UTF_8)).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("leaves the upload readable so the billing meter can still page-count it")
+    void leavesUploadReadableForBillingMeter() throws Exception {
+        byte[] pdfBytes = fivePagePdf();
+        Path backing = baseTmpDir.resolve("upload.pdf");
+        Files.write(backing, pdfBytes);
+        DiskBackedMultipartFile upload = new DiskBackedMultipartFile(backing, pdfBytes.length);
+
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(upload);
+        request.setPageNumbers("all");
+
+        when(pdfDocumentFactory.load(any(File.class))).thenReturn(docWithPages(5));
+        when(tableExtractionService.extract(any(), anyCollection(), any())).thenReturn(List.of());
+
+        controller.pdfToCsv(request);
+
+        // InstanceEntitlementInterceptor meters after the handler by re-reading the upload; a
+        // handler that moved it away zeroes the page axis and drops billing dedup.
+        try (InputStream metered = upload.getInputStream();
+                PDDocument counted = Loader.loadPDF(metered.readAllBytes())) {
+            assertThat(counted.getNumberOfPages()).isEqualTo(5);
+        }
+    }
+
+    private static byte[] fivePagePdf() throws Exception {
+        try (PDDocument doc = docWithPages(5);
+                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+            doc.save(out);
+            return out.toByteArray();
+        }
+    }
+
+    /** Servlet-container upload semantics: {@code transferTo} moves the backing file away. */
+    private record DiskBackedMultipartFile(Path backing, long size) implements MultipartFile {
+
+        @Override
+        public String getName() {
+            return "fileInput";
+        }
+
+        @Override
+        public String getOriginalFilename() {
+            return "upload.pdf";
+        }
+
+        @Override
+        public String getContentType() {
+            return MediaType.APPLICATION_PDF_VALUE;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return size == 0;
+        }
+
+        @Override
+        public long getSize() {
+            return size;
+        }
+
+        @Override
+        public byte[] getBytes() throws java.io.IOException {
+            return Files.readAllBytes(backing);
+        }
+
+        @Override
+        public InputStream getInputStream() throws java.io.IOException {
+            return Files.newInputStream(backing);
+        }
+
+        @Override
+        public void transferTo(File dest) throws java.io.IOException {
+            Files.move(backing, dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     @Test

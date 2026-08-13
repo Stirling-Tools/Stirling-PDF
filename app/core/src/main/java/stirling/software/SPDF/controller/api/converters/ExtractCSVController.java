@@ -1,8 +1,11 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -71,7 +74,11 @@ public class ExtractCSVController {
 
         // The word-grid fallback reads the PDF from disk, so keep a copy for the whole request.
         try (TempFile tempInput = new TempFile(tempFileManager, ".pdf")) {
-            request.getFileInput().transferTo(tempInput.getFile());
+            // Copy, never transferTo: that moves the upload away and the billing meter, which runs
+            // after this handler, would then see no file to page-count or fingerprint.
+            try (InputStream in = request.getFileInput().getInputStream()) {
+                Files.copy(in, tempInput.getPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
 
             try (PDDocument document = pdfDocumentFactory.load(tempInput.getFile())) {
                 List<Integer> pages = request.getPageNumbersList(document, true);
