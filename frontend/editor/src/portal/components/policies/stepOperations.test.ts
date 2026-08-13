@@ -231,9 +231,8 @@ describe("the Cloudmersive scan gate", () => {
 
 describe("the n8n operations", () => {
   it("covers each of the engine's response behaviours exactly once", () => {
-    // The reason n8n has four entries where Zapier has one: an n8n Webhook node can reply, so it
-    // reaches replace and requireTrue as well as report. If a refactor collapsed these onto the
-    // notify() helper the extra three would silently become fire-and-forget notifications.
+    // A Webhook node can reply, so n8n reaches replace and requireTrue as well as report;
+    // collapsed onto notify() the extra three would silently become fire-and-forget.
     const shape = (id: string) => {
       const params = buildStepParameters(operationById(id)!, "1", {
         message: "x",

@@ -83,12 +83,8 @@ export interface OperationCall {
   bodyTemplate?: string;
   /** False for notify-style calls that send facts rather than the document. */
   includeFile?: boolean;
-  /**
-   * Send the whole fact context alongside the document — a `stirlingContext` part in multipart,
-   * the context merged into the body in JSON. For a workflow engine on the other end this is the
-   * difference between receiving an anonymous file and being able to branch on which policy sent
-   * it; vendors with a fixed API have no field for it, so it stays off by default.
-   */
+  /** Send the fact context beside the document so the receiver can branch on the run.
+   * Off by default: a vendor with a fixed API has no field for it. */
   includeContext?: boolean;
 }
 
@@ -200,8 +196,8 @@ function n8nOperations(): StepOperation[] {
   });
 
   return [
-    // Facts only. The same job as zapierNotify, but structured rather than one text blob, because
-    // an n8n workflow branches on fields and would otherwise have to parse the sentence back apart.
+    // Facts only, structured rather than one text blob: a workflow branches on
+    // fields instead of parsing a sentence back apart.
     entry(
       "n8nNotify",
       {
@@ -241,10 +237,8 @@ function n8nOperations(): StepOperation[] {
       },
     ),
 
-    // The round trip: n8n returns a file and it replaces the one in the pipeline, which turns a
-    // workflow into a processing step. Needs the Webhook node set to respond via "Respond to
-    // Webhook" - on the default "Immediately" it acknowledges instead, and the acknowledgement
-    // would be what replaced the document.
+    // The round trip: the returned file replaces the one in the pipeline. Needs the Webhook node
+    // set to "Respond to Webhook" - on "Immediately" its acknowledgement would replace the document.
     entry(
       "n8nTransform",
       {
@@ -643,11 +637,8 @@ export const STEP_OPERATIONS: StepOperation[] = [
   ]),
 
   // ---- n8n: the one vendor here that can answer back ---------------------------------------------
-  // A Zapier catch hook swallows whatever it is sent and replies with an acknowledgement, so the
-  // only honest operation is "notify". An n8n Webhook node takes binary and, set to respond via the
-  // "Respond to Webhook" node, returns whatever the workflow produces. That covers the three modes
-  // the step engine already has - report, replace and a `requireTrue` verdict - so n8n gets an
-  // operation for each rather than one notify like the rest of this section.
+  // A Webhook node takes binary and can return what the workflow produces, so n8n reaches all three
+  // engine modes - report, replace and a `requireTrue` verdict - and gets an operation for each.
   ...n8nOperations(),
 
   {

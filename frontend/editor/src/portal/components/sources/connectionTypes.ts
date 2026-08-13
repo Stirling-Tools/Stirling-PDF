@@ -496,12 +496,8 @@ const field = {
   }),
 };
 
-/**
- * The authentication an n8n Webhook node can be set to, and nothing else: the node offers None,
- * Basic Auth and Header Auth. Unlike the other webhook vendors this is the operator's choice
- * rather than a fixed vendor mechanic, so it is asked for instead of baked into the preset —
- * `buildConnectionConfig` applies field values over `presetConfig`, so answering here wins.
- */
+/** The three modes an n8n Webhook node can be set to, asked for rather than baked into the preset
+ * because it is the operator's choice; field values apply over `presetConfig`, so the answer wins. */
 const N8N_AUTH_FIELDS: ConnectionFieldDef[] = [
   {
     key: "authType",
@@ -747,9 +743,8 @@ const API_PRESETS: CreatableConnectionType[] = [
     searchTerms: ["make", "automation", "workflow", "trigger", "no-code"],
     identifyHosts: ["zapier.com"],
   }),
-  // n8n is usually self-hosted, so unlike Zapier there is no global host to bake in and the
-  // Webhook node's own authentication is the operator's choice. Its three options are mirrored
-  // exactly; offering BEARER or TOKEN_LOGIN here would be auth the node cannot be configured for.
+  // Usually self-hosted, so there is no global host to bake in. The node's three auth options are
+  // mirrored exactly; BEARER or TOKEN_LOGIN would be auth it cannot be configured for.
   apiPreset({
     id: "n8n",
     category: "notify",
