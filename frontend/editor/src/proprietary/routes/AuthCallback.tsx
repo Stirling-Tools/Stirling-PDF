@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   consumePostLoginRedirectPath,
+  consumeSsoFlowMarker,
   springAuth,
 } from "@app/auth/spring/springAuthClient";
 import { markLoginLandingPending } from "@app/utils/loginLanding";
@@ -55,6 +56,7 @@ export default function AuthCallback() {
       try {
         const hash = window.location.hash.substring(1);
         const token = new URLSearchParams(hash).get("access_token");
+        const ssoFlowStarted = consumeSsoFlowMarker();
 
         if (!token) {
           console.error(
@@ -66,6 +68,24 @@ export default function AuthCallback() {
               error: i18n.t(
                 "auth.callback.missingToken",
                 "OAuth login failed - no token received.",
+              ),
+            },
+          });
+          return;
+        }
+
+        // Login CSRF: a callback this browser never started must not replace an
+        // existing session. First logins (no session yet) are left working.
+        if (!ssoFlowStarted && localStorage.getItem("stirling_jwt")) {
+          console.warn(
+            `[AuthCallback] Ignoring unsolicited callback token while a session is active (${elapsed()})`,
+          );
+          navigate("/login", {
+            replace: true,
+            state: {
+              error: i18n.t(
+                "auth.callback.unsolicited",
+                "Login could not be completed because it was not started from this browser. Please sign in again.",
               ),
             },
           });

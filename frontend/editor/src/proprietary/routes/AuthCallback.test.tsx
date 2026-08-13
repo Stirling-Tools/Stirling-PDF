@@ -4,6 +4,8 @@ import { BrowserRouter } from "react-router-dom";
 import AuthCallback from "@app/routes/AuthCallback";
 import {
   POST_LOGIN_REDIRECT_STORAGE_KEY,
+  SSO_FLOW_STORAGE_KEY,
+  markSsoFlowStarted,
   springAuth,
 } from "@app/auth/spring/springAuthClient";
 import { expectConsole } from "@app/tests/failOnConsole";
@@ -237,6 +239,106 @@ describe("AuthCallback", () => {
       expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
     });
     expect(sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("should refuse an unsolicited fragment token when a session already exists", async () => {
+    expectConsole.warn(
+      /\[AuthCallback\] Ignoring unsolicited callback token while a session is active/,
+    );
+    // No SSO flow marker: this browser never started a login.
+    localStorage.setItem("stirling_jwt", "victim-token");
+    window.location.hash = "#access_token=attacker-token";
+
+    render(
+      <BrowserRouter>
+        <AuthCallback />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/login", {
+        replace: true,
+        state: {
+          error:
+            "Login could not be completed because it was not started from this browser. Please sign in again.",
+        },
+      });
+    });
+    // Victim session left untouched, attacker token never validated
+    expect(localStorage.getItem("stirling_jwt")).toBe("victim-token");
+    expect(springAuth.getSession).not.toHaveBeenCalled();
+  });
+
+  it("should accept a fragment token without a marker when no session exists", async () => {
+    const mockToken = "first-login-token";
+    window.location.hash = `#access_token=${mockToken}`;
+
+    vi.mocked(springAuth.getSession).mockResolvedValueOnce({
+      data: {
+        session: {
+          user: {
+            id: "123",
+            email: "oauth@example.com",
+            username: "oauthuser",
+            role: "USER",
+          },
+          access_token: mockToken,
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000,
+        },
+      },
+      error: null,
+    });
+
+    render(
+      <BrowserRouter>
+        <AuthCallback />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(localStorage.getItem("stirling_jwt")).toBe(mockToken);
+      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+    });
+  });
+
+  it("should accept a fragment token when the SSO flow marker is present and clear it", async () => {
+    const mockToken = "reauth-token";
+    markSsoFlowStarted();
+    expect(sessionStorage.getItem(SSO_FLOW_STORAGE_KEY)).not.toBeNull();
+
+    localStorage.setItem("stirling_jwt", "previous-token");
+    window.location.hash = `#access_token=${mockToken}`;
+
+    vi.mocked(springAuth.getSession).mockResolvedValueOnce({
+      data: {
+        session: {
+          user: {
+            id: "123",
+            email: "oauth@example.com",
+            username: "oauthuser",
+            role: "USER",
+          },
+          access_token: mockToken,
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000,
+        },
+      },
+      error: null,
+    });
+
+    render(
+      <BrowserRouter>
+        <AuthCallback />
+      </BrowserRouter>,
+    );
+
+    await waitFor(() => {
+      expect(localStorage.getItem("stirling_jwt")).toBe(mockToken);
+      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+    });
+    // Marker is single-use
+    expect(sessionStorage.getItem(SSO_FLOW_STORAGE_KEY)).toBeNull();
   });
 
   it("should display loading state while processing", () => {

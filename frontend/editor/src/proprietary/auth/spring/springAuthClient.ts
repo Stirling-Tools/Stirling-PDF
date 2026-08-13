@@ -100,6 +100,40 @@ function persistRedirectPath(path: string): void {
   }
 }
 
+export const SSO_FLOW_STORAGE_KEY = "stirling_sso_flow";
+
+function randomFlowId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch (_error) {
+    // crypto.randomUUID is secure-context only; any opaque value works here
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+}
+
+// Records that this browser started an SSO flow, so /auth/callback can tell a
+// solicited token from one an attacker pasted into the URL fragment.
+export function markSsoFlowStarted(): void {
+  try {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(SSO_FLOW_STORAGE_KEY, randomFlowId());
+  } catch (_error) {
+    // sessionStorage unavailable (private mode): fail open
+  }
+}
+
+/** Reads and clears the single-use SSO flow marker. */
+export function consumeSsoFlowMarker(): boolean {
+  try {
+    if (typeof window === "undefined") return false;
+    const value = window.sessionStorage.getItem(SSO_FLOW_STORAGE_KEY);
+    window.sessionStorage.removeItem(SSO_FLOW_STORAGE_KEY);
+    return Boolean(value);
+  } catch (_error) {
+    return false;
+  }
+}
+
 // Same-origin relative path, not pointing at auth plumbing. Rejects protocol-relative
 // URLs to guard against open-redirect abuse if the stored value is tampered with.
 export function isSafePostLoginRedirect(path: unknown): path is string {
@@ -488,6 +522,7 @@ class SpringAuthClient {
     try {
       const redirectPath = normalizeRedirectPath(params.options?.redirectTo);
       persistRedirectPath(redirectPath);
+      markSsoFlowStarted();
 
       // Use the full path provided by the backend
       // This supports both OAuth2 (/oauth2/authorization/...) and SAML2 (/saml2/authenticate/...)
