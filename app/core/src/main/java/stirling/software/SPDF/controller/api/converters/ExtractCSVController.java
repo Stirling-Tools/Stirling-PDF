@@ -35,6 +35,7 @@ import stirling.software.common.model.tool.ToolArity;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CsvUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -73,7 +74,7 @@ public class ExtractCSVController {
                     StringWriter sw = new StringWriter();
                     try (CSVPrinter printer = format.print(sw)) {
                         for (List<String> row : fragments.get(i).rawRows()) {
-                            printer.printRecord(row);
+                            printer.printRecord(CsvUtils.neutraliseRow(row));
                         }
                     }
                     csvEntries.add(

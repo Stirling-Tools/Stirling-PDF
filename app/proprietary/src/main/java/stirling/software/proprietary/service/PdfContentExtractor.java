@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
 import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
 import stirling.software.SPDF.pdf.parser.TabulaTableParser;
+import stirling.software.common.util.CsvUtils;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -119,7 +120,7 @@ public class PdfContentExtractor {
             StringWriter sw = new StringWriter();
             try (CSVPrinter printer = format.print(sw)) {
                 for (List<String> row : fragment.rawRows()) {
-                    printer.printRecord(row);
+                    printer.printRecord(CsvUtils.neutraliseRow(row));
                 }
             }
             csvStrings.add(sw.toString());

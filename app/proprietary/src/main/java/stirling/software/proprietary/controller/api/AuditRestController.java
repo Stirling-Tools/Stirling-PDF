@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.ProprietaryUiDataApi;
+import stirling.software.common.util.CsvUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
@@ -802,8 +803,9 @@ public class AuditRestController {
         if (field == null) {
             return "";
         }
-        // Replace double quotes with two double quotes and wrap in quotes
-        return "\"" + field.replace("\"", "\"\"") + "\"";
+        // Neutralise formulas first, then replace double quotes with two and wrap in quotes
+        String safe = CsvUtils.neutraliseFormula(field);
+        return "\"" + safe.replace("\"", "\"\"") + "\"";
     }
 
     // DTOs for response formatting

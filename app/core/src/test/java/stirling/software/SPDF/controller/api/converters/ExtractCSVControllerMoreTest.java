@@ -211,4 +211,28 @@ class ExtractCSVControllerMoreTest {
         assertThat(body).contains("\"x\"").contains("\"y\"");
         assertThat(body.getBytes(StandardCharsets.UTF_8)).isNotEmpty();
     }
+
+    @Test
+    @DisplayName("formula cells are neutralised while numeric cells survive intact")
+    void csvBodyNeutralisesFormulas() throws Exception {
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(pdf("inject.pdf"));
+        request.setPageNumbers("all");
+
+        when(pdfDocumentFactory.load(request)).thenReturn(docWithPages(1));
+        when(tabulaTableParser.parse(any(PDDocument.class), eq(1)))
+                .thenReturn(
+                        List.of(
+                                fragment(
+                                        List.of(
+                                                List.of("=cmd|'/c calc'!A1", "@SUM(A1)"),
+                                                List.of("-12.50", "-1,234.00")))));
+
+        ResponseEntity<?> response = controller.pdfToCsv(request);
+
+        String body = response.getBody().toString();
+        assertThat(body).contains("\"'=cmd|'/c calc'!A1\"").contains("\"'@SUM(A1)\"");
+        assertThat(body).contains("\"-12.50\"").contains("\"-1,234.00\"");
+        assertThat(body).doesNotContain("\"'-12.50\"");
+    }
 }

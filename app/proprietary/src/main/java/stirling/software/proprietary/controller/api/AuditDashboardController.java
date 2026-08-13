@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.CsvUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.model.api.audit.AuditDataRequest;
 import stirling.software.proprietary.model.api.audit.AuditDataResponse;
@@ -348,8 +349,9 @@ public class AuditDashboardController {
         if (field == null) {
             return "";
         }
-        // Replace double quotes with two double quotes and wrap in quotes
-        return "\"" + field.replace("\"", "\"\"") + "\"";
+        // Neutralise formulas first, then replace double quotes with two and wrap in quotes
+        String safe = CsvUtils.neutraliseFormula(field);
+        return "\"" + safe.replace("\"", "\"\"") + "\"";
     }
 
     private List<PersistentAuditEvent> getAuditEventsByCriteria(AuditExportRequest request) {

@@ -219,6 +219,31 @@ class PdfContentExtractorTest {
                 assertThat(csv.get(0)).contains("\"a\"").contains("\"b\"").contains("\"c\"");
             }
         }
+
+        @Test
+        @DisplayName("neutralises formula cells but leaves numbers alone")
+        void formulaCellsAreNeutralised() throws IOException {
+            extractor = newExtractor();
+            TableFragment fragment =
+                    new TableFragment(
+                            "tbl-1",
+                            1,
+                            new Bounds(0, 0, 100, 100),
+                            List.of(),
+                            List.of(),
+                            List.of(List.of("=cmd|'/c calc'!A1", "-1,234.00")),
+                            2,
+                            1.0f,
+                            List.of(),
+                            null);
+            when(tabulaTableParser.parse(any(PDDocument.class), anyInt()))
+                    .thenReturn(List.of(fragment));
+            try (PDDocument doc = textDocument("with table")) {
+                List<String> csv = extractor.extractTablesAsCsv(doc, 1);
+                assertThat(csv.get(0)).contains("\"'=cmd|'/c calc'!A1\"");
+                assertThat(csv.get(0)).contains("\"-1,234.00\"");
+            }
+        }
     }
 
     @Nested

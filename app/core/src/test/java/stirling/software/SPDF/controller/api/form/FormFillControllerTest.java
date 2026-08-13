@@ -9,11 +9,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -183,11 +188,58 @@ class FormFillControllerTest {
         }
 
         @Test
+        @DisplayName("neutralises formula values but leaves numeric values alone")
+        void formulaValuesAreNeutralised() throws Exception {
+            MockMultipartFile file = pdfFile();
+            PDDocument doc = createPdfWithTextFields();
+            when(pdfDocumentFactory.load(eq(file), eq(true))).thenReturn(doc);
+
+            ResponseEntity<byte[]> response = controller.extractCsv(file, null);
+
+            String csv = new String(response.getBody());
+            assertThat(csv).contains("'=cmd|'/c calc'!A1");
+            assertThat(csv).contains("-1,234.00").doesNotContain("'-1,234.00");
+        }
+
+        @Test
         @DisplayName("throws for null file")
         void nullFile() {
             assertThatThrownBy(() -> controller.extractCsv(null, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
+    }
+
+    private PDDocument createPdfWithTextFields() throws IOException {
+        PDDocument doc = new PDDocument();
+        PDPage page = new PDPage(PDRectangle.A4);
+        doc.addPage(page);
+
+        PDAcroForm acroForm = new PDAcroForm(doc);
+        acroForm.setDefaultResources(new PDResources());
+        acroForm.setNeedAppearances(true);
+        doc.getDocumentCatalog().setAcroForm(acroForm);
+
+        addTextField(
+                acroForm, page, "payload", "=cmd|'/c calc'!A1", new PDRectangle(50, 700, 200, 20));
+        addTextField(acroForm, page, "balance", "-1,234.00", new PDRectangle(50, 660, 200, 20));
+        return doc;
+    }
+
+    private static void addTextField(
+            PDAcroForm acroForm, PDPage page, String name, String value, PDRectangle rectangle)
+            throws IOException {
+        PDTextField field = new PDTextField(acroForm);
+        field.setPartialName(name);
+
+        PDAnnotationWidget widget = new PDAnnotationWidget();
+        widget.setRectangle(rectangle);
+        widget.setPage(page);
+        field.setWidgets(List.of(widget));
+
+        acroForm.getFields().add(field);
+        page.getAnnotations().add(widget);
+        // Set /V directly; setValue would need a default appearance we do not care about here
+        field.getCOSObject().setString(COSName.V, value);
     }
 
     // ── extractXlsx ────────────────────────────────────────────────────
