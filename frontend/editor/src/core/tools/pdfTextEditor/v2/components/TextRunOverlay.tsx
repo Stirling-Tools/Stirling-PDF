@@ -246,6 +246,8 @@ export function TextRunOverlay({
 
   // Single-line runs only. Fixed-width boxes still fight a paragraph's
   // hard-break machinery even when flattened before the edit lands.
+  // Single-line runs only. Fixed-width boxes still fight a paragraph's
+  // hard-break machinery even when flattened before the edit lands.
   const exactLines =
     run.charStartsX && run.charEndsX && (run.paragraphLineCount ?? 1) <= 1
       ? buildExactLines(run.text, {

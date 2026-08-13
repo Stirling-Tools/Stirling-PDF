@@ -202,7 +202,7 @@ export function useSelectionActions(store: EditorStore) {
       // the user selected something else, or opened another document.
       const page = doc.loadedPages().find((p) => p.index === pageIndex);
       const img = page?.images.find((i) => i.id === imageId);
-      if (!img || img.locked || img.containerPtr) return;
+      if (!img || img.locked) return;
       store.dispatch(
         new ReplaceImageCommand({
           pageIndex: img.pageIndex,

@@ -39,6 +39,25 @@ interface MatrixModule {
 }
 
 /** Swap an image's pixels but keep its matrix, so it fills the same box. */
+interface ActivityModule {
+  FPDFPageObj_SetIsActive?: (obj: number, active: boolean) => boolean;
+}
+
+// Hiding beats detaching for an object the page does not own: it is a pure
+// state flip, so undo is exact and nothing changes hands.
+function setActive(
+  m: EditorDocument["module"],
+  ptr: number,
+  active: boolean,
+): void {
+  if (!ptr) return;
+  try {
+    (m as unknown as ActivityModule).FPDFPageObj_SetIsActive?.(ptr, active);
+  } catch {
+    /* best-effort */
+  }
+}
+
 export class ReplaceImageCommand implements Command {
   readonly type = "replace-image";
   private readonly pageIndex: number;
@@ -72,10 +91,11 @@ export class ReplaceImageCommand implements Command {
     const page = doc.page(this.pageIndex);
     const img = page.findImage(this.imageId);
     if (!img || !img.pdfiumObjPtr) return;
-    // This build exposes no FPDFFormObj_InsertObject, so a form-nested image
-    // could be detached but never put back. Refusing beats corrupting.
-    if (img.containerPtr) return;
     const m = doc.module;
+    // A form-nested original cannot be detached and put back (this build has
+    // no FPDFFormObj_InsertObject), so hide it in place instead and draw the
+    // replacement at page level using its already-composed page-space matrix.
+    const nested = img.containerPtr !== 0;
     if (this.prevMatrix === null || this.prevBounds === null) {
       this.prevObjPtr = img.pdfiumObjPtr;
       this.prevMatrix = { ...img.matrix };
@@ -87,7 +107,8 @@ export class ReplaceImageCommand implements Command {
     // Redo: revert only detached the replacement, so re-attach that same
     // object rather than embedding the pixels a second time.
     if (this.nextObjPtr) {
-      m.FPDFPage_RemoveObject(page.pagePtr, this.prevObjPtr);
+      if (nested) setActive(m, this.prevObjPtr, false);
+      else m.FPDFPage_RemoveObject(page.pagePtr, this.prevObjPtr);
       insertObjectAt(m, page.pagePtr, this.nextObjPtr, this.prevIndex);
       this.adopt(page, img, this.nextObjPtr);
       return;
@@ -123,7 +144,8 @@ export class ReplaceImageCommand implements Command {
     setImageMatrix(m, objPtr, matrix);
     // Detach only: the old object carries the original pixels for undo, so
     // destroying it would leave this command's undo entry pointing at free memory.
-    m.FPDFPage_RemoveObject(page.pagePtr, this.prevObjPtr);
+    if (nested) setActive(m, this.prevObjPtr, false);
+    else m.FPDFPage_RemoveObject(page.pagePtr, this.prevObjPtr);
     // The embed appended, so without this the replacement jumps to the top.
     if (this.prevIndex >= 0 && supportsInsertAtIndex(m)) {
       m.FPDFPage_RemoveObject(page.pagePtr, objPtr);
@@ -141,7 +163,8 @@ export class ReplaceImageCommand implements Command {
     const m = doc.module;
     // Detach only again: the replacement is what redo re-attaches.
     m.FPDFPage_RemoveObject(page.pagePtr, this.nextObjPtr);
-    insertObjectAt(m, page.pagePtr, this.prevObjPtr, this.prevIndex);
+    if (img.containerPtr) setActive(m, this.prevObjPtr, true);
+    else insertObjectAt(m, page.pagePtr, this.prevObjPtr, this.prevIndex);
     this.adopt(page, img, this.prevObjPtr);
   }
 
