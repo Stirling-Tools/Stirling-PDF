@@ -1,35 +1,84 @@
-# Cloudflare Pages headers. Hashed assets under /assets/ are immutable; the
-# unversioned static copies (pdfium/cmaps/fonts/logos) change on upgrades, so
-# they get a short TTL with revalidation instead. HTML and the service worker
-# are always revalidated. Precompressed wasm keeps application/wasm so
+# Cloudflare Pages headers. Hashed assets under /assets/ are immutable and
+# advertise themselves as Compression Dictionary Transport dictionaries so
+# returning users download only the diff on the next release. The unversioned
+# static copies (pdfium/cmaps/fonts/logos) are also cacheable for a year:
+# browsers must be able to fetch a new release's assets without a deploy of
+# the SW, so the service worker / update flow busts them, and Cloudflare
+# cache rules can purge the prefix on deploy. HTML and the service worker are
+# always revalidated. Precompressed wasm keeps application/wasm so
 # WebAssembly.instantiateStreaming works with native Content-Encoding.
+#
+# Dictionary transport (RFC 9842) requires HTTPS end-to-end and Cloudflare
+# "Shared Dictionaries" passthrough (Speed -> Settings -> Content Optimization).
+# Browsers without support ignore the headers and get standard br/gzip/zstd.
+
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+  Use-As-Dictionary: match="/assets/*.js"; type="br"; id="app-shell"
+
+/assets/*.js
+  Vary: Accept-Encoding, Available-Dictionary
+
+/assets/*.css
+  Vary: Accept-Encoding, Available-Dictionary
 
 /*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/sw.js
   Cache-Control: public, max-age=0, must-revalidate
 
 /sw-folder-retry.js
   Cache-Control: public, max-age=0, must-revalidate
 
 /pdfium/*
-  Cache-Control: public, max-age=86400, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
+
+/pdfium/*.wasm
+  Content-Type: application/wasm
+  Use-As-Dictionary: match="/pdfium/pdfium.wasm.br"; type="br"; id="pdfium"
+  Vary: Accept-Encoding, Available-Dictionary
+
+/pdfium/*.wasm.br
+  Content-Type: application/wasm
+  Content-Encoding: br
+  Cache-Control: public, max-age=31536000, immutable
+  Vary: Accept-Encoding, Available-Dictionary
+
+/pdfium/*.wasm.zst
+  Content-Type: application/wasm
+  Content-Encoding: zstd
+  Cache-Control: public, max-age=31536000, immutable
+  Vary: Accept-Encoding, Available-Dictionary
+
+/pdfium/*.wasm.gz
+  Content-Type: application/wasm
+  Content-Encoding: gzip
+  Cache-Control: public, max-age=31536000, immutable
+  Vary: Accept-Encoding
 
 /pdfjs/*
-  Cache-Control: public, max-age=86400, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
 
 /vendor/*
-  Cache-Control: public, max-age=86400, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
 
 /modern-logo/*
-  Cache-Control: public, max-age=86400, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
 
 /classic-logo/*
-  Cache-Control: public, max-age=86400, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
 
 *.wasm.br
   Content-Type: application/wasm
   Content-Encoding: br
+
+*.wasm.zst
+  Content-Type: application/wasm
+  Content-Encoding: zstd
 
 *.wasm.gz
   Content-Type: application/wasm

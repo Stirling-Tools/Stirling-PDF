@@ -21,6 +21,7 @@ import {
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
   pdfiumWasmUrl,
+  instantiatePdfiumWithFallback,
 } from "@app/services/wasmPrecompiler";
 import type { FormField, WidgetCoordinates } from "@app/tools/formFill/types";
 
@@ -115,9 +116,16 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
             "Eager WebAssembly instantiation failed, falling back to streaming compilation:",
             err,
           );
-          WebAssembly.instantiateStreaming(fetch(wasmUrl()), imports).then(
+          instantiatePdfiumWithFallback(imports).then(
             (result) => {
               successCallback(result.instance, result.module);
+            },
+            (fallbackErr: unknown) => {
+              console.error(
+                "[pdfium] streaming fallback instantiation failed:",
+                fallbackErr,
+              );
+              throw fallbackErr;
             },
           );
         });

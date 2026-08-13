@@ -24,7 +24,6 @@ import apiClient from "@app/services/apiClient";
 import { downloadBlob, downloadTextAsFile } from "@app/utils/downloadUtils";
 import { getFilenameFromHeaders } from "@app/utils/fileResponseUtils";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import { Util } from "pdfjs-dist/legacy/build/pdf.mjs";
 import {
   PdfJsonDocument,
   PdfJsonFont,
@@ -51,6 +50,19 @@ import type { PDFDocumentProxy } from "pdfjs-dist";
 
 const WORKBENCH_VIEW_ID = "pdfTextEditorWorkbench";
 const WORKBENCH_ID = "custom:pdfTextEditor" as const;
+
+/**
+ * 3x2 affine matrix multiply. Same convention as pdfjs-dist's Util.transform,
+ * inlined here so this tool does not statically import the whole pdfjs chunk.
+ */
+const multiplyTransforms = (m1: number[], m2: number[]): number[] => [
+  m1[0] * m2[0] + m1[2] * m2[1],
+  m1[1] * m2[0] + m1[3] * m2[1],
+  m1[0] * m2[2] + m1[2] * m2[3],
+  m1[1] * m2[2] + m1[3] * m2[3],
+  m1[0] * m2[4] + m1[2] * m2[5] + m1[4],
+  m1[1] * m2[4] + m1[3] * m2[5] + m1[5],
+];
 
 const sanitizeBaseName = (name?: string | null): string => {
   if (!name || name.trim().length === 0) {
@@ -1754,7 +1766,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
             // Skip TextMarkedContent items, only process TextItem
             if (!("transform" in item)) continue;
 
-            const transform = Util.transform(
+            const transform = multiplyTransforms(
               viewport.transform,
               item.transform,
             );
