@@ -2,9 +2,10 @@
  * Bidirectional codec between the portal's frontend `PolicyDecodedState` and
  * the backend `WirePolicy`. All policy-level metadata rides in
  * `output.options`; the virtual editor source lives only there, while real
- * backend sources are ALSO emitted as `sourceIds` so triggers and sweeps see
- * them. Mirrors the editor's `buildBackendPolicy` / `fromBackendPolicy` from
- * `policyPipeline.ts`, minus the editor-only `automation` blob.
+ * backend sources become `inputs` entries (source + trigger) so the backend's
+ * `Policy.inputs` binds them and triggers/sweeps see them. Mirrors the editor's
+ * `buildBackendPolicy` / `fromBackendPolicy` from `policyPipeline.ts`, minus
+ * the editor-only `automation` blob.
  */
 
 import { resolveRunOn } from "@app/policies/runOn";
@@ -41,8 +42,9 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     name: state.name,
     owner: "",
     enabled: state.enabled,
-    trigger: state.trigger,
-    sourceIds: state.sources.filter((id) => id !== EDITOR_SOURCE_ID),
+    inputs: state.sources
+      .filter((id) => id !== EDITOR_SOURCE_ID)
+      .map((sourceId) => ({ sourceId, trigger: state.trigger })),
     steps: state.steps,
     output: { type: "inline", options },
     outputIds: state.outputIds,
@@ -62,12 +64,15 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
         ? "auto-number"
         : "prefix";
   const categoryId = str(raw.categoryId);
-  // Selection = display metadata ∪ wire sourceIds, so policies saved before
-  // sourceIds existed (sources only in options) still round-trip complete.
+  // Selection = display metadata ∪ bound inputs, so policies saved before
+  // inputs were emitted (sources only in options) still round-trip complete.
   const optionSources = Array.isArray(raw.sources)
     ? (raw.sources as string[])
     : [];
-  const sources = [...new Set([...optionSources, ...(policy.sourceIds ?? [])])];
+  const inputs = policy.inputs ?? [];
+  const sources = [
+    ...new Set([...optionSources, ...inputs.map((i) => i.sourceId)]),
+  ];
   return {
     id: policy.id,
     name: policy.name,
@@ -86,7 +91,7 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     maxRetries: num(raw.maxRetries, DEFAULTS.maxRetries),
     retryDelayMinutes: num(raw.retryDelayMinutes, DEFAULTS.retryDelayMinutes),
     steps: Array.isArray(policy.steps) ? policy.steps : [],
-    trigger: policy.trigger ?? null,
+    trigger: inputs.find((i) => i.trigger)?.trigger ?? null,
     outputIds: policy.outputIds ?? [],
   };
 }

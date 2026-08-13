@@ -8331,7 +8331,9 @@ description = "Every uploaded document is classified against the built-in labels
 labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
-noTools = "Enable at least one tool in the workflow first."
+deliveryUnconfigured = "Choose an account and an action for the delivery step first."
+noSources = "Choose at least one source for this policy."
+noTools = "Enable at least one action, or choose a destination to deliver to."
 saveFailed = "Couldn't save the policy. Please try again."
 
 [portal.policies.wizard.output]

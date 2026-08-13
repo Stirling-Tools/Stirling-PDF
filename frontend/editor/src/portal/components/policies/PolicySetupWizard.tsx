@@ -36,6 +36,7 @@ import { resolveRunOn } from "@app/policies/runOn";
 import { useSources } from "@portal/queries/sources";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { EDITOR_SOURCE_ID } from "@app/policies/codec";
 import type { WireTriggerConfig } from "@app/policies/types";
 import { fetchIntegrations } from "@portal/api/integrations";
 import { errorMessage } from "@portal/api/http";
@@ -200,16 +201,21 @@ const CAPABILITY_META: Record<
   },
 };
 
-// Trigger from source types: folder watches, webhook fires on push, the rest
-// sweep hourly; editor-only stays null (the frontend fires those runs).
-function deriveTrigger(
-  selected: { id: string; type: string }[],
-): WireTriggerConfig | null {
-  const types = new Set(selected.map((s) => s.type));
-  types.delete("editor");
-  if (types.size === 0) return null;
-  if (types.has("folder")) return { type: "folder-watch", options: {} };
-  if (types.has("webhook")) return { type: "webhook", options: {} };
+// The editor is virtual, so it does not count against the backend's one-input cap.
+function capSources(selected: string[]): string[] {
+  const backend = selected.filter((id) => id !== EDITOR_SOURCE_ID);
+  return [
+    ...selected.filter((id) => id === EDITOR_SOURCE_ID),
+    ...backend.slice(0, 1),
+  ];
+}
+
+// Trigger from the bound source's type: folders are watched, webhooks fire on
+// push, the rest sweep hourly; editor-only stays null (the frontend runs those).
+function deriveTrigger(sourceType?: string): WireTriggerConfig | null {
+  if (!sourceType || sourceType === "editor") return null;
+  if (sourceType === "folder") return { type: "folder-watch", options: {} };
+  if (sourceType === "webhook") return { type: "webhook", options: {} };
   return {
     type: "schedule",
     options: { schedule: { type: "every", count: 1, unit: "HOURS" } },
@@ -295,11 +301,13 @@ function PolicySetupWizardBody({
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(entry),
   );
-  const [sources, setSources] = useState<string[]>(
-    policy?.state.sources ?? ["editor"],
+  // Trim a saved selection to the backend's cap, so editing a wider legacy
+  // record cannot re-save a body the backend rejects.
+  const [sources, setSources] = useState<string[]>(() =>
+    capSources(policy?.state.sources ?? [EDITOR_SOURCE_ID]),
   );
-  const [outputIds, setOutputIds] = useState<string[]>(
-    policy?.state.outputIds ?? [],
+  const [outputIds, setOutputIds] = useState<string[]>(() =>
+    (policy?.state.outputIds ?? []).slice(0, 1),
   );
   const navigate = useNavigate();
 
@@ -335,6 +343,11 @@ function PolicySetupWizardBody({
         (availableOutputModes() as string[]).includes(s.type),
       ),
     [backendSources],
+  );
+  // The one bound source, if any: it decides the trigger the policy is saved with.
+  const selectedBackendSource = useMemo(
+    () => backendSources.find((s) => sources.includes(s.id)),
+    [backendSources, sources],
   );
   const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
   // Document-type scoping has no UI; preserve any saved scope on edit and
@@ -405,10 +418,19 @@ function PolicySetupWizardBody({
     );
   }
 
+  // The editor is virtual and free to combine, but the backend binds at most one
+  // real source, so picking one replaces whichever was picked before.
   function toggleSource(id: string) {
-    setSources((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
-    );
+    setSources((prev) => {
+      if (prev.includes(id)) return prev.filter((s) => s !== id);
+      if (id === EDITOR_SOURCE_ID) return [...prev, id];
+      return [...prev.filter((s) => s === EDITOR_SOURCE_ID), id];
+    });
+  }
+
+  // One destination too: the backend caps outputs at one (PolicyValidator).
+  function toggleDestination(id: string) {
+    setOutputIds((prev) => (prev.includes(id) ? [] : [id]));
   }
 
   async function submit() {
@@ -455,9 +477,7 @@ function PolicySetupWizardBody({
         maxRetries,
         retryDelayMinutes,
         steps,
-        trigger: deriveTrigger(
-          availableSources.filter((s) => sources.includes(s.id)),
-        ),
+        trigger: deriveTrigger(selectedBackendSource?.type),
         outputIds,
       });
     } catch (e) {
@@ -871,7 +891,7 @@ function PolicySetupWizardBody({
           <p className="portal-policies__wizard-desc">
             {t(
               "portal.policies.wizard.destinations.description",
-              "Results always stay in Stirling. Each destination you select also receives a copy of every processed document.",
+              "Results always stay in Stirling. Pick one destination to also receive a copy of every processed document.",
             )}
           </p>
           {writableSources.length === 0 ? (
@@ -919,13 +939,7 @@ function PolicySetupWizardBody({
                         }}
                       />
                     }
-                    onClick={() =>
-                      setOutputIds((prev) =>
-                        prev.includes(dest.id)
-                          ? prev.filter((id) => id !== dest.id)
-                          : [...prev, dest.id],
-                      )
-                    }
+                    onClick={() => toggleDestination(dest.id)}
                     aria-pressed={on}
                   >
                     <span className="portal-policies__source-label">
