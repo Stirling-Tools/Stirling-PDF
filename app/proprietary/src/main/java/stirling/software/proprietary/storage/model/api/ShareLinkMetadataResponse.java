@@ -15,6 +15,9 @@ public class ShareLinkMetadataResponse {
     private final boolean ownedByCurrentUser;
     private final String accessRole;
 
+    // Whether the viewer may write back. Editor role alone is not enough on legacy shares.
+    private final boolean canEdit;
+
     // Content revision for optimistic concurrency; clients echo it back on update.
     private final Long version;
     private final LocalDateTime createdAt;

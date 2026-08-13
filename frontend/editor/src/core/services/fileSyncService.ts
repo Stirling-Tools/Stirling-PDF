@@ -43,6 +43,7 @@ interface StoredFileResponse {
   owner?: string | null;
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
+  canEdit?: boolean;
   version?: number | null;
   shareLinks?: Array<{ token?: string | null }>;
   sharedUsers?: Array<{ username?: string | null }>;
@@ -58,6 +59,7 @@ interface AccessedShareLinkResponse {
   owner?: string | null;
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
+  canEdit?: boolean;
   version?: number | null;
   createdAt?: string | null;
   lastAccessedAt?: string | null;
@@ -193,6 +195,10 @@ export async function reconcileServerFiles(
             ? serverFile.ownedByCurrentUser
             : stub.remoteOwnedByCurrentUser,
         remoteAccessRole: serverFile.accessRole ?? stub.remoteAccessRole,
+        remoteCanEdit:
+          typeof serverFile.canEdit === "boolean"
+            ? serverFile.canEdit
+            : stub.remoteCanEdit,
         remoteSharedViaLink: stub.remoteSharedViaLink,
         remoteHasShareLinks: Boolean(serverFile.shareLinks?.length),
         remoteHasUserShares: Boolean(
@@ -250,6 +256,8 @@ export async function reconcileServerFiles(
             ? file.ownedByCurrentUser
             : undefined,
         remoteAccessRole: file.accessRole ?? undefined,
+        remoteCanEdit:
+          typeof file.canEdit === "boolean" ? file.canEdit : undefined,
         remoteVersionLatest:
           typeof file.version === "number" ? file.version : undefined,
         remoteSharedViaLink: false,
@@ -371,6 +379,8 @@ export async function reconcileServerFiles(
         remoteOwnerUsername: link.owner ?? undefined,
         remoteOwnedByCurrentUser: false,
         remoteAccessRole: link.accessRole ?? undefined,
+        remoteCanEdit:
+          typeof link.canEdit === "boolean" ? link.canEdit : undefined,
         remoteVersionLatest:
           typeof link.version === "number" ? link.version : undefined,
         remoteSharedViaLink: true,

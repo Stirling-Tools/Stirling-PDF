@@ -48,7 +48,7 @@ The File Sharing feature enables users to store files server-side and share them
 
 | Role | Can Read | Can Write |
 |------|----------|-----------|
-| `EDITOR` | ✅ | ✅ |
+| `EDITOR` | ✅ | ✅ (when write was granted, see below) |
 | `COMMENTER` | ✅ | ❌ |
 | `VIEWER` | ✅ | ❌ |
 
@@ -60,9 +60,24 @@ Owners always have full access regardless of role.
 `EDITOR` user-share can `PUT /api/v1/storage/files/{fileId}`, and any
 authenticated holder of an `EDITOR` share link can
 `PUT /api/v1/storage/share-links/{token}`. Non-owner writes require
-`sharing.enabled`. Non-owner updates replace only the main file content -
-history bundle and audit log parts are accepted but only the owner's client
-sends them, so the owner's audit trail is not clobbered by collaborators.
+`sharing.enabled`.
+
+#### Write Is Opt-In Per Share
+
+The `EDITOR` role alone does not grant write. `file_shares.write_enabled` records
+the grant, and it is stamped `true` only when the owner creates or updates a share
+with the `EDITOR` role. Shares that predate collaborative editing have the column
+null and stay read-only after an upgrade — the owner must re-grant editor access to
+make one writable. `StoredFileResponse.canEdit` and `ShareLinkMetadataResponse.canEdit`
+expose the server's decision so the UI does not offer a save that would be rejected.
+
+Non-owner updates replace only the main file content. The version history bundle and
+the audit log belong to the owner, so a request from a non-owner that carries a
+`historyBundle` or `auditLog` part is rejected with `403` rather than overwriting
+(and deleting) the owner's archive.
+
+A superseded blob is deleted only after the transaction commits, so a failed or
+rolled-back update can never leave the file without its bytes.
 
 ### Optimistic Concurrency (Collaboration)
 
@@ -382,7 +397,8 @@ storage:
 ### Access Control
 - All endpoints require authentication — there is no anonymous access
 - Owner-only operations enforced in service layer (not just controller)
-- `requireReadAccess` checked on every download; `requireEditorAccess` checked on every non-owner content update
+- `requireReadAccess` checked on every download; every non-owner content update requires an `EDITOR` share with `write_enabled` set
+- Replacing the version history or audit log is owner-only
 
 ### Share Link Security
 - Tokens are UUIDs (random, not guessable)
