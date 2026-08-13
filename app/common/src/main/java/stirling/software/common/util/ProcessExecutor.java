@@ -307,7 +307,7 @@ public class ProcessExecutor {
             boolean isQpdf =
                     commandToRun != null
                             && !commandToRun.isEmpty()
-                            && commandToRun.get(0).contains("qpdf");
+                            && commandToRun.getFirst().contains("qpdf");
 
             if (!outputLines.isEmpty()) {
                 String outputMessage = String.join("\n", outputLines);
@@ -370,7 +370,7 @@ public class ProcessExecutor {
         }
 
         // Check if this is a UNO conversion by looking for unoconvert executable
-        String executable = command.get(0);
+        String executable = command.getFirst();
         if (executable != null) {
             // Extract basename from path for matching
             String basename = executable;
@@ -504,7 +504,7 @@ public class ProcessExecutor {
         }
 
         // Validate executable (first argument)
-        String executable = command.get(0);
+        String executable = command.getFirst();
         if (executable == null || executable.isBlank()) {
             throw new IllegalArgumentException("Command executable must not be empty");
         }
