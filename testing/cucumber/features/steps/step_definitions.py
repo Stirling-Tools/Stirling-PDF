@@ -745,10 +745,14 @@ def step_check_response_zip_doc_page_count(context, doc_count, pages_per_doc):
 @then('the JSON value of "{key}" should be "{expected_value}"')
 def step_check_json_value(context, key, expected_value):
     actual_value = context.response.json().get(key)
-    assert actual_value == expected_value, f"Expected JSON value for '{key}' to be '{expected_value}' but got '{actual_value}'"
+    assert actual_value == expected_value, (
+        f"Expected JSON value for '{key}' to be '{expected_value}' but got '{actual_value}'"
+    )
 
 
-@then('JSON list entry containing "{identifier_key}" as "{identifier_value}" should have "{target_key}" as "{target_value}"')
+@then(
+    'JSON list entry containing "{identifier_key}" as "{identifier_value}" should have "{target_key}" as "{target_value}"'
+)
 def step_check_json_list_entry(context, identifier_key, identifier_value, target_key, target_value):
     json_response = context.response.json()
     for entry in json_response:
@@ -764,4 +768,6 @@ def step_check_json_list_entry(context, identifier_key, identifier_value, target
 @then('the response should match the regex "{pattern}"')
 def step_response_matches_regex(context, pattern):
     response_text = context.response.text
-    assert re.match(pattern, response_text), f"Response '{response_text}' does not match the expected pattern '{pattern}'"
+    assert re.match(pattern, response_text), (
+        f"Response '{response_text}' does not match the expected pattern '{pattern}'"
+    )

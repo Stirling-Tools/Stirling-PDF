@@ -362,7 +362,7 @@ def main():
     parser.add_argument(
         "language",
         nargs="?",
-        help="Target language code (e.g., fr-FR). If omitted, add-missing and remove-unused run for all locales except en-US.",
+        help="Target language code (e.g., fr-FR). If omitted, add-missing and remove-unused run for all locales except en-US.",  # noqa: E501
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -467,7 +467,9 @@ def main():
 
         # Extract translations from template format or simple dict
         if "translations" in translations_data:
-            translations = {k: v["translated"] for k, v in translations_data["translations"].items() if v.get("translated")}
+            translations = {
+                k: v["translated"] for k, v in translations_data["translations"].items() if v.get("translated")
+            }
         else:
             translations = translations_data
 

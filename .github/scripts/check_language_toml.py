@@ -201,7 +201,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         if (branch_path / file_normpath).stat().st_size > MAX_FILE_SIZE:
             has_differences = True
             report.append(
-                f"\n⚠️ The file `{locale_dir}/{basename_current_file}` is too large and could pose a security risk.\n\n---\n"
+                f"\n⚠️ The file `{locale_dir}/{basename_current_file}` is too large and could pose a security risk.\n\n---\n"  # noqa: E501
             )
             continue
 

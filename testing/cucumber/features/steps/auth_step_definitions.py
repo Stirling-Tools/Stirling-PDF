@@ -414,7 +414,9 @@ def step_json_top_field_equals(context, field, expected):
     data = context.response.json()
     value = data.get(field, "")
     actual = str(value).lower() if isinstance(value, bool) else str(value)
-    assert actual == expected, f"Expected JSON field '{field}' == '{expected}' but got '{actual}'. Full response: {data}"
+    assert actual == expected, (
+        f"Expected JSON field '{field}' == '{expected}' but got '{actual}'. Full response: {data}"
+    )
 
 
 @then('the response JSON session field "{field}" should be positive')

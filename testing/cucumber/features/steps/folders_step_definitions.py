@@ -72,7 +72,9 @@ def _resolve_folder_id(context, ref):
     if ref.endswith(".id"):
         name = ref[:-3]
         _ensure_folders_dict(context)
-        assert name in context.folders_by_name, f"No folder named {name!r} stashed; available: {list(context.folders_by_name)}"
+        assert name in context.folders_by_name, (
+            f"No folder named {name!r} stashed; available: {list(context.folders_by_name)}"
+        )
         return context.folders_by_name[name]
     return ref
 
@@ -151,7 +153,9 @@ def step_folder_exists_under(context, name, parent):
     parent_id = context.folders_by_name.get(parent)
     assert parent_id, f"Parent folder {parent!r} not created yet; available: {list(context.folders_by_name)}"
     response = _create_folder(context, name, parent_id=parent_id)
-    assert response.status_code == 201, f"Could not create child folder {name!r}: {response.status_code} {response.text}"
+    assert response.status_code == 201, (
+        f"Could not create child folder {name!r}: {response.status_code} {response.text}"
+    )
     context.folders_by_name[name] = response.json()["id"]
     context.response = response
 
@@ -314,7 +318,9 @@ def step_response_folder_parent_null(context):
 def step_response_folder_parent_equal(context, ref):
     data = context.response.json()
     expected = _resolve_folder_id(context, ref)
-    assert data.get("parentFolderId") == expected, f"Expected parentFolderId={expected!r}, got {data.get('parentFolderId')!r}"
+    assert data.get("parentFolderId") == expected, (
+        f"Expected parentFolderId={expected!r}, got {data.get('parentFolderId')!r}"
+    )
 
 
 @then("the response JSON folder.createdAt should not be empty")

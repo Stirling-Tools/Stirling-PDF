@@ -46,7 +46,10 @@ class TranslationAnalyzer:
 
             # Convert lists to sets for faster lookup
             return {
-                lang: set(patterns) for lang, data in ignore_data.items() for patterns in [data.get("ignore", [])] if patterns
+                lang: set(patterns)
+                for lang, data in ignore_data.items()
+                for patterns in [data.get("ignore", [])]
+                if patterns
             }
         except Exception as e:  # noqa: BLE001
             print(f"Warning: Could not load ignore file {self.ignore_file}: {e}")

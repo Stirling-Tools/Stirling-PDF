@@ -198,7 +198,9 @@ async def test_canonicaliser_accepts_empty_alias_list(runtime: AppRuntime, file_
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")])
+    detector._mapper.map_pages = AsyncMock(
+        return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
+    )
     detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))
     detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
@@ -324,7 +326,9 @@ async def test_canonicaliser_failure_falls_back_to_lexical_keys(
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")])
+    detector._mapper.map_pages = AsyncMock(
+        return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
+    )
     detector._subject_canonicaliser.run = AsyncMock(side_effect=failure)
     detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
@@ -370,7 +374,9 @@ async def test_same_page_contradiction_is_surfaced(runtime: AppRuntime, file_a: 
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(return_value=[ChunkOutput(pages=[1], output=extracted_chunk, label="pages=1")])
+    detector._mapper.map_pages = AsyncMock(
+        return_value=[ChunkOutput(pages=[1], output=extracted_chunk, label="pages=1")]
+    )
     detector._subject_canonicaliser.run = AsyncMock(
         return_value=_stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="deadline", canonical="deadline")]))
     )
@@ -412,13 +418,17 @@ async def test_identical_quote_pair_is_still_dropped(runtime: AppRuntime, file_a
             _ExtractedClaim(page=2, subject="topic", polarity="deny", text="y", quote="Shared quote."),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1,2")])
+    detector._mapper.map_pages = AsyncMock(
+        return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1,2")]
+    )
     detector._subject_canonicaliser.run = AsyncMock(
         return_value=_stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="topic", canonical="topic")]))
     )
     detector._pair_detector.run = AsyncMock(
         return_value=_stub_result(
-            _BucketContradictions(pairs=[_DetectedPair(i=0, j=1, explanation="self", severity=ContradictionSeverity.WARNING)])
+            _BucketContradictions(
+                pairs=[_DetectedPair(i=0, j=1, explanation="self", severity=ContradictionSeverity.WARNING)]
+            )
         )
     )
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))
@@ -487,7 +497,9 @@ async def test_detector_chunk_timeout_falls_through(runtime: AppRuntime, file_a:
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")])
+    detector._mapper.map_pages = AsyncMock(
+        return_value=[ChunkOutput(pages=[1, 2], output=extracted_chunk, label="pages=1-2")]
+    )
     detector._subject_canonicaliser.run = AsyncMock(
         return_value=_stub_result(_SubjectMapping(aliases=[_SubjectAlias(raw="deadline", canonical="deadline")]))
     )
@@ -530,7 +542,9 @@ async def test_empty_chunk_with_substantial_content_logs_warning(
     with caplog.at_level(logging.WARNING, logger="stirling.agents.contradiction.detector"):
         await detector.detect([file_a], principals=PRINCIPALS)
 
-    assert any("produced 0 claims" in record.getMessage() and "pages=1" in record.getMessage() for record in caplog.records)
+    assert any(
+        "produced 0 claims" in record.getMessage() and "pages=1" in record.getMessage() for record in caplog.records
+    )
 
 
 @pytest.mark.anyio
@@ -566,7 +580,9 @@ async def test_pages_examined_includes_every_attempted_page(runtime: AppRuntime,
             ),
         ]
     )
-    detector._mapper.map_pages = AsyncMock(return_value=[ChunkOutput(pages=[1, 2, 3], output=extracted, label="pages=1-3")])
+    detector._mapper.map_pages = AsyncMock(
+        return_value=[ChunkOutput(pages=[1, 2, 3], output=extracted, label="pages=1-3")]
+    )
     detector._subject_canonicaliser.run = AsyncMock(return_value=_stub_result(_SubjectMapping(aliases=[])))
     detector._pair_detector.run = AsyncMock(return_value=_stub_result(_BucketContradictions(pairs=[])))
     detector._summary_agent.run = AsyncMock(return_value=_stub_result("done"))

@@ -409,7 +409,9 @@ def step_files_processed(context, seconds):
         if remaining == 0:
             break
         time.sleep(3)
-    assert remaining == 0, f"{remaining} of {len(context._dropped)} dropped files were still unprocessed after {seconds}s"
+    assert remaining == 0, (
+        f"{remaining} of {len(context._dropped)} dropped files were still unprocessed after {seconds}s"
+    )
     for node in NODES:
         rc, out, _ = _sh(["docker", "inspect", "-f", "{{.State.Status}}", node])
         assert out.strip() == "running", f"{node} crashed during concurrent processing"

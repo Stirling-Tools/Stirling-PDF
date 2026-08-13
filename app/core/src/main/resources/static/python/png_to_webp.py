@@ -54,7 +54,9 @@ def resize_image(input_image_path, output_image_path, max_size=(16383, 16383)):
             # Resize the image
             resized_image = image.resize((new_width, new_height), Image.LANCZOS)
             resized_image.save(output_image_path, format="WEBP", quality=100)
-            print(f"The image was successfully resized to ({new_width}, {new_height}) and saved as WebP: {output_image_path}")
+            print(
+                f"The image was successfully resized to ({new_width}, {new_height}) and saved as WebP: {output_image_path}"  # noqa: E501
+            )
         else:
             # If dimensions are within the allowed limits, save the image directly
             image.save(output_image_path, format="WEBP", quality=100)

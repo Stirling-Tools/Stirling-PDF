@@ -352,7 +352,9 @@ Examples:
             sys.exit(0)
 
         # Step 2: Translate all batches
-        translated_files = translate_batches(batch_files, args.language, api_key, args.timeout, args.model, args.parallel)
+        translated_files = translate_batches(
+            batch_files, args.language, api_key, args.timeout, args.model, args.parallel
+        )
         if translated_files is None:
             sys.exit(1)
 

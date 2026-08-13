@@ -32,7 +32,9 @@ class StubUserSpecAgent(UserSpecAgent):
             ],
         )
 
-    async def _build_edit_plan(self, user_message: str, conversation_history: list[ConversationMessage]) -> EditPlanResponse:
+    async def _build_edit_plan(
+        self, user_message: str, conversation_history: list[ConversationMessage]
+    ) -> EditPlanResponse:
         return self.edit_plan
 
     async def _run_draft_agent(self, request: AgentDraftRequest, edit_plan: EditPlanResponse) -> AgentDraft:

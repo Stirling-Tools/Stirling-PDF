@@ -433,7 +433,8 @@ def render_tool_io(spec: dict[str, Any], tools: list[ToolSpec]) -> str:
         formats=_members(vocabulary["formats"]),
         arities=_members(vocabulary["arities"]),
         declarations="\n".join(
-            f"    ToolEndpoint.{by_path[path]}: {_render_spec(declaration)}," for path, declaration in sorted(table.items())
+            f"    ToolEndpoint.{by_path[path]}: {_render_spec(declaration)},"
+            for path, declaration in sorted(table.items())
         ),
     )
     # Formatted before writing so --check compares like for like.
