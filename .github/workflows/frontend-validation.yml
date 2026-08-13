@@ -1,8 +1,8 @@
 name: Frontend lint, type-check, and build
 
 # Reusable workflow called from build.yml when frontend / testing sources
-# change. Runs the consolidated `task frontend:check:all` (lint, types,
-# unit tests, build) and uploads the dist artifact for downstream jobs.
+# change. Runs `task frontend:check:all` and uploads the 
+# coverage + dist artifacts for downstream jobs.
 on:
   workflow_call:
 
@@ -105,16 +105,6 @@ jobs:
                 comment_id: existing.id,
               });
             }
-      - name: Vitest coverage
-        # Separate from `frontend:check:all` so the quality-gate run stays
-        # uninstrumented (faster signal) and coverage stays an informational
-        # follow-up. Continue-on-error keeps the workflow green even when
-        # a handful of test files refuse to import (e.g. missing icon
-        # specifiers) - the summary still gets posted with whatever
-        # vitest managed to instrument.
-        id: frontend-coverage
-        continue-on-error: true
-        run: task frontend:test:coverage
       - name: Install uv
         if: always()
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0

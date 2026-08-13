@@ -269,7 +269,7 @@ export default function LoginAgreementEditor({
 
       {loading && <Loader size="xs" />}
       {loadFailed && !loading && (
-        <Text size="xs" c="red">
+        <Text size="xs" c="var(--color-red-dark)">
           {t(
             "admin.settings.legal.loginAgreement.loadError",
             "Failed to load the agreement for {{locale}}. Switch language and back to retry.",
