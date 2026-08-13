@@ -47,7 +47,25 @@ public class LeaderTeamResolver {
         }
     }
 
+    /** Caller must lead their team. Use for anything that changes who pays for what. */
     public LeaderTeam resolve(Authentication auth) {
+        return resolve(auth, true);
+    }
+
+    /**
+     * Caller need only belong to a team.
+     *
+     * <p>Used for re-authenticating an already-approved server. Approving a new link is a billing
+     * decision and stays leader-only, but re-establishing a browser session on a server the team
+     * already owns is not, and requiring a leader there would leave a member admin unable to fix
+     * their own expired session. The team is still checked against the one the server is pinned to,
+     * so this widens who may confirm, never which team they may confirm for.
+     */
+    public LeaderTeam resolveMember(Authentication auth) {
+        return resolve(auth, false);
+    }
+
+    private LeaderTeam resolve(Authentication auth, boolean requireLeader) {
         User user;
         try {
             user = AuthenticationUtils.getCurrentUser(auth, userRepository);
@@ -59,7 +77,7 @@ public class LeaderTeamResolver {
             return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
         }
         TeamMembership membership = rows.getFirst();
-        if (membership.getRole() != TeamRole.LEADER) {
+        if (requireLeader && membership.getRole() != TeamRole.LEADER) {
             return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
         }
         return new LeaderTeam(membership.getTeam().getId(), user.getId(), null);

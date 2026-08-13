@@ -117,6 +117,35 @@ public class ConnectService {
         if (credentialStore.isLinked()) {
             return status();
         }
+        return open(name, hint, null);
+    }
+
+    /**
+     * Opens a handshake that only re-establishes the admin's browser session, for an instance that
+     * is already linked.
+     *
+     * <p>Presents this instance's device credential, which is what lets the SaaS side pin the
+     * handshake to the team we already belong to. Approval can then only confirm that team, so this
+     * cannot end with the browser signed into an account that does not own this server, and no
+     * second device credential is minted.
+     *
+     * @throws IOException if this instance is not linked, or SaaS refuses the handshake.
+     */
+    @Transactional
+    public ConnectStatus startReauth(CallbackHint hint) throws IOException {
+        DeviceCredential credential =
+                credentialStore
+                        .get()
+                        .orElseThrow(
+                                () ->
+                                        new IOException(
+                                                "This server is not linked, so there is no session"
+                                                        + " to re-establish"));
+        return open(credential.getDeviceId(), hint, credential);
+    }
+
+    private ConnectStatus open(String name, CallbackHint hint, DeviceCredential credential)
+            throws IOException {
         String callbackUrl = resolveCallbackUrl(hint);
         if (callbackUrl == null) {
             throw new IOException(
@@ -127,7 +156,7 @@ public class ConnectService {
         String claimSecret = randomSecret();
 
         AccountLinkClient.ConnectRequestResult created =
-                client.connectRequest(name, callbackUrl, nonce, claimSecret);
+                client.connectRequest(name, callbackUrl, nonce, claimSecret, credential);
 
         LocalDateTime now = LocalDateTime.now();
         ConnectState state = new ConnectState();
@@ -180,6 +209,15 @@ public class ConnectService {
                 entitlementCache.invalidate();
                 stateRepo.delete(state);
                 log.info("Account-link connect: linked to team {}", claim.teamId());
+                yield new ConnectStatus(Phase.LINKED, null, null, claim.teamId());
+            }
+            case CONFIRMED -> {
+                // Re-authentication: the credential we already hold is untouched, so there is
+                // nothing to store and nothing to invalidate. The session the browser just
+                // received is the entire point.
+                stateRepo.delete(state);
+                log.info(
+                        "Account-link connect: session re-established for team {}", claim.teamId());
                 yield new ConnectStatus(Phase.LINKED, null, null, claim.teamId());
             }
             case PENDING ->

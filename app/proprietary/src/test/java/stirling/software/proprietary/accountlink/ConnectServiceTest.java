@@ -72,7 +72,9 @@ class ConnectServiceTest {
                         org.mockito.ArgumentMatchers.eq(
                                 "https://pdf.example.com" + ConnectService.CALLBACK_PATH),
                         anyString(),
-                        anyString());
+                        anyString(),
+                        // A first link carries no credential; that is what makes it a first link.
+                        org.mockito.ArgumentMatchers.isNull());
     }
 
     @Test
@@ -82,7 +84,7 @@ class ConnectServiceTest {
         service.start(null, fromRequest("https://pdf.internal:8443/stirling"));
 
         ArgumentCaptor<String> callback = ArgumentCaptor.forClass(String.class);
-        verify(client).connectRequest(any(), callback.capture(), anyString(), anyString());
+        verify(client).connectRequest(any(), callback.capture(), anyString(), anyString(), any());
         // Context path preserved, so a subpath deployment gets a callback that resolves.
         assertThat(callback.getValue())
                 .isEqualTo("https://pdf.internal:8443/stirling" + ConnectService.CALLBACK_PATH);
@@ -189,7 +191,7 @@ class ConnectServiceTest {
 
         ArgumentCaptor<String> nonce = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> secret = ArgumentCaptor.forClass(String.class);
-        verify(client).connectRequest(any(), anyString(), nonce.capture(), secret.capture());
+        verify(client).connectRequest(any(), anyString(), nonce.capture(), secret.capture(), any());
 
         ArgumentCaptor<ConnectState> saved = ArgumentCaptor.forClass(ConnectState.class);
         verify(stateRepo).save(saved.capture());
@@ -302,6 +304,53 @@ class ConnectServiceTest {
     }
 
     // ---------------------------------------------------------------------------------------
+    // Re-authentication: already linked, only the browser session needs renewing.
+    // ---------------------------------------------------------------------------------------
+
+    @Test
+    void startReauth_presentsTheCredentialSoSaaSCanPinTheTeam() throws Exception {
+        when(credentialStore.get()).thenReturn(Optional.of(credential(7L)));
+        when(client.connectRequest(any(), anyString(), anyString(), anyString(), any()))
+                .thenReturn(new ConnectRequestResult("req-1", 900));
+
+        service.startReauth(fromRequest("https://pdf.example.com"));
+
+        // Sending the credential is what makes the pinning trustworthy: the team comes from
+        // something only this instance holds.
+        verify(client)
+                .connectRequest(
+                        any(),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        org.mockito.ArgumentMatchers.argThat(
+                                c -> c != null && "dev".equals(c.getDeviceId())));
+    }
+
+    @Test
+    void startReauth_onAnUnlinkedServerFails() {
+        assertThat(catchIo(() -> service.startReauth(fromRequest("https://pdf.example.com"))))
+                .hasMessageContaining("not linked");
+        verifyNoInteractions(client);
+    }
+
+    @Test
+    void complete_onAConfirmedReauthKeepsTheExistingCredential() {
+        ConnectState state = openHandshake();
+        when(stateRepo.findById(ConnectState.SINGLETON_ID)).thenReturn(Optional.of(state));
+        when(client.connectClaim(anyString(), anyString()))
+                .thenReturn(new ConnectClaimResult(ConnectClaimOutcome.CONFIRMED, null, null, 7L));
+
+        ConnectService.ConnectStatus status = service.complete(NONCE);
+
+        assertThat(status.phase()).isEqualTo(Phase.LINKED);
+        assertThat(status.teamId()).isEqualTo(7L);
+        // Nothing to store: a second credential would orphan the one we already hold.
+        verify(credentialStore, never()).save(anyString(), anyString(), any());
+        verify(stateRepo).delete(state);
+    }
+
+    // ---------------------------------------------------------------------------------------
     // Status
     // ---------------------------------------------------------------------------------------
 
@@ -342,7 +391,8 @@ class ConnectServiceTest {
     }
 
     private void stubCreate() throws Exception {
-        when(client.connectRequest(any(), anyString(), anyString(), anyString()))
+        // The five-argument overload: a first link passes a null credential rather than none.
+        when(client.connectRequest(any(), anyString(), anyString(), anyString(), any()))
                 .thenReturn(new ConnectRequestResult("req-1", 900));
     }
 

@@ -55,6 +55,24 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ConnectRequest {
 
+    /**
+     * What the handshake is for. The distinction is not cosmetic: it decides whether a credential
+     * is minted, who may approve, and whether the team is already known.
+     */
+    public enum Mode {
+        /**
+         * First link. No team is known until a leader approves, and approval is what decides it.
+         * Claiming mints a device credential.
+         */
+        LINK,
+        /**
+         * The instance is already linked and only needs the admin's browser signed in again. The
+         * team is pinned at creation from the instance's own device credential, so approval cannot
+         * move the instance to a different team, and claiming mints nothing.
+         */
+        REAUTH
+    }
+
     public enum Status {
         /** Waiting for a leader to approve or deny. */
         PENDING,
@@ -98,10 +116,19 @@ public class ConnectRequest {
     private String claimSecretHash;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "mode", nullable = false, length = 16)
+    private Mode mode = Mode.LINK;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 16)
     private Status status = Status.PENDING;
 
-    /** Set on approval; the team the instance ends up bound to. */
+    /**
+     * For {@link Mode#LINK}, set on approval: approval is what decides the team. For {@link
+     * Mode#REAUTH}, set at creation from the instance's device credential, and approval may only
+     * confirm it. That is what stops a re-authentication silently moving a server between teams, or
+     * leaving the browser signed into an account that does not own the server it is looking at.
+     */
     @Column(name = "team_id")
     private Long teamId;
 

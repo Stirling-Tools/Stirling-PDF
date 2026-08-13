@@ -79,13 +79,9 @@ public class AccountLinkController {
     @PostMapping("/connect/start")
     public ResponseEntity<?> connectStart(
             @RequestBody(required = false) ConnectStartRequest req, HttpServletRequest http) {
-        ConnectService.CallbackHint hint =
-                new ConnectService.CallbackHint(
-                        req != null ? req.callbackUrl() : null,
-                        http.getHeader("Origin"),
-                        baseUrlOf(http));
         try {
-            return ResponseEntity.ok(connectService.start(req != null ? req.name() : null, hint));
+            return ResponseEntity.ok(
+                    connectService.start(req != null ? req.name() : null, callbackHint(req, http)));
         } catch (AccountLinkClient.UpstreamException e) {
             log.warn("Account-link connect rejected upstream: HTTP {}", e.status());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
@@ -93,6 +89,29 @@ public class AccountLinkController {
         } catch (IOException e) {
             // Same reasoning as /link: a transport message can carry the configured SaaS host.
             log.warn("Account-link connect failed (transport): {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(java.util.Map.of("error", "CONNECT_FAILED"));
+        }
+    }
+
+    /**
+     * Re-establishes the admin's SaaS session for a server that is already linked.
+     *
+     * <p>Same handshake, but the request carries this instance's device credential so the SaaS side
+     * pins it to the team we already belong to. Signing in as an account from a different team is
+     * refused there rather than silently leaving the portal reading the wrong team's billing.
+     */
+    @PostMapping("/connect/reauth")
+    public ResponseEntity<?> connectReauth(
+            @RequestBody(required = false) ConnectStartRequest req, HttpServletRequest http) {
+        try {
+            return ResponseEntity.ok(connectService.startReauth(callbackHint(req, http)));
+        } catch (AccountLinkClient.UpstreamException e) {
+            log.warn("Account-link reauth rejected upstream: HTTP {}", e.status());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(java.util.Map.of("error", "CONNECT_FAILED"));
+        } catch (IOException e) {
+            log.warn("Account-link reauth failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                     .body(java.util.Map.of("error", "CONNECT_FAILED"));
         }
@@ -114,6 +133,17 @@ public class AccountLinkController {
     public ResponseEntity<Void> connectCancel() {
         connectService.cancel();
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Everything we know about where the admin's browser is, for the callback. The portal's own
+     * claim is only honoured when the {@code Origin} header agrees with it, which is what makes it
+     * knowledge rather than a redirect the caller chose.
+     */
+    private static ConnectService.CallbackHint callbackHint(
+            ConnectStartRequest req, HttpServletRequest http) {
+        return new ConnectService.CallbackHint(
+                req != null ? req.callbackUrl() : null, http.getHeader("Origin"), baseUrlOf(http));
     }
 
     /**

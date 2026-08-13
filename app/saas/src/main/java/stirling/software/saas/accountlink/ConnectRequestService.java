@@ -69,7 +69,12 @@ public class ConnectRequestService {
     public enum CreateRejection {
         BAD_CALLBACK,
         BAD_NONCE,
-        RATE_LIMITED
+        RATE_LIMITED,
+        /**
+         * A re-authentication was asked for by something that could not prove it is a linked
+         * instance.
+         */
+        NOT_LINKED
     }
 
     /** Either a created request id, or the reason we would not create one. */
@@ -97,6 +102,7 @@ public class ConnectRequestService {
             String name,
             String callbackOrigin,
             boolean insecureTransport,
+            ConnectRequest.Mode mode,
             ConnectRequest.Status status) {}
 
     /** Where to send the browser once approved, plus the correlator the instance is expecting. */
@@ -105,6 +111,12 @@ public class ConnectRequestService {
     public enum ClaimOutcome {
         /** Approved and collected; {@code credential} is populated. */
         GRANTED,
+        /**
+         * A re-authentication was approved. No credential: the instance already has one, and
+         * issuing a second would orphan the first. The instance only needs to know the browser leg
+         * succeeded.
+         */
+        CONFIRMED,
         /** Still waiting on a human. The instance should keep waiting. */
         PENDING,
         /** Declined, expired, unknown, already collected, or a bad claim secret. Terminal. */
@@ -128,6 +140,38 @@ public class ConnectRequestService {
     @Transactional
     public CreateResult create(
             String name, String callbackUrl, String nonce, String claimSecret, String requesterIp) {
+        return create(name, callbackUrl, nonce, claimSecret, requesterIp, null);
+    }
+
+    /**
+     * As {@link #create}, but for an instance that is already linked and only needs its admin's
+     * browser signed in again.
+     *
+     * @param pinnedTeamId the team the instance already belongs to, learned from its device
+     *     credential rather than from the browser. Approval may only confirm this team, so a reauth
+     *     cannot move the instance or leave the browser signed into an unrelated account.
+     */
+    @Transactional
+    public CreateResult createReauth(
+            String name,
+            String callbackUrl,
+            String nonce,
+            String claimSecret,
+            String requesterIp,
+            Long pinnedTeamId) {
+        if (pinnedTeamId == null) {
+            return CreateResult.rejected(CreateRejection.NOT_LINKED);
+        }
+        return create(name, callbackUrl, nonce, claimSecret, requesterIp, pinnedTeamId);
+    }
+
+    private CreateResult create(
+            String name,
+            String callbackUrl,
+            String nonce,
+            String claimSecret,
+            String requesterIp,
+            Long pinnedTeamId) {
         if (nonce == null || nonce.isBlank() || nonce.length() > MAX_NONCE_LENGTH) {
             return CreateResult.rejected(CreateRejection.BAD_NONCE);
         }
@@ -154,6 +198,9 @@ public class ConnectRequestService {
         request.setNonce(nonce);
         request.setClaimSecretHash(sha256Hex(claimSecret));
         request.setStatus(ConnectRequest.Status.PENDING);
+        request.setMode(
+                pinnedTeamId == null ? ConnectRequest.Mode.LINK : ConnectRequest.Mode.REAUTH);
+        request.setTeamId(pinnedTeamId);
         request.setRequesterIp(requesterIp);
         request.setExpiresAt(now.plusMinutes(LIFETIME_MINUTES));
         repo.save(request);
@@ -179,7 +226,25 @@ public class ConnectRequestService {
                                         r.getName(),
                                         r.getCallbackOrigin(),
                                         !"https".equals(schemeOf(r.getCallbackOrigin())),
+                                        r.getMode(),
                                         r.getStatus()));
+    }
+
+    /** Why an approval was refused, so the page can say something useful. */
+    public enum ApproveRejection {
+        /** Unknown, expired, or already settled. */
+        UNAVAILABLE,
+        /**
+         * The approver's team is not the team this server already belongs to. The distinguishing
+         * case worth naming: signing in as the wrong account.
+         */
+        WRONG_TEAM
+    }
+
+    public record ApproveResult(ApprovalTarget target, ApproveRejection rejection) {
+        public boolean isRejected() {
+            return target == null;
+        }
     }
 
     /**
@@ -187,25 +252,45 @@ public class ConnectRequestService {
      *
      * <p>Deliberately returns the stored callback rather than accepting one, so the caller cannot
      * influence the destination.
+     *
+     * <p>For a re-authentication the team is already pinned from the instance's own credential, and
+     * a caller from a different team is refused rather than allowed to rebind the server. Without
+     * that check an admin could sign in with a personal account and leave the portal reading one
+     * team's billing while the server meters against another.
      */
     @Transactional
-    public Optional<ApprovalTarget> approve(String requestId, Long teamId, Long userId) {
+    public ApproveResult approve(String requestId, Long teamId, Long userId) {
         Optional<ConnectRequest> found = repo.findByRequestIdForUpdate(requestId);
         if (found.isEmpty()) {
-            return Optional.empty();
+            return new ApproveResult(null, ApproveRejection.UNAVAILABLE);
         }
         ConnectRequest request = found.get();
         LocalDateTime now = LocalDateTime.now();
         if (request.isExpired(now) || request.getStatus() != ConnectRequest.Status.PENDING) {
-            return Optional.empty();
+            return new ApproveResult(null, ApproveRejection.UNAVAILABLE);
+        }
+        Long pinned = request.getTeamId();
+        if (pinned != null && !pinned.equals(teamId)) {
+            log.warn(
+                    "Account-link connect: request {} approved by team {} but is pinned to team {};"
+                            + " refusing",
+                    requestId,
+                    teamId,
+                    pinned);
+            return new ApproveResult(null, ApproveRejection.WRONG_TEAM);
         }
         request.setStatus(ConnectRequest.Status.APPROVED);
         request.setTeamId(teamId);
         request.setApprovedByUserId(userId);
         request.setApprovedAt(now);
         repo.save(request);
-        log.info("Account-link connect: request {} approved for team {}", requestId, teamId);
-        return Optional.of(new ApprovalTarget(request.getCallbackUrl(), request.getNonce()));
+        log.info(
+                "Account-link connect: request {} approved for team {} ({})",
+                requestId,
+                teamId,
+                request.getMode());
+        return new ApproveResult(
+                new ApprovalTarget(request.getCallbackUrl(), request.getNonce()), null);
     }
 
     /** Declines a pending handshake. Idempotent in effect: a settled row simply reports false. */
@@ -258,7 +343,21 @@ public class ConnectRequestService {
         };
     }
 
+    /**
+     * Settles an approved handshake. A first link mints a credential; a re-authentication only
+     * confirms, because the instance already holds one and a second would orphan it.
+     */
     private ClaimResult mint(ConnectRequest request) {
+        if (request.getMode() == ConnectRequest.Mode.REAUTH) {
+            request.setStatus(ConnectRequest.Status.CONSUMED);
+            request.setConsumedAt(LocalDateTime.now());
+            repo.save(request);
+            log.info(
+                    "Account-link connect: request {} re-authenticated for team {}",
+                    request.getRequestId(),
+                    request.getTeamId());
+            return new ClaimResult(ClaimOutcome.CONFIRMED, null, null, request.getTeamId());
+        }
         AccountLinkService.RegisteredInstance registered =
                 accountLinkService.register(
                         request.getTeamId(), request.getApprovedByUserId(), request.getName());

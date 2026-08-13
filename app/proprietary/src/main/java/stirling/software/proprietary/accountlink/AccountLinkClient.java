@@ -152,6 +152,11 @@ public class AccountLinkClient {
     public enum ConnectClaimOutcome {
         /** Approved and collected; the credential fields are populated. */
         GRANTED,
+        /**
+         * A re-authentication was approved. No credential comes back: we already hold one, and a
+         * second would orphan it. Only the browser leg needed confirming.
+         */
+        CONFIRMED,
         /** No human decision yet. Keep waiting. */
         PENDING,
         /** Declined, expired or already used. Terminal — do not retry. */
@@ -175,6 +180,23 @@ public class AccountLinkClient {
      */
     public ConnectRequestResult connectRequest(
             String name, String callbackUrl, String nonce, String claimSecret) throws IOException {
+        return connectRequest(name, callbackUrl, nonce, claimSecret, null);
+    }
+
+    /**
+     * As {@link #connectRequest}, but presenting an existing device credential so the SaaS side
+     * treats this as a re-authentication and pins the handshake to the team we already belong to.
+     *
+     * <p>Sending the credential is what makes the pinning trustworthy: the team comes from
+     * something only this instance holds, rather than from anything a browser could assert.
+     */
+    public ConnectRequestResult connectRequest(
+            String name,
+            String callbackUrl,
+            String nonce,
+            String claimSecret,
+            DeviceCredential credential)
+            throws IOException {
         ObjectNode root = mapper.createObjectNode();
         if (name != null && !name.isBlank()) {
             root.put("name", name);
@@ -183,16 +205,19 @@ public class AccountLinkClient {
         root.put("nonce", nonce);
         root.put("claimSecret", claimSecret);
 
-        HttpRequest request =
+        HttpRequest.Builder builder =
                 HttpRequest.newBuilder()
                         .uri(uri("/api/v1/account-link/connect/request"))
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
                         .timeout(timeout())
-                        .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(root)))
-                        .build();
+                        .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(root)));
+        if (credential != null) {
+            builder.header(HEADER_DEVICE_ID, credential.getDeviceId())
+                    .header(HEADER_DEVICE_SECRET, credential.getDeviceSecret());
+        }
 
-        HttpResponse<String> response = send(request);
+        HttpResponse<String> response = send(builder.build());
         if (response.statusCode() / 100 != 2) {
             throw new UpstreamException(response.statusCode(), response.body());
         }
@@ -242,13 +267,18 @@ public class AccountLinkClient {
         }
         try {
             JsonNode body = mapper.readTree(response.body());
+            Long teamId = body.hasNonNull("teamId") ? body.get("teamId").asLong() : null;
+            // A re-authentication says so explicitly and carries no credential, so an absent
+            // credential is only an error when we were expecting one.
+            if ("confirmed".equals(text(body, "status"))) {
+                return new ConnectClaimResult(ConnectClaimOutcome.CONFIRMED, null, null, teamId);
+            }
             String deviceId = text(body, "deviceId");
             String deviceSecret = text(body, "deviceSecret");
             if (deviceId == null || deviceSecret == null) {
                 log.warn("Connect claim succeeded but the reply carried no credential");
                 return ConnectClaimResult.of(ConnectClaimOutcome.REJECTED);
             }
-            Long teamId = body.hasNonNull("teamId") ? body.get("teamId").asLong() : null;
             return new ConnectClaimResult(
                     ConnectClaimOutcome.GRANTED, deviceId, deviceSecret, teamId);
         } catch (RuntimeException e) {

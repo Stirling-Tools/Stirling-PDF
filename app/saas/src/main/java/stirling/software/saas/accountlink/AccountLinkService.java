@@ -99,6 +99,28 @@ public class AccountLinkService {
         return true;
     }
 
+    /**
+     * Resolves an active instance from a device credential, or empty if it does not authenticate.
+     *
+     * <p>Same check {@link DeviceCredentialAuthenticationFilter} performs, exposed for callers
+     * outside the {@code /api/v1/instance} paths that filter covers. The connect handshake needs it
+     * so a re-authentication request can be pinned to the team the instance already belongs to,
+     * learned from the credential rather than taken on trust from a browser.
+     */
+    @Transactional(readOnly = true)
+    public Optional<LinkedInstance> resolveActiveInstance(String deviceId, String deviceSecret) {
+        if (deviceId == null || deviceSecret == null) {
+            return Optional.empty();
+        }
+        return repo.findByDeviceIdAndRevokedAtIsNull(deviceId)
+                .filter(
+                        instance ->
+                                MessageDigest.isEqual(
+                                        sha256Hex(deviceSecret).getBytes(StandardCharsets.UTF_8),
+                                        instance.getDeviceSecretHash()
+                                                .getBytes(StandardCharsets.UTF_8)));
+    }
+
     private String randomSecret() {
         byte[] buf = new byte[SECRET_BYTES];
         random.nextBytes(buf);

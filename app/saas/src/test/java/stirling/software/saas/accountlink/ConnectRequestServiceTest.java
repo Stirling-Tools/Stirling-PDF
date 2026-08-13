@@ -151,12 +151,12 @@ class ConnectRequestServiceTest {
         ConnectRequest row = pending();
         when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
 
-        Optional<ConnectRequestService.ApprovalTarget> target = service.approve("req", 7L, 42L);
+        ConnectRequestService.ApproveResult result = service.approve("req", 7L, 42L);
 
-        assertThat(target).isPresent();
+        assertThat(result.isRejected()).isFalse();
         // The destination comes from the row, never from the caller.
-        assertThat(target.get().callbackUrl()).isEqualTo(CALLBACK);
-        assertThat(target.get().nonce()).isEqualTo(NONCE);
+        assertThat(result.target().callbackUrl()).isEqualTo(CALLBACK);
+        assertThat(result.target().nonce()).isEqualTo(NONCE);
         assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.APPROVED);
         assertThat(row.getTeamId()).isEqualTo(7L);
         assertThat(row.getApprovedByUserId()).isEqualTo(42L);
@@ -170,7 +170,7 @@ class ConnectRequestServiceTest {
         row.setStatus(ConnectRequest.Status.APPROVED);
         when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
 
-        assertThat(service.approve("req", 7L, 42L)).isEmpty();
+        assertThat(service.approve("req", 7L, 42L).isRejected()).isTrue();
     }
 
     @Test
@@ -179,7 +179,86 @@ class ConnectRequestServiceTest {
         row.setExpiresAt(LocalDateTime.now().minusSeconds(1));
         when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
 
-        assertThat(service.approve("req", 7L, 42L)).isEmpty();
+        assertThat(service.approve("req", 7L, 42L).isRejected()).isTrue();
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Re-authentication. The instance is already linked; the browser just needs signing in again.
+    // The team is pinned from the instance's own credential, so approving cannot move the server
+    // and cannot leave the browser signed into an account that does not own it.
+    // ---------------------------------------------------------------------------------------
+
+    @Test
+    void createReauth_pinsTheTeamItWasToldByTheCredential() {
+        ConnectRequestService.CreateResult result =
+                service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, 7L);
+
+        assertThat(result.isRejected()).isFalse();
+        ArgumentCaptor<ConnectRequest> saved = ArgumentCaptor.forClass(ConnectRequest.class);
+        verify(repo).save(saved.capture());
+        assertThat(saved.getValue().getMode()).isEqualTo(ConnectRequest.Mode.REAUTH);
+        assertThat(saved.getValue().getTeamId()).isEqualTo(7L);
+    }
+
+    @Test
+    void createReauth_withoutAnAuthenticatedInstanceIsRefused() {
+        // The controller passes null when the offered device credential did not authenticate.
+        assertThat(
+                        service.createReauth(null, CALLBACK, NONCE, CLAIM_SECRET, null, null)
+                                .rejection())
+                .isEqualTo(CreateRejection.NOT_LINKED);
+        verify(repo, never()).save(any());
+    }
+
+    @Test
+    void create_leavesTheTeamOpenForAFirstLink() {
+        service.create("n", CALLBACK, NONCE, CLAIM_SECRET, null);
+
+        ArgumentCaptor<ConnectRequest> saved = ArgumentCaptor.forClass(ConnectRequest.class);
+        verify(repo).save(saved.capture());
+        assertThat(saved.getValue().getMode()).isEqualTo(ConnectRequest.Mode.LINK);
+        // Approval is what decides the team on a first link.
+        assertThat(saved.getValue().getTeamId()).isNull();
+    }
+
+    @Test
+    void approve_refusesAnApproverFromADifferentTeam() {
+        ConnectRequest row = reauthPinnedTo(7L);
+        when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
+
+        ConnectRequestService.ApproveResult result = service.approve("req", 99L, 42L);
+
+        // This is the "signed in to the wrong account" case, and it must not silently rebind.
+        assertThat(result.rejection()).isEqualTo(ConnectRequestService.ApproveRejection.WRONG_TEAM);
+        assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.PENDING);
+        assertThat(row.getTeamId()).isEqualTo(7L);
+    }
+
+    @Test
+    void approve_acceptsTheTeamTheServerAlreadyBelongsTo() {
+        ConnectRequest row = reauthPinnedTo(7L);
+        when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
+
+        assertThat(service.approve("req", 7L, 42L).isRejected()).isFalse();
+        assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.APPROVED);
+    }
+
+    @Test
+    void claim_onAReauthConfirmsWithoutMintingASecondCredential() {
+        ConnectRequest row = reauthPinnedTo(7L);
+        row.setStatus(ConnectRequest.Status.APPROVED);
+        row.setApprovedByUserId(42L);
+        when(repo.findByRequestIdForUpdate("req")).thenReturn(Optional.of(row));
+
+        ConnectRequestService.ClaimResult result = service.claim("req", CLAIM_SECRET);
+
+        assertThat(result.outcome()).isEqualTo(ClaimOutcome.CONFIRMED);
+        assertThat(result.deviceId()).isNull();
+        assertThat(result.deviceSecret()).isNull();
+        assertThat(result.teamId()).isEqualTo(7L);
+        assertThat(row.getStatus()).isEqualTo(ConnectRequest.Status.CONSUMED);
+        // A second credential would orphan the one the instance already holds.
+        verifyNoInteractions(accountLinkService);
     }
 
     // ---------------------------------------------------------------------------------------
@@ -272,6 +351,14 @@ class ConnectRequestServiceTest {
         row.setClaimSecretHash(AccountLinkService.sha256Hex(CLAIM_SECRET));
         row.setStatus(ConnectRequest.Status.PENDING);
         row.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+        return row;
+    }
+
+    /** A re-authentication whose team came from the instance's credential, not from a browser. */
+    private static ConnectRequest reauthPinnedTo(Long teamId) {
+        ConnectRequest row = pending();
+        row.setMode(ConnectRequest.Mode.REAUTH);
+        row.setTeamId(teamId);
         return row;
     }
 
