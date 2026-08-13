@@ -16,6 +16,11 @@ updates:
     cooldown:
       default-days: 7
     rebase-strategy: "auto"
+    groups:
+      simple-java-mail:
+        patterns:
+          - "org.simplejavamail:simple-java-mail"
+          - "org.simplejavamail:outlook-module"
 
   - package-ecosystem: "docker"
     directories:
@@ -32,6 +37,19 @@ updates:
     cooldown:
       default-days: 7
     rebase-strategy: "auto"
+    groups:
+      ubuntu:
+        patterns:
+          - "ubuntu"
+      eclipse-temurin:
+        patterns:
+          - "eclipse-temurin"
+      uv:
+        patterns:
+          - "ghcr.io/astral-sh/uv"
+      gradle:
+        patterns:
+          - "gradle"
 
   - package-ecosystem: github-actions
     directory: /
@@ -73,14 +91,6 @@ updates:
           - "react-dom"
           - "@types/react"
           - "@types/react-dom"
-      typescript-eslint:
-        patterns:
-          - "@typescript-eslint/*"
-          - "typescript-eslint"
-      eslint:
-        patterns:
-          - "eslint"
-          - "@eslint/*"
       vite:
         patterns:
           - "vite"
@@ -109,6 +119,10 @@ updates:
         patterns:
           - "@posthog/*"
           - "posthog-js"
+      storybook:
+        patterns:
+          - "storybook"
+          - "@storybook/*"
       supabase:
         patterns:
           - "@supabase/*"
@@ -157,6 +171,14 @@ updates:
 
   - package-ecosystem: pip
     directory: /testing/cucumber
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "uv"
+    directory: "/engine"
     schedule:
       interval: "weekly"
     cooldown:

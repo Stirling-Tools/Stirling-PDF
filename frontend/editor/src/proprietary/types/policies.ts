@@ -136,7 +136,7 @@ export interface PolicyState {
   /** Whether the rename rule is applied before ("prefix") or after ("suffix")
    *  the base filename, or as an auto-incrementing number. */
   outputNamePosition?: "prefix" | "suffix" | "auto-number";
-  /** When the policy runs: on "upload" or before "export". Defaults to "upload". */
+  /** When the policy runs: on "upload" or before "export". See `defaultRunOn`. */
   runOn?: "upload" | "export";
   /**
    * Execution order among policies that share a trigger. When several policies run

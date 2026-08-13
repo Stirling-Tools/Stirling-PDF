@@ -34,6 +34,7 @@ export interface AppConfig {
   serverCertificateEnabled?: boolean;
   hardwareSigningAvailable?: boolean;
   enableMobileScanner?: boolean;
+  enableMobileSignature?: boolean;
   mobileScannerConvertToPdf?: boolean;
   mobileScannerImageResolution?: string;
   mobileScannerPageFormat?: string;

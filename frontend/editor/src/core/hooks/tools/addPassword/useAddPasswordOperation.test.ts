@@ -147,6 +147,15 @@ describe("useAddPasswordOperation", () => {
 });
 
 describe("addPassword mappers", () => {
+  test("falls back to the default key length when the stored step omits it", () => {
+    // A pipeline step saved without keyLength must not deserialize to
+    // undefined: the settings UI calls keyLength.toString() on it.
+    const restored = addPasswordFromApiParams({
+      password: "user-pw",
+    } as never);
+    expect(restored.keyLength).toBe(128);
+  });
+
   test("round-trips backend params, including the flattened permissions", () => {
     // Baseline differs from the configured values so the round trip fails if
     // fromApiParams drops a field instead of reconstructing it.

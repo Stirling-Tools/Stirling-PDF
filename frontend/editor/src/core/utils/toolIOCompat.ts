@@ -102,12 +102,18 @@ export function resolveOutput(
   for (const rule of spec.cases ?? []) {
     let allHold = true;
     for (const condition of rule.when) {
-      if (!parameters || !(condition.param in parameters)) {
+      let raw: unknown;
+      if (parameters && condition.param in parameters) {
+        raw = parameters[condition.param];
+      } else if (condition.default !== undefined) {
+        // The caller omitted it, so it takes the endpoint's default.
+        raw = condition.default;
+      } else {
         sawUnknownParam = true;
         allHold = false;
         continue;
       }
-      const value = normalise(parameters[condition.param]);
+      const value = normalise(raw);
       allHold &&= condition.matches.some((match) => normalise(match) === value);
     }
     if (allHold) {

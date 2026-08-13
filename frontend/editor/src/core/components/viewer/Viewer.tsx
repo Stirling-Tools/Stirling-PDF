@@ -5,7 +5,7 @@ import {
   NonPdfViewerWrapper,
   type ViewerProps,
 } from "@app/components/viewer/NonPdfViewer";
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { isStirlingFile } from "@app/types/fileContext";
 import { isPdfFile } from "@app/utils/fileUtils";
@@ -26,8 +26,7 @@ type SignatureOverlayPassThrough = Pick<
 >;
 
 const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
-  const { selectors } = useFileState();
-  const activeFiles = selectors.getFiles();
+  const { files: activeFiles } = useAllFiles();
   const { activeFileId } = useViewer();
 
   // Determine the active file — previewFile takes priority, then look up by stable ID

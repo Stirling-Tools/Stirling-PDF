@@ -61,4 +61,47 @@ class CredentialEncryptionTest {
         assertThatThrownBy(() -> CredentialEncryption.decrypt(tampered))
                 .isInstanceOf(IllegalStateException.class);
     }
+
+    @Test
+    void encryptStaysBase64SoStringColumnsKeepTheirWireFormat() {
+        assertThat(Base64.getDecoder().decode(CredentialEncryption.encrypt("secret"))).isNotEmpty();
+    }
+
+    @Test
+    void byteRoundTripRecoversPlaintext() {
+        // Not valid UTF-8: the byte path must not go via a charset.
+        byte[] plaintext = new byte[] {0, -1, 0x7F, -128};
+
+        byte[] encrypted = CredentialEncryption.encryptBytes(plaintext);
+
+        assertThat(encrypted).isNotEqualTo(plaintext);
+        assertThat(CredentialEncryption.decryptBytes(encrypted)).isEqualTo(plaintext);
+    }
+
+    @Test
+    void sameBytesProduceDifferentCiphertext() {
+        byte[] plaintext = "repeated-secret".getBytes();
+
+        byte[] first = CredentialEncryption.encryptBytes(plaintext);
+        byte[] second = CredentialEncryption.encryptBytes(plaintext);
+
+        assertThat(first).isNotEqualTo(second);
+        assertThat(CredentialEncryption.decryptBytes(first)).isEqualTo(plaintext);
+        assertThat(CredentialEncryption.decryptBytes(second)).isEqualTo(plaintext);
+    }
+
+    @Test
+    void tamperedBlobIsRejected() {
+        byte[] encrypted = CredentialEncryption.encryptBytes("top-secret".getBytes());
+        encrypted[encrypted.length - 1] ^= 0x01;
+
+        assertThatThrownBy(() -> CredentialEncryption.decryptBytes(encrypted))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void nullBytesPassThrough() {
+        assertThat(CredentialEncryption.encryptBytes(null)).isNull();
+        assertThat(CredentialEncryption.decryptBytes(null)).isNull();
+    }
 }

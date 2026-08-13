@@ -270,7 +270,7 @@ export default function ProviderCard({
                 href={provider.documentationUrl}
                 target="_blank"
                 size="xs"
-                c="blue"
+                c="var(--c-accent-text)"
               >
                 {t(
                   "admin.settings.connections.documentation",

@@ -859,7 +859,7 @@ export function WatchedFolderManagementModal({
               {t("watchedFolders.modal.sectionSteps", "Steps")}
             </SectionLabel>
             {automationError && (
-              <Text size="xs" c="red" mt={4}>
+              <Text size="xs" c="var(--color-red-dark)" mt={4}>
                 {automationError}
               </Text>
             )}

@@ -17,7 +17,6 @@ import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.examples.util.DeletingRandomAccessFile;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
@@ -31,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.util.DeletingRandomAccessFile;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFileManager;
 

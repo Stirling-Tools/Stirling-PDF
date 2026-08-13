@@ -129,6 +129,8 @@ export function PolicyCatalogueTable({
           ? undefined
           : onOpen(entry)
       }
+      // A category with no policy yet renders a "set up" button, which opens the same thing.
+      rowsContainControls
     />
   );
 }

@@ -73,7 +73,7 @@ const EncryptedPdfUnlockModal = ({
             autoFocus
           />
           {errorMessage ? (
-            <Text c="red" size="sm">
+            <Text c="var(--color-red-dark)" size="sm">
               {errorMessage}
             </Text>
           ) : null}

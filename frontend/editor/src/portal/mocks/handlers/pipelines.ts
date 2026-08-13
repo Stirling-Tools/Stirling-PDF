@@ -70,6 +70,29 @@ function seedPipelines(): StoredPolicy[] {
       outputIds: ["src-contracts"],
     },
     {
+      // A chain long enough to overflow the builder's graph column, which is where the graph has to
+      // start scrolling instead of pushing the inspector off the page.
+      id: "plc-long",
+      name: "Full document pipeline",
+      owner: "ops@acme.com",
+      enabled: true,
+      inputs: [{ sourceId: "src-claims", trigger: null }],
+      steps: [
+        { operation: "/api/v1/misc/repair", parameters: {} },
+        { operation: "/api/v1/misc/ocr-pdf", parameters: {} },
+        { operation: "/api/v1/general/rotate-pdf", parameters: {} },
+        { operation: "/api/v1/general/crop", parameters: {} },
+        { operation: "/api/v1/general/remove-pages", parameters: {} },
+        { operation: "/api/v1/misc/add-page-numbers", parameters: {} },
+        { operation: "/api/v1/security/add-watermark", parameters: {} },
+        { operation: "/api/v1/security/sanitize-pdf", parameters: {} },
+        { operation: "/api/v1/misc/flatten", parameters: {} },
+        { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+      ],
+      output: { type: "inline", options: {} },
+      outputIds: ["src-archive"],
+    },
+    {
       id: "plc-onboarding",
       name: "Onboarding OCR (paused)",
       owner: "ops@acme.com",

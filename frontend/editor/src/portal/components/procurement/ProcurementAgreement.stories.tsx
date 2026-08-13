@@ -69,10 +69,9 @@ const meta: Meta<typeof ProcurementAgreement> = {
   args: {
     quote,
     busy: false,
-    downloading: false,
     onAgree: () => {},
-    onDownload: () => {},
-    onEdit: () => {},
+    onRequestChanges: () => {},
+    onClose: () => {},
   },
 };
 export default meta;
@@ -81,12 +80,7 @@ type Story = StoryObj<typeof ProcurementAgreement>;
 
 export const Default: Story = {};
 
-// Agreeing: the primary CTA shows its loading state while the accept call is in flight.
-export const Agreeing: Story = {
+// Signing: the primary CTA shows its loading state while the accept call is in flight.
+export const Signing: Story = {
   args: { busy: true },
-};
-
-// Downloading: the secondary action shows its loading state instead.
-export const Downloading: Story = {
-  args: { downloading: true },
 };

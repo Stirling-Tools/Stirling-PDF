@@ -167,7 +167,7 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
             {/* Warnings */}
             {analysis.warnings.length > 0 && (
               <Box>
-                <Text size="xs" c="orange" fw={500}>
+                <Text size="xs" c="var(--color-amber-dark)" fw={500}>
                   {t("pdfTextEditor.fontAnalysis.warnings", "Warnings")}:
                 </Text>
                 <List size="xs" spacing={2} withPadding>
@@ -183,7 +183,7 @@ const FontDetailItem = ({ analysis }: { analysis: FontAnalysis }) => {
             {/* Suggestions */}
             {analysis.suggestions.length > 0 && (
               <Box>
-                <Text size="xs" c="blue" fw={500}>
+                <Text size="xs" c="var(--c-accent-text)" fw={500}>
                   {t("pdfTextEditor.fontAnalysis.suggestions", "Notes")}:
                 </Text>
                 <List size="xs" spacing={2} withPadding>

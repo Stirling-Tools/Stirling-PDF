@@ -189,6 +189,13 @@ const FilePickerModal = ({
                           checked={isSelected}
                           onChange={() => toggleFileSelection(fileId)}
                           onClick={(e) => e.stopPropagation()}
+                          aria-label={t(
+                            "fileUpload.selectFile",
+                            "Select {{name}}",
+                            {
+                              name: file.name,
+                            },
+                          )}
                         />
 
                         {/* Thumbnail */}
@@ -239,7 +246,7 @@ const FilePickerModal = ({
 
             {/* Selection summary */}
             {selectedFileIds.length > 0 && (
-              <Text size="sm" c="blue" ta="center">
+              <Text size="sm" c="var(--c-accent-text)" ta="center">
                 {selectedFileIds.length}{" "}
                 {t("fileManager.filesSelected", "files selected")}
               </Text>

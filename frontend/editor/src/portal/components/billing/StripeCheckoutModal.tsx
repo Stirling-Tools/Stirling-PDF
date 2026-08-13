@@ -451,7 +451,6 @@ export function StripeCheckoutModal({
                 {t("portal.billing.checkout.cap.back", "Back")}
               </Button>
               <Button
-                accent="premium"
                 loading={capBusy}
                 disabled={!capValid}
                 onClick={handleContinue}

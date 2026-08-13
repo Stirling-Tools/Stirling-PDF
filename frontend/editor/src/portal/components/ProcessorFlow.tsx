@@ -102,7 +102,9 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
 
   return (
     <Card padding="loose" className="portal-pf">
-      <header className="portal-pf__head">
+      {/* A div, not <header>: the card sits in page content, and a <header> here
+          would register a second banner landmark alongside the page's own. */}
+      <div className="portal-pf__head">
         <div className="portal-pf__head-text">
           <span
             className={
@@ -130,7 +132,7 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
             ]}
           />
         </div>
-      </header>
+      </div>
 
       {isLoading ? (
         <div className="portal-pf__loading" aria-hidden>

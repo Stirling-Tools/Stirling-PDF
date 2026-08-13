@@ -26,6 +26,7 @@ import {
   type JscanifyScanner,
 } from "@app/utils/loadJscanify";
 import apiClient from "@app/services/apiClient";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 // Use the configured API base (e.g. api.stirling.com), not the page origin.
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
@@ -890,7 +891,7 @@ export default function MobileScannerPage() {
         window.close();
         // Fallback if window.close() doesn't work (some browsers block it)
         if (!window.closed) {
-          navigate("/");
+          navigate(EDITOR_BASENAME);
         }
       }, 1500);
     } catch (err) {
@@ -1107,7 +1108,7 @@ export default function MobileScannerPage() {
                 <PhotoCameraRoundedIcon
                   style={{
                     fontSize: "3rem",
-                    color: "var(--mantine-color-blue-6)",
+                    color: "var(--c-accent-text)",
                   }}
                 />
                 <Text size="lg" fw={600}>

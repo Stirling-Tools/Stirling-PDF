@@ -12,6 +12,7 @@ import {
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { firePixel } from "@app/utils/scarfTracking";
 import { withBasePath } from "@app/constants/app";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 /**
@@ -35,7 +36,7 @@ export function useNavigationUrlSync(
       const tool = registry[toolId];
       if (tool?.requiresPremium === true && premiumEnabled !== true) {
         // Premium tool accessed without premium - redirect to home
-        const homePath = withBasePath("/");
+        const homePath = withBasePath(EDITOR_BASENAME);
         if (window.location.pathname !== homePath) {
           clearToolRoute(true); // Use replaceState to avoid adding to history
           window.location.href = homePath;
@@ -81,7 +82,7 @@ export function useNavigationUrlSync(
     } else if (prevSelectedTool.current !== null) {
       // Only clear URL if we had a tool before (user navigated away)
       // Don't clear on initial load when both current and previous are null
-      const homePath = withBasePath("/");
+      const homePath = withBasePath(EDITOR_BASENAME);
       if (window.location.pathname !== homePath) {
         clearToolRoute(false); // Use pushState for user navigation
       }

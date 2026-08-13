@@ -140,7 +140,13 @@ export function ResetPasswordModal({
             }
           >
             <div className="portal-users__pw-row">
-              <Input value={generated} readOnly />
+              {/* FormField's label wires up to the row wrapper, not this
+                  input, so name the input directly. */}
+              <Input
+                value={generated}
+                readOnly
+                aria-label={t("users.resetPw.newPassword", "New password")}
+              />
               <Button
                 variant="secondary"
                 size="sm"

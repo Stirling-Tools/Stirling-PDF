@@ -84,7 +84,8 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
       },
       {
         key: "open",
-        header: "",
+        header: t("portal.pipelines.table.open"),
+        headerHidden: true,
         align: "right",
         width: "2.5rem",
         render: () => (

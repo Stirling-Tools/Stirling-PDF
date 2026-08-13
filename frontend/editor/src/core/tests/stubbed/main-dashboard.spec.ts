@@ -3,7 +3,7 @@ import { openSettings } from "@app/tests/helpers/ui-helpers";
 
 test.describe("2. Main Dashboard / Home Page", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/editor");
   });
 
   test.describe("2.1 Dashboard Layout and Tool Categories", () => {
@@ -80,7 +80,7 @@ test.describe("2. Main Dashboard / Home Page", () => {
 
       await expect(page).toHaveURL(/\/merge/, { timeout: 10000 });
 
-      await page.goto("/");
+      await page.goto("/editor");
 
       // Tool search is a header toggle; the field mounts only once pressed.
       await expect(

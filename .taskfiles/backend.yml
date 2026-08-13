@@ -146,6 +146,7 @@ tasks:
 
   swagger:
     desc: "Generate OpenAPI docs"
+    run: once
     cmds:
       - cmd: cmd /c ".\gradlew.bat :stirling-pdf:copySwaggerDoc"
         platforms: [windows]

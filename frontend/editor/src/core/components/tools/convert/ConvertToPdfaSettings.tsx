@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Stack, Text, Select, Alert, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
@@ -24,6 +25,7 @@ const ConvertToPdfaSettings = ({
   const { t } = useTranslation();
   const { hasDigitalSignatures, isChecking } =
     usePdfSignatureDetection(selectedFiles);
+  const outputFormatLabelId = useId();
 
   const pdfaFormatOptions = [
     { value: "pdfa-1", label: "PDF/A-1b" },
@@ -49,10 +51,11 @@ const ConvertToPdfaSettings = ({
       )}
 
       <Stack gap="xs">
-        <Text size="xs" fw={500}>
+        <Text id={outputFormatLabelId} size="xs" fw={500}>
           {t("convert.outputFormat", "Output Format")}:
         </Text>
         <Select
+          aria-labelledby={outputFormatLabelId}
           value={parameters.pdfaOptions.outputFormat}
           onChange={(value) =>
             onParameterChange("pdfaOptions", {

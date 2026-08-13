@@ -11,6 +11,7 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import { getFileSize, getFileDate } from "@app/utils/fileUtils";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
 interface FileCardProps {
   file: File;
@@ -44,7 +45,14 @@ const FileCard = ({
   const [isHovered, setIsHovered] = useState(false);
 
   const isPdf = file.type === "application/pdf";
-  const isHydrating = isPdf && !isEncrypted && !thumb && !isGenerating;
+  // Files at/above the parse limit never get a thumbnail, so without the size
+  // check their spinner has no terminal state and runs forever.
+  const isHydrating =
+    isPdf &&
+    file.size < LARGE_PDF_PARSE_LIMIT &&
+    !isEncrypted &&
+    !thumb &&
+    !isGenerating;
 
   return (
     <Card

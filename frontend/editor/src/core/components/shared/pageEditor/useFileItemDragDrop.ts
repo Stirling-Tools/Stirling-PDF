@@ -111,8 +111,7 @@ export const useFileItemDragDrop = ({
         if (!element) return;
 
         const rect = element.getBoundingClientRect();
-        const clientY =
-          (source as any).element?.getBoundingClientRect().top || 0;
+        const clientY = source.element?.getBoundingClientRect().top || 0;
         const midpoint = rect.top + rect.height / 2;
 
         setDropPosition(clientY < midpoint ? "below" : "above");
@@ -121,7 +120,10 @@ export const useFileItemDragDrop = ({
         setIsDragOver(false);
         const dropPos = dropPositionRef.current;
         setDropPosition("below");
-        const sourceData = source.data as any;
+        const sourceData = source.data as {
+          type?: string;
+          fromIndex?: number;
+        };
         if (sourceData?.type === "file-item") {
           const fromIndex = sourceData.fromIndex as number;
           let toIndex = indexRef.current;

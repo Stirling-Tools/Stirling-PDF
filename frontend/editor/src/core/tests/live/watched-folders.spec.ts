@@ -182,7 +182,7 @@ test.describe("Watched Folders — Presets", () => {
     const count1 = await getIDBFolderCount(page);
 
     // Navigate away and back
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/editor", { waitUntil: "domcontentloaded" });
     await page.waitForSelector('[data-testid="watchedFolders-button"]', {
       timeout: 15000,
     });
@@ -421,7 +421,7 @@ test.describe("Watched Folders — Home Page", () => {
       sessionStorage.removeItem("watchedFolderHowItWorksDismissed"),
     );
     // Re-navigate
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/editor", { waitUntil: "domcontentloaded" });
     await page.waitForSelector('[data-testid="watchedFolders-button"]', {
       timeout: 15000,
     });

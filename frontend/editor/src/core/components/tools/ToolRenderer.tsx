@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { BaseToolProps } from "@app/types/tool";
 import { ToolId } from "@app/types/toolId";
@@ -14,6 +15,7 @@ const ToolRenderer = ({
   onComplete,
   onError,
 }: ToolRendererProps) => {
+  const { t } = useTranslation();
   // Get the tool from context (instead of direct hook call)
   const { toolRegistry } = useToolWorkflow();
   const selectedTool =
@@ -27,7 +29,7 @@ const ToolRenderer = ({
   }
 
   if (!selectedTool || !selectedTool.component) {
-    return <div>Tool not found: {selectedToolKey}</div>;
+    return <div>{t("toolRenderer.notFound", { tool: selectedToolKey })}</div>;
   }
 
   const ToolComponent = selectedTool.component;

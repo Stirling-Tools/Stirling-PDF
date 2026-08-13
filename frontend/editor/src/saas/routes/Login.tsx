@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { resolveLandingPath } from "@app/utils/loginLanding";
 import { supabase, signInAnonymously } from "@app/auth/supabase";
 import { Button } from "@app/ui/Button";
 import { useAuth } from "@app/auth/UseSession";
@@ -20,7 +21,6 @@ import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
-import { markLoginLandingPending } from "@app/utils/loginLanding";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
@@ -165,10 +165,10 @@ export default function Login() {
         setError(error.message);
       } else if (data.user) {
         console.log("[Login] Email sign in successful");
-        // Fresh login with no explicit destination: let the role-based landing
-        // redirect route team leads to the processor. User is redirected by the
-        // auth state change.
-        if (!nextPath) markLoginLandingPending();
+        // No explicit destination: land team leads on the processor and everyone
+        // else on the editor. Resolved here rather than by bouncing through "/"
+        // so the app isn't torn down and remounted on the way.
+        if (!nextPath) navigate(await resolveLandingPath(), { replace: true });
       }
     } catch (err) {
       console.error("[Login] Unexpected error]:", err);
@@ -325,7 +325,7 @@ export default function Login() {
                   <p
                     style={{
                       fontSize: "0.875rem",
-                      color: "var(--c-success)",
+                      color: "var(--color-green-dark)",
                       margin: 0,
                     }}
                   >
@@ -404,7 +404,7 @@ export default function Login() {
             border: "none",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: "var(--c-primary)",
+            color: "var(--c-accent-text)",
           }}
         >
           {t("login.createAccount", "Create an account")}

@@ -69,9 +69,20 @@ describe("fromWirePolicy → round-trip", () => {
     expect(decoded.steps).toEqual(FULL_STATE.steps);
   });
 
-  it("defaults runOn to upload when missing", () => {
+  it("defaults a missing runOn to the category default (security → export)", () => {
     const wire = toWirePolicy(FULL_STATE);
     delete (wire.output.options as Record<string, unknown>).runOn;
+    expect(fromWirePolicy(wire).runOn).toBe("export");
+  });
+
+  it("defaults a missing runOn to upload for other categories", () => {
+    const wire = toWirePolicy({ ...FULL_STATE, categoryId: "classification" });
+    delete (wire.output.options as Record<string, unknown>).runOn;
+    expect(fromWirePolicy(wire).runOn).toBe("upload");
+  });
+
+  it("keeps an explicitly saved upload on a security policy", () => {
+    const wire = toWirePolicy(FULL_STATE);
     expect(fromWirePolicy(wire).runOn).toBe("upload");
   });
 

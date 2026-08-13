@@ -27,7 +27,7 @@ const toneStyles: Record<
   warning: {
     background: "var(--mantine-color-orange-0)",
     border: "var(--mantine-color-orange-3)",
-    text: "var(--mantine-color-orange-9)",
+    text: "var(--color-amber-dark)",
     icon: "var(--mantine-color-orange-7)",
     buttonColor: "orange",
   },

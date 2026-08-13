@@ -19,7 +19,7 @@ import type { Team } from "@portal/api/teams";
 // Prove the gating against the real flavor capability files. The portal vitest
 // project resolves @app to proprietary and has no @saas alias, so the SaaS set is
 // reached by path; the self-hosted set uses the @proprietary alias.
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import { usersCapabilities as saasCaps } from "../../../saas/portal/usersCapabilities";
 import { usersCapabilities as selfHostedCaps } from "@proprietary/portal/usersCapabilities";
 

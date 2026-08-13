@@ -99,8 +99,12 @@ export default function SignupForm({
           />
         </div>
 
+        {/* Collapsed to zero height rather than unmounted so it can animate open,
+            so `inert` is what keeps the field out of the tab order while
+            aria-hidden keeps it off the accessibility tree. */}
         <div
           aria-hidden={!showConfirm}
+          inert={!showConfirm}
           className="auth-confirm"
           style={{
             maxHeight: showConfirm ? 96 : 0,

@@ -2,6 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   validateToolChain,
@@ -24,7 +25,9 @@ interface SharedCase {
 
 /** Shared with the backend and engine, so it lives at the repo root. */
 function casesFile(): string {
-  let current = dirname(new URL(import.meta.url).pathname);
+  // fileURLToPath, not URL.pathname: on Windows the latter yields "/C:/..." and
+  // resolving against it produces a "C:\C:\..." path that never matches.
+  let current = dirname(fileURLToPath(import.meta.url));
   for (let i = 0; i < 12; i++) {
     const candidate = resolve(current, "testing/tool-io-cases.json");
     try {

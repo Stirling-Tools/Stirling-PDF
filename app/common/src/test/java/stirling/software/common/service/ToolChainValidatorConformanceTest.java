@@ -101,7 +101,12 @@ class ToolChainValidatorConformanceTest {
                 for (JsonNode match : condition.get("matches")) {
                     matches.add(match.asString());
                 }
-                when.add(new ToolIOSpec.When(condition.get("param").asString(), matches));
+                JsonNode paramDefault = condition.get("default");
+                when.add(
+                        new ToolIOSpec.When(
+                                condition.get("param").asString(),
+                                matches,
+                                paramDefault == null ? null : paramDefault.asString()));
             }
             cases.add(
                     new ToolIOSpec.Case(

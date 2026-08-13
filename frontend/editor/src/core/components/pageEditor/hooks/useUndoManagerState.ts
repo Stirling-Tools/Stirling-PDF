@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { UndoManager } from "@app/components/pageEditor/commands/pageCommands";
+import {
+  DOMCommand,
+  UndoManager,
+} from "@app/components/pageEditor/commands/pageCommands";
 
 interface UseUndoManagerStateParams {
   setHasUnsavedChanges: (dirty: boolean) => void;
@@ -29,7 +32,7 @@ export const useUndoManagerState = ({
   }, [updateUndoRedoState]);
 
   const executeCommandWithTracking = useCallback(
-    (command: any) => {
+    (command: DOMCommand) => {
       undoManagerRef.current.executeCommand(command);
       setHasUnsavedChanges(true);
     },
