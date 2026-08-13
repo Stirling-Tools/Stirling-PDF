@@ -4,6 +4,7 @@ import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import HomePage from "@app/pages/HomePage";
 import { useBackendProbe } from "@app/hooks/useBackendProbe";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import LoginHeader from "@app/routes/login/LoginHeader";
 import { useTranslation } from "react-i18next";
@@ -59,7 +60,7 @@ export default function Landing() {
       if (result.status === "up") {
         await refetch();
         if (result.loginDisabled) {
-          navigate("/", { replace: true });
+          navigate(EDITOR_BASENAME, { replace: true });
         }
       }
     };
@@ -130,7 +131,7 @@ export default function Landing() {
       const result = await backendProbe.probe();
       if (result.status === "up") {
         await refetch();
-        navigate("/", { replace: true });
+        navigate(EDITOR_BASENAME, { replace: true });
       }
     };
     return (
@@ -173,10 +174,17 @@ export default function Landing() {
     return <HomePage />;
   }
 
-  // No session - redirect to login page
-  // This ensures the URL always shows /login when not authenticated
+  // No session - redirect to login page. The URL always shows /login when not
+  // authenticated, and carries where we came from so signing in returns there
+  // (going to /editor and logging in lands back on /editor, not the role
+  // router). Also passed as router state; the query is what survives a reload.
+  const returnTo = encodeURIComponent(location.pathname + location.search);
   return config?.enableLogin === true && !backendProbe.loginDisabled ? (
-    <Navigate to="/login" replace state={{ from: location }} />
+    <Navigate
+      to={`/login?from=${returnTo}`}
+      replace
+      state={{ from: location }}
+    />
   ) : (
     <HomePage />
   );
