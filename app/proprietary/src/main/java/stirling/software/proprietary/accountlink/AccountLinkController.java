@@ -59,7 +59,12 @@ public class AccountLinkController {
         this.syncServiceProvider = syncServiceProvider;
     }
 
-    public record ConnectStartRequest(String name) {}
+    /**
+     * {@code callbackUrl} is the portal telling us where its own callback route lives. Honoured
+     * only when it matches the browser's {@code Origin}, so it is a way of knowing the frontend's
+     * real origin and base path rather than a redirect the caller gets to choose.
+     */
+    public record ConnectStartRequest(String name, String callbackUrl) {}
 
     /** {@code nonce} comes from the callback fragment the approval page redirected to. */
     public record ConnectCompleteRequest(String nonce) {}
@@ -74,9 +79,13 @@ public class AccountLinkController {
     @PostMapping("/connect/start")
     public ResponseEntity<?> connectStart(
             @RequestBody(required = false) ConnectStartRequest req, HttpServletRequest http) {
+        ConnectService.CallbackHint hint =
+                new ConnectService.CallbackHint(
+                        req != null ? req.callbackUrl() : null,
+                        http.getHeader("Origin"),
+                        baseUrlOf(http));
         try {
-            return ResponseEntity.ok(
-                    connectService.start(req != null ? req.name() : null, baseUrlOf(http)));
+            return ResponseEntity.ok(connectService.start(req != null ? req.name() : null, hint));
         } catch (AccountLinkClient.UpstreamException e) {
             log.warn("Account-link connect rejected upstream: HTTP {}", e.status());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)

@@ -40,14 +40,16 @@ import lombok.Setter;
  * <p>The device credential is minted at claim time, not at approval time, so no plaintext secret is
  * ever persisted here waiting to be collected.
  */
+/*
+ * Only one index is declared. request_id is already UNIQUE on the column, which carries its own
+ * index, and nothing queries expires_at: expiry is evaluated in Java after loading a row by id,
+ * and there is no sweep. The remaining index serves the per-IP creation cap, which is the one
+ * query here that is not a primary-key lookup.
+ */
 @Entity
 @Table(
         name = "account_link_connect_request",
-        indexes = {
-            @Index(name = "idx_alcr_request_id", columnList = "request_id", unique = true),
-            @Index(name = "idx_alcr_ip_created", columnList = "requester_ip,created_at"),
-            @Index(name = "idx_alcr_expires", columnList = "expires_at")
-        })
+        indexes = @Index(name = "idx_alcr_ip_created", columnList = "requester_ip,created_at"))
 @Getter
 @Setter
 @NoArgsConstructor

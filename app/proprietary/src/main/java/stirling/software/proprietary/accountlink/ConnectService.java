@@ -1,12 +1,15 @@
 package stirling.software.proprietary.accountlink;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -91,24 +94,35 @@ public class ConnectService {
     }
 
     /**
+     * Everything we know about where the admin's browser actually is, in decreasing authority.
+     *
+     * @param requestedCallbackUrl the callback the portal built from its own router. The frontend
+     *     is the only party that knows where its route really lives, so this is knowledge rather
+     *     than a guess. Honoured only when its origin matches {@code browserOrigin}.
+     * @param browserOrigin the {@code Origin} header. Set by the browser and not writable from page
+     *     script, which is what makes the check above worth doing.
+     * @param derivedBaseUrl last resort, reconstructed from the request. Right for a direct hit,
+     *     wrong whenever the frontend is served from a different port than the API.
+     */
+    public record CallbackHint(
+            String requestedCallbackUrl, String browserOrigin, String derivedBaseUrl) {}
+
+    /**
      * Opens a handshake and returns where to send the admin.
      *
-     * @param requestBaseUrl this instance's base URL as derived from the incoming request; used
-     *     only when {@code stirling.billing.account-link.public-url} is unset.
      * @throws IOException if SaaS cannot be reached or refuses the handshake.
      */
     @Transactional
-    public ConnectStatus start(String name, String requestBaseUrl) throws IOException {
+    public ConnectStatus start(String name, CallbackHint hint) throws IOException {
         if (credentialStore.isLinked()) {
             return status();
         }
-        String base = resolveBaseUrl(requestBaseUrl);
-        if (base == null) {
+        String callbackUrl = resolveCallbackUrl(hint);
+        if (callbackUrl == null) {
             throw new IOException(
-                    "Cannot determine this instance's public URL; set"
+                    "Cannot determine where to send the admin back to; set"
                             + " stirling.billing.account-link.public-url");
         }
-        String callbackUrl = base + CALLBACK_PATH;
         String nonce = randomSecret();
         String claimSecret = randomSecret();
 
@@ -217,15 +231,66 @@ public class ConnectService {
         return trimTrailingSlash(appBase) + AUTHORIZE_PATH + "?request=" + requestId;
     }
 
-    /** Explicit configuration wins; otherwise fall back to what the request told us. */
-    private String resolveBaseUrl(String requestBaseUrl) {
+    /**
+     * Decides the callback, preferring knowledge over inference.
+     *
+     * <ol>
+     *   <li>An explicit {@code public-url} always wins: an operator who has set it knows something
+     *       we cannot observe.
+     *   <li>Otherwise the portal's own callback, but only if it is on the same origin the browser
+     *       reported. The frontend knows its router's base path and its own port; the {@code
+     *       Origin} header proves the claim came from that origin rather than from a script or a
+     *       stray client.
+     *   <li>Otherwise the browser's origin plus our route, which is still better than the request's
+     *       own host and port.
+     *   <li>Only then the reconstructed request URL, which is wrong whenever the frontend and the
+     *       API are on different ports (every local dev setup).
+     * </ol>
+     */
+    String resolveCallbackUrl(CallbackHint hint) {
         String configured = properties.getPublicUrl();
         if (configured != null && !configured.isBlank()) {
-            return trimTrailingSlash(configured.strip());
+            return trimTrailingSlash(configured.strip()) + CALLBACK_PATH;
         }
-        return requestBaseUrl == null || requestBaseUrl.isBlank()
+        String browserOrigin = originOf(hint.browserOrigin());
+        if (browserOrigin != null) {
+            String requested = hint.requestedCallbackUrl();
+            if (requested != null && browserOrigin.equals(originOf(requested))) {
+                return requested.strip();
+            }
+            return browserOrigin + CALLBACK_PATH;
+        }
+        return hint.derivedBaseUrl() == null || hint.derivedBaseUrl().isBlank()
                 ? null
-                : trimTrailingSlash(requestBaseUrl.strip());
+                : trimTrailingSlash(hint.derivedBaseUrl().strip()) + CALLBACK_PATH;
+    }
+
+    /** Scheme, host and port of an absolute http(s) URL; null if it is not one. */
+    private static String originOf(String candidate) {
+        if (candidate == null || candidate.isBlank()) {
+            return null;
+        }
+        URI uri;
+        try {
+            uri = new URI(candidate.strip());
+        } catch (URISyntaxException e) {
+            return null;
+        }
+        if (uri.getScheme() == null || uri.getHost() == null) {
+            return null;
+        }
+        String scheme = uri.getScheme().toLowerCase(Locale.ROOT);
+        if (!"http".equals(scheme) && !"https".equals(scheme)) {
+            return null;
+        }
+        int port = uri.getPort();
+        boolean defaultPort =
+                port == -1
+                        || ("http".equals(scheme) && port == 80)
+                        || ("https".equals(scheme) && port == 443);
+        return defaultPort
+                ? scheme + "://" + uri.getHost()
+                : scheme + "://" + uri.getHost() + ":" + port;
     }
 
     private static String trimTrailingSlash(String value) {

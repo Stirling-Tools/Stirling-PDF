@@ -63,7 +63,7 @@ class ConnectServiceTest {
         properties.setPublicUrl("https://pdf.example.com/");
         stubCreate();
 
-        service.start("prod-1", "http://10.0.0.5:8080");
+        service.start("prod-1", fromRequest("http://10.0.0.5:8080"));
 
         verify(client)
                 .connectRequest(
@@ -79,7 +79,7 @@ class ConnectServiceTest {
     void start_fallsBackToTheAddressTheRequestArrivedOn() throws Exception {
         stubCreate();
 
-        service.start(null, "https://pdf.internal:8443/stirling");
+        service.start(null, fromRequest("https://pdf.internal:8443/stirling"));
 
         ArgumentCaptor<String> callback = ArgumentCaptor.forClass(String.class);
         verify(client).connectRequest(any(), callback.capture(), anyString(), anyString());
@@ -90,8 +90,73 @@ class ConnectServiceTest {
 
     @Test
     void start_withNoAddressAtAllFailsRatherThanGuessing() {
-        assertThat(catchIo(() -> service.start(null, null))).hasMessageContaining("public-url");
+        assertThat(catchIo(() -> service.start(null, fromRequest(null))))
+                .hasMessageContaining("public-url");
         verifyNoInteractions(client);
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Callback resolution. The frontend and the API are on different ports in every local dev
+    // setup, so anything derived from the API request is wrong there. These pin the order of
+    // preference: configuration, then what the browser proves, then inference.
+    // ---------------------------------------------------------------------------------------
+
+    @Test
+    void resolveCallback_honoursThePortalsOwnCallbackWhenTheBrowserOriginAgrees() {
+        // The frontend is the only party that knows its router's base path.
+        String requested = "http://localhost:5173/app/account-link/callback";
+
+        assertThat(
+                        service.resolveCallbackUrl(
+                                new ConnectService.CallbackHint(
+                                        requested,
+                                        "http://localhost:5173",
+                                        "http://localhost:8080")))
+                .isEqualTo(requested);
+    }
+
+    @Test
+    void resolveCallback_ignoresACallbackFromADifferentOrigin() {
+        assertThat(
+                        service.resolveCallbackUrl(
+                                new ConnectService.CallbackHint(
+                                        "https://evil.example.com/steal",
+                                        "http://localhost:5173",
+                                        "http://localhost:8080")))
+                .isEqualTo("http://localhost:5173" + ConnectService.CALLBACK_PATH);
+    }
+
+    @Test
+    void resolveCallback_prefersTheBrowserOriginOverTheApiRequest() {
+        // The whole point: :5173 is where the admin is, :8080 is where the call landed.
+        assertThat(
+                        service.resolveCallbackUrl(
+                                new ConnectService.CallbackHint(
+                                        null, "http://localhost:5173", "http://localhost:8080")))
+                .isEqualTo("http://localhost:5173" + ConnectService.CALLBACK_PATH);
+    }
+
+    @Test
+    void resolveCallback_letsConfigurationBeatEverything() {
+        properties.setPublicUrl("https://pdf.example.com/");
+
+        assertThat(
+                        service.resolveCallbackUrl(
+                                new ConnectService.CallbackHint(
+                                        "http://localhost:5173/account-link/callback",
+                                        "http://localhost:5173",
+                                        "http://localhost:8080")))
+                .isEqualTo("https://pdf.example.com" + ConnectService.CALLBACK_PATH);
+    }
+
+    @Test
+    void resolveCallback_ignoresAnUnusableOriginHeader() {
+        // "null" is what a browser sends for an opaque origin; it must not become a callback.
+        assertThat(
+                        service.resolveCallbackUrl(
+                                new ConnectService.CallbackHint(
+                                        null, "null", "http://localhost:8080")))
+                .isEqualTo("http://localhost:8080" + ConnectService.CALLBACK_PATH);
     }
 
     @Test
@@ -99,7 +164,8 @@ class ConnectServiceTest {
         properties.setAppBaseUrl("https://app.example.com");
         stubCreate();
 
-        ConnectService.ConnectStatus status = service.start(null, "https://pdf.example.com");
+        ConnectService.ConnectStatus status =
+                service.start(null, fromRequest("https://pdf.example.com"));
 
         assertThat(status.phase()).isEqualTo(Phase.PENDING);
         assertThat(status.authorizeUrl()).isEqualTo("https://app.example.com/link?request=req-1");
@@ -109,7 +175,8 @@ class ConnectServiceTest {
     void start_withoutAWebAppUrlFallsBackToTheApiBase() throws Exception {
         stubCreate();
 
-        ConnectService.ConnectStatus status = service.start(null, "https://pdf.example.com");
+        ConnectService.ConnectStatus status =
+                service.start(null, fromRequest("https://pdf.example.com"));
 
         assertThat(status.authorizeUrl()).isEqualTo("https://api.example.com/link?request=req-1");
     }
@@ -118,7 +185,7 @@ class ConnectServiceTest {
     void start_keepsTheNonceAndClaimSecretItSent() throws Exception {
         stubCreate();
 
-        service.start(null, "https://pdf.example.com");
+        service.start(null, fromRequest("https://pdf.example.com"));
 
         ArgumentCaptor<String> nonce = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> secret = ArgumentCaptor.forClass(String.class);
@@ -137,7 +204,8 @@ class ConnectServiceTest {
         when(credentialStore.isLinked()).thenReturn(true);
         when(credentialStore.get()).thenReturn(Optional.of(credential(7L)));
 
-        ConnectService.ConnectStatus status = service.start(null, "https://pdf.example.com");
+        ConnectService.ConnectStatus status =
+                service.start(null, fromRequest("https://pdf.example.com"));
 
         assertThat(status.phase()).isEqualTo(Phase.LINKED);
         verifyNoInteractions(client);
@@ -267,6 +335,11 @@ class ConnectServiceTest {
     }
 
     // ---------------------------------------------------------------------------------------
+
+    /** A start with nothing but the reconstructed request URL, as a headless caller would send. */
+    private static ConnectService.CallbackHint fromRequest(String derivedBaseUrl) {
+        return new ConnectService.CallbackHint(null, null, derivedBaseUrl);
+    }
 
     private void stubCreate() throws Exception {
         when(client.connectRequest(any(), anyString(), anyString(), anyString()))

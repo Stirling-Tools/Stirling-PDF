@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -48,13 +50,22 @@ class SupabaseSecurityConfigMoreTest {
             apiKeyAuthenticationService;
 
     private SupabaseSecurityConfig config(ApplicationProperties props) {
+        return config(props, new MockEnvironment());
+    }
+
+    /**
+     * Loopback CORS origins are only added outside production, so the environment decides. A bare
+     * {@link MockEnvironment} has no active profiles, which is the production shape.
+     */
+    private SupabaseSecurityConfig config(ApplicationProperties props, Environment environment) {
         return new SupabaseSecurityConfig(
                 userService,
                 teamService,
                 supabaseUserService,
                 saasTeamService,
                 props,
-                apiKeyAuthenticationService);
+                apiKeyAuthenticationService,
+                environment);
     }
 
     @Nested
@@ -202,6 +213,50 @@ class SupabaseSecurityConfigMoreTest {
                             "https://tauri.localhost");
             assertThat(cfg.getAllowedOriginPatterns().stream().filter("tauri://localhost"::equals))
                     .hasSize(1);
+        }
+
+        @Test
+        @DisplayName("production does not allow loopback on arbitrary ports")
+        void productionHasNoLoopbackWildcard() {
+            CorsConfiguration cfg =
+                    cors(config(new ApplicationProperties()).corsConfigurationSource());
+
+            assertThat(cfg.getAllowedOriginPatterns())
+                    .doesNotContain("http://localhost:[*]", "http://127.0.0.1:[*]");
+        }
+
+        @Test
+        @DisplayName("non-production allows loopback on any port so dev servers can move")
+        void devAllowsAnyLoopbackPort() {
+            // Several dev servers run side by side and their ports change; pinning a list turns
+            // every new local environment into an opaque CORS failure.
+            MockEnvironment dev = new MockEnvironment();
+            dev.setActiveProfiles("saas", "dev");
+
+            CorsConfiguration cfg =
+                    cors(config(new ApplicationProperties(), dev).corsConfigurationSource());
+
+            assertThat(cfg.getAllowedOriginPatterns())
+                    .contains("http://localhost:[*]", "http://127.0.0.1:[*]")
+                    // Still credentialed, which is the reason the pattern form matters.
+                    .contains("https://stirling.com");
+            assertThat(cfg.getAllowCredentials()).isTrue();
+        }
+
+        @Test
+        @DisplayName("an operator origin list is respected verbatim even in dev")
+        void operatorOverrideSuppressesLoopbackWildcard() {
+            ApplicationProperties props = new ApplicationProperties();
+            props.getSystem().setCorsAllowedOrigins(List.of("https://custom.example.com"));
+            MockEnvironment dev = new MockEnvironment();
+            dev.setActiveProfiles("saas", "dev");
+
+            CorsConfiguration cfg = cors(config(props, dev).corsConfigurationSource());
+
+            // An operator who set the list meant it; we do not widen it behind their back.
+            assertThat(cfg.getAllowedOriginPatterns())
+                    .contains("https://custom.example.com")
+                    .doesNotContain("http://localhost:[*]");
         }
 
         @Test
