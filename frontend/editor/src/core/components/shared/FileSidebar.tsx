@@ -55,6 +55,7 @@ import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
+import { SidebarProcessingSlot } from "@app/components/shared/SidebarProcessingSlot";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -1088,6 +1089,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 )}
               </div>
             )}
+
+            {/* Offer to process a folder of files, below the ways of opening
+                one. Empty in builds without a policy engine. */}
+            <SidebarProcessingSlot collapsed={collapsed} />
           </NavSurface>
 
           {/* Box 2 — the file tree (this box scrolls). */}
