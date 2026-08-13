@@ -1,0 +1,363 @@
+package stirling.software.saas.accountlink;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.Locale;
+import java.util.Optional;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * The "connect this server" handshake, SaaS side.
+ *
+ * <p>Shape borrowed from the desktop app's deep-link login, because the problem is the same: a
+ * client that cannot complete an identity round trip on its own origin. There, the app mints a
+ * nonce and only accepts a callback carrying it back. Here the self-hosted instance does the same,
+ * and the hop the OS performs for the desktop app is performed by our own approval page instead.
+ *
+ * <p>Two properties carry the security of this flow, and both are easy to lose in a refactor:
+ *
+ * <ul>
+ *   <li>The redirect target is read from the stored row, never from a request parameter. A caller
+ *       cannot talk us into posting a session token to an origin of their choosing.
+ *   <li>The device credential is minted when it is claimed, not when it is approved, and the claim
+ *       is authenticated by a secret that never enters the browser. Approval decides <em>who</em>
+ *       the instance belongs to; it does not hand out anything usable.
+ * </ul>
+ */
+@Slf4j
+@Service
+@Profile("saas")
+@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+public class ConnectRequestService {
+
+    /**
+     * Long enough for the approver to sign in, pick the right account and read the origin. The
+     * device-grant code next to this uses ten minutes, but that flow does not include a login.
+     */
+    static final int LIFETIME_MINUTES = 15;
+
+    /** Creating a request needs no authentication, so the only brake is per-source volume. */
+    static final int MAX_REQUESTS_PER_IP = 10;
+
+    private static final int REQUEST_ID_BYTES = 32;
+    private static final int MAX_NONCE_LENGTH = 128;
+    private static final int MAX_CALLBACK_LENGTH = 2048;
+    private static final int MAX_NAME_LENGTH = 255;
+
+    private final ConnectRequestRepository repo;
+    private final AccountLinkService accountLinkService;
+    private final SecureRandom random = new SecureRandom();
+
+    public ConnectRequestService(
+            ConnectRequestRepository repo, AccountLinkService accountLinkService) {
+        this.repo = repo;
+        this.accountLinkService = accountLinkService;
+    }
+
+    /** Rejected creation attempts, so the controller can pick a status without parsing messages. */
+    public enum CreateRejection {
+        BAD_CALLBACK,
+        BAD_NONCE,
+        RATE_LIMITED
+    }
+
+    /** Either a created request id, or the reason we would not create one. */
+    public record CreateResult(String requestId, int expiresInSeconds, CreateRejection rejection) {
+        static CreateResult ok(String requestId, int expiresInSeconds) {
+            return new CreateResult(requestId, expiresInSeconds, null);
+        }
+
+        static CreateResult rejected(CreateRejection rejection) {
+            return new CreateResult(null, 0, rejection);
+        }
+
+        public boolean isRejected() {
+            return rejection != null;
+        }
+    }
+
+    /**
+     * What the approval page shows. {@code insecureTransport} is surfaced rather than blocked:
+     * plenty of self-hosted instances legitimately run plain HTTP inside a private network, but the
+     * approver should know before a session token is sent over one.
+     */
+    public record ConnectView(
+            String requestId,
+            String name,
+            String callbackOrigin,
+            boolean insecureTransport,
+            ConnectRequest.Status status) {}
+
+    /** Where to send the browser once approved, plus the correlator the instance is expecting. */
+    public record ApprovalTarget(String callbackUrl, String nonce) {}
+
+    public enum ClaimOutcome {
+        /** Approved and collected; {@code credential} is populated. */
+        GRANTED,
+        /** Still waiting on a human. The instance should keep waiting. */
+        PENDING,
+        /** Declined, expired, unknown, already collected, or a bad claim secret. Terminal. */
+        REJECTED
+    }
+
+    public record ClaimResult(
+            ClaimOutcome outcome, String deviceId, String deviceSecret, Long teamId) {
+        static ClaimResult of(ClaimOutcome outcome) {
+            return new ClaimResult(outcome, null, null, null);
+        }
+    }
+
+    /**
+     * Records a handshake on behalf of an instance that has no credential yet.
+     *
+     * <p>Unauthenticated by necessity: this is the call an instance makes before it has anything to
+     * authenticate with. It creates no entitlement on its own, and nothing here is usable until a
+     * leader approves and the creator presents its claim secret.
+     */
+    @Transactional
+    public CreateResult create(
+            String name, String callbackUrl, String nonce, String claimSecret, String requesterIp) {
+        if (nonce == null || nonce.isBlank() || nonce.length() > MAX_NONCE_LENGTH) {
+            return CreateResult.rejected(CreateRejection.BAD_NONCE);
+        }
+        if (claimSecret == null || claimSecret.isBlank()) {
+            return CreateResult.rejected(CreateRejection.BAD_NONCE);
+        }
+        Optional<URI> parsed = validateCallback(callbackUrl);
+        if (parsed.isEmpty()) {
+            return CreateResult.rejected(CreateRejection.BAD_CALLBACK);
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (requesterIp != null
+                && repo.countByRequesterIpAndCreatedAtAfter(requesterIp, now.minusHours(1))
+                        >= MAX_REQUESTS_PER_IP) {
+            return CreateResult.rejected(CreateRejection.RATE_LIMITED);
+        }
+
+        URI uri = parsed.get();
+        ConnectRequest request = new ConnectRequest();
+        request.setRequestId(randomToken());
+        request.setName(trim(name, MAX_NAME_LENGTH));
+        request.setCallbackUrl(uri.toString());
+        request.setCallbackOrigin(originOf(uri));
+        request.setNonce(nonce);
+        request.setClaimSecretHash(sha256Hex(claimSecret));
+        request.setStatus(ConnectRequest.Status.PENDING);
+        request.setRequesterIp(requesterIp);
+        request.setExpiresAt(now.plusMinutes(LIFETIME_MINUTES));
+        repo.save(request);
+
+        // Never log the nonce or the claim secret; both are live. The request id is the safe
+        // handle for correlating a support request against this row.
+        log.info(
+                "Account-link connect: request {} created for origin {}",
+                request.getRequestId(),
+                request.getCallbackOrigin());
+        return CreateResult.ok(request.getRequestId(), LIFETIME_MINUTES * 60);
+    }
+
+    /** The approver's view of a handshake. Empty for unknown or expired ids. */
+    @Transactional(readOnly = true)
+    public Optional<ConnectView> lookup(String requestId) {
+        return repo.findByRequestId(requestId)
+                .filter(r -> !r.isExpired(LocalDateTime.now()))
+                .map(
+                        r ->
+                                new ConnectView(
+                                        r.getRequestId(),
+                                        r.getName(),
+                                        r.getCallbackOrigin(),
+                                        !"https".equals(schemeOf(r.getCallbackOrigin())),
+                                        r.getStatus()));
+    }
+
+    /**
+     * Binds a pending handshake to the approver's team and returns where to send them next.
+     *
+     * <p>Deliberately returns the stored callback rather than accepting one, so the caller cannot
+     * influence the destination.
+     */
+    @Transactional
+    public Optional<ApprovalTarget> approve(String requestId, Long teamId, Long userId) {
+        Optional<ConnectRequest> found = repo.findByRequestIdForUpdate(requestId);
+        if (found.isEmpty()) {
+            return Optional.empty();
+        }
+        ConnectRequest request = found.get();
+        LocalDateTime now = LocalDateTime.now();
+        if (request.isExpired(now) || request.getStatus() != ConnectRequest.Status.PENDING) {
+            return Optional.empty();
+        }
+        request.setStatus(ConnectRequest.Status.APPROVED);
+        request.setTeamId(teamId);
+        request.setApprovedByUserId(userId);
+        request.setApprovedAt(now);
+        repo.save(request);
+        log.info("Account-link connect: request {} approved for team {}", requestId, teamId);
+        return Optional.of(new ApprovalTarget(request.getCallbackUrl(), request.getNonce()));
+    }
+
+    /** Declines a pending handshake. Idempotent in effect: a settled row simply reports false. */
+    @Transactional
+    public boolean deny(String requestId) {
+        Optional<ConnectRequest> found = repo.findByRequestIdForUpdate(requestId);
+        if (found.isEmpty()) {
+            return false;
+        }
+        ConnectRequest request = found.get();
+        if (request.getStatus() != ConnectRequest.Status.PENDING) {
+            return false;
+        }
+        request.setStatus(ConnectRequest.Status.DENIED);
+        repo.save(request);
+        log.info("Account-link connect: request {} denied", requestId);
+        return true;
+    }
+
+    /**
+     * Collects the device credential for an approved handshake.
+     *
+     * <p>Authenticated purely by possession of the claim secret, which only the instance that
+     * created the row has ever held. The row is locked and marked consumed in the same transaction
+     * as the mint, so one approval can only ever yield one credential.
+     */
+    @Transactional
+    public ClaimResult claim(String requestId, String claimSecret) {
+        if (requestId == null || claimSecret == null) {
+            return ClaimResult.of(ClaimOutcome.REJECTED);
+        }
+        Optional<ConnectRequest> found = repo.findByRequestIdForUpdate(requestId);
+        if (found.isEmpty()) {
+            return ClaimResult.of(ClaimOutcome.REJECTED);
+        }
+        ConnectRequest request = found.get();
+        if (!secretMatches(claimSecret, request.getClaimSecretHash())) {
+            // Same answer as an unknown id: a caller probing ids learns nothing from the
+            // difference.
+            log.warn("Account-link connect: claim for request {} had a bad secret", requestId);
+            return ClaimResult.of(ClaimOutcome.REJECTED);
+        }
+        if (request.isExpired(LocalDateTime.now())) {
+            return ClaimResult.of(ClaimOutcome.REJECTED);
+        }
+        return switch (request.getStatus()) {
+            case PENDING -> ClaimResult.of(ClaimOutcome.PENDING);
+            case APPROVED -> mint(request);
+            case DENIED, CONSUMED -> ClaimResult.of(ClaimOutcome.REJECTED);
+        };
+    }
+
+    private ClaimResult mint(ConnectRequest request) {
+        AccountLinkService.RegisteredInstance registered =
+                accountLinkService.register(
+                        request.getTeamId(), request.getApprovedByUserId(), request.getName());
+        request.setStatus(ConnectRequest.Status.CONSUMED);
+        request.setConsumedAt(LocalDateTime.now());
+        repo.save(request);
+        log.info(
+                "Account-link connect: request {} claimed, instance {} bound to team {}",
+                request.getRequestId(),
+                registered.instanceId(),
+                request.getTeamId());
+        return new ClaimResult(
+                ClaimOutcome.GRANTED,
+                registered.deviceId(),
+                registered.deviceSecret(),
+                request.getTeamId());
+    }
+
+    // ------------------------------------------------------------------------------------------
+    // Callback validation. The point of these is that a stored callback is only ever something we
+    // already decided was well formed, so the redirect step has nothing left to judge.
+    // ------------------------------------------------------------------------------------------
+
+    /** Absolute http(s) URL, with a host, no credentials and no fragment of its own. */
+    static Optional<URI> validateCallback(String candidate) {
+        if (candidate == null || candidate.isBlank() || candidate.length() > MAX_CALLBACK_LENGTH) {
+            return Optional.empty();
+        }
+        URI uri;
+        try {
+            uri = new URI(candidate.strip());
+        } catch (URISyntaxException e) {
+            return Optional.empty();
+        }
+        if (!uri.isAbsolute() || uri.getScheme() == null) {
+            return Optional.empty();
+        }
+        String scheme = uri.getScheme().toLowerCase(Locale.ROOT);
+        if (!"http".equals(scheme) && !"https".equals(scheme)) {
+            return Optional.empty();
+        }
+        if (uri.getHost() == null || uri.getHost().isBlank()) {
+            return Optional.empty();
+        }
+        // Credentials in the URL would end up in logs and history, and a fragment would collide
+        // with
+        // the one we append to carry the session back.
+        if (uri.getUserInfo() != null || uri.getFragment() != null) {
+            return Optional.empty();
+        }
+        return Optional.of(uri);
+    }
+
+    /** Scheme, host and port, with the default port omitted so origins compare cleanly. */
+    static String originOf(URI uri) {
+        String scheme = uri.getScheme().toLowerCase(Locale.ROOT);
+        int port = uri.getPort();
+        boolean defaultPort =
+                port == -1
+                        || ("http".equals(scheme) && port == 80)
+                        || ("https".equals(scheme) && port == 443);
+        return defaultPort
+                ? scheme + "://" + uri.getHost()
+                : scheme + "://" + uri.getHost() + ":" + port;
+    }
+
+    private static String schemeOf(String origin) {
+        int sep = origin.indexOf("://");
+        return sep < 0 ? "" : origin.substring(0, sep);
+    }
+
+    private static String trim(String value, int max) {
+        if (value == null) {
+            return null;
+        }
+        String stripped = value.strip();
+        if (stripped.isEmpty()) {
+            return null;
+        }
+        return stripped.length() <= max ? stripped : stripped.substring(0, max);
+    }
+
+    private String randomToken() {
+        byte[] buf = new byte[REQUEST_ID_BYTES];
+        random.nextBytes(buf);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(buf);
+    }
+
+    /** Constant-time comparison so a claim cannot be brute-forced a byte at a time. */
+    private static boolean secretMatches(String candidate, String expectedHash) {
+        if (expectedHash == null) {
+            return false;
+        }
+        return MessageDigest.isEqual(
+                sha256Hex(candidate).getBytes(StandardCharsets.UTF_8),
+                expectedHash.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String sha256Hex(String value) {
+        return AccountLinkService.sha256Hex(value);
+    }
+}

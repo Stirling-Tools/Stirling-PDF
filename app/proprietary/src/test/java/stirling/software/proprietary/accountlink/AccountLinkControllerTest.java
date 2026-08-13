@@ -24,6 +24,7 @@ import stirling.software.proprietary.accountlink.AccountLinkController.LinkReque
 class AccountLinkControllerTest {
 
     private AccountLinkService service;
+    private ConnectService connectService;
     private UsageSyncService syncService;
     private ObjectProvider<UsageSyncService> syncProvider;
     private AccountLinkController controller;
@@ -32,10 +33,12 @@ class AccountLinkControllerTest {
     @SuppressWarnings("unchecked")
     void setUp() {
         service = mock(AccountLinkService.class);
+        connectService = mock(ConnectService.class);
         syncService = mock(UsageSyncService.class);
         syncProvider = mock(ObjectProvider.class);
         controller =
-                new AccountLinkController(service, mock(LocalUsageService.class), syncProvider);
+                new AccountLinkController(
+                        service, connectService, mock(LocalUsageService.class), syncProvider);
     }
 
     @Test

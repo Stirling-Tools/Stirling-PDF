@@ -33,6 +33,27 @@ public class AccountLinkProperties {
      */
     private String saasBaseUrl = "https://stirling.com/app";
 
+    /**
+     * Origin of the SaaS <em>web app</em>, where the {@code /link} approval page is served.
+     *
+     * <p>Distinct from {@link #saasBaseUrl}, which is the API. In a normal deployment one host
+     * serves both and this can be left unset, in which case {@link #saasBaseUrl} is used. Locally
+     * they are split (API on 8081, web app on the saas-mode Vite server), and pointing an admin at
+     * the API origin gives them a URL that renders nothing.
+     */
+    private String appBaseUrl;
+
+    /**
+     * Externally reachable base URL of <em>this</em> instance, used to build the callback the
+     * approval page returns the admin to.
+     *
+     * <p>Left unset, it is derived from the incoming request, which is correct for a direct hit and
+     * for any proxy that sets {@code X-Forwarded-*}. Set it explicitly when the instance cannot see
+     * its own public address, since a wrong value here sends the admin somewhere that cannot finish
+     * the handshake.
+     */
+    private String publicUrl;
+
     /** Cached entitlement is reused for this long before a refresh is attempted. */
     private long entitlementCacheSeconds = 300;
 

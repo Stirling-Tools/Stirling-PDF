@@ -44,7 +44,12 @@ class AccountLinkControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new AccountLinkController(service, memberRepo, userRepository);
+        // Real resolver over the mocked repositories: the leader ladder moved into
+        // LeaderTeamResolver, and these tests are still asserting that ladder's behaviour
+        // through the controller.
+        controller =
+                new AccountLinkController(
+                        service, new LeaderTeamResolver(memberRepo, userRepository));
         auth =
                 new AnonymousAuthenticationToken(
                         "k", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_USER")));

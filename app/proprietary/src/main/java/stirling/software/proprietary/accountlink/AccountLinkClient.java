@@ -146,6 +146,117 @@ public class AccountLinkClient {
         return new RegisterResult(deviceId, deviceSecret, teamId);
     }
 
+    /** What the SaaS side hands back when it records a connect handshake. */
+    public record ConnectRequestResult(String requestId, int expiresInSeconds) {}
+
+    public enum ConnectClaimOutcome {
+        /** Approved and collected; the credential fields are populated. */
+        GRANTED,
+        /** No human decision yet. Keep waiting. */
+        PENDING,
+        /** Declined, expired or already used. Terminal — do not retry. */
+        REJECTED,
+        /** SaaS unreachable or erroring. Transient, so the caller may retry. */
+        UNAVAILABLE
+    }
+
+    public record ConnectClaimResult(
+            ConnectClaimOutcome outcome, String deviceId, String deviceSecret, Long teamId) {
+        static ConnectClaimResult of(ConnectClaimOutcome outcome) {
+            return new ConnectClaimResult(outcome, null, null, null);
+        }
+    }
+
+    /**
+     * Opens a connect handshake. Unauthenticated by nature — this is the call made before this
+     * instance holds any credential at all.
+     *
+     * @throws IOException on transport failure or a non-2xx reply.
+     */
+    public ConnectRequestResult connectRequest(
+            String name, String callbackUrl, String nonce, String claimSecret) throws IOException {
+        ObjectNode root = mapper.createObjectNode();
+        if (name != null && !name.isBlank()) {
+            root.put("name", name);
+        }
+        root.put("callbackUrl", callbackUrl);
+        root.put("nonce", nonce);
+        root.put("claimSecret", claimSecret);
+
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(uri("/api/v1/account-link/connect/request"))
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/json")
+                        .timeout(timeout())
+                        .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(root)))
+                        .build();
+
+        HttpResponse<String> response = send(request);
+        if (response.statusCode() / 100 != 2) {
+            throw new UpstreamException(response.statusCode(), response.body());
+        }
+        JsonNode body = mapper.readTree(response.body());
+        String requestId = text(body, "requestId");
+        if (requestId == null) {
+            throw new IOException("SaaS connect response missing requestId");
+        }
+        return new ConnectRequestResult(requestId, body.path("expiresIn").asInt(0));
+    }
+
+    /**
+     * Collects the device credential for an approved handshake, proving possession of the claim
+     * secret. Never throws: the outcome enum carries the distinction the caller needs between
+     * "wait", "give up" and "try again later".
+     */
+    public ConnectClaimResult connectClaim(String requestId, String claimSecret) {
+        HttpResponse<String> response;
+        try {
+            ObjectNode root = mapper.createObjectNode();
+            root.put("requestId", requestId);
+            root.put("claimSecret", claimSecret);
+            HttpRequest request =
+                    HttpRequest.newBuilder()
+                            .uri(uri("/api/v1/account-link/connect/claim"))
+                            .header("Content-Type", "application/json")
+                            .header("Accept", "application/json")
+                            .timeout(timeout())
+                            .POST(
+                                    HttpRequest.BodyPublishers.ofString(
+                                            mapper.writeValueAsString(root)))
+                            .build();
+            response = send(request);
+        } catch (Exception e) {
+            log.debug("Connect claim failed (transport): {}", e.getMessage());
+            return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);
+        }
+        int status = response.statusCode();
+        if (status == 202) {
+            return ConnectClaimResult.of(ConnectClaimOutcome.PENDING);
+        }
+        if (status / 100 == 5) {
+            return ConnectClaimResult.of(ConnectClaimOutcome.UNAVAILABLE);
+        }
+        if (status / 100 != 2) {
+            return ConnectClaimResult.of(ConnectClaimOutcome.REJECTED);
+        }
+        try {
+            JsonNode body = mapper.readTree(response.body());
+            String deviceId = text(body, "deviceId");
+            String deviceSecret = text(body, "deviceSecret");
+            if (deviceId == null || deviceSecret == null) {
+                log.warn("Connect claim succeeded but the reply carried no credential");
+                return ConnectClaimResult.of(ConnectClaimOutcome.REJECTED);
+            }
+            Long teamId = body.hasNonNull("teamId") ? body.get("teamId").asLong() : null;
+            return new ConnectClaimResult(
+                    ConnectClaimOutcome.GRANTED, deviceId, deviceSecret, teamId);
+        } catch (RuntimeException e) {
+            log.debug("Connect claim parse failed: {}", e.getMessage());
+            return ConnectClaimResult.of(ConnectClaimOutcome.REJECTED);
+        }
+    }
+
     /**
      * Revokes this instance's own credential on the SaaS side, authenticated by that credential.
      * Best-effort: returns {@code false} if SaaS is unreachable or rejects, so the caller (local

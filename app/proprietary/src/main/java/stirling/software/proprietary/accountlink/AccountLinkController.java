@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -41,17 +43,100 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountLinkController {
 
     private final AccountLinkService service;
+    private final ConnectService connectService;
     private final LocalUsageService localUsageService;
     // Present only when metering is on (its own flag); absent → /sync-now reports 409.
     private final ObjectProvider<UsageSyncService> syncServiceProvider;
 
     public AccountLinkController(
             AccountLinkService service,
+            ConnectService connectService,
             LocalUsageService localUsageService,
             ObjectProvider<UsageSyncService> syncServiceProvider) {
         this.service = service;
+        this.connectService = connectService;
         this.localUsageService = localUsageService;
         this.syncServiceProvider = syncServiceProvider;
+    }
+
+    public record ConnectStartRequest(String name) {}
+
+    /** {@code nonce} comes from the callback fragment the approval page redirected to. */
+    public record ConnectCompleteRequest(String nonce) {}
+
+    /**
+     * Opens a browser-mediated link handshake and returns the approval URL to send the admin to.
+     *
+     * <p>Supersedes {@code POST /link}, which needed the admin's SaaS JWT to reach this backend.
+     * Here the token never comes near the server: it is delivered to the admin's own browser by the
+     * approval page, and this backend collects only its device credential.
+     */
+    @PostMapping("/connect/start")
+    public ResponseEntity<?> connectStart(
+            @RequestBody(required = false) ConnectStartRequest req, HttpServletRequest http) {
+        try {
+            return ResponseEntity.ok(
+                    connectService.start(req != null ? req.name() : null, baseUrlOf(http)));
+        } catch (AccountLinkClient.UpstreamException e) {
+            log.warn("Account-link connect rejected upstream: HTTP {}", e.status());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(java.util.Map.of("error", "CONNECT_FAILED"));
+        } catch (IOException e) {
+            // Same reasoning as /link: a transport message can carry the configured SaaS host.
+            log.warn("Account-link connect failed (transport): {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(java.util.Map.of("error", "CONNECT_FAILED"));
+        }
+    }
+
+    /** Called by the callback page with the nonce it found in the fragment. */
+    @PostMapping("/connect/complete")
+    public ResponseEntity<ConnectService.ConnectStatus> connectComplete(
+            @RequestBody(required = false) ConnectCompleteRequest req) {
+        return ResponseEntity.ok(connectService.complete(req != null ? req.nonce() : null));
+    }
+
+    @GetMapping("/connect/status")
+    public ResponseEntity<ConnectService.ConnectStatus> connectStatus() {
+        return ResponseEntity.ok(connectService.status());
+    }
+
+    @PostMapping("/connect/cancel")
+    public ResponseEntity<Void> connectCancel() {
+        connectService.cancel();
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * This instance's base URL as the browser reached it, including any context path so a subpath
+     * deployment builds a callback that actually resolves. Honours {@code X-Forwarded-*} for the
+     * common reverse-proxy case; an operator behind something that does not set them configures
+     * {@code stirling.billing.account-link.public-url} instead.
+     */
+    private static String baseUrlOf(HttpServletRequest request) {
+        String forwardedProto = firstHop(request.getHeader("X-Forwarded-Proto"));
+        String forwardedHost = firstHop(request.getHeader("X-Forwarded-Host"));
+        String scheme = forwardedProto != null ? forwardedProto : request.getScheme();
+        String hostPort;
+        if (forwardedHost != null) {
+            hostPort = forwardedHost;
+        } else {
+            int port = request.getServerPort();
+            boolean defaultPort =
+                    ("http".equals(scheme) && port == 80)
+                            || ("https".equals(scheme) && port == 443);
+            hostPort = defaultPort ? request.getServerName() : request.getServerName() + ":" + port;
+        }
+        String context = request.getContextPath() == null ? "" : request.getContextPath();
+        return scheme + "://" + hostPort + context;
+    }
+
+    private static String firstHop(String headerValue) {
+        if (headerValue == null || headerValue.isBlank()) {
+            return null;
+        }
+        String first = headerValue.split(",")[0].strip();
+        return first.isEmpty() ? null : first;
     }
 
     /** {@code supabaseJwt} is the admin's short-lived token the portal already holds. */

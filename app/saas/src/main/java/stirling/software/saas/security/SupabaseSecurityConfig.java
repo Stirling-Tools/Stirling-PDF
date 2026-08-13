@@ -105,6 +105,17 @@ public class SupabaseSecurityConfig {
                                         .permitAll()
                                         .requestMatchers("/actuator/health", "/api/v1/config/**")
                                         .permitAll()
+                                        // Account-link connect handshake: an instance calls these
+                                        // before it holds any credential, so there is nothing to
+                                        // authenticate with yet. Neither grants anything on its
+                                        // own — /request records an intent a human must approve,
+                                        // and /claim requires a secret only the instance that
+                                        // created the request has ever held.
+                                        .requestMatchers(
+                                                HttpMethod.POST,
+                                                "/api/v1/account-link/connect/request",
+                                                "/api/v1/account-link/connect/claim")
+                                        .permitAll()
                                         .requestMatchers(
                                                 req ->
                                                         RequestUriUtils.isStaticResource(
