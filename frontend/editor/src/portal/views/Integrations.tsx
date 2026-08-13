@@ -2,8 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import { Banner, Button, Skeleton } from "@app/ui";
+import {
+  Banner,
+  Button,
+  column,
+  DataTable,
+  type DataTableColumn,
+  type DataTableGroup,
+  EmptyState,
+} from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import {
   deleteIntegration,
@@ -29,12 +36,11 @@ import "@portal/views/Integrations.css";
 /**
  * The integrations catalogue: everything Stirling can talk to, in one place.
  *
- * Three bands in one list. Connected first — stored connections grouped by
- * vendor, expandable when a vendor has several (two S3 buckets is normal, not
- * an error), each instance editable and one click from "add another". Then
- * Available — the supported vendors, each saying what it works with (sources,
- * policies, pipelines) so it's obvious whether a vendor feeds documents in or
- * receives them. Coming-soon source connectors close the list greyed out, so
+ * Three bands, one grouped table. Connected first - stored connections grouped
+ * by vendor (two S3 buckets is normal, not an error), every instance a row you
+ * can edit or remove, with "add another" on the vendor's group header. Then
+ * Available - the supported vendors, each saying what it works with (sources,
+ * policies, pipelines). Coming-soon source connectors close the list so
  * "do you support X?" is answered honestly instead of hidden.
  *
  * Setup itself stays in the shared {@link ConnectionModal}; every entry point
@@ -71,6 +77,20 @@ interface TypeGroup {
   connections: IntegrationConfig[];
 }
 
+/** One normalized row across the three bands, so a single grouped table renders
+ *  connected instances, available vendors, and coming-soon vendors alike. */
+type IntegrationRow = {
+  key: string;
+  brandId: string;
+  title: string;
+  subtitle: string;
+  worksWith: WorksWith[];
+} & (
+  | { kind: "instance"; connection: IntegrationConfig; canManage: boolean }
+  | { kind: "available"; typeId: string }
+  | { kind: "soon" }
+);
+
 export function Integrations() {
   const { t } = useTranslation();
   const [connections, setConnections] = useState<IntegrationConfig[] | null>(
@@ -81,7 +101,6 @@ export function Integrations() {
   >(undefined);
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<{
     open: boolean;
     editing: IntegrationConfig | null;
@@ -191,15 +210,6 @@ export function Integrations() {
     return counts;
   }, [catalogue]);
 
-  function toggleExpand(typeId: string) {
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (next.has(typeId)) next.delete(typeId);
-      else next.add(typeId);
-      return next;
-    });
-  }
-
   function openCreate(typeId: string) {
     setModal({ open: true, editing: null, fixedTypeId: typeId });
   }
@@ -208,27 +218,129 @@ export function Integrations() {
     setModal({ open: true, editing: connection });
   }
 
-  async function remove(connection: IntegrationConfig) {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteIntegration(connection.id);
-      await refresh();
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  }
+  const remove = useCallback(
+    async (connection: IntegrationConfig) => {
+      if (busy) return;
+      setBusy(true);
+      setError(null);
+      try {
+        await deleteIntegration(connection.id);
+        await refresh();
+      } catch (e) {
+        setError(errorMessage(e));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, refresh],
+  );
 
   const isLoading = connections === null;
 
-  const chip = (kind: WorksWith) => (
-    <span key={kind} className="portal-integrations__chip">
-      {t(`portal.integrations.worksWith.${kind}`)}
-    </span>
-  );
+  const worksWithText = (list: WorksWith[]) =>
+    list.map((w) => t(`portal.integrations.worksWith.${w}`)).join(", ");
+
+  const columns: DataTableColumn<IntegrationRow>[] = [
+    column.entity({
+      key: "integration",
+      header: t("portal.integrations.table.integration"),
+      icon: (r) => <BrandMark id={r.brandId} size={22} />,
+      primary: (r) => r.title,
+      note: (r) => r.subtitle || undefined,
+    }),
+    column.text({
+      key: "worksWith",
+      header: t("portal.integrations.table.worksWith"),
+      get: (r) => worksWithText(r.worksWith),
+    }),
+    column.actions({
+      key: "actions",
+      get: (r) => {
+        if (r.kind === "instance") {
+          return r.canManage
+            ? [
+                {
+                  label: t("portal.connections.edit"),
+                  onClick: () => openEdit(r.connection),
+                },
+                {
+                  label: t("portal.connections.delete"),
+                  tone: "danger",
+                  loading: busy,
+                  onClick: () => void remove(r.connection),
+                },
+              ]
+            : [];
+        }
+        if (r.kind === "available") {
+          return [
+            {
+              label: t("portal.integrations.connect"),
+              onClick: () => openCreate(r.typeId),
+            },
+          ];
+        }
+        return [];
+      },
+    }),
+  ];
+
+  const tableGroups: DataTableGroup<IntegrationRow>[] = [];
+  for (const { type, connections: list } of connectedGroups) {
+    tableGroups.push({
+      key: `connected-${type.id}`,
+      title: t(type.labelKey),
+      meta:
+        list.length > 1
+          ? t("portal.integrations.connectionCount", { count: list.length })
+          : t("portal.integrations.status.connected"),
+      actions: [
+        {
+          label: t("portal.integrations.addAnother"),
+          onClick: () => openCreate(type.id),
+        },
+      ],
+      rows: list.map((c) => ({
+        kind: "instance" as const,
+        key: `i-${c.id}`,
+        brandId: type.id,
+        title: c.name,
+        subtitle: connectionDetail(c),
+        worksWith: worksWith(type),
+        connection: c,
+        canManage: !!c.canManage,
+      })),
+    });
+  }
+  if (availableTypes.length > 0) {
+    tableGroups.push({
+      key: "available",
+      title: t("portal.integrations.availableHeading"),
+      rows: availableTypes.map((type) => ({
+        kind: "available" as const,
+        key: `a-${type.id}`,
+        brandId: type.id,
+        title: t(type.labelKey),
+        subtitle: t(type.descriptionKey),
+        worksWith: worksWith(type),
+        typeId: type.id,
+      })),
+    });
+  }
+  if (comingSoon.length > 0) {
+    tableGroups.push({
+      key: "soon",
+      title: t("portal.integrations.comingSoonHeading"),
+      rows: comingSoon.map((entry) => ({
+        kind: "soon" as const,
+        key: `s-${entry.type}`,
+        brandId: entry.type,
+        title: t(entry.labelKey),
+        subtitle: t(entry.descriptionKey),
+        worksWith: ["sources"],
+      })),
+    });
+  }
 
   return (
     <div className="portal-integrations">
@@ -299,187 +411,23 @@ export function Integrations() {
 
       {error && <Banner tone="danger" description={error} />}
 
-      {isLoading ? (
-        <div className="portal-integrations__skeleton" aria-hidden>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} height="3.25rem" />
-          ))}
-        </div>
+      {!isLoading && tableGroups.length === 0 ? (
+        <EmptyState
+          size="compact"
+          title={t("portal.integrations.noResults.title", "No matches")}
+          description={t(
+            "portal.integrations.noResults.description",
+            "No integrations match your filters. Try a different category or search.",
+          )}
+        />
       ) : (
-        <div className="portal-integrations__table">
-          <div className="portal-integrations__cols" aria-hidden>
-            <span>{t("portal.integrations.table.integration")}</span>
-            <span>{t("portal.integrations.table.worksWith")}</span>
-            <span />
-          </div>
-
-          {connectedGroups.length > 0 && (
-            <div className="portal-integrations__section">
-              {t("portal.integrations.connectedHeading")} ·{" "}
-              {connectedGroups.length}
-            </div>
-          )}
-          {connectedGroups.map(({ type, connections: list }) => {
-            const open = expanded.has(type.id);
-            return (
-              <div key={type.id} className="portal-integrations__group">
-                <button
-                  type="button"
-                  className="portal-integrations__row portal-integrations__row--connected"
-                  aria-expanded={open}
-                  onClick={() => toggleExpand(type.id)}
-                >
-                  <span className="portal-integrations__name">
-                    <BrandMark id={type.id} size={22} />
-                    <span className="portal-integrations__name-text">
-                      <span className="portal-integrations__label">
-                        {t(type.labelKey)}
-                      </span>
-                      <span className="portal-integrations__detail">
-                        {list.length === 1
-                          ? list[0].name
-                          : t("portal.integrations.connectionCount", {
-                              count: list.length,
-                            })}
-                      </span>
-                    </span>
-                  </span>
-                  <span className="portal-integrations__chips">
-                    {worksWith(type).map(chip)}
-                  </span>
-                  <span className="portal-integrations__status">
-                    <span className="portal-integrations__status-dot" />
-                    {t("portal.integrations.status.connected")}
-                    <ExpandMoreRoundedIcon
-                      fontSize="inherit"
-                      className={
-                        "portal-integrations__chevron" +
-                        (open ? " is-open" : "")
-                      }
-                    />
-                  </span>
-                </button>
-                {open && (
-                  <div className="portal-integrations__instances">
-                    {list.map((connection) => (
-                      <div
-                        key={connection.id}
-                        className="portal-integrations__instance"
-                      >
-                        <span className="portal-integrations__instance-name">
-                          {connection.name}
-                        </span>
-                        <span className="portal-integrations__instance-detail">
-                          {connectionDetail(connection)}
-                        </span>
-                        {connection.canManage && (
-                          <span className="portal-integrations__instance-actions">
-                            <Button
-                              variant="tertiary"
-                              size="sm"
-                              disabled={busy}
-                              onClick={() => openEdit(connection)}
-                            >
-                              {t("portal.connections.edit")}
-                            </Button>
-                            <Button
-                              variant="tertiary"
-                              size="sm"
-                              accent="danger"
-                              disabled={busy}
-                              onClick={() => void remove(connection)}
-                            >
-                              {t("portal.connections.delete")}
-                            </Button>
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                    <div className="portal-integrations__instance portal-integrations__instance--add">
-                      <Button
-                        variant="tertiary"
-                        size="sm"
-                        onClick={() => openCreate(type.id)}
-                        leftSection={
-                          <AddRoundedIcon style={{ fontSize: "1rem" }} />
-                        }
-                      >
-                        {t("portal.integrations.addAnother")}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {availableTypes.length > 0 && (
-            <div className="portal-integrations__section">
-              {t("portal.integrations.availableHeading")} ·{" "}
-              {availableTypes.length}
-            </div>
-          )}
-          {availableTypes.map((type) => (
-            <div key={type.id} className="portal-integrations__row">
-              <span className="portal-integrations__name">
-                <BrandMark id={type.id} size={22} />
-                <span className="portal-integrations__name-text">
-                  <span className="portal-integrations__label">
-                    {t(type.labelKey)}
-                  </span>
-                  <span className="portal-integrations__detail">
-                    {t(type.descriptionKey)}
-                  </span>
-                </span>
-              </span>
-              <span className="portal-integrations__chips">
-                {worksWith(type).map(chip)}
-              </span>
-              <span className="portal-integrations__status">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => openCreate(type.id)}
-                >
-                  {t("portal.integrations.connect")}
-                </Button>
-              </span>
-            </div>
-          ))}
-
-          {comingSoon.length > 0 && (
-            <div className="portal-integrations__section">
-              {t("portal.integrations.comingSoonHeading")} · {comingSoon.length}
-            </div>
-          )}
-          {comingSoon.map((entry) => (
-            <div
-              key={entry.type}
-              className="portal-integrations__row portal-integrations__row--soon"
-              aria-disabled
-            >
-              <span className="portal-integrations__name">
-                <BrandMark id={entry.type} size={22} />
-                <span className="portal-integrations__name-text">
-                  <span className="portal-integrations__label">
-                    {t(entry.labelKey)}
-                  </span>
-                  <span className="portal-integrations__detail">
-                    {t(entry.descriptionKey)}
-                  </span>
-                </span>
-              </span>
-              <span className="portal-integrations__chips">
-                {chip("sources")}
-              </span>
-              <span className="portal-integrations__status">
-                <span className="portal-integrations__soon-badge">
-                  {t("portal.sources.builder.comingSoon")}
-                </span>
-              </span>
-            </div>
-          ))}
-        </div>
+        <DataTable<IntegrationRow>
+          columns={columns}
+          groups={tableGroups}
+          rowKey={(r) => r.key}
+          loading={isLoading}
+          skeletonRows={5}
+        />
       )}
 
       <ConnectionModal
