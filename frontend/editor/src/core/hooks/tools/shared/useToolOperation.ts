@@ -21,7 +21,11 @@ import {
   StirlingFileStub,
 } from "@app/types/fileContext";
 import { FILE_EVENTS } from "@app/services/errorUtils";
-import { reportToolFailure } from "@app/services/failureReporting";
+import {
+  reportToolFailure,
+  wasCancelled,
+} from "@app/services/failureReporting";
+import { stashRetryPayload } from "@app/services/notificationRetry";
 import { refreshNotificationsNow } from "@app/hooks/useNotifications";
 import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
@@ -614,6 +618,20 @@ export const useToolOperation = <TParams>(
           error,
           fileIds: validFiles.map((file) => file.fileId),
         }).then(refreshNotificationsNow);
+
+        // Keep what a retry would need, since the report itself carries no
+        // operation and answers 204. Gated on the reporter's own cancellation
+        // test so the two cannot disagree about what counts as a failure, and on
+        // there being an endpoint: a custom processor has nothing to re-submit to.
+        if (!wasCancelled(error) && runtimeEndpoint) {
+          void stashRetryPayload({
+            operation: config.operationType,
+            endpoint: runtimeEndpoint,
+            params: params as Record<string, unknown>,
+            fileIds: validFiles.map((file) => file.fileId),
+            recordedAt: Date.now(),
+          });
+        }
 
         const errorMessage =
           config.getErrorMessage?.(error) || extractErrorMessage(error);

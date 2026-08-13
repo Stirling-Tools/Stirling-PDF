@@ -1,4 +1,5 @@
 import type { AppNotification } from "@app/services/notifications";
+import type { RetryPayload } from "@app/services/notificationRetry";
 
 /**
  * What this client can do about a notification, keyed by the action id the server offered. Keyed by
@@ -11,6 +12,8 @@ export interface NotificationActionContext {
   notification: AppNotification;
   /** Whether the document is still in this browser, which is what most actions hinge on. */
   hasLocalFile: boolean;
+  /** What the failed operation was, when this browser stashed it. */
+  retryPayload: RetryPayload | null;
 }
 
 /**
@@ -26,10 +29,13 @@ export interface ClientActionOutcome {
 export interface ClientActionSpec {
   /** Whether this device can perform it right now. Asked per row, never during a request. */
   available(context: NotificationActionContext): boolean;
-  /** May answer synchronously. */
+  /** `password` is only ever passed for a spec that asked for one. May answer synchronously. */
   run(
     context: NotificationActionContext,
+    password?: string,
   ): ClientActionOutcome | void | Promise<ClientActionOutcome | void>;
+  /** Collect a password in the row before running. Never stored, never logged. */
+  needsPassword?: boolean;
   /** Whether the panel should get out of the way, because the destination is behind it. */
   closesPanel?: boolean;
 }

@@ -174,6 +174,26 @@ public class FileRunEventService {
     }
 
     /**
+     * Mark an incident resolved, because a client retried the operation and it worked. Nobody is
+     * offered a "resolve" button, which is why {@code RESOLVED} is a status and not a {@link
+     * FailureActionId}. Idempotent: a client reporting the same success twice reads its row back.
+     *
+     * @throws FailureActionException if the event is not the caller's, or is already closed some
+     *     other way
+     */
+    public FileRunEvent resolve(String eventId) {
+        FileRunEvent event = requireVisible(eventId);
+        // No terminal pre-check: the store's guarded UPDATE decides, and tells a dismissed row
+        // apart from a deleted one after the fact rather than racing a read against the write.
+        return store.applyStatusOnce(
+                event.id(),
+                event.teamId(),
+                FileRunEventStatus.RESOLVED,
+                currentActor(),
+                FileRunEventStatus.open());
+    }
+
+    /**
      * The event, if this caller may act on it at all. Reported as "no such event" rather than a
      * refusal, so a member cannot learn that a colleague's incident exists by trying to close it.
      */
@@ -232,7 +252,8 @@ public class FileRunEventService {
             boolean unattended,
             boolean documentless) {
         String reason = disabledReasonFor(offer.audience(), closed, unattended, documentless);
-        return new AvailableAction(offer.id(), offer.labelKey(), reason == null, reason);
+        return new AvailableAction(
+                offer.id(), offer.labelKey(), offer.slot(), reason == null, reason);
     }
 
     /**
@@ -343,7 +364,14 @@ public class FileRunEventService {
         return applicationProperties.getSecurity().isEnableLogin();
     }
 
-    /** One action as offered to one caller about one event, with its availability resolved. */
+    /**
+     * One action as offered to one caller about one event, with its availability resolved. {@code
+     * slot} is the kind's placement intent, carried through for the client to make the final call.
+     */
     public record AvailableAction(
-            FailureActionId id, String labelKey, boolean enabled, String disabledReasonKey) {}
+            FailureActionId id,
+            String labelKey,
+            FailureActionSlot slot,
+            boolean enabled,
+            String disabledReasonKey) {}
 }

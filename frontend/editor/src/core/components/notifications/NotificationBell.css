@@ -162,6 +162,14 @@
   color: var(--c-text-subtle);
 }
 
+.notification-bell__password {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1, 0.25rem);
+  margin-top: var(--sp-2, 0.5rem);
+}
+
 .notification-bell__message {
   grid-column: 2;
   margin-top: var(--sp-1, 0.25rem);

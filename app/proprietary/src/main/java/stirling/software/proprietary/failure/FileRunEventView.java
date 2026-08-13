@@ -63,13 +63,15 @@ public record FileRunEventView(
     /**
      * One button, as offered to this caller about this row. {@code defaultLabel} and {@code
      * execution} are here for the reason {@code defaultTitle} is on the row: a client can then
-     * render, and route, an action it was never built with. Declaration order is display order.
+     * render, and route, an action it was never built with. {@code slot} is placement intent; see
+     * {@link FailureActionSlot}.
      */
     public record ActionView(
             String id,
             String labelKey,
             String defaultLabel,
             FailureActionId.Execution execution,
+            FailureActionSlot slot,
             boolean enabled,
             String disabledReasonKey) {
 
@@ -80,6 +82,7 @@ public record FileRunEventView(
                     action.labelKey(),
                     action.id().getDefaultLabel(),
                     action.id().getExecution(),
+                    action.slot(),
                     action.enabled(),
                     action.disabledReasonKey());
         }

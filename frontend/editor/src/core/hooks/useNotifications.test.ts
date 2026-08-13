@@ -18,9 +18,11 @@ vi.mock("@app/services/notifications", () => ({
 // The document lookups read IndexedDB, which jsdom has none of. Counted here so that "resolved once
 // per list, not once per row" is observable.
 const hasLocalFile = vi.fn((_fileId: string) => Promise.resolve(true));
+const loadRetryPayload = vi.fn((_fileId: string) => Promise.resolve(null));
 
-vi.mock("@app/services/localFilePresence", () => ({
+vi.mock("@app/services/notificationRetry", () => ({
   hasLocalFile: (fileId: string) => hasLocalFile(fileId),
+  loadRetryPayload: (fileId: string) => loadRetryPayload(fileId),
 }));
 
 const { useNotifications } = await import("@app/hooks/useNotifications");
@@ -56,6 +58,7 @@ describe("useNotifications", () => {
     window.localStorage.clear();
     fetchNotifications.mockReset().mockResolvedValue([]);
     hasLocalFile.mockClear();
+    loadRetryPayload.mockClear();
   });
 
   it("reads the list once however many bells are mounted", async () => {
@@ -82,6 +85,7 @@ describe("useNotifications", () => {
 
     await waitFor(() => expect(result.current.notifications).toHaveLength(3));
     expect(hasLocalFile).toHaveBeenCalledTimes(2);
+    expect(loadRetryPayload).toHaveBeenCalledTimes(2);
   });
 
   it("looks up an attended run's document but never an unattended run's", async () => {

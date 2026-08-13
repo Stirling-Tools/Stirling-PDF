@@ -3,7 +3,11 @@ import {
   fetchNotifications,
   type AppNotification,
 } from "@app/services/notifications";
-import { hasLocalFile } from "@app/services/localFilePresence";
+import {
+  hasLocalFile,
+  loadRetryPayload,
+  type RetryPayload,
+} from "@app/services/notificationRetry";
 
 /**
  * The caller's notifications, refreshed on a timer because they arrive from background work rather
@@ -50,10 +54,12 @@ function writeLastSeenId(id: string): void {
  */
 export interface NotificationDocumentState {
   hasLocalFile: boolean;
+  retryPayload: RetryPayload | null;
 }
 
 const NO_DOCUMENT: NotificationDocumentState = {
   hasLocalFile: false,
+  retryPayload: null,
 };
 
 /**
@@ -132,6 +138,7 @@ async function read(forCycle: number): Promise<void> {
           fileId,
           {
             hasLocalFile: await hasLocalFile(fileId),
+            retryPayload: await loadRetryPayload(fileId),
           },
         ] as const,
     ),

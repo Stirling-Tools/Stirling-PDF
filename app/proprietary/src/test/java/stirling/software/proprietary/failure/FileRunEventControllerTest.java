@@ -153,6 +153,7 @@ class FileRunEventControllerTest {
                             action -> {
                                 assertThat(action.defaultLabel()).isNotBlank();
                                 assertThat(action.execution()).isNotNull();
+                                assertThat(action.slot()).isNotNull();
                             })
                     .filteredOn(action -> "VIEW_IN_PROCESSOR".equals(action.id()))
                     .singleElement()
@@ -160,6 +161,7 @@ class FileRunEventControllerTest {
                             action -> {
                                 assertThat(action.execution())
                                         .isEqualTo(FailureActionId.Execution.CLIENT);
+                                assertThat(action.slot()).isEqualTo(FailureActionSlot.SECONDARY);
                                 assertThat(action.defaultLabel()).isEqualTo("View in processor");
                             });
         }

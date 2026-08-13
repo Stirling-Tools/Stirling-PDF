@@ -1,6 +1,9 @@
 package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static stirling.software.proprietary.failure.FailureActionSlot.OVERFLOW;
+import static stirling.software.proprietary.failure.FailureActionSlot.RESOLUTION;
+import static stirling.software.proprietary.failure.FailureActionSlot.SECONDARY;
 import static stirling.software.proprietary.failure.FailureAudience.ANYONE_WHO_SEES;
 import static stirling.software.proprietary.failure.FailureAudience.OWNER;
 import static stirling.software.proprietary.failure.FailureAudience.TEAM_REVIEWER;
@@ -37,9 +40,12 @@ class FailureKindTest {
      * declaration that pairs the right action with the wrong audience cannot pass.
      */
     private static FailureKind.OfferedAction offered(
-            FailureActionId id, FailureAudience audience, String labelKeySuffix) {
+            FailureActionId id,
+            FailureAudience audience,
+            FailureActionSlot slot,
+            String labelKeySuffix) {
         return new FailureKind.OfferedAction(
-                id, "portal.failures.action." + labelKeySuffix, audience);
+                id, "portal.failures.action." + labelKeySuffix, audience, slot);
     }
 
     @Nested
@@ -73,28 +79,6 @@ class FailureKindTest {
             assertThat(kind.getId()).matches("^[A-Z][A-Z0-9_]*$");
         }
 
-        @ParameterizedTest
-        @EnumSource(FailureKind.class)
-        void declaresItsActionsInTheSameOrderAsEveryOtherKind(FailureKind kind) {
-            // Declaration order is display order, and the first offer a reader can use is the one
-            // rendered as the row's primary. Two kinds listing the same actions in different orders
-            // therefore flip the solid button between rows, which reads as a bug rather than as
-            // emphasis. Asserted as a shared ranking so a kind added later cannot reintroduce it.
-            List<FailureActionId> ranking =
-                    List.of(
-                            FailureActionId.VIEW_FILE,
-                            FailureActionId.VIEW_IN_PROCESSOR,
-                            FailureActionId.DISMISS);
-
-            List<FailureActionId> declared = kind.getActions();
-            assertThat(ranking)
-                    .as("%s declares an action the shared ranking does not rank", kind.getId())
-                    .containsAll(declared);
-            assertThat(declared)
-                    .as("%s declares its actions out of the shared order", kind.getId())
-                    .isEqualTo(ranking.stream().filter(declared::contains).toList());
-        }
-
         @Test
         void idsAreUnique() {
             Set<String> ids = new HashSet<>();
@@ -125,13 +109,14 @@ class FailureKindTest {
 
         @ParameterizedTest
         @EnumSource(FailureKind.class)
-        void everyOfferSaysWhoItIsFor(FailureKind kind) {
-            // Read per row to decide what a caller is shown, so a missing one would be a button
-            // offered to whoever the null case happened to let through.
+        void everyOfferSaysWhoItIsForAndWhereItGoes(FailureKind kind) {
+            // Both are read per row to decide what a caller is shown, so a missing one would be a
+            // button placed by whatever the null case happened to do.
             for (FailureKind.OfferedAction offer : kind.getOfferedActions()) {
                 assertThat(offer.audience())
                         .as("%s offers %s", kind.getId(), offer.id())
                         .isNotNull();
+                assertThat(offer.slot()).as("%s offers %s", kind.getId(), offer.id()).isNotNull();
             }
         }
 
@@ -141,6 +126,17 @@ class FailureKindTest {
             // Declaration order is the client's tie-break, so the same action twice would be two
             // buttons with one meaning, and labelKeyFor would silently answer for the first.
             assertThat(kind.getActions()).doesNotHaveDuplicates();
+        }
+
+        @ParameterizedTest
+        @EnumSource(FailureKind.class)
+        void declaresAtMostOneResolution(FailureKind kind) {
+            // Two things that both claim to fix it is a sign of two kinds wearing one id.
+            assertThat(
+                            kind.getOfferedActions().stream()
+                                    .filter(offer -> offer.slot() == FailureActionSlot.RESOLUTION)
+                                    .toList())
+                    .hasSizeLessThanOrEqualTo(1);
         }
 
         @Test
@@ -237,17 +233,19 @@ class FailureKindTest {
     class Unknown {
 
         @Test
-        void offersItsOwnerTheirDocumentAndTheRunToWhoeverReviews() {
-            // Nothing here is known to be fixable, so the offers are the places to look: the
-            // owner their document, a reviewer the run, and anyone may close the row.
+        void offersARetryToItsOwnerAndTheRunToWhoeverReviews() {
+            // Nothing here is known to be fixable, so there is no resolution. A retry is still
+            // worth offering the person who hit it: an unrecognised failure is often a one-off.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
+                            offered(FailureActionId.RETRY, OWNER, SECONDARY, "retry"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
+                                    SECONDARY,
                                     "viewInProcessor"),
-                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, "dismiss"));
+                            offered(FailureActionId.VIEW_FILE, OWNER, OVERFLOW, "viewFile"),
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
         @Test
@@ -300,17 +298,24 @@ class FailureKindTest {
         }
 
         @Test
-        void offersTheDocumentToItsOwnerAndTheRunToItsReviewer() {
-            // The whole point of the audiences: only the owner holds the document, so a reviewer
-            // is offered the run and a way to close the row instead.
+        void aKindWithSomethingToFixOffersTheFixToItsOwnerAndTheRunToItsReviewer() {
+            // The whole point of the audiences: the password is the fix and only the owner has it,
+            // so a reviewer is offered the run and a way to close the row instead.
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.VIEW_FILE, OWNER, "viewFile"),
+                            offered(
+                                    FailureActionId.DECRYPT_AND_RETRY,
+                                    OWNER,
+                                    RESOLUTION,
+                                    "decryptAndRetry"),
+                            offered(FailureActionId.RETRY, OWNER, OVERFLOW, "retry"),
+                            offered(FailureActionId.VIEW_FILE, OWNER, OVERFLOW, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
                                     TEAM_REVIEWER,
+                                    SECONDARY,
                                     "viewInProcessor"),
-                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, "dismiss"));
+                            offered(FailureActionId.DISMISS, ANYONE_WHO_SEES, OVERFLOW, "dismiss"));
         }
 
         @Test
@@ -343,8 +348,8 @@ class FailureKindTest {
                     .isEqualTo("portal.failures.action.dismiss");
             assertThat(
                             FailureKind.INPUT_PASSWORD_PROTECTED.labelKeyFor(
-                                    FailureActionId.VIEW_IN_PROCESSOR))
-                    .isEqualTo("portal.failures.action.viewInProcessor");
+                                    FailureActionId.DECRYPT_AND_RETRY))
+                    .isEqualTo("portal.failures.action.decryptAndRetry");
         }
 
         @Test

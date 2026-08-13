@@ -167,6 +167,7 @@ class NotificationProjectionTest {
                                 assertThat(action.labelKey()).startsWith("portal.failures.action.");
                                 assertThat(action.defaultLabel()).isNotBlank();
                                 assertThat(action.execution()).isNotNull();
+                                assertThat(action.slot()).isNotNull();
                             });
         }
     }

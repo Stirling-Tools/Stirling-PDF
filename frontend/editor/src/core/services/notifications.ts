@@ -23,6 +23,12 @@ export type NotificationOrigin = "TOOL" | "POLICY" | "PIPELINE";
 export type NotificationOwnership = "MINE" | "THEIRS" | "UNOWNED";
 
 /**
+ * How much of the row an action has earned. The server ranks by what the action does, not by where it
+ * ends up on screen; `promoteActions` turns a slot into a button or a menu entry.
+ */
+export type NotificationActionSlot = "RESOLUTION" | "SECONDARY" | "OVERFLOW";
+
+/**
  * One action as offered for one notification, all of them run by this client on its own device.
  * `id` is a plain string rather than a union because the server may know actions this build does
  * not, and the client skips the ones it cannot perform.
@@ -32,6 +38,7 @@ export interface NotificationActionOffer {
   labelKey: string;
   /** English fallback, for a build with no copy for `labelKey`. */
   defaultLabel: string;
+  slot: NotificationActionSlot;
   /** False means it cannot work for this row. The bell renders no button and states the reason
    *  instead; the portal's queue still shows it disabled. */
   enabled: boolean;
@@ -89,5 +96,26 @@ export async function fetchNotifications(
     return response?.data?.notifications ?? [];
   } catch {
     return [];
+  }
+}
+
+/**
+ * Tell the server that the client fixed what a notification was about, so the bell stops reporting a
+ * failure the user has already dealt with. Takes the prefixed id, so the bell never hands a raw row id
+ * to a failure endpoint.
+ *
+ * Never throws. A refusal (already dismissed, not the caller's row) is not worth interrupting the user
+ * over: their document is already fixed and in front of them, and the next read tidies up the row.
+ */
+export async function reportNotificationResolved(
+  notificationId: string,
+): Promise<boolean> {
+  try {
+    await apiClient.post(
+      `${NOTIFICATIONS_PATH}/${encodeURIComponent(notificationId)}/resolved`,
+    );
+    return true;
+  } catch {
+    return false;
   }
 }

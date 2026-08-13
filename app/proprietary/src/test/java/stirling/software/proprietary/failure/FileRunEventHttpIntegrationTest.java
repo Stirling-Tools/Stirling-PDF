@@ -130,6 +130,7 @@ class FileRunEventHttpIntegrationTest {
             assertThat(actions.get(0).get("defaultLabel").asString())
                     .isEqualTo("View in processor");
             assertThat(actions.get(0).get("execution").asString()).isEqualTo("CLIENT");
+            assertThat(actions.get(0).get("slot").asString()).isEqualTo("SECONDARY");
             assertThat(actions.get(0).get("enabled").asBoolean()).isTrue();
             assertThat(actions.get(0).get("disabledReasonKey").isNull()).isTrue();
             assertThat(actions.get(1).get("id").asString()).isEqualTo("DISMISS");

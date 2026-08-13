@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
+import { Button, Input } from "@app/ui";
 import { BellIcon } from "@app/components/notifications/BellIcon";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import {
@@ -20,6 +20,7 @@ import {
   type ClientActionRegistry,
   type NotificationActionContext,
 } from "@app/components/notifications/notificationActions";
+import { promoteActions } from "@app/components/notifications/notificationActionSlots";
 import type {
   AppNotification,
   NotificationActionOffer,
@@ -36,7 +37,7 @@ import "@app/components/notifications/NotificationBell.css";
  */
 export function NotificationBell() {
   const { t } = useTranslation();
-  const { notifications, unreadCount, documentStateFor, markAllSeen } =
+  const { notifications, unreadCount, documentStateFor, markAllSeen, refresh } =
     useNotifications();
   const registry = useNotificationActions();
   const [open, setOpen] = useState(false);
@@ -180,6 +181,7 @@ export function NotificationBell() {
                     documentState={documentStateFor(notification)}
                     registry={registry}
                     onDismissPanel={() => setOpen(false)}
+                    onChanged={refresh}
                   />
                 </Fragment>
               ))}
@@ -214,12 +216,12 @@ function noteFor(
   if (!notification.fileId)
     return t(
       "notifications.noDocumentLinked",
-      "This failure is not linked to a specific document, so there is nothing to open here.",
+      "This failure is not linked to a specific document, so it cannot be opened or retried here.",
     );
   return isResolvableHere(notification)
     ? t(
         "notifications.notOnThisDevice",
-        "This document is not on this device, so it cannot be opened here.",
+        "This document is not on this device, so it cannot be opened or retried here.",
       )
     : null;
 }
@@ -230,11 +232,13 @@ interface NotificationItemProps {
   documentState: NotificationDocumentState;
   registry: ClientActionRegistry;
   onDismissPanel: () => void;
+  /** The row changed something server-side; re-read rather than patch a local copy. */
+  onChanged: () => void;
 }
 
 /**
- * One row. Its own component because the message its last attempt came back with and whether that
- * message is expanded are per-row state the panel cannot hold.
+ * One row. Its own component because the password it is collecting, the message its last attempt came
+ * back with and whether that message is expanded are all per-row state the panel cannot hold.
  */
 function NotificationItem({
   notification,
@@ -242,8 +246,13 @@ function NotificationItem({
   documentState,
   registry,
   onDismissPanel,
+  onChanged,
 }: NotificationItemProps) {
   const { t } = useTranslation();
+  // Held only while the field is open, and dropped as soon as the row is done with it. Never stashed,
+  // never logged.
+  const [password, setPassword] = useState("");
+  const [askingFor, setAskingFor] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -253,27 +262,19 @@ function NotificationItem({
   const context: NotificationActionContext = {
     notification,
     hasLocalFile: documentState.hasLocalFile,
+    retryPayload: documentState.retryPayload,
   };
 
-  // What this device can actually do, in the order the kind declared. An id this build has never
-  // heard of is skipped rather than rendered unwired: the server ships new kinds, and new actions,
-  // ahead of the clients that understand them.
-  const usable = notification.actions.filter((offer) => {
-    if (!offer.enabled) return false;
-    const spec = registry[offer.id];
-    return spec ? spec.available(context) : false;
-  });
-
-  // Why the row is thin, when the server withheld something and said so. Only from an action this
-  // build would otherwise have rendered, so a reason about an action it cannot perform anyway is not
-  // presented as the row's explanation.
-  const withheldReasonKey =
-    notification.actions.find(
-      (offer) =>
-        !offer.enabled &&
-        offer.disabledReasonKey !== null &&
-        registry[offer.id] !== undefined,
-    )?.disabledReasonKey ?? null;
+  const { primary, secondary, overflow, withheldReasonKey } = promoteActions(
+    notification.actions,
+    (offer) => {
+      const spec = registry[offer.id];
+      // An id this build has never heard of: skipped, not rendered unwired. The server ships new kinds
+      // and their actions ahead of the clients that understand them.
+      if (!spec) return false;
+      return spec.available(context);
+    },
+  );
 
   const labelOf = (offer: NotificationActionOffer) =>
     t(offer.labelKey, offer.defaultLabel);
@@ -284,9 +285,18 @@ function NotificationItem({
 
     const spec = registry[offer.id];
     if (!spec) return;
+    // First click on a password action opens the field, the second one runs it. An empty field means
+    // the user clicked the button again rather than filling it in, so there is nothing to send yet.
+    if (spec.needsPassword && (askingFor !== offer.id || password === "")) {
+      setAskingFor(offer.id);
+      return;
+    }
 
     setBusy(offer.id);
-    const outcome = await spec.run(context);
+    const outcome = await spec.run(
+      context,
+      spec.needsPassword ? password : undefined,
+    );
     setBusy(null);
     if (outcome && !outcome.ok) {
       setMessage(
@@ -299,6 +309,10 @@ function NotificationItem({
       return;
     }
 
+    setPassword("");
+    setAskingFor(null);
+    // A password action resolves the incident server-side, so the row is expected to drop out.
+    if (spec.needsPassword) onChanged();
     if (spec.closesPanel) onDismissPanel();
   };
 
@@ -311,6 +325,10 @@ function NotificationItem({
       // No clipboard permission. The message is on screen and selectable, so this needs no error.
     }
   };
+
+  const asking = askingFor
+    ? (notification.actions.find((offer) => offer.id === askingFor) ?? null)
+    : null;
 
   const note = noteFor(notification, documentState, withheldReasonKey, t);
 
@@ -381,15 +399,30 @@ function NotificationItem({
       {/* Actions were taken away from this row, so say why rather than leaving a bare row. */}
       {note && <span className="notification-bell__note">{note}</span>}
 
-      {/* Every action the row has, in the kind's declared order, the first leading. Three is the most
-          any kind offers once the unusable ones are dropped, so hiding the tail behind a menu would
-          cost more than it saves. */}
-      {usable.length > 0 && (
+      {/* Every action the row has, in the server's order. Three is the most any kind offers once the
+          unusable ones are dropped, so hiding the tail behind a menu would cost more than it saves. */}
+      {primary && (
         <span className="notification-bell__actions">
-          {usable.map((offer, index) => (
+          <ActionButton
+            variant="primary"
+            rowTitle={title}
+            label={labelOf(primary)}
+            busy={busy === primary.id}
+            onRun={() => void run(primary)}
+          />
+          {secondary && (
+            <ActionButton
+              variant="secondary"
+              rowTitle={title}
+              label={labelOf(secondary)}
+              busy={busy === secondary.id}
+              onRun={() => void run(secondary)}
+            />
+          )}
+          {overflow.map((offer) => (
             <ActionButton
               key={offer.id}
-              variant={index === 0 ? "primary" : "secondary"}
+              variant="tertiary"
               rowTitle={title}
               label={labelOf(offer)}
               busy={busy === offer.id}
@@ -397,6 +430,51 @@ function NotificationItem({
             />
           ))}
         </span>
+      )}
+
+      {asking && (
+        <form
+          className="notification-bell__password"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void run(asking);
+          }}
+        >
+          <Input
+            type="password"
+            inputSize="sm"
+            autoFocus
+            autoComplete="off"
+            value={password}
+            aria-label={`${t("notifications.password.label", "Document password")}: ${title}`}
+            placeholder={t("notifications.password.label", "Document password")}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            fontSize="xs"
+            disabled={password === "" || busy !== null}
+          >
+            {busy === asking.id
+              ? t("notifications.password.working", "Unlocking...")
+              : labelOf(asking)}
+          </Button>
+          <Button
+            type="button"
+            variant="quiet"
+            size="sm"
+            fontSize="xs"
+            onClick={() => {
+              setPassword("");
+              setAskingFor(null);
+              setMessage(null);
+            }}
+          >
+            {t("notifications.password.cancel", "Cancel")}
+          </Button>
+        </form>
       )}
 
       {message && (
@@ -410,7 +488,7 @@ function NotificationItem({
 
 interface ActionButtonProps {
   /** Solid for the row's answer, outlined for its runner-up, ghost for the rest. */
-  variant: "primary" | "secondary";
+  variant: "primary" | "secondary" | "tertiary";
   rowTitle: string;
   label: string;
   busy: boolean;

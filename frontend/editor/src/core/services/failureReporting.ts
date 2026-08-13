@@ -165,8 +165,11 @@ function messageOf(error: unknown): string {
  * <p>Everything else is reported, client-side refusals included: an unsupported input
  * format is the same class of problem as the processor rejecting a file type, which
  * is already recorded.
+ *
+ * <p>Exported for `useToolOperation`, which must not stash a retry for a run the user
+ * cancelled themselves.
  */
-function wasCancelled(error: unknown): boolean {
+export function wasCancelled(error: unknown): boolean {
   const candidate = error as {
     code?: unknown;
     name?: unknown;
