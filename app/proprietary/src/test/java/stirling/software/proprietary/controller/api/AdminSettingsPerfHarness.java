@@ -39,6 +39,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
@@ -222,7 +223,8 @@ class AdminSettingsPerfHarness {
                 mock(PersistentAuditEventRepository.class),
                 mock(MfaService.class),
                 loginAttemptService,
-                resourceAccessService);
+                resourceAccessService,
+                mock(InviteTokenRepository.class));
     }
 
     Authentication adminAuth() {

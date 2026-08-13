@@ -32,6 +32,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.exception.UserLimitExceededException;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.storage.model.FileShare;
@@ -72,6 +73,11 @@ class UserServiceTest {
 
     @Mock private TeamMembershipService teamMembershipService;
     @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
+
+    @Mock
+    private org.springframework.beans.factory.ObjectProvider<
+                    stirling.software.proprietary.service.UserLicenseSettingsService>
+            licenseSettingsService;
 
     @Spy @InjectMocks private UserService userService;
 
@@ -157,6 +163,52 @@ class UserServiceTest {
         verify(teamRepository, never()).findById(anyLong());
         verify(databaseService).exportDatabase();
         assertEquals(defaultTeam, saved.getTeam(), "Default team should be applied");
+    }
+
+    @Test
+    void saveUserCore_atLimit_refusesAndDoesNotPersist() {
+        stirling.software.proprietary.service.UserLicenseSettingsService settings =
+                mock(stirling.software.proprietary.service.UserLicenseSettingsService.class);
+        when(licenseSettingsService.getIfAvailable()).thenReturn(settings);
+        when(settings.wouldExceedLimit(1)).thenReturn(true);
+        when(settings.calculateMaxAllowedUsers()).thenReturn(100);
+        when(userRepository.count()).thenReturn(100L);
+        when(userRepository.findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId()))
+                .thenReturn(Optional.empty());
+
+        SaveUserRequest request = SaveUserRequest.builder().username("oneTooMany").build();
+
+        UserLimitExceededException thrown =
+                assertThrows(
+                        UserLimitExceededException.class, () -> userService.saveUserCore(request));
+
+        assertEquals(100, thrown.getMaxAllowedUsers());
+        verify(userRepository, never()).save(any(User.class));
+        verifyNoInteractions(databaseService);
+    }
+
+    @Test
+    void saveUserCore_bypassUserLimit_createsInternalAccountAtLimit()
+            throws SQLException, UnsupportedProviderException {
+        Team internalTeam = new Team();
+        internalTeam.setName("Internal");
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // The internal API user is excluded from the count, so an installation sitting at its cap
+        // must still be able to create it. No licence lookup should happen at all.
+        SaveUserRequest request =
+                SaveUserRequest.builder()
+                        .username(Role.INTERNAL_API_USER.getRoleId())
+                        .team(internalTeam)
+                        .bypassUserLimit(true)
+                        .build();
+
+        User saved = userService.saveUserCore(request);
+
+        assertEquals(Role.INTERNAL_API_USER.getRoleId(), saved.getUsername());
+        verify(userRepository).save(any(User.class));
+        verifyNoInteractions(licenseSettingsService);
     }
 
     @Test

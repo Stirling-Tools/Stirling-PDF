@@ -64,6 +64,25 @@ public class KeygenLicenseVerifier {
         public LicenseContext() {}
     }
 
+    /**
+     * Records the server/block breakdown behind {@code users}. Presentation only: {@code maxUsers}
+     * remains the enforced limit and is set by each caller. Absent on any licence issued before the
+     * cap, and on enterprise licences, which carry no server count.
+     *
+     * <p>Called from all three verification paths (certificate, JWT policy, live API) so the three
+     * cannot drift; {@code metadataObj} is whichever node carries the licence metadata there.
+     */
+    private void applyCapacityBreakdown(JsonNode metadataObj) {
+        int serverQuantity = 0;
+        int userBlockSize = 0;
+        if (metadataObj != null && !metadataObj.isMissingNode() && metadataObj.isObject()) {
+            serverQuantity = Math.max(0, metadataObj.path("server_quantity").asInt(0));
+            userBlockSize = Math.max(0, metadataObj.path("user_block_size").asInt(0));
+        }
+        applicationProperties.getPremium().setServerQuantity(serverQuantity);
+        applicationProperties.getPremium().setUserBlockSize(userBlockSize);
+    }
+
     public License verifyLicense(String licenseKeyOrCert) {
         if (!applicationProperties.getPremium().isEnabled()) {
             return License.NORMAL;
@@ -284,6 +303,7 @@ public class KeygenLicenseVerifier {
                     }
 
                     applicationProperties.getPremium().setMaxUsers(users);
+                    applyCapacityBreakdown(metadataObj);
                 }
 
                 // Check license status if available
@@ -480,6 +500,7 @@ public class KeygenLicenseVerifier {
                 }
 
                 applicationProperties.getPremium().setMaxUsers(users);
+                applyCapacityBreakdown(policyObj.path("metadata"));
             }
 
             return true;
@@ -666,6 +687,7 @@ public class KeygenLicenseVerifier {
             }
 
             applicationProperties.getPremium().setMaxUsers(users);
+            applyCapacityBreakdown(jsonResponse.path("data").path("attributes").path("metadata"));
             log.debug(applicationProperties.toString());
 
         } else {
