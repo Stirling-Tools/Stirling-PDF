@@ -327,27 +327,42 @@ test("Ctrl+A works without first hovering the viewer", async ({ page }) => {
   expect(nativeSelectionLength).toBe(0);
 });
 
-test("text selection still works after toggling the pan tool off again", async ({
-  page,
-}) => {
-  test.setTimeout(60_000);
-  const firstPage = await loadSampleAndOpenViewer(page);
+// hasTouch is required: the pan plugin's defaultConfig is "mobile", so only a
+// touch-capable context reproduces the pan lock that kills selection (#5175).
+test.describe("pan mode on a touch-capable device", () => {
+  test.use({ hasTouch: true });
 
-  // Toggling pan on then off should return the active mode to pointerMode.
-  const panButton = page
-    .locator('[aria-label="Pan"], [aria-label*="and tool" i]')
-    .first();
-  if (await panButton.count()) {
+  test("the viewer does not open locked in pan mode", async ({ page }) => {
+    test.setTimeout(60_000);
+    const firstPage = await loadSampleAndOpenViewer(page);
+
+    await dragSelectAcrossPage(page, firstPage);
+
+    const selectionRects = firstPage.locator(
+      ".pdf-selection-layer > div:first-child > div",
+    );
+    await expect(selectionRects.first()).toBeAttached({ timeout: 5_000 });
+  });
+
+  test("text selection still works after toggling the pan tool off again", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    const firstPage = await loadSampleAndOpenViewer(page);
+
+    // Toggling pan on then off should return the active mode to pointerMode.
+    const panButton = page.locator('[aria-label="Pan Mode"]').first();
+    await expect(panButton).toBeVisible({ timeout: 10_000 });
     await panButton.click();
     await page.waitForTimeout(200);
     await panButton.click();
     await page.waitForTimeout(200);
-  }
 
-  await dragSelectAcrossPage(page, firstPage);
+    await dragSelectAcrossPage(page, firstPage);
 
-  const selectionRects = firstPage.locator(
-    ".pdf-selection-layer > div:first-child > div",
-  );
-  await expect(selectionRects.first()).toBeAttached({ timeout: 5_000 });
+    const selectionRects = firstPage.locator(
+      ".pdf-selection-layer > div:first-child > div",
+    );
+    await expect(selectionRects.first()).toBeAttached({ timeout: 5_000 });
+  });
 });

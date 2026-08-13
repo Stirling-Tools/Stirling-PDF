@@ -380,12 +380,9 @@ export function LocalEmbedPDF({
         drawBlackBoxes: false,
       }),
 
-      // Register pan plugin (depends on Viewport, InteractionManager).
-      // Keep the default mode ("never"). Do NOT set defaultMode: "mobile" - the pan
-      // react layer makes pan the default interaction on any touch-capable device
-      // (navigator.maxTouchPoints > 0), e.g. Windows touchscreen laptops, which then
-      // permanently locks the viewer in pan mode and blocks all text selection.
-      createPluginRegistration(PanPluginPackage),
+      // "never" is required: the plugin's own defaultConfig is "mobile", which makes
+      // pan the default mode on touch devices and locks text selection (#5175).
+      createPluginRegistration(PanPluginPackage, { defaultMode: "never" }),
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
