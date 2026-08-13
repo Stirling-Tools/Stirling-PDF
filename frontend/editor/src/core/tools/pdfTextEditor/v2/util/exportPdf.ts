@@ -16,7 +16,7 @@ export async function exportToBlob(
   const regenerated = doc.regeneratedPages();
   let bytes = PdfiumSave.serialize(doc, { incremental });
 
-  if (regenerated.length > 0) {
+  if (regenerated.length > 0 && doc.openedBytes.length > 0) {
     try {
       const repaired = await preserveShadings(bytes, doc.openedBytes, {
         pages: regenerated,

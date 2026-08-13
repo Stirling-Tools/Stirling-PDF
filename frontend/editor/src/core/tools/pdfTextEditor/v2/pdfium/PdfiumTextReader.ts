@@ -256,7 +256,7 @@ function captureCharPositions(
     if (!aligned) continue;
     run.charStartsX = aligned.starts;
     run.charEndsX = aligned.ends;
-    run.charPositionsText = run.text;
+    run.charPositionsKey = run.positionsKey();
   }
 }
 
@@ -281,10 +281,16 @@ function alignToText(
       g += 1;
       placed += 1;
     } else if (g < glyphs.length && cp !== 0x20 && cp !== 0x0a) {
-      // The text has a character the glyph list does not: skip one glyph in
-      // case the engine emitted an extra, else give up on this character.
-      const next = glyphs.findIndex((entry, at) => at > g && entry.cp === cp);
-      if (next > 0 && next - g <= 2) {
+      // The text has a character the glyph list does not: look at the next
+      // couple of glyphs only, so a long mismatching run stays linear.
+      let next = -1;
+      for (let at = g + 1; at <= g + 2 && at < glyphs.length; at += 1) {
+        if (glyphs[at].cp === cp) {
+          next = at;
+          break;
+        }
+      }
+      if (next > 0) {
         g = next;
         continue;
       }
@@ -292,7 +298,8 @@ function alignToText(
     i += units;
   }
   // A capture that placed almost nothing is not worth trusting.
-  return placed >= Math.max(1, Math.floor(text.replace(/\s/g, "").length * 0.6))
+  const visible = [...text].filter((c) => !/\s/.test(c)).length;
+  return placed >= Math.max(1, Math.floor(visible * 0.6))
     ? { starts, ends }
     : null;
 }

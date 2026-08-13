@@ -11,10 +11,16 @@ import { prepareForEditing } from "@app/tools/pdfTextEditor/v2/pdfdoc/prepareFor
 
 // Lifetime-managed PDFium document wrapper for the v2 text editor. - Opens a
 // raw PDFium document pointer from bytes.
+// Above this the save-time repairs are skipped rather than keeping a second
+// full copy of the file alive for the session.
+const MAX_RETAINED_BYTES = 64 * 1024 * 1024;
+const EMPTY = new Uint8Array(0);
+
 export class EditorDocument {
   readonly module: WrappedPdfiumModule;
   readonly docPtr: number;
   /** Exactly the bytes PDFium was handed: the save-time repairs re-read them. */
+  /** Empty when the file was too large to keep a second copy of. */
   readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
   private readonly ownedFonts: Map<string, FontRef>;
@@ -41,7 +47,10 @@ export class EditorDocument {
     const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
     const prepared = await prepareForEditing(bytes);
     const docPtr = await openRawDocument(prepared, password);
-    return new EditorDocument(module, docPtr, prepared);
+    // PDFium already holds its own heap copy, so retaining these doubles the
+    // footprint; past a point the gradient repair is not worth that.
+    const keep = prepared.length <= MAX_RETAINED_BYTES ? prepared : EMPTY;
+    return new EditorDocument(module, docPtr, keep);
   }
 
   /** Page indices whose content stream has been regenerated this session. */

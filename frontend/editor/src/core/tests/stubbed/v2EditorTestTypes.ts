@@ -46,7 +46,7 @@ export interface V2Run {
   /** Captured engine pen origins / ends per code unit of `text`. */
   charStartsX: number[] | null;
   charEndsX: number[] | null;
-  charPositionsText: string | null;
+  charPositionsKey: string | null;
   /** Member-line count; > 1 means a multi-line paragraph. */
   paragraphLineCount?: number;
 }

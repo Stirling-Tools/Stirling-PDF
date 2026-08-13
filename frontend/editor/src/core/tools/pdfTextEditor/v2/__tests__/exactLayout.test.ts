@@ -3,6 +3,7 @@ import {
   buildExactLines,
   type CharPositions,
 } from "@app/tools/pdfTextEditor/v2/util/exactLayout";
+import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 
 /** Positions for `text` where every glyph advances by `advance` points. */
 function uniform(text: string, advance = 10): CharPositions {
@@ -143,5 +144,49 @@ describe("buildExactLines", () => {
   it("returns null when positions run backwards", () => {
     const positions: CharPositions = { starts: [50, 10], ends: [60, 20] };
     expect(buildExactLines("ab", positions)).toBeNull();
+  });
+});
+
+describe("capture validity", () => {
+  const base = {
+    id: "r1",
+    pageIndex: 0,
+    bounds: { x: 0, y: 0, width: 10, height: 10 },
+    matrix: { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
+    text: "ab",
+    fontId: "pdf:1:Helvetica",
+    fontSize: 12,
+    fill: { r: 0, g: 0, b: 0, a: 255 },
+    fontSubset: false,
+  };
+
+  function measured(): TextRun {
+    const run = new TextRun({ ...base, pdfiumObjPtr: 1 });
+    run.charStartsX = [0, 10];
+    run.charEndsX = [10, 20];
+    run.charPositionsKey = run.positionsKey();
+    return run;
+  }
+
+  it("publishes the capture while the run is unchanged", () => {
+    expect(measured().snapshot().charStartsX).toEqual([0, 10]);
+  });
+
+  it("drops the capture when the text changes", () => {
+    const run = measured();
+    run.text = "abc";
+    expect(run.snapshot().charStartsX).toBeUndefined();
+  });
+
+  it("drops the capture when the size changes, which rescales every glyph", () => {
+    const run = measured();
+    run.fontSize = 24;
+    expect(run.snapshot().charStartsX).toBeUndefined();
+  });
+
+  it("drops the capture when the family changes", () => {
+    const run = measured();
+    run.fontId = "base14:Times-Roman";
+    expect(run.snapshot().charStartsX).toBeUndefined();
   });
 });

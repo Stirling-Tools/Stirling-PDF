@@ -22,7 +22,7 @@ async function firstMeasuredRun(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     const store = (window as unknown as V2TestWindow).__v2_editor_store;
     for (const run of store.doc.page(0).runs) {
-      if (!run.charStartsX || run.charPositionsText !== run.text) continue;
+      if (!run.charStartsX || run.charPositionsKey === null) continue;
       if (!/\S\s+\S/.test(run.text)) continue;
       // Exact placement is enabled for single-line runs only.
       if ((run.paragraphLineCount ?? 1) > 1) continue;
