@@ -112,14 +112,48 @@ export async function fetchDownloadsSuggestion(): Promise<DownloadsSuggestion> {
   return res.data;
 }
 
+/** One file a run produced. Downloadable by id from the general files endpoint. */
+export interface ProcessingRunOutput {
+  fileId: string;
+  fileName?: string | null;
+}
+
+export interface ProcessingFolderRun {
+  runId?: string;
+  status: string;
+  error?: string | null;
+  outputs?: ProcessingRunOutput[] | null;
+}
+
 /** Runs belonging to a processing folder, newest first — drives the progress display. */
 export async function fetchProcessingFolderRuns(
   policyId: string,
-): Promise<{ status: string; error?: string | null }[]> {
-  const res = await apiClient.get<
-    { policyId?: string; status: string; error?: string | null }[]
-  >("/api/v1/policies/runs");
+): Promise<ProcessingFolderRun[]> {
+  const res = await apiClient.get<(ProcessingFolderRun & { policyId?: string })[]>(
+    "/api/v1/policies/runs",
+  );
   return (res.data ?? []).filter((run) => run.policyId === policyId);
+}
+
+/**
+ * Fetch a run output's bytes as a File, ready to hand to the workbench. Runs are server-side, so
+ * their results exist only in storage until something pulls them down.
+ *
+ * A storage-backed run puts the stored file's own id in `fileId`, so it downloads from the storage
+ * endpoint. The job endpoint (`/api/v1/general/files/{id}`) keys off job-file UUIDs and rejects a
+ * stored-file id outright — the two share a field name but not an id space.
+ */
+export async function fetchRunOutputFile(
+  output: ProcessingRunOutput,
+): Promise<File> {
+  const res = await apiClient.get(
+    `/api/v1/storage/files/${output.fileId}/download`,
+    { responseType: "blob" },
+  );
+  const name = output.fileName?.trim() || `${output.fileId}.pdf`;
+  return new File([res.data as Blob], name, {
+    type: (res.data as Blob).type || "application/pdf",
+  });
 }
 
 /** One file in a mounted (disk-backed) processing folder. */

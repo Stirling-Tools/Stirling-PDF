@@ -9,10 +9,13 @@ import {
   CLASSIFY_OPERATION,
   fetchDownloadsSuggestion,
   fetchProcessingFolderRuns,
+  fetchRunOutputFile,
   saveProcessingFolder,
   type DownloadsSuggestion,
+  type ProcessingRunOutput,
 } from "@app/services/processingFolderApi";
 import { refreshProcessingFolders } from "@app/hooks/useProcessingFolders";
+import { useFileHandler } from "@app/hooks/useFileHandler";
 import "@app/components/policies/DownloadsProcessingWizard.css";
 
 type Phase = "asking" | "working" | "done" | "failed";
@@ -45,6 +48,8 @@ export function DownloadsProcessingWizard({
   const [started, setStarted] = useState(0);
   const [skipped, setSkipped] = useState(0);
   const [stalled, setStalled] = useState(false);
+  const [opened, setOpened] = useState(0);
+  const { addFiles } = useFileHandler();
 
   // Only offer where it can actually work: Downloads must exist, be a permitted folder root, and
   // have something in it worth processing.
@@ -74,6 +79,7 @@ export function DownloadsProcessingWizard({
     setStarted(0);
     setSkipped(0);
     setStalled(false);
+    setOpened(0);
   };
 
   /**
@@ -81,18 +87,65 @@ export function DownloadsProcessingWizard({
    * server reported starting, so this never waits on runs that were never going to appear — and
    * gives up after a bounded wait rather than spinning forever if a run goes missing.
    */
-  const trackRuns = useCallback(async (policyId: string, expected: number) => {
-    const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
-    for (let attempt = 0; attempt < 600; attempt++) {
-      const runs = await fetchProcessingFolderRuns(policyId).catch(() => []);
-      const settled = runs.filter((run) => TERMINAL.includes(run.status));
-      setProcessed(settled.filter((run) => run.status === "COMPLETED").length);
-      setFailed(settled.filter((run) => run.status !== "COMPLETED").length);
-      if (settled.length >= expected) return;
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-    setStalled(true);
-  }, []);
+  /**
+   * Pull a batch of results into the workbench as open files. Runs happen server-side, so without
+   * this the user is left with a finished job and an unchanged screen. Downloads are sequential so
+   * a hundred results don't open a hundred parallel requests, and one failure costs one file
+   * rather than the batch — it is still in the user's file library either way.
+   */
+  const openInWorkbench = useCallback(
+    async (outputs: ProcessingRunOutput[]) => {
+      if (outputs.length === 0) return;
+      const files: File[] = [];
+      for (const output of outputs) {
+        try {
+          files.push(await fetchRunOutputFile(output));
+        } catch (e) {
+          // Skipped: it is still in the file library, just not opened. Logged rather than
+          // swallowed — a download that fails for every file is indistinguishable from the
+          // pipeline producing nothing, and looks like the feature simply not working.
+          console.warn(
+            `[processing folders] could not open result ${output.fileId}`,
+            e,
+          );
+        }
+      }
+      if (files.length === 0) return;
+      await addFiles(files, { selectFiles: true });
+      setOpened((count) => count + files.length);
+    },
+    [addFiles],
+  );
+
+  /**
+   * Poll until the sweep's own runs have settled, opening each run's results as soon as that run
+   * finishes rather than at the end. A single slow or stuck file would otherwise hold back
+   * everything that already succeeded, and a timeout would throw all of it away.
+   */
+  const trackRuns = useCallback(
+    async (policyId: string, expected: number) => {
+      const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
+      const alreadyOpened = new Set<string>();
+      for (let attempt = 0; attempt < 900; attempt++) {
+        const runs = await fetchProcessingFolderRuns(policyId).catch(() => []);
+        const settled = runs.filter((run) => TERMINAL.includes(run.status));
+        const done = settled.filter((run) => run.status === "COMPLETED");
+        setProcessed(done.length);
+        setFailed(settled.length - done.length);
+
+        const fresh = done.filter(
+          (run) => run.runId && !alreadyOpened.has(run.runId),
+        );
+        fresh.forEach((run) => alreadyOpened.add(run.runId!));
+        await openInWorkbench(fresh.flatMap((run) => run.outputs ?? []));
+
+        if (settled.length >= expected) return;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      setStalled(true);
+    },
+    [openInWorkbench],
+  );
 
   const approve = async () => {
     if (!suggestion) return;
@@ -113,6 +166,18 @@ export function DownloadsProcessingWizard({
       if (folder.startedRuns > 0) {
         await trackRuns(folder.id, folder.startedRuns);
       }
+      // One sweep, not a standing watch: the offer's promise is "sort out what is already in
+      // Downloads", so the folder is stood down once it has. Leaving it enabled would keep
+      // opening files into the workbench every time anything landed in Downloads.
+      await saveProcessingFolder({
+        id: folder.id,
+        directory: suggestion.directory,
+        enabled: false,
+        steps: [{ operation: CLASSIFY_OPERATION, parameters: {}, assets: {} }],
+      }).catch(() => {
+        // The results are already in; a folder left running is a nuisance, not a failure.
+      });
+      void refreshProcessingFolders();
       setPhase("done");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -188,7 +253,7 @@ export function DownloadsProcessingWizard({
             {t("processingFolders.downloads.explain", {
               count: total,
               defaultValue:
-                "Stirling can classify the {{count}} PDFs already in your Downloads folder, and anything new that lands there.",
+                "Stirling can classify the {{count}} PDFs already in your Downloads folder and open the results here.",
             })}
           </p>
           <p className="downloads-wizard__path">{suggestion.directory}</p>
@@ -254,15 +319,16 @@ export function DownloadsProcessingWizard({
               {t("processingFolders.downloads.nothingNew", {
                 count: skipped,
                 defaultValue:
-                  "Nothing new to process — these {{count}} files have already been through. New PDFs landing in Downloads are processed automatically from now on.",
+                  "Nothing new to process — these {{count}} files have already been through.",
               })}
             </p>
           ) : (
             <p>
               {t("processingFolders.downloads.finished", {
                 count: processed,
+                opened,
                 defaultValue:
-                  "Classified {{count}} files. New PDFs landing in Downloads are processed automatically from now on.",
+                  "Classified {{count}} files and opened {{opened}} of them here, ready to work on.",
               })}
             </p>
           )}
