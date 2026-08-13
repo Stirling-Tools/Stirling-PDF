@@ -1,4 +1,4 @@
-package stirling.software.proprietary.security.oauth2;
+package stirling.software.proprietary.security.saml2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -12,9 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
@@ -23,50 +22,43 @@ import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @ExtendWith(MockitoExtension.class)
-class CustomOAuth2AuthenticationSuccessHandlerTest {
+class CustomSaml2AuthenticationSuccessHandlerTest {
 
     private final ApplicationProperties applicationProperties = new ApplicationProperties();
 
-    private CustomOAuth2AuthenticationSuccessHandler handlerWithStubs() {
+    private CustomSaml2AuthenticationSuccessHandler handlerWithStubs() {
         LoginAttemptService loginAttemptService = mock(LoginAttemptService.class);
         UserService userService = mock(UserService.class);
         JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
         UserLicenseSettingsService licenseSettingsService = mock(UserLicenseSettingsService.class);
 
-        ApplicationProperties.Security.OAUTH2 oauth2Props =
-                new ApplicationProperties.Security.OAUTH2();
-        oauth2Props.setAutoCreateUser(true);
-        oauth2Props.setBlockRegistration(false);
-
-        ApplicationProperties.Security securityProperties = new ApplicationProperties.Security();
-        securityProperties.setOauth2(oauth2Props);
-        applicationProperties.setSecurity(securityProperties);
+        ApplicationProperties.Security.SAML2 saml2Props =
+                new ApplicationProperties.Security.SAML2();
+        saml2Props.setAutoCreateUser(true);
+        saml2Props.setBlockRegistration(false);
 
         when(userService.usernameExistsIgnoreCase("user")).thenReturn(false);
-        when(licenseSettingsService.isOAuthEligible(null)).thenReturn(true);
-        when(userService.isUserDisabled("user")).thenReturn(false);
+        when(licenseSettingsService.isSamlEligible(null)).thenReturn(true);
         when(jwtService.isJwtEnabled()).thenReturn(true);
         when(jwtService.generateToken(
-                        org.mockito.Mockito.any(
-                                org.springframework.security.core.Authentication.class),
+                        org.mockito.Mockito.any(Authentication.class),
                         org.mockito.Mockito.anyMap()))
                 .thenReturn("jwt");
 
-        return new CustomOAuth2AuthenticationSuccessHandler(
+        return new CustomSaml2AuthenticationSuccessHandler(
                 loginAttemptService,
-                oauth2Props,
+                saml2Props,
                 userService,
                 jwtService,
                 licenseSettingsService,
                 applicationProperties);
     }
 
-    private OAuth2AuthenticationToken authentication() {
-        Map<String, Object> attributes = Map.of("sub", "provider-sub", "name", "user");
-        DefaultOAuth2User oauthUser =
-                new DefaultOAuth2User(
-                        List.of(new SimpleGrantedAuthority("ROLE_USER")), attributes, "name");
-        return new OAuth2AuthenticationToken(oauthUser, oauthUser.getAuthorities(), "google");
+    private Authentication authentication() {
+        CustomSaml2AuthenticatedPrincipal principal =
+                new CustomSaml2AuthenticatedPrincipal(
+                        "user", Map.of(), "name-id", List.of(), "response");
+        return new TestingAuthenticationToken(principal, "credentials");
     }
 
     private MockHttpServletRequest request() {
@@ -79,22 +71,8 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
     }
 
     @Test
-    void redirectsToTauriCallbackWhenStateMarked() throws Exception {
-        CustomOAuth2AuthenticationSuccessHandler handler = handlerWithStubs();
-        MockHttpServletRequest request = request();
-        request.setParameter("state", "tauri:abc");
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        handler.onAuthenticationSuccess(request, response, authentication());
-
-        assertEquals(
-                "http://localhost:8080/auth/callback/tauri#access_token=jwt",
-                response.getRedirectedUrl());
-    }
-
-    @Test
     void ignoresForwardedHostFromAnotherHost() throws Exception {
-        CustomOAuth2AuthenticationSuccessHandler handler = handlerWithStubs();
+        CustomSaml2AuthenticationSuccessHandler handler = handlerWithStubs();
         MockHttpServletRequest request = request();
         request.addHeader("X-Forwarded-Host", "evil.example");
         request.addHeader("X-Forwarded-Proto", "https");
@@ -108,22 +86,8 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
     }
 
     @Test
-    void ignoresRefererFromAnotherHost() throws Exception {
-        CustomOAuth2AuthenticationSuccessHandler handler = handlerWithStubs();
-        MockHttpServletRequest request = request();
-        request.addHeader("Referer", "https://evil.example/auth/callback");
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        handler.onAuthenticationSuccess(request, response, authentication());
-
-        assertEquals(
-                "http://localhost:8080/auth/callback#access_token=jwt",
-                response.getRedirectedUrl());
-    }
-
-    @Test
     void usesConfiguredFrontendUrlAndIgnoresHeaders() throws Exception {
-        CustomOAuth2AuthenticationSuccessHandler handler = handlerWithStubs();
+        CustomSaml2AuthenticationSuccessHandler handler = handlerWithStubs();
         applicationProperties.getSystem().setFrontendUrl("https://app.example.com");
         MockHttpServletRequest request = request();
         request.addHeader("X-Forwarded-Host", "evil.example");
@@ -138,7 +102,7 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
 
     @Test
     void honoursForwardedHeadersWhenHostMatchesRequestHost() throws Exception {
-        CustomOAuth2AuthenticationSuccessHandler handler = handlerWithStubs();
+        CustomSaml2AuthenticationSuccessHandler handler = handlerWithStubs();
         MockHttpServletRequest request = request();
         request.addHeader("X-Forwarded-Host", "localhost");
         request.addHeader("X-Forwarded-Proto", "https");

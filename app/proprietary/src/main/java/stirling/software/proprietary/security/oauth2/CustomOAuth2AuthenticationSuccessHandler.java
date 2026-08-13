@@ -3,10 +3,8 @@ package stirling.software.proprietary.security.oauth2;
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
 
 import java.io.IOException;
-import java.net.URI;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -37,6 +35,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
+import stirling.software.proprietary.security.util.SsoRedirectOriginResolver;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -217,12 +216,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
             String contextPath,
             String jwt) {
         String redirectPath = resolveRedirectPath(request, contextPath);
-        String origin =
-                resolveForwardedOrigin(request)
-                        .orElseGet(
-                                () ->
-                                        resolveOriginFromReferer(request)
-                                                .orElseGet(() -> buildOriginFromRequest(request)));
+        String origin = SsoRedirectOriginResolver.resolveOrigin(request, applicationProperties);
         clearRedirectCookie(response);
 
         // Extract nonce from state for CSRF validation in callback
@@ -248,89 +242,6 @@ public class CustomOAuth2AuthenticationSuccessHandler
         return TauriOAuthUtils.defaultCallbackPath(contextPath);
     }
 
-    private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {
-        String forwardedHostHeader = request.getHeader("X-Forwarded-Host");
-        if (forwardedHostHeader == null || forwardedHostHeader.isBlank()) {
-            return Optional.empty();
-        }
-        String host = forwardedHostHeader.split(",")[0].trim();
-        if (host.isEmpty()) {
-            return Optional.empty();
-        }
-
-        String forwardedProtoHeader = request.getHeader("X-Forwarded-Proto");
-        String proto =
-                (forwardedProtoHeader == null || forwardedProtoHeader.isBlank())
-                        ? request.getScheme()
-                        : forwardedProtoHeader.split(",")[0].trim();
-
-        if (!host.contains(":")) {
-            String forwardedPort = request.getHeader("X-Forwarded-Port");
-            if (forwardedPort != null
-                    && !forwardedPort.isBlank()
-                    && !isDefaultPort(proto, forwardedPort.trim())) {
-                host = host + ":" + forwardedPort.trim();
-            }
-        }
-        return Optional.of(proto + "://" + host);
-    }
-
-    private Optional<String> resolveOriginFromReferer(HttpServletRequest request) {
-        String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isEmpty()) {
-            try {
-                URI refererUri = URI.create(referer);
-                String host = refererUri.getHost();
-                if (host == null) {
-                    return Optional.empty();
-                }
-
-                String refererHost = host.toLowerCase();
-
-                if (!isOAuthProviderDomain(refererHost)) {
-                    String origin = refererUri.getScheme() + "://" + host;
-                    int port = refererUri.getPort();
-                    if (port != -1 && port != 80 && port != 443) {
-                        origin += ":" + port;
-                    }
-                    return Optional.of(origin);
-                }
-            } catch (IllegalArgumentException e) {
-                // ignore and fall back
-            }
-        }
-        return Optional.empty();
-    }
-
-    private String buildOriginFromRequest(HttpServletRequest request) {
-        String scheme = request.getScheme();
-        String serverName = request.getServerName();
-        int serverPort = request.getServerPort();
-
-        StringBuilder origin = new StringBuilder();
-        origin.append(scheme).append("://").append(serverName);
-
-        if ((!"http".equalsIgnoreCase(scheme) || serverPort != 80)
-                && (!"https".equalsIgnoreCase(scheme) || serverPort != 443)) {
-            origin.append(":").append(serverPort);
-        }
-
-        return origin.toString();
-    }
-
-    private boolean isDefaultPort(String scheme, String port) {
-        if (port == null) {
-            return true;
-        }
-        try {
-            int parsedPort = Integer.parseInt(port);
-            return ("http".equalsIgnoreCase(scheme) && parsedPort == 80)
-                    || ("https".equalsIgnoreCase(scheme) && parsedPort == 443);
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
     private void clearRedirectCookie(HttpServletResponse response) {
         ResponseCookie cookie =
                 ResponseCookie.from(TauriOAuthUtils.SPA_REDIRECT_COOKIE, "")
@@ -339,21 +250,5 @@ public class CustomOAuth2AuthenticationSuccessHandler
                         .maxAge(0)
                         .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-    }
-
-    /**
-     * Checks if the given hostname belongs to a known OAuth provider.
-     *
-     * @param hostname The hostname to check
-     * @return true if it's an OAuth provider domain, false otherwise
-     */
-    private boolean isOAuthProviderDomain(String hostname) {
-        return hostname.contains("google.com")
-                || hostname.contains("googleapis.com")
-                || hostname.contains("github.com")
-                || hostname.contains("microsoft.com")
-                || hostname.contains("microsoftonline.com")
-                || hostname.contains("linkedin.com")
-                || hostname.contains("apple.com");
     }
 }

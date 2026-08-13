@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.saml2;
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -38,6 +37,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
+import stirling.software.proprietary.security.util.SsoRedirectOriginResolver;
 
 @AllArgsConstructor
 @Slf4j
@@ -264,23 +264,9 @@ public class CustomSaml2AuthenticationSuccessHandler
         return url;
     }
 
-    /**
-     * Resolve the origin (frontend URL) for redirects. First checks system.frontendUrl from config,
-     * then falls back to detecting from request headers.
-     */
+    /** Resolve the origin (frontend URL) for redirects. */
     private String resolveOrigin(HttpServletRequest request) {
-        // First check if frontendUrl is configured
-        String configuredFrontendUrl = applicationProperties.getSystem().getFrontendUrl();
-        if (configuredFrontendUrl != null && !configuredFrontendUrl.trim().isEmpty()) {
-            return configuredFrontendUrl.trim();
-        }
-
-        // Fall back to auto-detection from request headers
-        return resolveForwardedOrigin(request)
-                .orElseGet(
-                        () ->
-                                resolveOriginFromReferer(request)
-                                        .orElseGet(() -> buildOriginFromRequest(request)));
+        return SsoRedirectOriginResolver.resolveOrigin(request, applicationProperties);
     }
 
     private String resolveRedirectPath(HttpServletRequest request, String contextPath) {
@@ -316,85 +302,6 @@ public class CustomSaml2AuthenticationSuccessHandler
             return DEFAULT_CALLBACK_PATH;
         }
         return contextPath + DEFAULT_CALLBACK_PATH;
-    }
-
-    private Optional<String> resolveForwardedOrigin(HttpServletRequest request) {
-        String forwardedHostHeader = request.getHeader("X-Forwarded-Host");
-        if (forwardedHostHeader == null || forwardedHostHeader.isBlank()) {
-            return Optional.empty();
-        }
-        String host = forwardedHostHeader.split(",")[0].trim();
-        if (host.isEmpty()) {
-            return Optional.empty();
-        }
-
-        String forwardedProtoHeader = request.getHeader("X-Forwarded-Proto");
-        String proto =
-                (forwardedProtoHeader == null || forwardedProtoHeader.isBlank())
-                        ? request.getScheme()
-                        : forwardedProtoHeader.split(",")[0].trim();
-
-        if (!host.contains(":")) {
-            String forwardedPort = request.getHeader("X-Forwarded-Port");
-            if (forwardedPort != null
-                    && !forwardedPort.isBlank()
-                    && !isDefaultPort(proto, forwardedPort.trim())) {
-                host = host + ":" + forwardedPort.trim();
-            }
-        }
-        return Optional.of(proto + "://" + host);
-    }
-
-    private Optional<String> resolveOriginFromReferer(HttpServletRequest request) {
-        String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isEmpty()) {
-            try {
-                URI refererUri = URI.create(referer);
-                String host = refererUri.getHost();
-                if (host == null) {
-                    return Optional.empty();
-                }
-                String origin = refererUri.getScheme() + "://" + host;
-                int port = refererUri.getPort();
-                if (port != -1 && port != 80 && port != 443) {
-                    origin += ":" + port;
-                }
-                return Optional.of(origin);
-            } catch (IllegalArgumentException e) {
-                log.debug(
-                        "Malformed referer URL: {}, falling back to request-based origin", referer);
-            }
-        }
-        return Optional.empty();
-    }
-
-    private String buildOriginFromRequest(HttpServletRequest request) {
-        String scheme = request.getScheme();
-        String serverName = request.getServerName();
-        int serverPort = request.getServerPort();
-
-        StringBuilder origin = new StringBuilder();
-        origin.append(scheme).append("://").append(serverName);
-
-        if ((!"http".equalsIgnoreCase(scheme) || serverPort != 80)
-                && (!"https".equalsIgnoreCase(scheme) || serverPort != 443)) {
-            origin.append(":").append(serverPort);
-        }
-
-        return origin.toString();
-    }
-
-    private boolean isDefaultPort(String scheme, String port) {
-        if (port == null) {
-            return true;
-        }
-        try {
-            int parsedPort = Integer.parseInt(port);
-            return ("http".equalsIgnoreCase(scheme) && parsedPort == 80)
-                    || ("https".equalsIgnoreCase(scheme) && parsedPort == 443);
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 
     private void clearRedirectCookie(HttpServletResponse response) {
