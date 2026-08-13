@@ -6,7 +6,9 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -60,14 +62,15 @@ public class PairingController {
     }
 
     /**
-     * Where the admin goes to approve: our own base URL plus {@value #LINK_PATH}.
+     * Where the admin goes to approve: the SaaS <b>web app's</b> base URL plus {@value #LINK_PATH}.
      *
-     * <p>Left unset, this is derived from the request that reached us, which is right by
-     * construction because the approval page is served by this same app. Hard-coding a default host
-     * would silently point staging and self-hosted-cloud deployments at production, and any guess
-     * also has to get the context path right. An operator can still pin it with {@code
-     * stirling.billing.account-link.pairing.base-url} when the API and the web app are not on the
-     * same origin.
+     * <p>This must be the origin that serves the SPA, because {@code /link} is a frontend route. In
+     * a deployment where one JAR serves both the API and the SPA they are the same host, so the
+     * request-derived fallback below is correct. Where they are split — a separate API host, or
+     * local dev with a Vite server on another port — deriving gives an API origin that renders
+     * nothing, so {@code stirling.billing.account-link.pairing.base-url} has to be set. That is why
+     * an unset value warns at startup rather than failing quietly: the symptom is a blank page at
+     * the end of the flow, which is a long way from the cause.
      *
      * <p>The derived form trusts the forwarded host, which is client-controlled. That is fine here:
      * the value is only ever echoed back to the caller that supplied it, so a spoofed host misleads
@@ -98,6 +101,30 @@ public class PairingController {
 
     private static String firstNonBlank(String a, String b) {
         return a != null && !a.isBlank() ? a : b;
+    }
+
+    /**
+     * Warns when the approval URL will be guessed from the request rather than configured.
+     *
+     * <p>Guessing is right only where the API and the SPA share an origin. Anywhere else the admin
+     * is handed an API host that renders nothing, and the flow dead-ends on a blank page with no
+     * hint as to why. Cheap to say so at boot; expensive to work out from the symptom.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    public void warnIfApprovalUrlIsGuessed() {
+        if (configuredBaseUrl != null && !configuredBaseUrl.isBlank()) {
+            log.info("Pairing: approval URL base is {}", configuredBaseUrl.strip());
+            return;
+        }
+        log.warn(
+                """
+                Pairing: stirling.billing.account-link.pairing.base-url is not set, so the approval \
+                URL will be derived from each incoming request.
+                  - Correct only if this app also serves the web UI on the same origin.
+                  - If the API and the SPA are on different hosts (a split deployment, or local dev \
+                with a separate Vite server), the admin will be sent to an origin with no /link \
+                page and the pairing will dead-end on a blank screen.\
+                """);
     }
 
     /** Instance-supplied hints shown on the approval screen. Both optional and both untrusted. */

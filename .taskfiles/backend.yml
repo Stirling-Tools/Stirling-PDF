@@ -58,14 +58,17 @@ tasks:
         platforms: [linux, darwin]
 
   dev:saas:
-    desc: "Start backend in SaaS flavor against Supabase"
+    desc: "Start backend in SaaS flavor against Supabase (PROFILES=dev|staging|'')"
     # `dotenv:` reads from the root Taskfile's directory (".") because this
     # subtaskfile is included with `dir: .`.
     dotenv: ['app/.env.saas.local', 'app/.env.saas']
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'
-      # Override to "" to run the pure `saas` profile against your own SAAS_DB_*.
+      # dev     = the Supabase preview branch of the SaaS PR you are testing. Set
+      #           SAAS_DEV_PROJECT_REF; it changes as PRs come and go.
+      # staging = pinned to the long-lived v3 project. Always there.
+      # ""      = the pure `saas` profile against your own SAAS_DB_*.
       PROFILES: '{{.PROFILES | default "dev"}}'
       AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
