@@ -67,7 +67,7 @@ authenticated holder of an `EDITOR` share link can
 The `EDITOR` role alone does not grant write. `file_shares.write_enabled` records
 the grant, and it is stamped `true` only when the owner creates or updates a share
 with the `EDITOR` role. Shares that predate collaborative editing have the column
-null and stay read-only after an upgrade — the owner must re-grant editor access to
+null and stay read-only after an upgrade - the owner must re-grant editor access to
 make one writable. `StoredFileResponse.canEdit` and `ShareLinkMetadataResponse.canEdit`
 expose the server's decision so the UI does not offer a save that would be rejected.
 
