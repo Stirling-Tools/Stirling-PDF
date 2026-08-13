@@ -54,10 +54,16 @@ import FileCopyIcon from "@mui/icons-material/FileCopy";
 import BuildCircleIcon from "@mui/icons-material/BuildCircle";
 import DescriptionIcon from "@mui/icons-material/Description";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
 import {
   extractFormFieldsCsv,
   extractFormFieldsXlsx,
 } from "@app/tools/formFill/formApi";
+import {
+  buildXfdf,
+  parseFormDataFile,
+  reconcileImportedValues,
+} from "@app/utils/formDataExchange";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
@@ -149,6 +155,8 @@ const FormFill = (_props: BaseToolProps) => {
   const [saving, setSaving] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [importSummary, setImportSummary] = useState<string | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(
     null,
@@ -209,6 +217,91 @@ const FormFill = (_props: BaseToolProps) => {
       setExtracting(false);
     }
   }, [currentFile, allValues]);
+
+  /**
+   * Export as XFDF - the interchange format Acrobat's "Import Data" reads, so
+   * a form filled here can be handed back to an Acrobat-based process.
+   */
+  const handleExportXfdf = useCallback(() => {
+    setExtracting(true);
+    try {
+      const multiSelectFields = formState.fields
+        .filter((field) => field.multiSelect)
+        .map((field) => field.name);
+      const xfdf = buildXfdf(allValues, {
+        pdfHref: currentFile instanceof File ? currentFile.name : undefined,
+        multiSelectFields,
+      });
+      const blob = new Blob([xfdf], { type: "application/vnd.adobe.xfdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `form-data-${new Date().getTime()}.xfdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 250);
+    } finally {
+      setExtracting(false);
+    }
+  }, [allValues, currentFile, formState.fields]);
+
+  /**
+   * Import an Acrobat XFDF/FDF export into the open form. Values for fields
+   * this document doesn't have are reported rather than silently dropped.
+   */
+  const handleImportFormData = useCallback(
+    async (file: File) => {
+      setSaveError(null);
+      setImportSummary(null);
+      try {
+        const { values, format } = await parseFormDataFile(file);
+        const { applied, unmatched } = reconcileImportedValues(
+          values,
+          formState.fields.map((field) => field.name),
+        );
+        for (const [name, value] of Object.entries(applied)) {
+          setValue(name, value);
+        }
+        // Two sentences, not one: each count needs its own plural form, so
+        // "Imported 1 field" can sit next to "3 fields are not in this PDF".
+        const imported = t(
+          "formFill.importSuccess",
+          "Imported {{count}} field(s) from {{format}}",
+          { count: Object.keys(applied).length, format: format.toUpperCase() },
+        );
+        const NAME_LIMIT = 5;
+        const skipped =
+          unmatched.length > 0
+            ? t(
+                "formFill.importSkipped",
+                "{{count}} field(s) are not in this PDF: {{names}}",
+                {
+                  count: unmatched.length,
+                  names:
+                    unmatched.length > NAME_LIMIT
+                      ? t(
+                          "formFill.importSkippedNames",
+                          "{{names}} and {{rest}} more",
+                          {
+                            names: unmatched.slice(0, NAME_LIMIT).join(", "),
+                            rest: unmatched.length - NAME_LIMIT,
+                          },
+                        )
+                      : unmatched.join(", "),
+                },
+              )
+            : "";
+        setImportSummary([imported, skipped].filter(Boolean).join(". "));
+      } catch (err) {
+        console.error("[FormFill] Form data import failed:", err);
+        setSaveError(
+          err instanceof Error
+            ? err.message
+            : t("formFill.importError", "Failed to import form data"),
+        );
+      }
+    },
+    [formState.fields, setValue, t],
+  );
 
   const handleExtractXlsx = useCallback(async () => {
     if (!currentFile) return;
@@ -541,36 +634,71 @@ const FormFill = (_props: BaseToolProps) => {
                     </Tooltip>
                   </div>
 
+                  <div className={styles.importRow}>
+                    <Tooltip
+                      label={t(
+                        "formFill.importTooltip",
+                        "Import values from an Acrobat XFDF or FDF export",
+                      )}
+                      withArrow
+                      position="bottom"
+                    >
+                      <Button
+                        variant="secondary"
+                        leftSection={<FileUploadIcon sx={{ fontSize: 14 }} />}
+                        onClick={() => importInputRef.current?.click()}
+                        size="sm"
+                      >
+                        {t("formFill.importData", "Import form data")}
+                      </Button>
+                    </Tooltip>
+
+                    <input
+                      ref={importInputRef}
+                      type="file"
+                      accept=".xfdf,.fdf,application/vnd.adobe.xfdf,application/vnd.fdf"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.currentTarget.files?.[0];
+                        // Clear first so re-picking the same file re-fires.
+                        e.currentTarget.value = "";
+                        if (file) void handleImportFormData(file);
+                      }}
+                    />
+                  </div>
+
+                  {/* Four formats don't fit this panel with an icon each, so
+                      the row is labelled once instead. */}
+                  <Text size="xs" c="dimmed" className={styles.exportLabel}>
+                    <FileDownloadIcon sx={{ fontSize: 12 }} />
+                    {t("formFill.exportAs", "Export data as")}
+                  </Text>
                   <div className={styles.secondaryActions}>
-                    <Button
-                      variant="secondary"
-                      leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
-                      loading={extracting}
-                      onClick={handleExtractJson}
-                      size="sm"
-                    >
-                      JSON
-                    </Button>
-
-                    <Button
-                      variant="secondary"
-                      leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
-                      loading={extracting}
-                      onClick={handleExtractCsv}
-                      size="sm"
-                    >
-                      CSV
-                    </Button>
-
-                    <Button
-                      variant="secondary"
-                      leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
-                      loading={extracting}
-                      onClick={handleExtractXlsx}
-                      size="sm"
-                    >
-                      XLSX
-                    </Button>
+                    {(
+                      [
+                        ["XFDF", handleExportXfdf],
+                        ["JSON", handleExtractJson],
+                        ["CSV", handleExtractCsv],
+                        ["XLSX", handleExtractXlsx],
+                      ] as const
+                    ).map(([label, onClick]) => (
+                      <Button
+                        key={label}
+                        variant="secondary"
+                        loading={extracting}
+                        onClick={() => void onClick()}
+                        size="sm"
+                        aria-label={t(
+                          "formFill.exportAsFormat",
+                          "Export as {{format}}",
+                          {
+                            format: label,
+                          },
+                        )}
+                      >
+                        {label}
+                      </Button>
+                    ))}
                   </div>
                 </div>
 
@@ -578,6 +706,12 @@ const FormFill = (_props: BaseToolProps) => {
                 {saveError && (
                   <Alert color="red" variant="light" p="xs" radius="sm">
                     <Text size="xs">{saveError}</Text>
+                  </Alert>
+                )}
+
+                {importSummary && (
+                  <Alert color="blue" variant="light" p="xs" radius="sm">
+                    <Text size="xs">{importSummary}</Text>
                   </Alert>
                 )}
               </>

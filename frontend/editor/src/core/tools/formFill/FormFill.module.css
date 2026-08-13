@@ -106,6 +106,24 @@
   padding-right: 0.25rem;
 }
 
+/* Import is an input action, not one of the export formats, so it gets its
+   own full-width row. Four format buttons is already the most this panel
+   width fits without truncating their labels. */
+.importRow {
+  display: flex;
+}
+
+.importRow > button {
+  flex: 1;
+}
+
+.exportLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.125rem;
+}
+
 .fieldList {
   flex: 1;
   overflow: hidden;
