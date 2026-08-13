@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Stack, Text, Select, Alert, Checkbox, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import apiClient from "@app/services/apiClient";
@@ -71,16 +71,26 @@ const ConvertToPdfUaSettings = ({
     onParameterChange("pdfUaOptions", { ...parameters.pdfUaOptions, ...patch });
 
   const descriptions = parseAltText(parameters.pdfUaOptions.altText);
+  // A key is a position inside one document, so descriptions only mean anything for one file.
+  const scannableFile = selectedFiles.length === 1 ? selectedFiles[0] : null;
+  const tooManyFiles = selectedFiles.length > 1;
   const fileKey = selectedFiles
     .map((file) => `${file.name}:${file.size}`)
     .join("|");
+  const describedFileKey = useRef(fileKey);
 
-  // The keys describe one document, so a scan must not outlive the selection it was made against.
-  useEffect(() => setFigures(null), [fileKey]);
+  // The same key names a different image in the next document, so descriptions must not outlive the
+  // selection. Mount is skipped so a stored automation step keeps the text it was saved with.
+  useEffect(() => {
+    if (describedFileKey.current === fileKey) return;
+    describedFileKey.current = fileKey;
+    setFigures(null);
+    if (parameters.pdfUaOptions.altText) update({ altText: "" });
+  }, [fileKey]);
 
   // The keys are opaque, so they have to come from the backend's own analysis of this file.
   const findFigures = async () => {
-    const file = selectedFiles[0];
+    const file = scannableFile;
     if (!file) return;
     setIsScanning(true);
     setScanError(null);
@@ -199,15 +209,29 @@ const ConvertToPdfUaSettings = ({
         </Text>
       </Alert>
 
-      <Button
-        variant="secondary"
-        onClick={findFigures}
-        loading={isScanning}
-        disabled={disabled || selectedFiles.length === 0}
-        data-testid="pdfua-find-figures"
-      >
-        {t("convert.pdfUaFindImages", "Find images needing a description")}
-      </Button>
+      {tooManyFiles && (
+        <Alert color="yellow" data-testid="pdfua-alt-text-single-file-only">
+          <Text size="sm">
+            {t(
+              "convert.pdfUaAltTextSingleFileOnly",
+              "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images.",
+              { fileCount: selectedFiles.length },
+            )}
+          </Text>
+        </Alert>
+      )}
+
+      {!tooManyFiles && (
+        <Button
+          variant="secondary"
+          onClick={findFigures}
+          loading={isScanning}
+          disabled={disabled || !scannableFile}
+          data-testid="pdfua-find-figures"
+        >
+          {t("convert.pdfUaFindImages", "Find images needing a description")}
+        </Button>
+      )}
 
       {scanError && (
         <Alert color="yellow">
@@ -215,7 +239,7 @@ const ConvertToPdfUaSettings = ({
         </Alert>
       )}
 
-      {figures?.length === 0 && (
+      {!tooManyFiles && figures?.length === 0 && (
         <Text size="xs" c="dimmed" data-testid="pdfua-no-figures">
           {t(
             "convert.pdfUaNoImagesNeedingText",
@@ -224,30 +248,31 @@ const ConvertToPdfUaSettings = ({
         </Text>
       )}
 
-      {figures?.map((figure) => (
-        <TextInput
-          key={figure.key}
-          label={t("convert.pdfUaFigureLabel", "Page {{page}} {{kind}}", {
-            page: figure.page,
-            kind: figure.kind,
-          })}
-          placeholder={t(
-            "convert.pdfUaFigurePlaceholder",
-            "What this image tells the reader",
-          )}
-          value={descriptions[figure.key] ?? ""}
-          onChange={(event) =>
-            update({
-              altText: formatAltText({
-                ...descriptions,
-                [figure.key]: event.currentTarget.value,
-              }),
-            })
-          }
-          disabled={disabled}
-          data-testid={`pdfua-alt-text-${figure.key}`}
-        />
-      ))}
+      {!tooManyFiles &&
+        figures?.map((figure) => (
+          <TextInput
+            key={figure.key}
+            label={t("convert.pdfUaFigureLabel", "Page {{page}} {{kind}}", {
+              page: figure.page,
+              kind: figure.kind,
+            })}
+            placeholder={t(
+              "convert.pdfUaFigurePlaceholder",
+              "What this image tells the reader",
+            )}
+            value={descriptions[figure.key] ?? ""}
+            onChange={(event) =>
+              update({
+                altText: formatAltText({
+                  ...descriptions,
+                  [figure.key]: event.currentTarget.value,
+                }),
+              })
+            }
+            disabled={disabled}
+            data-testid={`pdfua-alt-text-${figure.key}`}
+          />
+        ))}
     </Stack>
   );
 };

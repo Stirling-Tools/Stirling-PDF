@@ -250,11 +250,28 @@ export const createFileFromResponse = (
   return createFileFromApiResponse(responseData, headers, fallbackFilename);
 };
 
-// Static processor that can be used by both the hook and automation executor
-export const convertProcessor = async (
+/**
+ * PDF/UA alt text is keyed by an image's position in one document, so reusing it across files would
+ * describe the wrong image - worse than no description, since the checker still passes. Dropped
+ * rather than misapplied; the UI offers descriptions for a single file, this guards every caller.
+ */
+const withoutCrossFileAltText = (
   parameters: ConvertParameters,
   selectedFiles: File[],
+): ConvertParameters =>
+  selectedFiles.length > 1 && parameters.pdfUaOptions.altText
+    ? {
+        ...parameters,
+        pdfUaOptions: { ...parameters.pdfUaOptions, altText: "" },
+      }
+    : parameters;
+
+// Static processor that can be used by both the hook and automation executor
+export const convertProcessor = async (
+  rawParameters: ConvertParameters,
+  selectedFiles: File[],
 ): Promise<CustomProcessorResult> => {
+  const parameters = withoutCrossFileAltText(rawParameters, selectedFiles);
   const processedFiles: File[] = [];
 
   // Map PDF/X to use PDF/A endpoint
