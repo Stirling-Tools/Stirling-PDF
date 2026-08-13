@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
@@ -93,12 +94,16 @@ public class DatabaseService implements DatabaseServiceInterface {
                     Pattern.compile("(?i)\\bFALSE\\b"),
                     Pattern.compile("(?i)\\bNULL\\b"));
 
+    // H2 grammar allows CREATE [FORCE] [[GLOBAL|LOCAL] TEMPORARY] before the object type
+    private static final String CREATE_MODIFIERS =
+            "(?i)\\bCREATE\\s+(FORCE\\s+)?((GLOBAL|LOCAL)\\s+)?(TEMPORARY\\s+)?";
+
     private static final java.util.List<Pattern> DENIED_PATTERNS =
             java.util.List.of(
-                    Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?ALIAS\\b"),
-                    Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?TRIGGER\\b"),
-                    Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?AGGREGATE\\b"),
-                    Pattern.compile("(?i)\\bCREATE\\s+LINKED\\s+TABLE\\b"),
+                    Pattern.compile(CREATE_MODIFIERS + "ALIAS\\b"),
+                    Pattern.compile(CREATE_MODIFIERS + "TRIGGER\\b"),
+                    Pattern.compile(CREATE_MODIFIERS + "AGGREGATE\\b"),
+                    Pattern.compile(CREATE_MODIFIERS + "LINKED\\s+TABLE\\b"),
                     Pattern.compile("(?i)\\bFILE_WRITE\\s*\\("),
                     Pattern.compile("(?i)\\bFILE_READ\\s*\\("),
                     Pattern.compile("(?i)\\bCSVWRITE\\s*\\("),
@@ -106,6 +111,11 @@ public class DatabaseService implements DatabaseServiceInterface {
                     Pattern.compile("(?i)\\bLINK_SCHEMA\\s*\\("),
                     Pattern.compile("(?i)\\bRUNSCRIPT\\b"),
                     Pattern.compile("(?i)\\bSCRIPT\\s+TO\\b"));
+
+    private static final Pattern STRING_LITERAL_PATTERN = Pattern.compile("'((?:[^']|'')*)'");
+    // A genuine SCRIPT backup never embeds a JDBC URL or a nested script reference in a literal
+    private static final Pattern DANGEROUS_LITERAL_PATTERN =
+            Pattern.compile("(?i)(INIT\\s*=|\\bRUNSCRIPT\\b|\\bjdbc:)");
 
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
@@ -525,16 +535,10 @@ public class DatabaseService implements DatabaseServiceInterface {
             String content = Files.readString(scriptPath);
             String normalizedContent = sanitizeSql(content);
 
-            String codeOnly = stripStringLiterals(normalizedContent);
-            for (Pattern deniedPattern : DENIED_PATTERNS) {
-                if (deniedPattern.matcher(codeOnly).find()) {
-                    log.error(
-                            "Blocked disallowed SQL in backup file matching: {}",
-                            deniedPattern.pattern());
-                    throw new IllegalArgumentException(
-                            "SQL script contains disallowed operations and was rejected.");
-                }
-            }
+            // Literals get their own narrow check; the denylist runs on code only so that
+            // ordinary row data merely mentioning a keyword is not rejected.
+            checkStringLiterals(normalizedContent);
+            checkDeniedPatterns(stripStringLiterals(normalizedContent));
 
             // Validate that content only contains allowed operations (whitelist approach)
             // Split by semicolons to check individual statements
@@ -570,6 +574,29 @@ public class DatabaseService implements DatabaseServiceInterface {
         }
     }
 
+    private void checkDeniedPatterns(String sql) {
+        for (Pattern deniedPattern : DENIED_PATTERNS) {
+            if (deniedPattern.matcher(sql).find()) {
+                log.error(
+                        "Blocked disallowed SQL in backup file matching: {}",
+                        deniedPattern.pattern());
+                throw new IllegalArgumentException(
+                        "SQL script contains disallowed operations and was rejected.");
+            }
+        }
+    }
+
+    private void checkStringLiterals(String sql) {
+        Matcher literals = STRING_LITERAL_PATTERN.matcher(sql);
+        while (literals.find()) {
+            if (DANGEROUS_LITERAL_PATTERN.matcher(literals.group(1)).find()) {
+                log.error("Blocked SQL string literal containing a nested JDBC or script payload");
+                throw new IllegalArgumentException(
+                        "SQL script contains disallowed operations and was rejected.");
+            }
+        }
+    }
+
     /**
      * Sanitize SQL content by removing comments to prevent bypass attacks.
      *
@@ -589,7 +616,7 @@ public class DatabaseService implements DatabaseServiceInterface {
     }
 
     private String stripStringLiterals(String sql) {
-        return sql.replaceAll("'(?:[^']|'')*'", "''");
+        return STRING_LITERAL_PATTERN.matcher(sql).replaceAll("''");
     }
 
     /**

