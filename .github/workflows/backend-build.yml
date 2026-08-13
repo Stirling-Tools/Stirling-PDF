@@ -153,6 +153,9 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           STIRLING_FLAVOR: ${{ matrix.flavor }}
+          # Configure the Gradle daemon explicitly; GRADLE_OPTS alone only
+          # configures the Gradle client JVM.
+          GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx4g -XX:+UseG1GC'
 
       - name: Check Test Reports Exist
         if: always()
@@ -192,12 +195,14 @@ jobs:
           retention-days: 3
           if-no-files-found: warn
 
-      - name: Install defusedxml for coverage summary
-        # coverage-summary.py parses JaCoCo XML through defusedxml to
-        # silence security scanners that pattern-match on the stdlib
-        # xml.etree.ElementTree.parse call.
+      - name: Install uv
         if: always() && matrix.flavor == 'saas'
-        run: python -m pip install --quiet defusedxml
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
 
       - name: JaCoCo coverage step summary
         # Only the saas leg posts the JUnit summary - it's a strict
@@ -206,7 +211,7 @@ jobs:
         # near-identical tables crowding out the aggregate report.
         if: always() && matrix.flavor == 'saas'
         run: |
-          python scripts/coverage-summary.py \
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
             --title "Backend JUnit coverage (JDK ${{ matrix.jdk-version }})" \
             --jacoco "common=app/common/build/reports/jacoco/test/jacocoTestReport.xml" \
             --jacoco "core=app/core/build/reports/jacoco/test/jacocoTestReport.xml" \

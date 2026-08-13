@@ -34,6 +34,7 @@ import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -82,6 +83,7 @@ public class PolicyEngine {
     private final PolicyOutputResolver outputResolver;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
+    private final PolicyAssetResolver assetResolver;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
 
@@ -158,6 +160,9 @@ public class PolicyEngine {
         // the owner owns those outputs.
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
+        // Stored supporting files (certificates, watermark images, ...) load here, before the
+        // async hop: worker threads have no principal, so assets bind by the policy's own team.
+        PolicyInputs resolved = assetResolver.resolve(policy, inputs);
         // Resolve the referenced output destinations live (like sourceIds), so a stored policy
         // delivers to each of its saved Source destinations. Unreferenced policies fall back to
         // their inline output.
@@ -169,7 +174,9 @@ public class PolicyEngine {
                 fileOwner,
                 policy.id(),
                 definition,
-                inputs,
+                // main's asset-resolved inputs, not the raw ones: stored certificates and watermark
+                // images bind here, before the async hop, because worker threads have no principal.
+                resolved,
                 listener,
                 sourceId,
                 fileIdentity);
