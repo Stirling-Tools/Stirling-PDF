@@ -2,6 +2,7 @@ package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -82,6 +83,10 @@ class FileRunEventControllerTest {
                         null,
                         fileId,
                         "the raw failure message"));
+    }
+
+    private static List<String> fileIds(int count) {
+        return java.util.stream.IntStream.range(0, count).mapToObj(i -> "f-" + i).toList();
     }
 
     /** The status a refused call came back with. Fails the test if the call was allowed. */
@@ -454,6 +459,55 @@ class FileRunEventControllerTest {
                                                     new EditorFailureReport(
                                                             " ", "E004", List.of("f-1"), "boom"))))
                     .isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
+        void acceptsAReportAtTheFileLimitAndRecordsEveryRow() {
+            List<String> atLimit = fileIds(EditorFailureReport.MAX_FILE_IDS);
+
+            EditorFailureReport report =
+                    new EditorFailureReport("compress", "E004", atLimit, "boom");
+
+            assertThat(controller.report(report).getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            assertThat(store.list(TEAM, null, null, null, EditorFailureReport.MAX_FILE_IDS + 10))
+                    .hasSize(EditorFailureReport.MAX_FILE_IDS);
+        }
+
+        @Test
+        void refusesAReportOverTheFileLimitAndRecordsNothing() {
+            // One call used to be able to mint an unbounded number of permanent incidents, since
+            // each named file gets its own row and TOOL dedup keys never fold across ids. Refused
+            // rather than trimmed so nothing is lost silently, and refused before the first write
+            // so a rejected report cannot leave a partial set behind either.
+            List<String> overLimit = fileIds(EditorFailureReport.MAX_FILE_IDS + 1);
+
+            assertThat(
+                            statusOf(
+                                    () ->
+                                            controller.report(
+                                                    new EditorFailureReport(
+                                                            "compress",
+                                                            "E004",
+                                                            overLimit,
+                                                            "boom"))))
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(store.list(TEAM, null, null, null, EditorFailureReport.MAX_FILE_IDS + 10))
+                    .isEmpty();
+        }
+
+        @Test
+        void saysWhatTheLimitIsSoAClientAuthorCanSeeWhatHappened() {
+            // The editor reports in the background, so the message is the only place this surfaces.
+            assertThatThrownBy(
+                            () ->
+                                    controller.report(
+                                            new EditorFailureReport(
+                                                    "compress",
+                                                    "E004",
+                                                    fileIds(EditorFailureReport.MAX_FILE_IDS + 1),
+                                                    "boom")))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining(String.valueOf(EditorFailureReport.MAX_FILE_IDS));
         }
 
         @Test

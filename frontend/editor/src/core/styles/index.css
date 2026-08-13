@@ -62,7 +62,7 @@ code {
 }
 
 .stirling-link {
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;

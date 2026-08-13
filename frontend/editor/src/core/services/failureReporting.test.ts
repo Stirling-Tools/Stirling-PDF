@@ -152,6 +152,70 @@ describe("reportToolFailure", () => {
     expect(threw).toBe(false);
   });
 
+  it("asks for its own failure not to be shown, since the tool's error is already on screen", async () => {
+    await reportToolFailure({
+      operation: "compress",
+      error: problemDetail("E004"),
+      fileIds: ["f-1"],
+    });
+
+    expect(post.mock.calls[0]?.[2]).toMatchObject({ suppressErrorToast: true });
+  });
+
+  it("logs a rejected report instead of losing it, and still does not throw", async () => {
+    // A 400 means this client built a bad report, e.g. one naming more files than a report may
+    // carry. Nothing else would ever surface it: the call is fire-and-forget and its toast is
+    // suppressed, so the console line is the only sign a client author gets.
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    transport = () => {
+      throw Object.assign(new Error("Request failed with status code 400"), {
+        response: {
+          status: 400,
+          data: {
+            detail:
+              "a report may name at most 200 files, and this one named 5000",
+          },
+        },
+      });
+    };
+
+    let threw = false;
+    try {
+      await reportToolFailure({
+        operation: "compress",
+        error: problemDetail("E004"),
+        fileIds: ["f-1"],
+      });
+    } catch {
+      threw = true;
+    }
+
+    expect(threw).toBe(false);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0]?.[0])).toContain("at most 200 files");
+    warn.mockRestore();
+  });
+
+  it("stays quiet when the route is simply absent, as on a build without failure tracking", async () => {
+    // Otherwise every tool failure on such a build would log, which is noise rather than a
+    // diagnostic.
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    transport = () => {
+      throw Object.assign(new Error("Request failed with status code 404"), {
+        response: { status: 404, data: {} },
+      });
+    };
+
+    await reportToolFailure({
+      operation: "compress",
+      error: problemDetail("E004"),
+      fileIds: ["f-1"],
+    });
+
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   it("reports a client-side refusal, which is a failure a leader can act on", async () => {
     // The same class of problem as the processor rejecting a file type, which is
     // already recorded. Unclassified, so the server files it as UNKNOWN.

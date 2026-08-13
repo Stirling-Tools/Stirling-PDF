@@ -10,7 +10,8 @@
 // embedded interpreter runs on Windows, but sed/grep/sort do not exist for
 // developers calling tasks from PowerShell.
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { readdirSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
 
 const base = process.argv[2] || "origin/main";
 
@@ -40,9 +41,25 @@ for (const f of changed) {
     continue;
   }
   if (TEST.test(f) || !SOURCE.test(f)) continue;
-  const sibling = f.replace(SOURCE, "");
-  for (const s of [`${sibling}.stories.tsx`, `${sibling}.stories.ts`])
-    if (existsSync(s)) stories.add(s);
+  // A story file does not have to match its source's case — tokens.css sits
+  // beside Tokens.stories.tsx. Deriving the name from the source and trusting
+  // existsSync silently skips those on a case-sensitive filesystem, and on a
+  // case-insensitive one feeds the scan a path no result will ever match. Read
+  // the directory instead and compare case-insensitively, then use the name as
+  // it is actually spelled on disk.
+  const dir = dirname(f) || ".";
+  const stem = basename(f).replace(SOURCE, "").toLowerCase();
+  let entries;
+  try {
+    entries = readdirSync(dir);
+  } catch {
+    continue;
+  }
+  for (const entry of entries) {
+    if (!STORY.test(entry)) continue;
+    if (entry.replace(STORY, "").toLowerCase() !== stem) continue;
+    stories.add(join(dir, entry).split("\\").join("/"));
+  }
 }
 
 // One line, each path quoted: the output is interpolated into a task command,

@@ -73,16 +73,53 @@ export async function reportToolFailure({
   if (wasCancelled(error)) return;
 
   try {
-    await apiClient.post(REPORT_PATH, {
-      operation,
-      errorCode: await errorCodeOf(error),
-      fileIds,
-      detail: messageOf(error),
-    });
-  } catch {
-    // A core build has no such route, and a member's report can also be refused.
-    // Either way the user already has the tool's own error on screen.
+    await apiClient.post(
+      REPORT_PATH,
+      {
+        operation,
+        errorCode: await errorCodeOf(error),
+        fileIds,
+        detail: messageOf(error),
+      },
+      // The reporter's own failure must not reach the user: they already have the
+      // tool's error on screen, and a second toast about the report would be noise
+      // about something they never asked for.
+      { suppressErrorToast: true },
+    );
+  } catch (reportError) {
+    // Still never rethrown: a core build has no such route, and a member's report can
+    // also be refused. But a report the server rejected as invalid is logged rather
+    // than lost, because nothing else would ever surface it.
+    warnIfRejected(operation, reportError);
   }
+}
+
+/**
+ * A report the server refused as malformed, which means this client built a bad one: worth a
+ * line in the console for whoever wrote it, since the call is fire-and-forget and its toast is
+ * suppressed. An absent route (404, a core build) or a session not allowed to report are
+ * expected, and stay quiet so an ordinary build does not log on every tool failure.
+ */
+function warnIfRejected(operation: string, error: unknown): void {
+  const response = (error as { response?: { status?: number; data?: unknown } })
+    ?.response;
+  if (response?.status !== 400) return;
+
+  console.warn(
+    `Failure report for "${operation}" was rejected by the server: ${reasonOf(response.data)}`,
+  );
+}
+
+/** Whatever the server said, out of a Problem Details body. */
+function reasonOf(data: unknown): string {
+  const body = data as { detail?: unknown; message?: unknown };
+  const stated =
+    typeof body?.detail === "string"
+      ? body.detail
+      : typeof body?.message === "string"
+        ? body.message
+        : "";
+  return stated.trim() === "" ? "no reason given" : stated;
 }
 
 /**
@@ -99,7 +136,13 @@ export async function reportFilesRemoved(fileIds: string[]): Promise<void> {
   if (named.length === 0) return;
 
   try {
-    await apiClient.post(REMOVED_FILES_PATH, { fileIds: named });
+    // Toast suppressed for the same reason as a report: the user deleted a file and is not
+    // waiting to hear whether the server was told.
+    await apiClient.post(
+      REMOVED_FILES_PATH,
+      { fileIds: named },
+      { suppressErrorToast: true },
+    );
   } catch {
     // The file is gone locally either way. A row left open is retention's problem.
   }

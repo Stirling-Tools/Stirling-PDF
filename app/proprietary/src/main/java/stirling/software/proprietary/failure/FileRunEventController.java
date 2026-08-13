@@ -96,12 +96,26 @@ public class FileRunEventController {
             summary = "Report a failure hit in the editor",
             description =
                     "For failures the server never sees, because the editor calls tools directly."
-                            + " Whoever's work failed can say so, and reads it back scoped to"
-                            + " themselves.")
+                            + " Open to any authenticated user: whoever's work failed can say so, and"
+                            + " reads it back scoped to themselves. Rejected with 400 if it names"
+                            + " more files than one report may carry.")
     public ResponseEntity<Void> report(@RequestBody EditorFailureReport report) {
         if (report == null || !report.hasOperation()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "operation is required to report a failure");
+        }
+        // Refused whole rather than trimmed, and refused before the first write, so an oversized
+        // report leaves no rows at all. Trimming would hand a reviewer part of a set with nothing
+        // saying the rest existed, which is what the cap inside the service used to do. The limit
+        // is stated in the message because the editor reports in the background: a client author
+        // reading a log is the only person who will ever see this.
+        if (report.namesTooManyFiles()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "a report may name at most "
+                            + EditorFailureReport.MAX_FILE_IDS
+                            + " files, and this one named "
+                            + report.fileIds().size());
         }
         service.report(report);
         // No body: the editor reports and moves on, and has nothing to do with the row.
@@ -148,7 +162,15 @@ public class FileRunEventController {
     /** Wrapped rather than a bare array so pagination can be added without breaking clients. */
     public record FileRunEventsResponse(List<FileRunEventView> events) {}
 
-    /** Files gone from the caller's editor. Opaque ids only, as everywhere else on this API. */
+    /**
+     * Files gone from the caller's editor. Opaque ids only, as everywhere else on this API.
+     *
+     * <p>Deliberately uncapped where a report is capped, because this creates nothing: it closes
+     * rows the caller already owns, so however long the list is, it can only ever touch incidents
+     * that already exist. Refusing an oversized one would also be the harmful direction here, since
+     * the editor says this once and never retries: those incidents would sit in the queue asking
+     * for attention about files that no longer exist.
+     */
     public record RemovedFiles(List<String> fileIds) {
 
         List<String> safeFileIds() {

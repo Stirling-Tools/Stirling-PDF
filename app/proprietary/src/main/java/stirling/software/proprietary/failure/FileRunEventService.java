@@ -54,9 +54,11 @@ public class FileRunEventService {
         if (fileIds.isEmpty()) {
             return List.of(recordReported(kind, teamId, actor, null, detail));
         }
-        // Every named file gets its row. An earlier cap silently dropped the rest, which lost
+        // Every named file gets its row. An earlier cap here silently dropped the rest, which lost
         // failures a reviewer needed and was inconsistent with the processor path, where a sweep
-        // records one row per failing file with no limit at all.
+        // records one row per failing file with no limit at all. How many files one report may name
+        // is bounded at the boundary instead (see EditorFailureReport#MAX_FILE_IDS), where an
+        // oversized report can be refused whole before anything is written.
         return fileIds.stream()
                 .map(fileId -> recordReported(kind, teamId, actor, fileId, detail))
                 .toList();

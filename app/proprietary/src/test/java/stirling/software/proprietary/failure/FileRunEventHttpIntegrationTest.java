@@ -234,6 +234,28 @@ class FileRunEventHttpIntegrationTest {
                                     .statusCode())
                     .isEqualTo(400);
         }
+
+        @Test
+        void rejectsAnOversizedReportWithoutRecordingAnyOfIt() throws Exception {
+            // Over the wire because that is where the flood would arrive: one request, an
+            // arbitrarily long fileIds array, a permanent row per entry. The read-back is the point
+            // of the test, since a partial write would be worse than either accepting or refusing.
+            String ids =
+                    java.util.stream.IntStream.range(0, EditorFailureReport.MAX_FILE_IDS + 1)
+                            .mapToObj(i -> "\"f-" + i + "\"")
+                            .collect(java.util.stream.Collectors.joining(","));
+
+            HttpResponse<String> response =
+                    post(
+                            "/api/v1/file-run-events/reports",
+                            "{\"operation\":\"compress\",\"errorCode\":\"E004\",\"fileIds\":["
+                                    + ids
+                                    + "],\"detail\":\"boom\"}");
+
+            assertThat(response.statusCode()).isEqualTo(400);
+            assertThat(mapper.readTree(get("/api/v1/file-run-events").body()).get("events"))
+                    .isEmpty();
+        }
     }
 
     @Nested
