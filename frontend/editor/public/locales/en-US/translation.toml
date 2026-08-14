@@ -6426,17 +6426,24 @@ minutesAgo_other = "{{count}}m ago"
 never = "never"
 
 [portal.accountLink.modal]
-linkSubtitle = "Sign in to the account this server should bill against."
-linkTitle = "Link your Stirling account"
-reauthSubtitle = "Your session expired — sign back in to your Stirling account. Your instance stays linked."
+cancel = "Cancel"
+continueLink = "Continue to Stirling"
+continueReauth = "Sign in again"
+linkSubtitle = "Connect this server to the Stirling account it should bill against."
+linkTitle = "Connect your Stirling account"
+noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
+reauthSubtitle = "Your Stirling session expired. Sign in again to keep seeing usage and billing. This server stays connected either way."
 reauthTitle = "Sign in again"
-simulateSignIn = "Simulate sign-in (dev)"
+startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
+step1 = "We send you to stirling.com to sign in. Any sign-in method works there, including Google and single sign-on."
+step2 = "You check this server's address and approve it. A team owner has to do this the first time."
+step3 = "Stirling brings you straight back here and finishes up."
 
 [portal.accountLink.modal.loginNotConfigured]
-after = "to enable in-app linking against the hosted Stirling account."
+after = "so this server can finish the connection when you come back."
 and = "and"
 before = "Set"
-title = "SaaS login not configured"
+title = "Stirling connection not configured"
 
 [portal.accountLink.panel]
 instancesSub = "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access."

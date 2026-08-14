@@ -1,38 +1,27 @@
 import { TierProvider } from "@portal/contexts/TierContext";
-import { LinkProvider, useLink } from "@portal/contexts/LinkContext";
+import { LinkProvider } from "@portal/contexts/LinkContext";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
-import type { SupabaseLoginSession } from "@app/auth/ui/useSupabaseLogin";
 import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
-import {
-  AccountLinkProvider,
-  useAccountLinkContext,
-} from "@portal/contexts/AccountLinkContext";
+import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
 import { PortalChrome } from "@portal/components/PortalChrome";
 
 /**
- * The one and only account-link login modal. Mounted at the app root (never
- * nested in another overlay) and driven by UIContext, so any "Link account" CTA
- * — sidebar, billing prompt, feature gate, Settings panel — opens this exact
- * instance. Linking is finished by the shared {@link useAccountLinkContext}
- * orchestration.
+ * The one and only account-link modal. Mounted at the app root (never nested in
+ * another overlay) and driven by UIContext, so any "Link account" CTA — sidebar,
+ * billing prompt, feature gate, Settings panel — opens this exact instance.
+ *
+ * <p>It takes no completion callback: the modal only starts the handshake and
+ * navigates to Stirling. The return leg lands on {@code /account-link/callback},
+ * which deposits the session and tells the local backend to collect its
+ * credential, so nothing finishes here.
  */
 function LinkModalHost() {
   const { linkModalOpen, linkModalMode, closeLinkModal } = useUI();
-  const { markSaasSessionChanged } = useLink();
-  const link = useAccountLinkContext();
-  // "reauth" only refreshes the browser SaaS session for attended reads — the
-  // sign-in already applied it to the Supabase client, so we just signal a
-  // refetch. It must NOT call completeLink (that re-registers → duplicate row).
-  const onLinked =
-    linkModalMode === "reauth"
-      ? () => markSaasSessionChanged()
-      : (session: SupabaseLoginSession) => link.completeLink(session);
   return (
     <LinkAccountModal
       open={linkModalOpen}
       mode={linkModalMode}
       onClose={closeLinkModal}
-      onLinked={onLinked}
     />
   );
 }

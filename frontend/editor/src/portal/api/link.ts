@@ -153,10 +153,30 @@ const CONNECT = `${BASE}/connect`;
  * credential; the admin's SaaS session is handed to their browser by the
  * approval page instead.
  */
-export async function startConnect(name?: string): Promise<ConnectStatus> {
+export async function startConnect(
+  name?: string,
+  callbackUrl?: string,
+): Promise<ConnectStatus> {
   return apiClient.local.json<ConnectStatus>(`${CONNECT}/start`, {
     method: "POST",
-    body: { name },
+    body: { name, callbackUrl },
+  });
+}
+
+/**
+ * Re-establish the SaaS session for a server that is already linked.
+ *
+ * The local backend presents its device credential, so Stirling pins the
+ * handshake to the team this server already belongs to and refuses an approver
+ * from any other team. That is what stops a refresh leaving the portal reading
+ * one team's billing while the server meters against another.
+ */
+export async function startReauth(
+  callbackUrl?: string,
+): Promise<ConnectStatus> {
+  return apiClient.local.json<ConnectStatus>(`${CONNECT}/reauth`, {
+    method: "POST",
+    body: { callbackUrl },
   });
 }
 
