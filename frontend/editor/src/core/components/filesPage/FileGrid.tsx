@@ -19,7 +19,12 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import SearchIcon from "@mui/icons-material/Search";
 
 import { FileId } from "@app/types/file";
-import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
+import {
+  FolderId,
+  FolderRecord,
+  ROOT_FOLDER_ID,
+  folderKind,
+} from "@app/types/folder";
 import { useFolders } from "@app/contexts/FolderContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -479,6 +484,12 @@ function FolderCard({
 }: FolderCardProps) {
   const { t } = useTranslation();
   const { serverReachable, setError } = useFolders();
+  // Only server folders go offline: a virtual folder is browser-owned and a
+  // local one takes its name, look, and lifetime from its directory on disk —
+  // so its edit items are hidden rather than disabled-with-a-wrong-excuse.
+  const kind = folderKind(folder);
+  const editsDisabled = kind === "server" && !serverReachable;
+  const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
     "Offline - folder changes are disabled.",
@@ -586,33 +597,37 @@ function FolderCard({
             >
               {t("filesPage.open", "Open")}
             </Menu.Item>
-            <Menu.Item
-              leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-              onClick={onRename}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
-            >
-              {t("filesPage.rename", "Rename")}
-            </Menu.Item>
-            <Menu.Divider />
-            <Menu.Label>
-              {t("filesPage.appearance.title", "Appearance")}
-            </Menu.Label>
-            <FolderAppearancePicker
-              folder={folder}
-              onChange={onChangeAppearance}
-              disabled={!serverReachable}
-            />
-            <Menu.Divider />
-            <Menu.Item
-              color="red"
-              leftSection={<DeleteIcon fontSize="small" />}
-              onClick={onDelete}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
-            >
-              {t("filesPage.deleteFolder", "Delete folder")}
-            </Menu.Item>
+            {!editsHidden && (
+              <>
+                <Menu.Item
+                  leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+                  onClick={onRename}
+                  disabled={editsDisabled}
+                  title={editsDisabled ? offlineHint : undefined}
+                >
+                  {t("filesPage.rename", "Rename")}
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Label>
+                  {t("filesPage.appearance.title", "Appearance")}
+                </Menu.Label>
+                <FolderAppearancePicker
+                  folder={folder}
+                  onChange={onChangeAppearance}
+                  disabled={editsDisabled}
+                />
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<DeleteIcon fontSize="small" />}
+                  onClick={onDelete}
+                  disabled={editsDisabled}
+                  title={editsDisabled ? offlineHint : undefined}
+                >
+                  {t("filesPage.deleteFolder", "Delete folder")}
+                </Menu.Item>
+              </>
+            )}
           </Menu.Dropdown>
         </Menu>
       </div>
@@ -1082,6 +1097,12 @@ function FolderRow({
 }: FolderRowProps) {
   const { t } = useTranslation();
   const { serverReachable, setError } = useFolders();
+  // Only server folders go offline: a virtual folder is browser-owned and a
+  // local one takes its name, look, and lifetime from its directory on disk —
+  // so its edit items are hidden rather than disabled-with-a-wrong-excuse.
+  const kind = folderKind(folder);
+  const editsDisabled = kind === "server" && !serverReachable;
+  const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
     "Offline - folder changes are disabled.",
@@ -1178,7 +1199,13 @@ function FolderRow({
           )}
         </span>
       </span>
-      <span role="gridcell">{t("filesPage.folder", "Folder")}</span>
+      <span role="gridcell">
+        {kind === "virtual"
+          ? t("filesPage.folderKind.virtual", "Browser folder")
+          : kind === "local"
+            ? t("filesPage.folderKind.local", "Local folder")
+            : t("filesPage.folder", "Folder")}
+      </span>
       <span role="gridcell">
         {fileCount === 0
           ? "-"
@@ -1207,33 +1234,37 @@ function FolderRow({
             >
               {t("filesPage.open", "Open")}
             </Menu.Item>
-            <Menu.Item
-              leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-              onClick={onRename}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
-            >
-              {t("filesPage.rename", "Rename")}
-            </Menu.Item>
-            <Menu.Divider />
-            <Menu.Label>
-              {t("filesPage.appearance.title", "Appearance")}
-            </Menu.Label>
-            <FolderAppearancePicker
-              folder={folder}
-              onChange={onChangeAppearance}
-              disabled={!serverReachable}
-            />
-            <Menu.Divider />
-            <Menu.Item
-              color="red"
-              leftSection={<DeleteIcon fontSize="small" />}
-              onClick={onDelete}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
-            >
-              {t("filesPage.deleteFolder", "Delete folder")}
-            </Menu.Item>
+            {!editsHidden && (
+              <>
+                <Menu.Item
+                  leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+                  onClick={onRename}
+                  disabled={editsDisabled}
+                  title={editsDisabled ? offlineHint : undefined}
+                >
+                  {t("filesPage.rename", "Rename")}
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Label>
+                  {t("filesPage.appearance.title", "Appearance")}
+                </Menu.Label>
+                <FolderAppearancePicker
+                  folder={folder}
+                  onChange={onChangeAppearance}
+                  disabled={editsDisabled}
+                />
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<DeleteIcon fontSize="small" />}
+                  onClick={onDelete}
+                  disabled={editsDisabled}
+                  title={editsDisabled ? offlineHint : undefined}
+                >
+                  {t("filesPage.deleteFolder", "Delete folder")}
+                </Menu.Item>
+              </>
+            )}
           </Menu.Dropdown>
         </Menu>
       </span>

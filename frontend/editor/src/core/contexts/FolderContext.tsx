@@ -617,7 +617,9 @@ export function FolderProvider({ children }: FolderProviderProps) {
   const applyOwnedRecord = useCallback(
     (record: FolderRecord | null): FolderRecord | null => {
       if (record !== null && mountedRef.current) {
-        setFolders((prev) => prev.map((f) => (f.id === record.id ? record : f)));
+        setFolders((prev) =>
+          prev.map((f) => (f.id === record.id ? record : f)),
+        );
         setError(null);
       }
       bumpFolderRevision();
@@ -731,7 +733,9 @@ export function FolderProvider({ children }: FolderProviderProps) {
         // Removing the mount is the mounting feature's job; deleting the
         // directory itself is nobody's job but the user's, in their file
         // explorer.
-        throw new Error("Local folders are removed by the feature that mounted them");
+        throw new Error(
+          "Local folders are removed by the feature that mounted them",
+        );
       }
       if (kind === "virtual") {
         // Same shape as the server path below: subtree delete, strand-reset,

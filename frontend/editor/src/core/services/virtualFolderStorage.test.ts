@@ -3,7 +3,10 @@ import "fake-indexeddb/auto";
 import { IDBFactory } from "fake-indexeddb";
 import { virtualFolderStorage } from "@app/services/virtualFolderStorage";
 import { folderStorage } from "@app/services/folderStorage";
-import { indexedDBManager, DATABASE_CONFIGS } from "@app/services/indexedDBManager";
+import {
+  indexedDBManager,
+  DATABASE_CONFIGS,
+} from "@app/services/indexedDBManager";
 
 /**
  * Virtual folders have no server to be authoritative, so the invariants the

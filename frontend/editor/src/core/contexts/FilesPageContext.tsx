@@ -443,6 +443,22 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         );
         return;
       }
+      // A subtree is one kind throughout (each kind has its own system of
+      // record), so a cross-kind drop is refused here as a message rather
+      // than surfacing as a thrown error from the context.
+      if (newParentId !== null) {
+        const source = folders.foldersById.get(folderId);
+        const target = folders.foldersById.get(newParentId);
+        if (source && target && folderKind(source) !== folderKind(target)) {
+          folders.setError(
+            t(
+              "filesPage.moveAcrossKindsBlocked",
+              "These folders live in different places, so one can't go inside the other.",
+            ),
+          );
+          return;
+        }
+      }
       await folders.moveFolder(folderId, newParentId);
     },
     [folders, t],

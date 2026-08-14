@@ -3979,6 +3979,8 @@ inWorkspace = "Open"
 inWorkspaceAria = "Already in workspace"
 loading = "Loading…"
 localFoldersUnavailable = "Folders are cloud-only - save a file to the cloud to organize it."
+localFolderManagedByDisk = "This folder is managed by its directory on disk."
+moveAcrossKindsBlocked = "These folders live in different places, so one can't go inside the other."
 moveIntoLocalBlocked = "Files can't be moved into a folder that mirrors a directory on disk."
 moveIntoVirtualCloudSkipped_one = "{{count}} server file was left in place — server files can't live in browser-only folders."
 moveIntoVirtualCloudSkipped_other = "{{count}} server files were left in place — server files can't live in browser-only folders."
@@ -4139,6 +4141,10 @@ sharedHint = "Shared with you via link"
 clear = "Clear filter"
 label = "Filter files by name"
 placeholder = "Filter files…"
+
+[filesPage.folderKind]
+local = "Local folder"
+virtual = "Browser folder"
 
 [filesPage.sort]
 modifiedAsc = "Oldest first"

@@ -16,6 +16,7 @@ import { useFolders } from "@app/contexts/FolderContext";
 import { FileId } from "@app/types/file";
 import {
   FolderId,
+  folderKind,
   FolderRecord,
   FolderTreeNode,
   ROOT_FOLDER_ID,
@@ -260,6 +261,12 @@ function TreeNodeRow({
 }: TreeNodeRowProps) {
   const { t } = useTranslation();
   const { serverReachable, setError } = useFolders();
+  // Server folders need the server; a virtual folder is browser-owned and a
+  // local one is managed by its directory, so its edit items disable with a
+  // kind-specific hint instead of a wrong "offline" excuse.
+  const kind = folderKind(node.folder);
+  const editsDisabled =
+    kind === "local" || (kind === "server" && !serverReachable);
   const { currentTab } = useFilesPage();
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
@@ -433,8 +440,17 @@ function TreeNodeRow({
                 e.stopPropagation();
                 onRenameFolder(node.folder);
               }}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
+              disabled={editsDisabled}
+              title={
+                kind === "local"
+                  ? t(
+                      "filesPage.localFolderManagedByDisk",
+                      "This folder is managed by its directory on disk.",
+                    )
+                  : editsDisabled
+                    ? offlineHint
+                    : undefined
+              }
             >
               {t("filesPage.treeMenu.rename", "Rename")}
             </Menu.Item>
@@ -444,8 +460,17 @@ function TreeNodeRow({
                 e.stopPropagation();
                 onRequestNewFolder(node.folder.id);
               }}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
+              disabled={editsDisabled}
+              title={
+                kind === "local"
+                  ? t(
+                      "filesPage.localFolderManagedByDisk",
+                      "This folder is managed by its directory on disk.",
+                    )
+                  : editsDisabled
+                    ? offlineHint
+                    : undefined
+              }
             >
               {t("filesPage.treeMenu.newSubfolder", "New subfolder")}
             </Menu.Item>
@@ -457,8 +482,17 @@ function TreeNodeRow({
                 e.stopPropagation();
                 onDeleteFolder(node.folder);
               }}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
+              disabled={editsDisabled}
+              title={
+                kind === "local"
+                  ? t(
+                      "filesPage.localFolderManagedByDisk",
+                      "This folder is managed by its directory on disk.",
+                    )
+                  : editsDisabled
+                    ? offlineHint
+                    : undefined
+              }
             >
               {t("filesPage.treeMenu.delete", "Delete folder")}
             </Menu.Item>

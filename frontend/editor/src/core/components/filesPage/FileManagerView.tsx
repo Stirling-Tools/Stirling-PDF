@@ -839,14 +839,23 @@ export default function FileManagerView() {
         "Switch to All or Cloud to create folders.",
       );
     }
-    if (!folders.serverReachable) {
+    // Only server folders need the server. On an install without server
+    // storage, New folder creates a virtual (browser-owned) folder, so the
+    // control stays live — that's what lets a desktop user organise at all.
+    if (uploadEnabled && !folders.serverReachable) {
       return t(
         "filesPage.newFolderStorageDisabled",
         "Server folder storage isn't enabled. Ask your admin to turn it on.",
       );
     }
     return null;
-  }, [signInRequiredReason, currentTab, folders.serverReachable, t]);
+  }, [
+    signInRequiredReason,
+    currentTab,
+    uploadEnabled,
+    folders.serverReachable,
+    t,
+  ]);
 
   return (
     <div className="files-page" ref={dropZoneRef}>
