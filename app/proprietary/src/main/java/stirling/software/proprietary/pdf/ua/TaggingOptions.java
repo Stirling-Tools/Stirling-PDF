@@ -54,6 +54,9 @@ public class TaggingOptions {
     /** Alternative descriptions supplied by the caller, keyed by "pageIndex:ordinal". */
     @Builder.Default private Map<String, String> altTextByFigure = Map.of();
 
+    /** What the document said before font embedding rewrote it; see {@link SourceFacts}. */
+    @Builder.Default private SourceFacts sourceFacts = SourceFacts.NONE;
+
     public String altTextFor(int pageIndex, int ordinal) {
         return altTextByFigure.get(pageIndex + ":" + ordinal);
     }

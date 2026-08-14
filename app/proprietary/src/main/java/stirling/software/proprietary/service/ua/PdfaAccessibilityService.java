@@ -42,6 +42,11 @@ import stirling.software.proprietary.pdf.ua.TaggingResult;
 @RequiredArgsConstructor
 public class PdfaAccessibilityService implements PdfaLevelAServiceInterface {
 
+    /**
+     * Matches the PDF/UA converter's own cap; beyond this the structure model exhausts the heap.
+     */
+    private static final int MAX_TAGGABLE_PAGES = 2000;
+
     private final PdfUaValidationService validationService;
 
     /**
@@ -64,6 +69,17 @@ public class PdfaAccessibilityService implements PdfaLevelAServiceInterface {
             TaggingResult taggingResult;
 
             try (PDDocument document = Loader.loadPDF(pdfBytes)) {
+                // Tagging holds a model of the whole document; without a cap a large file exhausts
+                // the heap, and OutOfMemoryError is an Error, so the catch below never sees it.
+                if (document.getNumberOfPages() > MAX_TAGGABLE_PAGES) {
+                    warnings.add(
+                            "This document has "
+                                    + document.getNumberOfPages()
+                                    + " pages, more than the "
+                                    + MAX_TAGGABLE_PAGES
+                                    + " that can be tagged, so it was left at conformance level B.");
+                    return new Result(pdfBytes, false, warnings);
+                }
                 TaggingOptions options =
                         TaggingOptions.builder()
                                 .profile(PdfUaProfile.UA1)

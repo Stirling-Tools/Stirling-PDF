@@ -194,11 +194,18 @@ public class PdfUaValidationService {
                 "7.8",
                 new ClauseInfo("Running heads or page numbers are not marked as artifacts.", true));
         table.put("7.9", new ClauseInfo("A note is missing a unique identifier.", true));
-        table.put("7.10", new ClauseInfo("An optional content group has no name.", true));
+        // Tagging does not touch optional content groups, so this needs the authoring tool.
+        table.put("7.10", new ClauseInfo("An optional content group has no name.", false));
+        // The attachment's own /AFRelationship and /Desc are not something tagging can supply.
         table.put(
                 "7.11",
                 new ClauseInfo(
-                        "An embedded file is missing its relationship or description.", true));
+                        "An embedded file is missing its relationship or description.", false));
+        table.put(
+                "7.15",
+                new ClauseInfo(
+                        "The document uses a dynamic XFA form, which PDF/UA does not allow.",
+                        false));
         table.put(
                 "7.16",
                 new ClauseInfo(
@@ -210,7 +217,17 @@ public class PdfUaValidationService {
                 new ClauseInfo(
                         "An annotation is missing a description, tab order, or structure entry.",
                         true));
-        table.put("7.21", new ClauseInfo("A font used in the document is not embedded.", true));
+        table.put(
+                "7.20",
+                new ClauseInfo(
+                        "A form or group XObject is not marked as content or as an artifact.",
+                        false));
+        // Most font defects (CIDFont, CMap, metrics, encoding) need the font itself repaired.
+        table.put(
+                "7.21",
+                new ClauseInfo("A font in the document does not meet PDF/UA rules.", false));
+        // The one font defect embedding does fix.
+        table.put("7.21.4.1", new ClauseInfo("A font used in the document is not embedded.", true));
         // ToUnicode gaps need the font itself repaired, which embedding does not do.
         table.put(
                 "7.21.7",

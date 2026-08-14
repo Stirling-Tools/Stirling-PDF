@@ -18,6 +18,7 @@ import stirling.software.proprietary.model.api.ua.PdfUaConversionOutcome;
 import stirling.software.proprietary.model.api.ua.UaValidationResult;
 import stirling.software.proprietary.pdf.ua.PdfUaProfile;
 import stirling.software.proprietary.pdf.ua.PdfUaTagger;
+import stirling.software.proprietary.pdf.ua.SourceFacts;
 import stirling.software.proprietary.pdf.ua.TaggingOptions;
 import stirling.software.proprietary.pdf.ua.TaggingResult;
 
@@ -52,6 +53,16 @@ public class PdfUaConversionService {
         PdfUaProfile profile = options.getProfile();
         List<String> warnings = new ArrayList<>();
 
+        // Read the document's own facts before anything rewrites it. Font embedding runs
+        // Ghostscript over the whole file, which discards the structure tree, /Lang and XFA, so
+        // every guard and every "what did the source say" question must be answered from here.
+        SourceFacts facts;
+        try (PDDocument original = load(input)) {
+            rejectUnsupportedSource(original);
+            warnSignatures(original, warnings);
+            facts = SourceFacts.of(original);
+        }
+
         byte[] source = input;
         if (options.isEmbedFonts()) {
             // Must precede tagging: the embedder rewrites the file and drops any structure tree.
@@ -60,16 +71,18 @@ public class PdfUaConversionService {
             if (fonts.warning() != null) {
                 warnings.add(fonts.warning());
             }
+            source = keepTagsOverFonts(input, source, facts, options, warnings);
         }
+
+        TaggingOptions effective = options.toBuilder().sourceFacts(facts).build();
 
         // Tag and declare in one pass; the claim is withdrawn below if validation disagrees.
         byte[] declared;
         TaggingResult taggingResult;
         PdfUaTagger tagger = new PdfUaTagger();
         try (PDDocument document = load(source)) {
-            rejectUnsupported(document);
-            warnSignatures(document, warnings);
-            taggingResult = tagger.tag(document, options);
+            rejectEncrypted(document);
+            taggingResult = tagger.tag(document, effective);
             warnings.addAll(taggingResult.getWarnings());
             tagger.declareConformance(document, profile);
             declared = save(document);
@@ -166,7 +179,42 @@ public class PdfUaConversionService {
     }
 
     /** XFA is forbidden by PDF/UA-1 clause 7.15; encrypted or huge files cannot be restructured. */
-    private static void rejectUnsupported(PDDocument document) throws IOException {
+    /**
+     * Under KEEP nothing rebuilds a tree, so if the embedder deleted one we would hand back an
+     * untagged document. Fonts are not worth the whole structure; give the tags back instead.
+     */
+    private byte[] keepTagsOverFonts(
+            byte[] input,
+            byte[] embedded,
+            SourceFacts facts,
+            TaggingOptions options,
+            List<String> warnings)
+            throws IOException {
+        if (options.getExistingTags() != TaggingOptions.ExistingTags.KEEP
+                || !facts.hasUsableTree()
+                || embedded == input) {
+            return embedded;
+        }
+        boolean survived;
+        try (PDDocument rewritten = load(embedded)) {
+            survived = PdfUaTagger.hasUsableStructureTree(rewritten);
+        }
+        if (survived) {
+            return embedded;
+        }
+        warnings.add(
+                "Embedding the missing fonts would have deleted the document's existing tags, so"
+                        + " the tags were kept and the fonts left unembedded. Turn off font"
+                        + " embedding to silence this, or rebuild the tags to embed them.");
+        return input;
+    }
+
+    /**
+     * Checks that must see the document as the author wrote it. Font embedding strips XFA, so
+     * running this afterwards would let a dynamic form through unnoticed, and it would push a
+     * document we are about to reject through the whole embedder first.
+     */
+    private static void rejectUnsupportedSource(PDDocument document) throws IOException {
         if (document.getNumberOfPages() > MAX_PAGES) {
             throw new IOException(
                     "This PDF has "
@@ -175,14 +223,23 @@ public class PdfUaConversionService {
                             + MAX_PAGES
                             + " pages; split it first.");
         }
-        if (document.isEncrypted()) {
-            throw new IOException(
-                    "Encrypted PDFs cannot be converted to PDF/UA. Remove the password first.");
-        }
         PDAcroForm form = document.getDocumentCatalog().getAcroForm();
         if (form != null && form.xfaIsDynamic()) {
             throw new IOException(
                     "Dynamic XFA forms are not permitted by PDF/UA. Flatten the form first.");
+        }
+    }
+
+    /**
+     * Deliberately checked on the working document rather than the source. Permissions-only
+     * encryption with an empty user password is common in published documents, the embedder
+     * resolves it, and those files convert usefully; rejecting them up front would fail a document
+     * for a password its author never set.
+     */
+    private static void rejectEncrypted(PDDocument document) throws IOException {
+        if (document.isEncrypted()) {
+            throw new IOException(
+                    "Encrypted PDFs cannot be converted to PDF/UA. Remove the password first.");
         }
     }
 

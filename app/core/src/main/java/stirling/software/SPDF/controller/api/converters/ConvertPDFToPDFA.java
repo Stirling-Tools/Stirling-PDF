@@ -1834,7 +1834,11 @@ public class ConvertPDFToPDFA {
 
     /** Tags a converted PDF/A for level A; must run after Ghostscript, which discards tags. */
     private PdfaLevelAServiceInterface.Result applyLevelA(
-            byte[] converted, PdfaProfile profile, String baseFileName, boolean declarePdfUa) {
+            byte[] converted,
+            Path original,
+            PdfaProfile profile,
+            String baseFileName,
+            boolean declarePdfUa) {
         if (!profile.requiresTagging()) {
             return new PdfaLevelAServiceInterface.Result(converted, true, List.of());
         }
@@ -1847,13 +1851,25 @@ public class ConvertPDFToPDFA {
                                     + " at conformance level B."));
         }
         // Prefer the document's own title/language; hardcoding "en" mislabelled German reports.
+        // Read the original, not the converted bytes: Ghostscript discards /Lang, so probing its
+        // output always yields null and every document would be relabelled with the default.
         String language = null;
         String title = null;
-        try (PDDocument probe = Loader.loadPDF(converted)) {
+        try (PDDocument probe = Loader.loadPDF(original.toFile())) {
             language = probe.getDocumentCatalog().getLanguage();
             title = probe.getDocumentInformation().getTitle();
         } catch (IOException e) {
-            log.debug("Could not read existing title/language: {}", e.getMessage());
+            log.debug("Could not read original title/language: {}", e.getMessage());
+        }
+        if (language == null || language.isBlank()) {
+            try (PDDocument probe = Loader.loadPDF(converted)) {
+                language = probe.getDocumentCatalog().getLanguage();
+                if (title == null || title.isBlank()) {
+                    title = probe.getDocumentInformation().getTitle();
+                }
+            } catch (IOException e) {
+                log.debug("Could not read converted title/language: {}", e.getMessage());
+            }
         }
         PdfaLevelAServiceInterface.Result result =
                 pdfaLevelAService.upgradeToLevelA(
@@ -1898,7 +1914,8 @@ public class ConvertPDFToPDFA {
                 log.info("Using Ghostscript for PDF/A conversion to {}", profile.getDisplayName());
                 try {
                     converted = convertWithGhostscript(inputPath, workingDir, profile);
-                    var levelA = applyLevelA(converted, profile, baseFileName, declarePdfUa);
+                    var levelA =
+                            applyLevelA(converted, inputPath, profile, baseFileName, declarePdfUa);
                     converted = levelA.pdfBytes();
                     String outputFilename = baseFileName + profile.outputSuffix(levelA.levelA());
 
@@ -1926,7 +1943,7 @@ public class ConvertPDFToPDFA {
             }
 
             converted = convertWithPdfBoxMethod(inputPath, profile);
-            var levelA = applyLevelA(converted, profile, baseFileName, declarePdfUa);
+            var levelA = applyLevelA(converted, inputPath, profile, baseFileName, declarePdfUa);
             converted = levelA.pdfBytes();
             String outputFilename = baseFileName + profile.outputSuffix(levelA.levelA());
 

@@ -2,13 +2,16 @@ package stirling.software.proprietary.pdf.ua;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
 
 import lombok.extern.slf4j.Slf4j;
@@ -43,10 +46,21 @@ public class PdfUaTagger {
             languageWarnings.forEach(kept::warn);
             metadataWriter
                     .applyDocumentRequirements(
-                            document, options.getTitle(), language, options.getProfile())
+                            document,
+                            options.getTitle(),
+                            language,
+                            options.getProfile(),
+                            options.isPreservePdfVersion())
                     .forEach(kept::warn);
             return new TaggingResult(kept, false);
         }
+
+        // Types the old tree carried, so a rebuild that cannot reproduce them can say so. Font
+        // embedding may already have deleted the tree, so fall back to what the source had.
+        Set<String> discardedTypes =
+                alreadyTagged
+                        ? structureTypes(document)
+                        : options.getSourceFacts().structureTypes();
 
         if (alreadyTagged) {
             stripStructure(document);
@@ -65,6 +79,11 @@ public class PdfUaTagger {
 
         injectMarkedContent(document, structure, pages);
         new StructTreeWriter().write(document, structure, options.getProfile());
+        // Losing the tree to the embedder is a different problem from a requested rebuild, and
+        // the advice that helps differs too, so tell them apart.
+        boolean lostToEmbedder = !alreadyTagged && options.getSourceFacts().hasUsableTree();
+        warnAboutFlattenedStructure(
+                discardedTypes, structureTypes(document), structure, lostToEmbedder);
 
         String title = resolveTitle(options, structure);
         if (title == null) {
@@ -90,6 +109,11 @@ public class PdfUaTagger {
     private static String resolveLanguage(
             PDDocument document, TaggingOptions options, List<String> warnings) {
         String existing = document.getDocumentCatalog().getLanguage();
+        if (existing == null || existing.isBlank()) {
+            // Font embedding discards /Lang, so without this a rewritten French document would
+            // silently take the caller's default language.
+            existing = options.getSourceFacts().language();
+        }
         String requested = options.getLanguage();
         if (existing == null || existing.isBlank() || options.isOverrideLanguage()) {
             return requested;
@@ -189,7 +213,7 @@ public class PdfUaTagger {
      * A tree is only worth keeping when wired up: kids, a parent tree, and a marked catalog.
      * Keeping one that fails any of those leaves the document permanently unfixable.
      */
-    static boolean hasUsableStructureTree(PDDocument document) {
+    public static boolean hasUsableStructureTree(PDDocument document) {
         PDDocumentCatalog catalog = document.getDocumentCatalog();
         PDStructureTreeRoot root = catalog.getStructureTreeRoot();
         if (root == null) {
@@ -203,6 +227,65 @@ public class PdfUaTagger {
         } catch (RuntimeException e) {
             log.debug("Unreadable structure tree, treating as absent: {}", e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * A rebuild derives structure from layout, so semantics the old tree carried can vanish - a
+     * table becomes loose paragraphs. Validators cannot see that loss, so it has to be reported.
+     */
+    private static void warnAboutFlattenedStructure(
+            Set<String> before,
+            Set<String> after,
+            DocumentStructure structure,
+            boolean lostToEmbedder) {
+        List<String> lost =
+                MEANINGFUL_TYPES.stream()
+                        .filter(type -> before.contains(type) && !after.contains(type))
+                        .toList();
+        if (lost.isEmpty()) {
+            return;
+        }
+        // Keeping the tags cannot help once the embedder has deleted them, so do not suggest it.
+        String remedy =
+                lostToEmbedder
+                        ? " Embedding the missing fonts rewrote the document and deleted its"
+                                + " original tags. Turn off font embedding to keep them."
+                        : " Keep the existing tags instead to preserve it.";
+        structure.warn(
+                "Rebuilding the tags could not reproduce "
+                        + String.join(", ", lost)
+                        + " structure, so that content is now plain paragraphs."
+                        + remedy);
+    }
+
+    /** Structure whose loss changes what a screen reader conveys, not just how it is nested. */
+    private static final List<String> MEANINGFUL_TYPES =
+            List.of("Table", "TH", "Formula", "L", "LI", "TOC", "Note");
+
+    private static Set<String> structureTypes(PDDocument document) {
+        Set<String> types = new HashSet<>();
+        try {
+            PDStructureTreeRoot root = document.getDocumentCatalog().getStructureTreeRoot();
+            if (root != null) {
+                collectTypes(root.getKids(), types, 0);
+            }
+        } catch (RuntimeException e) {
+            log.debug("Could not read structure types: {}", e.getMessage());
+        }
+        return types;
+    }
+
+    private static void collectTypes(Object node, Set<String> types, int depth) {
+        // Structure trees can be deep or, in damaged files, cyclic; cap rather than overflow.
+        if (node == null || depth > 64) {
+            return;
+        }
+        if (node instanceof List<?> list) {
+            list.forEach(child -> collectTypes(child, types, depth + 1));
+        } else if (node instanceof PDStructureElement element) {
+            types.add(element.getStructureType());
+            collectTypes(element.getKids(), types, depth + 1);
         }
     }
 
