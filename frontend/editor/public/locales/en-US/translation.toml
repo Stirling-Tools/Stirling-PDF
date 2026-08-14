@@ -8608,9 +8608,7 @@ subtitle = "Reusable input connections that feed documents into Stirling. Config
 title = "Sources"
 
 [portal.sources.actions]
-connectAdditional = "Connect an additional source"
 connectSource = "Connect source"
-moreTypes = "+{{count}} more"
 
 [portal.sources.builder]
 back = "Back to sources"

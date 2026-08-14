@@ -41,8 +41,6 @@ export interface TableProps<T> {
   rowsContainControls?: boolean;
   /** Rendered in place of the body when there are no rows. */
   empty?: ReactNode;
-  /** Trailing non-data row spanning every column; rendered even when there are no rows. */
-  footer?: ReactNode;
   className?: string;
 }
 
@@ -60,7 +58,6 @@ export function Table<T>({
   isRowInteractive,
   rowsContainControls = false,
   empty,
-  footer,
   className,
 }: TableProps<T>) {
   const interactive = Boolean(onRowClick);
@@ -138,15 +135,6 @@ export function Table<T>({
             })
           )}
         </tbody>
-        {footer && (
-          <tfoot>
-            <tr className="sui-table__row sui-table__footer-row">
-              <td className="sui-table__td" colSpan={columns.length}>
-                {footer}
-              </td>
-            </tr>
-          </tfoot>
-        )}
       </table>
     </div>
   );

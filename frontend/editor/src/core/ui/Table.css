@@ -66,14 +66,6 @@
   outline-offset: -0.125rem;
 }
 
-.sui-table:has(tfoot) tbody tr:last-child .sui-table__td {
-  border-bottom: 1px solid var(--c-border-subtle);
-}
-.sui-table__footer-row .sui-table__td {
-  padding: 0;
-  border-bottom: none;
-}
-
 .sui-table__empty {
   padding: 2rem;
   text-align: center;

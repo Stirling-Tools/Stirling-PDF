@@ -158,34 +158,15 @@ describe("Sources view", () => {
     expect(await screen.findByText("integrations view")).toBeInTheDocument();
   });
 
-  it("hides the KPI strip when only the editor exists, keeping the connect row", async () => {
+  it("hides the KPI strip when only the editor exists", async () => {
     fetchSources.mockResolvedValue({
       kpis: RESPONSE.kpis,
       sources: [RESPONSE.sources[0]],
     });
     renderView();
     expect(
-      await screen.findByRole("button", {
-        name: "portal.sources.actions.connectAdditional",
-      }),
+      await screen.findByText("portal.sources.types.editor.label"),
     ).toBeInTheDocument();
     expect(screen.queryByText("portal.sources.kpi.total")).toBeNull();
-  });
-
-  it("opens the connect flow from the table's trailing row", async () => {
-    fetchSources.mockResolvedValue({
-      kpis: RESPONSE.kpis,
-      sources: [RESPONSE.sources[0]],
-    });
-    renderView();
-    fireEvent.click(
-      await screen.findByRole("button", {
-        name: "portal.sources.actions.connectAdditional",
-      }),
-    );
-    // Coming-soon type: only the modal renders it, unlike the row's preview chips.
-    expect(
-      await screen.findByText("portal.sources.types.sharepoint.label"),
-    ).toBeInTheDocument();
   });
 });

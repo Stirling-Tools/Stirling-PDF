@@ -79,13 +79,7 @@ export function Sources() {
         </div>
       )}
 
-      {!isLoading && (
-        <SourcesTable
-          sources={sources}
-          onRowClick={openSource}
-          onConnect={openCreate}
-        />
-      )}
+      {!isLoading && <SourcesTable sources={sources} onRowClick={openSource} />}
 
       <SourceModal
         open={modal.open}

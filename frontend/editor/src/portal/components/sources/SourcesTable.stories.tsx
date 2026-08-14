@@ -51,7 +51,7 @@ const meta: Meta<typeof SourcesTable> = {
   title: "Portal/Sources/SourcesTable",
   component: SourcesTable,
   parameters: { layout: "padded" },
-  args: { sources: SOURCES, onRowClick: () => {}, onConnect: () => {} },
+  args: { sources: SOURCES, onRowClick: () => {} },
 };
 export default meta;
 type Story = StoryObj<typeof SourcesTable>;
