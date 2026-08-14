@@ -57,19 +57,78 @@ tasks:
       - cmd: ./gradlew clean bootRun -PbuildWithFrontend=true
         platforms: [linux, darwin]
 
+  # ============================================================
+  # SaaS backend
+  #
+  # Three environments, one implementation. `dev:saas` and `staging:saas` are the
+  # front doors; both delegate to `_run:saas` with a different profile.
+  #
+  #   task backend:dev:saas                 the SaaS PR's Supabase preview branch
+  #   task backend:staging:saas             the shared long-lived v3 project
+  #   task backend:dev:saas PROFILES=none   production, against your own SAAS_DB_*
+  #
+  # Production deliberately has no named task. Reaching it should take a conscious
+  # PROFILES=none rather than a tab-complete. It is `none` rather than an empty
+  # value because Go template `default` treats "" as absent, so `PROFILES=` would
+  # silently resolve back to dev.
+  # ============================================================
+
   dev:saas:
-    desc: "Start backend in SaaS flavor against Supabase (PROFILES=dev|staging|'')"
+    desc: "Start SaaS backend against the current PR's Supabase preview branch"
     # `dotenv:` reads from the root Taskfile's directory (".") because this
-    # subtaskfile is included with `dir: .`.
+    # subtaskfile is included with `dir: .`. Loaded here as well as in _run:saas
+    # so the fallback below can see SAAS_DEV_PROJECT_REF.
+    dotenv: ['app/.env.saas.local', 'app/.env.saas']
+    vars:
+      # With no preview branch configured, fall back to the whole staging profile
+      # rather than to staging's project ref. Pointing the dev profile at v3 would
+      # keep dev's ddl-auto=update and aim it at a shared database; switching
+      # profile picks up staging's ddl-auto=none too.
+      #
+      # `sh:` runs in Task's embedded POSIX shell, so ${VAR:-default} works on
+      # Windows as well. dotenv values are visible to it; note they are NOT
+      # visible to Go templates ({{.SAAS_DEV_PROJECT_REF}} is always empty).
+      RESOLVED_PROFILES:
+        sh: 'if [ -n "${SAAS_DEV_PROJECT_REF:-}" ]; then echo dev; else echo staging; fi'
+    cmds:
+      # Plain POSIX, no `platforms:` needed: Task's default shell is its embedded
+      # interpreter on every OS. Only the gradlew calls need a real cmd.exe.
+      - cmd: |
+          if [ -z "${SAAS_DEV_PROJECT_REF:-}" ]; then
+            echo ">> SAAS_DEV_PROJECT_REF is not set, so this is running STAGING (shared v3), not a PR preview branch."
+            echo ">> Testing a SaaS PR? Put its ref, DB password and publishable key in app/.env.saas.local."
+          fi
+      - task: _run:saas
+        vars:
+          PORT: '{{.PORT}}'
+          PROFILES: '{{.PROFILES | default .RESOLVED_PROFILES}}'
+          AIENGINE_URL: '{{.AIENGINE_URL}}'
+          AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
+          AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+
+  staging:saas:
+    desc: "Start SaaS backend against the shared v3 staging project"
+    cmds:
+      - task: _run:saas
+        vars:
+          PORT: '{{.PORT}}'
+          PROFILES: staging
+          AIENGINE_URL: '{{.AIENGINE_URL}}'
+          AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
+          AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+
+  _run:saas:
+    internal: true
     dotenv: ['app/.env.saas.local', 'app/.env.saas']
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'
-      # dev     = the Supabase preview branch of the SaaS PR you are testing. Set
-      #           SAAS_DEV_PROJECT_REF; it changes as PRs come and go.
-      # staging = pinned to the long-lived v3 project. Always there.
-      # ""      = the pure `saas` profile against your own SAAS_DB_*.
       PROFILES: '{{.PROFILES | default "dev"}}'
+      # Built here rather than inline in the cmds below: the Windows line is an
+      # unquoted YAML scalar wrapping a cmd.exe string, so a nested {{if ne .X
+      # "none"}} needs escaped quotes that reach the Go template as literal
+      # backslashes and fail with `unexpected "\" in operand`.
+      PROFILE_ARGS: '{{if ne .PROFILES "none"}}--spring.profiles.include={{.PROFILES}}{{end}}'
       AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
@@ -80,9 +139,11 @@ tasks:
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
     cmds:
-      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}"
+      # PROFILE_ARGS is empty when PROFILES=none, i.e. the bare `saas` profile
+      # against SAAS_DB_* (production).
+      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILE_ARGS}}--args=\"{{.PROFILE_ARGS}}\"{{end}}"
         platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:bootRun {{if .PROFILES}}--args='--spring.profiles.include={{.PROFILES}}'{{end}}
+      - cmd: ./gradlew :stirling-pdf:bootRun {{if .PROFILE_ARGS}}--args='{{.PROFILE_ARGS}}'{{end}}
         platforms: [linux, darwin]
 
   build:

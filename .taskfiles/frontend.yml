@@ -5,6 +5,15 @@ version: '3'
 # mode flag) or use `--project editor/...` for tsc — so the editor lives
 # under frontend/editor/ without each task needing a cd.
 
+vars:
+  # Dev-only browser-tab label so concurrent worktrees are distinguishable. Only
+  # the worktree folder basename (e.g. "wt1") is exposed — never the full path,
+  # hostname, or user. Consumed at dev-serve time by vite.config and dropped from
+  # production builds. Shared by the two dev runners so neither has to repeat it.
+  DEV_LABEL:
+    sh: >-
+      {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
+
 tasks:
   install:
     desc: "Install dependencies"
@@ -80,15 +89,59 @@ tasks:
       OPEN: '{{.OPEN | default ""}}'
     env:
       BACKEND_URL: '{{.BACKEND_URL}}'
-      # Dev-only browser-tab label so concurrent worktrees are distinguishable.
-      # Only the worktree folder basename (e.g. "wt1") is exposed — never the
-      # full path, hostname, or user. Consumed at dev-serve time by vite.config
-      # and dropped from production builds.
-      STIRLING_DEV_LABEL:
-        sh: >-
-          {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
+      STIRLING_DEV_LABEL: '{{.DEV_LABEL}}'
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
+
+  # As dev:_run, plus pointing the frontend at the same Supabase project the
+  # backend is using. Separate rather than a flag on dev:_run because Task sets an
+  # `env:` key even when its value resolves to empty, and Vite treats an empty
+  # process.env VITE_* as authoritative over the committed editor/.env. Folding
+  # this into dev:_run therefore blanked Supabase config for the core, proprietary
+  # and desktop dev servers. The duplication is one vite line; the alternative was
+  # a silent regression in three flavors.
+  dev:_run:saas:
+    internal: true
+    ignore_error: true
+    # Read the backend's env files so the frontend cannot authenticate against a
+    # different project than the backend is talking to. Relative to this taskfile's
+    # dir, which is `frontend`.
+    dotenv: ['../app/.env.saas.local', '../app/.env.saas']
+    vars:
+      PORT: '{{.PORT | default "5173"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      OPEN: '{{.OPEN | default ""}}'
+      SAAS_ENV: '{{.SAAS_ENV | default "dev"}}'
+    env:
+      BACKEND_URL: '{{.BACKEND_URL}}'
+      STIRLING_DEV_LABEL: '{{.DEV_LABEL}}'
+      SAAS_ENV: '{{.SAAS_ENV}}'
+      # A real process.env VITE_* beats a committed .env in Vite (loadEnv applies
+      # process.env last), which is what lets this override editor/.env without a
+      # new vite mode or a hand-edited .local file.
+      #
+      # `sh:` runs in Task's embedded POSIX shell on every OS, including Windows,
+      # and can see the dotenv values above. Go templates cannot: dotenv entries
+      # are shell-only, so {{.SAAS_DEV_PROJECT_REF}} is always empty.
+      #
+      # dev falls back to the staging ref exactly as backend:dev:saas does, so both
+      # halves land on the same project when no preview branch is configured.
+      VITE_SUPABASE_URL:
+        sh: |
+          case "${SAAS_ENV:-dev}" in
+            staging) ref="${SAAS_STAGING_PROJECT_REF:-}" ;;
+            *)       ref="${SAAS_DEV_PROJECT_REF:-${SAAS_STAGING_PROJECT_REF:-}}" ;;
+          esac
+          echo "https://${ref}.supabase.co"
+      VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY:
+        sh: |
+          case "${SAAS_ENV:-dev}" in
+            staging) echo "${SAAS_STAGING_PUBLISHABLE_KEY:-}" ;;
+            *)       echo "${SAAS_DEV_PUBLISHABLE_KEY:-${SAAS_STAGING_PUBLISHABLE_KEY:-}}" ;;
+          esac
+    cmds:
+      - 'echo ">> frontend Supabase target: $VITE_SUPABASE_URL"'
+      - npx vite editor --mode saas --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
   dev:
     desc: "Start frontend dev server"
@@ -111,13 +164,32 @@ tasks:
         vars: { MODE: proprietary, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:saas:
-    desc: "Start frontend dev server in SaaS mode"
+    desc: "Start frontend dev server in SaaS mode (SAAS_ENV=dev|staging|prod)"
+    # Reads the backend's env files so the frontend cannot end up authenticating
+    # against a different Supabase project than the backend is using. Paths are
+    # relative to this taskfile's dir, which is `frontend`.
+    #
+    # Without this the frontend always used editor/.env, which pins PRODUCTION -
+    # so `task dev:saas` gave you a backend on a preview branch and a login
+    # against prod unless you had hand-written editor/.env.saas.local.
     deps:
       - task: prepare
         vars: { MODE: saas }
+    vars:
+      # dev (default) follows SAAS_DEV_PROJECT_REF, falling back to staging exactly
+      # as backend:dev:saas does. staging is the shared v3 project. prod routes to
+      # the plain runner, which sets no VITE_SUPABASE_* and so leaves the committed
+      # editor/.env (and any editor/.env.saas.local) alone.
+      SAAS_ENV: '{{.SAAS_ENV | default "dev"}}'
+      RUNNER: '{{if eq .SAAS_ENV "prod"}}dev:_run{{else}}dev:_run:saas{{end}}'
     cmds:
-      - task: dev:_run
-        vars: { MODE: saas, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
+      - task: '{{.RUNNER}}'
+        vars:
+          MODE: saas
+          PORT: '{{.PORT}}'
+          BACKEND_URL: '{{.BACKEND_URL}}'
+          OPEN: '{{.OPEN}}'
+          SAAS_ENV: '{{.SAAS_ENV}}'
 
   dev:desktop:
     desc: "Start frontend dev server in desktop mode"

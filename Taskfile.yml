@@ -96,11 +96,27 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
 
+  # Backend, frontend and engine against the Supabase preview branch of the SaaS PR
+  # you are working on (SAAS_DEV_PROJECT_REF in app/.env.saas.local). With no ref
+  # set, both halves fall back to staging and say so.
   dev:saas:
-    desc: "Start SaaS backend + frontend concurrently on free ports"
+    desc: "Start SaaS backend + frontend + engine against the current PR's preview branch"
     cmds:
       - task: dev:_all
-        vars: { FRONTEND: saas, BACKEND: saas }
+        vars: { FRONTEND: saas, BACKEND: saas, SAAS_ENV: dev }
+
+  # The same three against the shared long-lived v3 project. Use this when you want
+  # somewhere stable to reproduce something or paste a link, rather than a branch
+  # that disappears with its PR.
+  staging:saas:
+    desc: "Start SaaS backend + frontend + engine against the shared v3 staging project"
+    cmds:
+      - task: dev:_all
+        vars:
+          FRONTEND: saas
+          BACKEND: saas
+          BACKEND_TASK: backend:staging:saas
+          SAAS_ENV: staging
 
   dev:all:
     desc: "Start backend + frontend + engine concurrently on free ports"
@@ -112,6 +128,12 @@ tasks:
     vars:
       FRONTEND: '{{.FRONTEND | default "proprietary"}}'
       BACKEND: '{{.BACKEND | default "proprietary"}}'
+      # Which backend task to run. Defaults to the dev one for the chosen flavor;
+      # staging:saas overrides it, so the environment is picked in one place instead
+      # of threading a profile down through three layers.
+      BACKEND_TASK: '{{.BACKEND_TASK | default (printf "backend:dev:%s" .BACKEND)}}'
+      # Only meaningful to the saas frontend; every other flavor ignores it.
+      SAAS_ENV: '{{.SAAS_ENV | default ""}}'
       PORTS:
         sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173 5001{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5001{{end}}'
       BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
@@ -121,7 +143,7 @@ tasks:
       - task: engine:dev
         vars:
           PORT: '{{.ENGINE_PORT}}'
-      - task: 'backend:dev:{{.BACKEND}}'
+      - task: '{{.BACKEND_TASK}}'
         vars:
           PORT: '{{.BACKEND_PORT}}'
           AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
@@ -131,6 +153,7 @@ tasks:
           PORT: '{{.FRONTEND_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
+          SAAS_ENV: '{{.SAAS_ENV}}'
 
   # ============================================================
   # Build
