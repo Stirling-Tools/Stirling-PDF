@@ -46,7 +46,7 @@ public class EndpointConfiguration {
     private final ApplicationProperties applicationProperties;
     @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
-    private Set<String> disabledGroups = new HashSet<>();
+    private Set<String> disabledGroups = ConcurrentHashMap.newKeySet();
     private Map<String, DisableReason> endpointDisableReasons = new ConcurrentHashMap<>();
     private Map<String, DisableReason> groupDisableReasons = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
