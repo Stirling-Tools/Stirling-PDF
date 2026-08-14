@@ -109,7 +109,7 @@ jobs:
           push: false
           provenance: false
           build-args: ENABLE_CCACHE=true
-          docker-tool-cache: ccache
+          docker-tool-cache: ccache:stirling-docker-base-ccache
           docker-mount-cache: true
           diagnostics: summary
           metadata-hints: workflow=docker-compose-tests,stage=base,image=fat
