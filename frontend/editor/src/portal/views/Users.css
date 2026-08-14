@@ -265,7 +265,7 @@
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   background: color-mix(in srgb, var(--c-danger) 12%, transparent);
-  color: var(--c-danger);
+  color: var(--color-red-dark);
   font-size: 0.85rem;
 }
 
@@ -279,7 +279,7 @@
 }
 
 .portal-users__link {
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   text-decoration: none;
 }
 .portal-users__link:hover {
@@ -337,7 +337,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   font-size: 0.8rem;
   font-weight: 500;
   white-space: nowrap;
@@ -354,6 +354,18 @@
 }
 .portal-users__row + .portal-users__row {
   border-top: 1px solid var(--c-border-subtle);
+}
+/* Deep-link landing flash (?member=<id>). */
+.portal-users__row--flash {
+  animation: portal-users-row-flash 1.6s ease-out;
+}
+@keyframes portal-users-row-flash {
+  from {
+    background: var(--c-hover);
+  }
+  to {
+    background: transparent;
+  }
 }
 .portal-users__row-main {
   display: flex;
@@ -492,7 +504,7 @@
   background: none;
   border: none;
   border-top: 1px solid var(--c-border-subtle);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;

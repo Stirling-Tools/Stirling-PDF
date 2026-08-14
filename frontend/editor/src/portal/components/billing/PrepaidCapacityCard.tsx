@@ -72,6 +72,7 @@ export function PrepaidCapacityCard({
       <MeterBar
         state={state}
         pct={pct}
+        barLabel={t("portal.billing.prepaid.eyebrow", "Prepaid capacity")}
         figure={remaining.toLocaleString()}
         capSuffix={t(
           "portal.billing.prepaid.capSuffix",

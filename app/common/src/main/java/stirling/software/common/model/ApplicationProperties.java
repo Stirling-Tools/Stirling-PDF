@@ -1078,6 +1078,8 @@ public class ApplicationProperties {
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
         private boolean enableMobileScanner = true; // Enable mobile phone QR code upload feature
+        private boolean enableMobileSignature =
+                true; // Enable drawing signatures on a phone via QR code
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
         private ServerCertificate serverCertificate = new ServerCertificate();
 
@@ -1136,6 +1138,13 @@ public class ApplicationProperties {
         @Data
         public static class Encryption {
             private boolean enabled = false;
+
+            /**
+             * Emit an audit event for every decrypt of an encrypted blob. Compliance reviewers
+             * (HIPAA) expect read audit, so it defaults on; busy multi-user installs can disable.
+             * Denied decrypts and key lifecycle events are always audited regardless.
+             */
+            private boolean auditReads = true;
         }
 
         @Data
@@ -1339,7 +1348,7 @@ public class ApplicationProperties {
     public static class Ui {
         private String appNameNavbar;
         private List<String> languages;
-        private String logoStyle = "classic"; // Options: "classic" (default) or "modern"
+        private String logoStyle = "modern"; // Options: "modern" (default) or "classic"
         private boolean defaultHideUnavailableTools = false;
         private boolean defaultHideUnavailableConversions = false;
         private HideDisabledTools hideDisabledTools = new HideDisabledTools();
@@ -1350,10 +1359,10 @@ public class ApplicationProperties {
 
         public String getLogoStyle() {
             // Validate and return either "modern" or "classic"
-            if ("modern".equalsIgnoreCase(logoStyle)) {
-                return "modern";
+            if ("classic".equalsIgnoreCase(logoStyle)) {
+                return "classic";
             }
-            return "classic"; // default
+            return "modern"; // default
         }
 
         @Data
