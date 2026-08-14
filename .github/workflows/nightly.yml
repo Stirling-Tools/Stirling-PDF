@@ -21,8 +21,6 @@ jobs:
   playwright-all-browsers:
     name: Playwright (chromium + firefox + webkit)
     runs-on: ubuntu-latest
-    # PRs and branch dispatches reach this workflow for cucumber-nightly alone.
-    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -68,7 +66,6 @@ jobs:
   a11y-all-stories:
     name: a11y (every story, light + dark)
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
     # Two full sweeps (one per theme), each ~30 minutes of browser time.
     timeout-minutes: 120
     steps:
@@ -107,6 +104,10 @@ jobs:
 
   # Builds all desktop platforms on a schedule so the Rust dependency cache is
   # written on main, where PR and merge-queue tauri builds can restore it.
+  #
+  # The only job here still pinned to schedule/main: it primes a cache rather than
+  # testing anything, and Actions scopes a cache written on a PR branch to that PR
+  # alone, so a PR run costs three platform builds and produces nothing reusable.
   warm-tauri-cache:
     name: Warm Tauri Rust cache
     if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
@@ -119,7 +120,9 @@ jobs:
       sign: false
     secrets: inherit
 
-  # The PR run caps concurrency at 5 and skips the heavy-binary endpoints.
+  # The cucumber run in build.yml caps concurrency at 5 and skips the heavy-binary
+  # endpoints. This job is what covers the rest: the @nightly conversion scenarios
+  # and a 10-shard concurrency run.
   cucumber-nightly:
     name: Cucumber (nightly scenarios + full concurrency)
     runs-on: ubuntu-latest
