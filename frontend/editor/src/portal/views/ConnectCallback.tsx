@@ -1,5 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useNavigate } from "react-router-dom";
+import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
+import { SuiProvider } from "@portal/theme/SuiProvider";
+import "@portal/theme/base.css";
 import {
   completeConnect,
   startConnect,
@@ -32,7 +41,7 @@ import "@portal/views/ConnectCallback.css";
  * <p>The fragment is stripped before anything awaits, so a live token does not
  * linger in the address bar or the history entry.
  */
-export default function ConnectCallback() {
+function ConnectCallbackContent() {
   const navigate = useNavigate();
   const [state, setState] = useState<ConnectCallbackState>("working");
   const [sessionRestored, setSessionRestored] = useState(false);
@@ -122,6 +131,39 @@ export default function ConnectCallback() {
       onRetry={onRetry}
       onDone={() => navigate("/", { replace: true })}
     />
+  );
+}
+
+/** Binds Mantine to the portal's theme, as {@link PortalApp} does for the portal proper. */
+function ThemedSui({ children }: { children: ReactNode }) {
+  const { theme } = useTheme();
+  return <SuiProvider colorScheme={theme}>{children}</SuiProvider>;
+}
+
+/**
+ * The callback with its own minimal provider shell.
+ *
+ * <p>This route is a sibling of the portal's, not a page inside it, so it inherits
+ * none of {@link PortalApp}'s providers. It needs the theme and Mantine, because the
+ * shared Button is a Mantine button underneath, and base.css for the tokens the
+ * stylesheet references.
+ *
+ * <p>Deliberately no PortalAuthBoundary. This is a redirect target carrying a
+ * one-time nonce in the fragment, and a client-side auth gate could navigate away
+ * to a login screen and take the fragment with it. The endpoints it calls are
+ * admin-gated server side, so nothing is lost by not gating here, and a failed call
+ * shows the retry state instead of silently discarding the handshake.
+ */
+export default function ConnectCallback() {
+  return (
+    <ThemeProvider>
+      <ThemedSui>
+        {/* Scopes base.css the same way the portal does, so it cannot restyle the host editor. */}
+        <div className="portal-scope">
+          <ConnectCallbackContent />
+        </div>
+      </ThemedSui>
+    </ThemeProvider>
   );
 }
 
