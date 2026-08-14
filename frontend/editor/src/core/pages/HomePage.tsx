@@ -35,6 +35,7 @@ import {
   useFilesPage,
 } from "@app/contexts/FilesPageContext";
 import { useFolders } from "@app/contexts/FolderContext";
+import { folderKind } from "@app/types/folder";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
@@ -588,12 +589,27 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       [addFiles, filesPage, folders.currentFolderId],
     );
 
-    const newFolderDisabledReason = !folders.serverReachable
-      ? t(
-          "filesPage.newFolderStorageDisabled",
-          "Server folder storage isn't enabled.",
-        )
+    // Kind-aware: only a server folder's subfolder needs the server, and a
+    // mounted directory takes no subfolders from here at all. At the root the
+    // rail creates a folder on this device, which nothing can disable.
+    const railCurrentFolder = folders.currentFolderId
+      ? folders.foldersById.get(folders.currentFolderId)
+      : undefined;
+    const railCurrentKind = railCurrentFolder
+      ? folderKind(railCurrentFolder)
       : null;
+    const newFolderDisabledReason =
+      railCurrentKind === "local"
+        ? t(
+            "filesPage.newFolderInLocalUnavailable",
+            "This folder mirrors a directory on disk — create subfolders in your file explorer.",
+          )
+        : railCurrentKind === "server" && !folders.serverReachable
+          ? t(
+              "filesPage.newFolderStorageDisabled",
+              "Server folder storage isn't enabled.",
+            )
+          : null;
 
     return (
       <FileSidebar
@@ -604,7 +620,11 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
         extraAction={{
           icon: <CreateNewFolderIcon />,
           label: t("filesPage.newFolder", "New folder"),
-          onClick: () => filesPage.openNewFolderDialog(),
+          onClick: () =>
+            filesPage.openNewFolderDialog(
+              folders.currentFolderId,
+              folders.currentFolderId === null ? "virtual" : undefined,
+            ),
           disabled: newFolderDisabledReason !== null,
           disabledTooltip: newFolderDisabledReason ?? undefined,
           testId: "files-rail-new-folder",

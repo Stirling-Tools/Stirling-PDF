@@ -434,7 +434,19 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Local files moving to ROOT need no cloud write.
+      // Local files moving to the root DO need a write when they are leaving a
+      // folder — their membership is a browser-side folderId that nothing
+      // above has touched (the upload branch only runs for a non-null
+      // target). Without this, a file placed in a virtual folder could never
+      // be taken out of it.
+      if (folderId === null && localOnly.length > 0) {
+        const leaving = localOnly
+          .filter((s) => (s.folderId ?? null) !== null)
+          .map((s) => s.id);
+        if (leaving.length > 0) {
+          await indexedDB.moveFilesToFolder(leaving, null);
+        }
+      }
       await refresh();
     },
     [indexedDB, refresh, fileMap, folders, t, fileActions],

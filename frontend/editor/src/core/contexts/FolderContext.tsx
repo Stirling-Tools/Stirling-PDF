@@ -709,11 +709,18 @@ export function FolderProvider({ children }: FolderProviderProps) {
         throw new Error("Local folders cannot be recoloured yet");
       }
       if (kind === "virtual") {
+        // Forward only the fields the picker actually sent: it sends one key
+        // per interaction, and the store's spread persists an explicit
+        // undefined — so passing both keys would erase whichever appearance
+        // field the user did NOT touch. (icon: null means "clear the icon"
+        // and maps to an explicit undefined deliberately.)
+        const updates: { color?: string; icon?: string } = {};
+        if (appearance.color !== undefined) updates.color = appearance.color;
+        if (appearance.icon !== undefined) {
+          updates.icon = appearance.icon ?? undefined;
+        }
         return applyOwnedRecord(
-          await virtualFolderStorage.updateFolder(id, {
-            color: appearance.color,
-            icon: appearance.icon ?? undefined,
-          }),
+          await virtualFolderStorage.updateFolder(id, updates),
         );
       }
       return runFolderMutation(

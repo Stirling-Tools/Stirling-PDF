@@ -3978,9 +3978,8 @@ inPath = "in {{path}}"
 inWorkspace = "Open"
 inWorkspaceAria = "Already in workspace"
 loading = "Loading…"
-localFoldersUnavailable = "Folders are cloud-only - save a file to the cloud to organize it."
 localFolderManagedByDisk = "This folder is managed by its directory on disk."
-removeLocalFolder = "Remove (files stay on disk)"
+localFoldersUnavailable = "Folders are cloud-only - save a file to the cloud to organize it."
 moveAcrossKindsBlocked = "These folders live in different places, so one can't go inside the other."
 moveIntoLocalBlocked = "Files can't be moved into a folder that mirrors a directory on disk."
 moveIntoVirtualCloudSkipped_one = "{{count}} server file was left in place — server files can't live in browser-only folders."
@@ -3999,6 +3998,7 @@ openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
 refresh = "Refresh from server"
 remove = "Delete"
+removeLocalFolder = "Remove (files stay on disk)"
 removeVersion = "Remove this version"
 rename = "Rename"
 renamed = "Renamed"
@@ -4111,11 +4111,23 @@ totalSize = "Total size"
 type = "Type"
 versionHistory = "Version journey"
 
+[filesPage.folderKind]
+local = "Local folder"
+virtual = "Browser folder"
+
+[filesPage.folderKindChoice]
+localUnavailable = "Available in the desktop app, which can see your disk."
+
 [filesPage.folderName]
 cancel = "Cancel"
 error = "Could not save folder. Try again."
 label = "Folder name"
 placeholder = "Folder name"
+
+[filesPage.folderOrigin]
+diskHint = "A folder mounted from a directory on your disk"
+serverHint = "A folder stored on the Stirling server"
+virtualHint = "A folder that lives only in this browser"
 
 [filesPage.moveDialog]
 cancel = "Cancel"
@@ -4129,6 +4141,14 @@ newFolderLabel = "New folder name"
 newFolderPlaceholder = "Folder name"
 newFolderToggle = "Create new folder…"
 title = "Move to folder"
+
+[filesPage.newFolderMenu]
+addExisting = "Add folder from this computer…"
+addExistingHint = "Its files stay exactly where they are."
+device = "New folder on this device"
+deviceHint = "Lives only on this device. Works offline."
+server = "New folder on the server"
+serverHint = "Synced to your account, available wherever you sign in."
 
 [filesPage.origin]
 all = "All sources"
@@ -4145,27 +4165,6 @@ sharedHint = "Shared with you via link"
 clear = "Clear filter"
 label = "Filter files by name"
 placeholder = "Filter files…"
-
-[filesPage.newFolderMenu]
-addExisting = "Add folder from this computer…"
-addExistingHint = "Its files stay exactly where they are."
-device = "New folder on this device"
-deviceHint = "Lives only on this device. Works offline."
-server = "New folder on the server"
-serverHint = "Synced to your account, available wherever you sign in."
-
-[filesPage.folderOrigin]
-diskHint = "A folder mounted from a directory on your disk"
-serverHint = "A folder stored on the Stirling server"
-virtualHint = "A folder that lives only in this browser"
-
-[filesPage.folderKindChoice]
-localUnavailable = "Available in the desktop app, which can see your disk."
-
-
-[filesPage.folderKind]
-local = "Local folder"
-virtual = "Browser folder"
 
 [filesPage.sort]
 modifiedAsc = "Oldest first"

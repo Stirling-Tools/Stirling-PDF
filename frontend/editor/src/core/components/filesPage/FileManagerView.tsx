@@ -440,11 +440,17 @@ export default function FileManagerView() {
     currentFolder && folderKind(currentFolder) === "local"
       ? currentFolder.directory
       : undefined;
+  const { setError: setFolderError } = folders;
   const [diskEntries, setDiskEntries] = useState<DiskFileEntry[]>([]);
   const [diskLoading, setDiskLoading] = useState(false);
   useEffect(() => {
     if (!currentLocalDirectory || !canListDirectory) {
       setDiskEntries([]);
+      // Also stand the loading flag down: when the user navigates OUT of a
+      // mount mid-listing, the in-flight finally skips its reset (cancelled),
+      // and this branch is the only code that runs — without the reset the
+      // skeleton covers every folder for the rest of the session.
+      setDiskLoading(false);
       return;
     }
     let cancelled = false;
@@ -457,7 +463,7 @@ export default function FileManagerView() {
         console.warn("[FileManagerView] disk listing failed", err);
         if (!cancelled) {
           setDiskEntries([]);
-          folders.setError(
+          setFolderError(
             err instanceof Error
               ? `Could not read the folder: ${err.message}`
               : "Could not read the folder.",
@@ -470,7 +476,10 @@ export default function FileManagerView() {
     return () => {
       cancelled = true;
     };
-  }, [currentLocalDirectory, folders]);
+    // The stable setter, not the context object: that changes identity on
+    // every folder mutation — including the setError call above, which would
+    // make a failing listing re-trigger itself.
+  }, [currentLocalDirectory, setFolderError]);
 
   // Opening a disk file loads its bytes into the workbench — the one moment
   // anything leaves the disk, and only because the user asked to work on it.
@@ -940,7 +949,11 @@ export default function FileManagerView() {
       const picked = await pickDirectory();
       if (!picked) return;
       const record = await folders.mountLocalFolder(picked.path, picked.name);
-      folders.setCurrentFolderId(record.id);
+      // The URL is the source of truth for folder selection (the pathname →
+      // state effect owns currentFolderId). Setting state directly here races
+      // that effect — it re-runs on the same commit's foldersById change with
+      // the old pathname and snaps the selection back to root.
+      navigate(`/files/${record.id}`);
     } catch (err) {
       folders.setError(
         err instanceof Error
@@ -948,7 +961,7 @@ export default function FileManagerView() {
           : "Could not add the folder.",
       );
     }
-  }, [folders]);
+  }, [folders, navigate]);
 
   // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
@@ -976,11 +989,27 @@ export default function FileManagerView() {
         "This folder mirrors a directory on disk — create subfolders in your file explorer.",
       );
     }
+    // Inside a server folder the subfolder inherits kind server, so the
+    // server-side blockers apply to the button itself — otherwise the dialog
+    // opens only to fail at submit with a raw error.
+    if (
+      currentFolder &&
+      folderKind(currentFolder) === "server" &&
+      serverFolderDisabledReason
+    ) {
+      return serverFolderDisabledReason;
+    }
     // Reachability and storage no longer disable the button: those only rule
     // out the server option, which the dialog now greys out individually —
     // browser and disk folders remain creatable regardless.
     return null;
-  }, [currentTab, currentLocalDirectory, t]);
+  }, [
+    currentTab,
+    currentLocalDirectory,
+    currentFolder,
+    serverFolderDisabledReason,
+    t,
+  ]);
 
   return (
     <div className="files-page" ref={dropZoneRef}>
@@ -1713,7 +1742,15 @@ export default function FileManagerView() {
               // (disabled tooltips, native file picker, dialog) is
               // identical regardless of where the user clicks from.
               onEmptyUpload={() => fileInputRef.current?.click()}
-              onEmptyCreateFolder={() => openNewFolderDialog()}
+              onEmptyCreateFolder={() =>
+                // At the root the kind must be said out loud — the context's
+                // default prefers the server, which a guest can't use. On this
+                // surface there is no menu, so the never-fails kind wins.
+                openNewFolderDialog(
+                  folders.currentFolderId,
+                  folders.currentFolderId === null ? "virtual" : undefined,
+                )
+              }
               newFolderDisabledReason={newFolderDisabledReason}
             />
             {isDraggingExternal && (

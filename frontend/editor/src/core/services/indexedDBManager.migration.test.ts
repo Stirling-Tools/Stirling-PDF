@@ -400,13 +400,12 @@ describe("IndexedDB migration (FILES store)", () => {
     );
   });
 
-  test("a current-version database missing a store self-heals via a bump", async () => {
-    // A profile that opened the schema mid-change: version already 10, but
-    // only one of the two stores v10 defines exists. onupgradeneeded will
-    // never re-fire at 10, so without the self-heal every transaction naming
-    // local_folders throws "object store was not found" forever.
+  test("a v10 profile missing local_folders upgrades to v11 with the full schema", async () => {
+    // v10 briefly existed with only one of the two browser-folder stores.
+    // The cure is the shipped version bump: v11 declares both, so the normal
+    // upgrade path (which only adds what's absent) completes the schema.
     await new Promise<void>((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, TARGET_VERSION);
+      const req = indexedDB.open(DB_NAME, 10);
       req.onupgradeneeded = () => {
         const db = req.result;
         db.createObjectStore("files", { keyPath: "id" });
@@ -421,26 +420,11 @@ describe("IndexedDB migration (FILES store)", () => {
       req.onerror = () => reject(req.error);
     });
 
-    // The heal warn IS the contract: production fires it to say why the
-    // version moved past the configured one.
-    expectConsole.warn(/missing store\(s\) local_folders/);
     const db = await indexedDBManager.openDatabase(DATABASE_CONFIGS.FILES);
     const names = Array.from(db.objectStoreNames);
     expect(names).toContain("local_folders");
     expect(names).toContain("virtual_folders");
-    // Healed by bumping one past the configured version...
-    expect(db.version).toBe(TARGET_VERSION + 1);
-    indexedDBManager.closeDatabase(DB_NAME);
-
-    // ...and a subsequent open of the now-ahead database must not throw
-    // VersionError just because the config asks for the older number. The
-    // first attempt does log its failure before the recovery retries at the
-    // database's own version — that log is part of the path under test.
-    expectConsole.error(/Failed to open stirling-pdf-files/);
-    const reopened = await indexedDBManager.openDatabase(
-      DATABASE_CONFIGS.FILES,
-    );
-    expect(reopened.version).toBe(TARGET_VERSION + 1);
+    expect(db.version).toBe(TARGET_VERSION);
     indexedDBManager.closeDatabase(DB_NAME);
   });
 

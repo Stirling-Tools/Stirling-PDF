@@ -89,61 +89,7 @@ class IndexedDBManager {
         await this.deleteDatabase(config.name);
       }
     }
-    // A database can be AHEAD of the config (the self-heal bump below leaves
-    // it one past), and requesting an older version throws VersionError.
-    // Probe the real version only on that error — an up-front probe would
-    // cost every open an extra round trip.
-    let db: IDBDatabase;
-    try {
-      db = await this.performDatabaseInit(config);
-    } catch (err) {
-      if ((err as DOMException | null)?.name !== "VersionError") {
-        throw err;
-      }
-      const current = await this.getDatabaseVersion(config.name);
-      if (current === null || current <= config.version) {
-        throw err;
-      }
-      db = await this.performDatabaseInit({ ...config, version: current });
-    }
-
-    // Self-heal a database whose version matches but whose schema doesn't:
-    // once the version is current, onupgradeneeded never fires again, so a
-    // store that was added to the config under an ALREADY-SHIPPED version
-    // number would be missing forever and every transaction naming it throws
-    // "object store was not found". One forced version bump replays the
-    // declarative store creation (which only adds what's absent, touching no
-    // data). Chiefly a dev-profile hazard — a browser that opened the schema
-    // mid-change — but strictly better than staying broken in prod too.
-    const missing = config.stores.filter(
-      (store) => !db.objectStoreNames.contains(store.name),
-    );
-    if (missing.length === 0) {
-      return db;
-    }
-    console.warn(
-      `${config.name} v${db.version} is missing store(s) ${missing
-        .map((store) => store.name)
-        .join(", ")}; bumping to v${db.version + 1} to create them`,
-    );
-    const bumped = { ...config, version: db.version + 1 };
-    db.close();
-    this.databases.delete(config.name);
-    const healed = await this.performDatabaseInit(bumped);
-    const stillMissing = bumped.stores.filter(
-      (store) => !healed.objectStoreNames.contains(store.name),
-    );
-    if (stillMissing.length > 0) {
-      // Don't loop on an unfixable state; surface it instead.
-      healed.close();
-      this.databases.delete(config.name);
-      throw new Error(
-        `${config.name} could not create store(s): ${stillMissing
-          .map((store) => store.name)
-          .join(", ")}`,
-      );
-    }
-    return healed;
+    return this.performDatabaseInit(config);
   }
 
   private performDatabaseInit(config: DatabaseConfig): Promise<IDBDatabase> {
@@ -519,7 +465,11 @@ class IndexedDBManager {
 export const DATABASE_CONFIGS = {
   FILES: {
     name: "stirling-pdf-files",
-    version: 10,
+    // v10 existed briefly with only one of the two browser-folder stores;
+    // v11 declares both, so every v10 profile upgrades to a full schema.
+    // Never add a store under an already-opened version number — the upgrade
+    // only fires on a version change, so late additions are unreachable.
+    version: 11,
     stores: [
       {
         name: "files",

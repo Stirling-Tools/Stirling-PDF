@@ -91,7 +91,47 @@ export function useLazyThumbnail(
  * disk, so the cache is what makes revisits and re-sorts free.
  */
 const diskThumbCache = new Map<string, string>();
-const DISK_THUMB_CACHE_CAP = 300;
+// Image thumbnails are data URLs whose size tracks the source image, so the
+// cache is bounded by BYTES, not entries — 300 photos would otherwise pin
+// gigabytes of strings for the process lifetime.
+const DISK_THUMB_CACHE_MAX_BYTES = 48 * 1024 * 1024;
+let diskThumbCacheBytes = 0;
+
+function cacheDiskThumb(key: string, url: string): void {
+  const prior = diskThumbCache.get(key);
+  if (prior !== undefined) diskThumbCacheBytes -= prior.length;
+  while (
+    diskThumbCacheBytes + url.length > DISK_THUMB_CACHE_MAX_BYTES &&
+    diskThumbCache.size > 0
+  ) {
+    // Maps iterate in insertion order; evicting the first entry makes this
+    // FIFO — crude, but evicted thumbnails simply re-render on revisit.
+    const oldest = diskThumbCache.keys().next().value!;
+    diskThumbCacheBytes -= diskThumbCache.get(oldest)!.length;
+    diskThumbCache.delete(oldest);
+  }
+  diskThumbCache.set(key, url);
+  diskThumbCacheBytes += url.length;
+}
+
+// Reading a file's bytes is the expensive step, so it only happens for types
+// the generator can actually render — it branches on MIME (PDF and images)
+// and returns nothing for everything else, which must not cost a full read.
+const THUMBABLE_EXTENSIONS = new Set([
+  "pdf",
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "webp",
+  "bmp",
+  "svg",
+]);
+
+function canEverThumbnail(name: string): boolean {
+  const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
+  return THUMBABLE_EXTENSIONS.has(ext);
+}
 
 /**
  * Thumbnail for a disk-listed file, through the same generator and the same
@@ -119,6 +159,7 @@ export function useDiskThumbnail(entry: {
       return;
     }
     if (entry.sizeBytes >= THUMBNAIL_SIZE_LIMIT) return;
+    if (!canEverThumbnail(entry.name)) return;
     let cancelled = false;
     scheduleLazyThumb(async () => {
       if (cancelled || diskThumbCache.has(key)) return;
@@ -126,18 +167,12 @@ export function useDiskThumbnail(entry: {
         const file = await readDiskFile(entry);
         if (!file || cancelled) return;
         const url = await generateThumbnailForFile(file);
-        if (diskThumbCache.size >= DISK_THUMB_CACHE_CAP) {
-          // Maps iterate in insertion order; dropping the first entry makes
-          // this FIFO — crude, but revisits re-generate rather than grow.
-          const oldest = diskThumbCache.keys().next().value;
-          if (oldest !== undefined) diskThumbCache.delete(oldest);
-        }
         // "" is cached too: a failed/oversized render should not retry on
         // every re-mount of the same row.
-        diskThumbCache.set(key, url);
+        cacheDiskThumb(key, url);
         if (!cancelled && url) setThumb(url);
       } catch {
-        diskThumbCache.set(key, "");
+        cacheDiskThumb(key, "");
       }
     });
     return () => {

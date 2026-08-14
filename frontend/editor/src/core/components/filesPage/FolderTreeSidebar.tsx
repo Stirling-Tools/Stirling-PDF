@@ -482,19 +482,20 @@ function TreeNodeRow({
                 e.stopPropagation();
                 onDeleteFolder(node.folder);
               }}
-              disabled={editsDisabled}
+              // Removing is supported for every kind — a mount's removal
+              // deletes the record and nothing on disk — so only the server
+              // kind's reachability gate applies here.
+              disabled={kind === "server" && !serverReachable}
               title={
-                kind === "local"
-                  ? t(
-                      "filesPage.localFolderManagedByDisk",
-                      "This folder is managed by its directory on disk.",
-                    )
-                  : editsDisabled
-                    ? offlineHint
-                    : undefined
+                kind === "server" && !serverReachable ? offlineHint : undefined
               }
             >
-              {t("filesPage.treeMenu.delete", "Delete folder")}
+              {kind === "local"
+                ? t(
+                    "filesPage.removeLocalFolder",
+                    "Remove (files stay on disk)",
+                  )
+                : t("filesPage.treeMenu.delete", "Delete folder")}
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>
