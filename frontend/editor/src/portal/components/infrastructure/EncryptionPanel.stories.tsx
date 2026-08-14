@@ -7,6 +7,9 @@ import type {
   MigrationStatus,
   StorageEncryptionStatus,
 } from "@portal/api/storageEncryption";
+// SectionHeader's styles live in Infrastructure.css, and the real view loads it,
+// so the stories load it too or they render larger than the app does.
+import "@portal/views/Infrastructure.css";
 
 const BASE = "/api/v1/admin/storage-encryption";
 

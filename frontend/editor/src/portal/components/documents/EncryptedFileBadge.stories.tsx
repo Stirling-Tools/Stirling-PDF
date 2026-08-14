@@ -2,6 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Card } from "@app/ui";
 import { EncryptedFileBadge } from "@portal/components/documents/EncryptedFileBadge";
 import "@portal/components/infrastructure/EncryptionPanel.css";
+// SectionHeader's styles live in Infrastructure.css, and the real view loads it,
+// so the stories load it too or they render larger than the app does.
+import "@portal/views/Infrastructure.css";
 
 const meta: Meta<typeof EncryptedFileBadge> = {
   title: "Portal/Documents/EncryptedFileBadge",
