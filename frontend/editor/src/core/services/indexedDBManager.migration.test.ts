@@ -399,4 +399,44 @@ describe("IndexedDB migration (FILES store)", () => {
       TARGET_VERSION,
     );
   });
+
+  test("v9 -> latest adds virtual_folders without touching files or folders", async () => {
+    // Seed a database shaped like the v9 schema: files + folders, no
+    // virtual_folders yet, with a row in each that must survive the upgrade.
+    await new Promise<void>((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 9);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        db.createObjectStore("files", { keyPath: "id" });
+        db.createObjectStore("folders", { keyPath: "id" });
+      };
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction(["files", "folders"], "readwrite");
+        tx.objectStore("files").put({ id: "file-1", folderId: null });
+        tx.objectStore("folders").put({ id: "folder-1", name: "Kept" });
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error);
+      };
+      req.onerror = () => reject(req.error);
+    });
+
+    await indexedDBManager.openDatabase(DATABASE_CONFIGS.FILES);
+    indexedDBManager.closeDatabase(DB_NAME);
+
+    const stores = await getObjectStoreNames();
+    expect(stores).toContain("virtual_folders");
+    expect(stores).toContain("files");
+    expect(stores).toContain("folders");
+
+    const rows = (await readAllFiles()) as Array<Record<string, unknown>>;
+    expect(rows.map((row) => row.id)).toEqual(["file-1"]);
+
+    expect(await indexedDBManager.getDatabaseVersion(DB_NAME)).toBe(
+      TARGET_VERSION,
+    );
+  });
 });
