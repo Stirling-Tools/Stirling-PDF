@@ -331,6 +331,7 @@ export function Integrations() {
     tableGroups.push({
       key: "soon",
       title: t("portal.integrations.comingSoonHeading"),
+      muted: true,
       rows: comingSoon.map((entry) => ({
         kind: "soon" as const,
         key: `s-${entry.type}`,

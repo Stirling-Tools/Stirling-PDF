@@ -160,6 +160,17 @@
   outline-offset: -0.125rem;
 }
 
+/* Non-actionable rows (e.g. coming-soon): de-emphasized to read as disabled.
+   Muting is done with accessible colours + a faded (non-text) icon rather than
+   row opacity, which would blend text under the WCAG contrast floor. */
+.sui-datatable__row--muted .sui-dtc__entity-name {
+  color: var(--c-text-muted);
+  font-weight: 500;
+}
+.sui-datatable__row--muted .sui-dtc__entity-icon {
+  opacity: 0.4;
+}
+
 .sui-datatable__chevron {
   display: inline-flex;
   color: var(--c-text-subtle);

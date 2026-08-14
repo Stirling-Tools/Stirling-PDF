@@ -66,6 +66,8 @@ export interface DataTableGroup<T> {
   rows: T[];
   /** Collapse rows past this count behind a "Show all N" toggle. */
   collapseAfter?: number;
+  /** Render the group's rows greyed/disabled (non-actionable, e.g. coming-soon). */
+  muted?: boolean;
 }
 
 export interface DataTableProps<T> {
@@ -313,7 +315,14 @@ export function DataTable<T extends RowData>({
         </tr>
       );
       const rowEls = shown.map((row) => (
-        <tr key={rowKey(row)} className="sui-datatable__row">
+        <tr
+          key={rowKey(row)}
+          className={
+            g.muted
+              ? "sui-datatable__row sui-datatable__row--muted"
+              : "sui-datatable__row"
+          }
+        >
           {columns.map((c) => (
             <td key={c.key} className={cellClass(c.align, c.nowrap, c.fit)}>
               {c.renderCell(row)}
