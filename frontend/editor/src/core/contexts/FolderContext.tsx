@@ -26,14 +26,17 @@ import React, {
 } from "react";
 
 import { folderStorage } from "@app/services/folderStorage";
+import { virtualFolderStorage } from "@app/services/virtualFolderStorage";
 import { folderSyncService } from "@app/services/folderSyncService";
 import {
   FolderBreadcrumbEntry,
   FolderId,
+  FolderKind,
   FolderRecord,
   FolderTreeNode,
   ROOT_FOLDER_ID,
   createFolderId,
+  folderKind,
   pickFolderColor,
 } from "@app/types/folder";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
@@ -88,9 +91,17 @@ interface FolderContextValue {
     ok: boolean;
     reason?: "endpoint-missing" | "network" | "server" | "client";
   }>;
+  /**
+   * Create a folder. With a parent, the kind is the parent's — a subtree is
+   * one kind throughout, since each kind has its own system of record and a
+   * mixed chain would mean an ancestry no single store can vouch for. At the
+   * root, `kind` decides (default: server when this install has server-backed
+   * storage, else virtual — organisation shouldn't need an account).
+   */
   createFolder: (
     name: string,
     parentFolderId?: FolderId | null,
+    kind?: FolderKind,
   ) => Promise<FolderRecord>;
   renameFolder: (id: FolderId, name: string) => Promise<FolderRecord | null>;
   moveFolder: (
@@ -269,9 +280,14 @@ export function FolderProvider({ children }: FolderProviderProps) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const all = await folderStorage.getAllFolders();
+      // Two systems of record: the server cache and the browser-owned virtual
+      // store. The UI sees one list; kind says which rules each row follows.
+      const [server, virtual] = await Promise.all([
+        folderStorage.getAllFolders(),
+        virtualFolderStorage.getAllFolders(),
+      ]);
       if (!mountedRef.current) return;
-      setFolders(all);
+      setFolders([...server, ...virtual]);
     } catch (err) {
       console.error("[FolderContext] cache read failed", err);
       if (mountedRef.current) {
@@ -342,7 +358,12 @@ export function FolderProvider({ children }: FolderProviderProps) {
         console.warn("[FolderContext] cache replace failed", cacheErr);
       }
       if (mountedRef.current) {
-        setFolders(remote);
+        // Server-wins applies to server rows only: virtual and local folders
+        // have no server copy, so a pull says nothing about them.
+        setFolders((prev) => [
+          ...remote,
+          ...prev.filter((f) => folderKind(f) !== "server"),
+        ]);
         setServerReachable(true);
         setError(null);
       }
@@ -519,11 +540,45 @@ export function FolderProvider({ children }: FolderProviderProps) {
     [bumpFolderRevision, folders, handleStaleFolder],
   );
 
+  /** The kind of an existing folder, or throw — mutations must never guess. */
+  const requireKind = useCallback(
+    (id: FolderId): FolderKind => {
+      const folder = foldersById.get(id);
+      if (!folder) throw new Error(`Unknown folder: ${id}`);
+      return folderKind(folder);
+    },
+    [foldersById],
+  );
+
   const createFolder = useCallback(
     async (
       name: string,
       parentFolderId: FolderId | null = currentFolderId,
+      kind?: FolderKind,
     ): Promise<FolderRecord> => {
+      // A child's kind is its parent's, always: one subtree, one system of
+      // record. Only a root-level create gets to choose.
+      const effectiveKind: FolderKind =
+        parentFolderId !== null
+          ? requireKind(parentFolderId)
+          : (kind ?? (storageBackedByServer ? "server" : "virtual"));
+      if (effectiveKind === "local") {
+        // Local folders mount a directory that already exists on disk; they
+        // are registered by the feature that watches them, not created here.
+        throw new Error("Cannot create folders inside a local folder");
+      }
+      if (effectiveKind === "virtual") {
+        const record = await virtualFolderStorage.createFolder(
+          name,
+          parentFolderId,
+        );
+        if (mountedRef.current) {
+          setFolders((prev) => [...prev, record]);
+          setError(null);
+        }
+        bumpFolderRevision();
+        return record;
+      }
       const color = pickFolderColor(name);
       // Client-side id makes server idempotency check safe on retry.
       const id = createFolderId();
@@ -549,11 +604,41 @@ export function FolderProvider({ children }: FolderProviderProps) {
       }
       return result;
     },
-    [currentFolderId, runFolderMutation],
+    [
+      currentFolderId,
+      requireKind,
+      storageBackedByServer,
+      bumpFolderRevision,
+      runFolderMutation,
+    ],
+  );
+
+  /** Apply a mutated non-server record to state; the store already has it. */
+  const applyOwnedRecord = useCallback(
+    (record: FolderRecord | null): FolderRecord | null => {
+      if (record !== null && mountedRef.current) {
+        setFolders((prev) => prev.map((f) => (f.id === record.id ? record : f)));
+        setError(null);
+      }
+      bumpFolderRevision();
+      return record;
+    },
+    [bumpFolderRevision],
   );
 
   const renameFolder = useCallback(
     async (id: FolderId, name: string) => {
+      const kind = requireKind(id);
+      if (kind === "local") {
+        // The record's name is the directory's name; renaming the directory
+        // is the filesystem's business, not Stirling's.
+        throw new Error("A local folder takes its name from its directory");
+      }
+      if (kind === "virtual") {
+        return applyOwnedRecord(
+          await virtualFolderStorage.updateFolder(id, { name }),
+        );
+      }
       return runFolderMutation(
         () => folderSyncService.update(id, { name }),
         async (record) => {
@@ -565,11 +650,25 @@ export function FolderProvider({ children }: FolderProviderProps) {
         id,
       );
     },
-    [runFolderMutation],
+    [applyOwnedRecord, requireKind, runFolderMutation],
   );
 
   const moveFolder = useCallback(
     async (id: FolderId, newParentId: FolderId | null) => {
+      const kind = requireKind(id);
+      // One subtree, one system of record: a folder can move to the root or
+      // under a parent of its own kind, never across.
+      if (newParentId !== null && requireKind(newParentId) !== kind) {
+        throw new Error("Folders can only move within their own kind");
+      }
+      if (kind === "local") {
+        throw new Error("A local folder sits where its directory sits");
+      }
+      if (kind === "virtual") {
+        return applyOwnedRecord(
+          await virtualFolderStorage.moveFolder(id, newParentId),
+        );
+      }
       return runFolderMutation(
         () =>
           folderSyncService.update(id, {
@@ -585,7 +684,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         id,
       );
     },
-    [runFolderMutation],
+    [applyOwnedRecord, requireKind, runFolderMutation],
   );
 
   const updateFolderAppearance = useCallback(
@@ -593,6 +692,20 @@ export function FolderProvider({ children }: FolderProviderProps) {
       id: FolderId,
       appearance: { color?: string; icon?: string | null },
     ) => {
+      const kind = requireKind(id);
+      if (kind === "local") {
+        // Nothing persists a local folder's cosmetics yet; its record lives
+        // with whichever feature mounted it.
+        throw new Error("Local folders cannot be recoloured yet");
+      }
+      if (kind === "virtual") {
+        return applyOwnedRecord(
+          await virtualFolderStorage.updateFolder(id, {
+            color: appearance.color,
+            icon: appearance.icon ?? undefined,
+          }),
+        );
+      }
       return runFolderMutation(
         () =>
           folderSyncService.update(id, {
@@ -608,11 +721,39 @@ export function FolderProvider({ children }: FolderProviderProps) {
         id,
       );
     },
-    [runFolderMutation],
+    [applyOwnedRecord, requireKind, runFolderMutation],
   );
 
   const deleteFolder = useCallback(
     async (id: FolderId): Promise<FolderId[]> => {
+      const kind = requireKind(id);
+      if (kind === "local") {
+        // Removing the mount is the mounting feature's job; deleting the
+        // directory itself is nobody's job but the user's, in their file
+        // explorer.
+        throw new Error("Local folders are removed by the feature that mounted them");
+      }
+      if (kind === "virtual") {
+        // Same shape as the server path below: subtree delete, strand-reset,
+        // then detach the files that pointed at any removed folder.
+        const removed = await virtualFolderStorage.deleteFolder(id);
+        const removedSet = new Set(removed);
+        if (mountedRef.current) {
+          setError(null);
+          setFolders((prev) => prev.filter((f) => !removedSet.has(f.id)));
+          if (
+            currentFolderId &&
+            shouldStrandedReset(currentFolderId, removedSet, folders)
+          ) {
+            setCurrentFolderId(ROOT_FOLDER_ID);
+          }
+        }
+        bumpFolderRevision();
+        await clearFolderForFiles(removed).catch((e) =>
+          console.warn("[FolderContext] virtual folder file cleanup", e),
+        );
+        return removed;
+      }
       // Custom path (not runFolderMutation) because we have two best-effort
       // cleanups to coordinate, and need to reset currentFolderId BEFORE the
       // cleanups so the user isn't stranded inside a tombstone if the cache
@@ -680,6 +821,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
       currentFolderId,
       folders,
       handleStaleFolder,
+      requireKind,
     ],
   );
 

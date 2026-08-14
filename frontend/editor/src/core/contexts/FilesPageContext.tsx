@@ -13,7 +13,12 @@ import { useTranslation } from "react-i18next";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
-import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
+import {
+  FolderId,
+  FolderRecord,
+  ROOT_FOLDER_ID,
+  folderKind,
+} from "@app/types/folder";
 import { fileStorage } from "@app/services/fileStorage";
 import { folderSyncService } from "@app/services/folderSyncService";
 import { uploadHistoryChain } from "@app/services/serverStorageUpload";
@@ -303,6 +308,47 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const localOnly = stubs.filter((s) => s.remoteStorageId == null);
       // Cloud list is mutated below with newly-promoted local files.
       const cloudFiles = stubs.filter((s) => s.remoteStorageId != null);
+
+      const targetFolder =
+        folderId === null ? null : folders.foldersById.get(folderId);
+      const targetKind = targetFolder ? folderKind(targetFolder) : null;
+
+      if (targetKind === "local") {
+        // A local folder's contents are whatever its directory contains on
+        // disk; putting an app file there means writing to the filesystem,
+        // which is a different feature from membership, not a move.
+        folders.setError(
+          t(
+            "filesPage.moveIntoLocalBlocked",
+            "Files can't be moved into a folder that mirrors a directory on disk.",
+          ),
+        );
+        return;
+      }
+
+      if (targetKind === "virtual") {
+        // A virtual folder is browser-owned, so membership is too: local
+        // files just point their folderId at it — no upload, no server call.
+        // Server files stay out: their folder membership belongs to the
+        // server, and the next sync would silently snap them back.
+        if (cloudFiles.length > 0) {
+          folders.setError(
+            t(
+              "filesPage.moveIntoVirtualCloudSkipped",
+              "{{count}} server file(s) were left in place — server files can't live in browser-only folders.",
+              { count: cloudFiles.length },
+            ),
+          );
+        }
+        if (localOnly.length > 0) {
+          await indexedDB.moveFilesToFolder(
+            localOnly.map((s) => s.id),
+            folderId,
+          );
+        }
+        await refresh();
+        return;
+      }
 
       if (folderId !== null && localOnly.length > 0) {
         // Per-file uploadHistoryChain so each gets its own remoteStorageId.
