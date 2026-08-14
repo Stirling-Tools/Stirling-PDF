@@ -34,7 +34,7 @@ import {
   type LatestBundleQuote,
 } from "@portal/billing/stripe";
 import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
-import "@app/ui/Surface.css";
+import "@portal/theme/surface.css";
 
 /**
  * Prepaid-bundle purchase modal for the Processor billing page — "12 months for
@@ -1167,7 +1167,7 @@ function CalculatorStep({
       </div>
 
       {/* Finer settings as progressive-disclosure rows — a "Change" blooms the card picker. */}
-      <div className="sui-surface portal-billing__bundle-rows">
+      <div className="portal-surface portal-billing__bundle-rows">
         {rows.map((row) => {
           const open = expanded === row.id;
           return (

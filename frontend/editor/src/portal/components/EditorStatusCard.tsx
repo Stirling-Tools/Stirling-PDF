@@ -10,7 +10,7 @@ import {
 } from "@portal/queries/infrastructure";
 import { type EditorInstance } from "@portal/api/editorDeploy";
 import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
-import "@app/ui/Surface.css";
+import "@portal/theme/surface.css";
 import "@portal/components/EditorStatusCard.css";
 
 /** The Stirling brand mark, drawn at the hero size. Decorative. */
@@ -121,7 +121,7 @@ export function EditorStatusCard({ footer }: EditorStatusCardProps) {
 
   return (
     <section
-      className="sui-surface portal-editor-hero"
+      className="portal-surface portal-editor-hero"
       aria-label={t("portal.home.editor.name")}
     >
       <div className="portal-editor-hero__row">

@@ -8,7 +8,7 @@ import {
   type CreatableConnectionType,
 } from "@portal/components/sources/connectionTypes";
 import { BrandMark } from "@portal/components/BrandMarks";
-import "@app/ui/Surface.css";
+import "@portal/theme/surface.css";
 import "@portal/components/sources/connections.css";
 
 /**
@@ -114,7 +114,7 @@ function Grid({
             key={type.id}
             type="button"
             className={
-              "sui-surface portal-conn-picker__card" +
+              "portal-surface portal-conn-picker__card" +
               (type.kind === "custom"
                 ? " portal-conn-picker__card--advanced"
                 : "")

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { Banner, EmptyState } from "@app/ui";
-import "@app/ui/Surface.css";
+import "@portal/theme/surface.css";
 import "@portal/components/pipelines/PipelineInspector.css";
 
 export interface PipelineInspectorProps {
@@ -41,7 +41,7 @@ export function PipelineInspector({
 
   if (message) {
     return (
-      <aside className="sui-surface portal-inspector">
+      <aside className="portal-surface portal-inspector">
         <EmptyState
           size="compact"
           title={message}
@@ -53,7 +53,7 @@ export function PipelineInspector({
 
   if (!children) {
     return (
-      <aside className="sui-surface portal-inspector">
+      <aside className="portal-surface portal-inspector">
         <EmptyState
           size="compact"
           title={t("portal.pipelines.inspector.noSelectionTitle")}
@@ -64,7 +64,7 @@ export function PipelineInspector({
   }
 
   return (
-    <aside className="sui-surface portal-inspector">
+    <aside className="portal-surface portal-inspector">
       {/* The title stays put while the settings scroll: it names the node being edited, which is
           what makes a long form legible. */}
       <div className="portal-inspector__title">

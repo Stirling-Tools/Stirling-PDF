@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { LockIcon } from "@portal/components/icons";
-import "@app/ui/Surface.css";
+import "@portal/theme/surface.css";
 
 /**
  * Card-form stand-in shown on the checkout payment step when no Stripe publishable key is configured
@@ -10,7 +10,7 @@ import "@app/ui/Surface.css";
 export function CardPlaceholder() {
   const { t } = useTranslation();
   return (
-    <div className="sui-surface portal-billing__card-placeholder">
+    <div className="portal-surface portal-billing__card-placeholder">
       <div className="portal-billing__card-placeholder-head">
         <span>{t("portal.billing.checkout.card.label", "Card details")}</span>
         <span className="portal-billing__card-placeholder-badge">Stripe</span>

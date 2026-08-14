@@ -7,7 +7,7 @@ import {
   useFileRunEventActions,
 } from "@portal/queries/fileRunEvents";
 import { FailureActionButtons } from "@portal/components/failures/FailureActionButtons";
-import "@app/ui/Surface.css";
+import "@portal/theme/surface.css";
 
 /**
  * Recorded policy and pipeline failures, with the triage actions the server offered
@@ -138,7 +138,7 @@ function FailureBody({
   return (
     <ul className="portal-failures__list">
       {events.map((event) => (
-        <li key={event.id} className="sui-surface portal-failures__row">
+        <li key={event.id} className="portal-surface portal-failures__row">
           <div className="portal-failures__meta">
             <StatusBadge tone={SEVERITY_TONE[event.severity]}>
               {t(
