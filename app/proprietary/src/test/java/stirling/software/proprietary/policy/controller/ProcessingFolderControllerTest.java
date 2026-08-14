@@ -162,7 +162,8 @@ class ProcessingFolderControllerTest {
                         folderRepository,
                         fileStorageService,
                         accessGuard,
-                        folderAccessGuard);
+                        folderAccessGuard,
+                        properties);
     }
 
     @Test
@@ -214,7 +215,7 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void aDiskFolderDeliversItsResultsIntoAppStorage() {
+    void aDiskFolderWritesItsResultsBesideTheOriginals() {
         var view =
                 controller
                         .save(
@@ -232,20 +233,19 @@ class ProcessingFolderControllerTest {
                         .getBody();
 
         Policy stored = policyStore.get(view.id()).orElseThrow();
-        // Results are Stirling files, not a "Stirling Processed" directory the user has to go
-        // find in their file explorer.
-        assertThat(stored.output().type()).isEqualTo("storage");
-        assertThat(stored.output().options()).doesNotContainKey("directory");
-        // Nothing to version: the input is a file on disk with no stored row behind it.
-        assertThat(stored.output().options()).containsEntry("mode", "new_file");
-        // The folder results land in has to be named, since it is also what the sink reads the
-        // owner from — a disk-fed run has no input file to inherit ownership from.
-        assertThat(stored.output().options().get("folderId")).isNotNull();
+        // Disk, not app storage: an install with no accounts and no file storage has nothing to
+        // store a result against, and the watched directory is the one place that always exists.
+        assertThat(stored.output().type()).isEqualTo("folder");
+        assertThat(stored.output().options().get("directory").toString())
+                .endsWith("Stirling Processed");
+        // The originals themselves are never written over.
+        assertThat(stored.output().options().get("directory").toString())
+                .isNotEqualTo("/tmp/Downloads");
     }
 
     @Test
-    void updatingADiskFolderKeepsDeliveringIntoTheSameStorageFolder() {
-        var created =
+    void aDiskFolderReportsTheDirectoryItWatchesNotWhereResultsGo() {
+        var view =
                 controller
                         .save(
                                 new ProcessingFolderController.SaveProcessingFolderRequest(
@@ -260,28 +260,11 @@ class ProcessingFolderControllerTest {
                                                         Map.of())),
                                         Map.of()))
                         .getBody();
-        Object first =
-                policyStore.get(created.id()).orElseThrow().output().options().get("folderId");
 
-        var updated =
-                controller
-                        .save(
-                                new ProcessingFolderController.SaveProcessingFolderRequest(
-                                        created.id(),
-                                        null,
-                                        "/tmp/Downloads",
-                                        true,
-                                        List.of(
-                                                new PipelineStep(
-                                                        "/api/v1/misc/flatten",
-                                                        Map.of("flattenOnlyForms", true),
-                                                        Map.of())),
-                                        Map.of()))
-                        .getBody();
-
-        // A second folder per save would scatter one folder's results across many.
-        assertThat(policyStore.get(updated.id()).orElseThrow().output().options())
-                .containsEntry("folderId", first);
+        // The client shows this as the folder's address, so it has to be the watched directory —
+        // reading it off the output made the folder advertise its own results subdirectory.
+        assertThat(view.directory()).isEqualTo("/tmp/Downloads");
+        assertThat(view.folderId()).isNull();
     }
 
     @Test

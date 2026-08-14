@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -30,6 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
@@ -86,6 +86,9 @@ public class ProcessingFolderController {
      */
     static final int DISK_SWEEP_LIMIT = 100;
 
+    /** Where a disk-backed folder's results land, relative to the directory it watches. */
+    static final String DISK_OUTPUT_SUBDIR = "Stirling Processed";
+
     /** The trigger that watches a directory for arrivals. */
     static final String WATCH_TRIGGER = "folder-watch";
 
@@ -99,6 +102,7 @@ public class ProcessingFolderController {
     private final FileStorageService fileStorageService;
     private final PolicyAccessGuard policyAccessGuard;
     private final FolderAccessGuard folderAccessGuard;
+    private final ApplicationProperties applicationProperties;
 
     /** What a processing folder looks like to the editor client. */
     public record ProcessingFolderView(
@@ -143,7 +147,7 @@ public class ProcessingFolderController {
                             + " directory does not exist or is outside the permitted folder roots,"
                             + " so the offer is never made where it could only fail.")
     public DownloadsSuggestion downloadsSuggestion() {
-        fileStorageService.requireAuthenticatedUser();
+        currentUserOrNull();
         Path downloads = Path.of(System.getProperty("user.home", ""), "Downloads");
         if (!Files.isDirectory(downloads)) {
             return new DownloadsSuggestion(downloads.toString(), false, 0, DISK_SWEEP_LIMIT);
@@ -175,11 +179,11 @@ public class ProcessingFolderController {
     @GetMapping
     @Operation(summary = "List the caller's processing folders")
     public List<ProcessingFolderView> list() {
-        User user = fileStorageService.requireAuthenticatedUser();
+        User user = currentUserOrNull();
         return policyAccessGuard.visibleFrom(policyStore).stream()
                 .filter(ProcessingFolderController::isProcessingFolder)
                 .filter(policy -> ownedBy(policy, user))
-                .map(ProcessingFolderController::toView)
+                .map(this::toView)
                 .toList();
     }
 
@@ -192,7 +196,7 @@ public class ProcessingFolderController {
                             + " ledger keeps already-processed files from re-running).")
     public ResponseEntity<ProcessingFolderView> save(
             @RequestBody SaveProcessingFolderRequest request) {
-        User user = fileStorageService.requireAuthenticatedUser();
+        User user = currentUserOrNull();
         boolean onDisk = request.directory() != null && !request.directory().isBlank();
         if (onDisk == (request.folderId() != null && !request.folderId().isBlank())) {
             throw new ResponseStatusException(
@@ -203,8 +207,6 @@ public class ProcessingFolderController {
         boolean isCreate = request.id() == null || request.id().isBlank();
         Policy existing = isCreate ? null : requireOwn(request.id(), user);
         String name = onDisk ? diskFolderName(request.directory()) : folder.getName();
-        Folder diskOutputFolder =
-                onDisk ? diskOutputFolderFor(existing, request.directory(), user) : null;
 
         Source source =
                 sourceStore.save(
@@ -236,7 +238,7 @@ public class ProcessingFolderController {
                                                 ? new TriggerConfig(WATCH_TRIGGER, Map.of())
                                                 : null)),
                         request.steps() == null ? List.of() : request.steps(),
-                        outputSpecFor(request, folder, diskOutputFolder),
+                        outputSpecFor(request, folder),
                         policyAccessGuard.teamForNewPolicy());
         try {
             policyValidator.validate(policy);
@@ -278,7 +280,7 @@ public class ProcessingFolderController {
                             + " Empty for a storage-backed folder, whose files are ordinary stored"
                             + " files.")
     public List<MountedFileView> files(@PathVariable String id) {
-        User user = fileStorageService.requireAuthenticatedUser();
+        User user = currentUserOrNull();
         Policy policy = requireOwn(id, user);
         Path directory = watchedDirectory(policy);
         if (directory == null) {
@@ -327,7 +329,7 @@ public class ProcessingFolderController {
     @PostMapping("/{id}/sweep")
     @Operation(summary = "Run the folder's pipeline against its current contents now")
     public ResponseEntity<SweepOutcome> sweep(@PathVariable String id) {
-        User user = fileStorageService.requireAuthenticatedUser();
+        User user = currentUserOrNull();
         Policy policy = requireOwn(id, user);
         return ResponseEntity.accepted().body(policyRunner.run(policy));
     }
@@ -339,7 +341,7 @@ public class ProcessingFolderController {
                     "Removes the pipeline and its source. The storage folder and every file in it"
                             + " are untouched.")
     public ResponseEntity<Void> delete(@PathVariable String id) {
-        User user = fileStorageService.requireAuthenticatedUser();
+        User user = currentUserOrNull();
         Policy policy = requireOwn(id, user);
         policyStore.delete(policy.id());
         policy.inputs().stream().map(PipelineInput::sourceId).forEach(sourceStore::delete);
@@ -389,7 +391,24 @@ public class ProcessingFolderController {
      * Login disabled (null owner) matches everything.
      */
     private static boolean ownedBy(Policy policy, User user) {
+        if (user == null) {
+            // No accounts on this install: the local operator owns everything.
+            return true;
+        }
         return policy.owner() == null || Objects.equals(policy.owner(), user.getUsername());
+    }
+
+    /**
+     * The caller, or null on an install with no accounts (desktop, single-user self-host), where
+     * there is no principal to demand and the local operator is the only user. Mirrors {@link
+     * PolicyAccessGuard#ownerForNewPolicy()}, which stamps a null owner in the same case —
+     * requiring a principal here would make the whole surface 401 on those installs.
+     */
+    private User currentUserOrNull() {
+        if (!applicationProperties.getSecurity().isEnableLogin()) {
+            return null;
+        }
+        return fileStorageService.requireAuthenticatedUser();
     }
 
     /** The pair's source id; the compose invariant is exactly one source per processing folder. */
@@ -431,21 +450,19 @@ public class ProcessingFolderController {
     }
 
     /**
-     * Where results go. Both kinds write into app storage, so a run's output is a first-class
-     * Stirling file the user can open and run tools on.
+     * Where results go. A storage-backed folder writes back into app storage. A disk-backed one
+     * writes into a subdirectory of the directory it watches, so the user's own files are never
+     * rewritten and the results sit next to them. That subdirectory is outside the source's
+     * (non-recursive) scan, and the sink records each output in the ledger, so a run's results are
+     * never mistaken for new work.
      *
-     * <p>A storage-backed folder writes back into itself. A disk-backed one writes into a storage
-     * folder created to receive its results — the watched directory holds the user's own files and
-     * is never written to, and storage is the only place an output is kept, so there is no second
-     * copy to diverge from. Outputs are recorded in the ledger before they become visible, so the
-     * producing policy can never claim its own output as new work.
+     * <p>Writing to disk rather than app storage is what makes this work on an install with no
+     * accounts and no file storage — a desktop app, where the server is the user's own machine and
+     * there is nothing to store a file against.
      *
-     * <p>TEMPORARY: results being separated from the directory they came from is a stopgap until
-     * files carry a link to their location on disk. Once that lands, the results belong in the
-     * mounted view alongside their originals, and this branch collapses back into the one above.
+     * <p>TEMPORARY: the subdirectory name is fixed. It is expected to become a per-folder option.
      */
-    private OutputSpec outputSpecFor(
-            SaveProcessingFolderRequest request, Folder folder, Folder diskOutputFolder) {
+    private OutputSpec outputSpecFor(SaveProcessingFolderRequest request, Folder folder) {
         Map<String, Object> options =
                 new HashMap<>(request.output() == null ? Map.of() : request.output());
         options.put(SURFACE_OPTION, SURFACE);
@@ -453,59 +470,29 @@ public class ProcessingFolderController {
             options.putIfAbsent("folderId", folder.getId().toString());
             return new OutputSpec("storage", options);
         }
-        options.put("folderId", diskOutputFolder.getId().toString());
-        // Nothing to version: the input is a file on disk with no stored row behind it, so each
-        // result has to land as a new file rather than replacing something.
-        options.put("mode", "new_file");
-        return new OutputSpec("storage", options);
+        options.put(
+                "directory",
+                Path.of(request.directory().trim()).resolve(DISK_OUTPUT_SUBDIR).toString());
+        return new OutputSpec("folder", options);
     }
 
-    /**
-     * The storage folder a disk-backed processing folder delivers its results into, created on
-     * first save and reused afterwards. Named after the directory being watched, since that is what
-     * the user is looking for when they go hunting for the results.
-     */
-    private Folder diskOutputFolderFor(Policy existing, String directory, User user) {
-        UUID reused = storageFolderIdOf(existing);
-        if (reused != null) {
-            Optional<Folder> found = folderRepository.findById(reused);
-            if (found.isPresent()) {
-                return found.get();
-            }
-        }
-        Folder created = new Folder();
-        created.setId(UUID.randomUUID());
-        created.setOwner(user);
-        created.setName(diskFolderName(directory));
-        return folderRepository.saveAndFlush(created);
-    }
-
-    /** The storage folder a policy already delivers into, or null if it has none. */
-    private static UUID storageFolderIdOf(Policy policy) {
-        if (policy == null || policy.output() == null) {
-            return null;
-        }
-        Object raw = policy.output().options().get("folderId");
-        if (raw == null || String.valueOf(raw).isBlank()) {
-            return null;
-        }
-        try {
-            return UUID.fromString(String.valueOf(raw));
-        } catch (IllegalArgumentException notAnId) {
-            return null;
-        }
-    }
-
-    private static ProcessingFolderView toView(Policy policy) {
+    private ProcessingFolderView toView(Policy policy) {
         return toView(policy, 0, 0);
     }
 
-    private static ProcessingFolderView toView(
-            Policy policy, int startedRuns, int alreadyProcessed) {
+    /**
+     * What the folder watches comes from its source, never from its output. Reading it off the
+     * output made a disk-backed folder advertise the subdirectory its results go into as its own
+     * address, and a client that groups by folderId pick up the output folder instead of the
+     * watched one.
+     */
+    private ProcessingFolderView toView(Policy policy, int startedRuns, int alreadyProcessed) {
         Map<String, Object> output = new HashMap<>(policy.output().options());
         output.remove(SURFACE_OPTION);
-        Object folderId = policy.output().options().get("folderId");
-        Object directory = policy.output().options().get("directory");
+        String sourceId = soleSourceId(policy);
+        Source source = sourceId == null ? null : sourceStore.get(sourceId).orElse(null);
+        Object folderId = source == null ? null : source.options().get("folderId");
+        Object directory = source == null ? null : source.options().get("directory");
         return new ProcessingFolderView(
                 policy.id(),
                 folderId == null ? null : folderId.toString(),
