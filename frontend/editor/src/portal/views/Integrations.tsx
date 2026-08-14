@@ -211,13 +211,13 @@ export function Integrations() {
     return counts;
   }, [catalogue]);
 
-  function openCreate(typeId: string) {
+  const openCreate = useCallback((typeId: string) => {
     setModal({ open: true, editing: null, fixedTypeId: typeId });
-  }
+  }, []);
 
-  function openEdit(connection: IntegrationConfig) {
+  const openEdit = useCallback((connection: IntegrationConfig) => {
     setModal({ open: true, editing: connection });
-  }
+  }, []);
 
   const remove = useCallback(
     async (connection: IntegrationConfig) => {
@@ -238,111 +238,121 @@ export function Integrations() {
 
   const isLoading = connections === null;
 
-  const worksWithText = (list: WorksWith[]) =>
-    list.map((w) => t(`portal.integrations.worksWith.${w}`)).join(", ");
+  const worksWithText = useCallback(
+    (list: WorksWith[]) =>
+      list.map((w) => t(`portal.integrations.worksWith.${w}`)).join(", "),
+    [t],
+  );
 
-  const columns: DataTableColumn<IntegrationRow>[] = [
-    column.entity({
-      key: "integration",
-      header: t("portal.integrations.table.integration"),
-      icon: (r) => <BrandMark id={r.brandId} size={22} />,
-      primary: (r) => r.title,
-      note: (r) => r.subtitle || undefined,
-    }),
-    column.text({
-      key: "worksWith",
-      header: t("portal.integrations.table.worksWith"),
-      get: (r) => worksWithText(r.worksWith),
-    }),
-    column.actions({
-      key: "actions",
-      get: (r) => {
-        if (r.kind === "instance") {
-          return r.canManage
-            ? [
-                {
-                  label: t("portal.connections.edit"),
-                  onClick: () => openEdit(r.connection),
-                },
-                {
-                  label: t("portal.connections.delete"),
-                  tone: "danger",
-                  loading: busy,
-                  onClick: () => void remove(r.connection),
-                },
-              ]
-            : [];
-        }
-        if (r.kind === "available") {
-          return [
-            {
-              label: t("portal.integrations.connect"),
-              onClick: () => openCreate(r.typeId),
-            },
-          ];
-        }
-        return [];
-      },
-    }),
-  ];
-
-  const tableGroups: DataTableGroup<IntegrationRow>[] = [];
-  for (const { type, connections: list } of connectedGroups) {
-    tableGroups.push({
-      key: `connected-${type.id}`,
-      title: t(type.labelKey),
-      meta:
-        list.length > 1
-          ? t("portal.integrations.connectionCount", { count: list.length })
-          : t("portal.integrations.status.connected"),
-      actions: [
-        {
-          label: t("portal.integrations.connect"),
-          onClick: () => openCreate(type.id),
+  const columns = useMemo<DataTableColumn<IntegrationRow>[]>(
+    () => [
+      column.entity({
+        key: "integration",
+        header: t("portal.integrations.table.integration"),
+        icon: (r) => <BrandMark id={r.brandId} size={22} />,
+        primary: (r) => r.title,
+        note: (r) => r.subtitle || undefined,
+      }),
+      column.text({
+        key: "worksWith",
+        header: t("portal.integrations.table.worksWith"),
+        get: (r) => worksWithText(r.worksWith),
+      }),
+      column.actions({
+        key: "actions",
+        get: (r) => {
+          if (r.kind === "instance") {
+            return r.canManage
+              ? [
+                  {
+                    label: t("portal.connections.edit"),
+                    disabled: busy,
+                    onClick: () => openEdit(r.connection),
+                  },
+                  {
+                    label: t("portal.connections.delete"),
+                    tone: "danger",
+                    loading: busy,
+                    onClick: () => void remove(r.connection),
+                  },
+                ]
+              : [];
+          }
+          if (r.kind === "available") {
+            return [
+              {
+                label: t("portal.integrations.connect"),
+                onClick: () => openCreate(r.typeId),
+              },
+            ];
+          }
+          return [];
         },
-      ],
-      rows: list.map((c) => ({
-        kind: "instance" as const,
-        key: `i-${c.id}`,
-        brandId: type.id,
-        title: c.name,
-        subtitle: connectionDetail(c),
-        worksWith: worksWith(type),
-        connection: c,
-        canManage: !!c.canManage,
-      })),
-    });
-  }
-  if (availableTypes.length > 0) {
-    tableGroups.push({
-      key: "available",
-      title: t("portal.integrations.availableHeading"),
-      rows: availableTypes.map((type) => ({
-        kind: "available" as const,
-        key: `a-${type.id}`,
-        brandId: type.id,
+      }),
+    ],
+    [t, busy, remove, openEdit, openCreate, worksWithText],
+  );
+
+  const tableGroups = useMemo<DataTableGroup<IntegrationRow>[]>(() => {
+    const gs: DataTableGroup<IntegrationRow>[] = [];
+    for (const { type, connections: list } of connectedGroups) {
+      gs.push({
+        key: `connected-${type.id}`,
         title: t(type.labelKey),
-        subtitle: t(type.descriptionKey),
-        worksWith: worksWith(type),
-        typeId: type.id,
-      })),
-    });
-  }
-  if (comingSoon.length > 0) {
-    tableGroups.push({
-      key: "soon",
-      title: t("portal.integrations.comingSoonHeading"),
-      muted: true,
-      rows: comingSoon.map((entry) => ({
-        kind: "soon" as const,
-        key: `s-${entry.type}`,
-        brandId: entry.type,
-        title: t(entry.labelKey),
-        subtitle: t(entry.descriptionKey),
-        worksWith: ["sources"],
-      })),
-    });
-  }
+        meta:
+          list.length > 1
+            ? t("portal.integrations.connectionCount", { count: list.length })
+            : t("portal.integrations.status.connected"),
+        actions: [
+          {
+            label: t("portal.integrations.connect"),
+            onClick: () => openCreate(type.id),
+          },
+        ],
+        rows: list.map((c) => ({
+          kind: "instance" as const,
+          key: `i-${c.id}`,
+          brandId: type.id,
+          title: c.name,
+          subtitle: connectionDetail(c),
+          worksWith: worksWith(type),
+          connection: c,
+          canManage: !!c.canManage,
+        })),
+      });
+    }
+    if (availableTypes.length > 0) {
+      gs.push({
+        key: "available",
+        title: t("portal.integrations.availableHeading"),
+        rows: availableTypes.map((type) => ({
+          kind: "available" as const,
+          key: `a-${type.id}`,
+          brandId: type.id,
+          title: t(type.labelKey),
+          subtitle: t(type.descriptionKey),
+          worksWith: worksWith(type),
+          typeId: type.id,
+        })),
+      });
+    }
+    if (comingSoon.length > 0) {
+      gs.push({
+        key: "soon",
+        title: t("portal.integrations.comingSoonHeading"),
+        muted: true,
+        rows: comingSoon.map((entry) => ({
+          kind: "soon" as const,
+          key: `s-${entry.type}`,
+          brandId: entry.type,
+          title: t(entry.labelKey),
+          subtitle: t(entry.descriptionKey),
+          worksWith: ["sources"],
+        })),
+      });
+    }
+    return gs;
+  }, [connectedGroups, availableTypes, comingSoon, t, openCreate]);
 
   return (
     <div className="portal-integrations">
