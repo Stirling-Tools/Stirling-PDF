@@ -4142,6 +4142,13 @@ clear = "Clear filter"
 label = "Filter files by name"
 placeholder = "Filter files…"
 
+[filesPage.folderKindChoice]
+label = "Where should this folder live?"
+server = "On the server"
+serverHint = "Synced to your account and available wherever you sign in."
+virtual = "In this browser"
+virtualHint = "Only on this device. Works offline; holds files that are on this device too."
+
 [filesPage.folderKind]
 local = "Local folder"
 virtual = "Browser folder"

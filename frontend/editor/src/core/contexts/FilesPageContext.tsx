@@ -15,6 +15,7 @@ import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
 import {
   FolderId,
+  FolderKind,
   FolderRecord,
   ROOT_FOLDER_ID,
   folderKind,
@@ -110,7 +111,7 @@ interface FilesPageContextValue {
   openNewFolderDialog: (parentId?: FolderId | null) => void;
   openRenameFolderDialog: (folder: FolderRecord) => void;
   closeFolderNameDialog: () => void;
-  submitFolderName: (name: string) => Promise<void>;
+  submitFolderName: (name: string, kind?: FolderKind) => Promise<void>;
 
   moveDialog: MoveDialogState;
   promptMoveFiles: (fileIds: FileId[]) => void;
@@ -263,11 +264,14 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const submitFolderName = useCallback(
-    async (name: string) => {
+    async (name: string, kind?: FolderKind) => {
       if (folderNameDialog.mode === "new") {
+        // The kind only matters at the root; a subfolder inherits its
+        // parent's kind in the context regardless of what is passed.
         await folders.createFolder(
           name,
           folderNameDialog.parentId ?? folders.currentFolderId,
+          kind,
         );
       } else if (
         folderNameDialog.mode === "rename" &&

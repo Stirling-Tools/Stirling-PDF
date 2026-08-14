@@ -816,6 +816,27 @@ export default function FileManagerView() {
     [selectedFiles, fileMap],
   );
 
+  // Kinds a ROOT-level New folder may be. Server needs storage, a session,
+  // and a reachable backend; virtual needs nothing — that's its point. A
+  // subfolder gets no choice (it inherits its parent's kind), and a single
+  // option renders no chooser.
+  const newFolderKindOptions = useMemo(() => {
+    const serverViable =
+      uploadEnabled && !signInRequiredReason && folders.serverReachable;
+    const creatingAtRoot =
+      folderNameDialog.mode === "new" &&
+      (folderNameDialog.parentId ?? null) === null;
+    if (!creatingAtRoot) return undefined;
+    return serverViable
+      ? (["server", "virtual"] as const)
+      : (["virtual"] as const);
+  }, [
+    uploadEnabled,
+    signInRequiredReason,
+    folders.serverReachable,
+    folderNameDialog,
+  ]);
+
   // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
     // Guests can't use cloud folders at all - say so before any tab/storage
@@ -1631,6 +1652,9 @@ export default function FileManagerView() {
           folderNameDialog.mode === "rename"
             ? t("filesPage.save", "Save")
             : t("filesPage.create", "Create")
+        }
+        kindOptions={
+          newFolderKindOptions ? [...newFolderKindOptions] : undefined
         }
         onClose={closeFolderNameDialog}
         onSubmit={submitFolderName}
