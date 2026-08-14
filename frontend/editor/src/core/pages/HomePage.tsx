@@ -591,7 +591,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const newFolderDisabledReason = !folders.serverReachable
       ? t(
           "filesPage.newFolderStorageDisabled",
-          "Server folder storage isn't enabled. Ask your admin to turn it on.",
+          "Server folder storage isn't enabled.",
         )
       : null;
 
