@@ -53,19 +53,40 @@ export function DownloadsProcessingWizard({
 
   // Only offer where it can actually work: Downloads must exist, be a permitted folder root, and
   // have something in it worth processing.
+  //
+  // Asked repeatedly rather than once, because the window can open before the backend is
+  // reachable — on a desktop install the app and its bundled server start together, and the UI
+  // always wins that race. A single attempt would fail on every cold start and the offer would
+  // simply never appear. Gives up after a bounded wait so an install where the answer is a
+  // genuine "no" stops asking.
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
-    void fetchDownloadsSuggestion()
-      .then((next) => {
-        if (!cancelled && next.available && next.pdfCount > 0)
-          setSuggestion(next);
-      })
-      .catch(() => {
-        // Storage or folder access off, or not authenticated: make no offer at all.
-      });
+    let attempts = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const ask = () => {
+      void fetchDownloadsSuggestion()
+        .then((next) => {
+          if (cancelled) return;
+          if (next.available && next.pdfCount > 0) {
+            setSuggestion(next);
+            return;
+          }
+          // A definite answer: Downloads is missing, not permitted, or empty. Nothing to wait for.
+        })
+        .catch(() => {
+          // Backend not up yet, storage/folder access off, or not authenticated. Only the first of
+          // those resolves itself, so retry a while before concluding there is no offer.
+          if (cancelled || (attempts += 1) >= 20) return;
+          timer = setTimeout(ask, 1500);
+        });
+    };
+    ask();
+
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
   }, [active]);
 
