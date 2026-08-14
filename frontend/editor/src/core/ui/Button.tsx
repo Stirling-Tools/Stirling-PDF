@@ -104,8 +104,8 @@ function ButtonGroup({
   );
 }
 
-const FAT_HEIGHT = "3rem";
-const FAT_PADDING_X = "xl" satisfies ControlPadding;
+const FAT_HEIGHT = "2.75rem";
+const FAT_PADDING_X = "lg" satisfies ControlPadding;
 
 const MANTINE_VARIANT: Record<ButtonVariant, string> = {
   primary: "filled",

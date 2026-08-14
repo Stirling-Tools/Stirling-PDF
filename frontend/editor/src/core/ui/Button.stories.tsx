@@ -204,7 +204,7 @@ export const Padding: Story = {
   ),
 };
 
-/** `fat` is the chunky CTA treatment: 3rem tall, 1.5rem side padding, 0.75rem corners. */
+/** `fat` is the chunky CTA treatment: 2.75rem tall, 1.25rem side padding, 0.75rem corners. */
 export const Fat: Story = {
   render: () => (
     <div
