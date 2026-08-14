@@ -46,10 +46,33 @@ export async function listDirectory(
   return files.slice(0, LIST_CAP);
 }
 
+/**
+ * The filesystem gives back bytes and a name, never a MIME type — but
+ * everything downstream branches on File.type (the thumbnail generator's PDF
+ * path, the workbench's format handling), and an untyped File silently takes
+ * every "unknown format" branch. Recover the type from the extension.
+ */
+const MIME_BY_EXTENSION: Record<string, string> = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  bmp: "image/bmp",
+  svg: "image/svg+xml",
+};
+
+function mimeForName(name: string): string {
+  const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
+  return MIME_BY_EXTENSION[ext] ?? "";
+}
+
 export async function readDiskFile(entry: DiskFileEntry): Promise<File | null> {
   if (!canListDirectory) return null;
   const bytes = await readFile(entry.path);
   return new File([new Uint8Array(bytes)], entry.name, {
+    type: mimeForName(entry.name),
     lastModified: entry.lastModified || undefined,
   });
 }
