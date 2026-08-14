@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import ComputerIcon from "@mui/icons-material/Computer";
+import StorageIcon from "@mui/icons-material/Storage";
 import CloudDoneIcon from "@mui/icons-material/CloudDone";
 import GroupIcon from "@mui/icons-material/Group";
 
@@ -40,6 +41,10 @@ const styles = {
     background: "color-mix(in srgb, var(--c-primary) 16%, transparent)",
     color: "var(--c-accent-text)",
   },
+  disk: {
+    background: "color-mix(in srgb, var(--color-green-dark) 16%, transparent)",
+    color: "var(--color-green-dark)",
+  },
   shared: {
     background:
       "color-mix(in srgb, var(--mantine-color-orange-6) 16%, transparent)",
@@ -69,8 +74,11 @@ export function FileOriginBadge({
       case "disk":
         return {
           label: t("filesPage.origin.disk", "On disk"),
-          icon: <ComputerIcon style={{ fontSize: "0.85rem" }} />,
-          style: styles.local,
+          // Deliberately NOT the Computer icon: "local" (this browser) wears
+          // that one, and in compact mode the icon is the whole badge — two
+          // origins sharing a glyph read as the same place.
+          icon: <StorageIcon style={{ fontSize: "0.85rem" }} />,
+          style: styles.disk,
           tooltip: t(
             "filesPage.origin.diskHint",
             "A file in the mounted folder on your disk",
