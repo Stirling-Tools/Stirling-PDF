@@ -41,10 +41,6 @@ const styles = {
     background: "color-mix(in srgb, var(--c-primary) 16%, transparent)",
     color: "var(--c-accent-text)",
   },
-  disk: {
-    background: "color-mix(in srgb, var(--color-green-dark) 16%, transparent)",
-    color: "var(--color-green-dark)",
-  },
   shared: {
     background:
       "color-mix(in srgb, var(--mantine-color-orange-6) 16%, transparent)",
@@ -78,7 +74,7 @@ export function FileOriginBadge({
           // that one, and in compact mode the icon is the whole badge — two
           // origins sharing a glyph read as the same place.
           icon: <StorageIcon style={{ fontSize: "0.85rem" }} />,
-          style: styles.disk,
+          style: styles.local,
           tooltip: t(
             "filesPage.origin.diskHint",
             "A file in the mounted folder on your disk",
