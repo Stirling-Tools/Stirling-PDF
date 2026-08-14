@@ -8,7 +8,8 @@ import GroupIcon from "@mui/icons-material/Group";
 import { FileOrigin } from "@app/components/filesPage/fileOrigin";
 
 interface FileOriginBadgeProps {
-  origin: FileOrigin;
+  /** "disk" is a display-only origin for files listed from a mounted directory. */
+  origin: FileOrigin | "disk";
   /** Compact (icon-only) vs full (icon + text). */
   compact?: boolean;
 }
@@ -57,6 +58,16 @@ export function FileOriginBadge({
           tooltip: t(
             "filesPage.origin.cloudHint",
             "Stored on the Stirling server",
+          ),
+        };
+      case "disk":
+        return {
+          label: t("filesPage.origin.disk", "On disk"),
+          icon: <ComputerIcon style={{ fontSize: "0.85rem" }} />,
+          style: styles.local,
+          tooltip: t(
+            "filesPage.origin.diskHint",
+            "A file in the mounted folder on your disk",
           ),
         };
       case "shared-with-me":

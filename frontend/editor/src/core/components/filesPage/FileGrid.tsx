@@ -1590,8 +1590,9 @@ export { ROOT_FOLDER_ID };
 /**
  * A file listed straight off a mounted directory. Nothing behind it is
  * stored: no stub, no selection, no move/rename/delete — the disk owns the
- * file, and the one thing Stirling adds is "Open", which loads the bytes
- * into the workbench.
+ * file, and the one thing Stirling adds is "Add to workspace", which loads
+ * the bytes in. Visually it is a normal file card wearing an "On disk"
+ * origin badge, because to the user it is simply a file.
  */
 function DiskFileCard({
   entry,
@@ -1601,7 +1602,10 @@ function DiskFileCard({
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
-  const isPdf = entry.name.toLowerCase().endsWith(".pdf");
+  const extension = entry.name.includes(".")
+    ? entry.name.split(".").pop()!.toUpperCase()
+    : "";
+  const isPdf = extension === "PDF";
   return (
     <div
       className="files-page-card"
@@ -1616,38 +1620,50 @@ function DiskFileCard({
       <div className="files-page-card-thumb">
         <div className="files-page-card-thumb-fallback">
           {isPdf ? (
-            <PictureAsPdfIcon fontSize="large" />
+            <PictureAsPdfIcon style={{ fontSize: "2rem" }} />
           ) : (
-            <InsertDriveFileIcon fontSize="large" />
+            <InsertDriveFileIcon style={{ fontSize: "2rem" }} />
           )}
+          <span>{extension || "FILE"}</span>
+        </div>
+        <div className="files-page-card-origin">
+          <FileOriginBadge origin="disk" compact />
         </div>
       </div>
       <div className="files-page-card-body">
-        <div className="files-page-card-title">{entry.name}</div>
+        <div className="files-page-card-name" title={entry.name}>
+          {entry.name}
+        </div>
         <div className="files-page-card-meta">
-          {formatFileSize(entry.sizeBytes)}
+          <span>{formatFileSize(entry.sizeBytes)}</span>
+          <span>·</span>
+          <span>{getFileDate({ lastModified: entry.lastModified })}</span>
         </div>
       </div>
-      <Menu shadow="md" position="bottom-end" withinPortal>
-        <Menu.Target>
-          <ActionIcon
-            variant="tertiary"
-            size="sm"
-            onClick={(e) => e.stopPropagation()}
-            aria-label={t("filesPage.fileMenu", "File actions")}
-          >
-            <MoreVertIcon fontSize="small" />
-          </ActionIcon>
-        </Menu.Target>
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<OpenInNewIcon fontSize="small" />}
-            onClick={onOpen}
-          >
-            {t("filesPage.open", "Open")}
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+      <div className="files-page-card-actions">
+        <Menu shadow="md" position="bottom-end" withinPortal>
+          <Menu.Target>
+            <ActionIcon
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={t("filesPage.fileMenu", "File actions")}
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<OpenInNewIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpen();
+              }}
+            >
+              {t("filesPage.addToWorkspace", "Add to workspace")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </div>
     </div>
   );
 }
@@ -1678,14 +1694,29 @@ function DiskFileRow({
       <span aria-hidden="true" />
       <span
         role="gridcell"
-        style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          minWidth: 0,
+        }}
       >
-        {entry.name.toLowerCase().endsWith(".pdf") ? (
+        {ext === "PDF" ? (
           <PictureAsPdfIcon fontSize="small" />
         ) : (
           <InsertDriveFileIcon fontSize="small" />
         )}
-        {entry.name}
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={entry.name}
+        >
+          {entry.name}
+        </span>
+        <FileOriginBadge origin="disk" compact />
       </span>
       <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
       <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>
@@ -1709,7 +1740,7 @@ function DiskFileRow({
               leftSection={<OpenInNewIcon fontSize="small" />}
               onClick={onOpen}
             >
-              {t("filesPage.open", "Open")}
+              {t("filesPage.addToWorkspace", "Add to workspace")}
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>

@@ -499,8 +499,20 @@ export default function FileManagerView() {
     // subfolders don't apply there.
     if (currentLocalDirectory) {
       const needle = search.toLowerCase();
+      const compare: Record<
+        string,
+        (a: DiskFileEntry, b: DiskFileEntry) => number
+      > = {
+        "name-asc": (a, b) => a.name.localeCompare(b.name),
+        "name-desc": (a, b) => b.name.localeCompare(a.name),
+        "size-asc": (a, b) => a.sizeBytes - b.sizeBytes,
+        "size-desc": (a, b) => b.sizeBytes - a.sizeBytes,
+        "modified-asc": (a, b) => a.lastModified - b.lastModified,
+        "modified-desc": (a, b) => b.lastModified - a.lastModified,
+      };
       return diskEntries
         .filter((disk) => !needle || disk.name.toLowerCase().includes(needle))
+        .sort(compare[filesPage.sortMode] ?? compare["modified-desc"]!)
         .map<FilesPageEntry>((disk) => ({ kind: "diskFile", disk }));
     }
     return [
@@ -530,6 +542,7 @@ export default function FileManagerView() {
     currentFolderId,
     currentLocalDirectory,
     diskEntries,
+    filesPage.sortMode,
     pathForFolderId,
   ]);
 
@@ -954,11 +967,19 @@ export default function FileManagerView() {
         "Switch to All or Cloud to create folders.",
       );
     }
+    // Inside a mounted folder there is nothing to create: its contents ARE
+    // the directory, and subfolders are made in the file explorer.
+    if (currentLocalDirectory) {
+      return t(
+        "filesPage.newFolderInLocalUnavailable",
+        "This folder mirrors a directory on disk — create subfolders in your file explorer.",
+      );
+    }
     // Reachability and storage no longer disable the button: those only rule
     // out the server option, which the dialog now greys out individually —
     // browser and disk folders remain creatable regardless.
     return null;
-  }, [currentTab, t]);
+  }, [currentTab, currentLocalDirectory, t]);
 
   return (
     <div className="files-page" ref={dropZoneRef}>
