@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import {
+  CLASSIFY_OPERATION,
   classificationDefaults,
   deleteProcessingFolder,
   fetchProcessingFolders,
@@ -7,9 +8,17 @@ import {
   sweepProcessingFolder,
   type ProcessingFolder,
 } from "@app/services/processingFolderApi";
+import { folderKind, type FolderRecord } from "@app/types/folder";
 // The core stub declares the contract this shadows; import it from @core
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
 import type {
+  ProcessingFolderState,
+  ProcessingFoldersApi,
+} from "@core/hooks/useProcessingFolders";
+
+// Consumers import the contract's types from @app, which resolves here in
+// builds that carry this shadow — so it must re-export what the stub declares.
+export type {
   ProcessingFolderState,
   ProcessingFoldersApi,
 } from "@core/hooks/useProcessingFolders";
@@ -57,9 +66,20 @@ function load(force = false): Promise<void> {
 }
 
 /**
- * Processing folders for the files page: which folders run a pipeline, which are mounted from disk,
- * and the actions to attach, detach, or re-run one. Backed by `/api/v1/processing-folders`, which
- * composes the source + policy pair.
+ * A directory as a comparison key. A mount and its processing record are
+ * created from the same picker string, but one side may carry a trailing
+ * separator the other lost to trimming.
+ */
+function directoryKey(directory: string): string {
+  return directory.trim().replace(/[/\\]+$/, "");
+}
+
+/**
+ * Processing folders for the files page: which folders run a pipeline, and the actions to attach,
+ * detach, or re-run one. The record's identity is kind-shaped — a server folder is matched by its
+ * storage folderId, a mounted folder by the directory it mirrors — so the same folder row finds its
+ * processing state whichever side of that split it lives on. Backed by
+ * `/api/v1/processing-folders`, which composes the source + policy pair.
  *
  * Every mutation reloads rather than patching locally, so the list always reflects what the server
  * actually composed — and because the list is shared, every consumer sees it at once.
@@ -71,60 +91,90 @@ export function useProcessingFolders(): ProcessingFoldersApi {
     void load();
   }, []);
 
-  // Storage-backed folders key by the storage folder they mark; disk-backed ones have no storage
-  // folder at all and are surfaced as mounted entries instead.
-  const byFolderId = useMemo(() => {
-    const map = new Map<string, ProcessingFolderState>();
-    for (const folder of current) {
-      if (!folder.folderId) continue;
-      map.set(folder.folderId, {
-        id: folder.id,
-        enabled: folder.enabled,
-        name: folder.name,
-      });
-    }
-    return map;
-  }, [current]);
-
-  const mounted = useMemo(
-    () =>
-      current
-        .filter((folder) => Boolean(folder.directory))
-        .map((folder) => ({
-          id: folder.id,
-          enabled: folder.enabled,
-          directory: folder.directory,
-          // "Processing folder: Downloads" is the record's name; the folder is just "Downloads".
-          name: folder.name.replace(/^Processing folder:\s*/, ""),
-        })),
+  const recordFor = useCallback(
+    (folder: FolderRecord): ProcessingFolder | undefined => {
+      switch (folderKind(folder)) {
+        case "local": {
+          if (!folder.directory) return undefined;
+          const key = directoryKey(folder.directory);
+          return current.find(
+            (record) =>
+              record.directory && directoryKey(record.directory) === key,
+          );
+        }
+        case "virtual":
+          // Browser-owned folders process client-side; the server has no record of them.
+          return undefined;
+        default:
+          return current.find((record) => record.folderId === folder.id);
+      }
+    },
     [current],
   );
 
-  const enable = useCallback(async (folderId: string) => {
-    await saveProcessingFolder(classificationDefaults(folderId));
+  const stateFor = useCallback(
+    (folder: FolderRecord): ProcessingFolderState | undefined => {
+      const record = recordFor(folder);
+      return record ? { id: record.id, enabled: record.enabled } : undefined;
+    },
+    [recordFor],
+  );
+
+  const enabledFolderIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const record of current) {
+      if (record.enabled && record.folderId) ids.add(record.folderId);
+    }
+    return ids as ReadonlySet<string>;
+  }, [current]);
+
+  const anyEnabled = useMemo(
+    () => current.some((record) => record.enabled),
+    [current],
+  );
+
+  const enable = useCallback(async (folder: FolderRecord) => {
+    switch (folderKind(folder)) {
+      case "local":
+        await saveProcessingFolder({
+          directory: folder.directory ?? "",
+          enabled: true,
+          steps: [
+            { operation: CLASSIFY_OPERATION, parameters: {}, assets: {} },
+          ],
+        });
+        break;
+      case "virtual":
+        throw new Error("Processing is not available for browser folders yet.");
+      default:
+        await saveProcessingFolder(classificationDefaults(folder.id));
+    }
     await load(true);
   }, []);
 
   const disable = useCallback(
-    async (folderId: string) => {
-      const existing = current.find((f) => f.folderId === folderId);
+    async (folder: FolderRecord) => {
+      const existing = recordFor(folder);
       if (!existing) return;
       await deleteProcessingFolder(existing.id);
       await load(true);
     },
-    [current],
+    [recordFor],
   );
 
   const sweep = useCallback(
-    async (folderId: string) => {
-      const existing = current.find((f) => f.folderId === folderId);
+    async (folder: FolderRecord) => {
+      const existing = recordFor(folder);
       if (!existing) return;
       await sweepProcessingFolder(existing.id);
     },
-    [current],
+    [recordFor],
   );
 
-  return { byFolderId, mounted, enable, disable, sweep };
+  return useMemo(
+    () => ({ stateFor, enabledFolderIds, anyEnabled, enable, disable, sweep }),
+    [stateFor, enabledFolderIds, anyEnabled, enable, disable, sweep],
+  );
 }
 
 /** Reload the shared list — for a caller that created a folder outside these actions. */

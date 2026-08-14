@@ -58,7 +58,9 @@ vi.mock("@app/hooks/usePolicies", () => ({
 // activates the loop. Stubbed out so the hook's fetch never lands mid-assertion.
 vi.mock("@app/hooks/useProcessingFolders", () => ({
   useProcessingFolders: () => ({
-    byFolderId: new Map(),
+    stateFor: () => undefined,
+    enabledFolderIds: new Set<string>(),
+    anyEnabled: false,
     enable: async () => {},
     disable: async () => {},
     sweep: async () => {},

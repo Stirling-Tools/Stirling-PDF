@@ -34,6 +34,7 @@ import {
 } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useFolders } from "@app/contexts/FolderContext";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
 
@@ -158,6 +159,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const indexedDB = useIndexedDB();
   const indexedDBRevision = useIndexedDBRevision();
   const folders = useFolders();
+  const processingFolders = useProcessingFolders();
   const { actions: fileActions } = useFileActions();
   const { config: appConfig } = useAppConfig();
   const { isAnonymous } = useAuth();
@@ -642,7 +644,12 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         // and every file in it stay — so there is nothing to warn about and
         // the delete dialog's "what about the files?" question would be a
         // scary lie. Remove directly.
-        void folders.deleteFolder(folder.id).catch((err) => {
+        void (async () => {
+          // Its processing record points at the same directory; left behind,
+          // it would keep processing a folder the app no longer shows.
+          await processingFolders.disable(folder).catch(() => {});
+          await folders.deleteFolder(folder.id);
+        })().catch((err) => {
           folders.setError(
             err instanceof Error
               ? `Could not remove folder: ${err.message}`
@@ -654,7 +661,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const fileCount = filesInSubtree(folder.id).length;
       setDeleteFolderDialog({ folder, fileCount });
     },
-    [filesInSubtree, folders],
+    [filesInSubtree, folders, processingFolders],
   );
 
   const deleteFolder = useCallback(

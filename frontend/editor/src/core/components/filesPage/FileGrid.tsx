@@ -29,7 +29,10 @@ import {
 import type { DiskFileEntry } from "@app/services/localFolderContents";
 import { useFolders } from "@app/contexts/FolderContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
+import {
+  useProcessingFolders,
+  type ProcessingFolderState,
+} from "@app/hooks/useProcessingFolders";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import {
@@ -93,28 +96,12 @@ function useFolderOriginBadge(folder: FolderRecord): {
 
 export type FilesPageViewMode = "grid" | "list";
 
-/**
- * A folder mounted from a directory on disk. It is not a {@link FolderRecord}: there is no stored
- * folder behind it, and its id is a processing-folder id rather than the branded UUID a
- * FolderRecord carries — so it is kept as its own entry kind instead of being faked into one.
- */
-export interface MountedFolderEntry {
-  /** The processing folder's id, for reading its contents and acting on it. */
-  id: string;
-  name: string;
-  /** The directory it mirrors, shown as the folder's subtitle. */
-  directory: string;
-  enabled: boolean;
-}
-
 export interface FilesPageEntry {
-  kind: "folder" | "file" | "mounted" | "diskFile";
+  kind: "folder" | "file" | "diskFile";
   folder?: FolderRecord;
   /** Number of files inside this folder (folder entries only). */
   folderFileCount?: number;
   file?: StirlingFileStub;
-  /** Set for `kind: "mounted"` — a folder backed by a directory on disk. */
-  mounted?: MountedFolderEntry;
   /** A file read straight off a mounted directory (kind "diskFile"). */
   disk?: DiskFileEntry;
   /** Parent breadcrumb path for search results outside the current folder. */
@@ -131,8 +118,6 @@ interface FileGridProps {
   /** Replace the entire selection set. */
   onSetSelection?: (ids: Set<FileId>) => void;
   onOpenFolder: (id: FolderId) => void;
-  /** Open a folder mounted from disk, by its processing-folder id. */
-  onOpenMountedFolder?: (id: string) => void;
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
   /** Open a file listed straight from a mounted directory. */
@@ -446,7 +431,6 @@ function GridView({
   activeWorkspaceFileIds,
   onSelectFile,
   onOpenFolder,
-  onOpenMountedFolder,
   onOpenFile,
   onOpenDiskFile,
   onMoveFiles,
@@ -463,15 +447,6 @@ function GridView({
   return (
     <div className="files-page-grid" role="list">
       {entries.map((entry) => {
-        if (entry.kind === "mounted" && entry.mounted) {
-          return (
-            <MountedFolderCard
-              key={`mounted-${entry.mounted.id}`}
-              mounted={entry.mounted}
-              onOpen={() => onOpenMountedFolder?.(entry.mounted!.id)}
-            />
-          );
-        }
         if (entry.kind === "folder" && entry.folder) {
           return (
             <FolderCard
@@ -593,24 +568,24 @@ function FolderCard({
     );
   };
   const {
-    byFolderId: processingFolders,
+    stateFor: processingStateFor,
     enable: enableProcessing,
     disable: disableProcessing,
     sweep: sweepProcessing,
   } = useProcessingFolders();
-  const processing = processingFolders.get(folder.id as string);
+  const processing = processingStateFor(folder);
   // Each action surfaces its own failure the way a failed drop does; the
   // backend's reason (invalid pipeline, storage disabled) is the useful part.
   const startProcessing = (label: string) =>
-    Promise.resolve(enableProcessing(folder.id as string)).catch((err) =>
+    Promise.resolve(enableProcessing(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const stopProcessing = (label: string) =>
-    Promise.resolve(disableProcessing(folder.id as string)).catch((err) =>
+    Promise.resolve(disableProcessing(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const runProcessing = (label: string) =>
-    Promise.resolve(sweepProcessing(folder.id as string)).catch((err) =>
+    Promise.resolve(sweepProcessing(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const kebabRef = useRef<HTMLButtonElement>(null);
@@ -724,16 +699,26 @@ function FolderCard({
               {t("filesPage.open", "Open")}
             </Menu.Item>
             {editsHidden && (
-              <Menu.Item
-                color="red"
-                leftSection={<DeleteIcon fontSize="small" />}
-                onClick={onDelete}
-              >
-                {t(
-                  "filesPage.removeLocalFolder",
-                  "Remove (files stay on disk)",
-                )}
-              </Menu.Item>
+              <>
+                <ProcessingMenuItems
+                  processing={processing}
+                  disabled={false}
+                  onRun={() => void runProcessing("process folder now")}
+                  onStop={() => void stopProcessing("stop processing folder")}
+                  onStart={() => void startProcessing("process folder")}
+                />
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<DeleteIcon fontSize="small" />}
+                  onClick={onDelete}
+                >
+                  {t(
+                    "filesPage.removeLocalFolder",
+                    "Remove (files stay on disk)",
+                  )}
+                </Menu.Item>
+              </>
             )}
             {!editsHidden && (
               <>
@@ -755,40 +740,21 @@ function FolderCard({
                   disabled={editsDisabled}
                 />
                 <Menu.Divider />
-                {processing ? (
+                {kind !== "virtual" && (
                   <>
-                    <Menu.Item
-                      leftSection={<AutoModeIcon fontSize="small" />}
-                      onClick={() => void runProcessing("process folder now")}
-                    >
-                      {t("filesPage.processing.sweep", "Process files now")}
-                    </Menu.Item>
-                    <Menu.Item
-                      leftSection={<AutoModeIcon fontSize="small" />}
-                      onClick={() =>
+                    <ProcessingMenuItems
+                      processing={processing}
+                      disabled={editsDisabled}
+                      disabledHint={offlineHint}
+                      onRun={() => void runProcessing("process folder now")}
+                      onStop={() =>
                         void stopProcessing("stop processing folder")
                       }
-                    >
-                      {t(
-                        "filesPage.processing.stop",
-                        "Stop processing this folder",
-                      )}
-                    </Menu.Item>
+                      onStart={() => void startProcessing("process folder")}
+                    />
+                    <Menu.Divider />
                   </>
-                ) : (
-                  <Menu.Item
-                    leftSection={<AutoModeIcon fontSize="small" />}
-                    onClick={() => void startProcessing("process folder")}
-                    disabled={editsDisabled}
-                    title={editsDisabled ? offlineHint : undefined}
-                  >
-                    {t(
-                      "filesPage.processing.start",
-                      "Process files in this folder…",
-                    )}
-                  </Menu.Item>
                 )}
-                <Menu.Divider />
                 <Menu.Item
                   color="red"
                   leftSection={<DeleteIcon fontSize="small" />}
@@ -808,90 +774,51 @@ function FolderCard({
 }
 
 /**
- * A folder mirrored from a directory on disk. Read-only here: the directory is the source of
- * truth, so this shows what is in it rather than offering the storage-folder actions (rename,
- * appearance, delete) that would have no meaning on someone's own filesystem.
+ * The processing entries of a folder's action menu. Any folder that a
+ * processing pipeline can reach carries these — including mounts, whose other
+ * edit actions are hidden. Virtual folders are the exception until their
+ * client-side engine exists.
  */
-function MountedFolderCard({
-  mounted,
-  onOpen,
+function ProcessingMenuItems({
+  processing,
+  disabled,
+  disabledHint,
+  onRun,
+  onStop,
+  onStart,
 }: {
-  mounted: MountedFolderEntry;
-  onOpen: () => void;
+  processing: ProcessingFolderState | undefined;
+  disabled: boolean;
+  disabledHint?: string;
+  onRun: () => void;
+  onStop: () => void;
+  onStart: () => void;
 }) {
   const { t } = useTranslation();
-  return (
-    <div
-      role="listitem"
-      tabIndex={0}
-      className="files-page-card is-folder is-mounted"
-      onDoubleClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") onOpen();
-      }}
-      title={mounted.directory}
+  return processing ? (
+    <>
+      <Menu.Item
+        leftSection={<AutoModeIcon fontSize="small" />}
+        onClick={onRun}
+      >
+        {t("filesPage.processing.sweep", "Process files now")}
+      </Menu.Item>
+      <Menu.Item
+        leftSection={<AutoModeIcon fontSize="small" />}
+        onClick={onStop}
+      >
+        {t("filesPage.processing.stop", "Stop processing this folder")}
+      </Menu.Item>
+    </>
+  ) : (
+    <Menu.Item
+      leftSection={<AutoModeIcon fontSize="small" />}
+      onClick={onStart}
+      disabled={disabled}
+      title={disabled ? disabledHint : undefined}
     >
-      <div className="files-page-card-thumb">
-        <FolderThumbnail color={undefined} fileCount={0} />
-      </div>
-      <div className="files-page-card-body">
-        <div className="files-page-card-name" title={mounted.name}>
-          {mounted.name}
-        </div>
-        <div className="files-page-card-path" title={mounted.directory}>
-          {mounted.directory}
-        </div>
-        <div className="files-page-card-meta">
-          <span className="files-page-processing-tag">
-            {mounted.enabled
-              ? t("filesPage.processing.active", "Processing folder")
-              : t("filesPage.processing.paused", "Processing paused")}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** List-view counterpart of {@link MountedFolderCard}. */
-function MountedFolderRow({
-  mounted,
-  onOpen,
-}: {
-  mounted: MountedFolderEntry;
-  onOpen: () => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div
-      role="row"
-      tabIndex={0}
-      className="files-page-list-row is-folder is-mounted"
-      onDoubleClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") onOpen();
-      }}
-      title={mounted.directory}
-    >
-      <span aria-hidden="true" />
-      <span className="files-page-list-name">
-        <FolderIcon fontSize="small" />
-        <span>
-          {mounted.name}
-          <span className="files-page-card-path"> {mounted.directory}</span>
-        </span>
-      </span>
-      <span>
-        <span className="files-page-processing-tag">
-          {mounted.enabled
-            ? t("filesPage.processing.active", "Processing folder")
-            : t("filesPage.processing.paused", "Processing paused")}
-        </span>
-      </span>
-      <span>-</span>
-      <span>-</span>
-      <span aria-hidden="true" />
-    </div>
+      {t("filesPage.processing.start", "Process files in this folder…")}
+    </Menu.Item>
   );
 }
 
@@ -1162,7 +1089,6 @@ function ListView({
   onSelectFile,
   onSetSelection,
   onOpenFolder,
-  onOpenMountedFolder,
   onOpenFile,
   onOpenDiskFile,
   onMoveFiles,
@@ -1270,15 +1196,6 @@ function ListView({
         <span aria-hidden="true" />
       </div>
       {entries.map((entry) => {
-        if (entry.kind === "mounted" && entry.mounted) {
-          return (
-            <MountedFolderRow
-              key={`mounted-${entry.mounted.id}`}
-              mounted={entry.mounted}
-              onOpen={() => onOpenMountedFolder?.(entry.mounted!.id)}
-            />
-          );
-        }
         if (entry.kind === "folder" && entry.folder) {
           return (
             <FolderRow
@@ -1404,22 +1321,22 @@ function FolderRow({
     );
   };
   const {
-    byFolderId: processingFolders,
+    stateFor: processingStateFor,
     enable: enableProcessing,
     disable: disableProcessing,
     sweep: sweepProcessing,
   } = useProcessingFolders();
-  const processing = processingFolders.get(folder.id as string);
+  const processing = processingStateFor(folder);
   const startProcessing = (label: string) =>
-    Promise.resolve(enableProcessing(folder.id as string)).catch((err) =>
+    Promise.resolve(enableProcessing(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const stopProcessing = (label: string) =>
-    Promise.resolve(disableProcessing(folder.id as string)).catch((err) =>
+    Promise.resolve(disableProcessing(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const runProcessing = (label: string) =>
-    Promise.resolve(sweepProcessing(folder.id as string)).catch((err) =>
+    Promise.resolve(sweepProcessing(folder)).catch((err) =>
       surfaceDrop(err, label),
     );
   const kebabRef = useRef<HTMLButtonElement>(null);
@@ -1548,16 +1465,26 @@ function FolderRow({
               {t("filesPage.open", "Open")}
             </Menu.Item>
             {editsHidden && (
-              <Menu.Item
-                color="red"
-                leftSection={<DeleteIcon fontSize="small" />}
-                onClick={onDelete}
-              >
-                {t(
-                  "filesPage.removeLocalFolder",
-                  "Remove (files stay on disk)",
-                )}
-              </Menu.Item>
+              <>
+                <ProcessingMenuItems
+                  processing={processing}
+                  disabled={false}
+                  onRun={() => void runProcessing("process folder now")}
+                  onStop={() => void stopProcessing("stop processing folder")}
+                  onStart={() => void startProcessing("process folder")}
+                />
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<DeleteIcon fontSize="small" />}
+                  onClick={onDelete}
+                >
+                  {t(
+                    "filesPage.removeLocalFolder",
+                    "Remove (files stay on disk)",
+                  )}
+                </Menu.Item>
+              </>
             )}
             {!editsHidden && (
               <>
@@ -1579,40 +1506,21 @@ function FolderRow({
                   disabled={editsDisabled}
                 />
                 <Menu.Divider />
-                {processing ? (
+                {kind !== "virtual" && (
                   <>
-                    <Menu.Item
-                      leftSection={<AutoModeIcon fontSize="small" />}
-                      onClick={() => void runProcessing("process folder now")}
-                    >
-                      {t("filesPage.processing.sweep", "Process files now")}
-                    </Menu.Item>
-                    <Menu.Item
-                      leftSection={<AutoModeIcon fontSize="small" />}
-                      onClick={() =>
+                    <ProcessingMenuItems
+                      processing={processing}
+                      disabled={editsDisabled}
+                      disabledHint={offlineHint}
+                      onRun={() => void runProcessing("process folder now")}
+                      onStop={() =>
                         void stopProcessing("stop processing folder")
                       }
-                    >
-                      {t(
-                        "filesPage.processing.stop",
-                        "Stop processing this folder",
-                      )}
-                    </Menu.Item>
+                      onStart={() => void startProcessing("process folder")}
+                    />
+                    <Menu.Divider />
                   </>
-                ) : (
-                  <Menu.Item
-                    leftSection={<AutoModeIcon fontSize="small" />}
-                    onClick={() => void startProcessing("process folder")}
-                    disabled={editsDisabled}
-                    title={editsDisabled ? offlineHint : undefined}
-                  >
-                    {t(
-                      "filesPage.processing.start",
-                      "Process files in this folder…",
-                    )}
-                  </Menu.Item>
                 )}
-                <Menu.Divider />
                 <Menu.Item
                   color="red"
                   leftSection={<DeleteIcon fontSize="small" />}

@@ -16,6 +16,7 @@ import {
 } from "@app/services/processingFolderApi";
 import { refreshProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useFolders } from "@app/contexts/FolderContext";
 import "@app/components/policies/DownloadsProcessingWizard.css";
 
 type Phase = "asking" | "working" | "done" | "failed";
@@ -50,6 +51,7 @@ export function DownloadsProcessingWizard({
   const [stalled, setStalled] = useState(false);
   const [opened, setOpened] = useState(0);
   const { addFiles } = useFileHandler();
+  const { mountLocalFolder } = useFolders();
 
   // Only offer where it can actually work: Downloads must exist, be a permitted folder root, and
   // have something in it worth processing.
@@ -177,6 +179,15 @@ export function DownloadsProcessingWizard({
         enabled: true,
         steps: [{ operation: CLASSIFY_OPERATION, parameters: {}, assets: {} }],
       });
+      // Mount the directory as a local folder too, so Downloads exists in the
+      // file manager as a real folder — the processing record attaches to it
+      // there — rather than results appearing from nowhere. Idempotent, and
+      // best-effort: the sweep's results matter more than the bookmark.
+      const segments = suggestion.directory.split(/[/\\]/).filter(Boolean);
+      await mountLocalFolder(
+        suggestion.directory,
+        segments[segments.length - 1] ?? suggestion.directory,
+      ).catch(() => {});
       // The server reports what it actually started; 0 means everything there was already
       // processed, which is a finished state, not something to wait for.
       setStarted(folder.startedRuns);

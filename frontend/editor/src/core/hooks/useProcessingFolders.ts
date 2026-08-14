@@ -1,35 +1,40 @@
+import type { FolderRecord } from "@app/types/folder";
+
 /** A folder's processing state, as the files page needs to render it. */
 export interface ProcessingFolderState {
+  /** The processing record's own id — not the folder's. */
   id: string;
   enabled: boolean;
-  /** Set when the folder is mounted from a directory on disk rather than app storage. */
-  directory?: string | null;
-  /** Display name, for a mounted folder that has no storage folder to take a name from. */
-  name?: string;
 }
 
 export interface ProcessingFoldersApi {
-  /** Processing state per storage folder id; absent means an ordinary folder. */
-  byFolderId: Map<string, ProcessingFolderState>;
-  /** Disk-backed processing folders, which the file manager shows as mounted folders. */
-  mounted: ProcessingFolderState[];
+  /** The folder's processing state; undefined means an ordinary folder. */
+  stateFor: (folder: FolderRecord) => ProcessingFolderState | undefined;
+  /** Server-storage folder ids whose processing is enabled, for id-only callers. */
+  enabledFolderIds: ReadonlySet<string>;
+  /** Whether any processing folder is enabled, whatever it watches. */
+  anyEnabled: boolean;
   /** Attach the default (classification) pipeline to a folder. */
-  enable: (folderId: string) => Promise<void>;
+  enable: (folder: FolderRecord) => Promise<void>;
   /** Remove the processing behaviour; the folder and its files stay. */
-  disable: (folderId: string) => Promise<void>;
+  disable: (folder: FolderRecord) => Promise<void>;
   /** Process the folder's current contents now. */
-  sweep: (folderId: string) => Promise<void>;
+  sweep: (folder: FolderRecord) => Promise<void>;
 }
 
+const EMPTY_IDS: ReadonlySet<string> = new Set();
+
 /**
- * Processing folders — folders that run a pipeline over anything added to them.
- * Inert in core; the proprietary build shadows this with an implementation
- * backed by `/api/v1/processing-folders`.
+ * Processing folders — folders that run a pipeline over anything added to
+ * them, whatever kind of folder they are. Inert in core; the proprietary
+ * build shadows this with an implementation backed by
+ * `/api/v1/processing-folders`.
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
   return {
-    byFolderId: new Map(),
-    mounted: [],
+    stateFor: () => undefined,
+    enabledFolderIds: EMPTY_IDS,
+    anyEnabled: false,
     enable: async () => {},
     disable: async () => {},
     sweep: async () => {},

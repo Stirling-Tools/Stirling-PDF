@@ -74,14 +74,12 @@ export function useClientSideClassification(): void {
   // A processing folder classifies whatever lands in it, on exactly the same terms: the server
   // does it when AI is on, and this loop does it when AI is off. So a file sitting in an enabled
   // processing folder is in scope even with no org-wide Classification policy.
-  const { byFolderId: processingFolders } = useProcessingFolders();
+  const { enabledFolderIds, anyEnabled } = useProcessingFolders();
   const inEnabledProcessingFolder = (stub: StirlingFileStub) => {
     const folderId = stub.folderId as string | null | undefined;
-    return Boolean(folderId && processingFolders.get(folderId)?.enabled);
+    return Boolean(folderId && enabledFolderIds.has(folderId));
   };
-  const anyProcessingFolder =
-    !classificationPaused &&
-    Array.from(processingFolders.values()).some((f) => f.enabled);
+  const anyProcessingFolder = !classificationPaused && anyEnabled;
 
   useEffect(() => {
     if (
@@ -144,7 +142,7 @@ export function useClientSideClassification(): void {
     active,
     classificationPaused,
     anyProcessingFolder,
-    processingFolders,
+    enabledFolderIds,
     classificationEnabled,
     aiEnabled,
     configLoading,

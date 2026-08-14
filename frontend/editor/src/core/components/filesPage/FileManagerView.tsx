@@ -43,7 +43,6 @@ import { stripBasePath } from "@app/constants/app";
 import { useAuth } from "@app/auth/UseSession";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { useFolders } from "@app/contexts/FolderContext";
-import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
@@ -267,9 +266,6 @@ export default function FileManagerView() {
     }
     return set;
   }, [folders.folders, currentFolderId]);
-
-  // Folders mirrored from a directory on disk; they have no stored folder behind them.
-  const { mounted: mountedFolders } = useProcessingFolders();
 
   const visibleFolders = useMemo(() => {
     // Folders only appear in cloud-rooted tabs.
@@ -534,19 +530,6 @@ export default function FileManagerView() {
         .map<FilesPageEntry>((disk) => ({ kind: "diskFile", disk }));
     }
     return [
-      // Mounted folders live at the root of the cloud view: they mirror a directory on disk, so
-      // they have no parent among the stored folders and never nest under one.
-      ...(currentFolderId === null && !inSearch
-        ? mountedFolders.map<FilesPageEntry>((folder) => ({
-            kind: "mounted",
-            mounted: {
-              id: folder.id,
-              name: folder.name ?? "",
-              directory: folder.directory ?? "",
-              enabled: folder.enabled,
-            },
-          }))
-        : []),
       ...visibleFolders.map<FilesPageEntry>((folder) => ({
         kind: "folder",
         folder,
@@ -566,7 +549,6 @@ export default function FileManagerView() {
       })),
     ];
   }, [
-    mountedFolders,
     visibleFolders,
     visibleFiles,
     filesPage.fileCountsByFolder,
