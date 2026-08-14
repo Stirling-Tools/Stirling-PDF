@@ -62,7 +62,7 @@ jobs:
 
       - name: Restore Gradle dependencies with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -75,7 +75,7 @@ jobs:
 
       - name: Configure Gradle build cache with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -168,7 +168,7 @@ jobs:
       - name: Set up latest Docker cache with BoringCache
         id: boringcache-latest
         if: env.RUN_MAIN_APP == 'true' && steps.meta.outputs.tags != '' && env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -233,7 +233,7 @@ jobs:
       - name: Set up fat Docker cache with BoringCache
         id: boringcache-fat
         if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-fat.outputs.tags != '' && env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -293,7 +293,7 @@ jobs:
       - name: Set up ultra-lite Docker cache with BoringCache
         id: boringcache-lite
         if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-lite.outputs.tags != '' && env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -437,7 +437,7 @@ jobs:
       - name: Set up unoserver Docker cache with BoringCache
         id: boringcache-unoserver
         if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode != 'skip' && env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none

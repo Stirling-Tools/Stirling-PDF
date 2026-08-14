@@ -55,7 +55,7 @@ jobs:
 
       - name: Restore Gradle dependencies with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -68,7 +68,7 @@ jobs:
 
       - name: Configure Gradle build cache with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -173,7 +173,7 @@ jobs:
 
       - name: Restore build dependencies with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -186,7 +186,7 @@ jobs:
 
       - name: Configure Gradle build cache with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -274,7 +274,7 @@ jobs:
 
       - name: Restore build dependencies with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -287,7 +287,7 @@ jobs:
 
       - name: Configure Gradle build cache with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -384,7 +384,7 @@ jobs:
 
       - name: Build Rust application with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -398,7 +398,7 @@ jobs:
 
       - name: Build x86_64 Rust application with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true' && matrix.platform == 'macos-15'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -872,7 +872,7 @@ jobs:
 
       - name: Restore uv dependencies with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none

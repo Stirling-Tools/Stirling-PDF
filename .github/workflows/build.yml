@@ -76,7 +76,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Restore Gradle dependencies with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
@@ -88,7 +88,7 @@ jobs:
           BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
       - name: Configure Gradle build cache with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
-        uses: boringcache/one@1d01e5dbf19ce259f921aa353d5e3e4ac5f942e4 # v1.19.0
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
