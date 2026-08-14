@@ -1,17 +1,23 @@
 #!/bin/bash
 
+set -o pipefail
+
 # Usage function
 usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
     echo "  --rerun-failed              Rerun only the tests that failed in the last run"
     echo "  --rerun \"test1,test2,...\"   Rerun specific tests (comma-separated)"
+    echo "  --build-only IMAGE          Build only the ultra-lite or fat test image"
+    echo "  --use-existing-image        Run tests against an image already loaded in Docker"
     echo "  -h, --help                  Show this help message"
     echo ""
     echo "Examples:"
     echo "  $0                                    # Run all tests"
     echo "  $0 --rerun-failed                     # Rerun tests that failed previously"
     echo "  $0 --rerun \"Stirling-PDF-Regression Stirling-PDF-Security-Fat-with-login,Webpage-Accessibility-full\""
+    echo "  $0 --build-only fat                    # Build the fat image without running tests"
+    echo "  $0 --use-existing-image --rerun \"Stirling-PDF-Security-Fat\""
     exit 0
 }
 
@@ -275,7 +281,7 @@ prepare_base_image() {
             -t stirling-pdf-base:local \
             "$PROJECT_ROOT/docker/base"; then
             echo "✓ Built base image locally: stirling-pdf-base:local"
-            BASE_IMAGE_ARG="--build-arg BASE_IMAGE=stirling-pdf-base:local"
+            BASE_IMAGE_ARGS=(--build-arg BASE_IMAGE=stirling-pdf-base:local)
         else
             echo "ERROR: Failed to build base image"
             gha_endgroup
@@ -284,8 +290,71 @@ prepare_base_image() {
         gha_endgroup
     else
         echo "Docker base unchanged — using published base image from Dockerfile defaults"
-        BASE_IMAGE_ARG=""
+        BASE_IMAGE_ARGS=()
     fi
+}
+
+build_ultra_lite_image() {
+    gha_group "Build: Ultra-Lite (Gradle + Docker)"
+    export DISABLE_ADDITIONAL_FEATURES=true
+    if ! ./gradlew clean build -PnoSpotless; then
+        echo "Gradle build failed with security disabled, exiting script."
+        failed_tests+=("Build-Ultra-Lite-Gradle")
+        capture_build_failure "Build-Ultra-Lite-Gradle"
+        gha_endgroup
+        return 1
+    fi
+
+    echo "Getting expected version from Gradle..."
+    EXPECTED_VERSION=$(get_expected_version)
+    echo "Expected version: $EXPECTED_VERSION"
+
+    echo "Building ultra-lite image for tests that require it..."
+    set_docker_cache_args stirling-pdf-ultra-lite
+    local ultra_lite_build_log="$REPORT_DIR/Build-Ultra-Lite-Docker.build.log"
+    if ! docker buildx build --build-arg VERSION_TAG=alpha \
+        -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
+        -f ./docker/embedded/Dockerfile.ultra-lite \
+        --load \
+        "${DOCKER_CACHE_ARGS[@]}" . 2>&1 | tee "$ultra_lite_build_log"; then
+        failed_tests+=("Build-Ultra-Lite-Docker")
+        capture_build_failure "Build-Ultra-Lite-Docker"
+        gha_endgroup
+        return 1
+    fi
+    gha_endgroup
+}
+
+build_fat_image() {
+    gha_group "Build: Fat + Security (Gradle + Docker)"
+    export DISABLE_ADDITIONAL_FEATURES=false
+    if ! ./gradlew clean build -PnoSpotless; then
+        echo "Gradle build failed with security enabled, exiting script."
+        failed_tests+=("Build-Fat-Gradle")
+        capture_build_failure "Build-Fat-Gradle"
+        gha_endgroup
+        return 1
+    fi
+
+    echo "Getting expected version from Gradle (security enabled)..."
+    EXPECTED_VERSION=$(get_expected_version)
+    echo "Expected version with security enabled: $EXPECTED_VERSION"
+
+    echo "Building fat image for tests that require it..."
+    set_docker_cache_args stirling-pdf-fat
+    local fat_build_log="$REPORT_DIR/Build-Fat-Docker.build.log"
+    if ! docker buildx build --build-arg VERSION_TAG=alpha \
+        "${BASE_IMAGE_ARGS[@]}" \
+        -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
+        -f ./docker/embedded/Dockerfile.fat \
+        --load \
+        "${DOCKER_CACHE_ARGS[@]}" . 2>&1 | tee "$fat_build_log"; then
+        failed_tests+=("Build-Fat-Docker")
+        capture_build_failure "Build-Fat-Docker"
+        gha_endgroup
+        return 1
+    fi
+    gha_endgroup
 }
 
 # Function to check application readiness via HTTP instead of Docker's health status
@@ -567,8 +636,13 @@ test_compose() {
     gha_group "Deploy: $test_name"
     echo "Testing ${compose_file} configuration..."
 
-    # Start up the Docker Compose service
-    docker-compose $(compose_args "$compose_file") up -d
+    # Start up the Docker Compose service. Parallel CI consumers load the
+    # producer's exact image first, so fail rather than silently rebuilding it.
+    local -a up_args=(up -d)
+    if [ "${USE_EXISTING_IMAGE:-false}" = "true" ]; then
+        up_args+=(--no-build)
+    fi
+    docker-compose $(compose_args "$compose_file") "${up_args[@]}"
 
     # Wait a moment for containers to appear
     sleep 3
@@ -689,15 +763,11 @@ main() {
 
     trap finalize_reports EXIT
 
-    echo "=========================================="
-    echo "Preparing Docker base image..."
-    echo "=========================================="
-    prepare_base_image || exit 1
-    echo ""
-
     # Parse command line arguments
     RERUN_MODE=false
-    declare -a RERUN_TESTS
+    BUILD_ONLY=""
+    USE_EXISTING_IMAGE=false
+    declare -a RERUN_TESTS=()
 
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -720,6 +790,18 @@ main() {
                 done
                 shift 2
                 ;;
+            --build-only)
+                if [[ -z "${2:-}" ]]; then
+                    echo "Error: --build-only requires either ultra-lite or fat"
+                    usage
+                fi
+                BUILD_ONLY="$2"
+                shift 2
+                ;;
+            --use-existing-image)
+                USE_EXISTING_IMAGE=true
+                shift
+                ;;
             -h|--help)
                 usage
                 ;;
@@ -733,6 +815,36 @@ main() {
     export DOCKER_CLI_EXPERIMENTAL=enabled
     export COMPOSE_DOCKER_CLI_BUILD=0
 
+    if [ -n "$BUILD_ONLY" ] && [ "$USE_EXISTING_IMAGE" = "true" ]; then
+        echo "Error: --build-only and --use-existing-image cannot be combined"
+        return 1
+    fi
+
+    if [ -n "$BUILD_ONLY" ]; then
+        case "$BUILD_ONLY" in
+            ultra-lite)
+                build_ultra_lite_image
+                ;;
+            fat)
+                echo "=========================================="
+                echo "Preparing Docker base image..."
+                echo "=========================================="
+                prepare_base_image && build_fat_image
+                ;;
+            *)
+                echo "Error: unknown image '$BUILD_ONLY' (expected ultra-lite or fat)"
+                return 1
+                ;;
+        esac
+        return $?
+    fi
+
+    if [ "$USE_EXISTING_IMAGE" = "true" ]; then
+        echo "Using the Docker image already loaded by the CI image producer."
+        EXPECTED_VERSION=$(get_expected_version)
+        echo "Expected version: $EXPECTED_VERSION"
+    fi
+
     # ==================================================================
     # 1. Ultra-Lite (no additional features)
     # ==================================================================
@@ -741,36 +853,11 @@ main() {
        should_run_test "Webpage-Accessibility-lite" || \
        should_run_test "Stirling-PDF-Ultra-Lite-Version-Check"; then
 
-        gha_group "Build: Ultra-Lite (Gradle + Docker)"
-        export DISABLE_ADDITIONAL_FEATURES=true
-        if ! ./gradlew clean build -PnoSpotless; then
-            echo "Gradle build failed with security disabled, exiting script."
-            failed_tests+=("Build-Ultra-Lite-Gradle")
-            capture_build_failure "Build-Ultra-Lite-Gradle"
-            gha_endgroup
-            exit 1
+        if [ "$USE_EXISTING_IMAGE" != "true" ]; then
+            build_ultra_lite_image || exit 1
+        else
+            echo "Skipping ultra-lite image build - using the image loaded by CI"
         fi
-
-        # Get expected version after the build to ensure version.properties is created
-        echo "Getting expected version from Gradle..."
-        EXPECTED_VERSION=$(get_expected_version)
-        echo "Expected version: $EXPECTED_VERSION"
-
-        # Build Ultra-Lite image with embedded frontend (matching docker-compose-latest-ultra-lite.yml)
-        echo "Building ultra-lite image for tests that require it..."
-        set_docker_cache_args stirling-pdf-ultra-lite
-        local ultra_lite_build_log="$REPORT_DIR/Build-Ultra-Lite-Docker.build.log"
-        if ! docker buildx build --build-arg VERSION_TAG=alpha \
-            -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
-            -f ./docker/embedded/Dockerfile.ultra-lite \
-            --load \
-            "${DOCKER_CACHE_ARGS[@]}" . 2>&1 | tee "$ultra_lite_build_log"; then
-            failed_tests+=("Build-Ultra-Lite-Docker")
-            capture_build_failure "Build-Ultra-Lite-Docker"
-            gha_endgroup
-            exit 1
-        fi
-        gha_endgroup
     else
         echo "Skipping ultra-lite image build - no ultra-lite tests in rerun list"
     fi
@@ -824,36 +911,15 @@ main() {
        should_run_test "Disabled-Endpoints" || \
        should_run_test "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"; then
 
-        gha_group "Build: Fat + Security (Gradle + Docker)"
-        export DISABLE_ADDITIONAL_FEATURES=false
-        if ! ./gradlew clean build -PnoSpotless; then
-            echo "Gradle build failed with security enabled, exiting script."
-            failed_tests+=("Build-Fat-Gradle")
-            capture_build_failure "Build-Fat-Gradle"
-            gha_endgroup
-            exit 1
+        if [ "$USE_EXISTING_IMAGE" != "true" ]; then
+            echo "=========================================="
+            echo "Preparing Docker base image..."
+            echo "=========================================="
+            prepare_base_image || exit 1
+            build_fat_image || exit 1
+        else
+            echo "Skipping fat image build - using the image loaded by CI"
         fi
-
-        echo "Getting expected version from Gradle (security enabled)..."
-        EXPECTED_VERSION=$(get_expected_version)
-        echo "Expected version with security enabled: $EXPECTED_VERSION"
-
-        # Build Fat (Security) image with embedded frontend (matching all 'fat' compose files)
-        echo "Building fat image for tests that require it..."
-        set_docker_cache_args stirling-pdf-fat
-        local fat_build_log="$REPORT_DIR/Build-Fat-Docker.build.log"
-        if ! docker buildx build --build-arg VERSION_TAG=alpha \
-            ${BASE_IMAGE_ARG} \
-            -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
-            -f ./docker/embedded/Dockerfile.fat \
-            --load \
-            "${DOCKER_CACHE_ARGS[@]}" . 2>&1 | tee "$fat_build_log"; then
-            failed_tests+=("Build-Fat-Docker")
-            capture_build_failure "Build-Fat-Docker"
-            gha_endgroup
-            exit 1
-        fi
-        gha_endgroup
     else
         echo "Skipping fat image build - no fat tests in rerun list"
     fi

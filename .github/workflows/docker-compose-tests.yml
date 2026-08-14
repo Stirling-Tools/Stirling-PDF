@@ -1,8 +1,8 @@
 name: Docker Compose Cucumber tests
 
 # Reusable workflow called from build.yml when project / docker / testing
-# sources change. Boots the docker-compose stack and runs the cucumber
-# scenarios in testing/cucumber.
+# sources change. Builds the two test images in parallel, then fans the
+# existing compose suites out across isolated runners.
 on:
   workflow_call:
     inputs:
@@ -16,14 +16,24 @@ permissions:
   contents: read
 
 jobs:
-  docker-compose-tests:
+  build-images:
+    name: Build test image (${{ matrix.image }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ultra-lite
+            image-ref: docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite
+            boringcache-directory: .github/boringcache/docker-ultra-lite
+          - image: fat
+            image-ref: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
+            boringcache-directory: .github/boringcache/docker-fat
     env:
       BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     permissions:
       actions: write
       contents: read
-      checks: write
 
     steps:
       - name: Harden Runner
@@ -34,15 +44,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Restore build dependencies with BoringCache
+      - name: Restore Gradle dependencies with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
         uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
           mode: archive
-          cache-profiles: gradle-dependencies,uv-dependencies
-          metadata-hints: workflow=docker-compose-tests
+          cache-profiles: gradle-dependencies
+          metadata-hints: workflow=docker-compose-tests,stage=build,image=${{ matrix.image }}
         env:
           BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
           BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
@@ -54,7 +64,7 @@ jobs:
           trust-policy: auto
           setup: none
           mode: gradle
-          metadata-hints: workflow=docker-compose-tests
+          metadata-hints: workflow=docker-compose-tests,stage=build,image=${{ matrix.image }}
         env:
           BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
           BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
@@ -77,52 +87,176 @@ jobs:
             gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
             gradle-${{ runner.os }}-${{ runner.arch }}-
 
-      # When the PR changes the base image, test.sh builds it locally
-      # (stirling-pdf-base:local) into the daemon image store. A buildx
-      # container builder can't see that store, so skip it here and let
-      # `docker buildx build` fall back to the default docker driver, which
-      # resolves the local base. The gha cache backend is also skipped (its
-      # runtime token isn't exposed) since the docker driver can't use it.
+      # The fat build uses the daemon-local base when that Dockerfile changed.
+      # Ultra-lite has no dependency on that base and can keep its cache-backed
+      # container builder even on a base-changing pull request.
       - name: Set up Docker Buildx
-        if: inputs.docker-base-changed != 'true' && env.BORINGCACHE_ENABLED != 'true'
+        if: (inputs.docker-base-changed != 'true' || matrix.image != 'fat') && env.BORINGCACHE_ENABLED != 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
-      - name: Set up ultra-lite Docker cache with BoringCache
-        id: boringcache-ultra-lite
-        if: inputs.docker-base-changed != 'true' && env.BORINGCACHE_ENABLED == 'true'
+      - name: Set up Docker cache with BoringCache
+        id: boringcache-docker
+        if: (inputs.docker-base-changed != 'true' || matrix.image != 'fat') && env.BORINGCACHE_ENABLED == 'true'
         uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
           mode: docker
           proxy-port: 22244
-          working-directory: .github/boringcache/docker-ultra-lite
+          working-directory: ${{ matrix.boringcache-directory }}
           docker-command: setup
-          metadata-hints: workflow=docker-compose-tests,image=ultra-lite
+          metadata-hints: workflow=docker-compose-tests,stage=build,image=${{ matrix.image }}
         env:
           BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
           BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
-      - name: Set up fat Docker cache with BoringCache
-        id: boringcache-fat
-        if: inputs.docker-base-changed != 'true' && env.BORINGCACHE_ENABLED == 'true'
+      - name: Expose GitHub runtime for Buildx cache
+        if: (inputs.docker-base-changed != 'true' || matrix.image != 'fat') && env.BORINGCACHE_ENABLED != 'true'
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
+
+      - name: Build ${{ matrix.image }} test image
+        run: |
+          chmod +x ./testing/test.sh
+          ./testing/test.sh --build-only "$IMAGE"
+        env:
+          IMAGE: ${{ matrix.image }}
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
+          BORINGCACHE_DOCKER_CACHE_FROM_ULTRA_LITE: ${{ steps.boringcache-docker.outputs.cache-from }}
+          BORINGCACHE_DOCKER_CACHE_TO_ULTRA_LITE: ${{ steps.boringcache-docker.outputs.cache-to }}
+          BORINGCACHE_DOCKER_CACHE_FROM_FAT: ${{ steps.boringcache-docker.outputs.cache-from }}
+          BORINGCACHE_DOCKER_CACHE_TO_FAT: ${{ steps.boringcache-docker.outputs.cache-to }}
+
+      - name: Pack ${{ matrix.image }} test image
+        env:
+          IMAGE: ${{ matrix.image }}
+          IMAGE_REF: ${{ matrix.image-ref }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/compose-image"
+          docker image inspect "$IMAGE_REF" > /dev/null
+          docker save "$IMAGE_REF" | gzip -1 > "$RUNNER_TEMP/compose-image/$IMAGE.tar.gz"
+          ls -lh "$RUNNER_TEMP/compose-image/$IMAGE.tar.gz"
+
+      - name: Upload ${{ matrix.image }} test image
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docker-compose-image-${{ matrix.image }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/compose-image/${{ matrix.image }}.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+
+      - name: Upload image build reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: docker-compose-build-reports-${{ matrix.image }}-${{ github.run_attempt }}
+          path: testing/reports/
+          retention-days: 7
+          if-no-files-found: warn
+
+  test-suites:
+    name: Test compose suite (${{ matrix.name }})
+    needs: build-images
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ultra-lite
+            image: ultra-lite
+            image-ref: docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite
+            tests: Stirling-PDF-Ultra-Lite,Webpage-Accessibility-lite,Stirling-PDF-Ultra-Lite-Version-Check
+            cucumber: "false"
+          - name: fat-smoke
+            image: fat
+            image-ref: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
+            tests: Stirling-PDF-Security-Fat,Webpage-Accessibility-full,Stirling-PDF-Security-Fat-Version-Check
+            cucumber: "false"
+          - name: cucumber
+            image: fat
+            image-ref: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
+            tests: Stirling-PDF-Security-Fat-with-login
+            cucumber: "true"
+          - name: disabled-endpoints
+            image: fat
+            image-ref: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
+            tests: Stirling-PDF-Fat-Disable-Endpoints,Disabled-Endpoints,Stirling-PDF-Fat-Disable-Endpoints-Version-Check
+            cucumber: "false"
+    env:
+      BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
+    permissions:
+      actions: write
+      contents: read
+      checks: write
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download ${{ matrix.image }} test image
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: docker-compose-image-${{ matrix.image }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/compose-image
+
+      - name: Load ${{ matrix.image }} test image
+        env:
+          IMAGE: ${{ matrix.image }}
+          IMAGE_REF: ${{ matrix.image-ref }}
+        run: |
+          docker load --input "$RUNNER_TEMP/compose-image/$IMAGE.tar.gz"
+          docker image inspect "$IMAGE_REF" > /dev/null
+
+      - name: Restore build dependencies with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
         uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
           setup: none
-          mode: docker
-          proxy-port: 22245
-          working-directory: .github/boringcache/docker-fat
-          docker-command: setup
-          metadata-hints: workflow=docker-compose-tests,image=fat
+          mode: archive
+          cache-profiles: gradle-dependencies,uv-dependencies
+          metadata-hints: workflow=docker-compose-tests,stage=test,suite=${{ matrix.name }}
         env:
           BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
           BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
 
-      # Expose ACTIONS_RUNTIME_TOKEN / ACTIONS_RESULTS_URL for docker buildx type=gha cache backend.
-      - name: Expose GitHub runtime for Buildx cache
-        if: inputs.docker-base-changed != 'true' && env.BORINGCACHE_ENABLED != 'true'
-        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
+      - name: Configure Gradle build cache with BoringCache
+        if: env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
+        with:
+          trust-policy: auto
+          setup: none
+          mode: gradle
+          metadata-hints: workflow=docker-compose-tests,stage=test,suite=${{ matrix.name }}
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Cache Gradle User Home
+        if: env.BORINGCACHE_ENABLED != 'true'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
+            gradle-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Install Docker Compose
         run: |
@@ -130,6 +264,7 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Install uv
+        if: matrix.cucumber == 'true'
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           enable-cache: ${{ env.BORINGCACHE_ENABLED != 'true' }}
@@ -138,41 +273,28 @@ jobs:
             engine/uv.lock
 
       - name: Install Cucumber and coverage dependencies
-        run: |
-          uv sync --project engine --locked --group cucumber --group tools
+        if: matrix.cucumber == 'true'
+        run: uv sync --project engine --locked --group cucumber --group tools
 
       - name: Extract JaCoCo agent for cucumber coverage
-        # Stages build/jacoco/jacocoagent.jar where the coverage override
-        # file bind-mounts it into the cucumber container. The agent jar
-        # never goes into the published image - this is host-only.
+        if: matrix.cucumber == 'true'
         run: ./gradlew copyJacocoAgent -PnoSpotless
 
-      - name: Run Docker Compose Tests
+      - name: Run ${{ matrix.name }} compose tests
+        env:
+          COMPOSE_TESTS: ${{ matrix.tests }}
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          STIRLING_PDF_TEST_COVERAGE: ${{ matrix.cucumber == 'true' && '1' || '' }}
         run: |
           chmod +x ./testing/test_webpages.sh
           chmod +x ./testing/test.sh
           chmod +x ./testing/test_disabledEndpoints.sh
-          ./testing/test.sh
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
-          BORINGCACHE_DOCKER_CACHE_FROM_ULTRA_LITE: ${{ steps.boringcache-ultra-lite.outputs.cache-from }}
-          BORINGCACHE_DOCKER_CACHE_TO_ULTRA_LITE: ${{ steps.boringcache-ultra-lite.outputs.cache-to }}
-          BORINGCACHE_DOCKER_CACHE_FROM_FAT: ${{ steps.boringcache-fat.outputs.cache-from }}
-          BORINGCACHE_DOCKER_CACHE_TO_FAT: ${{ steps.boringcache-fat.outputs.cache-to }}
-          # Tells test.sh to layer testing/compose/docker-compose-coverage.override.yml
-          # over the cucumber compose so the container starts with the
-          # JaCoCo agent attached via JAVA_CUSTOM_OPTS.
-          STIRLING_PDF_TEST_COVERAGE: "1"
+          ./testing/test.sh --use-existing-image --rerun "$COMPOSE_TESTS"
 
       - name: Generate cucumber JaCoCo report
-        # `if: always()` so a behave failure still produces partial
-        # coverage from whatever endpoints did run. The exec file only
-        # exists when the container shut down cleanly - guard so the step
-        # is silent on the (rare) crash path.
-        if: always()
+        if: always() && matrix.cucumber == 'true'
         id: cucumber-coverage
         run: |
           if [ -s testing/cucumber-coverage/cucumber.exec ]; then
@@ -187,7 +309,7 @@ jobs:
           fi
 
       - name: Cucumber coverage step summary
-        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        if: always() && matrix.cucumber == 'true' && steps.cucumber-coverage.outputs.report == 'true'
         run: |
           uv run --project engine --locked --group tools python scripts/coverage-summary.py \
             --title "Cucumber (docker) JaCoCo coverage" \
@@ -195,7 +317,7 @@ jobs:
             --github-step-summary
 
       - name: Upload cucumber JaCoCo report
-        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        if: always() && matrix.cucumber == 'true' && steps.cucumber-coverage.outputs.report == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jacoco-cucumber-${{ github.run_id }}
@@ -203,9 +325,7 @@ jobs:
           retention-days: 7
 
       - name: Upload raw cucumber .exec for aggregate merge
-        # Picked up by the coverage-aggregate workflow via the
-        # `jacoco-exec-*` artifact name pattern.
-        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        if: always() && matrix.cucumber == 'true' && steps.cucumber-coverage.outputs.report == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: jacoco-exec-cucumber
@@ -214,7 +334,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload Cucumber Report
-        if: always()
+        if: always() && matrix.cucumber == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cucumber-report
@@ -226,13 +346,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: docker-compose-test-reports
+          name: docker-compose-test-reports-${{ matrix.name }}-${{ github.run_attempt }}
           path: testing/reports/
           retention-days: 7
           if-no-files-found: warn
 
       - name: Cucumber Test Report
-        if: always()
+        if: always() && matrix.cucumber == 'true'
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
           name: Cucumber Tests
