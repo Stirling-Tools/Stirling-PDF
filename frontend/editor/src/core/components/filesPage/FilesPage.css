@@ -554,7 +554,12 @@
   position: absolute;
   bottom: 0.4rem;
   left: 0.4rem;
+  /* The overlay itself stays transparent to the card's clicks and drags, but
+     the badge inside must catch hover or its tooltip can never open. */
   pointer-events: none;
+}
+.files-page-card-origin > * {
+  pointer-events: auto;
 }
 
 /* "Open" badge - file is currently loaded in the active workspace.
