@@ -85,8 +85,3 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 > **Policies** targets the **real** backend base `/api/v1/policies` (Stirling's
 > `PolicyController`) rather than the mock `/v1/...` convention — its contract
 > mirrors the live policy engine.
->
-> **Infrastructure** is likewise fully real (`/api/v1/proprietary/ui-data/...`).
-> Its former mock-only `/v1/infrastructure/{deployments,security,models,storage}`
-> endpoints were removed along with the tabs they backed — those tabs remain in
-> the strip but are disabled until a backend exists.
