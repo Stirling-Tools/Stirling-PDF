@@ -36,6 +36,15 @@ tasks:
         vars: { MODE: desktop }
       - provisioner
 
+  prepare:ci:
+    desc: "Prepare the complete desktop bundle for CI"
+    deps:
+      # Task dependencies run concurrently. Building the Vite bundle here lets
+      # it overlap the independent backend JAR and bundled JRE work in jlink.
+      - jlink
+      - ":frontend:build:desktop"
+      - provisioner
+
   provisioner:
     desc: "Build installer provisioner"
     platforms: [windows]

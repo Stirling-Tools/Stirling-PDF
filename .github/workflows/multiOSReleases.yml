@@ -364,23 +364,18 @@ jobs:
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
         run: task desktop:jlink:universal-mac
 
-      - name: Prepare desktop build
+      - name: Prepare desktop bundle
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
           JPDFIUM_PLATFORMS: ${{ matrix.jpdfium_platforms }}
-        run: task desktop:prepare
-
-      - name: Build desktop frontend
-        working-directory: frontend/editor
-        run: npx vite build --mode desktop
-        env:
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
           CI: true
+        run: task desktop:prepare:ci
 
       - name: Build Rust application with BoringCache
         if: env.BORINGCACHE_ENABLED == 'true'
