@@ -317,6 +317,7 @@ export function DataTable<T extends RowData>({
       const rowEls = shown.map((row) => (
         <tr
           key={rowKey(row)}
+          data-row-key={rowKey(row)}
           className={
             g.muted
               ? "sui-datatable__row sui-datatable__row--muted"
@@ -373,6 +374,7 @@ export function DataTable<T extends RowData>({
       return (
         <tr
           key={row.id}
+          data-row-key={row.id}
           className={
             rowInteractive
               ? "sui-datatable__row sui-datatable__row--interactive"
