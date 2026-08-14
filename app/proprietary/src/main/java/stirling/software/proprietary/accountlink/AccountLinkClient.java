@@ -146,8 +146,15 @@ public class AccountLinkClient {
         return new RegisterResult(deviceId, deviceSecret, teamId);
     }
 
-    /** What the SaaS side hands back when it records a connect handshake. */
-    public record ConnectRequestResult(String requestId, int expiresInSeconds) {}
+    /**
+     * What the SaaS side hands back when it records a connect handshake.
+     *
+     * <p>{@code authorizeUrl} comes from SaaS rather than being composed here: it is the only party
+     * that knows where its own approval page lives, so an instance that had to configure that could
+     * only get it wrong and would need reconfiguring whenever the page moved.
+     */
+    public record ConnectRequestResult(
+            String requestId, int expiresInSeconds, String authorizeUrl) {}
 
     public enum ConnectClaimOutcome {
         /** Approved and collected; the credential fields are populated. */
@@ -226,7 +233,14 @@ public class AccountLinkClient {
         if (requestId == null) {
             throw new IOException("SaaS connect response missing requestId");
         }
-        return new ConnectRequestResult(requestId, body.path("expiresIn").asInt(0));
+        // We navigate an admin's browser here, so refuse anything that is not a plain absolute
+        // http(s) URL. This is the SaaS host we already trust for entitlement decisions, but a
+        // malformed or scheme-shifted value should fail loudly rather than reach the browser.
+        String authorizeUrl = text(body, "authorizeUrl");
+        if (authorizeUrl == null || !isAbsoluteHttpUrl(authorizeUrl)) {
+            throw new IOException("SaaS connect response carried no usable authorizeUrl");
+        }
+        return new ConnectRequestResult(requestId, body.path("expiresIn").asInt(0), authorizeUrl);
     }
 
     /**
@@ -500,5 +514,20 @@ public class AccountLinkClient {
 
     private static String text(JsonNode node, String field) {
         return node.hasNonNull(field) ? node.get(field).asText() : null;
+    }
+
+    /** Absolute http(s) with a host. Rejects relative paths and other schemes. */
+    static boolean isAbsoluteHttpUrl(String candidate) {
+        try {
+            URI uri = URI.create(candidate.strip());
+            String scheme = uri.getScheme();
+            return uri.isAbsolute()
+                    && scheme != null
+                    && ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))
+                    && uri.getHost() != null
+                    && !uri.getHost().isBlank();
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

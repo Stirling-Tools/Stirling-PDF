@@ -42,9 +42,6 @@ public class ConnectService {
     /** Frontend route that consumes the callback fragment. Must exist in the SPA router. */
     static final String CALLBACK_PATH = "/account-link/callback";
 
-    /** Approval page on the SaaS web app. */
-    static final String AUTHORIZE_PATH = "/link";
-
     private static final int SECRET_BYTES = 32;
 
     private final AccountLinkClient client;
@@ -165,7 +162,7 @@ public class ConnectService {
         state.setNonce(nonce);
         state.setClaimSecret(claimSecret);
         state.setCallbackUrl(callbackUrl);
-        state.setAuthorizeUrl(authorizeUrl(created.requestId()));
+        state.setAuthorizeUrl(created.authorizeUrl());
         state.setCreatedAt(now);
         state.setExpiresAt(
                 now.plusSeconds(created.expiresInSeconds() > 0 ? created.expiresInSeconds() : 900));
@@ -259,14 +256,6 @@ public class ConnectService {
         long remaining = Duration.between(now, state.getExpiresAt()).toSeconds();
         return new ConnectStatus(
                 Phase.PENDING, state.getAuthorizeUrl(), Math.max(remaining, 0), null);
-    }
-
-    private String authorizeUrl(String requestId) {
-        String appBase =
-                properties.getAppBaseUrl() != null && !properties.getAppBaseUrl().isBlank()
-                        ? properties.getAppBaseUrl()
-                        : properties.getSaasBaseUrl();
-        return trimTrailingSlash(appBase) + AUTHORIZE_PATH + "?request=" + requestId;
     }
 
     /**

@@ -1,8 +1,11 @@
 package stirling.software.saas.accountlink;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -52,6 +55,16 @@ public class ConnectController {
 
     static final String HEADER_DEVICE_SECRET = "X-Device-Secret";
 
+    /** Frontend route serving the approval page. */
+    static final String LINK_PATH = "/link";
+
+    /**
+     * Origin of our own web app, when it is not the origin serving this API. Empty means "derive it
+     * from the request", which is correct for a single-host deployment.
+     */
+    @Value("${stirling.billing.account-link.app-base-url:}")
+    private String appBaseUrl;
+
     private final ConnectRequestService service;
     private final LeaderTeamResolver leaderTeams;
     private final AccountLinkService accountLinkService;
@@ -68,7 +81,14 @@ public class ConnectController {
     /** Sent by the instance's own backend, before it holds any credential. */
     public record CreateBody(String name, String callbackUrl, String nonce, String claimSecret) {}
 
-    public record CreateResponse(String requestId, int expiresIn) {}
+    /**
+     * {@code authorizeUrl} is where the instance should send its admin.
+     *
+     * <p>Returned rather than composed by the instance, because we are the only party that knows
+     * where our own approval page lives. An instance that had to configure it could only ever get
+     * it wrong, and would need reconfiguring whenever we moved the page.
+     */
+    public record CreateResponse(String requestId, int expiresIn, String authorizeUrl) {}
 
     /** What the approval page renders. Carries no secret. */
     public record ViewResponse(
@@ -144,7 +164,57 @@ public class ConnectController {
             };
         }
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new CreateResponse(result.requestId(), result.expiresInSeconds()));
+                .body(
+                        new CreateResponse(
+                                result.requestId(),
+                                result.expiresInSeconds(),
+                                authorizeUrl(result.requestId(), http)));
+    }
+
+    /**
+     * Where to send the admin to approve a handshake.
+     *
+     * <p>Derived from the incoming request by default, which is right whenever the API and the web
+     * app share a host — the normal deployment, so this usually needs no configuration at all. Set
+     * {@code stirling.billing.account-link.app-base-url} where they are split, which locally they
+     * are (API on one port, web app on another).
+     */
+    private String authorizeUrl(String requestId, HttpServletRequest http) {
+        String base =
+                appBaseUrl != null && !appBaseUrl.isBlank()
+                        ? appBaseUrl.strip().replaceAll("/+$", "")
+                        : requestOrigin(http);
+        return base
+                + LINK_PATH
+                + "?request="
+                + URLEncoder.encode(requestId, StandardCharsets.UTF_8);
+    }
+
+    /** Scheme, host and context path as the browser reached us, honouring a reverse proxy. */
+    private static String requestOrigin(HttpServletRequest request) {
+        String proto = firstHop(request.getHeader("X-Forwarded-Proto"));
+        String host = firstHop(request.getHeader("X-Forwarded-Host"));
+        String scheme = proto != null ? proto : request.getScheme();
+        String hostPort;
+        if (host != null) {
+            hostPort = host;
+        } else {
+            int port = request.getServerPort();
+            boolean defaultPort =
+                    ("http".equals(scheme) && port == 80)
+                            || ("https".equals(scheme) && port == 443);
+            hostPort = defaultPort ? request.getServerName() : request.getServerName() + ":" + port;
+        }
+        String context = request.getContextPath() == null ? "" : request.getContextPath();
+        return scheme + "://" + hostPort + context;
+    }
+
+    private static String firstHop(String headerValue) {
+        if (headerValue == null || headerValue.isBlank()) {
+            return null;
+        }
+        String first = headerValue.split(",")[0].strip();
+        return first.isEmpty() ? null : first;
     }
 
     /**

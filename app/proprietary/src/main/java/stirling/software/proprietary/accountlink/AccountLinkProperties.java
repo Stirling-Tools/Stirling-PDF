@@ -33,15 +33,12 @@ public class AccountLinkProperties {
      */
     private String saasBaseUrl = "https://stirling.com/app";
 
-    /**
-     * Origin of the SaaS <em>web app</em>, where the {@code /link} approval page is served.
-     *
-     * <p>Distinct from {@link #saasBaseUrl}, which is the API. In a normal deployment one host
-     * serves both and this can be left unset, in which case {@link #saasBaseUrl} is used. Locally
-     * they are split (API on 8081, web app on the saas-mode Vite server), and pointing an admin at
-     * the API origin gives them a URL that renders nothing.
+    /*
+     * There is deliberately no "SaaS web app URL" here. Where to send an admin to approve a link is
+     * answered by the SaaS side in its connect-request reply: it is the only party that knows where
+     * its own approval page lives, so an instance configuring that could only get it wrong, and
+     * would need reconfiguring whenever we moved the page.
      */
-    private String appBaseUrl;
 
     /**
      * Externally reachable base URL of <em>this</em> instance, used to build the callback the

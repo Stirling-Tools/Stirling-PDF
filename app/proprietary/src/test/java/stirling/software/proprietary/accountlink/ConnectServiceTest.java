@@ -36,6 +36,7 @@ class ConnectServiceTest {
 
     private static final String NONCE = "the-nonce";
     private static final String CLAIM_SECRET = "the-claim-secret";
+    private static final String AUTHORIZE_URL = "https://app.example.com/link?request=req-1";
 
     @Mock private AccountLinkClient client;
     @Mock private ConnectStateRepository stateRepo;
@@ -162,25 +163,16 @@ class ConnectServiceTest {
     }
 
     @Test
-    void start_pointsTheAdminAtTheWebAppNotTheApi() throws Exception {
-        properties.setAppBaseUrl("https://app.example.com");
+    void start_sendsTheAdminWhereverSaaSSaidToSendThem() throws Exception {
         stubCreate();
 
         ConnectService.ConnectStatus status =
                 service.start(null, fromRequest("https://pdf.example.com"));
 
         assertThat(status.phase()).isEqualTo(Phase.PENDING);
-        assertThat(status.authorizeUrl()).isEqualTo("https://app.example.com/link?request=req-1");
-    }
-
-    @Test
-    void start_withoutAWebAppUrlFallsBackToTheApiBase() throws Exception {
-        stubCreate();
-
-        ConnectService.ConnectStatus status =
-                service.start(null, fromRequest("https://pdf.example.com"));
-
-        assertThat(status.authorizeUrl()).isEqualTo("https://api.example.com/link?request=req-1");
+        // Not composed here: only the SaaS side knows where its approval page lives, so an
+        // instance configuring that could only get it wrong.
+        assertThat(status.authorizeUrl()).isEqualTo(AUTHORIZE_URL);
     }
 
     @Test
@@ -311,7 +303,7 @@ class ConnectServiceTest {
     void startReauth_presentsTheCredentialSoSaaSCanPinTheTeam() throws Exception {
         when(credentialStore.get()).thenReturn(Optional.of(credential(7L)));
         when(client.connectRequest(any(), anyString(), anyString(), anyString(), any()))
-                .thenReturn(new ConnectRequestResult("req-1", 900));
+                .thenReturn(new ConnectRequestResult("req-1", 900, AUTHORIZE_URL));
 
         service.startReauth(fromRequest("https://pdf.example.com"));
 
@@ -393,7 +385,7 @@ class ConnectServiceTest {
     private void stubCreate() throws Exception {
         // The five-argument overload: a first link passes a null credential rather than none.
         when(client.connectRequest(any(), anyString(), anyString(), anyString(), any()))
-                .thenReturn(new ConnectRequestResult("req-1", 900));
+                .thenReturn(new ConnectRequestResult("req-1", 900, AUTHORIZE_URL));
     }
 
     private static ConnectState openHandshake() {
