@@ -10,8 +10,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   Drawer,
   Group,
+  Menu,
   MultiSelect,
   Select,
+  Text,
   TextInput,
   Tooltip,
 } from "@mantine/core";
@@ -32,6 +34,9 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
+import CloudIcon from "@mui/icons-material/Cloud";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
 import { stripBasePath } from "@app/constants/app";
@@ -65,7 +70,7 @@ import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { canPickDirectory } from "@app/services/directoryPicker";
+import { canPickDirectory, pickDirectory } from "@app/services/directoryPicker";
 import {
   canListDirectory,
   listDirectory,
@@ -910,44 +915,40 @@ export default function FileManagerView() {
     [selectedFiles, fileMap],
   );
 
-  // Choices a ROOT-level New folder offers. Every kind is listed — an option
-  // this install can't provide renders greyed with the reason as its tooltip
-  // (the treatment the New folder button itself used to get), so the user
-  // learns the capability exists rather than never seeing it. A subfolder
-  // gets no chooser: it inherits its parent's kind.
-  const newFolderKindChoices = useMemo(() => {
-    const creatingAtRoot =
-      folderNameDialog.mode === "new" &&
-      (folderNameDialog.parentId ?? null) === null;
-    if (!creatingAtRoot) return undefined;
-    const serverDisabledReason =
-      signInRequiredReason ??
-      (!uploadEnabled || !folders.serverReachable
-        ? t(
-            "filesPage.newFolderStorageDisabled",
-            "Server folder storage isn't enabled. Ask your admin to turn it on.",
-          )
-        : undefined);
-    return [
-      {
-        kind: "local" as const,
-        disabledReason: canPickDirectory
-          ? undefined
-          : t(
-              "filesPage.folderKindChoice.localUnavailable",
-              "Available in the desktop app, which can see your disk.",
-            ),
-      },
-      { kind: "virtual" as const },
-      { kind: "server" as const, disabledReason: serverDisabledReason },
-    ];
-  }, [
-    folderNameDialog,
-    signInRequiredReason,
-    uploadEnabled,
-    folders.serverReachable,
-    t,
-  ]);
+  // Per-destination availability for the New-folder menu. The reasons render
+  // inline as the disabled item's caption — the reason IS the information.
+  const serverFolderDisabledReason =
+    signInRequiredReason ??
+    (!uploadEnabled || !folders.serverReachable
+      ? t(
+          "filesPage.newFolderStorageDisabled",
+          "Server folder storage isn't enabled. Ask your admin to turn it on.",
+        )
+      : undefined);
+  const addExistingDisabledReason = canPickDirectory
+    ? undefined
+    : t(
+        "filesPage.folderKindChoice.localUnavailable",
+        "Available in the desktop app, which can see your disk.",
+      );
+
+  // "Add an existing folder" needs no dialog at all: the native picker is the
+  // whole interaction, and the directory's name is the folder's name. Landing
+  // inside the fresh mount is the confirmation.
+  const addExistingFolder = useCallback(async () => {
+    try {
+      const picked = await pickDirectory();
+      if (!picked) return;
+      const record = await folders.mountLocalFolder(picked.path, picked.name);
+      folders.setCurrentFolderId(record.id);
+    } catch (err) {
+      folders.setError(
+        err instanceof Error
+          ? `Could not add the folder: ${err.message}`
+          : "Could not add the folder.",
+      );
+    }
+  }, [folders]);
 
   // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
@@ -1081,7 +1082,9 @@ export default function FileManagerView() {
                       </Button>
                     </span>
                   </Tooltip>
-                ) : (
+                ) : folders.currentFolderId !== null ? (
+                  // Inside a folder there is nothing to choose: the subfolder
+                  // inherits its parent's kind, so plain click → name dialog.
                   <Button
                     variant="secondary"
                     size="sm"
@@ -1090,6 +1093,88 @@ export default function FileManagerView() {
                   >
                     {t("filesPage.newFolder", "New folder")}
                   </Button>
+                ) : (
+                  // Root: split button. Plain click does the common thing —
+                  // a folder on this device — and the chevron offers the rest,
+                  // each action under its true name with its minimal flow.
+                  <span style={{ display: "inline-flex", gap: "2px" }}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      leftSection={<CreateNewFolderIcon fontSize="small" />}
+                      onClick={() => openNewFolderDialog(null, "virtual")}
+                    >
+                      {t("filesPage.newFolder", "New folder")}
+                    </Button>
+                    <Menu shadow="md" position="bottom-end" withinPortal>
+                      <Menu.Target>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          px="xs"
+                          aria-label={t(
+                            "filesPage.newFolderMenu.more",
+                            "More ways to add a folder",
+                          )}
+                        >
+                          <ArrowDropDownIcon fontSize="small" />
+                        </Button>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          leftSection={<CreateNewFolderIcon fontSize="small" />}
+                          onClick={() => openNewFolderDialog(null, "virtual")}
+                        >
+                          {t(
+                            "filesPage.newFolderMenu.device",
+                            "New folder on this device",
+                          )}
+                          <Text size="xs" c="dimmed">
+                            {t(
+                              "filesPage.newFolderMenu.deviceHint",
+                              "Lives only on this device. Works offline.",
+                            )}
+                          </Text>
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={
+                            <DriveFolderUploadIcon fontSize="small" />
+                          }
+                          disabled={Boolean(addExistingDisabledReason)}
+                          onClick={() => void addExistingFolder()}
+                        >
+                          {t(
+                            "filesPage.newFolderMenu.addExisting",
+                            "Add folder from this computer…",
+                          )}
+                          <Text size="xs" c="dimmed">
+                            {addExistingDisabledReason ??
+                              t(
+                                "filesPage.newFolderMenu.addExistingHint",
+                                "Its files stay exactly where they are.",
+                              )}
+                          </Text>
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<CloudIcon fontSize="small" />}
+                          disabled={Boolean(serverFolderDisabledReason)}
+                          onClick={() => openNewFolderDialog(null, "server")}
+                        >
+                          {t(
+                            "filesPage.newFolderMenu.server",
+                            "New folder on the server",
+                          )}
+                          <Text size="xs" c="dimmed">
+                            {serverFolderDisabledReason ??
+                              t(
+                                "filesPage.newFolderMenu.serverHint",
+                                "Synced to your account, available wherever you sign in.",
+                              )}
+                          </Text>
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </span>
                 )}
                 <Button
                   size="sm"
@@ -1757,7 +1842,6 @@ export default function FileManagerView() {
             ? t("filesPage.save", "Save")
             : t("filesPage.create", "Create")
         }
-        kindChoices={newFolderKindChoices}
         onClose={closeFolderNameDialog}
         onSubmit={submitFolderName}
       />

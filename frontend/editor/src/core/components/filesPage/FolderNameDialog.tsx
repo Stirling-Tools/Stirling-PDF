@@ -1,123 +1,47 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Alert,
-  Group,
-  Modal,
-  Radio,
-  Stack,
-  Text,
-  TextInput,
-} from "@mantine/core";
+import { Alert, Group, Modal, Stack, TextInput } from "@mantine/core";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
 import { Button } from "@app/ui/Button";
-import type { FolderKind } from "@app/types/folder";
-import {
-  pickDirectory,
-  type PickedDirectory,
-} from "@app/services/directoryPicker";
 
 interface FolderNameDialogProps {
   opened: boolean;
   title: string;
   initialName?: string;
   submitLabel: string;
-  /**
-   * Kinds the new folder may be, when the caller is offering a choice — only
-   * ever at root-level creation, since a subfolder inherits its parent's kind.
-   * A disabled entry renders greyed with its reason as the tooltip, the same
-   * treatment the New folder button itself used to get; keeping the option
-   * visible tells the user the capability exists even where this install
-   * can't offer it. Absent (or a single enabled entry) means no chooser.
-   */
-  kindChoices?: Array<{ kind: FolderKind; disabledReason?: string }>;
   onClose: () => void;
-  onSubmit: (
-    name: string,
-    kind?: FolderKind,
-    /** For kind "local": the directory being mounted. */
-    directory?: string,
-  ) => void | Promise<void>;
+  onSubmit: (name: string) => void | Promise<void>;
 }
-
-/**
- * Label + hint per offered kind, resolved through i18n at render. Framed by
- * what the user is doing, not by implementation: pointing Stirling at a
- * folder that already exists, creating a new one on this device, or creating
- * one on the server.
- */
-const KIND_COPY: Record<
-  FolderKind,
-  {
-    labelKey: string;
-    labelDefault: string;
-    hintKey: string;
-    hintDefault: string;
-  }
-> = {
-  local: {
-    labelKey: "filesPage.folderKindChoice.local",
-    labelDefault: "Add an existing folder",
-    hintKey: "filesPage.folderKindChoice.localHint",
-    hintDefault:
-      "Point Stirling at a folder already on this computer. Its files stay exactly where they are.",
-  },
-  virtual: {
-    labelKey: "filesPage.folderKindChoice.virtual",
-    labelDefault: "Create a folder on this device",
-    hintKey: "filesPage.folderKindChoice.virtualHint",
-    hintDefault: "A new folder that lives only on this device. Works offline.",
-  },
-  server: {
-    labelKey: "filesPage.folderKindChoice.server",
-    labelDefault: "Create a folder on the server",
-    hintKey: "filesPage.folderKindChoice.serverHint",
-    hintDefault: "Synced to your account and available wherever you sign in.",
-  },
-};
 
 export function FolderNameDialog({
   opened,
   title,
   initialName = "",
   submitLabel,
-  kindChoices,
   onClose,
   onSubmit,
 }: FolderNameDialogProps) {
   const { t } = useTranslation();
   const [value, setValue] = useState(initialName);
-  const firstEnabledKind = kindChoices?.find((c) => !c.disabledReason)?.kind;
-  const [kind, setKind] = useState<FolderKind | undefined>(firstEnabledKind);
-  const [pickedDir, setPickedDir] = useState<PickedDirectory | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (opened) {
       setValue(initialName);
-      setKind(firstEnabledKind);
-      setPickedDir(null);
       setSubmitting(false);
       setError(null);
     }
-    // kindChoices is a fresh array per render; keying the reset on the derived
-    // first-enabled kind keeps this effect from re-firing (and wiping the
-    // user's pick) every render while the dialog is open.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opened, initialName, firstEnabledKind]);
-
-  const mountingDisk = kind === "local";
+  }, [opened, initialName]);
 
   const submit = async () => {
-    // A mounted folder is named by its directory; anything else by the input.
-    const name = mountingDisk ? pickedDir?.name : value.trim();
+    const name = value.trim();
     if (!name) return;
     setSubmitting(true);
     setError(null);
     try {
-      await onSubmit(name, kind, mountingDisk ? pickedDir?.path : undefined);
+      await onSubmit(name);
       onClose();
     } catch (err) {
       // Keep dialog open so the user can retry. Closing on error was a
@@ -147,79 +71,20 @@ export function FolderNameDialog({
       transitionProps={{ duration: 0 }}
     >
       <Stack gap="sm">
-        {kindChoices && kindChoices.length > 1 && (
-          <Radio.Group
-            value={kind}
-            onChange={(next) => setKind(next as FolderKind)}
-            label={t(
-              "filesPage.folderKindChoice.label",
-              "Where should this folder live?",
-            )}
-          >
-            <Stack gap="xs" mt="xs">
-              {kindChoices.map(({ kind: choice, disabledReason }) => {
-                const copy = KIND_COPY[choice];
-                // A disabled option explains itself in its own description —
-                // the reason is the one thing the user needs, and hover-only
-                // text hides it (and never appears on touch).
-                return (
-                  <Radio
-                    key={choice}
-                    value={choice}
-                    disabled={Boolean(disabledReason)}
-                    label={t(copy.labelKey, copy.labelDefault)}
-                    description={
-                      disabledReason ?? t(copy.hintKey, copy.hintDefault)
-                    }
-                  />
-                );
-              })}
-            </Stack>
-          </Radio.Group>
-        )}
-        {mountingDisk ? (
-          <Group gap="sm" wrap="nowrap">
-            <Button
-              variant="secondary"
-              onClick={async () => {
-                const picked = await pickDirectory();
-                if (picked) setPickedDir(picked);
-              }}
-            >
-              {t(
-                "filesPage.folderKindChoice.chooseDirectory",
-                "Choose folder…",
-              )}
-            </Button>
-            <Text
-              size="sm"
-              c={pickedDir ? undefined : "dimmed"}
-              style={{ wordBreak: "break-all" }}
-            >
-              {pickedDir
-                ? pickedDir.path
-                : t(
-                    "filesPage.folderKindChoice.noDirectory",
-                    "No folder chosen yet",
-                  )}
-            </Text>
-          </Group>
-        ) : (
-          <TextInput
-            autoFocus
-            value={value}
-            onChange={(e) => setValue(e.currentTarget.value)}
-            placeholder={t("filesPage.folderName.placeholder", "Folder name")}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                void submit();
-              }
-            }}
-            maxLength={120}
-            aria-label={t("filesPage.folderName.label", "Folder name")}
-          />
-        )}
+        <TextInput
+          autoFocus
+          value={value}
+          onChange={(e) => setValue(e.currentTarget.value)}
+          placeholder={t("filesPage.folderName.placeholder", "Folder name")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void submit();
+            }
+          }}
+          maxLength={120}
+          aria-label={t("filesPage.folderName.label", "Folder name")}
+        />
         {error && (
           <Alert
             color="red"
@@ -237,7 +102,7 @@ export function FolderNameDialog({
           <Button
             onClick={submit}
             loading={submitting}
-            disabled={mountingDisk ? !pickedDir : !value.trim()}
+            disabled={!value.trim()}
           >
             {submitLabel}
           </Button>

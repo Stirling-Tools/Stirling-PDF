@@ -65,6 +65,8 @@ export type FilesPageTab =
 export interface FolderNameDialogState {
   mode: "new" | "rename" | null;
   parentId?: FolderId | null;
+  /** For a root-level create: the kind the caller chose (menu, not dialog). */
+  kind?: FolderKind;
   folder?: FolderRecord;
 }
 
@@ -108,14 +110,10 @@ interface FilesPageContextValue {
 
   // Dialog state
   folderNameDialog: FolderNameDialogState;
-  openNewFolderDialog: (parentId?: FolderId | null) => void;
+  openNewFolderDialog: (parentId?: FolderId | null, kind?: FolderKind) => void;
   openRenameFolderDialog: (folder: FolderRecord) => void;
   closeFolderNameDialog: () => void;
-  submitFolderName: (
-    name: string,
-    kind?: FolderKind,
-    directory?: string,
-  ) => Promise<void>;
+  submitFolderName: (name: string) => Promise<void>;
 
   moveDialog: MoveDialogState;
   promptMoveFiles: (fileIds: FileId[]) => void;
@@ -253,8 +251,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     useState<FolderNameDialogState>({ mode: null });
 
   const openNewFolderDialog = useCallback(
-    (parentId: FolderId | null = folders.currentFolderId) => {
-      setFolderNameDialog({ mode: "new", parentId });
+    (
+      parentId: FolderId | null = folders.currentFolderId,
+      kind?: FolderKind,
+    ) => {
+      setFolderNameDialog({ mode: "new", parentId, kind });
     },
     [folders.currentFolderId],
   );
@@ -268,20 +269,14 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const submitFolderName = useCallback(
-    async (name: string, kind?: FolderKind, directory?: string) => {
+    async (name: string) => {
       if (folderNameDialog.mode === "new") {
-        if (kind === "local" && directory) {
-          // Mounting, not creating: the directory already exists on disk and
-          // the record just points at it.
-          await folders.mountLocalFolder(directory, name);
-          return;
-        }
-        // The kind only matters at the root; a subfolder inherits its
-        // parent's kind in the context regardless of what is passed.
+        // The kind was chosen before the dialog opened (the New-folder menu);
+        // it only matters at the root — a subfolder inherits its parent's.
         await folders.createFolder(
           name,
           folderNameDialog.parentId ?? folders.currentFolderId,
-          kind,
+          folderNameDialog.kind,
         );
       } else if (
         folderNameDialog.mode === "rename" &&
