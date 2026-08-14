@@ -2,10 +2,13 @@ package stirling.software.proprietary.security.model;
 
 import java.io.Serializable;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.security.core.GrantedAuthority;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,6 +27,8 @@ import lombok.Setter;
         name = "authorities",
         // index the FK: authorities load by user_id
         indexes = @Index(name = "idx_authorities_user_id", columnList = "user_id"))
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "users")
 @Getter
 @Setter
 public class Authority implements GrantedAuthority, Serializable {

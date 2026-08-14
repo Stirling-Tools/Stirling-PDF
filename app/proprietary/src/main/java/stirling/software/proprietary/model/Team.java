@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.proxy.HibernateProxy;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -21,6 +23,8 @@ import stirling.software.proprietary.security.model.User;
 @Entity
 @Table(name = "teams")
 @EntityListeners(TeamEntityListener.class)
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "teams")
 @NoArgsConstructor
 @Getter
 @Setter
