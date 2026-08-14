@@ -21,18 +21,42 @@ const PortalApp = includePortal
   : null;
 
 /**
+ * Return leg of the account-link handshake, which Stirling redirects to with the
+ * admin's session in the URL fragment.
+ *
+ * <p>Sits here rather than in the editor's own route list because it is a portal
+ * view: importing it there would pull the portal chunk into the main bundle, which
+ * is the thing this seam exists to avoid. It is also why core and desktop need no
+ * {@code @portal/*} path mapping — their stubs return nothing.
+ *
+ * <p>Top level rather than under PORTAL_BASENAME so the callback URL the portal
+ * advertises is just origin plus this path, with no second basename to compose.
+ */
+const ConnectCallback = includePortal
+  ? lazy(async () => {
+      const m = await import("@portal/views/ConnectCallback");
+      return { default: m.default };
+    })
+  : null;
+
+/**
  * The portal mounts as an admin-only route-set at PORTAL_BASENAME (/processor/*).
  * Access is gated inside PortalApp (its own AuthProvider + AuthGate, plus server
  * enforcement), so this just wires the lazy route into the editor's router when
  * the portal is included in this build.
  */
 export function getAdminRouteExtensions(): ReactElement[] {
-  if (!PortalApp) return [];
+  if (!PortalApp || !ConnectCallback) return [];
   return [
     <Route
       key="portal"
       path={`${PORTAL_BASENAME}/*`}
       element={<PortalApp />}
+    />,
+    <Route
+      key="account-link-callback"
+      path="/account-link/callback"
+      element={<ConnectCallback />}
     />,
   ];
 }

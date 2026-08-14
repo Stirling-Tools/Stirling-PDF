@@ -8,7 +8,6 @@ import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
 import AuthCallback from "@app/routes/AuthCallback";
-import ConnectCallback from "@portal/views/ConnectCallback";
 import InviteAccept from "@app/routes/InviteAccept";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import ParticipantView from "@app/components/workflow/ParticipantView";
@@ -103,13 +102,6 @@ export default function App() {
                       element={<Navigate to="/login" replace />}
                     />
                     <Route path="/auth/callback" element={<AuthCallback />} />
-                    {/* Return leg of the account-link handshake. Must stay a
-                        real route: the SaaS approval page redirects here with
-                        the session in the fragment. */}
-                    <Route
-                      path="/account-link/callback"
-                      element={<ConnectCallback />}
-                    />
                     <Route path="/invite/:token" element={<InviteAccept />} />
                     <Route path="/share/:token" element={<ShareLinkPage />} />
                     {/* The editor and its tool routes - Landing handles auth logic */}
