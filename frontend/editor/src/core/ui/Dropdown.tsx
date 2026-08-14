@@ -164,9 +164,11 @@ function Menu({ children, className, width }: DropdownMenuProps) {
   // out of any `overflow` ancestor (e.g. a table's horizontal scroll area),
   // which would otherwise clip it and add a scrollbar.
   const [pos, setPos] = useState<{
-    top: number;
+    top?: number;
+    bottom?: number;
     left?: number;
     right?: number;
+    maxHeight: number;
   } | null>(null);
 
   useLayoutEffect(() => {
@@ -175,12 +177,24 @@ function Menu({ children, className, width }: DropdownMenuProps) {
       const el = triggerRef.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
-      const top = r.bottom + 4;
-      setPos(
+      const gap = 4;
+      const margin = 8;
+      const spaceBelow = window.innerHeight - r.bottom - margin;
+      const spaceAbove = r.top - margin;
+      // Flip above when there's more room there, so a trigger near the viewport
+      // bottom doesn't open a fixed menu that runs off-screen and can't scroll.
+      const below = spaceBelow >= spaceAbove;
+      const horizontal =
         align === "end"
-          ? { top, right: window.innerWidth - r.right }
-          : { top, left: r.left },
-      );
+          ? { right: window.innerWidth - r.right }
+          : { left: r.left };
+      setPos({
+        ...horizontal,
+        ...(below
+          ? { top: r.bottom + gap }
+          : { bottom: window.innerHeight - r.top + gap }),
+        maxHeight: Math.max(0, (below ? spaceBelow : spaceAbove) - gap),
+      });
     };
     place();
     // Track the trigger while scrolling/resizing (capture catches inner scrollers).
@@ -195,9 +209,14 @@ function Menu({ children, className, width }: DropdownMenuProps) {
   if (!open || !pos) return null;
   const style: React.CSSProperties = {
     position: "fixed",
-    top: pos.top,
-    left: pos.left,
-    right: pos.right,
+    // Explicit auto (not undefined) so the CSS fallback `top`/`left` can't leak
+    // in on the axis this placement isn't pinning.
+    top: pos.top ?? "auto",
+    bottom: pos.bottom ?? "auto",
+    left: pos.left ?? "auto",
+    right: pos.right ?? "auto",
+    maxHeight: pos.maxHeight,
+    overflowY: "auto",
     ...(width !== undefined
       ? { minWidth: typeof width === "number" ? `${width}px` : width }
       : {}),

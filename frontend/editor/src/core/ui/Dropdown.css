@@ -4,8 +4,7 @@
 }
 
 .sui-dd__menu {
-  position: absolute;
-  top: calc(100% + var(--space-1));
+  /* Positioned (fixed, portaled to <body>) entirely by the Menu component. */
   min-width: 12rem;
   padding: var(--space-1);
   background: var(--c-surface);
@@ -17,13 +16,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.0625rem;
-}
-
-.sui-dd__menu--start {
-  left: 0;
-}
-.sui-dd__menu--end {
-  right: 0;
 }
 
 .sui-dd__item {
