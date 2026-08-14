@@ -152,7 +152,7 @@ public class AccountLinkController {
         if (rows.isEmpty()) {
             return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
         }
-        TeamMembership m = rows.get(0);
+        TeamMembership m = rows.getFirst();
         if (m.getRole() != TeamRole.LEADER) {
             return new LeaderTeam(null, null, HttpStatus.FORBIDDEN);
         }

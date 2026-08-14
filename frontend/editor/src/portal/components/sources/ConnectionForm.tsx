@@ -5,6 +5,7 @@ import {
   type ConnectionFieldDef,
   type CreatableConnectionType,
 } from "@portal/components/sources/connectionTypes";
+import "@portal/components/sources/connections.css";
 
 /**
  * Renders whatever fields a connection type declares, rather than knowing any vendor's shape.
