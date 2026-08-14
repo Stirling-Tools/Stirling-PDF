@@ -37,8 +37,13 @@ COPY app/core/build.gradle                  app/core/
 COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
 
-# Use system gradle instead of gradlew to avoid SSL issues downloading gradle distribution on emulated arm64
-RUN gradle dependencies --no-daemon || true
+# The Gradle image declares /home/gradle/.gradle as a volume, so dependency and
+# local build-cache data do not become reusable image layers. BuildKit cache
+# mounts keep that data outside the image and let BoringCache persist it between
+# otherwise isolated CI builders.
+# Use system gradle instead of gradlew to avoid SSL issues downloading gradle distribution on emulated arm64.
+RUN --mount=type=cache,id=stirling-gradle,target=/home/gradle/.gradle,sharing=locked \
+    gradle dependencies --no-daemon || true
 
 COPY . .
 
@@ -46,7 +51,9 @@ COPY . .
 ARG BUILD_PORTAL=false
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
-RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+RUN --mount=type=cache,id=stirling-gradle,target=/home/gradle/.gradle,sharing=locked \
+    --mount=type=cache,id=stirling-npm,target=/root/.npm,sharing=locked \
+    JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
     DISABLE_ADDITIONAL_FEATURES=false \
     gradle clean build \
       -PbuildWithFrontend=true \

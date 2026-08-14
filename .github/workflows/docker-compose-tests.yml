@@ -132,6 +132,7 @@ jobs:
           proxy-port: 22244
           working-directory: ${{ matrix.boringcache-directory }}
           docker-command: setup
+          docker-mount-cache: true
           metadata-hints: workflow=docker-compose-tests,stage=build,image=${{ matrix.image }}
         env:
           BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
