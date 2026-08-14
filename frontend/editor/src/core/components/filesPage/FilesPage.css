@@ -34,6 +34,33 @@
   gap: 0.5rem;
 }
 
+.files-page-header-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.files-page-header-search .super-search {
+  flex: 0 1 24rem;
+  width: min(100%, 24rem);
+  max-width: 24rem;
+}
+
+.files-page-header-search .super-search input {
+  background-color: transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+
+[data-mantine-color-scheme="dark"]
+  .files-page-header-search
+  .super-search
+  input {
+  background-color: transparent;
+}
+
 .files-page-breadcrumbs {
   display: flex;
   align-items: center;
@@ -77,28 +104,6 @@
   height: 1rem;
   opacity: 0.55;
   flex-shrink: 0;
-}
-
-.files-page-search {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: 999px;
-  padding: 0.2rem 0.75rem;
-  /* Fills its grid cell; the cell's minmax(...) clamps to a sensible range. */
-  width: 100%;
-  min-width: 0;
-}
-
-.files-page-search input {
-  background: transparent;
-  border: none;
-  outline: none;
-  flex: 1;
-  color: var(--c-text);
-  font-size: 0.9rem;
 }
 
 .files-page-body {
@@ -339,6 +344,9 @@
 }
 
 .files-page-list-row.is-header [data-sortable="true"] {
+  /* Block so the hit area and hover tint fill the columnheader cell that wraps
+     it, rather than hugging the label text. */
+  display: block;
   cursor: pointer;
   padding: 0.2rem 0.4rem;
   margin: -0.2rem -0.4rem;
@@ -741,7 +749,7 @@
   height: 5rem;
   border-radius: 50%;
   background: color-mix(in srgb, var(--c-primary) 12%, transparent);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   margin-bottom: 0.25rem;
 }
 
@@ -980,7 +988,7 @@
 .files-page-details-version-timeline-count {
   margin-left: auto;
   font-weight: 600;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -1112,7 +1120,29 @@
 .files-page-details-version-timeline-expand-btn:hover span {
   color: var(--c-text);
 }
-
+.files-page-details-version-timeline-delta {
+  font-size: 0.82rem;
+  color: var(--c-text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+.files-page-details-version-timeline-delta.is-origin {
+  font-weight: 400;
+  color: var(--c-text-subtle);
+  font-style: italic;
+}
+.files-page-details-version-timeline-delta-plus {
+  color: var(--c-accent-text);
+  font-weight: 700;
+}
+.files-page-details-version-timeline-spacer {
+  flex: 1;
+}
 .files-page-details-version-timeline-chevron {
   color: var(--c-text-subtle);
   transition: transform 0.15s ease;
@@ -1120,7 +1150,7 @@
 
 .files-page-details-version-timeline-chevron.is-expanded {
   transform: rotate(180deg);
-  color: var(--c-primary);
+  color: var(--c-accent-text);
 }
 
 .files-page-details-version-timeline-expanded {
@@ -1185,7 +1215,7 @@
   justify-content: center;
   gap: 1rem;
   pointer-events: none;
-  color: var(--c-primary);
+  color: var(--c-accent-text);
   font-weight: 600;
   font-size: 1.1rem;
   z-index: 10;
@@ -1350,23 +1380,6 @@
     flex-wrap: nowrap;
     overflow-x: auto;
     min-width: 0;
-  }
-  .files-page-search {
-    /* Shrink hard so the search bar doesn't eat the whole action row.
-       Users still see the icon + a few chars of the placeholder.
-       `overflow: hidden` clips the input's natural intrinsic width so
-       placeholder text never leaks outside the rounded pill. */
-    min-width: 0;
-    flex: 0 1 5.5rem;
-    max-width: 6.5rem;
-    overflow: hidden;
-  }
-  .files-page-search input {
-    /* `min-width: 0` lets flex actually shrink the input below its
-       default ~20-char intrinsic size - without this, the placeholder
-       extends beyond the parent's clip box and bleeds onto neighbours. */
-    min-width: 0;
-    text-overflow: ellipsis;
   }
   /* Upload becomes an icon-only square button on mobile so the action
      row stops getting clipped. Scoped to `.files-page-header-actions`

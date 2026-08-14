@@ -1,5 +1,19 @@
-import { describe, expect, test } from "vitest";
-import { processMultiFileResponse } from "@app/utils/automationExecutor";
+import { beforeEach, describe, expect, type Mock, test, vi } from "vitest";
+import apiClient from "@app/services/apiClient";
+import type { ToolRegistry } from "@app/data/toolsTaxonomy";
+import { ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  executeToolOperation,
+  processMultiFileResponse,
+} from "@app/utils/automationExecutor";
+
+vi.mock("@app/services/apiClient", () => ({
+  default: {
+    post: vi.fn(),
+  },
+}));
+
+const mockedApiClient = vi.mocked(apiClient);
 
 // Regression coverage for the automation-side mirror of the merge bug:
 // non-canonical Content-Types previously misrouted a PDF into ZIP extraction
@@ -54,5 +68,41 @@ describe("processMultiFileResponse (automation execution)", () => {
     const result = await run("APPLICATION/PDF");
     expect(result.length).toBe(1);
     expect(result[0].name).not.toMatch(/\.zip$/);
+  });
+});
+
+describe("executeToolOperation (automation execution)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (mockedApiClient.post as Mock).mockResolvedValue({
+      data: new Blob([PDF_BYTES], { type: "application/pdf" }),
+      headers: { "content-type": "application/pdf" },
+    });
+  });
+
+  test("does not impose a client-side operation timeout", async () => {
+    const toolRegistry = {
+      compress: {
+        operationConfig: {
+          operationType: "compress",
+          toolType: ToolType.singleFile,
+          endpoint: "/api/v1/misc/compress-pdf",
+          defaultParameters: {},
+          buildFormData: (_parameters: unknown, file: File) => {
+            const formData = new FormData();
+            formData.append("fileInput", file);
+            return formData;
+          },
+        },
+      },
+    } as unknown as ToolRegistry;
+
+    await executeToolOperation("compress", {}, inputFiles, toolRegistry);
+
+    expect(mockedApiClient.post).toHaveBeenCalledWith(
+      "/api/v1/misc/compress-pdf",
+      expect.any(FormData),
+      { responseType: "blob" },
+    );
   });
 });

@@ -35,7 +35,7 @@ import {
 } from "@app/tools/formFill/FormFillContext";
 import { useNavigation } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles, useFileState } from "@app/contexts/FileContext";
 import { Skeleton } from "@mantine/core";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
 import type { BaseToolProps } from "@app/types/tool";
@@ -124,7 +124,7 @@ const _MODE_TABS: ModeTabDef[] = [
 const FormFill = (_props: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectedTool } = useNavigation();
-  const { selectors, state: fileState } = useFileState();
+  const { state: fileState } = useFileState();
 
   const {
     state: formState,
@@ -178,7 +178,9 @@ const FormFill = (_props: BaseToolProps) => {
   const isDirtyRef = useRef(formState.isDirty);
   isDirtyRef.current = formState.isDirty;
 
-  const activeFiles = selectors.getFiles();
+  // Subscribing read: getFiles() during render doesn't re-run when the workbench
+  // changes, so the panel kept showing the pre-hydration (or pre-version) file.
+  const { files: activeFiles } = useAllFiles();
   const selectedFileIds = fileState.ui.selectedFileIds;
   const currentFile = useMemo(() => {
     if (activeFiles.length === 0) return null;
