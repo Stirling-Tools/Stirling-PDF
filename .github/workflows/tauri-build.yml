@@ -134,6 +134,7 @@ jobs:
         if: env.BORINGCACHE_ENABLED == 'true'
         uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
+          cli-version: vcli-canary-c093b9b1e335
           trust-policy: auto
           setup: none
           mode: archive
@@ -147,6 +148,7 @@ jobs:
         if: env.BORINGCACHE_ENABLED == 'true'
         uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
+          cli-version: vcli-canary-c093b9b1e335
           trust-policy: auto
           setup: none
           mode: archive
@@ -160,6 +162,7 @@ jobs:
         if: env.BORINGCACHE_ENABLED == 'true'
         uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
+          cli-version: vcli-canary-c093b9b1e335
           trust-policy: auto
           setup: none
           mode: sccache
@@ -173,6 +176,7 @@ jobs:
         if: env.BORINGCACHE_ENABLED == 'true'
         uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
+          cli-version: vcli-canary-c093b9b1e335
           trust-policy: auto
           setup: none
           mode: gradle
@@ -274,6 +278,7 @@ jobs:
         if: env.BORINGCACHE_ENABLED == 'true'
         uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
+          cli-version: vcli-canary-c093b9b1e335
           trust-policy: auto
           setup: none
           mode: cargo
@@ -288,6 +293,7 @@ jobs:
         if: env.BORINGCACHE_ENABLED == 'true' && matrix.platform == 'macos-15'
         uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
+          cli-version: vcli-canary-c093b9b1e335
           trust-policy: auto
           setup: none
           mode: cargo
