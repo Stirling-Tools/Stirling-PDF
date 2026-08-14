@@ -9,11 +9,13 @@ import "@app/components/shared/InfoBanner.css";
 export type InfoBannerTone = "info" | "promo" | "warning" | "danger";
 
 /** Tone decides the button too, so the CTA can't drift from the bar it sits on. */
-const TONE_ACCENT = {
-  info: "default",
-  promo: "default",
-  warning: "warning",
-  danger: "danger",
+const TONE_BUTTON = {
+  info: { variant: "primary", accent: "default" },
+  // Solid ink on the accent tint reads as two competing colours; the inverse fill
+  // sits on the tint instead of fighting it.
+  promo: { variant: "secondary", accent: "default" },
+  warning: { variant: "primary", accent: "warning" },
+  danger: { variant: "primary", accent: "danger" },
 } as const;
 
 interface InfoBannerProps {
@@ -85,8 +87,8 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
       <div className="sui-banner__actions">
         {buttonText && onButtonClick && (
           <Button
-            variant="primary"
-            accent={TONE_ACCENT[tone]}
+            variant={TONE_BUTTON[tone].variant}
+            accent={TONE_BUTTON[tone].accent}
             size="sm"
             loading={loading}
             onClick={onButtonClick}
