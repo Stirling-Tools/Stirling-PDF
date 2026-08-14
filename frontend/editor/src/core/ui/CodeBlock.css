@@ -1,10 +1,9 @@
 .sui-code {
   background: var(--code-bg);
   color: var(--code-text);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-nav);
   overflow: hidden;
   border: 1px solid var(--code-border);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 .sui-code__chrome {
   display: flex;

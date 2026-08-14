@@ -36,9 +36,6 @@
 }
 
 .portal-failures__row {
-  border: 1px solid var(--c-border);
-  border-radius: 8px;
-  background: var(--c-surface);
   padding: 0.8rem 0.95rem;
 }
 
