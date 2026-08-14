@@ -10,6 +10,13 @@ vars:
   # fails at launch with UnsupportedClassVersionError. Enforced by jlink:verify.
   REQUIRED_JAVA: "25"
 
+  # Which backend the bundled JAR is: "true" builds core only, "false" includes
+  # the proprietary module (the `with-login` shape the release matrix builds).
+  # Defaults to core, matching the default desktop release variant; override via
+  # the DISABLE_ADDITIONAL_FEATURES env to run the desktop app against a backend
+  # that carries the proprietary endpoints.
+  DISABLE_ADDITIONAL_FEATURES: '{{.DISABLE_ADDITIONAL_FEATURES | default "true"}}'
+
   # Override via JPDFIUM_PLATFORMS env (csv of platform keys, or 'all').
   JPDFIUM_PLATFORMS:
     sh: |
@@ -128,17 +135,22 @@ tasks:
     run: once
     dir: ..
     env:
-      DISABLE_ADDITIONAL_FEATURES: "true"
+      DISABLE_ADDITIONAL_FEATURES: "{{.DISABLE_ADDITIONAL_FEATURES}}"
     cmds:
-      - echo "Building bootJar with JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
+      - echo "Building bootJar (additional features disabled={{.DISABLE_ADDITIONAL_FEATURES}}) with JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
       - cmd: cmd /c gradlew.bat bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [windows]
       - cmd: ./gradlew bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
         platforms: [linux, darwin]
       - mkdir -p frontend/editor/src-tauri/libs
       - cp app/core/build/libs/stirling-pdf-*.jar frontend/editor/src-tauri/libs/
+      # Record which backend the bundled JAR is, so switching variant rebuilds
+      # rather than silently reusing the other one — the same staleness trap
+      # jlink:verify exists to catch for the JRE.
+      - echo "{{.DISABLE_ADDITIONAL_FEATURES}}" > frontend/editor/src-tauri/libs/.variant
     status:
       - test -f frontend/editor/src-tauri/libs/stirling-pdf-*.jar
+      - test "$(cat frontend/editor/src-tauri/libs/.variant 2>/dev/null)" = "{{.DISABLE_ADDITIONAL_FEATURES}}"
 
   jlink:runtime:
     desc: "Create custom JRE with jlink"
