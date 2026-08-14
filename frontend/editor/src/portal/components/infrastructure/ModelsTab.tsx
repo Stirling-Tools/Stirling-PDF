@@ -110,11 +110,6 @@ export function ModelsTab() {
       key: "operation",
       header: t("portal.infrastructure.models.routingColumns.operation"),
       primary: (r) => r.operation,
-      // The default rule was its own near-empty column; show it inline instead.
-      suffix: (r) =>
-        r.isDefault
-          ? t("portal.infrastructure.models.routingColumns.default")
-          : undefined,
     }),
     column.text({
       key: "docType",

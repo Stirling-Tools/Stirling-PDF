@@ -7670,7 +7670,6 @@ description = "Upgrade to Pro to control which model handles each operation and 
 title = "Model routing is a paid feature"
 
 [portal.infrastructure.models.routingColumns]
-default = "Default"
 docType = "Document type"
 modelForAria = "Model for {{operation}}"
 operation = "Operation"
