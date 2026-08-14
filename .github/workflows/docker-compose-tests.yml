@@ -26,9 +26,13 @@ jobs:
           - image: ultra-lite
             image-ref: docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite
             boringcache-directory: .github/boringcache/docker-ultra-lite
+            dockerfile: docker/embedded/Dockerfile.ultra-lite
+            disable-additional-features: "true"
           - image: fat
             image-ref: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
             boringcache-directory: .github/boringcache/docker-fat
+            dockerfile: docker/embedded/Dockerfile.fat
+            disable-additional-features: "false"
     env:
       BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
     permissions:
@@ -121,9 +125,20 @@ jobs:
         if: (inputs.docker-base-changed != 'true' || matrix.image != 'fat') && env.BORINGCACHE_ENABLED != 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
-      - name: Set up Docker cache with BoringCache
+      # Mount-cache needs BoringCache to own the build so its authenticated
+      # worker can snapshot and restore the Dockerfile cache mounts.
+      - name: Build ${{ matrix.image }} application artifacts
+        if: env.BORINGCACHE_ENABLED == 'true' && (inputs.docker-base-changed != 'true' || matrix.image != 'fat')
+        env:
+          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.disable-additional-features }}
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+        run: ./gradlew clean build -PnoSpotless
+
+      - name: Build ${{ matrix.image }} test image with BoringCache
         id: boringcache-docker
-        if: (inputs.docker-base-changed != 'true' || matrix.image != 'fat') && env.BORINGCACHE_ENABLED == 'true'
+        if: env.BORINGCACHE_ENABLED == 'true' && (inputs.docker-base-changed != 'true' || matrix.image != 'fat')
         uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
         with:
           trust-policy: auto
@@ -131,8 +146,17 @@ jobs:
           mode: docker
           proxy-port: 22244
           working-directory: ${{ matrix.boringcache-directory }}
-          docker-command: setup
+          docker-command: build
+          context: ../../..
+          dockerfile: ${{ matrix.dockerfile }}
+          image: docker.stirlingpdf.com/stirlingtools/stirling-pdf
+          tags: ${{ matrix.image }}
+          load: true
+          push: false
+          provenance: false
+          build-args: VERSION_TAG=alpha
           docker-mount-cache: true
+          diagnostics: summary
           metadata-hints: workflow=docker-compose-tests,stage=build,image=${{ matrix.image }}
         env:
           BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
@@ -150,6 +174,7 @@ jobs:
         run: docker buildx use default
 
       - name: Build ${{ matrix.image }} test image
+        if: env.BORINGCACHE_ENABLED != 'true' || (inputs.docker-base-changed == 'true' && matrix.image == 'fat')
         run: |
           chmod +x ./testing/test.sh
           ./testing/test.sh --build-only "$IMAGE"
@@ -160,10 +185,6 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
           DOCKER_BASE_PREBUILT: ${{ steps.boringcache-base.outcome == 'success' && 'true' || 'false' }}
-          BORINGCACHE_DOCKER_CACHE_FROM_ULTRA_LITE: ${{ steps.boringcache-docker.outputs.cache-from }}
-          BORINGCACHE_DOCKER_CACHE_TO_ULTRA_LITE: ${{ steps.boringcache-docker.outputs.cache-to }}
-          BORINGCACHE_DOCKER_CACHE_FROM_FAT: ${{ steps.boringcache-docker.outputs.cache-from }}
-          BORINGCACHE_DOCKER_CACHE_TO_FAT: ${{ steps.boringcache-docker.outputs.cache-to }}
 
       - name: Pack ${{ matrix.image }} test image
         env:
