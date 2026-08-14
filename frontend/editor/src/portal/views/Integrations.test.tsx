@@ -82,9 +82,10 @@ describe("Integrations view", () => {
     expect(
       screen.getByText("portal.integrations.connectionCount"),
     ).toBeInTheDocument();
+    // Each connected vendor group offers a Connect action (to add another).
     expect(
-      screen.getByText("portal.integrations.addAnother"),
-    ).toBeInTheDocument();
+      screen.getAllByText("portal.integrations.connect").length,
+    ).toBeGreaterThan(0);
     // The available band remains for the other, unconnected vendors.
     expect(
       screen.getByText(/portal\.integrations\.availableHeading/),

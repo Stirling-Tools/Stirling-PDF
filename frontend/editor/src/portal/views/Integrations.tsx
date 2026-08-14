@@ -296,7 +296,7 @@ export function Integrations() {
           : t("portal.integrations.status.connected"),
       actions: [
         {
-          label: t("portal.integrations.addAnother"),
+          label: t("portal.integrations.connect"),
           onClick: () => openCreate(type.id),
         },
       ],

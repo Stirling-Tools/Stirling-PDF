@@ -7813,7 +7813,6 @@ security = "Security"
 storage = "Storage"
 
 [portal.integrations]
-addAnother = "Add another"
 availableHeading = "Available"
 comingSoonHeading = "Coming soon"
 connect = "Connect"
