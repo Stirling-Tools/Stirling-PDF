@@ -8,17 +8,15 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 const faces = new Map<number, FontFace>();
 /** Pointers already tried, so a font that cannot load is not retried per run. */
 const attempted = new Set<number>();
+const loaded = new Set<number>();
+const listeners = new Set<() => void>();
+let generation = 0;
 
 /** CSS family name for a font pointer. Stable whether or not it ever loads. */
 export function embeddedFaceFamily(fontPtr: number): string {
   return `pdfface-${fontPtr}`;
 }
 
-/**
- * Register the face PDFium rendered with, under {@link embeddedFaceFamily}.
- * Fire-and-forget: an unsupported format just never resolves and the overlay's
- * generic stack keeps applying.
- */
 export function registerEmbeddedFace(
   m: WrappedPdfiumModule,
   fontPtr: number,
@@ -29,21 +27,64 @@ export function registerEmbeddedFace(
     return;
   }
   const bytes = readFontData(m, fontPtr);
-  // Bare CFF and Type1 are common in PDFs and FontFace accepts neither, so a
-  // rejected load is an ordinary outcome rather than an error.
   if (!bytes || bytes.length === 0) return;
   if (faceBytesHeld + bytes.length > MAX_TOTAL_FACE_BYTES) return;
-  faceBytesHeld += bytes.length;
+  const held = bytes.length;
+  const bornAt = generation;
+  faceBytesHeld += held;
+
+  let face: FontFace;
   try {
-    const face = new FontFace(embeddedFaceFamily(fontPtr), bytes);
-    faces.set(fontPtr, face);
-    void face
-      .load()
-      .then(() => document.fonts.add(face))
-      .catch(() => faces.delete(fontPtr));
+    face = new FontFace(embeddedFaceFamily(fontPtr), bytes);
   } catch {
-    /* constructor rejects a malformed buffer outright */
+    faceBytesHeld -= held;
+    return;
   }
+  faces.set(fontPtr, face);
+  void face
+    .load()
+    .then(() => {
+      if (bornAt !== generation) return;
+      document.fonts.add(face);
+      loaded.add(fontPtr);
+      notifyFaceLoaded();
+    })
+    .catch(() => {
+      faces.delete(fontPtr);
+      if (bornAt === generation) faceBytesHeld -= held;
+    });
+}
+
+export function isEmbeddedFaceReady(fontPtr: number): boolean {
+  return loaded.has(fontPtr);
+}
+
+export function onEmbeddedFaceLoaded(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function notifyFaceLoaded(): void {
+  for (const listener of [...listeners]) {
+    try {
+      listener();
+    } catch {
+      continue;
+    }
+  }
+}
+
+function isLoadableFaceHeader(head: Uint8Array): boolean {
+  if (head.length < 4) return false;
+  const tag = String.fromCharCode(head[0], head[1], head[2], head[3]);
+  if (tag === "OTTO" || tag === "true" || tag === "wOFF" || tag === "wOF2") {
+    return true;
+  }
+  return (
+    head[0] === 0x00 && head[1] === 0x01 && head[2] === 0x00 && head[3] === 0x00
+  );
 }
 
 /** Copy a font's face bytes out of the WASM heap. */
@@ -74,6 +115,7 @@ function readFontData(
       buf,
       size,
     );
+    if (!isLoadableFaceHeader(heap)) return null;
     // Copy into a plain ArrayBuffer: the heap view dies with the next
     // allocation that grows memory, and FontFace rejects a shared buffer.
     const copy = new Uint8Array(new ArrayBuffer(size));
@@ -106,5 +148,7 @@ export function resetEmbeddedFaces(): void {
   }
   faces.clear();
   attempted.clear();
+  loaded.clear();
   faceBytesHeld = 0;
+  generation++;
 }

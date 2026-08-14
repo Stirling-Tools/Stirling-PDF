@@ -74,6 +74,20 @@ export class PdfiumTextReader {
     }
     page.loaded = true;
   }
+
+  static recapturePositions(doc: EditorDocument, page: Page): void {
+    const m = doc.module;
+    if (!page.loaded || page.runs.length === 0) return;
+    page.flushGenerate(m);
+    const textPagePtr = m.FPDFText_LoadPage(page.pagePtr);
+    if (!textPagePtr) return;
+    try {
+      const geometry = collectCharGeometry(m, page, textPagePtr);
+      if (geometry) captureCharPositions(geometry);
+    } finally {
+      m.FPDFText_ClosePage(textPagePtr);
+    }
+  }
 }
 
 /** Every backing PDFium object pointer mapped to its post-grouping run. */

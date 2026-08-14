@@ -178,7 +178,24 @@ export class TextRun {
       paragraphLineHeight: this.paragraphLineHeight,
       paragraphLineCount: this.paragraphMemberPtrs.length || undefined,
       paragraphSlotCount: this.paragraphLineSlots.length || undefined,
+      paragraphBaselines: this.lineBaselines(),
+      paragraphLineLefts: this.lineLefts(),
       locked: this.locked || undefined,
     };
+  }
+
+  private lineBaselines(): number[] | undefined {
+    if (this.paragraphLineSlots.length > 0) {
+      return this.paragraphLineSlots.map((s) => s.baselineY);
+    }
+    return this.paragraphMemberFs.length > 0
+      ? [...this.paragraphMemberFs]
+      : undefined;
+  }
+
+  private lineLefts(): number[] | undefined {
+    return this.paragraphLineSlots.length > 0
+      ? this.paragraphLineSlots.map((s) => s.matrixE)
+      : undefined;
   }
 }

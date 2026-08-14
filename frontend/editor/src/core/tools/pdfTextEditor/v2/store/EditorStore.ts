@@ -75,6 +75,8 @@ export interface EditorViewState {
   showRulers: boolean;
 }
 
+const POSITION_REFRESH_MS = 600;
+
 const INITIAL: EditorViewState = {
   hasDocument: false,
   pageCount: 0,
@@ -105,6 +107,7 @@ export class EditorStore {
   private savedTop: Command | null = null;
   /** True when edits were baked into the stream (e.g. grouping-mode switch). */
   private bakedDirty = false;
+  private positionRefreshTimer: number | null = null;
   /** Monotonic token so a superseded async load can detect it lost the race. */
   private loadToken = 0;
   /** File awaiting a password retry; held off the view state (not serialisable). */
@@ -282,6 +285,42 @@ export class EditorStore {
     this.history.execute(cmd, this.doc);
     this.resnapshot();
     this.patch({ dirty: this.isDirty() });
+    this.schedulePositionRefresh();
+  }
+
+  private schedulePositionRefresh(): void {
+    if (typeof window === "undefined") return;
+    if (this.positionRefreshTimer !== null) {
+      window.clearTimeout(this.positionRefreshTimer);
+    }
+    this.positionRefreshTimer = window.setTimeout(() => {
+      this.positionRefreshTimer = null;
+      const doc = this.doc;
+      if (!doc) return;
+      for (const page of doc.loadedPages()) {
+        try {
+          PdfiumTextReader.recapturePositions(doc, page);
+        } catch {
+          continue;
+        }
+      }
+      this.refreshRunSnapshots();
+    }, POSITION_REFRESH_MS);
+  }
+
+  private refreshRunSnapshots(): void {
+    const doc = this.doc;
+    if (!doc) return;
+    this.patch({
+      pages: this.state.pages.map((p) => {
+        const live = doc.page(p.pageIndex);
+        return {
+          ...p,
+          runs: live.runs.map((r) => r.snapshot()),
+          images: live.images.map((img) => img.snapshot()),
+        };
+      }),
+    });
   }
 
   undo(): void {

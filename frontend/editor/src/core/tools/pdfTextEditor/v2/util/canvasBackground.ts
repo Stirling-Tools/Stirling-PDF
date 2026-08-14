@@ -42,7 +42,10 @@ export function sampleRunBackground(
     { top: Math.round(y + height - margin), h: margin },
   ];
 
-  const counts = new Map<string, { c: Rgb; n: number }>();
+  const buckets = new Map<
+    string,
+    { r: number; g: number; b: number; n: number }
+  >();
   for (const band of bands) {
     const top = Math.max(0, Math.min(canvas.height - 1, band.top));
     const h = Math.max(1, Math.min(band.h, canvas.height - top));
@@ -55,18 +58,26 @@ export function sampleRunBackground(
       return null;
     }
     for (let i = 0; i < data.length; i += 4 * STEP) {
-      // Quantise so anti-aliasing noise collapses onto the real colour.
-      const r = data[i] & 0xf8;
-      const g = data[i + 1] & 0xf8;
-      const b = data[i + 2] & 0xf8;
-      const key = `${r},${g},${b}`;
-      const hit = counts.get(key);
-      if (hit) hit.n += 1;
-      else counts.set(key, { c: { r, g, b }, n: 1 });
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const key = `${r & 0xf8},${g & 0xf8},${b & 0xf8}`;
+      const hit = buckets.get(key);
+      if (hit) {
+        hit.r += r;
+        hit.g += g;
+        hit.b += b;
+        hit.n += 1;
+      } else buckets.set(key, { r, g, b, n: 1 });
     }
   }
 
-  let best: { c: Rgb; n: number } | null = null;
-  for (const v of counts.values()) if (!best || v.n > best.n) best = v;
-  return best ? best.c : null;
+  let best: { r: number; g: number; b: number; n: number } | null = null;
+  for (const v of buckets.values()) if (!best || v.n > best.n) best = v;
+  if (!best) return null;
+  return {
+    r: Math.round(best.r / best.n),
+    g: Math.round(best.g / best.n),
+    b: Math.round(best.b / best.n),
+  };
 }

@@ -3,6 +3,17 @@ import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 
 /** Renders pages to bitmaps for the on-screen preview. */
 export class PdfiumPageRenderer {
+  static rasterSize(
+    pageWidth: number,
+    pageHeight: number,
+    scale: number,
+  ): { width: number; height: number } {
+    return {
+      width: Math.max(1, Math.round(pageWidth * scale)),
+      height: Math.max(1, Math.round(pageHeight * scale)),
+    };
+  }
+
   static async render(
     doc: EditorDocument,
     page: Page,
@@ -11,10 +22,11 @@ export class PdfiumPageRenderer {
     const m = doc.module;
     // No flush: FPDF_RenderPageBitmap draws from the in-memory object list, so
     // the preview is current without rewriting the content stream.
-    const rawW = page.width;
-    const rawH = page.height;
-    const w = Math.max(1, Math.round(rawW * scale));
-    const h = Math.max(1, Math.round(rawH * scale));
+    const { width: w, height: h } = PdfiumPageRenderer.rasterSize(
+      page.width,
+      page.height,
+      scale,
+    );
 
     // BGRA bitmap = format 1, fill white, then render with REVERSE_BYTE_ORDER
     // so the pixel buffer is RGBA-ordered for ImageData.

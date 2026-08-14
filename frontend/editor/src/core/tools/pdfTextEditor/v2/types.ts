@@ -75,6 +75,8 @@ export interface TextRunSnapshot {
   paragraphLineCount?: number;
   /** Line-slot count; what line alignment actually requires 2 of. */
   paragraphSlotCount?: number;
+  paragraphBaselines?: number[];
+  paragraphLineLefts?: number[];
   // Editor-only metadata: when true the run cannot be selected or edited via
   // mouse/keyboard.
   locked?: boolean;

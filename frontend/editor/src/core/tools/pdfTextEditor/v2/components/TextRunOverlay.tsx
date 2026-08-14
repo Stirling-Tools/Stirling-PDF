@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   TextRunSnapshot,
@@ -10,7 +10,11 @@ import {
   resolveLang,
   useSpellcheckPreference,
 } from "@app/tools/pdfTextEditor/v2/util/spellcheck";
-import { embeddedFaceFamily } from "@app/tools/pdfTextEditor/v2/util/embeddedFace";
+import {
+  embeddedFaceFamily,
+  onEmbeddedFaceLoaded,
+} from "@app/tools/pdfTextEditor/v2/util/embeddedFace";
+import { nearestStandardFont } from "@app/tools/pdfTextEditor/v2/util/fontFamily";
 import {
   fitTextToWidth,
   NO_FIT,
@@ -19,9 +23,27 @@ import {
   sampleRunBackground,
   toOpaqueCss,
 } from "@app/tools/pdfTextEditor/v2/util/canvasBackground";
+import { buildExactLines } from "@app/tools/pdfTextEditor/v2/util/exactLayout";
+import { stackLineBoxes } from "@app/tools/pdfTextEditor/v2/util/lineLayout";
+import {
+  isLinePainted,
+  type PaintLine,
+  paintLines,
+  paintPlainText,
+  plainCaretOffset,
+  restoreCaretOffset,
+} from "@app/tools/pdfTextEditor/v2/util/overlayPainter";
+import {
+  cssFontShorthand,
+  measureFontMetrics,
+  measureMaxLineWidth,
+  resetTextMetricsCache,
+} from "@app/tools/pdfTextEditor/v2/util/textMetrics";
+import "@app/tools/pdfTextEditor/v2/components/TextRunOverlay.css";
 
-// React + contentEditable do not play well together when JSX manages the
-// element's children: React reconciles the children on every render and can.
+const RENDER_MODE_INVISIBLE = 3;
+
+const SETTLE_MS = 400;
 
 // Map a font id like "base14:Helvetica-Bold" or "pdf:1234:Arial" to a CSS
 // font-family stack that visually approximates the PDFium-rendered glyphs.
@@ -31,16 +53,11 @@ function cssFontFamilyFor(fontId: string): string {
   // The document's own face, when PDFium gave us bytes a FontFace accepts.
   // An unresolved name costs nothing: the browser moves on to the next entry.
   const own = ownFaceFor(fontId);
-  const lc = family.toLowerCase();
-  if (
-    lc.includes("times") ||
-    lc.includes("serif") ||
-    lc.includes("liberation serif") ||
-    lc.includes("dejavu serif")
-  ) {
+  const standard = nearestStandardFont(family);
+  if (standard.startsWith("Times")) {
     return `${own}"Liberation Serif", "Times New Roman", Times, serif`;
   }
-  if (lc.includes("courier") || lc.includes("mono")) {
+  if (standard.startsWith("Courier")) {
     return `${own}"Liberation Mono", "Courier New", Courier, monospace`;
   }
   return `${own}"Liberation Sans", "Helvetica Neue", Helvetica, Arial, sans-serif`;
@@ -60,7 +77,6 @@ function cssStyleFor(fontId: string): "italic" | "normal" {
   return /italic|oblique/i.test(fontId) ? "italic" : "normal";
 }
 
-/** Pick an editing-mask color that always contrasts with the text fill. */
 // Read the page bitmap under a run and return an opaque CSS colour for the
 // editing mask. Null when the canvas is unreadable, so callers keep a default.
 function readMaskColor(el: HTMLDivElement): string | null {
@@ -82,6 +98,7 @@ function readMaskColor(el: HTMLDivElement): string | null {
   return rgb ? toOpaqueCss(rgb) : null;
 }
 
+/** Pick an editing-mask color that always contrasts with the text fill. */
 function contrastingMaskFor(fill: {
   r: number;
   g: number;
@@ -93,58 +110,117 @@ function contrastingMaskFor(fill: {
   return luma > 160 ? "rgba(30, 30, 30, 0.85)" : "rgba(255, 255, 255, 0.9)";
 }
 
-let sharedMeasureCanvas: HTMLCanvasElement | null = null;
-
-// Measure each line of `text` at the given CSS font / size and return the
-// widest one in CSS pixels.
-function measureMaxLineWidth(
-  text: string,
-  fontFamily: string,
-  fontWeight: number,
-  fontStyle: string,
-  fontSizePx: number,
-): number {
-  if (typeof document === "undefined") return 0;
-  if (!sharedMeasureCanvas)
-    sharedMeasureCanvas = document.createElement("canvas");
-  const ctx = sharedMeasureCanvas.getContext("2d");
-  if (!ctx) return 0;
-  ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
-  let max = 0;
-  for (const line of text.split(/\r?\n/)) {
-    const w = ctx.measureText(line).width;
-    if (w > max) max = w;
-  }
-  return max;
-}
-
-/** Measure the font's ascent / descent for the given CSS font. */
-function measureFontMetrics(
-  fontFamily: string,
-  fontWeight: number,
-  fontStyle: string,
-  fontSizePx: number,
-): { ascent: number; descent: number } {
-  const fallback = { ascent: 0.8 * fontSizePx, descent: 0.2 * fontSizePx };
-  if (typeof document === "undefined") return fallback;
-  if (!sharedMeasureCanvas)
-    sharedMeasureCanvas = document.createElement("canvas");
-  const ctx = sharedMeasureCanvas.getContext("2d");
-  if (!ctx) return fallback;
-  ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
-  const m = ctx.measureText("Hg");
-  const ascent = m.fontBoundingBoxAscent;
-  const descent = m.fontBoundingBoxDescent;
-  if (typeof ascent !== "number" || typeof descent !== "number") {
-    return fallback;
-  }
-  return { ascent, descent };
-}
-
-// Read the editable element's hard-break text. `innerText` already represents
-// user-typed Enter as `\n`.
 function extractHardBreaks(element: HTMLElement): string {
   return element.innerText.replace(/\u00A0/g, " ");
+}
+
+interface ExactLayout {
+  lines: PaintLine[];
+  leftPx: number;
+  topPx: number;
+  widthPx: number;
+  heightPx: number;
+  signature: string;
+}
+
+function computeExactLayout(args: {
+  run: TextRunSnapshot;
+  transform: DisplayTransform;
+  pageHeight: number;
+  scale: number;
+  font: string;
+  fontSizePx: number;
+  lineHeightPx: number;
+  ascent: number;
+  descent: number;
+}): ExactLayout | null {
+  const { run, transform, pageHeight, scale } = args;
+  if (!run.charStartsX || !run.charEndsX) return null;
+  const exact = buildExactLines(run.text, {
+    starts: run.charStartsX,
+    ends: run.charEndsX,
+  });
+  if (!exact || exact.length === 0) return null;
+
+  const lineLefts = exact.map((line, i) => {
+    const fromSlot = run.paragraphLineLefts?.[i];
+    if (fromSlot !== undefined && Number.isFinite(fromSlot)) return fromSlot;
+    if (Number.isFinite(line.left)) return line.left;
+    return i === 0 ? run.matrix.e : run.bounds.x;
+  });
+
+  const baselines = baselinesFor(run, exact.length);
+  if (!baselines) return null;
+
+  const anchors = baselines.map((y, i) => transform.apply(lineLefts[i], y));
+  const leftsPx = anchors.map((a) => a.x * scale);
+  const baselineTopsPx = anchors.map((a) => (pageHeight - a.y) * scale);
+
+  const halfLeading = Math.max(
+    0,
+    (args.lineHeightPx - (args.ascent + args.descent)) / 2,
+  );
+  const stack = stackLineBoxes(
+    baselineTopsPx,
+    args.lineHeightPx,
+    halfLeading + args.ascent,
+  );
+  if (!stack) return null;
+
+  const leftPx = Math.min(...leftsPx);
+  if (!Number.isFinite(leftPx) || !Number.isFinite(stack.topPx)) return null;
+
+  const lines: PaintLine[] = exact.map((line, i) => ({
+    tokens: line.tokens.map((t) => ({
+      text: t.text,
+      advancePx: t.width * scale,
+    })),
+    heightPx: args.lineHeightPx,
+    marginTopPx: stack.marginTopsPx[i],
+    marginLeftPx: leftsPx[i] - leftPx,
+  }));
+
+  const widthPx = Math.max(
+    run.bounds.width * scale,
+    ...lines.map(
+      (l) => l.marginLeftPx + l.tokens.reduce((sum, t) => sum + t.advancePx, 0),
+    ),
+  );
+  const heightPx =
+    lines.reduce((sum, l) => sum + l.marginTopPx + l.heightPx, 0) +
+    args.descent;
+  if (!Number.isFinite(widthPx) || !Number.isFinite(heightPx)) return null;
+  const signature = [
+    leftPx.toFixed(2),
+    stack.topPx.toFixed(2),
+    ...lines.map((l) =>
+      [
+        l.marginTopPx.toFixed(2),
+        l.marginLeftPx.toFixed(2),
+        l.tokens.length,
+        l.tokens.reduce((sum, t) => sum + t.advancePx, 0).toFixed(2),
+      ].join(","),
+    ),
+  ].join("|");
+  return { lines, leftPx, topPx: stack.topPx, widthPx, heightPx, signature };
+}
+
+function baselinesFor(
+  run: TextRunSnapshot,
+  lineCount: number,
+): number[] | null {
+  const stored = run.paragraphBaselines;
+  if (stored && stored.length === lineCount && stored.every(Number.isFinite)) {
+    return stored;
+  }
+  if (lineCount === 1) return [run.matrix.f];
+  const step =
+    run.paragraphLineHeight && run.paragraphLineHeight > 0
+      ? run.paragraphLineHeight
+      : run.fontSize * 1.2;
+  const out: number[] = [];
+  for (let i = 0; i < lineCount; i += 1) out.push(run.matrix.f - i * step);
+  return out;
 }
 
 interface TextRunOverlayProps {
@@ -160,6 +236,7 @@ interface TextRunOverlayProps {
   selected: boolean;
   /** True when this run is the active find-match (yellow highlight). */
   highlighted?: boolean;
+  pageRevision?: number;
   onSelect: (shiftKey: boolean) => void;
   onEdit: (nextText: string) => void;
   /** Fires when the user Ctrl+drags the run to a new position. dx/dy are PDF points. */
@@ -179,6 +256,7 @@ export function TextRunOverlay({
   widthMode,
   selected,
   highlighted,
+  pageRevision,
   onSelect,
   onEdit,
   onMove,
@@ -193,10 +271,14 @@ export function TextRunOverlay({
   // Masking a run the user has only clicked into swaps real PDF ink for a
   // CSS approximation, so hold the pristine bitmap until an actual edit.
   const [touched, setTouched] = useState(false);
+  const [editTick, setEditTick] = useState(0);
+  const editedAtRevisionRef = useRef(-1);
+  const paintedSignatureRef = useRef<string | null>(null);
   // The mask has to be the page's own colour, not a guess from the text: a
   // run on a coloured page got a grey band. Sampled from the rendered bitmap
   // once per focus, so the read never lands in the typing path.
   const [maskColor, setMaskColor] = useState<string | null>(null);
+  const [faceEpoch, setFaceEpoch] = useState(0);
   // True between compositionstart and compositionend (IME). While composing
   // onInput must not dispatch per-keystroke edits; we commit once on end.
   const composingRef = useRef(false);
@@ -210,65 +292,19 @@ export function TextRunOverlay({
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
     null,
   );
-  // The run's text and bounds width on first render - the stable baselines for
-  // the wrap-mode lock width (see below).
-  const originalTextRef = useRef<string>(run.text);
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
   // Whether this run was a real (multi-line) paragraph when it first mounted.
   const wasParagraphRef = useRef<boolean>((run.paragraphLineCount ?? 1) > 1);
-  // True while the box is showing engine-exact word boxes; the first edit
-  // flattens them because a typed character would overflow its fixed box.
-  // Sync the contenteditable's text with the snapshot on external changes
-  // (undo/redo, multi-select).
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (document.activeElement === el) return;
-    if (el.innerText !== run.text) {
-      el.innerText = run.text;
-    }
-  }, [run.text]);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (el && el.innerText === "") el.innerText = run.text;
-  }, []);
-
-  // Map the run's raw-PDF anchor (left edge x, baseline f) into display-PDF
-  // space (CropBox/rotation).
-  const anchor = transform.apply(run.bounds.x, run.matrix.f);
-  const left = anchor.x * scale;
-
-  // CSS font for the overlay - derived before the vertical math because
-  // baseline placement needs the font's measured ascent.
-  // Once an edit commits, the bitmap underneath matches again, so the mask
-  // is only needed between the keystroke and the re-render.
-  const edited = focused && touched;
   const fontFamily = cssFontFamilyFor(run.fontId);
   const fontWeight = cssWeightFor(run.fontId);
   const fontStyle = cssStyleFor(run.fontId);
   const fontSizePx = Math.max(4, run.fontSize * scale);
-
-  // Only fit when CSS glyphs are actually on screen. Unfocused and
-  // focused-but-unedited runs show the page bitmap itself, which needs nothing.
-  // Paragraphs are excluded: their width is per line, not per run.
-  const showsGlyphs = edited || dragging;
-  const singleLine = (run.paragraphLineCount ?? 1) <= 1;
-  const fit =
-    showsGlyphs && singleLine
-      ? fitTextToWidth(
-          run.text,
-          measureMaxLineWidth(
-            run.text,
-            fontFamily,
-            fontWeight,
-            fontStyle,
-            fontSizePx,
-          ),
-          run.bounds.width * scale,
-          fontSizePx,
-        )
-      : NO_FIT;
+  const font = cssFontShorthand(fontStyle, fontWeight, fontSizePx, fontFamily);
+  const { ascent, descent } = useMemo(
+    () => measureFontMetrics(font, fontSizePx),
+    [font, fontSizePx, faceEpoch],
+  );
 
   // Line height (px).
   const lineHeightPx =
@@ -276,62 +312,162 @@ export function TextRunOverlay({
       ? run.paragraphLineHeight * scale
       : fontSizePx * 1.2;
 
+  const freshExact = useMemo(
+    () =>
+      computeExactLayout({
+        run,
+        transform,
+        pageHeight,
+        scale,
+        font,
+        fontSizePx,
+        lineHeightPx,
+        ascent,
+        descent,
+      }),
+    [
+      run,
+      transform,
+      pageHeight,
+      scale,
+      font,
+      fontSizePx,
+      lineHeightPx,
+      ascent,
+      descent,
+    ],
+  );
+
+  const heldExactRef = useRef<ExactLayout | null>(null);
+  if (freshExact) heldExactRef.current = freshExact;
+  const exact = freshExact ?? (focused ? heldExactRef.current : null);
+  if (!freshExact && !focused) heldExactRef.current = null;
+  const editing = focused && touched;
+
+  useEffect(() => {
+    const bump = () => {
+      resetTextMetricsCache();
+      setFaceEpoch((n) => n + 1);
+    };
+    const unsubscribe = onEmbeddedFaceLoaded(bump);
+    let cancelled = false;
+    if (typeof document !== "undefined" && document.fonts) {
+      void document.fonts.ready.then(() => {
+        if (!cancelled) bump();
+      });
+    }
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onBeforeInput = (event: Event) => {
+      const inputType = (event as InputEvent).inputType ?? "";
+      if (inputType.startsWith("format")) event.preventDefault();
+    };
+    el.addEventListener("beforeinput", onBeforeInput);
+    return () => el.removeEventListener("beforeinput", onBeforeInput);
+  }, []);
+
+  useEffect(() => {
+    if (!touched) return;
+    if (pageRevision === undefined) return;
+    if (pageRevision <= editedAtRevisionRef.current) return;
+    const timer = window.setTimeout(() => setTouched(false), SETTLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [pageRevision, touched, editTick]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const active = document.activeElement === el;
+    if (active && (touched || composingRef.current)) return;
+    const domText = extractHardBreaks(el);
+    const wantSignature = freshExact ? freshExact.signature : "";
+    if (
+      domText === run.text &&
+      paintedSignatureRef.current === wantSignature &&
+      isLinePainted(el) === !!freshExact
+    ) {
+      return;
+    }
+    const caret = active ? plainCaretOffset(el) : null;
+    if (freshExact) {
+      paintLines(el, freshExact.lines, { font, fontSizePx });
+    } else {
+      paintPlainText(el, run.text);
+    }
+    paintedSignatureRef.current = wantSignature;
+    if (caret !== null) restoreCaretOffset(el, caret);
+  }, [run.text, freshExact, font, fontSizePx, touched, faceEpoch]);
+
+  const anchor = transform.apply(run.matrix.e, run.matrix.f);
+  const flowLeft = anchor.x * scale;
+
+  const invisible = run.renderMode === RENDER_MODE_INVISIBLE;
+  const showsGlyphs = (editing || dragging) && !invisible;
+
+  const singleLine = (run.paragraphLineCount ?? 1) <= 1;
+  const fit =
+    !exact && showsGlyphs && singleLine
+      ? fitTextToWidth(
+          run.text,
+          measureMaxLineWidth(run.text, font),
+          run.bounds.width * scale,
+          fontSizePx,
+        )
+      : NO_FIT;
+
   // VERTICAL PLACEMENT - anchor the first line's CSS alphabetic baseline
   // exactly onto the PDF baseline (`run.matrix.f`).
-  const { ascent, descent } = measureFontMetrics(
-    fontFamily,
-    fontWeight,
-    fontStyle,
-    fontSizePx,
-  );
   const halfLeading = Math.max(0, (lineHeightPx - (ascent + descent)) / 2);
   const firstBaselineFromTop = halfLeading + ascent;
   const baselineScreen = (pageHeight - anchor.y) * scale;
-  const top = baselineScreen - firstBaselineFromTop;
+  const flowTop = baselineScreen - firstBaselineFromTop;
 
   // Height covers every line plus descender slack.
   const lineCount = Math.max(1, run.text.split(/\r?\n/).length);
-  const height = lineCount * lineHeightPx + descent;
+  const flowHeight = lineCount * lineHeightPx + descent;
 
   const pdfWidth = run.bounds.width * scale;
   // Widen the overlay so every source line still fits in CSS metrics, and so
   // typed text wider than the original bounds isn't clipped.
-  const measuredWidth = measureMaxLineWidth(
-    run.text,
-    fontFamily,
-    fontWeight,
-    fontStyle,
-    fontSizePx,
-  );
+  const measuredWidth = measureMaxLineWidth(run.text, font);
   // Width behaviour is user-controlled: - "grow": box widens to the right to
   // fit the content.
   const isParagraph = (run.paragraphLineCount ?? 1) > 1;
   const wrapMode = widthMode === "wrap";
-  // Wrap-mode lock width.
   const wrapLockWidth = Math.max(
     originalBoundsWidthRef.current * scale,
-    measureMaxLineWidth(
-      originalTextRef.current,
-      fontFamily,
-      fontWeight,
-      fontStyle,
-      fontSizePx,
-    ) +
-      fontSizePx * 0.5,
+    fontSizePx * 4,
   );
   // A multi-line paragraph always WRAPS - it is body text, not a single-line
   // label. "grow" only applies to genuine single-line runs.
   const wantWrap = wrapMode || isParagraph;
   // Never let the box extend past the page's right edge.
+  const left = exact ? exact.leftPx : flowLeft;
   const maxOnPageWidth = Math.max(fontSizePx * 4, pageWidth * scale - left - 4);
   const naturalWidth = wantWrap
     ? wrapLockWidth
     : Math.max(pdfWidth, measuredWidth + fontSizePx);
-  const width = Math.min(naturalWidth, maxOnPageWidth);
-  // `min-height` (not a fixed height) is used below, so the box grows DOWNWARD
-  // when content needs it.
+  const flowWidth = Math.min(naturalWidth, maxOnPageWidth);
   const whiteSpace: "pre" | "pre-wrap" =
-    wantWrap || width < naturalWidth - 0.5 ? "pre-wrap" : "pre";
+    exact || !(wantWrap || flowWidth < naturalWidth - 0.5) ? "pre" : "pre-wrap";
+
+  const top = exact ? exact.topPx : flowTop;
+  const caretSlack = focused ? fontSizePx * 0.5 : 0;
+  const exactWidth = exact
+    ? Math.max(
+        exact.widthPx + caretSlack,
+        freshExact ? 0 : measuredWidth + fontSizePx,
+      )
+    : 0;
+  const width = exact ? Math.min(exactWidth, maxOnPageWidth) : flowWidth;
+  const height = exact ? exact.heightPx : flowHeight;
 
   // Which dictionary the browser should load. "auto" falls back to the
   // page's own language, which is what the element would inherit anyway.
@@ -340,13 +476,16 @@ export function TextRunOverlay({
     typeof document === "undefined" ? null : document.documentElement.lang,
   );
 
+  const pristine = !showsGlyphs;
+
   return (
     <div
       ref={ref}
       data-testid={`v2-run-${run.id}`}
+      className={`v2-run${pristine ? " is-pristine" : ""}`}
       contentEditable={!run.locked}
       suppressContentEditableWarning
-      spellCheck={spellcheck.enabled}
+      spellCheck={spellcheck.enabled && focused}
       lang={spellcheckLang ?? undefined}
       data-locked={run.locked ? "true" : undefined}
       title={
@@ -459,13 +598,7 @@ export function TextRunOverlay({
         const el = e.currentTarget as HTMLDivElement;
         const domText = extractHardBreaks(el);
         if (domText === focusTextRef.current) return; // not edited
-        const widest = measureMaxLineWidth(
-          domText,
-          fontFamily,
-          fontWeight,
-          fontStyle,
-          fontSizePx,
-        );
+        const widest = measureMaxLineWidth(domText, font);
         // Runs that were paragraphs on mount always re-flow when edited.
         if (!wasParagraphRef.current && widest <= width + 1) return;
         onWrap(width / scale);
@@ -481,6 +614,8 @@ export function TextRunOverlay({
       }}
       onInput={(e) => {
         setTouched(true);
+        setEditTick((n) => n + 1);
+        editedAtRevisionRef.current = pageRevision ?? -1;
         // Skip intermediate IME steps; compositionend commits the result.
         if (composingRef.current || (e.nativeEvent as InputEvent).isComposing)
           return;
@@ -496,7 +631,6 @@ export function TextRunOverlay({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        position: "absolute",
         left,
         top,
         width,
@@ -523,11 +657,8 @@ export function TextRunOverlay({
         fontWeight,
         fontStyle,
         fontSize: fontSizePx,
-        // Mirror the run's letter-spacing so the editing view tracks the
-        // wide-set glyphs underneath.
-        // The run's own tracking plus whatever the width fit needs.
         letterSpacing:
-          run.charSpacingPt || fit.letterSpacing
+          !exact && (run.charSpacingPt || fit.letterSpacing)
             ? `${(run.charSpacingPt ?? 0) * scale + fit.letterSpacing}px`
             : undefined,
         // Same line-height used in the baseline math above, so the CSS
@@ -536,9 +667,14 @@ export function TextRunOverlay({
         whiteSpace,
         // Show the glyphs once the run is really being changed, or mid-drag so
         // the Ctrl+drag preview is a visible chip that follows the cursor.
-        color: edited || dragging ? toCssHex(run.fill) : "transparent",
-        // Mask the underlying bitmap only once it no longer matches the text.
-        backgroundColor: edited
+        color: showsGlyphs ? toCssHex(run.fill) : "transparent",
+        WebkitTextStrokeColor:
+          showsGlyphs && run.stroke ? toCssHex(run.stroke) : undefined,
+        WebkitTextStrokeWidth:
+          showsGlyphs && run.stroke && run.strokeWidth
+            ? `${run.strokeWidth * scale}px`
+            : undefined,
+        backgroundColor: showsGlyphs
           ? (maskColor ?? contrastingMaskFor(run.fill))
           : highlighted
             ? "rgba(255,217,0,0.45)"
@@ -555,11 +691,6 @@ export function TextRunOverlay({
             : hovered
               ? "1px dashed rgba(44,123,229,0.6)"
               : "1px dashed transparent",
-        cursor: "text",
-        pointerEvents: "auto",
-        userSelect: "text",
-        padding: 0,
-        margin: 0,
         overflow: "hidden",
       }}
     />

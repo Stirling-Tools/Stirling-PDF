@@ -69,12 +69,15 @@ export function PageView({
 }: PageViewProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const raster = PdfiumPageRenderer.rasterSize(page.width, page.height, scale);
+  const cssScale = raster.width / page.width;
   // Raw-PDF -> display (CropBox/rotation) transform for this page. Identity for
   // normal pages, so every overlay/click computation below is unchanged there.
   const transform = DisplayTransform.fromData(page.display);
   const visibleFiredRef = useRef(false);
   const firstRenderFiredRef = useRef(false);
   const [rendering, setRendering] = useState(false);
+  const [paintedRevision, setPaintedRevision] = useState(-1);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
   // True when this page is within ~one viewport of the visible area.
@@ -137,11 +140,10 @@ export function PageView({
         if (cancelled || !canvasRef.current) return;
         canvas.width = image.width;
         canvas.height = image.height;
-        canvas.style.width = `${page.width * scale}px`;
-        canvas.style.height = `${page.height * scale}px`;
         const ctx = canvas.getContext("2d");
         if (ctx) ctx.putImageData(image, 0, 0);
         setRendering(false);
+        setPaintedRevision(page.revision);
         if (!firstRenderFiredRef.current) {
           firstRenderFiredRef.current = true;
           onFirstRendered?.(page.pageIndex);
@@ -182,8 +184,8 @@ export function PageView({
       mb="lg"
       ref={containerRef}
       style={{
-        width: page.width * scale,
-        height: page.height * scale,
+        width: raster.width,
+        height: raster.height,
         boxShadow: "0 0 4px rgba(0,0,0,0.2)",
         background: "#fff",
       }}
@@ -198,13 +200,20 @@ export function PageView({
         const cssX = e.clientX - rect.left;
         const cssY = e.clientY - rect.top;
         // CSS px -> display-PDF.
-        const xd = cssX / scale;
-        const yd = page.height - cssY / scale;
+        const xd = cssX / cssScale;
+        const yd = page.height - cssY / cssScale;
         const p = transform.invert(xd, yd);
         onPageClick(page.pageIndex, p.x, p.y);
       }}
     >
-      <canvas ref={canvasRef} style={{ display: "block" }} />
+      <canvas
+        ref={canvasRef}
+        style={{
+          display: "block",
+          width: raster.width,
+          height: raster.height,
+        }}
+      />
       {!nearViewport && (
         <Box
           pos="absolute"
@@ -282,7 +291,7 @@ export function PageView({
             image={image}
             pageHeight={page.height}
             transform={transform}
-            scale={scale}
+            scale={cssScale}
             selected={selectedImageIds.includes(image.id)}
             onSelect={() => onSelectImage(image.id)}
             onTransformCommit={(next) =>
@@ -297,8 +306,9 @@ export function PageView({
             pageHeight={page.height}
             pageWidth={page.width}
             transform={transform}
-            scale={scale}
+            scale={cssScale}
             widthMode={widthMode}
+            pageRevision={paintedRevision}
             selected={selectedRunIds.includes(run.id)}
             highlighted={highlightedRunId === run.id}
             onSelect={(shiftKey) => onSelectRun(run.id, shiftKey)}
@@ -314,7 +324,7 @@ export function PageView({
             pageIndex={page.pageIndex}
             width={page.width}
             height={page.height}
-            scale={scale}
+            scale={cssScale}
             transform={transform}
           />
         )}

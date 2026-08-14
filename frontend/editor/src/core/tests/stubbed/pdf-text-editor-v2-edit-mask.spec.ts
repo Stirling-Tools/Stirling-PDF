@@ -9,6 +9,7 @@ test.describe("PDF text editor v2 - editing mask", () => {
   const openAndEdit = async (
     page: import("@playwright/test").Page,
     fixture: string,
+    beforeEdit?: () => Promise<void>,
   ) => {
     await page.goto("/pdf-text-editor?charcodeStrategy=content-stream", {
       waitUntil: "domcontentloaded",
@@ -23,10 +24,11 @@ test.describe("PDF text editor v2 - editing mask", () => {
       timeout: 30_000,
     });
     await page.waitForTimeout(1200);
+    if (beforeEdit) await beforeEdit();
     const run = page.locator('[data-testid^="v2-run-p0-"]').first();
     await run.click();
     await page.keyboard.type("X");
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(150);
     return run;
   };
 
@@ -44,6 +46,25 @@ test.describe("PDF text editor v2 - editing mask", () => {
     expect(parts.length).toBeGreaterThanOrEqual(3);
     // A 4th component below 1 is the translucency that caused the ghosting.
     if (parts.length === 4) expect(parts[3]).toBe(1);
+  });
+
+  test("a white page gives pure white, not a quantised grey", async ({
+    page,
+  }) => {
+    const run = await openAndEdit(page, "sample", async () => {
+      await page
+        .locator('[data-testid="v2-page-0"] canvas')
+        .first()
+        .evaluate((el) => {
+          const canvas = el as HTMLCanvasElement;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("page canvas has no 2d context");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+    });
+    const bg = await run.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(bg).toBe("rgb(255, 255, 255)");
   });
 
   test("the mask takes the page's colour, not a guess from the text", async ({

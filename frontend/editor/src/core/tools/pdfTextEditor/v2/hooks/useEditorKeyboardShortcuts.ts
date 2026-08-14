@@ -100,6 +100,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
         case "m":
           if (store.selection.value.runIds.length < 2) return;
           e.preventDefault();
+          if (isFocusInContentEditable())
+            (document.activeElement as HTMLElement | null)?.blur();
           onMergeSelection();
           return;
         default:

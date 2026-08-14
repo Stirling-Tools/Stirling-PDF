@@ -374,6 +374,7 @@ export class EditTextCommand implements Command {
     // One "line anchor" ptr per output line; plus any extra per-word ptrs from
     // space preservation, kept for leaf removal on subsequent edits.
     const lineAnchorPtrs: number[] = [];
+    const lineAnchorYs: number[] = [];
     const allEmittedPtrs: number[] = [];
     // Per-line emit metadata used to rebuild paragraphLineSlots so the NEXT
     // edit can route back through paragraph-aware partial-edit instead of.
@@ -381,9 +382,19 @@ export class EditTextCommand implements Command {
     // Step each line along the run's rotated down-axis: the (0,-lineHeight)
     // stepping vector transformed by [cos,-sin] gives (sin*L, -cos*L).
     const rot = rotationFromMatrix(run.matrix);
+    const keptOrigins =
+      run.paragraphLineSlots.length === outputLines.length
+        ? run.paragraphLineSlots
+        : null;
+
     for (let i = 0; i < outputLines.length; i++) {
-      const x = run.matrix.e + (rot ? i * rot.sin * lineHeight : 0);
-      const y = run.matrix.f - i * lineHeight * (rot ? rot.cos : 1);
+      const kept = keptOrigins?.[i];
+      const x = kept
+        ? kept.matrixE
+        : run.matrix.e + (rot ? i * rot.sin * lineHeight : 0);
+      const y = kept
+        ? kept.baselineY
+        : run.matrix.f - i * lineHeight * (rot ? rot.cos : 1);
       // Empty lines get a placeholder slot.
       if (outputLines[i].length === 0) {
         perLineEmits.push({ ptrs: [], text: "", y });
@@ -409,6 +420,7 @@ export class EditTextCommand implements Command {
       this.createdPtrs.push(...ptrs);
       allEmittedPtrs.push(...ptrs);
       lineAnchorPtrs.push(ptrs[0]);
+      lineAnchorYs.push(y);
       perLineEmits.push({ ptrs, text: outputLines[i], y });
     }
 
@@ -424,9 +436,7 @@ export class EditTextCommand implements Command {
       }
       run.paragraphMemberPtrs = lineAnchorPtrs;
       run.paragraphMemberContainers = lineAnchorPtrs.map(() => 0);
-      run.paragraphMemberFs = lineAnchorPtrs.map(
-        (_, i) => run.matrix.f - i * lineHeight,
-      );
+      run.paragraphMemberFs = [...lineAnchorYs];
       // Every per-word emit becomes a leaf - so the next edit's removal
       // pass cleans them up alongside the anchors.
       run.paragraphLeafPtrs = allEmittedPtrs;
@@ -769,9 +779,16 @@ export class EditTextCommand implements Command {
     const newMemberFs: number[] = [];
     const usedPrev = new Set<number>();
     let cursor = 0;
+    const baselines = keptLeadingBaselines(
+      nextLines.length,
+      match,
+      slots,
+      topBaseline,
+      lineHeight,
+    );
     for (let i = 0; i < nextLines.length; i++) {
       const text = nextLines[i];
-      const y = topBaseline - i * lineHeight;
+      const y = baselines[i];
       const prevIdx = match.get(i);
       let slot: ParagraphLineSlot;
       if (prevIdx !== undefined && slots[prevIdx]) {
@@ -1254,6 +1271,39 @@ function boundsFromPtr(
     m.pdfium.wasmExports.free(r);
     m.pdfium.wasmExports.free(t);
   }
+}
+
+function keptLeadingBaselines(
+  lineCount: number,
+  match: Map<number, number>,
+  slots: ParagraphLineSlot[],
+  topBaseline: number,
+  lineHeight: number,
+): number[] {
+  const out: number[] = [];
+  let y = topBaseline;
+  for (let i = 0; i < lineCount; i++) {
+    if (i > 0) y -= stepBetween(i, match, slots, lineHeight);
+    out.push(y);
+  }
+  return out;
+}
+
+const MIN_REAL_LEADING = 0.5;
+
+function stepBetween(
+  i: number,
+  match: Map<number, number>,
+  slots: ParagraphLineSlot[],
+  lineHeight: number,
+): number {
+  const above = match.get(i - 1);
+  const here = match.get(i);
+  if (above === undefined || here === undefined) return lineHeight;
+  if (here !== above + 1) return lineHeight;
+  const delta = slots[above]?.baselineY - slots[here]?.baselineY;
+  if (!Number.isFinite(delta)) return lineHeight;
+  return delta >= MIN_REAL_LEADING * lineHeight ? delta : lineHeight;
 }
 
 function cloneSlot(s: ParagraphLineSlot): ParagraphLineSlot {

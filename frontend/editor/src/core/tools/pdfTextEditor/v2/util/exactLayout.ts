@@ -78,20 +78,10 @@ function buildLine(
   const tokens: ExactToken[] = [];
   for (let i = 0; i < spans.length; i += 1) {
     const span = spans[i];
-    let width = tokenWidth(positions, span.from, span.to);
-    if (width === null && span.space) {
-      // A synthesised space backs no glyph; its width is the gap the engine
-      // actually left, which is the whole point on justified text.
-      const before = positions.ends[spans[i - 1]?.to - 1];
-      const after = positions.starts[spans[i + 1]?.from];
-      if (
-        Number.isFinite(before) &&
-        Number.isFinite(after) &&
-        after >= before
-      ) {
-        width = after - before;
-      }
-    }
+    const width = span.space
+      ? (spaceGap(positions, spans, i) ??
+        tokenWidth(positions, span.from, span.to))
+      : tokenWidth(positions, span.from, span.to);
     if (width === null) return null;
     tokens.push({
       text: text.slice(span.from, span.to),
@@ -102,6 +92,22 @@ function buildLine(
   if (to > end)
     tokens.push({ text: text.slice(end, to), width: 0, space: true });
   return { left, tokens };
+}
+
+function spaceGap(
+  positions: CharPositions,
+  spans: Array<{ from: number; to: number; space: boolean }>,
+  i: number,
+): number | null {
+  const next = spans[i + 1];
+  if (!next) return null;
+  const after = positions.starts[next.from];
+  const prev = spans[i - 1];
+  const before = prev
+    ? positions.ends[prev.to - 1]
+    : positions.starts[spans[i].from];
+  if (!Number.isFinite(before) || !Number.isFinite(after)) return null;
+  return after >= before ? after - before : null;
 }
 
 // A token spans its first pen origin to the last origin-plus-advance, so boxes
