@@ -271,12 +271,18 @@ export class EditorStore {
   }
 
   /** Mark the current edit state as saved; clears the dirty indicator. */
-  markSaved(): void {
+  savedPosition(): Command | null {
+    this.history.breakCoalescing();
+    return this.history.peekUndo();
+  }
+
+  markSaved(position?: Command | null): void {
     // Break the coalesce burst so a post-save keystroke is a new dirtying step.
     this.history.breakCoalescing();
-    this.savedTop = this.history.peekUndo();
+    const saved = position === undefined ? this.history.peekUndo() : position;
+    this.savedTop = saved;
     this.bakedDirty = false;
-    this.patch({ dirty: false });
+    this.patch({ dirty: this.isDirty() });
   }
 
   /** Apply a command via the history stack, re-snapshot, and notify. */

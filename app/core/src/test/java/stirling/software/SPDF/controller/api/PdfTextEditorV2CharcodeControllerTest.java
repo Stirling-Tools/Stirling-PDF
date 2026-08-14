@@ -366,7 +366,6 @@ class PdfTextEditorV2CharcodeControllerTest {
         return sb.toString().getBytes(java.nio.charset.StandardCharsets.US_ASCII);
     }
 
-    /** One TrueType subset font dict with an embedded (fake) program + ToUnicode. */
     private static org.apache.pdfbox.cos.COSDictionary subsetFontDict(
             PDDocument doc, String baseName, byte[] fontProgram, byte[] toUnicode)
             throws Exception {
@@ -374,7 +373,9 @@ class PdfTextEditorV2CharcodeControllerTest {
         font.setItem(org.apache.pdfbox.cos.COSName.TYPE, org.apache.pdfbox.cos.COSName.FONT);
         font.setItem(
                 org.apache.pdfbox.cos.COSName.SUBTYPE, org.apache.pdfbox.cos.COSName.TRUE_TYPE);
-        font.setName(org.apache.pdfbox.cos.COSName.BASE_FONT, baseName);
+        if (baseName != null) {
+            font.setName(org.apache.pdfbox.cos.COSName.BASE_FONT, baseName);
+        }
         font.setInt(org.apache.pdfbox.cos.COSName.FIRST_CHAR, 0x21);
         font.setInt(org.apache.pdfbox.cos.COSName.LAST_CHAR, 0x22);
         org.apache.pdfbox.cos.COSArray widths = new org.apache.pdfbox.cos.COSArray();
@@ -384,7 +385,9 @@ class PdfTextEditorV2CharcodeControllerTest {
 
         org.apache.pdfbox.cos.COSDictionary fd = new org.apache.pdfbox.cos.COSDictionary();
         fd.setItem(org.apache.pdfbox.cos.COSName.TYPE, org.apache.pdfbox.cos.COSName.FONT_DESC);
-        fd.setName(org.apache.pdfbox.cos.COSName.FONT_NAME, baseName);
+        if (baseName != null) {
+            fd.setName(org.apache.pdfbox.cos.COSName.FONT_NAME, baseName);
+        }
         fd.setInt(org.apache.pdfbox.cos.COSName.FLAGS, 4);
         fd.setItem(
                 org.apache.pdfbox.cos.COSName.FONT_BBOX,
@@ -394,11 +397,13 @@ class PdfTextEditorV2CharcodeControllerTest {
         fd.setInt(org.apache.pdfbox.cos.COSName.DESCENT, -200);
         fd.setInt(org.apache.pdfbox.cos.COSName.CAP_HEIGHT, 700);
         fd.setInt(org.apache.pdfbox.cos.COSName.STEM_V, 80);
-        org.apache.pdfbox.pdmodel.common.PDStream ff2 =
-                new org.apache.pdfbox.pdmodel.common.PDStream(
-                        doc, new java.io.ByteArrayInputStream(fontProgram));
-        ff2.getCOSObject().setInt(org.apache.pdfbox.cos.COSName.LENGTH1, fontProgram.length);
-        fd.setItem(org.apache.pdfbox.cos.COSName.FONT_FILE2, ff2.getCOSObject());
+        if (fontProgram != null) {
+            org.apache.pdfbox.pdmodel.common.PDStream ff2 =
+                    new org.apache.pdfbox.pdmodel.common.PDStream(
+                            doc, new java.io.ByteArrayInputStream(fontProgram));
+            ff2.getCOSObject().setInt(org.apache.pdfbox.cos.COSName.LENGTH1, fontProgram.length);
+            fd.setItem(org.apache.pdfbox.cos.COSName.FONT_FILE2, ff2.getCOSObject());
+        }
         font.setItem(org.apache.pdfbox.cos.COSName.FONT_DESC, fd);
 
         org.apache.pdfbox.pdmodel.common.PDStream tu =
@@ -561,5 +566,199 @@ class PdfTextEditorV2CharcodeControllerTest {
         assertThat(body.getError()).isNull();
         assertThat(body.getNote()).contains("AAAAAC+FakeGaramond");
         assertThat(body.getCharcodes()).containsExactly(0x22L);
+    }
+
+    private static final String PUA_E000 = "";
+    private static final String PUA_E002 = "";
+
+    private static final byte[] SHARED_PROGRAM =
+            "fake-ttf-program-shared".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+
+    private static String cacheIdentityPairBase64(String baseName, byte[] program)
+            throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            doc.addPage(page);
+            org.apache.pdfbox.cos.COSDictionary fonts = new org.apache.pdfbox.cos.COSDictionary();
+            fonts.setItem(
+                    org.apache.pdfbox.cos.COSName.getPDFName("C1"),
+                    subsetFontDict(
+                            doc,
+                            baseName,
+                            program,
+                            toUnicodeCmap(new int[][] {{0x21, 0xE001}, {0x22, 0xE000}})));
+            fonts.setItem(
+                    org.apache.pdfbox.cos.COSName.getPDFName("C2"),
+                    subsetFontDict(
+                            doc,
+                            baseName,
+                            program,
+                            toUnicodeCmap(new int[][] {{0x21, 0xE002}, {0x22, 0xE003}})));
+            org.apache.pdfbox.pdmodel.PDResources resources =
+                    new org.apache.pdfbox.pdmodel.PDResources();
+            resources.getCOSObject().setItem(org.apache.pdfbox.cos.COSName.FONT, fonts);
+            page.setResources(resources);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            doc.save(bos);
+            return Base64.getEncoder().encodeToString(bos.toByteArray());
+        }
+    }
+
+    private static EncodeCharcodesRequest cacheIdentityRequest(
+            String base64, String locator, String fontName, String fontSha256) {
+        EncodeCharcodesRequest req = new EncodeCharcodesRequest();
+        req.setPdfBase64(base64);
+        req.setPageIndex(0);
+        req.setLocatorChar(locator);
+        req.setFontName(fontName);
+        req.setFontSha256(fontSha256);
+        req.setText(locator);
+        return req;
+    }
+
+    @Test
+    void unnamedFontsSharingOneProgramDoNotShareACachedMap() throws Exception {
+        String base64 = cacheIdentityPairBase64(null, SHARED_PROGRAM);
+        String sha = sha256Hex(SHARED_PROGRAM);
+        PdfTextEditorV2CharcodeController controller = controller();
+
+        EncodeCharcodesResponse first =
+                controller
+                        .encodeCharcodes(cacheIdentityRequest(base64, PUA_E000, null, sha))
+                        .getBody();
+        assertThat(first).isNotNull();
+        assertThat(first.getError()).isNull();
+        assertThat(first.getCharcodes()).containsExactly(0x22L);
+
+        EncodeCharcodesResponse second =
+                controller
+                        .encodeCharcodes(cacheIdentityRequest(base64, PUA_E002, null, sha))
+                        .getBody();
+        assertThat(second).isNotNull();
+        assertThat(second.getError()).isNull();
+        assertThat(second.getMissing()).isNullOrEmpty();
+        assertThat(second.getCharcodes())
+                .as("second font must not be served the first font's cached map")
+                .containsExactly(0x21L);
+    }
+
+    @Test
+    void fontsSharingOneNameDoNotShareACachedMap() throws Exception {
+        String base64 = cacheIdentityPairBase64("SharedName", null);
+        PdfTextEditorV2CharcodeController controller = controller();
+
+        EncodeCharcodesResponse first =
+                controller
+                        .encodeCharcodes(cacheIdentityRequest(base64, PUA_E000, "SharedName", null))
+                        .getBody();
+        assertThat(first).isNotNull();
+        assertThat(first.getError()).isNull();
+        assertThat(first.getCharcodes()).containsExactly(0x22L);
+
+        EncodeCharcodesResponse second =
+                controller
+                        .encodeCharcodes(cacheIdentityRequest(base64, PUA_E002, "SharedName", null))
+                        .getBody();
+        assertThat(second).isNotNull();
+        assertThat(second.getError()).isNull();
+        assertThat(second.getMissing()).isNullOrEmpty();
+        assertThat(second.getCharcodes())
+                .as("same-name fonts must not share one cached map")
+                .containsExactly(0x21L);
+    }
+
+    private static String formXObjectFontBase64() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            doc.addPage(page);
+
+            org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject outer =
+                    new org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject(doc);
+            outer.setBBox(new org.apache.pdfbox.pdmodel.common.PDRectangle(0, 0, 200, 200));
+            org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject inner =
+                    new org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject(doc);
+            inner.setBBox(new org.apache.pdfbox.pdmodel.common.PDRectangle(0, 0, 100, 100));
+
+            org.apache.pdfbox.pdmodel.PDResources innerResources =
+                    new org.apache.pdfbox.pdmodel.PDResources();
+            innerResources.put(
+                    org.apache.pdfbox.cos.COSName.getPDFName("F1"),
+                    new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            inner.setResources(innerResources);
+
+            org.apache.pdfbox.pdmodel.PDResources outerResources =
+                    new org.apache.pdfbox.pdmodel.PDResources();
+            outerResources.put(org.apache.pdfbox.cos.COSName.getPDFName("Fm1"), inner);
+            outer.setResources(outerResources);
+
+            org.apache.pdfbox.pdmodel.PDResources pageResources =
+                    new org.apache.pdfbox.pdmodel.PDResources();
+            pageResources.put(org.apache.pdfbox.cos.COSName.getPDFName("Fm0"), outer);
+            page.setResources(pageResources);
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            doc.save(bos);
+            return Base64.getEncoder().encodeToString(bos.toByteArray());
+        }
+    }
+
+    private static String cyclicFormXObjectsBase64() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            doc.addPage(page);
+
+            org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject formA =
+                    new org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject(doc);
+            formA.setBBox(new org.apache.pdfbox.pdmodel.common.PDRectangle(0, 0, 100, 100));
+            org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject formB =
+                    new org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject(doc);
+            formB.setBBox(new org.apache.pdfbox.pdmodel.common.PDRectangle(0, 0, 100, 100));
+
+            org.apache.pdfbox.pdmodel.PDResources resA =
+                    new org.apache.pdfbox.pdmodel.PDResources();
+            org.apache.pdfbox.pdmodel.PDResources resB =
+                    new org.apache.pdfbox.pdmodel.PDResources();
+            resA.put(org.apache.pdfbox.cos.COSName.getPDFName("Self"), formA);
+            resA.put(org.apache.pdfbox.cos.COSName.getPDFName("Fb"), formB);
+            resB.put(org.apache.pdfbox.cos.COSName.getPDFName("Fa"), formA);
+            resB.put(
+                    org.apache.pdfbox.cos.COSName.getPDFName("F1"),
+                    new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            formA.setResources(resA);
+            formB.setResources(resB);
+
+            org.apache.pdfbox.pdmodel.PDResources pageResources =
+                    new org.apache.pdfbox.pdmodel.PDResources();
+            pageResources.put(org.apache.pdfbox.cos.COSName.getPDFName("Fm0"), formA);
+            page.setResources(pageResources);
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            doc.save(bos);
+            return Base64.getEncoder().encodeToString(bos.toByteArray());
+        }
+    }
+
+    @Test
+    void fontReachableOnlyThroughAFormXObjectIsFound() throws Exception {
+        ResponseEntity<EncodeCharcodesResponse> resp =
+                controller().encodeCharcodes(manyFontsRequest(formXObjectFontBase64()));
+        assertThat(resp.getStatusCode().value()).isEqualTo(200);
+        EncodeCharcodesResponse body = resp.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getError()).isNull();
+        assertThat(body.getNote()).contains("Helvetica");
+        assertThat(body.getCharcodes()).containsExactly((long) 'A');
+    }
+
+    @Test
+    @org.junit.jupiter.api.Timeout(60)
+    void cyclicFormXObjectResourcesTerminate() throws Exception {
+        ResponseEntity<EncodeCharcodesResponse> resp =
+                controller().encodeCharcodes(manyFontsRequest(cyclicFormXObjectsBase64()));
+        assertThat(resp.getStatusCode().value()).isEqualTo(200);
+        EncodeCharcodesResponse body = resp.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getError()).isNull();
+        assertThat(body.getCharcodes()).containsExactly((long) 'A');
     }
 }

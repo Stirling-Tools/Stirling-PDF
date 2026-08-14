@@ -130,7 +130,7 @@ describe("BackendResolver", () => {
           pdfBase64: expect.any(String),
           pageIndex: 0,
           locatorChar: "M",
-          text: "M",
+          text: expect.stringContaining("M"),
         }),
         // Top-level axios config, NOT headers: handleHttpError reads
         // `error.config.<flag>`, so the header spelling was inert.
@@ -180,11 +180,16 @@ describe("BackendResolver", () => {
       expect(post).toHaveBeenCalledTimes(1);
       expect(post).toHaveBeenCalledWith(
         ENDPOINT,
-        expect.objectContaining({ text: "AB" }),
+        expect.objectContaining({ text: expect.stringContaining("AB") }),
         // This test's subject is the request body; the transport config is
         // pinned in full by the first test in this file.
         expect.objectContaining({ suppressErrorToast: true }),
       );
+      const sent = post.mock.calls[0][1] as { text: string };
+      // Characters the page never used must be probed too, or the first time
+      // the user types one it misses the cache and the font is substituted.
+      expect(sent.text).toContain("Z");
+      expect(sent.text).toContain("9");
       // Both chars cached under font 7 in request order.
       const r = new BackendResolver();
       const res = r.resolve(7, "AB", { module, pagePtr: 9100, docPtr: 4242 });
@@ -278,7 +283,7 @@ describe("BackendResolver", () => {
       expect(post).toHaveBeenCalledWith(
         "/api/v1/general/pdf-text-editor-v2/encode-charcodes",
         expect.objectContaining({
-          text: "M",
+          text: expect.stringContaining("M"),
           fontSha256: sha256Hex(fontBytes),
         }),
         // This test's subject is the request body; the transport config is

@@ -19,22 +19,26 @@ export interface DisplayTransformData {
   displayHeight: number;
 }
 
+type BoxReader = (
+  page: number,
+  left: number,
+  bottom: number,
+  right: number,
+  top: number,
+) => number | boolean;
+
 interface CropBoxModule {
-  FPDFPage_GetCropBox?: (
-    page: number,
-    left: number,
-    bottom: number,
-    right: number,
-    top: number,
-  ) => number | boolean;
-  FPDFPage_GetMediaBox?: (
-    page: number,
-    left: number,
-    bottom: number,
-    right: number,
-    top: number,
-  ) => number | boolean;
+  FPDFPage_GetCropBox?: BoxReader;
+  FPDFPage_GetMediaBox?: BoxReader;
+  FPDF_GetPageBoundingBox?: (page: number, rect: number) => number | boolean;
   FPDFPage_GetRotation?: (page: number) => number;
+}
+
+interface PageBox {
+  left: number;
+  bottom: number;
+  right: number;
+  top: number;
 }
 
 export class DisplayTransform implements DisplayTransformData {
@@ -84,6 +88,8 @@ export class DisplayTransform implements DisplayTransformData {
     displayWidth: number,
     displayHeight: number,
   ): DisplayTransform {
+    const dw = Number.isFinite(displayWidth) ? displayWidth : 0;
+    const dh = Number.isFinite(displayHeight) ? displayHeight : 0;
     return new DisplayTransform({
       a: 1,
       b: 0,
@@ -93,11 +99,11 @@ export class DisplayTransform implements DisplayTransformData {
       f: 0,
       cropLeft: 0,
       cropBottom: 0,
-      cropWidth: displayWidth,
-      cropHeight: displayHeight,
+      cropWidth: dw,
+      cropHeight: dh,
       rotate: 0,
-      displayWidth,
-      displayHeight,
+      displayWidth: dw,
+      displayHeight: dh,
     });
   }
 
@@ -172,21 +178,15 @@ export class DisplayTransform implements DisplayTransformData {
     const mod = m as unknown as CropBoxModule;
     const box = readBox(m, mod, pagePtr);
     if (!box) return DisplayTransform.identity(displayWidth, displayHeight);
-    const cl = Math.min(box.left, box.right);
-    const cb = Math.min(box.bottom, box.top);
-    const cw = Math.abs(box.right - box.left);
-    const ch = Math.abs(box.top - box.bottom);
-    let rotate = 0;
-    try {
-      rotate = (mod.FPDFPage_GetRotation?.(pagePtr) ?? 0) & 3;
-    } catch {
-      /* keep default rotate=0 on read failure */
-    }
+    const rotate = callSafely(
+      () => (mod.FPDFPage_GetRotation?.(pagePtr) ?? 0) & 3,
+      0,
+    );
     return DisplayTransform.fromCropAndRotate(
-      cl,
-      cb,
-      cw,
-      ch,
+      box.left,
+      box.bottom,
+      box.right - box.left,
+      box.top - box.bottom,
       rotate,
       displayWidth,
       displayHeight,
@@ -204,44 +204,50 @@ export class DisplayTransform implements DisplayTransformData {
     displayWidth: number,
     displayHeight: number,
   ): DisplayTransform {
+    const box = normaliseBox(cl, cb, cl + cw, cb + ch);
+    if (!box) return DisplayTransform.identity(displayWidth, displayHeight);
+    const left = box.left;
+    const bottom = box.bottom;
+    const width = box.right - box.left;
+    const height = box.top - box.bottom;
     let a = 1,
       b = 0,
       c = 0,
       d = 1,
-      e = -cl,
-      f = -cb;
+      e = -left,
+      f = -bottom;
     switch (rotate & 3) {
       case 0:
         a = 1;
         b = 0;
         c = 0;
         d = 1;
-        e = -cl;
-        f = -cb;
+        e = -left;
+        f = -bottom;
         break;
       case 1: // 90 CW - proper rotation (det +1), verified vs PDFium ground truth
         a = 0;
         b = -1;
         c = 1;
         d = 0;
-        e = -cb;
-        f = cw + cl;
+        e = -bottom;
+        f = width + left;
         break;
       case 2: // 180
         a = -1;
         b = 0;
         c = 0;
         d = -1;
-        e = cw + cl;
-        f = ch + cb;
+        e = width + left;
+        f = height + bottom;
         break;
       case 3: // 270 CW - proper rotation (det +1), verified vs PDFium ground truth
         a = 0;
         b = 1;
         c = -1;
         d = 0;
-        e = ch + cb;
-        f = -cl;
+        e = height + bottom;
+        f = -left;
         break;
     }
     return new DisplayTransform({
@@ -251,10 +257,10 @@ export class DisplayTransform implements DisplayTransformData {
       d,
       e,
       f,
-      cropLeft: cl,
-      cropBottom: cb,
-      cropWidth: cw,
-      cropHeight: ch,
+      cropLeft: left,
+      cropBottom: bottom,
+      cropWidth: width,
+      cropHeight: height,
       rotate: rotate & 3,
       displayWidth,
       displayHeight,
@@ -262,50 +268,90 @@ export class DisplayTransform implements DisplayTransformData {
   }
 }
 
-/** Read CropBox (preferred) or MediaBox into {left,bottom,right,top}, or null. */
+function callSafely<T>(run: () => T, fallback: T): T {
+  try {
+    return run();
+  } catch {
+    return fallback;
+  }
+}
+
+function boxOrNull(
+  left: number,
+  bottom: number,
+  right: number,
+  top: number,
+): PageBox | null {
+  if (
+    !Number.isFinite(left) ||
+    !Number.isFinite(bottom) ||
+    !Number.isFinite(right) ||
+    !Number.isFinite(top)
+  ) {
+    return null;
+  }
+  if (right - left <= 0 || top - bottom <= 0) return null;
+  return { left, bottom, right, top };
+}
+
+function normaliseBox(
+  left: number,
+  bottom: number,
+  right: number,
+  top: number,
+): PageBox | null {
+  return boxOrNull(
+    Math.min(left, right),
+    Math.min(bottom, top),
+    Math.max(left, right),
+    Math.max(bottom, top),
+  );
+}
+
+function intersectBoxes(a: PageBox, b: PageBox): PageBox | null {
+  return boxOrNull(
+    Math.max(a.left, b.left),
+    Math.max(a.bottom, b.bottom),
+    Math.min(a.right, b.right),
+    Math.min(a.top, b.top),
+  );
+}
+
 function readBox(
   m: WrappedPdfiumModule,
   mod: CropBoxModule,
   pagePtr: number,
-): { left: number; bottom: number; right: number; top: number } | null {
+): PageBox | null {
   const exports = m.pdfium.wasmExports as unknown as {
     malloc: (n: number) => number;
     free: (p: number) => void;
   };
-  const l = exports.malloc(4);
-  const b = exports.malloc(4);
-  const r = exports.malloc(4);
-  const t = exports.malloc(4);
+  const buf = exports.malloc(16);
+  if (!buf) return null;
   try {
-    const read = (
-      fn?: (
-        p: number,
-        l: number,
-        b: number,
-        r: number,
-        t: number,
-      ) => number | boolean,
-    ): boolean => {
-      if (!fn) return false;
-      try {
-        return !!fn(pagePtr, l, b, r, t);
-      } catch {
-        return false;
-      }
-    };
-    if (!read(mod.FPDFPage_GetCropBox) && !read(mod.FPDFPage_GetMediaBox)) {
-      return null;
+    const slot = (i: number): number => m.pdfium.getValue(buf + i * 4, "float");
+    const bounding = mod.FPDF_GetPageBoundingBox;
+    if (bounding) {
+      const ok = callSafely(() => !!bounding(pagePtr, buf), false);
+      const effective = ok
+        ? normaliseBox(slot(0), slot(3), slot(2), slot(1))
+        : null;
+      if (effective) return effective;
     }
-    return {
-      left: m.pdfium.getValue(l, "float"),
-      bottom: m.pdfium.getValue(b, "float"),
-      right: m.pdfium.getValue(r, "float"),
-      top: m.pdfium.getValue(t, "float"),
+    const readRect = (fn?: BoxReader): PageBox | null => {
+      if (!fn) return null;
+      const ok = callSafely(
+        () => !!fn(pagePtr, buf, buf + 4, buf + 8, buf + 12),
+        false,
+      );
+      if (!ok) return null;
+      return normaliseBox(slot(0), slot(1), slot(2), slot(3));
     };
+    const crop = readRect(mod.FPDFPage_GetCropBox);
+    const media = readRect(mod.FPDFPage_GetMediaBox);
+    if (crop && media) return intersectBoxes(crop, media) ?? media;
+    return crop ?? media;
   } finally {
-    exports.free(l);
-    exports.free(b);
-    exports.free(r);
-    exports.free(t);
+    exports.free(buf);
   }
 }

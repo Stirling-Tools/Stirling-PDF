@@ -14,6 +14,39 @@ const BASELINE_TOLERANCE = 0.4;
 // between them is below this absolute cap.
 const ABS_MAX_GAP_PT = 12;
 
+const WORD_GAP_MIN_RATIO = 0.2;
+const FALLBACK_SPACE_UNIT_RATIO = 0.5;
+const MIN_SPACE_UNIT_RATIO = 0.3;
+const MAX_SPACE_UNIT_RATIO = 1;
+const MULTI_SPACE_UNITS = 1.7;
+
+function junctionGapRatio(prev: TextRun, cur: TextRun): number {
+  const fontSize = Math.max(prev.fontSize, 4);
+  return (cur.bounds.x - (prev.bounds.x + prev.bounds.width)) / fontSize;
+}
+
+function lineSpaceUnitRatio(members: TextRun[]): number {
+  const wordGaps: number[] = [];
+  for (let i = 1; i < members.length; i++) {
+    const ratio = junctionGapRatio(members[i - 1], members[i]);
+    if (ratio > WORD_GAP_MIN_RATIO) wordGaps.push(ratio);
+  }
+  if (wordGaps.length < 2) return FALLBACK_SPACE_UNIT_RATIO;
+  wordGaps.sort((a, b) => a - b);
+  const lowerMedian = wordGaps[Math.floor((wordGaps.length - 1) / 2)];
+  return Math.min(
+    MAX_SPACE_UNIT_RATIO,
+    Math.max(MIN_SPACE_UNIT_RATIO, lowerMedian),
+  );
+}
+
+function spacesForGap(gapRatio: number, unitRatio: number): number {
+  if (gapRatio <= WORD_GAP_MIN_RATIO) return 0;
+  const units = gapRatio / unitRatio;
+  if (units < MULTI_SPACE_UNITS) return 1;
+  return Math.max(2, Math.round(units));
+}
+
 // True when a same-baseline cluster's glyphs overlap so heavily that it can't
 // be normal running text.
 function isDecorativeOverlap(members: TextRun[]): boolean {
@@ -129,18 +162,16 @@ export class LineGrouper {
       const parts: string[] = [memberTexts[0]];
       const memberCharStarts: number[] = [0];
       let cumulativeLen = memberTexts[0].length;
+      const spaceUnitRatio = lineSpaceUnitRatio(group.members);
       for (let i = 1; i < group.members.length; i++) {
         const prev = group.members[i - 1];
         const cur = group.members[i];
-        const gap = cur.bounds.x - (prev.bounds.x + prev.bounds.width);
         const prevTail = memberTexts[i - 1].slice(-1);
         const curHead = memberTexts[i].slice(0, 1);
-        // Typographic space advance is ~0.28*fontSize for Helvetica.
-        const spaceWidth = 0.4 * Math.max(prev.fontSize, 4);
-        const extraSpaces =
-          gap > 0.2 * Math.max(prev.fontSize, 4)
-            ? Math.max(1, Math.floor(gap / Math.max(1, spaceWidth) + 0.25))
-            : 0;
+        const extraSpaces = spacesForGap(
+          junctionGapRatio(prev, cur),
+          spaceUnitRatio,
+        );
         const prevEndsInSpace = /\s/.test(prevTail);
         const curStartsWithSpace = /\s/.test(curHead);
         const alreadyHave =

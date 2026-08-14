@@ -89,12 +89,15 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       // Yield once so React can paint the disabled/saving state before the
       // synchronous PDFium serialize blocks the main thread.
       await new Promise((resolve) => setTimeout(resolve, 0));
+      // The position that is about to be written out. Anything the user edits
+      // while the export runs is NOT in these bytes, so it must stay dirty.
+      const exported = store.savedPosition();
       const { blob, filename } = await exportToBlob(
         store.document,
         openedFileName,
       );
       downloadBlob(blob, filename);
-      store.markSaved();
+      store.markSaved(exported);
     } catch (err) {
       // Surface the failure instead of silently dropping it - the user
       // must not believe a broken save succeeded.

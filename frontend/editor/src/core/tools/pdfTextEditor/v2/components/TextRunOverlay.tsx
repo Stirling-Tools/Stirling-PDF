@@ -46,6 +46,8 @@ const RENDER_MODE_INVISIBLE = 3;
 
 const SETTLE_MS = 400;
 
+const STALL_MS = 250;
+
 // Map a font id like "base14:Helvetica-Bold" or "pdf:1234:Arial" to a CSS
 // font-family stack that visually approximates the PDFium-rendered glyphs.
 function cssFontFamilyFor(fontId: string): string {
@@ -274,6 +276,7 @@ export function TextRunOverlay({
   // CSS approximation, so hold the pristine bitmap until an actual edit.
   const [touched, setTouched] = useState(false);
   const [editTick, setEditTick] = useState(0);
+  const [stalled, setStalled] = useState(false);
   const editedAtRevisionRef = useRef(-1);
   const paintedSignatureRef = useRef<string | null>(null);
   const pointerFocusRef = useRef(false);
@@ -345,7 +348,6 @@ export function TextRunOverlay({
   if (freshExact) heldExactRef.current = freshExact;
   const exact = freshExact ?? (focused ? heldExactRef.current : null);
   if (!freshExact && !focused) heldExactRef.current = null;
-  const editing = focused && touched;
 
   useEffect(() => {
     const bump = () => {
@@ -385,6 +387,22 @@ export function TextRunOverlay({
   }, [pageRevision, touched, editTick]);
 
   useEffect(() => {
+    if (!touched) {
+      setStalled(false);
+      return;
+    }
+    if (
+      pageRevision !== undefined &&
+      pageRevision > editedAtRevisionRef.current
+    ) {
+      setStalled(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setStalled(true), STALL_MS);
+    return () => window.clearTimeout(timer);
+  }, [pageRevision, touched, editTick]);
+
+  useEffect(() => {
     const el = ref.current;
     if (!el || composingRef.current) return;
     if (!isLinePainted(el)) return;
@@ -420,7 +438,7 @@ export function TextRunOverlay({
   const flowLeft = anchor.x * scale;
 
   const invisible = run.renderMode === RENDER_MODE_INVISIBLE;
-  const showsGlyphs = (editing || dragging) && !invisible;
+  const showsGlyphs = (dragging || stalled) && !invisible;
 
   const singleLine = (run.paragraphLineCount ?? 1) <= 1;
   const fit =
@@ -696,18 +714,16 @@ export function TextRunOverlay({
           : highlighted
             ? "rgba(255,217,0,0.45)"
             : selected
-              ? "rgba(44,123,229,0.08)"
+              ? "rgba(44,123,229,0.10)"
               : hovered
-                ? "rgba(44,123,229,0.03)"
+                ? "rgba(44,123,229,0.04)"
                 : "transparent",
         caretColor: toCssHex(run.fill),
         outline: dragging
           ? "1px dashed #2c7be5"
-          : selected
-            ? "1px solid #2c7be5"
-            : hovered
-              ? "1px dashed rgba(44,123,229,0.6)"
-              : "1px dashed transparent",
+          : hovered && !selected
+            ? "1px dashed rgba(44,123,229,0.5)"
+            : "1px dashed transparent",
         overflow: "hidden",
       }}
     />

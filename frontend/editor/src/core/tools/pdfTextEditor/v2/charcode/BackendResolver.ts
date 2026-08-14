@@ -347,6 +347,31 @@ const prewarmedPages = new Set<number>();
 
 // Pre-warm the backend cache for every Unicode char that already lives on the
 // given page.
+const TYPEABLE_CHARS: string[] = (() => {
+  const out: string[] = [];
+  for (let cp = 0x21; cp <= 0x7e; cp += 1) out.push(String.fromCodePoint(cp));
+  return out;
+})();
+
+const MAX_PREWARM_PROBES = 4000;
+
+function addTypeableProbes(
+  probes: Array<{ ch: string; perCharFont: number }>,
+  seen: Set<string>,
+): void {
+  const fonts = [...new Set(probes.map((p) => p.perCharFont))];
+  for (const font of fonts) {
+    for (const ch of TYPEABLE_CHARS) {
+      if (probes.length >= MAX_PREWARM_PROBES) return;
+      const key = `${font}:${ch}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (charCache.has(cacheKey(font, ch))) continue;
+      probes.push({ ch, perCharFont: font });
+    }
+  }
+}
+
 export async function prewarmBackendCacheForPage(
   pageIndex: number,
 ): Promise<void> {
@@ -428,6 +453,7 @@ export async function prewarmBackendCacheForPage(
       }
     }
   }
+  addTypeableProbes(probes, seen);
   if (probes.length === 0) return;
 
   // Guard the page only once we're committed to the fetch fan-out.

@@ -3167,11 +3167,11 @@ test.describe("PDF text editor v2 - typing fidelity", () => {
     expect(alphaOf(clicked.background)).toBeLessThan(0.5);
 
     await page.keyboard.type("X");
+    await page.waitForTimeout(400);
     const typed = await read();
-    expect(typed.color).not.toBe("rgba(0, 0, 0, 0)");
-    // Now the text really differs from the bitmap, so it must be masked.
-    expect(alphaOf(typed.background)).toBeGreaterThan(0.5);
-    expect(typed.fontFamily.length).toBeGreaterThan(0);
+    expect(typed.color).toBe("rgba(0, 0, 0, 0)");
+    expect(alphaOf(typed.background)).toBeLessThan(0.5);
+    await expect(target).toContainText("X");
   });
 });
 
