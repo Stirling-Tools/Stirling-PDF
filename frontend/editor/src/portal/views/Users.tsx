@@ -280,11 +280,15 @@ export function Users() {
         </div>
         <div className="portal-users__head-actions">
           {caps.createTeam && (
-            <Button variant="secondary" onClick={() => setNewTeamOpen(true)}>
+            <Button
+              fat
+              variant="secondary"
+              onClick={() => setNewTeamOpen(true)}
+            >
               {t("users.newTeam.action", "+ New team")}
             </Button>
           )}
-          <Button onClick={() => openInvite(null)}>
+          <Button fat onClick={() => openInvite(null)}>
             {t("users.invite.action", "Invite people")}
           </Button>
         </div>

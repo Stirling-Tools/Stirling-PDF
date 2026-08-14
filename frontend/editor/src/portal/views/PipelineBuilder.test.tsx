@@ -456,7 +456,7 @@ describe("PipelineBuilder", () => {
     expect(
       await screen.findByText("portal.pipelines.builder.needsSource"),
     ).toBeInTheDocument();
-    // Still nothing chosen, so the pipeline cannot be saved.
+    // Still nothing chosen, so the pipeline cannot be created.
     expect(
       screen.getByText("portal.pipelines.composer.create").closest("button"),
     ).toBeDisabled();
@@ -601,15 +601,15 @@ describe("PipelineBuilder", () => {
         target: { value: "Needs both" },
       },
     );
-    const saveButton = () =>
+    const createButton = () =>
       screen.getByText("portal.pipelines.composer.create").closest("button");
 
     // Name only: blocked (no source, no destination).
-    expect(saveButton()).toBeDisabled();
+    expect(createButton()).toBeDisabled();
 
     // An input with a source but still no destination: blocked.
     await pickInputSource("Claims intake");
-    expect(saveButton()).toBeDisabled();
+    expect(createButton()).toBeDisabled();
 
     // Both chosen: allowed, and both are sent.
     await pickDestination();
@@ -782,17 +782,19 @@ describe("PipelineBuilder", () => {
     ).toBeInTheDocument();
   });
 
-  it("clears processed history from the header and confirms", async () => {
+  it("reprocesses the source: clears the processed record, runs, and reports", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
     await openTray();
     fireEvent.click(screen.getByText("portal.pipelines.detail.clearHistory"));
 
+    // It forgets what was processed, then triggers a run so those files go through now.
     await waitFor(() =>
       expect(clearProcessedHistory).toHaveBeenCalledWith("plc-1"),
     );
+    await waitFor(() => expect(triggerPipeline).toHaveBeenCalledWith("plc-1"));
     expect(
-      await screen.findByText("portal.pipelines.run.historyCleared"),
+      await screen.findByText("portal.pipelines.run.completed"),
     ).toBeInTheDocument();
   });
 
@@ -846,10 +848,51 @@ describe("PipelineBuilder", () => {
   it("deletes an existing pipeline after confirmation", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
+    // Delete is a rare, destructive action, so it lives behind the overflow tray.
+    await openTray();
     fireEvent.click(await screen.findByText("portal.pipelines.detail.delete"));
     fireEvent.click(await screen.findByText("portal.pipelines.delete.confirm"));
 
     await waitFor(() => expect(deletePipeline).toHaveBeenCalledWith("plc-1"));
+    expect(await screen.findByText("pipelines list")).toBeInTheDocument();
+  });
+
+  it("pauses a live pipeline at once, in place, and re-saves the persisted policy", async () => {
+    renderBuilder("/processor/pipelines/plc-1");
+
+    // POLICY.enabled is true, so the toggle offers to pause it.
+    fireEvent.click(await screen.findByText("portal.pipelines.builder.pause"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "plc-1", enabled: false }),
+    );
+    // It acts in place: the builder stays open and the control now offers to activate again.
+    expect(
+      await screen.findByText("portal.pipelines.builder.activate"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("pipelines list")).not.toBeInTheDocument();
+  });
+
+  it("creates a paused pipeline when Create paused is chosen", async () => {
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      { target: { value: "Paused draft" } },
+    );
+    await addTool("Compress");
+    await pickInputSource("Claims intake");
+    await pickDestination();
+
+    fireEvent.click(screen.getByText("portal.pipelines.composer.createPaused"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Paused draft", enabled: false }),
+    );
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
 
@@ -864,7 +907,7 @@ describe("PipelineBuilder", () => {
         target: { value: "Draft" },
       },
     );
-    fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
+    fireEvent.click(screen.getByLabelText("portal.pipelines.builder.back"));
 
     expect(
       await screen.findByText("portal.pipelines.builder.unsavedTitle"),
@@ -928,7 +971,7 @@ describe("PipelineBuilder", () => {
     await screen.findByRole("textbox", {
       name: "portal.pipelines.composer.name",
     });
-    fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
+    fireEvent.click(screen.getByLabelText("portal.pipelines.builder.back"));
 
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
