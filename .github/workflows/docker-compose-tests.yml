@@ -114,7 +114,6 @@ jobs:
           provenance: false
           build-args: ENABLE_CCACHE=true
           docker-tool-cache: ccache:stirling-docker-base-ccache
-          docker-mount-cache: true
           diagnostics: summary
           metadata-hints: workflow=docker-compose-tests,stage=base,image=fat
         env:
@@ -125,8 +124,9 @@ jobs:
         if: (inputs.docker-base-changed != 'true' || matrix.image != 'fat') && env.BORINGCACHE_ENABLED != 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
-      # Mount-cache needs BoringCache to own the build so its authenticated
-      # worker can snapshot and restore the Dockerfile cache mounts.
+      # Docker tool caches need BoringCache to own the build so Gradle's
+      # session-only remote-cache credentials reach uncached RUN steps without
+      # becoming part of the image layers.
       - name: Build ${{ matrix.image }} application artifacts
         if: env.BORINGCACHE_ENABLED == 'true' && (inputs.docker-base-changed != 'true' || matrix.image != 'fat')
         env:
@@ -155,7 +155,7 @@ jobs:
           push: false
           provenance: false
           build-args: VERSION_TAG=alpha
-          docker-mount-cache: true
+          docker-tool-cache: gradle:stirling-gradle
           diagnostics: summary
           metadata-hints: workflow=docker-compose-tests,stage=build,image=${{ matrix.image }}
         env:

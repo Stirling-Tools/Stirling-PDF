@@ -36,12 +36,7 @@ ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNN
   --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
   --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
 
-# The Gradle image declares /home/gradle/.gradle as a volume, so dependency and
-# local build-cache data do not become reusable image layers. BuildKit cache
-# mounts keep that data outside the image and let BoringCache persist it between
-# otherwise isolated CI builders.
-RUN --mount=type=cache,id=stirling-gradle,target=/home/gradle/.gradle,sharing=locked \
-    ./gradlew dependencies --no-daemon || true
+RUN ./gradlew dependencies --no-daemon || true
 
 # Copy entire project
 COPY . .
@@ -51,9 +46,7 @@ COPY . .
 ARG BUILD_PORTAL=false
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
-RUN --mount=type=cache,id=stirling-gradle,target=/home/gradle/.gradle,sharing=locked \
-    --mount=type=cache,id=stirling-npm,target=/root/.npm,sharing=locked \
-    JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
     DISABLE_ADDITIONAL_FEATURES=true \
     ./gradlew clean build \
       -PbuildWithFrontend=true \
