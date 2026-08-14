@@ -15,6 +15,10 @@ import {
   fitTextToWidth,
   NO_FIT,
 } from "@app/tools/pdfTextEditor/v2/util/fitText";
+import {
+  sampleRunBackground,
+  toOpaqueCss,
+} from "@app/tools/pdfTextEditor/v2/util/canvasBackground";
 
 // React + contentEditable do not play well together when JSX manages the
 // element's children: React reconciles the children on every render and can.
@@ -57,6 +61,27 @@ function cssStyleFor(fontId: string): "italic" | "normal" {
 }
 
 /** Pick an editing-mask color that always contrasts with the text fill. */
+// Read the page bitmap under a run and return an opaque CSS colour for the
+// editing mask. Null when the canvas is unreadable, so callers keep a default.
+function readMaskColor(el: HTMLDivElement): string | null {
+  const page = el.closest("[data-testid^='v2-page-']");
+  const canvas = page?.querySelector("canvas") as HTMLCanvasElement | null;
+  if (!canvas) return null;
+  const cb = canvas.getBoundingClientRect();
+  if (cb.width < 1 || cb.height < 1) return null;
+  const rb = el.getBoundingClientRect();
+  // CSS px -> canvas px: the bitmap is rendered at its own device scale.
+  const sx = canvas.width / cb.width;
+  const sy = canvas.height / cb.height;
+  const rgb = sampleRunBackground(canvas, {
+    x: (rb.left - cb.left) * sx,
+    y: (rb.top - cb.top) * sy,
+    width: rb.width * sx,
+    height: rb.height * sy,
+  });
+  return rgb ? toOpaqueCss(rgb) : null;
+}
+
 function contrastingMaskFor(fill: {
   r: number;
   g: number;
@@ -168,6 +193,10 @@ export function TextRunOverlay({
   // Masking a run the user has only clicked into swaps real PDF ink for a
   // CSS approximation, so hold the pristine bitmap until an actual edit.
   const [touched, setTouched] = useState(false);
+  // The mask has to be the page's own colour, not a guess from the text: a
+  // run on a coloured page got a grey band. Sampled from the rendered bitmap
+  // once per focus, so the read never lands in the typing path.
+  const [maskColor, setMaskColor] = useState<string | null>(null);
   // True between compositionstart and compositionend (IME). While composing
   // onInput must not dispatch per-keystroke edits; we commit once on end.
   const composingRef = useRef(false);
@@ -389,6 +418,7 @@ export function TextRunOverlay({
       onFocus={(e) => {
         setFocused(true);
         setTouched(false);
+        setMaskColor(readMaskColor(e.currentTarget as HTMLDivElement));
         const el = e.currentTarget as HTMLDivElement;
         // Remember the text at focus so blur can tell if the user edited it.
         focusTextRef.current = extractHardBreaks(el);
@@ -421,6 +451,7 @@ export function TextRunOverlay({
       }}
       onBlur={(e) => {
         setTouched(false);
+        setMaskColor(null);
         setFocused(false);
         // Wrap mode: when the just-edited content overflows the locked box
         // width.
@@ -508,7 +539,7 @@ export function TextRunOverlay({
         color: edited || dragging ? toCssHex(run.fill) : "transparent",
         // Mask the underlying bitmap only once it no longer matches the text.
         backgroundColor: edited
-          ? contrastingMaskFor(run.fill)
+          ? (maskColor ?? contrastingMaskFor(run.fill))
           : highlighted
             ? "rgba(255,217,0,0.45)"
             : selected
