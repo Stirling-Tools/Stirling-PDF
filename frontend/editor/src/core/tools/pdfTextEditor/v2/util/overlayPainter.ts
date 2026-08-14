@@ -54,14 +54,32 @@ function tokenSpan(token: PaintToken, opts: PaintOptions): HTMLSpanElement {
   const span = document.createElement("span");
   span.setAttribute(TOKEN_ATTR, "");
   span.textContent = token.text;
-  const fit = tokenFitFor(token, opts);
-  if (fit.letterSpacingPx !== 0) {
-    span.style.letterSpacing = `${fit.letterSpacingPx}px`;
-  }
-  if (fit.marginRightPx !== 0) {
-    span.style.marginRight = `${fit.marginRightPx}px`;
-  }
+  span.dataset.adv = String(token.advancePx);
+  span.dataset.src = token.text;
+  applyFit(span, token, opts);
   return span;
+}
+
+function applyFit(
+  span: HTMLSpanElement,
+  token: PaintToken,
+  opts: PaintOptions,
+): void {
+  const fit = tokenFitFor(token, opts);
+  span.style.letterSpacing =
+    fit.letterSpacingPx !== 0 ? `${fit.letterSpacingPx}px` : "";
+  span.style.marginRight =
+    fit.marginRightPx !== 0 ? `${fit.marginRightPx}px` : "";
+}
+
+export function refitTokens(el: HTMLElement, opts: PaintOptions): void {
+  for (const span of el.querySelectorAll<HTMLSpanElement>(`[${TOKEN_ATTR}]`)) {
+    const advance = Number(span.dataset.adv);
+    if (!Number.isFinite(advance)) continue;
+    const text = span.textContent ?? "";
+    if (text !== span.dataset.src) continue;
+    applyFit(span, { text, advancePx: advance }, opts);
+  }
 }
 
 function tokenFitFor(token: PaintToken, opts: PaintOptions): TokenFit {

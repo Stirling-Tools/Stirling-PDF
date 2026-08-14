@@ -31,6 +31,7 @@ import {
   paintLines,
   paintPlainText,
   plainCaretOffset,
+  refitTokens,
   restoreCaretOffset,
 } from "@app/tools/pdfTextEditor/v2/util/overlayPainter";
 import {
@@ -191,6 +192,7 @@ function computeExactLayout(args: {
     args.descent;
   if (!Number.isFinite(widthPx) || !Number.isFinite(heightPx)) return null;
   const signature = [
+    args.font,
     leftPx.toFixed(2),
     stack.topPx.toFixed(2),
     ...lines.map((l) =>
@@ -274,6 +276,7 @@ export function TextRunOverlay({
   const [editTick, setEditTick] = useState(0);
   const editedAtRevisionRef = useRef(-1);
   const paintedSignatureRef = useRef<string | null>(null);
+  const pointerFocusRef = useRef(false);
   // The mask has to be the page's own colour, not a guess from the text: a
   // run on a coloured page got a grey band. Sampled from the rendered bitmap
   // once per focus, so the read never lands in the typing path.
@@ -383,11 +386,19 @@ export function TextRunOverlay({
 
   useEffect(() => {
     const el = ref.current;
+    if (!el || composingRef.current) return;
+    if (!isLinePainted(el)) return;
+    refitTokens(el, { font, fontSizePx });
+  }, [font, fontSizePx]);
+
+  useEffect(() => {
+    const el = ref.current;
     if (!el) return;
     const active = document.activeElement === el;
     if (active && (touched || composingRef.current)) return;
     const domText = extractHardBreaks(el);
     const wantSignature = freshExact ? freshExact.signature : "";
+    if (!freshExact && isLinePainted(el) && domText === run.text) return;
     if (
       domText === run.text &&
       paintedSignatureRef.current === wantSignature &&
@@ -551,7 +562,8 @@ export function TextRunOverlay({
           onSelect(true);
           return;
         }
-        (e.currentTarget as HTMLDivElement).focus();
+        pointerFocusRef.current = true;
+        (e.currentTarget as HTMLDivElement).focus({ preventScroll: true });
         onSelect(false);
       }}
       onFocus={(e) => {
@@ -561,9 +573,14 @@ export function TextRunOverlay({
         const el = e.currentTarget as HTMLDivElement;
         // Remember the text at focus so blur can tell if the user edited it.
         focusTextRef.current = extractHardBreaks(el);
-        // Place caret at end so typed keys route into the element.
+        const fromPointer = pointerFocusRef.current;
+        pointerFocusRef.current = false;
         const sel = window.getSelection();
-        if (sel && !(sel.rangeCount > 0 && el.contains(sel.anchorNode))) {
+        if (
+          !fromPointer &&
+          sel &&
+          !(sel.rangeCount > 0 && el.contains(sel.anchorNode))
+        ) {
           const range = document.createRange();
           range.selectNodeContents(el);
           range.collapse(false);
