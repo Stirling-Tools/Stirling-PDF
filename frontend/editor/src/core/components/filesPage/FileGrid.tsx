@@ -25,6 +25,7 @@ import {
   ROOT_FOLDER_ID,
   folderKind,
 } from "@app/types/folder";
+import type { DiskFileEntry } from "@app/services/localFolderContents";
 import { useFolders } from "@app/contexts/FolderContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -47,11 +48,13 @@ import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWind
 export type FilesPageViewMode = "grid" | "list";
 
 export interface FilesPageEntry {
-  kind: "folder" | "file";
+  kind: "folder" | "file" | "diskFile";
   folder?: FolderRecord;
   /** Number of files inside this folder (folder entries only). */
   folderFileCount?: number;
   file?: StirlingFileStub;
+  /** A file read straight off a mounted directory (kind "diskFile"). */
+  disk?: DiskFileEntry;
   /** Parent breadcrumb path for search results outside the current folder. */
   parentPath?: string;
 }
@@ -68,6 +71,8 @@ interface FileGridProps {
   onOpenFolder: (id: FolderId) => void;
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
+  /** Open a file listed straight from a mounted directory. */
+  onOpenDiskFile?: (entry: DiskFileEntry) => void;
   onMoveFiles: (
     fileIds: FileId[],
     targetFolderId: FolderId | null,
@@ -378,6 +383,7 @@ function GridView({
   onSelectFile,
   onOpenFolder,
   onOpenFile,
+  onOpenDiskFile,
   onMoveFiles,
   onMoveFolder,
   onRenameFolder,
@@ -410,6 +416,15 @@ function GridView({
               onMoveFolder={(folderId) =>
                 onMoveFolder(folderId, entry.folder!.id)
               }
+            />
+          );
+        }
+        if (entry.kind === "diskFile" && entry.disk) {
+          return (
+            <DiskFileCard
+              key={`disk-${entry.disk.path}`}
+              entry={entry.disk}
+              onOpen={() => onOpenDiskFile?.(entry.disk!)}
             />
           );
         }
@@ -915,6 +930,7 @@ function ListView({
   onSetSelection,
   onOpenFolder,
   onOpenFile,
+  onOpenDiskFile,
   onMoveFiles,
   onMoveFolder,
   onRenameFolder,
@@ -1037,6 +1053,15 @@ function ListView({
               onDropFolder={(folderId) =>
                 onMoveFolder(folderId, entry.folder!.id)
               }
+            />
+          );
+        }
+        if (entry.kind === "diskFile" && entry.disk) {
+          return (
+            <DiskFileRow
+              key={`disk-${entry.disk.path}`}
+              entry={entry.disk}
+              onOpen={() => onOpenDiskFile?.(entry.disk!)}
             />
           );
         }
@@ -1561,3 +1586,134 @@ function FileRow({
 
 // Re-export root constant for caller convenience
 export { ROOT_FOLDER_ID };
+
+/**
+ * A file listed straight off a mounted directory. Nothing behind it is
+ * stored: no stub, no selection, no move/rename/delete — the disk owns the
+ * file, and the one thing Stirling adds is "Open", which loads the bytes
+ * into the workbench.
+ */
+function DiskFileCard({
+  entry,
+  onOpen,
+}: {
+  entry: DiskFileEntry;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  const isPdf = entry.name.toLowerCase().endsWith(".pdf");
+  return (
+    <div
+      className="files-page-card"
+      role="listitem"
+      tabIndex={0}
+      onDoubleClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen();
+      }}
+      title={entry.path}
+    >
+      <div className="files-page-card-thumb">
+        <div className="files-page-card-thumb-fallback">
+          {isPdf ? (
+            <PictureAsPdfIcon fontSize="large" />
+          ) : (
+            <InsertDriveFileIcon fontSize="large" />
+          )}
+        </div>
+      </div>
+      <div className="files-page-card-body">
+        <div className="files-page-card-title">{entry.name}</div>
+        <div className="files-page-card-meta">
+          {formatFileSize(entry.sizeBytes)}
+        </div>
+      </div>
+      <Menu shadow="md" position="bottom-end" withinPortal>
+        <Menu.Target>
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={t("filesPage.fileMenu", "File actions")}
+          >
+            <MoreVertIcon fontSize="small" />
+          </ActionIcon>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Item
+            leftSection={<OpenInNewIcon fontSize="small" />}
+            onClick={onOpen}
+          >
+            {t("filesPage.open", "Open")}
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+    </div>
+  );
+}
+
+/** List-view sibling of {@link DiskFileCard}; same single affordance. */
+function DiskFileRow({
+  entry,
+  onOpen,
+}: {
+  entry: DiskFileEntry;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  const ext = entry.name.includes(".")
+    ? entry.name.split(".").pop()!.toUpperCase()
+    : "";
+  return (
+    <div
+      role="row"
+      tabIndex={0}
+      className="files-page-list-row"
+      onDoubleClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen();
+      }}
+      title={entry.path}
+    >
+      <span aria-hidden="true" />
+      <span
+        role="gridcell"
+        style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+      >
+        {entry.name.toLowerCase().endsWith(".pdf") ? (
+          <PictureAsPdfIcon fontSize="small" />
+        ) : (
+          <InsertDriveFileIcon fontSize="small" />
+        )}
+        {entry.name}
+      </span>
+      <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
+      <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>
+      <span role="gridcell">
+        {getFileDate({ lastModified: entry.lastModified })}
+      </span>
+      <span role="gridcell">
+        <Menu shadow="md" position="bottom-end" withinPortal>
+          <Menu.Target>
+            <ActionIcon
+              variant="tertiary"
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={t("filesPage.fileMenu", "File actions")}
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<OpenInNewIcon fontSize="small" />}
+              onClick={onOpen}
+            >
+              {t("filesPage.open", "Open")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </span>
+    </div>
+  );
+}

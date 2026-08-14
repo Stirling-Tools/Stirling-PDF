@@ -56,7 +56,7 @@ import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
-import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
+import { FolderId, ROOT_FOLDER_ID, folderKind } from "@app/types/folder";
 
 import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
@@ -66,6 +66,12 @@ import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerMo
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { canPickDirectory } from "@app/services/directoryPicker";
+import {
+  canListDirectory,
+  listDirectory,
+  readDiskFile,
+  type DiskFileEntry,
+} from "@app/services/localFolderContents";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
@@ -419,12 +425,84 @@ export default function FileManagerView() {
     [foldersById],
   );
 
+  // ─── read-through listing for a mounted local folder ────────────────────
+  // The directory is the source of truth: its contents are read fresh off
+  // the disk whenever the user is inside the folder, never ingested to show.
+  const currentFolder = currentFolderId
+    ? folders.foldersById.get(currentFolderId)
+    : undefined;
+  const currentLocalDirectory =
+    currentFolder && folderKind(currentFolder) === "local"
+      ? currentFolder.directory
+      : undefined;
+  const [diskEntries, setDiskEntries] = useState<DiskFileEntry[]>([]);
+  const [diskLoading, setDiskLoading] = useState(false);
+  useEffect(() => {
+    if (!currentLocalDirectory || !canListDirectory) {
+      setDiskEntries([]);
+      return;
+    }
+    let cancelled = false;
+    setDiskLoading(true);
+    listDirectory(currentLocalDirectory)
+      .then((listed) => {
+        if (!cancelled) setDiskEntries(listed ?? []);
+      })
+      .catch((err) => {
+        console.warn("[FileManagerView] disk listing failed", err);
+        if (!cancelled) {
+          setDiskEntries([]);
+          folders.setError(
+            err instanceof Error
+              ? `Could not read the folder: ${err.message}`
+              : "Could not read the folder.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setDiskLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentLocalDirectory, folders]);
+
+  // Opening a disk file loads its bytes into the workbench — the one moment
+  // anything leaves the disk, and only because the user asked to work on it.
+  const openDiskFile = useCallback(
+    async (entry: DiskFileEntry) => {
+      try {
+        const file = await readDiskFile(entry);
+        if (!file) return;
+        clearFilesPageReturnRoute();
+        await addFiles([file], { selectFiles: true });
+        navActions.setWorkbench("viewer");
+        navigate("/");
+      } catch (err) {
+        folders.setError(
+          err instanceof Error
+            ? `Could not open ${entry.name}: ${err.message}`
+            : `Could not open ${entry.name}.`,
+        );
+      }
+    },
+    [addFiles, navActions, navigate, folders],
+  );
+
   const entries = useMemo<FilesPageEntry[]>(() => {
     // When searching, items may come from anywhere in the subtree, so we
     // expose a "parentPath" subtitle whenever the item's parent differs from
     // currentFolderId. When no search is active, every item is in the
     // current folder by definition and the subtitle is suppressed.
     const inSearch = search.length > 0;
+    // Inside a mounted folder the listing IS the directory; storage rows and
+    // subfolders don't apply there.
+    if (currentLocalDirectory) {
+      const needle = search.toLowerCase();
+      return diskEntries
+        .filter((disk) => !needle || disk.name.toLowerCase().includes(needle))
+        .map<FilesPageEntry>((disk) => ({ kind: "diskFile", disk }));
+    }
     return [
       ...visibleFolders.map<FilesPageEntry>((folder) => ({
         kind: "folder",
@@ -450,6 +528,8 @@ export default function FileManagerView() {
     filesPage.fileCountsByFolder,
     search,
     currentFolderId,
+    currentLocalDirectory,
+    diskEntries,
     pathForFolderId,
   ]);
 
@@ -1499,7 +1579,7 @@ export default function FileManagerView() {
           >
             <FileGrid
               entries={entries}
-              loading={loading}
+              loading={loading || diskLoading}
               currentTab={currentTab}
               searchActive={search.trim().length > 0}
               serverReachable={folders.serverReachable}
@@ -1511,6 +1591,7 @@ export default function FileManagerView() {
               onSelectFile={handleSelectFile}
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
+              onOpenDiskFile={(entry) => void openDiskFile(entry)}
               onOpenFile={handleOpenFile}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}
