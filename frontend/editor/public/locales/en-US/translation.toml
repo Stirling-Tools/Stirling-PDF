@@ -7481,7 +7481,6 @@ noEventsInCategory = "No events in this category."
 subheading = "Every authentication, configuration, and processing event across your workspace."
 
 [portal.infrastructure.audit.columns]
-action = "Action"
 actor = "Actor"
 event = "Event"
 latency = "Latency"

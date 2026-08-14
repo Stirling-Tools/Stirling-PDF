@@ -185,7 +185,12 @@ function base<T>(
 }
 
 function text<T>(
-  o: Common & { get: (row: T) => string; sortBy?: (row: T) => SortValue },
+  o: Common & {
+    get: (row: T) => string;
+    /** Optional bold label rendered before the value as "Label: value". */
+    label?: (row: T) => string | null | undefined;
+    sortBy?: (row: T) => SortValue;
+  },
 ): DataTableColumn<T> {
   return base<T>(o, {
     align: "left",
@@ -193,7 +198,16 @@ function text<T>(
     fit: false,
     sortValue: o.sortBy ?? ((r) => o.get(r)),
     sortFn: "alphanumeric",
-    renderCell: (r) => <span className="sui-dtc__text">{o.get(r)}</span>,
+    renderCell: (r) => {
+      const label = o.label?.(r);
+      return label ? (
+        <span className="sui-dtc__text sui-dtc__text--labeled">
+          <strong className="sui-dtc__text-label">{label}:</strong> {o.get(r)}
+        </span>
+      ) : (
+        <span className="sui-dtc__text">{o.get(r)}</span>
+      );
+    },
   });
 }
 

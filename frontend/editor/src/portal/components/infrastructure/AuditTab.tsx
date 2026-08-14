@@ -23,7 +23,6 @@ import { AuditExportModal } from "@portal/components/infrastructure/AuditExportM
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import {
   AUDIT_CAT_LABEL,
-  AUDIT_CAT_TONE,
   AUDIT_STATUS_LABEL,
   AUDIT_TONE,
 } from "@portal/components/infrastructure/infraFormat";
@@ -62,19 +61,14 @@ export function AuditTab() {
       sortable: true,
       get: (e) => e.timestamp,
     }),
-    column.badge({
-      key: "category",
+    column.text({
+      key: "event",
       header: t("portal.infrastructure.audit.columns.event"),
       sortable: true,
-      get: (e) => ({
-        tone: AUDIT_CAT_TONE[e.category],
-        label: t(AUDIT_CAT_LABEL[e.category]),
-      }),
-    }),
-    column.text({
-      key: "action",
-      header: t("portal.infrastructure.audit.columns.action", "Action"),
-      sortable: true,
+      // "Category: action" on one line - the category as a bold label, no
+      // status-coloured dot. Colour is reserved for the Status column, where it
+      // actually signals an outcome.
+      label: (e) => t(AUDIT_CAT_LABEL[e.category]),
       get: (e) => e.action,
     }),
     column.mono({

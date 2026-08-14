@@ -197,6 +197,13 @@
 .sui-dtc__text {
   color: var(--c-text-muted);
 }
+/* Labeled value ("Category: action"): full-strength text, bold label. */
+.sui-dtc__text--labeled {
+  color: var(--c-text);
+}
+.sui-dtc__text-label {
+  font-weight: 600;
+}
 .sui-dtc__mono {
   font-family: var(--font-mono);
   font-size: 0.75rem;
