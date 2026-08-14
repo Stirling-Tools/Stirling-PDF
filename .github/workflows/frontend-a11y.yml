@@ -3,9 +3,8 @@ name: Frontend a11y regression gate
 # Reusable workflow called from build.yml when frontend sources change.
 #
 # Scans the stories this branch touches in real Chromium and runs axe against
-# each. Existing violations are grandfathered in .storybook/a11y-baseline.json;
-# the check fails on a NEW violation — a story breaking a rule it wasn't already
-# breaking — or on a story that fails to render at all.
+# each; the check fails on any axe violation, or on a story that fails to render
+# at all.
 #
 # Only changed stories, because a full sweep is ~30 minutes: far too slow to sit
 # in front of every merge. The whole suite is scanned nightly instead

@@ -135,9 +135,9 @@ jobs:
     secrets: inherit
 
   # Required (in all-checks-passed). Scans the stories a branch touches in both
-  # light and dark; a NEW axe violation in either theme blocks the merge. The
-  # whole-suite sweep (nightly.yml) still covers regressions a change ripples
-  # into stories it doesn't touch.
+  # light and dark; an axe violation in either theme blocks the merge. The
+  # whole-suite sweep (nightly.yml) still covers stories a change affects without
+  # touching them directly.
   frontend-a11y:
     if: needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed]
