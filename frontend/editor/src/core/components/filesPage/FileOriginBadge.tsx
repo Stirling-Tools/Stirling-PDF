@@ -2,15 +2,13 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import ComputerIcon from "@mui/icons-material/Computer";
-import StorageIcon from "@mui/icons-material/Storage";
 import CloudDoneIcon from "@mui/icons-material/CloudDone";
 import GroupIcon from "@mui/icons-material/Group";
 
 import { FileOrigin } from "@app/components/filesPage/fileOrigin";
 
 interface FileOriginBadgeProps {
-  /** "disk" is a display-only origin for files listed from a mounted directory. */
-  origin: FileOrigin | "disk";
+  origin: FileOrigin;
   /** Compact (icon-only) vs full (icon + text). */
   compact?: boolean;
   /**
@@ -65,19 +63,6 @@ export function FileOriginBadge({
           tooltip: t(
             "filesPage.origin.cloudHint",
             "Stored on the Stirling server",
-          ),
-        };
-      case "disk":
-        return {
-          label: t("filesPage.origin.disk", "On disk"),
-          // Deliberately NOT the Computer icon: "local" (this browser) wears
-          // that one, and in compact mode the icon is the whole badge — two
-          // origins sharing a glyph read as the same place.
-          icon: <StorageIcon style={{ fontSize: "0.85rem" }} />,
-          style: styles.local,
-          tooltip: t(
-            "filesPage.origin.diskHint",
-            "A file in the mounted folder on your disk",
           ),
         };
       case "shared-with-me":

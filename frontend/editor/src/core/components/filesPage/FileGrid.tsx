@@ -55,7 +55,7 @@ import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWind
  * defaults describe files.
  */
 function useFolderOriginBadge(folder: FolderRecord): {
-  origin: "cloud" | "local" | "disk";
+  origin: "cloud" | "local";
   tooltip: string;
 } {
   const { t } = useTranslation();
@@ -70,7 +70,9 @@ function useFolderOriginBadge(folder: FolderRecord): {
       };
     case "local":
       return {
-        origin: "disk",
+        // Same mark as a virtual folder: what matters is that it lives on
+        // this device, not which corner of it. The tooltip says which.
+        origin: "local",
         tooltip: t(
           "filesPage.folderOrigin.diskHint",
           "A folder mounted from a directory on your disk",
@@ -1688,7 +1690,14 @@ function DiskFileCard({
           </div>
         )}
         <div className="files-page-card-origin">
-          <FileOriginBadge origin="disk" compact />
+          <FileOriginBadge
+            origin="local"
+            tooltip={t(
+              "filesPage.origin.diskHint",
+              "A file in the mounted folder on your disk",
+            )}
+            compact
+          />
         </div>
       </div>
       <div className="files-page-card-body">
@@ -1790,7 +1799,14 @@ function DiskFileRow({
         >
           {entry.name}
         </span>
-        <FileOriginBadge origin="disk" compact />
+        <FileOriginBadge
+          origin="local"
+          tooltip={t(
+            "filesPage.origin.diskHint",
+            "A file in the mounted folder on your disk",
+          )}
+          compact
+        />
       </span>
       <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
       <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>

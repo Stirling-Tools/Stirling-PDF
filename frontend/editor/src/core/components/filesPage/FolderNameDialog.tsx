@@ -8,7 +8,6 @@ import {
   Stack,
   Text,
   TextInput,
-  Tooltip,
 } from "@mantine/core";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
@@ -42,7 +41,12 @@ interface FolderNameDialogProps {
   ) => void | Promise<void>;
 }
 
-/** Label + hint per offered kind, resolved through i18n at render. */
+/**
+ * Label + hint per offered kind, resolved through i18n at render. Framed by
+ * what the user is doing, not by implementation: pointing Stirling at a
+ * folder that already exists, creating a new one on this device, or creating
+ * one on the server.
+ */
 const KIND_COPY: Record<
   FolderKind,
   {
@@ -54,21 +58,20 @@ const KIND_COPY: Record<
 > = {
   local: {
     labelKey: "filesPage.folderKindChoice.local",
-    labelDefault: "A folder on this computer",
+    labelDefault: "Add an existing folder",
     hintKey: "filesPage.folderKindChoice.localHint",
     hintDefault:
-      "Shows a real folder from your disk here. Its files stay exactly where they are.",
+      "Point Stirling at a folder already on this computer. Its files stay exactly where they are.",
   },
   virtual: {
     labelKey: "filesPage.folderKindChoice.virtual",
-    labelDefault: "In this browser",
+    labelDefault: "Create a folder on this device",
     hintKey: "filesPage.folderKindChoice.virtualHint",
-    hintDefault:
-      "Only on this device. Works offline; holds files that are on this device too.",
+    hintDefault: "A new folder that lives only on this device. Works offline.",
   },
   server: {
     labelKey: "filesPage.folderKindChoice.server",
-    labelDefault: "On the server",
+    labelDefault: "Create a folder on the server",
     hintKey: "filesPage.folderKindChoice.serverHint",
     hintDefault: "Synced to your account and available wherever you sign in.",
   },
@@ -156,24 +159,19 @@ export function FolderNameDialog({
             <Stack gap="xs" mt="xs">
               {kindChoices.map(({ kind: choice, disabledReason }) => {
                 const copy = KIND_COPY[choice];
-                const radio = (
+                // A disabled option explains itself in its own description —
+                // the reason is the one thing the user needs, and hover-only
+                // text hides it (and never appears on touch).
+                return (
                   <Radio
                     key={choice}
                     value={choice}
                     disabled={Boolean(disabledReason)}
                     label={t(copy.labelKey, copy.labelDefault)}
-                    description={t(copy.hintKey, copy.hintDefault)}
+                    description={
+                      disabledReason ?? t(copy.hintKey, copy.hintDefault)
+                    }
                   />
-                );
-                // Same treatment the New folder button used to get when the
-                // server couldn't oblige: greyed, with the reason on hover.
-                return disabledReason ? (
-                  <Tooltip key={choice} label={disabledReason} withArrow>
-                    {/* span: Mantine tooltips need events a disabled input eats */}
-                    <span>{radio}</span>
-                  </Tooltip>
-                ) : (
-                  radio
                 );
               })}
             </Stack>
