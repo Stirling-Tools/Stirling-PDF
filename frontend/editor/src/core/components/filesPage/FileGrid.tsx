@@ -48,6 +48,45 @@ import {
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
 
+/**
+ * The origin badge a folder wears, mirroring the one its files would: a
+ * server folder is Cloud, a virtual folder is Local (this browser), a
+ * mounted folder is On disk. Tooltips are folder-phrased — the badge's own
+ * defaults describe files.
+ */
+function useFolderOriginBadge(folder: FolderRecord): {
+  origin: "cloud" | "local" | "disk";
+  tooltip: string;
+} {
+  const { t } = useTranslation();
+  switch (folderKind(folder)) {
+    case "virtual":
+      return {
+        origin: "local",
+        tooltip: t(
+          "filesPage.folderOrigin.virtualHint",
+          "A folder that lives only in this browser",
+        ),
+      };
+    case "local":
+      return {
+        origin: "disk",
+        tooltip: t(
+          "filesPage.folderOrigin.diskHint",
+          "A folder mounted from a directory on your disk",
+        ),
+      };
+    default:
+      return {
+        origin: "cloud",
+        tooltip: t(
+          "filesPage.folderOrigin.serverHint",
+          "A folder stored on the Stirling server",
+        ),
+      };
+  }
+}
+
 export type FilesPageViewMode = "grid" | "list";
 
 export interface FilesPageEntry {
@@ -506,6 +545,7 @@ function FolderCard({
   // local one takes its name, look, and lifetime from its directory on disk —
   // so its edit items are hidden rather than disabled-with-a-wrong-excuse.
   const kind = folderKind(folder);
+  const originBadge = useFolderOriginBadge(folder);
   const editsDisabled = kind === "server" && !serverReachable;
   const editsHidden = kind === "local";
   const offlineHint = t(
@@ -578,6 +618,13 @@ function FolderCard({
           fileCount={fileCount}
           iconGlyph={findFolderIcon(folder.icon)?.glyph}
         />
+        <div className="files-page-card-origin">
+          <FileOriginBadge
+            origin={originBadge.origin}
+            tooltip={originBadge.tooltip}
+            compact
+          />
+        </div>
       </div>
       <div className="files-page-card-body">
         <div className="files-page-card-name" title={folder.name}>
@@ -1141,6 +1188,7 @@ function FolderRow({
   // local one takes its name, look, and lifetime from its directory on disk —
   // so its edit items are hidden rather than disabled-with-a-wrong-excuse.
   const kind = folderKind(folder);
+  const originBadge = useFolderOriginBadge(folder);
   const editsDisabled = kind === "server" && !serverReachable;
   const editsHidden = kind === "local";
   const offlineHint = t(
@@ -1238,6 +1286,11 @@ function FolderRow({
             </span>
           )}
         </span>
+        <FileOriginBadge
+          origin={originBadge.origin}
+          tooltip={originBadge.tooltip}
+          compact
+        />
       </span>
       <span role="gridcell">
         {kind === "virtual"

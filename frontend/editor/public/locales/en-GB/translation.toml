@@ -4133,6 +4133,11 @@ clear = "Clear filter"
 label = "Filter files by name"
 placeholder = "Filter files…"
 
+[filesPage.folderOrigin]
+diskHint = "A folder mounted from a directory on your disk"
+serverHint = "A folder stored on the Stirling server"
+virtualHint = "A folder that lives only in this browser"
+
 [filesPage.folderKindChoice]
 chooseDirectory = "Choose folder…"
 label = "Where should this folder live?"
