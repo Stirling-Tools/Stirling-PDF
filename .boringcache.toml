@@ -39,6 +39,9 @@ entries = ["npm-cache"]
 [profiles.uv-dependencies]
 entries = ["uv-cache"]
 
+[profiles.cargo-dependencies]
+entries = ["cargo-registry", "cargo-git"]
+
 [profiles.cargo-product]
 entries = ["cargo-registry", "cargo-git", "cargo-target"]
 

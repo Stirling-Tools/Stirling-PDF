@@ -33,6 +33,7 @@ permissions:
 
 jobs:
   sync-files:
+    environment: bot-identity
     runs-on: ubuntu-latest
     env:
       BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}

@@ -21,10 +21,14 @@ permissions:
 
 jobs:
   deploy:
+    environment: pr-preview
     if: ${{ vars.CI_PROFILE != 'lite' }}
     runs-on: ubuntu-latest
     env:
       BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -112,31 +116,38 @@ jobs:
           VERSION=$(grep "^version =" build.gradle | awk -F'"' '{print $2}')
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Login to Docker Hub
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
+
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
-          builder: ${{ steps.boringcache-docker.outputs.buildx-name || steps.buildx.outputs.name }}
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_API }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
 
       - name: Build and push test image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
+          builder: ${{ steps.boringcache-docker.outputs.buildx-name || steps.buildx.outputs.name }}
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
           cache-from: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-docker.outputs.cache-from || 'type=gha,scope=stirling-pdf-latest' }}
           cache-to: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-docker.outputs.cache-to || 'type=gha,mode=max,scope=stirling-pdf-latest' }}
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:test-${{ github.sha }}
+          tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:test-${{ github.sha }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64
 
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Deploy to VPS
         run: |
           cat > docker-compose.yml << EOF
@@ -144,7 +155,7 @@ jobs:
           services:
             stirling-pdf:
               container_name: stirling-pdf-test-${{ github.sha }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:test-${{ github.sha }}
+              image: ${IMAGE_BASE}:test-${{ github.sha }}
               ports:
                 - "1337:8080"
               volumes:
@@ -165,9 +176,9 @@ jobs:
               restart: on-failure:5
           EOF
 
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${NEW_VPS_USERNAME}@${NEW_VPS_HOST}:/tmp/docker-compose.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << EOF
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << EOF
             mkdir -p /stirling/test-${{ github.sha }}/{data,config,logs}
             mv /tmp/docker-compose.yml /stirling/test-${{ github.sha }}/docker-compose.yml
             cd /stirling/test-${{ github.sha }}
@@ -175,6 +186,10 @@ jobs:
             docker-compose up -d
           EOF
 
+        env:
+          IMAGE_BASE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
   files-changed:
     if: always()
     name: detect what files changed
@@ -197,6 +212,7 @@ jobs:
           filters: ".github/config/.files.yaml"
 
   test:
+    environment: pr-preview
     if: needs.files-changed.outputs.frontend == 'true'
     needs: [deploy, files-changed]
     runs-on: ubuntu-latest
@@ -247,6 +263,7 @@ jobs:
           FORCE_COLOR: "3"
 
   cleanup:
+    environment: pr-preview
     needs: [deploy, test]
     runs-on: ubuntu-latest
     if: always()
@@ -260,16 +277,21 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Cleanup deployment
         if: always()
         run: |
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << EOF
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << EOF
             cd /stirling/test-${{ github.sha }}
             docker-compose down
             cd /stirling
             rm -rf test-${{ github.sha }}
           EOF
+        env:
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
         continue-on-error: true # Ensure cleanup runs even if previous steps fail

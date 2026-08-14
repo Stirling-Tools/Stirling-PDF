@@ -160,10 +160,10 @@ jobs:
     uses: ./.github/workflows/frontend-validation.yml
     secrets: inherit
 
-  # Advisory: deliberately NOT in all-checks-passed. It reports on the stories a
-  # branch touches so a regression is visible in review, but a browser scan is
-  # too new here to block merges on. Promote it once its pass/fail proves stable.
-  # Manual runs have no reliable PR base, especially when dispatched from a fork.
+  # Required (in all-checks-passed). Scans the stories a branch touches in both
+  # light and dark; an axe violation in either theme blocks the merge. The
+  # whole-suite sweep (nightly.yml) still covers stories a change affects without
+  # touching them directly.
   frontend-a11y:
     if: github.event_name != 'workflow_dispatch' && needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed]
@@ -318,6 +318,7 @@ jobs:
       - db-migration-test
       - check-generateOpenApiDocs
       - frontend-validation
+      - frontend-a11y
       - playwright-e2e
       - playwright-e2e-live
       - playwright-e2e-enterprise
@@ -344,6 +345,7 @@ jobs:
             db-migration-test=${{ needs.db-migration-test.result }}
             check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}
             frontend-validation=${{ needs.frontend-validation.result }}
+            frontend-a11y=${{ needs.frontend-a11y.result }}
             playwright-e2e=${{ needs.playwright-e2e.result }}
             playwright-e2e-live=${{ needs.playwright-e2e-live.result }}
             playwright-e2e-enterprise=${{ needs.playwright-e2e-enterprise.result }}

@@ -11,9 +11,13 @@ permissions:
 
 jobs:
   deploy-v2-on-push:
+    environment: pr-preview
     runs-on: ubuntu-latest
     env:
       BORINGCACHE_ENABLED: ${{ vars.BORINGCACHE_ENABLED == 'true' && (secrets.BORINGCACHE_RESTORE_TOKEN != '' || (github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN != '')) && 'true' || 'false' }}
+    permissions:
+      contents: read
+      packages: write
     concurrency:
       group: deploy-v2-push-V2
       cancel-in-progress: true
@@ -66,10 +70,21 @@ jobs:
             echo "backend_short=${BACKEND_HASH:0:8}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
       - name: Check if frontend image exists
         id: check-frontend
         run: |
-          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }} >/dev/null 2>&1; then
+          if docker manifest inspect ${IMAGE_BASE}:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Frontend image already exists, skipping build"
           else
@@ -77,10 +92,12 @@ jobs:
             echo "Frontend image needs to be built"
           fi
 
+        env:
+          IMAGE_BASE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
       - name: Check if backend image exists
         id: check-backend
         run: |
-          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }} >/dev/null 2>&1; then
+          if docker manifest inspect ${IMAGE_BASE}:v2-backend-${{ steps.commit-hashes.outputs.backend_short }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Backend image already exists, skipping build"
           else
@@ -88,11 +105,8 @@ jobs:
             echo "Backend image needs to be built"
           fi
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_API }}
+        env:
+          IMAGE_BASE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
 
       - name: Set up frontend Docker cache with BoringCache
         id: boringcache-frontend
@@ -121,8 +135,8 @@ jobs:
           cache-from: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-frontend.outputs.cache-from || 'type=gha,scope=stirling-v2-frontend' }}
           cache-to: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-frontend.outputs.cache-to || 'type=gha,mode=max,scope=stirling-v2-frontend' }}
           tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-latest
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:v2-frontend-latest
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
 
@@ -153,17 +167,19 @@ jobs:
           cache-from: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-backend.outputs.cache-from || 'type=gha,scope=stirling-v2-backend' }}
           cache-to: ${{ env.BORINGCACHE_ENABLED == 'true' && steps.boringcache-backend.outputs.cache-to || 'type=gha,mode=max,scope=stirling-v2-backend' }}
           tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-latest
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:v2-backend-latest
           build-args: VERSION_TAG=v2-alpha
           platforms: linux/amd64
 
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Deploy to VPS on port 3000
         run: |
           export UNIQUE_NAME=docker-compose-v2-$GITHUB_RUN_ID.yml
@@ -173,7 +189,7 @@ jobs:
           services:
             backend:
               container_name: stirling-v2-backend
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
+              image: ${IMAGE_BASE}:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
               ports:
                 - "13000:8080"
               volumes:
@@ -196,21 +212,21 @@ jobs:
 
             frontend:
               container_name: stirling-v2-frontend
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+              image: ${IMAGE_BASE}:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
               ports:
                 - "3000:80"
               environment:
-                VITE_API_BASE_URL: "http://${{ secrets.NEW_VPS_HOST }}:13000"
+                VITE_API_BASE_URL: "http://${NEW_VPS_HOST}:13000"
               depends_on:
                 - backend
               restart: on-failure:5
           EOF
 
           # Copy to remote with unique name
-          scp -i ../private.key -o StrictHostKeyChecking=no $UNIQUE_NAME ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/$UNIQUE_NAME
+          scp -i ../private.key -o StrictHostKeyChecking=no $UNIQUE_NAME ${NEW_VPS_USERNAME}@${NEW_VPS_HOST}:/tmp/$UNIQUE_NAME
 
           # SSH and rename/move atomically to avoid interference
-          ssh -i ../private.key -o StrictHostKeyChecking=no ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << ENDSSH
             mkdir -p /stirling/V2/{data,config,logs}
             mv /tmp/$UNIQUE_NAME /stirling/V2/docker-compose.yml
             cd /stirling/V2
@@ -221,6 +237,10 @@ jobs:
             docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
           ENDSSH
 
+        env:
+          IMAGE_BASE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
       - name: Cleanup temporary files
         if: always()
         run: |
