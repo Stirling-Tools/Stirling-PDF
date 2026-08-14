@@ -4151,7 +4151,6 @@ addExisting = "Add folder from this computer…"
 addExistingHint = "Its files stay exactly where they are."
 device = "New folder on this device"
 deviceHint = "Lives only on this device. Works offline."
-more = "More ways to add a folder"
 server = "New folder on the server"
 serverHint = "Synced to your account, available wherever you sign in."
 

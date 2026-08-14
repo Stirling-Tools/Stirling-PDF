@@ -1094,87 +1094,72 @@ export default function FileManagerView() {
                     {t("filesPage.newFolder", "New folder")}
                   </Button>
                 ) : (
-                  // Root: split button. Plain click does the common thing —
-                  // a folder on this device — and the chevron offers the rest,
-                  // each action under its true name with its minimal flow.
-                  <span style={{ display: "inline-flex", gap: "2px" }}>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      leftSection={<CreateNewFolderIcon fontSize="small" />}
-                      onClick={() => openNewFolderDialog(null, "virtual")}
-                    >
-                      {t("filesPage.newFolder", "New folder")}
-                    </Button>
-                    <Menu shadow="md" position="bottom-end" withinPortal>
-                      <Menu.Target>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          px="xs"
-                          aria-label={t(
-                            "filesPage.newFolderMenu.more",
-                            "More ways to add a folder",
-                          )}
-                        >
-                          <ArrowDropDownIcon fontSize="small" />
-                        </Button>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        <Menu.Item
-                          leftSection={<CreateNewFolderIcon fontSize="small" />}
-                          onClick={() => openNewFolderDialog(null, "virtual")}
-                        >
+                  // Root: the button IS the menu. The three destinations are
+                  // peers — none deserves to be the hidden one behind a
+                  // chevron — so every click shows all of them.
+                  <Menu shadow="md" position="bottom-end" withinPortal>
+                    <Menu.Target>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        leftSection={<CreateNewFolderIcon fontSize="small" />}
+                        rightSection={<ArrowDropDownIcon fontSize="small" />}
+                      >
+                        {t("filesPage.newFolder", "New folder")}
+                      </Button>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        leftSection={<CreateNewFolderIcon fontSize="small" />}
+                        onClick={() => openNewFolderDialog(null, "virtual")}
+                      >
+                        {t(
+                          "filesPage.newFolderMenu.device",
+                          "New folder on this device",
+                        )}
+                        <Text size="xs" c="dimmed">
                           {t(
-                            "filesPage.newFolderMenu.device",
-                            "New folder on this device",
+                            "filesPage.newFolderMenu.deviceHint",
+                            "Lives only on this device. Works offline.",
                           )}
-                          <Text size="xs" c="dimmed">
-                            {t(
-                              "filesPage.newFolderMenu.deviceHint",
-                              "Lives only on this device. Works offline.",
+                        </Text>
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<DriveFolderUploadIcon fontSize="small" />}
+                        disabled={Boolean(addExistingDisabledReason)}
+                        onClick={() => void addExistingFolder()}
+                      >
+                        {t(
+                          "filesPage.newFolderMenu.addExisting",
+                          "Add folder from this computer…",
+                        )}
+                        <Text size="xs" c="dimmed">
+                          {addExistingDisabledReason ??
+                            t(
+                              "filesPage.newFolderMenu.addExistingHint",
+                              "Its files stay exactly where they are.",
                             )}
-                          </Text>
-                        </Menu.Item>
-                        <Menu.Item
-                          leftSection={
-                            <DriveFolderUploadIcon fontSize="small" />
-                          }
-                          disabled={Boolean(addExistingDisabledReason)}
-                          onClick={() => void addExistingFolder()}
-                        >
-                          {t(
-                            "filesPage.newFolderMenu.addExisting",
-                            "Add folder from this computer…",
-                          )}
-                          <Text size="xs" c="dimmed">
-                            {addExistingDisabledReason ??
-                              t(
-                                "filesPage.newFolderMenu.addExistingHint",
-                                "Its files stay exactly where they are.",
-                              )}
-                          </Text>
-                        </Menu.Item>
-                        <Menu.Item
-                          leftSection={<CloudIcon fontSize="small" />}
-                          disabled={Boolean(serverFolderDisabledReason)}
-                          onClick={() => openNewFolderDialog(null, "server")}
-                        >
-                          {t(
-                            "filesPage.newFolderMenu.server",
-                            "New folder on the server",
-                          )}
-                          <Text size="xs" c="dimmed">
-                            {serverFolderDisabledReason ??
-                              t(
-                                "filesPage.newFolderMenu.serverHint",
-                                "Synced to your account, available wherever you sign in.",
-                              )}
-                          </Text>
-                        </Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
-                  </span>
+                        </Text>
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<CloudIcon fontSize="small" />}
+                        disabled={Boolean(serverFolderDisabledReason)}
+                        onClick={() => openNewFolderDialog(null, "server")}
+                      >
+                        {t(
+                          "filesPage.newFolderMenu.server",
+                          "New folder on the server",
+                        )}
+                        <Text size="xs" c="dimmed">
+                          {serverFolderDisabledReason ??
+                            t(
+                              "filesPage.newFolderMenu.serverHint",
+                              "Synced to your account, available wherever you sign in.",
+                            )}
+                        </Text>
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
                 )}
                 <Button
                   size="sm"
