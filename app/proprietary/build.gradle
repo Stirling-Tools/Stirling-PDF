@@ -89,6 +89,14 @@ dependencies {
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersMinioVersion}"
 }
 
+// Golden extraction fixtures live in :common; the advanced converter is graded against the same
+// corpus as the built-in one rather than a forked copy of it.
+processTestResources {
+    from(project(':common').file('src/test/resources/pdf-ingestion-fixtures')) {
+        into 'pdf-ingestion-fixtures'
+    }
+}
+
 tasks.register('prepareKotlinBuildScriptModel') {}
 
 tasks.register('type3SignatureTool', JavaExec) {

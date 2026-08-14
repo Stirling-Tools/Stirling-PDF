@@ -1,6 +1,7 @@
-package stirling.software.common.pdf;
+package stirling.software.proprietary.pdf;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -15,6 +16,7 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -25,8 +27,8 @@ import stirling.software.jpdfium.text.TextLine;
 import stirling.software.jpdfium.text.TextWord;
 
 /**
- * Accuracy and robustness tests for {@link PdfMarkdownConverter}, comparing conversion output
- * against hand-authored golden Markdown for a set of owned/synthetic fixtures.
+ * Accuracy and robustness tests for {@link AdvancedPdfMarkdownConverter}, comparing conversion
+ * output against hand-authored golden Markdown for a set of owned/synthetic fixtures.
  *
  * <p>The {@link #gatedFixtures()} set is enforced in CI: those fixtures currently convert within
  * the accuracy threshold and guard against regressions. Fixtures still being iterated on live in
@@ -34,7 +36,7 @@ import stirling.software.jpdfium.text.TextWord;
  * breaking the build. Enable the WIP test locally to see per-fixture scores while working on the
  * converter.
  */
-class PdfMarkdownConverterTest {
+class AdvancedPdfMarkdownConverterTest {
 
     /** Accuracy threshold: output must share at least this fraction of content with the golden. */
     private static final double THRESHOLD = 0.95;
@@ -91,10 +93,151 @@ class PdfMarkdownConverterTest {
         }
 
         List<float[]> columns =
-                assertDoesNotThrow(() -> PdfMarkdownConverter.findColumnRangesFromLines(rows));
+                assertDoesNotThrow(
+                        () -> AdvancedPdfMarkdownConverter.findColumnRangesFromLines(rows));
         assertTrue(
                 columns.isEmpty(),
                 "implausible page span should disable column detection, not allocate from it");
+    }
+
+    @Test
+    @Timeout(20)
+    void gutterScanTerminatesOnCoordinatesBeyondFloatPrecision() {
+        // Past 2^24 a float cannot represent x + 1, so a float-stepped scan over a crafted text
+        // matrix stops advancing and spins forever - wedging the process-wide jpdfium lock with it.
+        List<TextLine> rows = new ArrayList<>();
+        for (int r = 0; r < 10; r++) {
+            float y = 400f - r * 12f;
+            float x = 20_000_000f;
+            TextWord w = new TextWord(List.of(), x, y, 200f, 10f);
+            rows.add(new TextLine(List.of(w), x, y, 200f, 10f));
+        }
+
+        List<Float> gutters =
+                assertDoesNotThrow(() -> AdvancedPdfMarkdownConverter.detectGuttersFromLines(rows));
+        assertTrue(
+                gutters.isEmpty(),
+                "implausible page span should disable gutter detection, not scan it");
+    }
+
+    /**
+     * Text set in three columns aligns across rows exactly as a table's cells do, so the word grid
+     * reads the whole page as one table and loses every heading in it. What tells them apart is
+     * that a table keys its rows on a column of short values, and that its cells do not continue
+     * each other's sentences.
+     */
+    @Test
+    void multiColumnProseIsNotATable() {
+        List<String[]> prose =
+                List.of(
+                        new String[] {
+                            "The SS Pack can reduce the information acquisition time by",
+                            "returning all the information that matches",
+                            "the user's search intent and the query behind it"
+                        },
+                        new String[] {
+                            "Unlike existing search systems that only return information",
+                            "limited to the entered search keywords, this pack",
+                            "returns all relevant data meeting the search intent"
+                        });
+        assertTrue(
+                AdvancedPdfMarkdownConverter.everyColumnIsProse(prose, 3),
+                "three columns of running sentences are a page layout, not a table");
+    }
+
+    @Test
+    void wideTableWithLongCellsStaysATable() {
+        // The prose test must not fire on a real table just because one column runs long: the
+        // short "Jurisdiction" and yes/no columns are what key the rows.
+        List<String[]> table =
+                List.of(
+                        new String[] {
+                            "Argentina",
+                            "Y",
+                            "Prohibition on ownership of property that contains or borders water"
+                        },
+                        new String[] {
+                            "Australia",
+                            "N",
+                            "Approval is needed from the Treasurer if the acquisition is large"
+                        });
+        assertTrue(
+                !AdvancedPdfMarkdownConverter.everyColumnIsProse(table, 3),
+                "a keyed table is a table");
+    }
+
+    @Test
+    void splitApostropheIsClosedUpInCells() {
+        // PDFium splits on its own bounding boxes, so a tight apostrophe arrives as its own word.
+        assertEquals(
+                "the firm's returns",
+                AdvancedPdfMarkdownConverter.rejoinContractions("the firm ' s returns"));
+        assertEquals("Don’t know", AdvancedPdfMarkdownConverter.rejoinContractions("Don ’ t know"));
+        // An opening quote has real space around it and must keep it.
+        assertEquals(
+                "he said ' hello",
+                AdvancedPdfMarkdownConverter.rejoinContractions("he said ' hello"));
+    }
+
+    @Test
+    void headingLevelsAreRebasedOnTheStrongestHeadingPresent() {
+        // A document whose headings are body-size and bold scores every one of them level 3;
+        // relative to each other they are its top level, so they must render as level 1.
+        assertEquals(
+                "# CONTENTS\n",
+                AdvancedPdfMarkdownConverter.normaliseHeadingLevels("### CONTENTS\n"));
+        // A real two-level document keeps two levels, with no gap between them.
+        assertEquals(
+                "# Title\n\ntext\n\n## Section\n",
+                AdvancedPdfMarkdownConverter.normaliseHeadingLevels(
+                        "# Title\n\ntext\n\n### Section\n"));
+        // Already rooted at level 1 with no gaps: left alone.
+        String unchanged = "# Title\n\n## Section\n";
+        assertEquals(unchanged, AdvancedPdfMarkdownConverter.normaliseHeadingLevels(unchanged));
+    }
+
+    /**
+     * A crafted PDF can draw thousands of disjoint rules. Ruled-table detection used to build one
+     * full-length int[] per connected component, so N non-crossing rules cost O(N^2) retained
+     * memory and tens of thousands of rules exhausted the heap. Partitioning must stay linear and
+     * bounded.
+     */
+    @Test
+    @Timeout(20)
+    void ruledTablePartitionSurvivesPathologicalGrid() {
+        // 4000 rules that never cross, so every one is its own component: the shape that made the
+        // old code allocate 4000 arrays of 4001 ints. Stays under the crossing-test budget so it is
+        // the component cap being exercised, not the operator-flood bail-out.
+        List<PageRules.Rule> horizontal = new ArrayList<>();
+        List<PageRules.Rule> vertical = new ArrayList<>();
+        for (int i = 0; i < 2_000; i++) {
+            horizontal.add(new PageRules.Rule(i * 10f, 0f, 20f));
+            vertical.add(new PageRules.Rule(1_000_000f + i * 10f, -50f, -30f));
+        }
+
+        int components =
+                assertDoesNotThrow(
+                        () ->
+                                AdvancedPdfMarkdownConverter.ruledComponentCount(
+                                        horizontal, vertical));
+        // 4000 disjoint rules would be 4000 components; the cap is what keeps this bounded.
+        assertEquals(256, components, "component count must stay bounded");
+    }
+
+    @Test
+    @Timeout(20)
+    void ruledTablePartitionBailsOutOnOperatorFlood() {
+        // Enough levels that the pairwise crossing scan alone would dominate the request.
+        List<PageRules.Rule> horizontal = new ArrayList<>();
+        List<PageRules.Rule> vertical = new ArrayList<>();
+        for (int i = 0; i < 20_000; i++) {
+            horizontal.add(new PageRules.Rule(i * 10f, 0f, 20f));
+            vertical.add(new PageRules.Rule(1_000_000f + i * 10f, -50f, -30f));
+        }
+
+        assertTrue(
+                AdvancedPdfMarkdownConverter.ruledComponentCount(horizontal, vertical) == 0,
+                "a rule flood should disable ruled-table detection, not scan it");
     }
 
     private void assertConversionMatchesGolden(String pdfName, String mdName) throws IOException {
@@ -109,7 +252,7 @@ class PdfMarkdownConverterTest {
 
         String actual;
         try (PdfDocument doc = PdfDocument.open(pdfPath)) {
-            actual = new PdfMarkdownConverter().convert(doc);
+            actual = new AdvancedPdfMarkdownConverter().convert(doc);
         }
 
         String expected;

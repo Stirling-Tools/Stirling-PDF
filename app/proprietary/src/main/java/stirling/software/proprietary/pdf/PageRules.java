@@ -1,4 +1,4 @@
-package stirling.software.common.pdf;
+package stirling.software.proprietary.pdf;
 
 import java.io.IOException;
 import java.util.ArrayList;
