@@ -120,6 +120,75 @@ class PdfMarkdownConverterTest {
     }
 
     /**
+     * Text set in three columns aligns across rows exactly as a table's cells do, so the word grid
+     * reads the whole page as one table and loses every heading in it. What tells them apart is
+     * that a table keys its rows on a column of short values, and that its cells do not continue
+     * each other's sentences.
+     */
+    @Test
+    void multiColumnProseIsNotATable() {
+        List<String[]> prose =
+                List.of(
+                        new String[] {
+                            "The SS Pack can reduce the information acquisition time by",
+                            "returning all the information that matches",
+                            "the user's search intent and the query behind it"
+                        },
+                        new String[] {
+                            "Unlike existing search systems that only return information",
+                            "limited to the entered search keywords, this pack",
+                            "returns all relevant data meeting the search intent"
+                        });
+        assertTrue(
+                PdfMarkdownConverter.everyColumnIsProse(prose, 3),
+                "three columns of running sentences are a page layout, not a table");
+    }
+
+    @Test
+    void wideTableWithLongCellsStaysATable() {
+        // The prose test must not fire on a real table just because one column runs long: the
+        // short "Jurisdiction" and yes/no columns are what key the rows.
+        List<String[]> table =
+                List.of(
+                        new String[] {
+                            "Argentina",
+                            "Y",
+                            "Prohibition on ownership of property that contains or borders water"
+                        },
+                        new String[] {
+                            "Australia",
+                            "N",
+                            "Approval is needed from the Treasurer if the acquisition is large"
+                        });
+        assertTrue(!PdfMarkdownConverter.everyColumnIsProse(table, 3), "a keyed table is a table");
+    }
+
+    @Test
+    void splitApostropheIsClosedUpInCells() {
+        // PDFium splits on its own bounding boxes, so a tight apostrophe arrives as its own word.
+        assertEquals(
+                "the firm's returns",
+                PdfMarkdownConverter.rejoinContractions("the firm ' s returns"));
+        assertEquals("Don’t know", PdfMarkdownConverter.rejoinContractions("Don ’ t know"));
+        // An opening quote has real space around it and must keep it.
+        assertEquals("he said ' hello", PdfMarkdownConverter.rejoinContractions("he said ' hello"));
+    }
+
+    @Test
+    void headingLevelsAreRebasedOnTheStrongestHeadingPresent() {
+        // A document whose headings are body-size and bold scores every one of them level 3;
+        // relative to each other they are its top level, so they must render as level 1.
+        assertEquals("# CONTENTS\n", PdfMarkdownConverter.normaliseHeadingLevels("### CONTENTS\n"));
+        // A real two-level document keeps two levels, with no gap between them.
+        assertEquals(
+                "# Title\n\ntext\n\n## Section\n",
+                PdfMarkdownConverter.normaliseHeadingLevels("# Title\n\ntext\n\n### Section\n"));
+        // Already rooted at level 1 with no gaps: left alone.
+        String unchanged = "# Title\n\n## Section\n";
+        assertEquals(unchanged, PdfMarkdownConverter.normaliseHeadingLevels(unchanged));
+    }
+
+    /**
      * A crafted PDF can draw thousands of disjoint rules. Ruled-table detection used to build one
      * full-length int[] per connected component, so N non-crossing rules cost O(N^2) retained
      * memory and tens of thousands of rules exhausted the heap. Partitioning must stay linear and

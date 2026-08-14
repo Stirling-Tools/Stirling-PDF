@@ -1051,33 +1051,6 @@ public class ExceptionUtils {
     }
 
     /**
-     * Maps a jpdfium failure onto a typed exception. Its exceptions are unchecked and their
-     * messages embed the server-side path, so anything unrecognised is treated as a corrupt PDF.
-     *
-     * @param e the exception thrown by jpdfium
-     * @param context operation context, e.g. "during Markdown conversion"
-     * @return a typed exception whose message is free of server-side detail
-     */
-    public static BaseAppException handleJpdfiumException(Exception e, String context) {
-        requireNonNull(e, "exception");
-
-        if (e instanceof stirling.software.jpdfium.exception.PdfPasswordException) {
-            return createPdfPasswordException(e);
-        }
-        if (e instanceof IOException io) {
-            IOException typed = handlePdfException(io, context);
-            if (typed instanceof BaseAppException app) {
-                return app;
-            }
-        }
-        String message = e.getMessage() == null ? "" : e.getMessage();
-        if (message.contains("Password required") || message.contains("password")) {
-            return createPdfPasswordException(e);
-        }
-        return createPdfCorruptedException(context, e);
-    }
-
-    /**
      * Log an exception with appropriate level based on its type. Returns the exception for fluent
      * log-and-throw pattern.
      *

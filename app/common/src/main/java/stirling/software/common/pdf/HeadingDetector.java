@@ -61,18 +61,6 @@ final class HeadingDetector {
     /** Size ratio at which a line is a level-2 heading on size alone. */
     private static final float H2_RATIO = 1.3f;
 
-    /** Ablation switch: when false only the original size-only rules apply. */
-    private static final boolean ENABLED = MdTuning.flag("stirling.md.headings", true);
-
-    /** Ablation switch for the run-on-sentence guard. */
-    private static final boolean RUN_ON_GUARD = MdTuning.flag("stirling.md.runOnGuard", true);
-
-    /** Ablation switch for extending the run-on guard to bold emphasis. */
-    private static final boolean RUN_ON_BOLD = MdTuning.flag("stirling.md.runOnBold", true);
-
-    /** Ablation switch: promote an isolated, all-capitals, numbered clause. */
-    private static final boolean ALL_CAPS_HEADINGS = MdTuning.flag("stirling.md.allCaps", true);
-
     /**
      * A section number ending in a period. Stricter than {@link #CLAUSE}: this rule has no
      * typography behind it, so only the period tells a clause from a header's page number.
@@ -137,23 +125,16 @@ final class HeadingDetector {
         if (text.isEmpty() || wordCount(text) > MAX_HEADING_WORDS) {
             return "";
         }
-        if (!ENABLED && endsLikeSentence(text)) {
-            return "";
-        }
-
         float ratio = sizeRatio(lineHeight, words, medianBodySize, medianBodyHeight);
         if (ratio < 0f) {
             return "";
-        }
-        if (!ENABLED) {
-            return ratio > 1.4f ? "# " : ratio > 1.2f ? "## " : "";
         }
         // A heading names something. A line with no word in it is a value, an equation fragment or
         // a chart label, however large it is set; a caption names a float, not a section.
         if (CAPTION.matcher(text).find() || !hasWord(text)) {
             return "";
         }
-        if (RUN_ON_GUARD && RUNS_ON.matcher(text).find()) {
+        if (RUNS_ON.matcher(text).find()) {
             return "";
         }
 
@@ -182,8 +163,7 @@ final class HeadingDetector {
         }
         // Some documents give a heading no size and no weight, only capitals. A short, isolated
         // line set entirely in capitals is one of those.
-        if (ALL_CAPS_HEADINGS
-                && isolated
+        if (isolated
                 && !endsLikeSentence(text)
                 && wordCount(text) >= 3
                 && isAllCaps(text)
@@ -320,7 +300,7 @@ final class HeadingDetector {
         if (text.isEmpty() || wordCount(text) > MAX_HEADING_WORDS || endsLikeSentence(text)) {
             return false;
         }
-        if (RUN_ON_BOLD && RUNS_ON.matcher(text).find()) {
+        if (RUNS_ON.matcher(text).find()) {
             return false;
         }
         return hasWord(text) && isBold(words);

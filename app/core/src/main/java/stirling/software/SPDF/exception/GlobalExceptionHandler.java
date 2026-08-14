@@ -34,9 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.*;
-import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.common.util.RegexPatternUtils;
-import stirling.software.jpdfium.exception.JPDFiumException;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -391,49 +389,6 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with appropriate HTTP status
      */
-    /**
-     * Catches jpdfium failures no controller translated; the exceptions are unchecked and carry the
-     * server-side temp path, which would otherwise reach the client in the 500 body.
-     */
-    @ExceptionHandler(JPDFiumException.class)
-    public ResponseEntity<ProblemDetail> handleJpdfium(
-            JPDFiumException ex, HttpServletRequest request) {
-        // Log the throwable so the temp path stays diagnosable server-side.
-        log.warn("Unhandled jpdfium failure on {}", request.getRequestURI(), ex);
-        BaseAppException translated =
-                ExceptionUtils.handleJpdfiumException(ex, "while reading the PDF");
-        if (translated instanceof PdfPasswordException pwd) {
-            return handlePdfPassword(pwd, request);
-        }
-        if (translated instanceof PdfCorruptedException
-                || translated instanceof PdfEncryptionException
-                || translated instanceof OutOfMemoryDpiException) {
-            return handlePdfAndDpiExceptions(translated, request);
-        }
-        return handleBaseApp(translated, request);
-    }
-
-    /**
-     * jpdfium is serialised process-wide, so a caller that cannot get the lock in time is a
-     * capacity signal, not a fault in the request: answer 503 rather than the catch-all 500.
-     */
-    @ExceptionHandler(JpdfiumGuard.JpdfiumBusyException.class)
-    public ResponseEntity<ProblemDetail> handleJpdfiumBusy(
-            JpdfiumGuard.JpdfiumBusyException ex, HttpServletRequest request) {
-        log.warn("jpdfium busy on {}: {}", request.getRequestURI(), ex.getMessage());
-        ProblemDetail problemDetail =
-                createBaseProblemDetail(
-                        HttpStatus.SERVICE_UNAVAILABLE,
-                        "The server is busy processing other PDFs. Please retry shortly.",
-                        request);
-        problemDetail.setType(URI.create("/errors/jpdfium-busy"));
-        problemDetail.setTitle("Service Busy");
-        problemDetail.setProperty("title", "Service Busy");
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .contentType(PROBLEM_JSON)
-                .body(problemDetail);
-    }
-
     @ExceptionHandler({
         PdfCorruptedException.class,
         PdfEncryptionException.class,

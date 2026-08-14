@@ -36,7 +36,6 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -85,8 +84,7 @@ public class SplitPdfBySizeController {
                     hasForm = acroDoc.getDocumentCatalog().getAcroForm(null) != null;
                 }
 
-                try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
-                        PdfDocument sourceDocument = PdfDocument.open(sourceTempFile.getPath())) {
+                try (PdfDocument sourceDocument = PdfDocument.open(sourceTempFile.getPath())) {
                     List<int[]> ranges = computeRanges(request, sourceDocument);
 
                     int fileIndex = 1;

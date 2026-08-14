@@ -3,12 +3,15 @@ package stirling.software.common.pdf;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -51,146 +54,57 @@ public class PdfMarkdownConverter {
      * Fraction of the word-grid's rows a ruled grid must also find before its rows are trusted;
      * below it the table is only partly ruled and its rules would merge several rows into one band.
      */
-    private static final float COMPLETE_LATTICE = MdTuning.num("stirling.md.completeLattice", 0.5f);
+    private static final float COMPLETE_LATTICE = 0.5f;
 
     /** Fraction of the page's text width a table must span to override two-column layout. */
     private static final float FULL_WIDTH = 0.6f;
-
-    // --- Tuning switches ----------------------------------------------------
-    // Read once at class load, so a run is stable. Defaults are the combined configuration; set a
-    // property to restore the older behaviour.
-
-    /** {@code placeholder} (the default), {@code none}, or {@code reference}. */
-    private static final String IMAGE_MODE = MdTuning.text("stirling.md.imageMode", "placeholder");
-
-    /** Emit AcroForm field values that live only in {@code /V}. */
-    private static final boolean FORM_VALUES = MdTuning.flag("stirling.md.formValues", true);
-
-    /** Detect tables from the page's drawn ruling lines as well as from word geometry. */
-    private static final boolean RULED_TABLES = MdTuning.flag("stirling.md.ruledTables", true);
-
-    /** How a detected table is written out. */
-    private enum TableFormat {
-        /** GitHub-Flavoured pipe table. Cannot express a merged cell. */
-        PIPE,
-        /** HTML {@code <table>}, which can. */
-        HTML,
-        /** HTML only where a merged cell was found; a pipe table otherwise. */
-        AUTO
-    }
-
-    private static final TableFormat TABLE_FORMAT =
-            switch (MdTuning.text("stirling.md.tableFormat", "pipe").toLowerCase(Locale.ROOT)) {
-                case "html" -> TableFormat.HTML;
-                case "auto" -> TableFormat.AUTO;
-                default -> TableFormat.PIPE;
-            };
-
-    /** Use the page's ruling lines to decide where cells are merged, not the grid's shape alone. */
-    private static final boolean SPAN_GEOMETRY = MdTuning.flag("stirling.md.spanGeometry", true);
-
-    /** Drop U+00AD and rejoin extractor line fragments that are really one visual line. */
-    private static final boolean TEXT_REPAIR = MdTuning.flag("stirling.md.textRepair", true);
-
-    /** Half of {@link #TEXT_REPAIR}: strip the discretionary hyphen U+00AD. */
-    private static final boolean SOFT_HYPHEN_FIX =
-            TEXT_REPAIR || MdTuning.flag("stirling.md.softHyphen", false);
-
-    /** Ablation: judge headings on the first fragment's text rather than the merged line's. */
-    private static final boolean DETECT_ON_FRAGMENT =
-            MdTuning.flag("stirling.md.detectOnFragment", false);
-
-    /** Half of {@link #TEXT_REPAIR}: rejoin same-baseline extractor line fragments. */
-    private static final boolean MERGE_FRAGMENTS =
-            TEXT_REPAIR || MdTuning.flag("stirling.md.mergeFragments", false);
 
     public String convert(PdfDocument doc) throws IOException {
         List<String> rendered = new ArrayList<>();
         for (Object e : buildElements(doc)) {
             rendered.add(e instanceof TableBlock tb ? tb.render() : (String) e);
         }
-        return String.join("\n\n", rendered);
+        return normaliseHeadingLevels(String.join("\n\n", rendered));
     }
 
-    /**
-     * Extracts every detected table as a cell grid, in document order. Same detection as {@link
-     * #convert(PdfDocument)}, so borderless tables are found and page-split ones stitched.
-     */
-    public List<ExtractedTable> extractTables(PdfDocument doc) throws IOException {
-        return extractTables(doc, null);
-    }
+    /** A Markdown ATX heading at the start of a line, with its level in group 1. */
+    private static final Pattern ATX_HEADING = Pattern.compile("(?m)^(#{1,6}) (?=\\S)");
 
     /**
-     * As {@link #extractTables(PdfDocument)}, but only analyses the pages asked for. Callers hold
-     * the process-wide jpdfium lock, so wasted layout analysis blocks all other native PDF work.
+     * Rebases the document's headings so its strongest one is level 1 and no level is skipped.
      *
-     * @param wantedPages 1-based page numbers, or {@code null} for the whole document
+     * <p>Detection judges each line against body text, so a document whose headings are set at body
+     * size and told apart only by weight scores every one of them level 3. That is the right
+     * relative answer and the wrong absolute one: those lines are the document's top-level
+     * headings. Levels are only meaningful against the other headings in the same document, so the
+     * ranking is fixed here, where the whole document is in hand, rather than per line.
      */
-    public List<ExtractedTable> extractTables(PdfDocument doc, Set<Integer> wantedPages)
-            throws IOException {
-        List<ExtractedTable> tables = new ArrayList<>();
-        for (Object e : buildElements(doc, wantedPages)) {
-            if (!(e instanceof TableBlock tb)) {
-                continue;
-            }
-            List<String[]> cells = tb.cells();
-            if (cells.isEmpty()) {
-                continue;
-            }
-            List<List<String>> rows = new ArrayList<>(cells.size());
-            for (String[] row : cells) {
-                rows.add(List.of(row));
-            }
-            tables.add(new ExtractedTable(tb.page(), List.copyOf(rows)));
+    static String normaliseHeadingLevels(String markdown) {
+        Set<Integer> levels = new TreeSet<>();
+        Matcher m = ATX_HEADING.matcher(markdown);
+        while (m.find()) {
+            levels.add(m.group(1).length());
         }
-        return List.copyOf(tables);
+        if (levels.isEmpty() || (levels.contains(1) && levels.size() == maxOf(levels))) {
+            return markdown;
+        }
+        Map<Integer, String> rebased = new HashMap<>();
+        int rank = 1;
+        for (int level : levels) {
+            rebased.put(level, "#".repeat(rank++));
+        }
+        return m.reset().replaceAll(r -> rebased.get(r.group(1).length()) + " ");
     }
 
-    /** A detected table: its 1-based starting page and its rectangular cell grid. */
-    public record ExtractedTable(int pageNumber, List<List<String>> rows) {}
-
-    /**
-     * Converts each page to markdown independently, indexed by 1-based page number. Nothing is
-     * stitched across a page break, and pages with no extractable text are omitted, not empty.
-     */
-    public Map<Integer, String> convertPages(PdfDocument doc) throws IOException {
-        List<PageText> allPageText = PdfTextExtractor.extractAll(doc);
-        float medianSize = HeadingDetector.medianFontSize(allPageText);
-        float medianHeight = HeadingDetector.medianLineHeight(allPageText);
-        String bodyFont = HeadingDetector.bodyFont(allPageText);
-
-        Map<Integer, String> pages = new LinkedHashMap<>();
-        for (int pageIndex = 0; pageIndex < doc.pageCount(); pageIndex++) {
-            PageLines page = pageLines(doc, allPageText, pageIndex);
-            if (page.lines().isEmpty()) {
-                continue;
-            }
-            List<Object> items =
-                    buildPageItems(doc, page, pageIndex, medianSize, medianHeight, bodyFont, null);
-            List<String> rendered = new ArrayList<>(items.size());
-            for (Object e : items) {
-                String s = e instanceof TableBlock tb ? tb.render() : (String) e;
-                if (s != null && !s.isBlank()) {
-                    rendered.add(s);
-                }
-            }
-            if (!rendered.isEmpty()) {
-                pages.put(pageIndex + 1, String.join("\n\n", rendered));
-            }
+    private static int maxOf(Set<Integer> levels) {
+        int max = 0;
+        for (int level : levels) {
+            max = Math.max(max, level);
         }
-        return pages;
+        return max;
     }
 
     private List<Object> buildElements(PdfDocument doc) throws IOException {
-        return buildElements(doc, null);
-    }
-
-    /**
-     * @param wantedPages 1-based pages to analyse, or {@code null} for all. The page before a
-     *     wanted one is analysed too, so a table starting there is stitched forward.
-     */
-    private List<Object> buildElements(PdfDocument doc, Set<Integer> wantedPages)
-            throws IOException {
         List<PageText> allPageText = PdfTextExtractor.extractAll(doc);
         float medianSize = HeadingDetector.medianFontSize(allPageText);
         float medianHeight = HeadingDetector.medianLineHeight(allPageText);
@@ -207,10 +121,6 @@ public class PdfMarkdownConverter {
         String prevPageTrailingTableHeader = null;
 
         for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-            if (!pageIsWanted(wantedPages, pageIndex)) {
-                prevPageTrailingTableHeader = null;
-                continue;
-            }
             PageLines page = pageLines(doc, allPageText, pageIndex);
             if (page.lines().isEmpty()) {
                 emitImages(doc, pageIndex, output);
@@ -240,15 +150,6 @@ public class PdfMarkdownConverter {
         return stitchTables(output);
     }
 
-    /** True when {@code pageIndex} is requested, or immediately precedes a requested page. */
-    private static boolean pageIsWanted(Set<Integer> wantedPages, int pageIndex) {
-        if (wantedPages == null) {
-            return true;
-        }
-        int oneBased = pageIndex + 1;
-        return wantedPages.contains(oneBased) || wantedPages.contains(oneBased + 1);
-    }
-
     /**
      * One page's lines plus the layout verdict, which must be taken before text repair: merging
      * reduces the line count the two-column guard's threshold scales with.
@@ -269,9 +170,7 @@ public class PdfMarkdownConverter {
         List<Line> stitched = stitchGlyphs(rawLines);
         List<Float> gutters = detectGutters(stitched);
         List<Line> lines = mergeLineFragments(stitched, gutters);
-        if (FORM_VALUES) {
-            lines.addAll(formValueLines(doc, pageIndex, lines));
-        }
+        lines.addAll(formValueLines(doc, pageIndex, lines));
         lines.sort(Comparator.comparingDouble((Line l) -> l.y).reversed());
         return new PageLines(lines, gutters);
     }
@@ -313,7 +212,7 @@ public class PdfMarkdownConverter {
         // Two detectors: ruling lines give exact boundaries and see single-word cells; the word
         // grid covers what the rules do not, i.e. borderless and whitespace-aligned tables.
         Set<String> tableRowTexts = new HashSet<>();
-        PageRules rules = RULED_TABLES ? readRules(doc, pageIndex) : PageRules.EMPTY;
+        PageRules rules = readRules(doc, pageIndex);
         List<TableBlock> blocks = findTableBlocks(lines, rules, pageIndex + 1);
         if (log.isDebugEnabled()) {
             log.debug(
@@ -374,7 +273,7 @@ public class PdfMarkdownConverter {
             // keeps the prose above and below it in column order.
             for (int s = 0; s < segments.size(); s++) {
                 List<List<Line>> groups =
-                        BAND_ORDER && respected
+                        respected
                                 ? orderByBand(segments.get(s), gutters)
                                 : legacySplit(segments.get(s));
                 for (List<Line> col : groups) {
@@ -455,7 +354,7 @@ public class PdfMarkdownConverter {
          * own string so behaviour is unchanged when fragment merging is off.
          */
         String detectText() {
-            return merged.isEmpty() || DETECT_ON_FRAGMENT ? source.text() : text;
+            return merged.isEmpty() ? source.text() : text;
         }
 
         float detectHeight() {
@@ -512,7 +411,7 @@ public class PdfMarkdownConverter {
      * back verbatim so words come out as {@code ar<AD>e}.
      */
     private static String stripSoftHyphens(String text) {
-        if (!SOFT_HYPHEN_FIX || text.indexOf('­') < 0) {
+        if (text.indexOf('­') < 0) {
             return text;
         }
         return text.replace("­", "");
@@ -524,14 +423,14 @@ public class PdfMarkdownConverter {
     private static final float NO_SPACE_GAP = 0.30f;
 
     /** Gap above this many average character widths is a real layout gap, so never merged. */
-    private static final float MAX_MERGE_GAP = MdTuning.num("stirling.md.maxMergeGap", 1.60f);
+    private static final float MAX_MERGE_GAP = 1.60f;
 
     /**
      * Rejoins extractor fragments that are really one visual line: PDFium splits on bounding box,
      * so a run with no ascender ({@code rou}) lands apart from the rest ({@code ghly ...}).
      */
     private static List<Line> mergeLineFragments(List<Line> lines, List<Float> gutters) {
-        if (!MERGE_FRAGMENTS || lines.size() < 2) {
+        if (lines.size() < 2) {
             return lines;
         }
         // Merge within each column, so a line ending at the gutter never joins the next column's.
@@ -626,6 +525,86 @@ public class PdfMarkdownConverter {
             }
         }
         return false;
+    }
+
+    /**
+     * Punctuation that binds to the words on both sides of it. Closing a cell's words up is only
+     * ever considered around one of these: two ordinary words set tight against each other are far
+     * more likely to be a narrow real space than a mid-word split, and dropping it would corrupt
+     * the text where a stray space merely looks untidy.
+     */
+    private static final String BINDING_MARKS = "'’ʼ´`-‐‑";
+
+    /** True for a lone apostrophe or hyphen, as in {@code firm}, {@code '}, {@code s}. */
+    private static boolean isBindingMark(String word) {
+        return word.length() == 1 && BINDING_MARKS.indexOf(word.charAt(0)) >= 0;
+    }
+
+    /**
+     * A contraction or possessive whose apostrophe the extractor padded on both sides, e.g. {@code
+     * firm ' s} or {@code Don ’ t}. Limited to the English suffixes because a lone apostrophe with
+     * real space around it is an opening quote, which must keep its spacing.
+     */
+    private static final Pattern SPLIT_CONTRACTION =
+            Pattern.compile("(\\p{L})\\s*([’'ʼ´`])\\s*(s|t|d|m|re|ve|ll)\\b");
+
+    /** Closes up an apostrophe the extractor left standing alone inside a cell. */
+    static String rejoinContractions(String cell) {
+        return cell.indexOf(' ') < 0 ? cell : SPLIT_CONTRACTION.matcher(cell).replaceAll("$1$2$3");
+    }
+
+    /**
+     * True when two words of one cell are far enough apart to be separated by a space. The
+     * extractor splits on its own bounding boxes, so a punctuation mark set tight against its
+     * neighbour ({@code firm}, {@code '}, {@code s}) arrives as three words; joining those with a
+     * space unconditionally writes {@code firm ' s} into the cell.
+     */
+    private static boolean separated(TextWord previous, TextWord current) {
+        if (previous == null) {
+            return true;
+        }
+        float gap = wordLeftEdge(current) - wordRightEdge(previous);
+        if (gap < 0f) {
+            // Overlapping or out of order (a second line of a wrapped cell): keep the space.
+            return true;
+        }
+        float charWidth = wordCharWidth(previous, current);
+        return charWidth <= 0f || gap >= charWidth * NO_SPACE_GAP;
+    }
+
+    /** Mean glyph width across two words, used to size the space test above. */
+    private static float wordCharWidth(TextWord a, TextWord b) {
+        float width = 0f;
+        int chars = 0;
+        for (TextWord w : List.of(a, b)) {
+            for (TextChar c : w.chars()) {
+                if (!c.isWhitespace() && !c.isNewline()) {
+                    width += c.width();
+                    chars++;
+                }
+            }
+        }
+        return chars == 0 ? 0f : width / chars;
+    }
+
+    private static float wordRightEdge(TextWord w) {
+        float edge = -Float.MAX_VALUE;
+        for (TextChar c : w.chars()) {
+            if (!c.isWhitespace() && !c.isNewline()) {
+                edge = Math.max(edge, c.x() + c.width());
+            }
+        }
+        return edge == -Float.MAX_VALUE ? w.x() + w.width() : edge;
+    }
+
+    private static float wordLeftEdge(TextWord w) {
+        float edge = Float.MAX_VALUE;
+        for (TextChar c : w.chars()) {
+            if (!c.isWhitespace() && !c.isNewline()) {
+                edge = Math.min(edge, c.x());
+            }
+        }
+        return edge == Float.MAX_VALUE ? w.x() : edge;
     }
 
     private static void appendFragment(Line host, Line next) {
@@ -773,34 +752,24 @@ public class PdfMarkdownConverter {
      * extent; without it the host reports a right edge at the seam and merging sees a false gap.
      */
     private static void absorb(Line host, TextLine fragment) {
-        if (MERGE_FRAGMENTS) {
-            host.merged.add(fragment);
-        }
+        host.merged.add(fragment);
     }
 
     private static void absorb(Line host, Line fragment) {
-        if (MERGE_FRAGMENTS) {
-            host.merged.add(fragment.source);
-            host.merged.addAll(fragment.merged);
-        }
+        host.merged.add(fragment.source);
+        host.merged.addAll(fragment.merged);
     }
 
     // --- Column detection ---------------------------------------------------
 
-    /** Ablation switch: off restores the older central-band two-column guard. */
-    private static final boolean GUTTER_SCAN = MdTuning.flag("stirling.md.gutterScan", true);
-
-    /** Order a multi-column page by horizontal band, so a spanning line splits the columns. */
-    private static final boolean BAND_ORDER = MdTuning.flag("stirling.md.bandOrder", true);
-
     /** Narrowest run of near-empty x that can separate two columns of prose. */
-    private static final float MIN_GUTTER = MdTuning.num("stirling.md.minGutter", 10f);
+    private static final float MIN_GUTTER = 10f;
 
     /** Narrowest column worth splitting out; below this a "gutter" is just a ragged margin. */
-    private static final float MIN_COLUMN = MdTuning.num("stirling.md.minColumn", 70f);
+    private static final float MIN_COLUMN = 70f;
 
     /** Fraction of a page's lines that may cross a gutter and still leave it a gutter. */
-    private static final float MAX_CROSSING = MdTuning.num("stirling.md.maxCrossing", 0.15f);
+    private static final float MAX_CROSSING = 0.15f;
 
     /** Most columns recognised on one page. Beyond this the geometry is a table, not a layout. */
     private static final int MAX_COLUMNS = 4;
@@ -828,10 +797,6 @@ public class PdfMarkdownConverter {
         float hi = sortedHi[Math.min(n - 1, (int) (n * 0.95f))];
         if (hi - lo < 2 * MIN_COLUMN + MIN_GUTTER || !plausibleSpan(lo, hi)) {
             return List.of();
-        }
-
-        if (!GUTTER_SCAN) {
-            return legacyTwoColumn(lines) ? List.of((lo + hi) / 2f) : List.of();
         }
 
         int maxCrossing = (int) (n * MAX_CROSSING);
@@ -883,12 +848,8 @@ public class PdfMarkdownConverter {
         if (!gutters.isEmpty() && columnsLookLikeText(lines, gutters)) {
             return gutters;
         }
-        return FALLBACK_GUTTER ? centralGutter(lines, los, his, lo, hi) : List.of();
+        return centralGutter(lines, los, his, lo, hi);
     }
-
-    /** Fall back to the central-band verdict when the projection finds no gutter. */
-    private static final boolean FALLBACK_GUTTER =
-            MdTuning.flag("stirling.md.fallbackGutter", true);
 
     /**
      * Rejects page geometry too wide to be real: past 2^24 a float cannot represent x + 1, so a
@@ -934,10 +895,10 @@ public class PdfMarkdownConverter {
     }
 
     /** Lines of at least this fraction of a column's width count as that column's body text. */
-    private static final float BODY_LINE_WIDTH = MdTuning.num("stirling.md.bodyLineWidth", 0.5f);
+    private static final float BODY_LINE_WIDTH = 0.5f;
 
     /** Body lines a column must hold before it is accepted as a column. */
-    private static final int BODY_LINES = MdTuning.count("stirling.md.bodyLines", 4);
+    private static final int BODY_LINES = 4;
 
     /**
      * True when every carved-out column reads as running text. The projection alone cannot tell
@@ -971,47 +932,6 @@ public class PdfMarkdownConverter {
             }
         }
         return true;
-    }
-
-    /** The older whole-page guard, kept behind {@link #GUTTER_SCAN} for ablation. */
-    private static boolean legacyTwoColumn(List<Line> lines) {
-        float minX = Float.MAX_VALUE;
-        float maxX = -Float.MAX_VALUE;
-        for (Line l : lines) {
-            minX = Math.min(minX, l.x);
-            maxX = Math.max(maxX, l.x + l.width);
-        }
-        if (maxX - minX < 200f) {
-            return false;
-        }
-        float centreLo = minX + (maxX - minX) * 0.35f;
-        float centreHi = minX + (maxX - minX) * 0.65f;
-        int bestCrossing = Integer.MAX_VALUE;
-        int bestLeft = 0;
-        int bestRight = 0;
-        for (int gi = (int) Math.floor(centreLo); gi <= (int) Math.ceil(centreHi); gi += 2) {
-            float gutter = gi;
-            int crossing = 0;
-            int leftOnly = 0;
-            int rightOnly = 0;
-            for (Line l : lines) {
-                float lx = l.x;
-                float rx = l.x + l.width;
-                if (lx < gutter - 5f && rx > gutter + 5f) {
-                    crossing++;
-                } else if (rx <= gutter) {
-                    leftOnly++;
-                } else {
-                    rightOnly++;
-                }
-            }
-            if (crossing < bestCrossing) {
-                bestCrossing = crossing;
-                bestLeft = leftOnly;
-                bestRight = rightOnly;
-            }
-        }
-        return bestLeft >= 4 && bestRight >= 4 && bestCrossing <= (int) (lines.size() * 0.25f);
     }
 
     /** Left edge of a line's glyphs, falling back to its bounding box when it has no words. */
@@ -1073,7 +993,7 @@ public class PdfMarkdownConverter {
     }
 
     /** Fraction of the finished lines that may straddle a gutter and still allow band ordering. */
-    private static final float BAND_CROSSING = MdTuning.num("stirling.md.bandCrossing", 0.35f);
+    private static final float BAND_CROSSING = 0.35f;
 
     /** Fallback column split: cut at the widest gap between the lines' left edges. */
     private static List<List<Line>> legacySplit(List<Line> lines) {
@@ -1113,8 +1033,6 @@ public class PdfMarkdownConverter {
      * Keep a run of gutter-spanning lines in one group: a full-width banner heading is several
      * lines, and one group each would break it into that many paragraphs.
      */
-    private static final boolean SPAN_RUNS = MdTuning.flag("stirling.md.spanRuns", true);
-
     /** Longest a line may be and still be a line of a heading rather than of a paragraph. */
     private static final int HEADING_LENGTH_WORDS = 12;
 
@@ -1156,11 +1074,6 @@ public class PdfMarkdownConverter {
                     spanning.clear();
                 }
                 spanning.add(l);
-                if (!SPAN_RUNS) {
-                    // One group per spanning line: the older behaviour, kept for ablation.
-                    out.add(new ArrayList<>(spanning));
-                    spanning.clear();
-                }
             } else {
                 if (!spanning.isEmpty()) {
                     out.add(new ArrayList<>(spanning));
@@ -1228,7 +1141,7 @@ public class PdfMarkdownConverter {
             }
             boolean isBullet = startsWithBullet(text);
             // A line that opens with a list marker is an item of a list, whatever it is set in.
-            boolean isHeading = !prefix.isEmpty() && !(BULLET_NEVER_HEADING && isBullet);
+            boolean isHeading = !prefix.isEmpty() && !isBullet;
 
             if (isHeading) {
                 flushParagraph(para, out);
@@ -1236,7 +1149,7 @@ public class PdfMarkdownConverter {
                 int words = wordCount(text);
                 int j = i;
                 int k = i + 1;
-                while (WRAP_HEADINGS && k < lines.size() && words < MAX_WRAPPED_HEADING_WORDS) {
+                while (k < lines.size() && words < MAX_WRAPPED_HEADING_WORDS) {
                     Line next = lines.get(k);
                     String nt = repairHyphens(next.text).strip();
                     if (nt.isEmpty()) {
@@ -1291,13 +1204,6 @@ public class PdfMarkdownConverter {
         flushParagraph(para, out);
     }
 
-    /** Ablation switch for refusing to promote a list item to a heading. */
-    private static final boolean BULLET_NEVER_HEADING =
-            MdTuning.flag("stirling.md.bulletNeverHeading", true);
-
-    /** Ablation switch for the wider list-marker set. */
-    private static final boolean WIDE_BULLETS = MdTuning.flag("stirling.md.wideBullets", true);
-
     /** Glyphs a document may set its list markers in beyond the three already recognised. */
     private static final String EXTRA_BULLETS = "‣⁃▶●○■□" + "◆⮚➢➣➤";
 
@@ -1308,17 +1214,14 @@ public class PdfMarkdownConverter {
         if (text.startsWith("•") || text.startsWith("▪") || text.startsWith("◦")) {
             return true;
         }
-        return WIDE_BULLETS && EXTRA_BULLETS.indexOf(text.charAt(0)) >= 0;
+        return EXTRA_BULLETS.indexOf(text.charAt(0)) >= 0;
     }
-
-    /** Ablation switch for joining a display heading that wraps onto further lines. */
-    private static final boolean WRAP_HEADINGS = MdTuning.flag("stirling.md.wrapHeadings", true);
 
     /** Longest a heading may grow to by absorbing its continuation lines, in words. */
     private static final int MAX_WRAPPED_HEADING_WORDS = 24;
 
     /** How far a continuation line's type size may differ from the line it continues. */
-    private static final float WRAP_SIZE_TOLERANCE = MdTuning.num("stirling.md.wrapSize", 0.2f);
+    private static final float WRAP_SIZE_TOLERANCE = 0.2f;
 
     /** A full stop that a further sentence follows: the shape of prose, not of a heading. */
     private static final Pattern SENTENCE_BREAK = Pattern.compile("[.!?]\\s+\\p{Lu}");
@@ -1463,71 +1366,21 @@ public class PdfMarkdownConverter {
             List<float[]> cols,
             boolean ruled,
             RowSource rowSource,
-            int page,
-            PageRules rules) {
+            int page) {
         TableBlock(List<List<Line>> rows, float top, float bottom, int page) {
-            this(rows, top, bottom, null, false, RowSource.WORDS, page, null);
+            this(rows, top, bottom, null, false, RowSource.WORDS, page);
         }
 
         /** A rules-derived block whose rows are not a drawn lattice. */
         TableBlock(List<List<Line>> rows, float top, float bottom, List<float[]> cols, int page) {
-            this(rows, top, bottom, cols, true, RowSource.RULE_BOUNDED, page, null);
-        }
-
-        TableBlock(
-                List<List<Line>> rows,
-                float top,
-                float bottom,
-                List<float[]> cols,
-                boolean ruled,
-                RowSource rowSource,
-                int page) {
-            this(rows, top, bottom, cols, ruled, rowSource, page, null);
-        }
-
-        /** The same block with the page's ruling lines attached, for span recovery. */
-        TableBlock withRules(PageRules pageRules) {
-            return new TableBlock(rows, top, bottom, cols, ruled, rowSource, page, pageRules);
+            this(rows, top, bottom, cols, true, RowSource.RULE_BOUNDED, page);
         }
 
         String render() {
-            if (TABLE_FORMAT == TableFormat.PIPE) {
-                return buildTableFromRows(rows, cols, rowSource);
-            }
-            CellGrid grid = buildCellGrid(rows, cols, rowSource);
-            if (grid.cells().isEmpty()) {
-                return "";
-            }
-            List<TableSpans.Cell> flatFirst;
-            List<List<TableSpans.Cell>> spanned =
-                    TableSpans.infer(
-                            grid.cells(), grid.columns(), rowBands(), rules, SPAN_GEOMETRY);
-            flatFirst = spanned.get(0);
-            if (TABLE_FORMAT == TableFormat.AUTO && !TableSpans.hasSpans(spanned)) {
-                return buildTableFromRows(rows, cols, rowSource);
-            }
-            return flatFirst.isEmpty() && spanned.size() == 1 ? "" : TableSpans.renderHtml(spanned);
+            return buildTableFromRows(rows, cols, rowSource);
         }
 
-        /** Vertical extent of each rendered row, taken from the lines it was built from. */
-        private List<TableSpans.Band> rowBands() {
-            List<TableSpans.Band> bands = new ArrayList<>(rows.size());
-            for (List<Line> group : rows) {
-                float lo = Float.MAX_VALUE;
-                float hi = -Float.MAX_VALUE;
-                for (Line l : group) {
-                    lo = Math.min(lo, l.y);
-                    hi = Math.max(hi, l.y + l.height);
-                }
-                if (lo > hi) {
-                    return List.of();
-                }
-                bands.add(new TableSpans.Band(lo, hi));
-            }
-            return bands;
-        }
-
-        /** Cell grid for structured consumers; empty when the block fails the table guards. */
+        /** Cell grid for the layout guards; empty when the block fails the table guards. */
         List<String[]> cells() {
             return buildCells(rows, cols, rowSource);
         }
@@ -1538,20 +1391,6 @@ public class PdfMarkdownConverter {
      * word-grid cannot), then word-grid blocks over whatever lines the rules did not claim.
      */
     private static List<TableBlock> findTableBlocks(List<Line> lines, PageRules rules, int page) {
-        List<TableBlock> blocks = detectTableBlocks(lines, rules, page);
-        if (rules == null || rules.isEmpty()) {
-            return blocks;
-        }
-        // Every block carries the page's rules onwards: they are what a span emitter asks whether a
-        // boundary between two cells was ever drawn.
-        List<TableBlock> withRules = new ArrayList<>(blocks.size());
-        for (TableBlock b : blocks) {
-            withRules.add(b.withRules(rules));
-        }
-        return withRules;
-    }
-
-    private static List<TableBlock> detectTableBlocks(List<Line> lines, PageRules rules, int page) {
         List<TableBlock> ruled = RuledTables.find(lines, rules, page);
         List<TableBlock> word = findTableBlocks(lines, page);
         if (ruled.isEmpty()) {
@@ -1734,7 +1573,7 @@ public class PdfMarkdownConverter {
     }
 
     /** Vertical gaps, in median row gaps, within which a line above a block can be its header. */
-    private static final float HEADER_GAP = MdTuning.num("stirling.md.headerGap", 1.6f);
+    private static final float HEADER_GAP = 1.6f;
 
     /**
      * Runs of words in a line separated by more than a cell gutter: a header row has one per cell,
@@ -1771,16 +1610,10 @@ public class PdfMarkdownConverter {
     }
 
     /** Line heights within which a line above a ruled grid can be its header row. */
-    private static final float HEADER_RULE_GAP = MdTuning.num("stirling.md.headerRuleGap", 2.5f);
-
-    /** Take a header row from the drawn text above a word-grid block. */
-    private static final boolean HEADER_ABOVE = MdTuning.flag("stirling.md.headerAbove", true);
+    private static final float HEADER_RULE_GAP = 2.5f;
 
     /** The nearest line above {@code top} close enough to be the block's header row. */
     private static Line headerAbove(List<Line> lines, float top, float medianGap) {
-        if (!HEADER_ABOVE) {
-            return null;
-        }
         Line best = null;
         for (Line l : lines) {
             if (l.y <= top || l.y - top > medianGap * HEADER_GAP || l.words().size() < 2) {
@@ -1844,10 +1677,7 @@ public class PdfMarkdownConverter {
         // A column only the header occupies is invisible to the projection, which needs a band
         // shared by several rows; but inside a ruled region a blank answer column is still one.
         boolean headerOnlyColumn = false;
-        if (columns.size() < 2
-                && ruledColumns == null
-                && rowSource.ruleConfirmed()
-                && HEADER_ONLY_COLUMNS) {
+        if (columns.size() < 2 && ruledColumns == null && rowSource.ruleConfirmed()) {
             List<float[]> retry = findColumnRanges(flat, RULED_GUTTER_CHARS, RULED_GUTTER_FLOOR, 1);
             // Only the worksheet shape: exactly one row, the first, reaches past the supported
             // column. Anything else would invent a column and swallow the headings around it.
@@ -1893,8 +1723,12 @@ public class PdfMarkdownConverter {
         List<String[]> rows = new ArrayList<>();
         for (List<Line> rowLines : rowGroups) {
             String[] row = new String[cols];
+            TextWord[] lastWord = new TextWord[cols];
+            String[] lastText = new String[cols];
+            boolean[] boundMark = new boolean[cols];
             for (int i = 0; i < cols; i++) {
                 row[i] = "";
+                lastText[i] = "";
             }
             // Top line first so a wrapped cell's words stay in reading order within the cell.
             rowLines.sort(Comparator.comparingDouble((Line l) -> l.y).reversed());
@@ -1911,8 +1745,21 @@ public class PdfMarkdownConverter {
                             ruledColumns != null
                                     ? containingColumn(mid, columns)
                                     : nearestColumn(mid, centers);
-                    row[col] = row[col].isEmpty() ? wt : row[col] + " " + wt;
+                    // A mark that closed up against the word on its left closes up against the
+                    // word on its right too, so Party - List does not settle at "Party- List".
+                    boolean bind =
+                            !row[col].isEmpty()
+                                    && (boundMark[col]
+                                            || (isBindingMark(wt) || isBindingMark(lastText[col]))
+                                                    && !separated(lastWord[col], word));
+                    row[col] = row[col].isEmpty() ? wt : row[col] + (bind ? "" : " ") + wt;
+                    boundMark[col] = bind && isBindingMark(wt);
+                    lastWord[col] = word;
+                    lastText[col] = wt;
                 }
+            }
+            for (int c = 0; c < cols; c++) {
+                row[c] = rejoinContractions(row[c]);
             }
             rows.add(row);
         }
@@ -1971,10 +1818,7 @@ public class PdfMarkdownConverter {
         // The multi-column tests ask whether a grid inferred from whitespace is real; when rows
         // and columns are both drawn there is nothing to infer, and a blank worksheet would fail.
         boolean drawnGrid =
-                headerOnlyColumn
-                        || (DRAWN_GRID_SPARSE
-                                && ruledColumns != null
-                                && rowSource == RowSource.LATTICE);
+                headerOnlyColumn || (ruledColumns != null && rowSource == RowSource.LATTICE);
         if (drawnGrid
                 ? anchorRows < 1
                 : (anchorRows < 1 || multiColumnRows < 2 || multiColumnRows < rows.size() * 0.5)) {
@@ -1986,28 +1830,17 @@ public class PdfMarkdownConverter {
         return new CellGrid(rows, columns);
     }
 
-    /** Recover a column that only the header row occupies, inside a ruled region. */
-    private static final boolean HEADER_ONLY_COLUMNS =
-            MdTuning.flag("stirling.md.headerOnlyColumns", true);
-
-    /** Accept a sparse table when the page draws both its rows and its columns. */
-    private static final boolean DRAWN_GRID_SPARSE =
-            MdTuning.flag("stirling.md.drawnGridSparse", true);
-
     /** Rows a single-column ruled table needs before it is a table rather than a run of lines. */
     private static final int SINGLE_COLUMN_ROWS = 3;
 
     /** Fraction of a single-column table's rows that must carry text. */
     private static final float SINGLE_COLUMN_FILLED = 0.8f;
 
-    /** Reject a block of prose that the word grid read as a table (contents list, wide columns). */
-    private static final boolean PROSE_GUARD = MdTuning.flag("stirling.md.proseGuard", true);
-
     /** Rows of a two-column block that must end in a page number for it to be a contents list. */
-    private static final float TOC_ROWS = MdTuning.num("stirling.md.tocRows", 0.65f);
+    private static final float TOC_ROWS = 0.65f;
 
     /** Mean filled-cell length above which a two-column block reads as prose, not cells. */
-    private static final float PROSE_CELL = MdTuning.num("stirling.md.proseCell", 40f);
+    private static final float PROSE_CELL = 40f;
 
     private static final Pattern PAGE_NUMBER = Pattern.compile("[0-9]{1,4}|[ivxlcdmIVXLCDM]{1,7}");
 
@@ -2019,7 +1852,7 @@ public class PdfMarkdownConverter {
      * without dot leaders, or two columns of prose whose "cells" are whole sentences.
      */
     private static boolean isProseNotTable(List<String[]> rows, int cols) {
-        if (!PROSE_GUARD || rows.isEmpty()) {
+        if (rows.isEmpty()) {
             return false;
         }
         for (String[] row : rows) {
@@ -2030,7 +1863,7 @@ public class PdfMarkdownConverter {
             }
         }
         if (cols != 2) {
-            return false;
+            return everyColumnIsProse(rows, cols);
         }
         int folios = 0;
         int length = 0;
@@ -2052,6 +1885,71 @@ public class PdfMarkdownConverter {
             return true;
         }
         return filled > 0 && (float) length / filled >= PROSE_CELL;
+    }
+
+    /** Mean cell length at or above which a column carries sentences rather than values. */
+    private static final float PROSE_COLUMN = 20f;
+
+    /** Fraction of neighbouring cells that must continue each other's sentence to read as prose. */
+    private static final float PROSE_RUN_ON = 0.5f;
+
+    /** A cell that ends a sentence or clause, so the cell after it starts something new. */
+    private static final Pattern CELL_ENDS_CLAUSE = Pattern.compile("[.!?:;,]$");
+
+    /**
+     * True when a wider block is a multi-column page layout the word grid read across rather than a
+     * table. Two things have to hold at once, because either alone has honest counter-examples.
+     *
+     * <p>No column keys the rows. Every real wide table keeps one column of short values to
+     * identify its rows by - a name, a code, a yes/no - however long its other columns run.
+     *
+     * <p>And the cells continue each other. Text set in columns puts one sentence across several
+     * cells, so a cell ends mid-clause and its neighbour opens in lower case; a table's cells are
+     * independent values and do not run on.
+     */
+    static boolean everyColumnIsProse(List<String[]> rows, int cols) {
+        if (cols < 3) {
+            return false;
+        }
+        for (int c = 0; c < cols; c++) {
+            int length = 0;
+            int filled = 0;
+            for (String[] row : rows) {
+                if (c < row.length && !row[c].isEmpty()) {
+                    length += row[c].length();
+                    filled++;
+                }
+            }
+            if (filled == 0 || (float) length / filled < PROSE_COLUMN) {
+                return false;
+            }
+        }
+        return runsOnAcrossCells(rows);
+    }
+
+    /**
+     * Fraction of side-by-side filled cells where the right one continues the left one's clause.
+     */
+    private static boolean runsOnAcrossCells(List<String[]> rows) {
+        int pairs = 0;
+        int runOn = 0;
+        for (String[] row : rows) {
+            String previous = null;
+            for (String cell : row) {
+                if (cell.isEmpty()) {
+                    continue;
+                }
+                if (previous != null) {
+                    pairs++;
+                    if (!CELL_ENDS_CLAUSE.matcher(previous).find()
+                            && Character.isLowerCase(cell.charAt(0))) {
+                        runOn++;
+                    }
+                }
+                previous = cell;
+            }
+        }
+        return pairs > 0 && (float) runOn / pairs > PROSE_RUN_ON;
     }
 
     /** Index of the column band containing x, clamped to the first/last band outside the grid. */
@@ -2408,24 +2306,17 @@ public class PdfMarkdownConverter {
     /** Fraction of a block's own lines that must run the page's width, not a column's. */
     private static final float SPANNING_LINES = 0.6f;
 
-    /** Keep an unruled full-width table on a multi-column page. */
-    private static final boolean WIDE_UNRULED_TABLES =
-            MdTuning.flag("stirling.md.wideUnruledTables", true);
-
     /** Columns a full-width unruled block needs before it can outrank the page's column layout. */
-    private static final int GRID_COLUMNS = MdTuning.count("stirling.md.gridColumns", 3);
+    private static final int GRID_COLUMNS = 3;
 
     /** Mean filled-cell length above which a full-width unruled block is prose read across. */
-    private static final float GRID_CELL = MdTuning.num("stirling.md.gridCell", 25f);
+    private static final float GRID_CELL = 25f;
 
     /**
      * True when an unruled full-width block is really a table, not the page's own column gutter
      * read as a cell boundary: a data table's cells are short values, the gutter's are sentences.
      */
     private static boolean looksLikeGrid(TableBlock block) {
-        if (!WIDE_UNRULED_TABLES) {
-            return false;
-        }
         List<String[]> cells = block.cells();
         if (cells.isEmpty() || cells.get(0).length < GRID_COLUMNS) {
             return false;
@@ -2473,32 +2364,15 @@ public class PdfMarkdownConverter {
 
     private static void emitImages(PdfDocument doc, int pageIndex, List<Object> pageItems)
             throws IOException {
-        if ("none".equals(IMAGE_MODE)) {
-            return;
-        }
         try (PdfPage page = doc.page(pageIndex)) {
             List<ExtractedImage> images =
                     PdfImageExtractor.extract(page.rawDocHandle(), page.rawHandle(), pageIndex);
             int n = 0;
             for (ExtractedImage img : images) {
                 n++;
-                pageItems.add(
-                        "reference".equals(IMAGE_MODE)
-                                ? referenceImage(img, pageIndex, n)
-                                : describeImage(img));
+                pageItems.add(describeImage(img));
             }
         }
-    }
-
-    /**
-     * A real Markdown image node instead of the pseudo-HTML placeholder: the metadata becomes alt
-     * text and the target names the image this endpoint would have written beside the Markdown.
-     */
-    private static String referenceImage(ExtractedImage img, int pageIndex, int n) {
-        String ext = img.suggestedExtension();
-        ext = ext == null || ext.isBlank() ? "png" : ext.replaceFirst("^\\.", "");
-        String alt = img.width() > 0 ? "Image " + img.width() + "x" + img.height() : "Image";
-        return "![" + alt + "](image-p" + (pageIndex + 1) + "-" + n + "." + ext + ")";
     }
 
     // --- AcroForm field values ---------------------------------------------
@@ -2624,7 +2498,7 @@ public class PdfMarkdownConverter {
         }
         String ext = img.suggestedExtension();
         if (ext != null && !ext.isBlank()) {
-            parts.add(ext.replaceFirst("^\\.", "").toUpperCase(java.util.Locale.ROOT));
+            parts.add(ext.replaceFirst("^\\.", "").toUpperCase(Locale.ROOT));
         }
         if (img.colorSpace() != null) {
             parts.add(img.colorSpace().toString());
@@ -2974,22 +2848,13 @@ public class PdfMarkdownConverter {
         private static final float FILLED_BANDS = 0.6f;
 
         /** Fraction of the table's width an interior rule must run to be a row boundary. */
-        private static final float ROW_RULE_SPAN = MdTuning.num("stirling.md.rowRuleSpan", 0.8f);
-
-        /** Keep only interior rules that run the table's width when reading its row bands. */
-        private static final boolean WIDE_ROW_RULES =
-                MdTuning.flag("stirling.md.wideRowRules", true);
-
-        /** Keep a one-column-wide interior rule when a spanning cell sits beside it. */
-        private static final boolean ROWSPAN_RULES =
-                MdTuning.flag("stirling.md.rowspanRules", true);
+        private static final float ROW_RULE_SPAN = 0.8f;
 
         /**
          * Interior row rules needed before drawn bands beat text baselines. One is enough: bands
          * keep a multi-line cell whole, where baselines split every wrapped cell into its own row.
          */
-        private static final int MIN_INTERIOR_RULES =
-                MdTuning.count("stirling.md.minInteriorRules", 1);
+        private static final int MIN_INTERIOR_RULES = 1;
 
         /** Fraction of a region's width every rule must run for its rows to be a drawn lattice. */
         private static final float FULL_WIDTH_RULE = 0.8f;
@@ -3305,10 +3170,7 @@ public class PdfMarkdownConverter {
                 }
                 boolean wide = widest.hi() - widest.lo() >= rowRuleWidth;
                 boolean keep =
-                        wide
-                                || !WIDE_ROW_RULES
-                                || spanningNeighbour(
-                                        widest, vL, inside, pos, prevWide, top - bottom);
+                        wide || spanningNeighbour(widest, vL, inside, pos, prevWide, top - bottom);
                 if (!keep) {
                     continue;
                 }
@@ -3345,7 +3207,7 @@ public class PdfMarkdownConverter {
 
             // A grid is often ruled around its body only, leaving the header just above the top
             // rule; take it when it fits the grid's width and resolves into its columns.
-            if (HEADER_ABOVE && cols != null) {
+            if (cols != null) {
                 // The header's cells are separate lines when they sit far apart, so the whole
                 // band above the grid is taken, not the nearest line.
                 List<Line> hdr = new ArrayList<>();
@@ -3402,7 +3264,7 @@ public class PdfMarkdownConverter {
          */
         private static List<List<Line>> splitCompleteBands(
                 List<List<Line>> bands, List<float[]> cols) {
-            if (!SPLIT_COMPLETE_BANDS || cols == null || cols.size() < 2) {
+            if (cols == null || cols.size() < 2) {
                 return bands;
             }
             List<List<Line>> out = new ArrayList<>();
@@ -3441,15 +3303,11 @@ public class PdfMarkdownConverter {
             return true;
         }
 
-        /** Split a lattice band into its baselines when each is a complete row. */
-        private static final boolean SPLIT_COMPLETE_BANDS =
-                MdTuning.flag("stirling.md.splitCompleteBands", true);
-
         /** How near a rule end must be to a vertical rule to count as landing on it. */
         private static final float COLUMN_SNAP = 2.5f;
 
         /** Fraction of the table's height a vertical must run to be a column boundary. */
-        private static final float COLUMN_RUN = MdTuning.num("stirling.md.columnRun", 0.5f);
+        private static final float COLUMN_RUN = 0.5f;
 
         /**
          * True when a rule narrower than the table is still a row boundary: it ends on the grid's
@@ -3462,9 +3320,6 @@ public class PdfMarkdownConverter {
                 float pos,
                 float above,
                 float height) {
-            if (!ROWSPAN_RULES) {
-                return false;
-            }
             // The vertical must run the table, not merely be there: a line box inside a wrapped
             // cell draws its own short verticals at its inset edges.
             float columnRun = height * COLUMN_RUN;

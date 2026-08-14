@@ -46,7 +46,6 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.common.util.PdfErrorUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -282,11 +281,7 @@ public class MergeController {
                 filesToDelete.add(tempFile);
                 inputPaths.add(tempFile.toPath());
 
-                try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
-                        PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
-                } catch (JpdfiumGuard.JpdfiumBusyException e) {
-                    // A busy native layer says nothing about the file; do not brand it invalid.
-                    throw e;
+                try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
                 } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
                     invalidIndexes.add(index);
@@ -307,8 +302,7 @@ public class MergeController {
 
             boolean sigFlattenNeeded = false;
             if (removeCertSign) {
-                try (JpdfiumGuard.Scope sigGuard = JpdfiumGuard.acquire();
-                        PdfDocument check = PdfDocument.open(mt.getFile().toPath())) {
+                try (PdfDocument check = PdfDocument.open(mt.getFile().toPath())) {
                     sigFlattenNeeded = !check.signatures().isEmpty();
                 } catch (Exception e) {
                     log.debug(
@@ -383,15 +377,6 @@ public class MergeController {
     }
 
     private int[] mergeWithJpdfium(
-            List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
-            throws IOException {
-        // One scope for the whole merge: every source document stays open until PdfMerge finishes.
-        try (JpdfiumGuard.Scope mergeGuard = JpdfiumGuard.acquire()) {
-            return mergeWithJpdfiumLocked(inputPaths, files, generateToc, outputPath);
-        }
-    }
-
-    private int[] mergeWithJpdfiumLocked(
             List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
             throws IOException {
         if (inputPaths.isEmpty()) {

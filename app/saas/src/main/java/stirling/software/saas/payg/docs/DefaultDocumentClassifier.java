@@ -16,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
@@ -170,16 +169,8 @@ public class DefaultDocumentClassifier implements DocumentClassifier {
      * avoid a second copy.
      */
     private int readPageCountFromPath(Path path, String displayName) {
-        try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
-                PdfDocument doc = PdfDocument.open(path)) {
+        try (PdfDocument doc = PdfDocument.open(path)) {
             return doc.pageCount();
-        } catch (JpdfiumGuard.JpdfiumBusyException e) {
-            // Metering must not fail the request, but a busy lock under-counts: say so loudly.
-            log.warn(
-                    "Timed out waiting for jpdfium to count pages of {}; metering on bytes only, so"
-                            + " this operation is under-counted",
-                    displayName);
-            return 0;
         } catch (RuntimeException e) {
             log.debug(
                     "Could not read PDF page count for {} ({}); falling back to bytes-only units",

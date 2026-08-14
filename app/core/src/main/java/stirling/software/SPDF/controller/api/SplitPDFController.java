@@ -36,7 +36,6 @@ import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.JpdfiumGuard;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -122,8 +121,7 @@ public class SplitPDFController {
     private void writeSplitsViaJpdfium(
             File source, List<Integer> pageNumbers, String baseFilename, ZipOutputStream zipOut)
             throws IOException {
-        try (JpdfiumGuard.Scope guard = JpdfiumGuard.acquire();
-                PdfDocument sourceDoc = PdfDocument.open(source.toPath())) {
+        try (PdfDocument sourceDoc = PdfDocument.open(source.toPath())) {
             int previousPageNumber = 0;
             for (int splitIndex = 0; splitIndex < pageNumbers.size(); splitIndex++) {
                 int splitPoint = pageNumbers.get(splitIndex);
