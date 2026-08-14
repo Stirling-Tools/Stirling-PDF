@@ -223,7 +223,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          BASE_URL="https://${FRONTEND_PORT}.ssl.stirlingpdf.cloud"
+          # Absolute URLs the backend hands out (swagger server, generated links).
+          # <port>.ssl.stirlingpdf.cloud resolves to a separate proxy host that
+          # does not currently reach this box, so point at the instance directly
+          # and switch back once that proxy is repaired.
+          BASE_URL="http://${VPS_HOST}:${FRONTEND_PORT}"
 
           # Renders a value as a single-quoted YAML scalar that compose will not
           # touch: '' is the YAML escape for a quote, $$ is compose's escape for
@@ -297,7 +301,13 @@ jobs:
               ports:
                 - "${FRONTEND_PORT}:80"
               environment:
-                VITE_API_BASE_URL: "https://${BACKEND_PORT}.ssl.stirlingpdf.cloud"
+                # Not browser-facing: the frontend image's entrypoint substitutes
+                # this into its own nginx as the /api proxy_pass upstream, so the
+                # browser only ever talks to this container. Keep it on the
+                # compose network - routing it through a public hostname would
+                # send every API call out to the internet and back, and tie the
+                # deploy to a proxy and a public IP it does not need.
+                VITE_API_BASE_URL: "http://saas-backend:8080"
               depends_on:
                 - saas-backend
               restart: on-failure:5${AI_SERVICE}
