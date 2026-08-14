@@ -23,6 +23,10 @@ import lombok.Getter;
  * <p>Actions are declared here but implemented in {@link FailureAction} beans resolved by id, so a
  * new kind ships as a registry entry plus copy. {@link #UNKNOWN} gives every failed run a record,
  * and kinds get promoted out of it as production shows what occurs.
+ *
+ * <p>A kind offers an acknowledgement only where there is something to acknowledge <em>doing</em>.
+ * With nothing to fix, "seen it" and "clear it" are the same decision, so the row offers only the
+ * one that clears it.
  */
 @Getter
 public enum FailureKind {
@@ -53,7 +57,6 @@ public enum FailureKind {
             FailureScope.RUN,
             noErrorCodes(),
             fallback("This run failed for a reason Stirling does not yet recognise."),
-            offer(ACKNOWLEDGE),
             offer(DISMISS));
 
     private static final String KEY_PREFIX = "portal.failures.kind.";
