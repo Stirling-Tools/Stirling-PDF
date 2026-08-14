@@ -194,6 +194,11 @@ jobs:
           IMAGE_BASE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
           IMAGE_TAG: ${{ steps.commit-hash.outputs.app_short }}
           AI_ENABLED: ${{ steps.config.outputs.ai }}
+          # The VPS pulls from GHCR as this workflow's SSH user, which has no
+          # stored registry credentials of its own. Use the job token rather
+          # than parking a long-lived PAT on the box - it dies with the job.
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ github.token }}
           VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
           VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
           # Read as shell vars rather than interpolated into the script body, so
@@ -309,9 +314,12 @@ jobs:
             # The compose file carries the credentials, so it is not world-readable.
             chmod 600 ${DEPLOY_DIR}/docker-compose.yml
             cd ${DEPLOY_DIR}
+            printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
             docker-compose down --remove-orphans 2>/dev/null || true
             docker-compose pull
             docker-compose up -d
+            # The token expires with the job; do not leave it on disk.
+            docker logout ghcr.io >/dev/null 2>&1 || true
             # Images only - --volumes would take the other deployments' data.
             docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
           ENDSSH
