@@ -90,6 +90,33 @@ jobs:
       # The fat build uses the daemon-local base when that Dockerfile changed.
       # Ultra-lite has no dependency on that base and can keep its cache-backed
       # container builder even on a base-changing pull request.
+      - name: Build changed Docker base with BoringCache
+        id: boringcache-base
+        if: inputs.docker-base-changed == 'true' && matrix.image == 'fat' && env.BORINGCACHE_ENABLED == 'true'
+        uses: boringcache/one@71fdb67f0aa0afc1c4ac616c8c57d0d535f15bd9 # v1.19.2
+        with:
+          trust-policy: auto
+          setup: none
+          mode: docker
+          proxy-port: 22245
+          working-directory: .github/boringcache/docker-base
+          docker-command: build
+          context: ../../../docker/base
+          dockerfile: Dockerfile
+          image: stirling-pdf-base
+          tags: local
+          load: true
+          push: false
+          provenance: false
+          build-args: ENABLE_CCACHE=true
+          docker-tool-cache: ccache
+          docker-mount-cache: true
+          diagnostics: summary
+          metadata-hints: workflow=docker-compose-tests,stage=base,image=fat
+        env:
+          BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+          BORINGCACHE_SAVE_TOKEN: ${{ github.event_name != 'pull_request' && secrets.BORINGCACHE_SAVE_TOKEN || '' }}
+
       - name: Set up Docker Buildx
         if: (inputs.docker-base-changed != 'true' || matrix.image != 'fat') && env.BORINGCACHE_ENABLED != 'true'
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
@@ -114,6 +141,13 @@ jobs:
         if: (inputs.docker-base-changed != 'true' || matrix.image != 'fat') && env.BORINGCACHE_ENABLED != 'true'
         uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
+      # The BoringCache-owned base build uses its managed BuildKit builder, but
+      # the following fat build must resolve the loaded base from Docker's local
+      # image store. Switch back to the daemon builder before invoking test.sh.
+      - name: Select daemon builder for local base image
+        if: inputs.docker-base-changed == 'true' && matrix.image == 'fat'
+        run: docker buildx use default
+
       - name: Build ${{ matrix.image }} test image
         run: |
           chmod +x ./testing/test.sh
@@ -124,6 +158,7 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
+          DOCKER_BASE_PREBUILT: ${{ steps.boringcache-base.outcome == 'success' && 'true' || 'false' }}
           BORINGCACHE_DOCKER_CACHE_FROM_ULTRA_LITE: ${{ steps.boringcache-docker.outputs.cache-from }}
           BORINGCACHE_DOCKER_CACHE_TO_ULTRA_LITE: ${{ steps.boringcache-docker.outputs.cache-to }}
           BORINGCACHE_DOCKER_CACHE_FROM_FAT: ${{ steps.boringcache-docker.outputs.cache-from }}

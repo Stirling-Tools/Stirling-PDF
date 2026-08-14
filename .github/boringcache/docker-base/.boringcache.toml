@@ -3,3 +3,7 @@ workspace = "stirling-tools/stirling-pdf"
 [adapters.docker]
 tag = "stirling-docker-base"
 metadata-hints = ["tool=oci", "image=base"]
+
+[adapters.ccache]
+tag = "stirling-docker-base-ccache"
+metadata-hints = ["tool=ccache", "image=base"]

@@ -275,6 +275,16 @@ generate_gha_summary() {
 
 prepare_base_image() {
     if [ "${DOCKER_BASE_CHANGED:-false}" = "true" ]; then
+        if [ "${DOCKER_BASE_PREBUILT:-false}" = "true" ]; then
+            echo "Docker base files changed — using the base image built by BoringCache..."
+            if ! docker image inspect stirling-pdf-base:local > /dev/null; then
+                echo "ERROR: Expected prebuilt base image stirling-pdf-base:local was not loaded"
+                return 1
+            fi
+            BASE_IMAGE_ARGS=(--build-arg BASE_IMAGE=stirling-pdf-base:local)
+            return 0
+        fi
+
         echo "Docker base files changed — building base image locally..."
         gha_group "Build: Base image (local)"
         if docker build -f "$PROJECT_ROOT/docker/base/Dockerfile" \
