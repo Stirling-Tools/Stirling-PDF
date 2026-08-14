@@ -97,17 +97,6 @@ public class UserService implements UserServiceInterface {
     private final TeamMembershipService teamMembershipService;
     private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private jakarta.persistence.EntityManagerFactory entityManagerFactory;
-
-    public void evictUserFromCache(Long userId) {
-        if (entityManagerFactory != null
-                && entityManagerFactory.getCache() != null
-                && userId != null) {
-            entityManagerFactory.getCache().evict(User.class, userId);
-        }
-    }
-
     @Transactional
     public void processSSOPostLogin(
             String username,
@@ -265,7 +254,6 @@ public class UserService implements UserServiceInterface {
                 }
             }
             deleteUserRelatedData(user);
-            evictUserFromCache(user.getId());
             userRepository.delete(user);
             persistentLoginRepository.deleteByUsername(username);
         }
@@ -414,7 +402,6 @@ public class UserService implements UserServiceInterface {
         }
         user.setUsername(newUsername);
         userRepository.save(user);
-        evictUserFromCache(user.getId());
         databaseService.exportDatabase();
     }
 
@@ -422,7 +409,6 @@ public class UserService implements UserServiceInterface {
             throws SQLException, UnsupportedProviderException {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        evictUserFromCache(user.getId());
         databaseService.exportDatabase();
     }
 
@@ -430,7 +416,6 @@ public class UserService implements UserServiceInterface {
             throws SQLException, UnsupportedProviderException {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
-        evictUserFromCache(user.getId());
         databaseService.exportDatabase();
     }
 
@@ -439,7 +424,6 @@ public class UserService implements UserServiceInterface {
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
         authorityRepository.save(userAuthority);
-        evictUserFromCache(user.getId());
         databaseService.exportDatabase();
     }
 
@@ -447,7 +431,6 @@ public class UserService implements UserServiceInterface {
             throws SQLException, UnsupportedProviderException {
         user.setEnabled(enbeled);
         userRepository.save(user);
-        evictUserFromCache(user.getId());
         databaseService.exportDatabase();
     }
 
@@ -458,7 +441,6 @@ public class UserService implements UserServiceInterface {
         }
         user.setTeam(team);
         userRepository.save(user);
-        evictUserFromCache(user.getId());
         teamMembershipService.syncMembership(user);
         databaseService.exportDatabase();
     }

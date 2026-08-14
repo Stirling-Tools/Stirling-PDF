@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
 import stirling.software.proprietary.model.Team;
@@ -34,6 +35,7 @@ import stirling.software.proprietary.security.repository.TeamRepository;
             "spring.jpa.properties.hibernate.cache.use_query_cache=false",
             "spring.jpa.properties.hibernate.cache.region.factory_class=org.hibernate.cache.jcache.internal.JCacheRegionFactory",
             "spring.jpa.properties.hibernate.javax.cache.provider=com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider",
+            "spring.jpa.properties.hibernate.javax.cache.missing_cache_strategy=fail",
             "spring.jpa.properties.hibernate.generate_statistics=true",
             "spring.jpa.properties.jakarta.persistence.sharedCache.mode=ENABLE_SELECTIVE"
         })
@@ -126,6 +128,48 @@ class HibernateSecondLevelCacheTest {
                     PolicyEntity reloaded =
                             policyRepository.findById("cache-test-policy-2").orElseThrow();
                     assertThat(reloaded.getName()).isEqualTo("Updated Name");
+                });
+    }
+
+    @Test
+    void testSecondLevelCacheEvictedByBulkHqlUpdate() {
+        String id = "cache-test-policy-bulk";
+
+        txTemplate.executeWithoutResult(
+                status -> {
+                    PolicyEntity policy = new PolicyEntity();
+                    policy.setId(id);
+                    policy.setName("Bulk Initial");
+                    policy.setEnabled(true);
+                    policy.setOwner("admin");
+                    policyRepository.save(policy);
+                });
+
+        txTemplate.executeWithoutResult(
+                status -> {
+                    assertThat(policyRepository.findById(id).orElseThrow().getName())
+                            .isEqualTo("Bulk Initial");
+                });
+
+        txTemplate.executeWithoutResult(
+                status -> {
+                    try (EntityManager em = entityManagerFactory.createEntityManager()) {
+                        em.getTransaction().begin();
+                        em.createQuery(
+                                        "update PolicyEntity p set p.name = 'Bulk Updated' where"
+                                                + " p.id = :id")
+                                .setParameter("id", id)
+                                .executeUpdate();
+                        em.getTransaction().commit();
+                    }
+                });
+
+        // Hibernate's BulkOperationCleanupAction evicts the region on the bulk HQL update, so the
+        // next read must observe the new value rather than the stale second-level cache entry.
+        txTemplate.executeWithoutResult(
+                status -> {
+                    assertThat(policyRepository.findById(id).orElseThrow().getName())
+                            .isEqualTo("Bulk Updated");
                 });
     }
 

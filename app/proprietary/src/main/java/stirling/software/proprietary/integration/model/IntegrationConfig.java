@@ -3,12 +3,9 @@ package stirling.software.proprietary.integration.model;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -36,8 +33,6 @@ import stirling.software.proprietary.integration.crypto.EncryptedStringConverter
             @Index(name = "idx_integration_configs_type", columnList = "integration_type"),
             @Index(name = "idx_integration_configs_scope", columnList = "scope")
         })
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "integration-configs")
 @NoArgsConstructor
 @Getter
 @Setter
