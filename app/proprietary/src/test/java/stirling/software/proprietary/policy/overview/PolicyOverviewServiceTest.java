@@ -110,8 +110,7 @@ class PolicyOverviewServiceTest {
                         List.of(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline()));
-        // A pipeline that watches a folder is still a pipeline: shows. The watched-folders feature
-        // is separate and does not create Policy records, so a folder-watch trigger is no signal.
+        // A folder-watch pipeline is still a pipeline: shows.
         policyStore.save(
                 new Policy(
                         null,

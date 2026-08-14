@@ -152,9 +152,8 @@ function toView(policy: StoredPolicy): PipelineView {
   };
 }
 
-// Mirrors the backend PolicyOverviewService: only policies built on the Pipelines page appear.
-// Frontend/catalogue policies (a categoryId in output options) are owned by the Policies page and
-// hidden. A folder-watch trigger is no signal - such a policy is still a pipeline.
+// Mirrors the backend PolicyOverviewService: hide frontend/catalogue policies (a categoryId in
+// output options). A folder-watch trigger is still a normal pipeline and stays.
 function isPipeline(policy: StoredPolicy): boolean {
   const categoryId = policy.output?.options?.categoryId;
   return !(typeof categoryId === "string" && categoryId.length > 0);

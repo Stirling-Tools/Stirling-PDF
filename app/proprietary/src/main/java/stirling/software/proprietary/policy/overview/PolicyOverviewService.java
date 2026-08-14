@@ -20,25 +20,16 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Builds the Pipelines overview: the policies the caller's team built on the Pipelines page, each
- * annotated with its referenced sources (resolved to display names), its pipeline steps, and a
- * trigger/output summary. Source names are resolved from the team's sources in memory rather than
- * persisted on the policy, so the view always reflects the live source set.
- *
- * <p>Only policies created from the Pipelines page appear. Frontend/catalogue policies are excluded
- * even though they share the same {@code Policy} store: they carry a {@code categoryId} in their
- * output options and are managed by the user-facing Policies page (including the seeded
- * Classification policy). A pipeline that uses a folder-watch trigger is still a pipeline and
- * stays; the separate watched-folders feature does not create {@code Policy} records at all.
+ * Builds the Pipelines overview: one row per policy the caller's team built on the Pipelines page,
+ * with its sources resolved to live display names, its steps, and a trigger/output summary.
+ * Frontend/catalogue policies (marked by a {@code categoryId} in their output options) belong to the
+ * user-facing Policies page and are excluded; a folder-watch trigger is not a signal.
  */
 @Service
 @RequiredArgsConstructor
 public class PolicyOverviewService {
 
-    /**
-     * Output-options key stamped on frontend/catalogue policies (by the Policies page codec and the
-     * classification seeder). Its presence means the Policies page owns the policy, not this page.
-     */
+    // Output-options key marking a frontend/catalogue policy (set by the Policies page and seeder).
     private static final String CATEGORY_OPTION = "categoryId";
 
     private final PolicyStore policyStore;
@@ -64,19 +55,11 @@ public class PolicyOverviewService {
         return new PoliciesOverviewResponse(buildKpis(policies), views);
     }
 
-    /**
-     * Whether a policy belongs on the Pipelines page: it was built there, rather than auto-created
-     * for the user-facing Policies page. A pipeline that uses a folder-watch trigger is still a
-     * pipeline and is included.
-     */
     private static boolean isPipeline(Policy policy) {
         return !isCataloguePolicy(policy);
     }
 
-    /**
-     * A frontend/catalogue policy: the Policies page and the classification seeder stamp a {@code
-     * categoryId} into the output options, so its presence means that page owns the policy.
-     */
+    /** A frontend/catalogue policy, marked by a {@code categoryId} in its output options. */
     private static boolean isCataloguePolicy(Policy policy) {
         OutputSpec output = policy.output();
         return output != null
