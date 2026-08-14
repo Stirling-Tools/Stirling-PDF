@@ -2,10 +2,6 @@ package stirling.software.proprietary.policy.asset;
 
 import java.io.Serializable;
 
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-
-import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -24,8 +20,6 @@ import lombok.Setter;
  */
 @Entity
 @Table(name = "policy_assets")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "policy-assets")
 @NoArgsConstructor
 @Getter
 @Setter
