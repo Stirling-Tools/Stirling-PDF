@@ -37,16 +37,44 @@ export const FOLDER_COLOR_PALETTE = [
 /** Members of {@link FOLDER_COLOR_PALETTE}. Use this rather than `string` to keep callers honest. */
 export type FolderPaletteColor = (typeof FOLDER_COLOR_PALETTE)[number];
 
+/**
+ * What kind of thing a folder is — three independent features that happen to
+ * share a shape, not variants of one:
+ *
+ * - `server`: a folder in app storage. Lives in the server's database, synced
+ *   down and cached in IndexedDB; needs login + storage to exist.
+ * - `virtual`: an organisation-only folder in this browser's IndexedDB. No
+ *   server involvement at all, so it works offline and on installs with
+ *   storage disabled.
+ * - `local`: a real directory on the machine, mounted read-through — the
+ *   filesystem is the source of truth and Stirling holds no copy of its
+ *   contents, only this record of where it is.
+ */
+export type FolderKind = "server" | "virtual" | "local";
+
 /** Persisted folder shape stored in IndexedDB. */
 export interface FolderRecord {
   id: FolderId;
+  /**
+   * Absent means `server`: kinds arrived after rows already existed in user
+   * databases and on the server wire, and every one of those is a server
+   * folder. Read through {@link folderKind} rather than directly.
+   */
+  kind?: FolderKind;
   name: string;
   parentFolderId: FolderId | null;
+  /** For `local` folders: the directory this record mounts. */
+  directory?: string;
   /** Hex colour - either a palette member or any custom hex from a future picker. */
   color?: string;
   icon?: string;
   createdAt: number;
   updatedAt: number;
+}
+
+/** The folder's kind, reading absent as `server` (pre-kinds rows and server DTOs). */
+export function folderKind(folder: Pick<FolderRecord, "kind">): FolderKind {
+  return folder.kind ?? "server";
 }
 
 /**

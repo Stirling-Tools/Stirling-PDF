@@ -20,7 +20,13 @@ import AutoModeIcon from "@mui/icons-material/AutoMode";
 import SearchIcon from "@mui/icons-material/Search";
 
 import { FileId } from "@app/types/file";
-import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
+import {
+  FolderId,
+  FolderRecord,
+  ROOT_FOLDER_ID,
+  folderKind,
+} from "@app/types/folder";
+import type { DiskFileEntry } from "@app/services/localFolderContents";
 import { useFolders } from "@app/contexts/FolderContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
@@ -37,9 +43,53 @@ import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
-import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
+import {
+  useLazyThumbnail,
+  useDiskThumbnail,
+} from "@app/hooks/useLazyThumbnail";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
+
+/**
+ * The origin badge a folder wears, mirroring the one its files would: a
+ * server folder is Cloud, a virtual folder is Local (this browser), a
+ * mounted folder is On disk. Tooltips are folder-phrased — the badge's own
+ * defaults describe files.
+ */
+function useFolderOriginBadge(folder: FolderRecord): {
+  origin: "cloud" | "local";
+  tooltip: string;
+} {
+  const { t } = useTranslation();
+  switch (folderKind(folder)) {
+    case "virtual":
+      return {
+        origin: "local",
+        tooltip: t(
+          "filesPage.folderOrigin.virtualHint",
+          "A folder that lives only in this browser",
+        ),
+      };
+    case "local":
+      return {
+        // Same mark as a virtual folder: what matters is that it lives on
+        // this device, not which corner of it. The tooltip says which.
+        origin: "local",
+        tooltip: t(
+          "filesPage.folderOrigin.diskHint",
+          "A folder mounted from a directory on your disk",
+        ),
+      };
+    default:
+      return {
+        origin: "cloud",
+        tooltip: t(
+          "filesPage.folderOrigin.serverHint",
+          "A folder stored on the Stirling server",
+        ),
+      };
+  }
+}
 
 export type FilesPageViewMode = "grid" | "list";
 
@@ -58,13 +108,15 @@ export interface MountedFolderEntry {
 }
 
 export interface FilesPageEntry {
-  kind: "folder" | "file" | "mounted";
+  kind: "folder" | "file" | "mounted" | "diskFile";
   folder?: FolderRecord;
   /** Number of files inside this folder (folder entries only). */
   folderFileCount?: number;
   file?: StirlingFileStub;
   /** Set for `kind: "mounted"` — a folder backed by a directory on disk. */
   mounted?: MountedFolderEntry;
+  /** A file read straight off a mounted directory (kind "diskFile"). */
+  disk?: DiskFileEntry;
   /** Parent breadcrumb path for search results outside the current folder. */
   parentPath?: string;
 }
@@ -83,6 +135,8 @@ interface FileGridProps {
   onOpenMountedFolder?: (id: string) => void;
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
+  /** Open a file listed straight from a mounted directory. */
+  onOpenDiskFile?: (entry: DiskFileEntry) => void;
   onMoveFiles: (
     fileIds: FileId[],
     targetFolderId: FolderId | null,
@@ -394,6 +448,7 @@ function GridView({
   onOpenFolder,
   onOpenMountedFolder,
   onOpenFile,
+  onOpenDiskFile,
   onMoveFiles,
   onMoveFolder,
   onRenameFolder,
@@ -435,6 +490,15 @@ function GridView({
               onMoveFolder={(folderId) =>
                 onMoveFolder(folderId, entry.folder!.id)
               }
+            />
+          );
+        }
+        if (entry.kind === "diskFile" && entry.disk) {
+          return (
+            <DiskFileCard
+              key={`disk-${entry.disk.path}`}
+              entry={entry.disk}
+              onOpen={() => onOpenDiskFile?.(entry.disk!)}
             />
           );
         }
@@ -509,6 +573,13 @@ function FolderCard({
 }: FolderCardProps) {
   const { t } = useTranslation();
   const { serverReachable, setError } = useFolders();
+  // Only server folders go offline: a virtual folder is browser-owned and a
+  // local one takes its name, look, and lifetime from its directory on disk —
+  // so its edit items are hidden rather than disabled-with-a-wrong-excuse.
+  const kind = folderKind(folder);
+  const originBadge = useFolderOriginBadge(folder);
+  const editsDisabled = kind === "server" && !serverReachable;
+  const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
     "Offline - folder changes are disabled.",
@@ -600,6 +671,13 @@ function FolderCard({
           fileCount={fileCount}
           iconGlyph={findFolderIcon(folder.icon)?.glyph}
         />
+        <div className="files-page-card-origin">
+          <FileOriginBadge
+            origin={originBadge.origin}
+            tooltip={originBadge.tooltip}
+            compact
+          />
+        </div>
       </div>
       <div className="files-page-card-body">
         <div className="files-page-card-name" title={folder.name}>
@@ -645,65 +723,83 @@ function FolderCard({
             >
               {t("filesPage.open", "Open")}
             </Menu.Item>
-            <Menu.Item
-              leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-              onClick={onRename}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
-            >
-              {t("filesPage.rename", "Rename")}
-            </Menu.Item>
-            <Menu.Divider />
-            <Menu.Label>
-              {t("filesPage.appearance.title", "Appearance")}
-            </Menu.Label>
-            <FolderAppearancePicker
-              folder={folder}
-              onChange={onChangeAppearance}
-              disabled={!serverReachable}
-            />
-            <Menu.Divider />
-            {processing ? (
-              <>
-                <Menu.Item
-                  leftSection={<AutoModeIcon fontSize="small" />}
-                  onClick={() => void runProcessing("process folder now")}
-                >
-                  {t("filesPage.processing.sweep", "Process files now")}
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<AutoModeIcon fontSize="small" />}
-                  onClick={() => void stopProcessing("stop processing folder")}
-                >
-                  {t(
-                    "filesPage.processing.stop",
-                    "Stop processing this folder",
-                  )}
-                </Menu.Item>
-              </>
-            ) : (
+            {editsHidden && (
               <Menu.Item
-                leftSection={<AutoModeIcon fontSize="small" />}
-                onClick={() => void startProcessing("process folder")}
-                disabled={!serverReachable}
-                title={!serverReachable ? offlineHint : undefined}
+                color="red"
+                leftSection={<DeleteIcon fontSize="small" />}
+                onClick={onDelete}
               >
                 {t(
-                  "filesPage.processing.start",
-                  "Process files in this folder…",
+                  "filesPage.removeLocalFolder",
+                  "Remove (files stay on disk)",
                 )}
               </Menu.Item>
             )}
-            <Menu.Divider />
-            <Menu.Item
-              color="red"
-              leftSection={<DeleteIcon fontSize="small" />}
-              onClick={onDelete}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
-            >
-              {t("filesPage.deleteFolder", "Delete folder")}
-            </Menu.Item>
+            {!editsHidden && (
+              <>
+                <Menu.Item
+                  leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+                  onClick={onRename}
+                  disabled={editsDisabled}
+                  title={editsDisabled ? offlineHint : undefined}
+                >
+                  {t("filesPage.rename", "Rename")}
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Label>
+                  {t("filesPage.appearance.title", "Appearance")}
+                </Menu.Label>
+                <FolderAppearancePicker
+                  folder={folder}
+                  onChange={onChangeAppearance}
+                  disabled={editsDisabled}
+                />
+                <Menu.Divider />
+                {processing ? (
+                  <>
+                    <Menu.Item
+                      leftSection={<AutoModeIcon fontSize="small" />}
+                      onClick={() => void runProcessing("process folder now")}
+                    >
+                      {t("filesPage.processing.sweep", "Process files now")}
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<AutoModeIcon fontSize="small" />}
+                      onClick={() =>
+                        void stopProcessing("stop processing folder")
+                      }
+                    >
+                      {t(
+                        "filesPage.processing.stop",
+                        "Stop processing this folder",
+                      )}
+                    </Menu.Item>
+                  </>
+                ) : (
+                  <Menu.Item
+                    leftSection={<AutoModeIcon fontSize="small" />}
+                    onClick={() => void startProcessing("process folder")}
+                    disabled={editsDisabled}
+                    title={editsDisabled ? offlineHint : undefined}
+                  >
+                    {t(
+                      "filesPage.processing.start",
+                      "Process files in this folder…",
+                    )}
+                  </Menu.Item>
+                )}
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<DeleteIcon fontSize="small" />}
+                  onClick={onDelete}
+                  disabled={editsDisabled}
+                  title={editsDisabled ? offlineHint : undefined}
+                >
+                  {t("filesPage.deleteFolder", "Delete folder")}
+                </Menu.Item>
+              </>
+            )}
           </Menu.Dropdown>
         </Menu>
       </div>
@@ -1068,6 +1164,7 @@ function ListView({
   onOpenFolder,
   onOpenMountedFolder,
   onOpenFile,
+  onOpenDiskFile,
   onMoveFiles,
   onMoveFolder,
   onRenameFolder,
@@ -1202,6 +1299,15 @@ function ListView({
             />
           );
         }
+        if (entry.kind === "diskFile" && entry.disk) {
+          return (
+            <DiskFileRow
+              key={`disk-${entry.disk.path}`}
+              entry={entry.disk}
+              onOpen={() => onOpenDiskFile?.(entry.disk!)}
+            />
+          );
+        }
         if (entry.kind === "file" && entry.file) {
           return (
             <FileRow
@@ -1271,6 +1377,13 @@ function FolderRow({
 }: FolderRowProps) {
   const { t } = useTranslation();
   const { serverReachable, setError } = useFolders();
+  // Only server folders go offline: a virtual folder is browser-owned and a
+  // local one takes its name, look, and lifetime from its directory on disk —
+  // so its edit items are hidden rather than disabled-with-a-wrong-excuse.
+  const kind = folderKind(folder);
+  const originBadge = useFolderOriginBadge(folder);
+  const editsDisabled = kind === "server" && !serverReachable;
+  const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
     "Offline - folder changes are disabled.",
@@ -1385,6 +1498,11 @@ function FolderRow({
             </span>
           )}
         </span>
+        <FileOriginBadge
+          origin={originBadge.origin}
+          tooltip={originBadge.tooltip}
+          compact
+        />
       </span>
       <span role="gridcell">
         {processing ? (
@@ -1393,6 +1511,10 @@ function FolderRow({
               ? t("filesPage.processing.active", "Processing folder")
               : t("filesPage.processing.paused", "Processing paused")}
           </span>
+        ) : kind === "virtual" ? (
+          t("filesPage.folderKind.virtual", "Browser folder")
+        ) : kind === "local" ? (
+          t("filesPage.folderKind.local", "Local folder")
         ) : (
           t("filesPage.folder", "Folder")
         )}
@@ -1425,59 +1547,83 @@ function FolderRow({
             >
               {t("filesPage.open", "Open")}
             </Menu.Item>
-            <Menu.Item
-              leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-              onClick={onRename}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
-            >
-              {t("filesPage.rename", "Rename")}
-            </Menu.Item>
-            <Menu.Divider />
-            <Menu.Label>
-              {t("filesPage.appearance.title", "Appearance")}
-            </Menu.Label>
-            <FolderAppearancePicker
-              folder={folder}
-              onChange={onChangeAppearance}
-              disabled={!serverReachable}
-            />
-            <Menu.Divider />
-            {processing ? (
-              <>
-                <Menu.Item
-                  leftSection={<AutoModeIcon fontSize="small" />}
-                  onClick={() => void runProcessing("process folder now")}
-                >
-                  {t("filesPage.processing.sweep", "Process files now")}
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<AutoModeIcon fontSize="small" />}
-                  onClick={() => void stopProcessing("stop processing folder")}
-                >
-                  {t("filesPage.processing.stop", "Stop processing this folder")}
-                </Menu.Item>
-              </>
-            ) : (
+            {editsHidden && (
               <Menu.Item
-                leftSection={<AutoModeIcon fontSize="small" />}
-                onClick={() => void startProcessing("process folder")}
-                disabled={!serverReachable}
-                title={!serverReachable ? offlineHint : undefined}
+                color="red"
+                leftSection={<DeleteIcon fontSize="small" />}
+                onClick={onDelete}
               >
-                {t("filesPage.processing.start", "Process files in this folder…")}
+                {t(
+                  "filesPage.removeLocalFolder",
+                  "Remove (files stay on disk)",
+                )}
               </Menu.Item>
             )}
-            <Menu.Divider />
-            <Menu.Item
-              color="red"
-              leftSection={<DeleteIcon fontSize="small" />}
-              onClick={onDelete}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
-            >
-              {t("filesPage.deleteFolder", "Delete folder")}
-            </Menu.Item>
+            {!editsHidden && (
+              <>
+                <Menu.Item
+                  leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+                  onClick={onRename}
+                  disabled={editsDisabled}
+                  title={editsDisabled ? offlineHint : undefined}
+                >
+                  {t("filesPage.rename", "Rename")}
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Label>
+                  {t("filesPage.appearance.title", "Appearance")}
+                </Menu.Label>
+                <FolderAppearancePicker
+                  folder={folder}
+                  onChange={onChangeAppearance}
+                  disabled={editsDisabled}
+                />
+                <Menu.Divider />
+                {processing ? (
+                  <>
+                    <Menu.Item
+                      leftSection={<AutoModeIcon fontSize="small" />}
+                      onClick={() => void runProcessing("process folder now")}
+                    >
+                      {t("filesPage.processing.sweep", "Process files now")}
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<AutoModeIcon fontSize="small" />}
+                      onClick={() =>
+                        void stopProcessing("stop processing folder")
+                      }
+                    >
+                      {t(
+                        "filesPage.processing.stop",
+                        "Stop processing this folder",
+                      )}
+                    </Menu.Item>
+                  </>
+                ) : (
+                  <Menu.Item
+                    leftSection={<AutoModeIcon fontSize="small" />}
+                    onClick={() => void startProcessing("process folder")}
+                    disabled={editsDisabled}
+                    title={editsDisabled ? offlineHint : undefined}
+                  >
+                    {t(
+                      "filesPage.processing.start",
+                      "Process files in this folder…",
+                    )}
+                  </Menu.Item>
+                )}
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<DeleteIcon fontSize="small" />}
+                  onClick={onDelete}
+                  disabled={editsDisabled}
+                  title={editsDisabled ? offlineHint : undefined}
+                >
+                  {t("filesPage.deleteFolder", "Delete folder")}
+                </Menu.Item>
+              </>
+            )}
           </Menu.Dropdown>
         </Menu>
       </span>
@@ -1750,3 +1896,197 @@ function FileRow({
 
 // Re-export root constant for caller convenience
 export { ROOT_FOLDER_ID };
+
+/**
+ * A file listed straight off a mounted directory. Nothing behind it is
+ * stored: no stub, no selection, no move/rename/delete — the disk owns the
+ * file, and the one thing Stirling adds is "Add to workspace", which loads
+ * the bytes in. Visually it is a normal file card wearing an "On disk"
+ * origin badge, because to the user it is simply a file.
+ */
+function DiskFileCard({
+  entry,
+  onOpen,
+}: {
+  entry: DiskFileEntry;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  const thumbnail = useDiskThumbnail(entry);
+  const extension = entry.name.includes(".")
+    ? entry.name.split(".").pop()!.toUpperCase()
+    : "";
+  const isPdf = extension === "PDF";
+  return (
+    <div
+      className="files-page-card"
+      role="listitem"
+      tabIndex={0}
+      onDoubleClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen();
+      }}
+      title={entry.path}
+    >
+      <div className="files-page-card-thumb">
+        {thumbnail ? (
+          <img src={thumbnail} alt="" draggable={false} />
+        ) : (
+          <div className="files-page-card-thumb-fallback">
+            {isPdf ? (
+              <PictureAsPdfIcon style={{ fontSize: "2rem" }} />
+            ) : (
+              <InsertDriveFileIcon style={{ fontSize: "2rem" }} />
+            )}
+            <span>{extension || "FILE"}</span>
+          </div>
+        )}
+        <div className="files-page-card-origin">
+          <FileOriginBadge
+            origin="local"
+            tooltip={t(
+              "filesPage.origin.diskHint",
+              "A file in the mounted folder on your disk",
+            )}
+            compact
+          />
+        </div>
+      </div>
+      <div className="files-page-card-body">
+        <div className="files-page-card-name" title={entry.name}>
+          {entry.name}
+        </div>
+        <div className="files-page-card-meta">
+          <span>{formatFileSize(entry.sizeBytes)}</span>
+          <span>·</span>
+          <span>{getFileDate({ lastModified: entry.lastModified })}</span>
+        </div>
+      </div>
+      <div className="files-page-card-actions">
+        <Menu shadow="md" position="bottom-end" withinPortal>
+          <Menu.Target>
+            <ActionIcon
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={t("filesPage.fileMenu", "File actions")}
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<OpenInNewIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpen();
+              }}
+            >
+              {t("filesPage.addToWorkspace", "Add to workspace")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </div>
+    </div>
+  );
+}
+
+/** List-view sibling of {@link DiskFileCard}; same single affordance. */
+function DiskFileRow({
+  entry,
+  onOpen,
+}: {
+  entry: DiskFileEntry;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  const thumbnail = useDiskThumbnail(entry);
+  const ext = entry.name.includes(".")
+    ? entry.name.split(".").pop()!.toUpperCase()
+    : "";
+  return (
+    <div
+      role="row"
+      tabIndex={0}
+      className="files-page-list-row"
+      onDoubleClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen();
+      }}
+      title={entry.path}
+    >
+      <span aria-hidden="true" />
+      <span
+        role="gridcell"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          minWidth: 0,
+        }}
+      >
+        {thumbnail ? (
+          <img
+            src={thumbnail}
+            alt=""
+            draggable={false}
+            style={{
+              width: "1.5rem",
+              height: "1.5rem",
+              objectFit: "cover",
+              borderRadius: "0.25rem",
+            }}
+          />
+        ) : ext === "PDF" ? (
+          <PictureAsPdfIcon fontSize="small" />
+        ) : (
+          <InsertDriveFileIcon fontSize="small" />
+        )}
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={entry.name}
+        >
+          {entry.name}
+        </span>
+        <FileOriginBadge
+          origin="local"
+          tooltip={t(
+            "filesPage.origin.diskHint",
+            "A file in the mounted folder on your disk",
+          )}
+          compact
+        />
+      </span>
+      <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
+      <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>
+      <span role="gridcell">
+        {getFileDate({ lastModified: entry.lastModified })}
+      </span>
+      <span role="gridcell">
+        <Menu shadow="md" position="bottom-end" withinPortal>
+          <Menu.Target>
+            <ActionIcon
+              variant="tertiary"
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={t("filesPage.fileMenu", "File actions")}
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<OpenInNewIcon fontSize="small" />}
+              onClick={onOpen}
+            >
+              {t("filesPage.addToWorkspace", "Add to workspace")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </span>
+    </div>
+  );
+}

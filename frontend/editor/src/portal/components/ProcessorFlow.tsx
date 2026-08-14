@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, SegmentedControl, Skeleton, StatusBadge } from "@app/ui";
+import "@app/ui/Surface.css";
 import {
   useView,
   VIEW_PATHS,

@@ -24,6 +24,7 @@ import {
 } from "@portal/components/sources/connectionTypes";
 import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
 import { COMING_SOON_SOURCE_TYPES } from "@portal/components/sources/sourceTypes";
+import "@portal/theme/surface.css";
 import "@portal/views/Integrations.css";
 
 /**
@@ -243,6 +244,7 @@ export function Integrations() {
         </div>
         {capabilities?.customApi && (
           <Button
+            fat
             onClick={() => openCreate("api")}
             leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
           >
@@ -306,7 +308,7 @@ export function Integrations() {
           ))}
         </div>
       ) : (
-        <div className="portal-integrations__table">
+        <div className="portal-surface portal-integrations__table">
           <div className="portal-integrations__cols" aria-hidden>
             <span>{t("portal.integrations.table.integration")}</span>
             <span>{t("portal.integrations.table.worksWith")}</span>
