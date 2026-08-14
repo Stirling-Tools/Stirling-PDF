@@ -59,10 +59,14 @@ jobs:
   # the story itself — a shared component, a theme token — still surfaces within
   # a day.
   a11y-all-stories:
-    name: a11y (every story, light + dark)
+    name: a11y (every story)
+    strategy:
+      fail-fast: false
+      matrix:
+        theme: [light, dark]
     runs-on: ubuntu-latest
-    # Two full sweeps (one per theme), each ~30 minutes of browser time.
-    timeout-minutes: 120
+    # One full sweep (~30 minutes of browser time).
+    timeout-minutes: 60
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -82,14 +86,14 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
-      - name: a11y gate (every story, light + dark)
-        run: task frontend:storybook:a11y
+      - name: a11y gate (every story, ${{ matrix.theme }})
+        run: task frontend:storybook:a11y:${{ matrix.theme }}
 
       - name: Upload scan reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: a11y-scan-nightly-${{ github.run_id }}
+          name: a11y-scan-nightly-${{ matrix.theme }}-${{ github.run_id }}
           path: frontend/.a11y-scan/
           retention-days: 14
           if-no-files-found: ignore
