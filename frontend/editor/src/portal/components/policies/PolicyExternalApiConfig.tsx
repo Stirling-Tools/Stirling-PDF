@@ -10,6 +10,8 @@ import {
   type ConnectionCategory,
 } from "@portal/components/sources/connectionTypes";
 import { BrandMark } from "@portal/components/BrandMarks";
+import "@app/ui/Surface.css";
+import "@portal/components/sources/connections.css";
 import {
   STEP_OPERATIONS,
   buildStepParameters,
@@ -258,7 +260,7 @@ function OperationGrid({
             key={op.id}
             type="button"
             className={
-              "portal-conn-picker__card" +
+              "sui-surface portal-conn-picker__card" +
               (op.custom ? " portal-conn-picker__card--advanced" : "")
             }
             onClick={() => onPick(op)}

@@ -51,9 +51,28 @@ const meta: Meta<typeof SourcesTable> = {
   title: "Portal/Sources/SourcesTable",
   component: SourcesTable,
   parameters: { layout: "padded" },
-  args: { sources: SOURCES, onRowClick: () => {} },
+  args: { sources: SOURCES, onRowClick: () => {}, onConnect: () => {} },
 };
 export default meta;
 type Story = StoryObj<typeof SourcesTable>;
 
 export const Default: Story = {};
+
+export const OnlyEditorSource: Story = {
+  args: {
+    sources: [
+      {
+        id: "src-editor",
+        name: "Editor",
+        type: "editor",
+        status: "active",
+        referenceCount: 1,
+        referencingPolicies: [],
+        config: [],
+        docsTotal: 0,
+        docs24h: 0,
+        docs30d: 0,
+      },
+    ],
+  },
+};

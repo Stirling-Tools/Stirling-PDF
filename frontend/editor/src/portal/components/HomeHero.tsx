@@ -31,7 +31,7 @@ export function HomeHero() {
       {procurement.loading ? (
         // Hold the rail's shape rather than committing to a footer: branching before the snapshot
         // lands paints the no-deal rail first, flashing on every refresh of an active deal.
-        <section className="portal-editor-hero" aria-busy>
+        <section className="sui-surface portal-editor-hero" aria-busy>
           <div className="portal-editor-hero__row">
             <Skeleton width="2rem" height="2rem" />
             <Skeleton width="12rem" height="1rem" />

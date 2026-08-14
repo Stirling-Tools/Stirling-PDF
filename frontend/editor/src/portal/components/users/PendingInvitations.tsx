@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { Avatar, Button } from "@app/ui";
 import type { PendingInvitation } from "@portal/api/users";
+import "@app/ui/Surface.css";
 import "@portal/views/Users.css";
 
 interface PendingInvitationsProps {
@@ -34,7 +35,7 @@ export function PendingInvitations({
 }: PendingInvitationsProps) {
   const { t } = useTranslation();
   return (
-    <section className="portal-users__group">
+    <section className="sui-surface portal-users__group">
       <header className="portal-users__group-head">
         <div className="portal-users__group-title">
           <strong>{t("users.invites.title", "Pending invitations")}</strong>

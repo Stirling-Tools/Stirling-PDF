@@ -64,12 +64,9 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 | Policies | `GET/POST /api/v1/policies` · `GET/DELETE /api/v1/policies/{id}` · `POST /api/v1/policies/{id}/run` | — | `fetchPolicies` · `savePolicy` · `deletePolicy` · `runPolicy` | `PoliciesResponse` · `Policy` |
 | Sources | `GET /v1/sources` | `tier` | `fetchSources` | `SourcesResponse` |
 | Components | `GET /v1/components` | `tier` | `fetchComponents` | `ComponentsResponse` |
-| Infrastructure | `GET /v1/infrastructure/deployments` | `tier` | `fetchDeployments` | `DeploymentsResponse` |
-| Infrastructure | `GET /v1/infrastructure/api-keys` | `tier` | `fetchApiKeys` | `ApiKey[]` |
-| Infrastructure | `GET /v1/infrastructure/security` | `tier` | `fetchSecurity` | `SecurityConfig` |
-| Infrastructure | `GET /v1/infrastructure/models` | `tier` | `fetchModels` | `ModelsResponse` |
-| Infrastructure | `GET /v1/infrastructure/storage` | `tier` | `fetchStorage` | `StorageConfig` |
-| Infrastructure | `GET /v1/infrastructure/audit-log` | `tier` | `fetchAuditLog` | `AuditLogResponse` |
+| Infrastructure | `GET/POST /api/v1/proprietary/ui-data/infrastructure/api-keys` · `DELETE …/api-keys/{id}` | — | `fetchApiKeys` · `createApiKey` · `revokeApiKey` | `ApiKeysResponse` · `CreatedApiKey` |
+| Infrastructure | `GET /api/v1/proprietary/ui-data/infrastructure/audit-log` | `tier` | `fetchAuditLog` | `AuditLogResponse` |
+| Infrastructure | `GET /api/v1/proprietary/ui-data/audit-export` | `format`, `fields` | `exportAuditLog` | CSV/JSON blob |
 | Usage & Billing | `GET /v1/billing/usage` | — | `fetchBillingUsage` | `UsageSeriesResponse` |
 | Usage & Billing | `GET /v1/billing/summary` | `tier` | `fetchBillingSummary` | `BillingSummary` |
 | Usage & Billing | `GET /v1/billing/plans` | — | `fetchPlanOptions` | `PlanOption[]` |
@@ -88,3 +85,8 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 > **Policies** targets the **real** backend base `/api/v1/policies` (Stirling's
 > `PolicyController`) rather than the mock `/v1/...` convention — its contract
 > mirrors the live policy engine.
+>
+> **Infrastructure** is likewise fully real (`/api/v1/proprietary/ui-data/...`).
+> Its former mock-only `/v1/infrastructure/{deployments,security,models,storage}`
+> endpoints were removed along with the tabs they backed — those tabs remain in
+> the strip but are disabled until a backend exists.

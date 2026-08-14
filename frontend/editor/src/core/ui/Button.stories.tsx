@@ -89,6 +89,7 @@ const meta: Meta<typeof Button> = {
       options: ["center", "start", "end", "between"],
     },
     shape: { control: "inline-radio", options: ["default", "circle", "pill"] },
+    fat: { control: "boolean" },
     text: { control: "text" },
   },
 };
@@ -200,6 +201,35 @@ export const Padding: Story = {
         <Button key={p} {...args} p={p} text={p} />
       ))}
     </Wrap>
+  ),
+};
+
+/** `fat` is the chunky CTA treatment: 3rem tall, 1.5rem side padding, 0.75rem corners. */
+export const Fat: Story = {
+  render: () => (
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 16, width: 460 }}
+    >
+      <Wrap>
+        <Button fat leftSection={<Plus />} text="Connect source" />
+        <Button fat variant="secondary" text="Export CSV" />
+      </Wrap>
+      <Wrap>
+        <Button fat variant="tertiary" text="Tertiary" />
+        <Button fat variant="quiet" text="Quiet" />
+        <Button fat accent="premium" leftSection={<Sparkle />} text="Upgrade" />
+        <Button fat accent="danger" text="Delete" />
+      </Wrap>
+      <Wrap>
+        <Button fat loading text="Saving" />
+        <Button fat disabled text="Disabled" />
+        <Button fat leftSection={<Plus />} aria-label="Add" />
+      </Wrap>
+      <Wrap>
+        <Button text="Default" />
+        <Button fat text="Fat" />
+      </Wrap>
+    </div>
   ),
 };
 

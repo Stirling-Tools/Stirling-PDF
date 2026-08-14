@@ -11,6 +11,7 @@ import {
   buildDirectory,
   type TeamGroup,
 } from "@portal/components/users/directory";
+import "@app/ui/Surface.css";
 import "@portal/views/Users.css";
 
 /** Collapse a group's rows past this many, behind a "Show all" expander. */
@@ -350,7 +351,7 @@ export function UsersDirectory({
     <div className="portal-users__directory">
       {/* Organization (a single-org deployment only; SaaS has no org). */}
       {capabilities.orgGroup && dir.organization.length > 0 && (
-        <section className="portal-users__group">
+        <section className="sui-surface portal-users__group">
           <header className="portal-users__group-head">
             <div className="portal-users__group-title">
               <strong>{t("users.group.org", "Organization")}</strong>
@@ -373,7 +374,7 @@ export function UsersDirectory({
 
       {/* Teams */}
       {dir.teams.map((team) => (
-        <section className="portal-users__group" key={team.id}>
+        <section className="sui-surface portal-users__group" key={team.id}>
           <header className="portal-users__group-head">
             <div className="portal-users__group-title">
               <strong>
@@ -461,7 +462,7 @@ export function UsersDirectory({
 
       {/* Guests (parked in the live app; shown when showGuests is set). */}
       {showGuests && dir.guests.length > 0 && (
-        <section className="portal-users__group">
+        <section className="sui-surface portal-users__group">
           <header className="portal-users__group-head">
             <div className="portal-users__group-title">
               <strong>{t("users.group.guests", "Guests")}</strong>

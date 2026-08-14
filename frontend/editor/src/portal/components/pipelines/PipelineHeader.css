@@ -7,9 +7,6 @@
   flex-direction: column;
   gap: 0.875rem;
   padding: 1.125rem;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-lg);
 }
 
 /* Leaving the page and saving it are the same kind of decision, so they share a row - and the back

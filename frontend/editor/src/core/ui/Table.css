@@ -1,9 +1,6 @@
 .sui-table-wrap {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-md);
-  background: var(--c-surface);
 }
 
 .sui-table {
@@ -67,6 +64,14 @@
 .sui-table__row--interactive:focus-visible {
   outline: 0.125rem solid var(--c-primary);
   outline-offset: -0.125rem;
+}
+
+.sui-table:has(tfoot) tbody tr:last-child .sui-table__td {
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+.sui-table__footer-row .sui-table__td {
+  padding: 0;
+  border-bottom: none;
 }
 
 .sui-table__empty {

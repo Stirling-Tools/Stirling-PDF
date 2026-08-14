@@ -18,6 +18,7 @@ import {
   Input,
   Spinner,
 } from "@app/ui";
+import "@app/ui/Surface.css";
 import "@portal/components/pipelines/PipelineHeader.css";
 
 /** One file a test run produced, downloadable from the result strip. */
@@ -105,7 +106,7 @@ export function PipelineHeader({
   const { t } = useTranslation();
 
   return (
-    <section className="portal-pipeline-header">
+    <section className="sui-surface portal-pipeline-header">
       <div className="portal-pipeline-header__top">
         <Button
           variant="quiet"
@@ -119,20 +120,10 @@ export function PipelineHeader({
           {t("portal.pipelines.builder.back")}
         </Button>
         <div className="portal-pipeline-header__save">
-          <Button
-            variant="tertiary"
-            size="sm"
-            onClick={onCancel}
-            disabled={saving}
-          >
+          <Button fat variant="tertiary" onClick={onCancel} disabled={saving}>
             {t("portal.pipelines.composer.cancel")}
           </Button>
-          <Button
-            size="sm"
-            onClick={onSave}
-            loading={saving}
-            disabled={!canSave}
-          >
+          <Button fat onClick={onSave} loading={saving} disabled={!canSave}>
             {isEdit
               ? t("portal.pipelines.composer.save")
               : t("portal.pipelines.composer.create")}
