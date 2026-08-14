@@ -4,8 +4,6 @@ on:
   schedule:
     - cron: "0 2 * * *" # 2 AM UTC every night
   workflow_dispatch:
-  # PRs run no @nightly scenario, no high concurrency and no shard run. build.yml
-  # can't own this: via workflow_call the concurrency group below self-cancels.
   pull_request:
     paths:
       - .github/workflows/nightly.yml
@@ -154,9 +152,8 @@ jobs:
             engine/pyproject.toml
             engine/uv.lock
 
-      - name: Install behave test deps
-        run: |
-          uv sync --project engine --locked --group cucumber
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
       - name: Start the fat image with login and storage enabled
         run: docker compose -f docker/embedded/compose/test_cicd.yml up -d --build
@@ -174,14 +171,13 @@ jobs:
             -sf -H "X-API-KEY: $TEST_API_KEY" http://localhost:8080/api/v1/info/status
 
       # Heavy LibreOffice/Calibre/Ghostscript conversions, excluded from the PR run.
+      # Both tasks install the behave deps themselves, so there is no separate uv sync step.
       - name: Run @nightly scenarios
-        working-directory: testing/cucumber
-        run: uv run --project ../../engine --locked --group cucumber python -m behave --tags=@nightly --no-capture -f plain
+        run: task cucumber:nightly
 
       # Genuinely different payloads contending on one backend.
       - name: Sharded concurrency validation
-        working-directory: testing/cucumber
-        run: bash run-parallel.sh 10
+        run: task cucumber:parallel SHARDS=10
 
       - name: Container logs on failure
         if: failure()
