@@ -215,13 +215,6 @@ const AdminPlanSection: React.FC = () => {
           buttonIcon="upgrade-rounded"
           onButtonClick={scrollToPlans}
           dismissible={false}
-          minHeight={68}
-          background="#FFF4E6"
-          borderColor="var(--mantine-color-orange-7)"
-          textColor="#9A3412"
-          iconColor="#EA580C"
-          buttonVariant="filled"
-          buttonColor="orange.7"
         />
       )}
 

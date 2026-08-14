@@ -1,84 +1,30 @@
 import React, { ReactNode } from "react";
-import { Paper, Group, Text, Stack } from "@mantine/core";
-import { Button, type ButtonVariant, type ButtonAccent } from "@app/ui/Button";
+import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import "@app/components/shared/InfoBanner.css";
 
-type InfoBannerTone = "info" | "warning";
+/** Picks the whole look. Callers choose meaning, never colours. */
+export type InfoBannerTone = "info" | "promo" | "warning" | "danger";
 
-const toneStyles: Record<
-  InfoBannerTone,
-  {
-    background: string;
-    border: string;
-    text: string;
-    icon: string;
-    buttonColor: string;
-  }
-> = {
-  info: {
-    background: "var(--mantine-color-blue-0)",
-    border: "var(--mantine-color-blue-2)",
-    text: "var(--mantine-color-blue-9)",
-    icon: "var(--mantine-color-blue-6)",
-    buttonColor: "blue",
-  },
-  warning: {
-    background: "var(--mantine-color-orange-0)",
-    border: "var(--mantine-color-orange-3)",
-    text: "var(--color-amber-dark)",
-    icon: "var(--mantine-color-orange-7)",
-    buttonColor: "orange",
-  },
-};
-
-function toSharedButtonVariant(
-  variant: "light" | "filled" | "white" | "outline" | "subtle",
-): ButtonVariant {
-  switch (variant) {
-    case "filled":
-      return "primary";
-    case "outline":
-      return "secondary";
-    case "subtle":
-      return "tertiary";
-    case "light":
-    case "white":
-    default:
-      return "secondary";
-  }
-}
-
-function toSharedButtonAccent(color: string | undefined): ButtonAccent {
-  // Mantine colours may carry a shade suffix (e.g. "orange.7"); use the hue.
-  const hue = (color ?? "").split(".")[0];
-  switch (hue) {
-    case "red":
-      return "danger";
-    case "green":
-      return "success";
-    case "yellow":
-    case "orange":
-      return "warning";
-    case "blue":
-    default:
-      return "default";
-  }
-}
+/** Tone decides the button too, so the CTA can't drift from the bar it sits on. */
+const TONE_ACCENT = {
+  info: "default",
+  promo: "default",
+  warning: "warning",
+  danger: "danger",
+} as const;
 
 interface InfoBannerProps {
-  /**
-   * Either a LocalIcon name (string) for the standard sized icon slot, or a
-   * pre-rendered ReactNode (e.g. a logo image) which is dropped in as-is.
-   */
+  /** A LocalIcon name, or a pre-rendered node (e.g. a logo) dropped in as-is. */
   icon?: string | ReactNode;
   title?: ReactNode;
   message: ReactNode;
   buttonText?: string;
   buttonIcon?: string;
   onButtonClick?: () => void;
-  /** Optional muted secondary action (e.g. "Don't remind me again"). */
+  /** Muted secondary action, e.g. "Don't remind me again". */
   secondaryButtonText?: string;
   onSecondaryButtonClick?: () => void;
   onDismiss?: () => void;
@@ -86,22 +32,10 @@ interface InfoBannerProps {
   loading?: boolean;
   show?: boolean;
   tone?: InfoBannerTone;
-  background?: string;
-  borderColor?: string;
-  textColor?: string;
-  iconColor?: string;
-  buttonColor?: string;
-  buttonVariant?: "light" | "filled" | "white" | "outline" | "subtle";
-  /** Override the button label colour (for dark/custom theme variants). */
-  buttonTextColor?: string;
-  minHeight?: number | string;
-  closeIconColor?: string;
   compact?: boolean;
 }
 
-/**
- * Generic info banner component for displaying dismissible messages at the top of the app
- */
+/** The app's top bar: dismissible messaging above the workspace. */
 export const InfoBanner: React.FC<InfoBannerProps> = ({
   icon,
   title,
@@ -116,148 +50,75 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   loading = false,
   show = true,
   tone = "info",
-  background,
-  borderColor,
-  textColor,
-  iconColor,
-  buttonColor,
-  buttonVariant = "light",
-  buttonTextColor,
-  minHeight = 56,
-  closeIconColor,
   compact = false,
 }) => {
   const { t } = useTranslation();
-  if (!show) {
-    return null;
-  }
+  if (!show) return null;
 
-  const toneStyle = toneStyles[tone] ?? toneStyles.info;
-  const resolvedTextColor = textColor ?? toneStyle.text;
-  const handleDismiss = () => {
-    onDismiss?.();
-  };
-
-  const iconSize = compact ? "1rem" : "1.2rem";
-  const textSize = compact ? "xs" : "sm";
+  const iconSize = compact ? "1rem" : "1.25rem";
 
   return (
-    <Paper
-      p={compact ? "xs" : "sm"}
-      radius={0}
-      style={{
-        background: background ?? toneStyle.background,
-        border: "none",
-        borderBottom:
-          borderColor === "transparent"
-            ? "none"
-            : `1px solid ${borderColor ?? toneStyle.border}`,
-        minHeight,
-        display: "flex",
-        alignItems: "center",
-      }}
+    <div
+      className={[
+        "sui-banner",
+        `sui-banner--${tone}`,
+        compact ? "sui-banner--compact" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
-      <Group
-        gap="sm"
-        align="center"
-        wrap="nowrap"
-        justify="space-between"
-        style={{ width: "100%" }}
-      >
-        <Group
-          gap={compact ? "xs" : "sm"}
-          align="center"
-          wrap="nowrap"
-          style={{ flex: 1, minWidth: 0 }}
-        >
-          {icon != null &&
-            (typeof icon === "string" ? (
-              <LocalIcon
-                icon={icon}
-                width={iconSize}
-                height={iconSize}
-                style={{ color: iconColor ?? toneStyle.icon, flexShrink: 0 }}
-              />
-            ) : (
-              <div
-                style={{ flexShrink: 0, display: "flex", alignItems: "center" }}
-              >
-                {icon}
-              </div>
-            ))}
-          <Stack gap={compact ? 1 : 2} style={{ flex: 1, minWidth: 0 }}>
-            {title && (
-              <Text
-                fw={600}
-                size={textSize}
-                style={{ color: resolvedTextColor }}
-              >
-                {title}
-              </Text>
-            )}
-            <Text
-              fw={title ? 400 : 500}
-              size={textSize}
-              style={{ color: resolvedTextColor }}
-              lineClamp={compact ? 1 : 2}
-            >
-              {message}
-            </Text>
-          </Stack>
-        </Group>
-        <Group gap="xs" align="center" wrap="nowrap">
-          {buttonText && onButtonClick && (
-            <Button
-              variant={toSharedButtonVariant(buttonVariant)}
-              accent={toSharedButtonAccent(
-                buttonColor ?? toneStyle.buttonColor,
-              )}
-              size="sm"
-              loading={loading}
-              onClick={onButtonClick}
-              leftSection={
-                <LocalIcon
-                  icon={buttonIcon}
-                  width={compact ? "0.75rem" : "0.9rem"}
-                  height={compact ? "0.75rem" : "0.9rem"}
-                />
-              }
-              style={buttonTextColor ? { color: buttonTextColor } : undefined}
-            >
-              {buttonText}
-            </Button>
+      {icon != null && (
+        <span className="sui-banner__icon" aria-hidden>
+          {typeof icon === "string" ? (
+            <LocalIcon icon={icon} width={iconSize} height={iconSize} />
+          ) : (
+            icon
           )}
-          {secondaryButtonText && onSecondaryButtonClick && (
-            <Button
-              variant="tertiary"
-              accent="neutral"
-              size="sm"
-              onClick={onSecondaryButtonClick}
-              style={{ color: "var(--c-text-muted)" }}
-            >
-              {secondaryButtonText}
-            </Button>
-          )}
-          {dismissible && (
-            <ActionIcon
-              variant="tertiary"
-              accent="neutral"
-              size="sm"
-              onClick={handleDismiss}
-              aria-label={t("infoBanner.dismiss", "Dismiss")}
-              style={{
-                color: closeIconColor ?? "var(--c-text-muted)",
-              }}
-            >
-              <LocalIcon
-                icon="close-rounded"
-                width={compact ? "0.85rem" : "1rem"}
-                height={compact ? "0.85rem" : "1rem"}
-              />
-            </ActionIcon>
-          )}
-        </Group>
-      </Group>
-    </Paper>
+        </span>
+      )}
+
+      <div className="sui-banner__body">
+        {title && <span className="sui-banner__title">{title}</span>}
+        <span className="sui-banner__message">{message}</span>
+      </div>
+
+      <div className="sui-banner__actions">
+        {buttonText && onButtonClick && (
+          <Button
+            variant="primary"
+            accent={TONE_ACCENT[tone]}
+            size="sm"
+            loading={loading}
+            onClick={onButtonClick}
+            leftSection={
+              <LocalIcon icon={buttonIcon} width="0.9rem" height="0.9rem" />
+            }
+          >
+            {buttonText}
+          </Button>
+        )}
+        {secondaryButtonText && onSecondaryButtonClick && (
+          <Button
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            onClick={onSecondaryButtonClick}
+          >
+            {secondaryButtonText}
+          </Button>
+        )}
+        {dismissible && (
+          <ActionIcon
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            onClick={() => onDismiss?.()}
+            aria-label={t("infoBanner.dismiss", "Dismiss")}
+          >
+            <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+          </ActionIcon>
+        )}
+      </div>
+    </div>
   );
 };

@@ -120,10 +120,6 @@ export function TeamInvitationBanner() {
       }
       show={shouldShow}
       dismissible={false}
-      background="var(--mantine-color-dark-7)"
-      borderColor="var(--mantine-color-dark-5)"
-      textColor="rgba(255, 255, 255, 0.95)"
-      iconColor="rgba(255, 255, 255, 0.95)"
     />
   );
 }

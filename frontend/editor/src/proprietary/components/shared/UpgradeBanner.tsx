@@ -312,13 +312,6 @@ const UpgradeBanner: React.FC = () => {
         buttonIcon="info-rounded"
         onButtonClick={buttonText ? handleSeeInfo : undefined}
         dismissible={false}
-        minHeight={60}
-        background="#FFF4E6"
-        borderColor="var(--mantine-color-orange-7)"
-        textColor="#9A3412"
-        iconColor="#EA580C"
-        buttonVariant="filled"
-        buttonColor="orange.7"
       />
     );
   };
@@ -353,14 +346,7 @@ const UpgradeBanner: React.FC = () => {
           onButtonClick={handleUpgrade}
           onDismiss={handleFriendlyDismiss}
           show={friendlyVisible}
-          background="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-          borderColor="transparent"
-          textColor="#fff"
-          iconColor="#fff"
-          closeIconColor="#fff"
-          buttonVariant="filled"
-          buttonColor="blue"
-          minHeight={48}
+          tone="promo"
           compact
         />
       )}
