@@ -79,29 +79,31 @@ tasks:
     # subtaskfile is included with `dir: .`. Loaded here as well as in _run:saas
     # so the fallback below can see SAAS_DEV_PROJECT_REF.
     dotenv: ['app/.env.saas.local', 'app/.env.saas']
-    vars:
-      # With no preview branch configured, fall back to the whole staging profile
-      # rather than to staging's project ref. Pointing the dev profile at v3 would
-      # keep dev's ddl-auto=update and aim it at a shared database; switching
-      # profile picks up staging's ddl-auto=none too.
-      #
-      # `sh:` runs in Task's embedded POSIX shell, so ${VAR:-default} works on
-      # Windows as well. dotenv values are visible to it; note they are NOT
-      # visible to Go templates ({{.SAAS_DEV_PROJECT_REF}} is always empty).
-      RESOLVED_PROFILES:
-        sh: 'if [ -n "${SAAS_DEV_PROJECT_REF:-}" ]; then echo dev; else echo staging; fi'
     cmds:
       # Plain POSIX, no `platforms:` needed: Task's default shell is its embedded
       # interpreter on every OS. Only the gradlew calls need a real cmd.exe.
+      #
+      # This task always runs the dev profile. It used to pick dev or staging from a
+      # `sh:` var testing SAAS_DEV_PROJECT_REF, but on Task 3.51.1 dotenv values are
+      # NOT visible during `sh:` var evaluation -- only inside cmds like this one --
+      # so that test always saw an empty value and silently ran staging even with a
+      # preview branch configured. Silently ignoring your configuration is worse than
+      # either outcome it was choosing between, and `staging:saas` already exists for
+      # when you actually want the shared project.
+      #
+      # Unconfigured, the dev profile fails on a required property rather than
+      # falling back, deliberately: dev sets ddl-auto=update, so pointing it at the
+      # shared project would let a feature branch create tables there.
       - cmd: |
           if [ -z "${SAAS_DEV_PROJECT_REF:-}" ]; then
-            echo ">> SAAS_DEV_PROJECT_REF is not set, so this is running STAGING (shared v3), not a PR preview branch."
+            echo ">> SAAS_DEV_PROJECT_REF is not set, so the dev profile will refuse to start."
             echo ">> Testing a SaaS PR? Put its ref, DB password and publishable key in app/.env.saas.local."
+            echo ">> Wanted the shared v3 project? Use 'task backend:staging:saas' instead."
           fi
       - task: _run:saas
         vars:
           PORT: '{{.PORT}}'
-          PROFILES: '{{.PROFILES | default .RESOLVED_PROFILES}}'
+          PROFILES: '{{.PROFILES | default "dev"}}'
           AIENGINE_URL: '{{.AIENGINE_URL}}'
           AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
           AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
