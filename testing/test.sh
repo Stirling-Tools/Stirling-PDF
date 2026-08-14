@@ -391,6 +391,17 @@ capture_file_list() {
     gha_endgroup
 }
 
+# Tail of container logs shown when a leak is detected. The full log is captured as a
+# job artifact anyway, and dumping all of it here buried the actual finding.
+TEMP_FILE_LOG_TAIL=${TEMP_FILE_LOG_TAIL:-200}
+
+# Print the log context for a detected temp-file leak, bounded so the finding stays readable.
+print_temp_file_leak_logs() {
+    local container_name=$1
+    echo "Last $TEMP_FILE_LOG_TAIL lines of container logs (full log is in the uploaded artifacts):"
+    docker logs --tail "$TEMP_FILE_LOG_TAIL" "$container_name" 2>&1 || true
+}
+
 # Function to compare before and after file lists
 compare_file_lists() {
     local before_file=$1
@@ -425,8 +436,7 @@ compare_file_lists() {
             if [ -s "${diff_file}.tmp" ]; then
                 echo "WARNING: Temporary files found:"
                 cat "${diff_file}.tmp"
-                echo "Printing docker logs due to temporary file detection:"
-                docker logs "$container_name"  # Print logs when temp files are found
+                print_temp_file_leak_logs "$container_name"
                 gha_endgroup
                 return 1
             else
@@ -466,8 +476,11 @@ compare_file_lists() {
             if [ -s "${diff_file}.tmp" ]; then
                 echo "WARNING: Temporary files detected:"
                 cat "${diff_file}.tmp"
-                echo "Printing docker logs due to temporary file detection:"
-                docker logs "$container_name"  # Print logs when temp files are found
+                echo "These files were still present after the suite finished. Async job results"
+                echo "and their input copies live under the server's file store and are released"
+                echo "by the cleanup that features/environment.py runs in after_all - if they show"
+                echo "up here, that cleanup did not cover them."
+                print_temp_file_leak_logs "$container_name"
                 return 1
             fi
         fi
