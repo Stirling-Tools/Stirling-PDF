@@ -120,10 +120,20 @@ export function PipelineHeader({
           {t("portal.pipelines.builder.back")}
         </Button>
         <div className="portal-pipeline-header__save">
-          <Button fat variant="tertiary" onClick={onCancel} disabled={saving}>
+          <Button
+            variant="tertiary"
+            size="sm"
+            onClick={onCancel}
+            disabled={saving}
+          >
             {t("portal.pipelines.composer.cancel")}
           </Button>
-          <Button fat onClick={onSave} loading={saving} disabled={!canSave}>
+          <Button
+            size="sm"
+            onClick={onSave}
+            loading={saving}
+            disabled={!canSave}
+          >
             {isEdit
               ? t("portal.pipelines.composer.save")
               : t("portal.pipelines.composer.create")}
