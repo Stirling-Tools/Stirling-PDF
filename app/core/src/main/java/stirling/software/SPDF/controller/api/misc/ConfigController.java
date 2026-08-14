@@ -338,6 +338,19 @@ public class ConfigController {
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
+            // Whether this instance can link a Stirling (SaaS) account at all. The account-link
+            // beans live in :proprietary and are @ConditionalOnProperty on this same key, so when
+            // it is off they are absent and /api/v1/account-link/* returns 404. The frontend cannot
+            // tell that 404 apart from "not linked yet", so it needs this told to it explicitly
+            // before it can prompt anyone to link. Read from the environment rather than
+            // AccountLinkProperties because :core must not depend on :proprietary.
+            configData.put(
+                    "accountLinkAvailable",
+                    applicationContext
+                            .getEnvironment()
+                            .getProperty(
+                                    "stirling.billing.account-link.enabled", Boolean.class, false));
+
             // AI Engine settings
             ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();
             configData.put("aiEngineEnabled", aiEngineConfig.isEnabled());

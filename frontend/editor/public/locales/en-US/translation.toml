@@ -6326,11 +6326,37 @@ after = "to enable account linking against the hosted Stirling account. In dev y
 before = "Set"
 title = "SaaS login not configured"
 
-[portal.accountLink.gate]
-action = "Link account"
-description = "Link this org's Stirling account to use billable features."
-title = "Link to unlock"
-titleFeature = "Link to unlock {{feature}}"
+[portal.accountLink.connect]
+back = "Back"
+close = "Close"
+notNow = "Not now"
+start = "Connect account"
+step = "Step {{current}} of {{total}}"
+
+[portal.accountLink.connect.benefits]
+creditsDetail = "500 free on a new account"
+creditsLabel = "Credits"
+processorDetail = "Pipelines, policies, sources and audit"
+processorLabel = "Processor"
+teamsDetail = "Free for 5 users and under"
+teamsLabel = "Teams"
+title = "Connect this server to a Stirling account"
+
+[portal.accountLink.connect.done]
+addPolicy = "Add a policy"
+buildPipeline = "Set up a pipeline"
+creditsRemaining = "free credits remaining"
+cta = "Done"
+inviteTeam = "Invite your team"
+lede = "This server now runs against your Stirling account."
+title = "Connected"
+titleNamed = "Connected to {{name}}"
+
+[portal.accountLink.connect.signIn]
+failed = "Couldn't connect this server"
+lede = "Your credits and team live in your Stirling account. This server connects once, then runs on its own."
+reauthLede = "Your session expired. Sign back in to your Stirling account. This server stays connected."
+title = "Sign in to Stirling"
 
 [portal.accountLink.instances]
 active = "Active"
@@ -6360,9 +6386,6 @@ minutesAgo_other = "{{count}}m ago"
 never = "never"
 
 [portal.accountLink.modal]
-linkSubtitle = "Sign in to the account this server should bill against."
-linkTitle = "Link your Stirling account"
-reauthSubtitle = "Your session expired — sign back in to your Stirling account. Your instance stays linked."
 reauthTitle = "Sign in again"
 simulateSignIn = "Simulate sign-in (dev)"
 
@@ -6382,6 +6405,12 @@ sub = "Link this self-hosted org to its Stirling account so unattended processin
 forbidden = "Only the team owner can view the org's linked instances."
 generic = "Couldn't load the team's linked instances. Try again in a moment."
 title = "Couldn't load linked instances"
+
+[portal.accountLink.rail]
+cta = "Connect"
+later = "Later"
+sub = "Unlocks teams, the processor, pipelines and policies. Manual PDF editing stays free."
+title = "Connect your Stirling account"
 
 [portal.accountLink.state]
 free = "Editor plan"
@@ -6505,11 +6534,6 @@ showMostRecent_other = "Show {{count}} most recent"
 title = "Invoice history"
 viewAriaLabel = "View invoice {{number}} in Stripe"
 viewLink = "View ↗"
-
-[portal.billing.linkPrompt]
-cta = "Link Stirling account"
-description = "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — is always free, linked or not. Link to claim 500 free PDFs of metered processing (automation, AI, and the API); when you need more, turn on the Processor plan and only pay for what you use."
-title = "Link your Stirling account"
 
 [portal.billing.paymentMethod]
 billedMonthly = "Billed monthly"
@@ -6666,8 +6690,8 @@ label = "Projected to exceed."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Spend this month"
-freeRemaining_one = "{{formatted}} free PDF remaining"
-freeRemaining_other = "{{formatted}} free PDFs remaining"
+freeRemaining_one = "{{formatted}} free credit remaining"
+freeRemaining_other = "{{formatted}} free credits remaining"
 processed_one = "{{formattedCount}} PDF processed."
 processed_other = "{{formattedCount}} PDFs processed."
 processedWithRate_one = "{{formattedCount}} PDF processed, at {{rate}} each."
@@ -6684,17 +6708,17 @@ reachedTitle = "Monthly spend limit reached"
 title = "Couldn't open Stripe portal"
 
 [portal.billing.walletMeter]
-barAria = "Free PDFs used"
-capSuffix_one = "of {{allowance}} free PDFs used"
-capSuffix_other = "of {{allowance}} free PDFs used"
+barAria = "Free credits used"
+capSuffix_one = "of {{allowance}} free credits used"
+capSuffix_other = "of {{allowance}} free credits used"
 eyebrow = "Processor trial"
 statusLabel_one = "{{remaining}} left"
 statusLabel_other = "{{remaining}} left"
 sub = "Use the PDF Editor for free. Pay to process PDFs automatically."
-title_one = "Process {{allowance}} PDFs free"
-title_other = "Process {{allowance}} PDFs free"
-titleWithRate_one = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
-titleWithRate_other = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
+title_one = "{{allowance}} free credit to start"
+title_other = "{{allowance}} free credits to start"
+titleWithRate_one = "{{allowance}} free credit, then {{rate}} per PDF"
+titleWithRate_other = "{{allowance}} free credits, then {{rate}} per PDF"
 
 [portal.components.billingUnit]
 approval = "approval"

@@ -22,8 +22,27 @@ const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 export const isSaasSupabaseConfigured = Boolean(url && key);
 
-/** OAuth providers the hosted SaaS login offers (mirrors the SaaS editor login). */
-export const SAAS_OAUTH_PROVIDERS = ["google", "github", "apple", "azure"];
+/**
+ * Whether an OAuth sign-in can actually finish on this origin.
+ *
+ * Supabase honours a `redirectTo` only when it matches the project's Redirect URLs allow-list;
+ * anything else falls back to the project's Site URL, which is the SaaS app. A customer's own
+ * server (https://pdf.acme.internal, http://192.168.1.20:8080) will never be on that list, so the
+ * admin would complete the provider round trip, land on the SaaS site, and this instance would
+ * never receive a session — a button that silently cannot work. Wildcards can cover a domain we
+ * own, not the open set of customer hostnames, so this is opt-in per deployment rather than
+ * something we can detect.
+ *
+ * Set VITE_SAAS_OAUTH_ENABLED=true only for origins that ARE allow-listed on the Supabase project
+ * (deployments we host). Email and password work regardless.
+ */
+export const isSaasOAuthAvailable =
+  import.meta.env.VITE_SAAS_OAUTH_ENABLED === "true";
+
+/** OAuth providers offered, empty when the round trip cannot return to this origin. */
+export const SAAS_OAUTH_PROVIDERS = isSaasOAuthAvailable
+  ? ["google", "github", "apple", "azure"]
+  : [];
 
 /** sessionStorage marker set before an SSO redirect so the return can finish the link. */
 export const PENDING_LINK_KEY = "stirling-account-link-pending";

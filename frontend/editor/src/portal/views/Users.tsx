@@ -21,6 +21,7 @@ import {
 import { deleteTeam as apiDeleteTeam } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
 import { usersCapabilities as caps } from "@app/portal/usersCapabilities";
+import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
 import { PendingInvitations } from "@portal/components/users/PendingInvitations";
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
@@ -46,6 +47,7 @@ interface Confirm {
  */
 export function Users() {
   const { t } = useTranslation();
+  const { guard } = useConnectGate();
   const { usersState, grantsState, teamsState, authState, refresh } =
     useUsersData();
 
@@ -192,10 +194,12 @@ export function Users() {
     if (!grant) return;
     run(() => revokeGrant(grant.id));
   }
-  function openInvite(teamId: number | null) {
+  // Teams need a linked account, so inviting or creating one asks for the connection first.
+  const openInvite = guard((teamId: number | null) => {
     setInviteTeamId(teamId);
     setInviteOpen(true);
-  }
+  });
+  const openNewTeam = guard(() => setNewTeamOpen(true));
 
   // Kebab actions
   function toggleEnabled(member: Member) {
@@ -280,7 +284,7 @@ export function Users() {
         </div>
         <div className="portal-users__head-actions">
           {caps.createTeam && (
-            <Button variant="secondary" onClick={() => setNewTeamOpen(true)}>
+            <Button variant="secondary" onClick={openNewTeam}>
               {t("users.newTeam.action", "+ New team")}
             </Button>
           )}
