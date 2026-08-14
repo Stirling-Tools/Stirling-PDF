@@ -3,6 +3,7 @@ import { Stack, Text, Select, Alert, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import { usePdfSignatureDetection } from "@app/hooks/usePdfSignatureDetection";
+import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
 import { StirlingFile } from "@app/types/fileContext";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
@@ -26,15 +27,21 @@ const ConvertToPdfaSettings = ({
   const { hasDigitalSignatures, isChecking } =
     usePdfSignatureDetection(selectedFiles);
   const outputFormatLabelId = useId();
+  // Level A needs the same tagger as PDF/UA, so it stands or falls with that endpoint.
+  const { enabled: taggingAvailable } = useEndpointEnabled("pdf-to-ua");
 
   const pdfaFormatOptions = [
     { value: "pdfa-1", label: "PDF/A-1b" },
     { value: "pdfa-2b", label: "PDF/A-2b" },
     { value: "pdfa-3b", label: "PDF/A-3b" },
     // Level A is level B plus accessibility: it additionally tags the document.
-    { value: "pdfa-1a", label: "PDF/A-1a (accessible)" },
-    { value: "pdfa-2a", label: "PDF/A-2a (accessible)" },
-    { value: "pdfa-3a", label: "PDF/A-3a (accessible)" },
+    ...(taggingAvailable === false
+      ? []
+      : [
+          { value: "pdfa-1a", label: "PDF/A-1a (accessible)" },
+          { value: "pdfa-2a", label: "PDF/A-2a (accessible)" },
+          { value: "pdfa-3a", label: "PDF/A-3a (accessible)" },
+        ]),
   ];
 
   return (

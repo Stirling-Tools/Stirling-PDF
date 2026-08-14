@@ -72,6 +72,7 @@ import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -84,7 +85,6 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
@@ -94,6 +94,7 @@ import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -103,15 +104,25 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
 @Slf4j
-@RequiredArgsConstructor
 public class ConvertPDFToPDFA {
 
     private static final Pattern NON_PRINTABLE_ASCII = Pattern.compile("[^\\x20-\\x7E]");
     private final RuntimePathConfig runtimePathConfig;
     private final stirling.software.SPDF.service.VeraPDFService veraPDFService;
-    private final stirling.software.SPDF.service.ua.PdfaAccessibilityService
-            pdfaAccessibilityService;
+    // Level A needs the proprietary tagger; core builds convert at level B instead.
+    private final PdfaLevelAServiceInterface pdfaLevelAService;
     private final TempFileManager tempFileManager;
+
+    public ConvertPDFToPDFA(
+            RuntimePathConfig runtimePathConfig,
+            stirling.software.SPDF.service.VeraPDFService veraPDFService,
+            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService,
+            TempFileManager tempFileManager) {
+        this.runtimePathConfig = runtimePathConfig;
+        this.veraPDFService = veraPDFService;
+        this.pdfaLevelAService = pdfaLevelAService;
+        this.tempFileManager = tempFileManager;
+    }
 
     private static final String ICC_RESOURCE_PATH = "/icc/sRGB2014.icc";
     private static final int PDFA_COMPATIBILITY_POLICY = 1;
@@ -1822,11 +1833,18 @@ public class ConvertPDFToPDFA {
     }
 
     /** Tags a converted PDF/A for level A; must run after Ghostscript, which discards tags. */
-    private stirling.software.SPDF.service.ua.PdfaAccessibilityService.Result applyLevelA(
+    private PdfaLevelAServiceInterface.Result applyLevelA(
             byte[] converted, PdfaProfile profile, String baseFileName, boolean declarePdfUa) {
         if (!profile.requiresTagging()) {
-            return new stirling.software.SPDF.service.ua.PdfaAccessibilityService.Result(
-                    converted, true, List.of());
+            return new PdfaLevelAServiceInterface.Result(converted, true, List.of());
+        }
+        if (pdfaLevelAService == null) {
+            return new PdfaLevelAServiceInterface.Result(
+                    converted,
+                    false,
+                    List.of(
+                            "Level A tagging is not available in this build, so the file was left"
+                                    + " at conformance level B."));
         }
         // Prefer the document's own title/language; hardcoding "en" mislabelled German reports.
         String language = null;
@@ -1837,8 +1855,8 @@ public class ConvertPDFToPDFA {
         } catch (IOException e) {
             log.debug("Could not read existing title/language: {}", e.getMessage());
         }
-        stirling.software.SPDF.service.ua.PdfaAccessibilityService.Result result =
-                pdfaAccessibilityService.upgradeToLevelA(
+        PdfaLevelAServiceInterface.Result result =
+                pdfaLevelAService.upgradeToLevelA(
                         converted,
                         profile.getPart(),
                         language,

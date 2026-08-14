@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
 
 @Service
 @Slf4j
@@ -51,12 +53,16 @@ public class EndpointConfiguration {
     private Map<String, DisableReason> groupDisableReasons = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
+    private final boolean pdfUaAvailable;
 
     public EndpointConfiguration(
             ApplicationProperties applicationProperties,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
+            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService) {
         this.applicationProperties = applicationProperties;
         this.runningProOrHigher = runningProOrHigher;
+        // The PDF/UA tagger ships in the proprietary module, and so do its endpoints.
+        this.pdfUaAvailable = pdfaLevelAService != null;
         init();
         processEnvironmentConfigs();
     }
@@ -634,6 +640,11 @@ public class EndpointConfiguration {
         }
         if (!runningProOrHigher) {
             disableGroup("enterprise");
+        }
+
+        if (!pdfUaAvailable) {
+            disableEndpoint("pdf-to-ua");
+            disableEndpoint("accessibility-report");
         }
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {

@@ -42,6 +42,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -63,16 +64,12 @@ class ConvertPDFToPDFAMoreTest {
 
     @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private VeraPDFService veraPDFService;
+    @Mock private PdfaLevelAServiceInterface pdfaLevelAService;
     @Mock private TempFileManager tempFileManager;
 
     private ConvertPDFToPDFA newController() {
         return new ConvertPDFToPDFA(
-                runtimePathConfig,
-                veraPDFService,
-                new stirling.software.SPDF.service.ua.PdfaAccessibilityService(
-                        new stirling.software.SPDF.service.ua.PdfUaValidationService(),
-                        veraPDFService),
-                tempFileManager);
+                runtimePathConfig, veraPDFService, pdfaLevelAService, tempFileManager);
     }
 
     private static ResponseEntity<Resource> streamingOk(byte[] bytes) {

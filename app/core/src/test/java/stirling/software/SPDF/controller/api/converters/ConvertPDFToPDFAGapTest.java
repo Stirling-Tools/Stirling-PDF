@@ -46,6 +46,7 @@ import stirling.software.SPDF.model.api.converters.PdfToPdfARequest;
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
 import stirling.software.common.util.TempFileManager;
 
 /**
@@ -62,16 +63,12 @@ class ConvertPDFToPDFAGapTest {
 
     @Mock private RuntimePathConfig runtimePathConfig;
     @Mock private VeraPDFService veraPDFService;
+    @Mock private PdfaLevelAServiceInterface pdfaLevelAService;
     @Mock private TempFileManager tempFileManager;
 
     private ConvertPDFToPDFA newController() {
         return new ConvertPDFToPDFA(
-                runtimePathConfig,
-                veraPDFService,
-                new stirling.software.SPDF.service.ua.PdfaAccessibilityService(
-                        new stirling.software.SPDF.service.ua.PdfUaValidationService(),
-                        veraPDFService),
-                tempFileManager);
+                runtimePathConfig, veraPDFService, pdfaLevelAService, tempFileManager);
     }
 
     // ---- reflection helpers ----------------------------------------------------------------
