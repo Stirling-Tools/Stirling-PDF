@@ -22,8 +22,8 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 /**
  * Builds the Pipelines overview: one row per policy the caller's team built on the Pipelines page,
  * with its sources resolved to live display names, its steps, and a trigger/output summary.
- * Frontend/catalogue policies (marked by a {@code categoryId} in their output options) belong to the
- * user-facing Policies page and are excluded; a folder-watch trigger is not a signal.
+ * Frontend/catalogue policies (marked by a {@code categoryId} in their output options) belong to
+ * the user-facing Policies page and are excluded; a folder-watch trigger is not a signal.
  */
 @Service
 @RequiredArgsConstructor
