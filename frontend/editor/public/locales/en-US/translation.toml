@@ -5055,6 +5055,14 @@ title = "Upload from Mobile"
 tags = "Multi Tool,Multi operation,UI,click drag,front end,client side,interactive,intractable,move,delete,migrate,divide"
 title = "PDF Multi Tool"
 
+[navFooter]
+openEditor = "Open PDF Editor"
+openProcessor = "Open PDF Processor"
+
+[navFooter.credits]
+count = "{{remaining}} of {{total}}"
+label = "Free credits"
+
 [oauth.error]
 message = "Authentication was not successful. You can close this window and try again."
 title = "Authentication Failed"
@@ -7621,7 +7629,6 @@ integrations = "Integrations"
 pipelines = "Pipelines"
 policies = "Policies"
 procurement = "Procurement"
-settings = "Settings"
 sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"

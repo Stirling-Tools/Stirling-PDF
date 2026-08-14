@@ -22,13 +22,14 @@ import {
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useAuth } from "@app/auth/UseSession";
-import { useProfilePictureUrl } from "@app/hooks/useProfilePictureUrl";
+import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
+import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
+import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
+import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import {
   useIndexedDB,
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
-import { accountService } from "@app/services/accountService";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { AppSwitcher } from "@app/components/shared/AppSwitcher";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
@@ -38,7 +39,6 @@ import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import SettingsIcon from "@mui/icons-material/Settings";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
@@ -241,43 +241,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
 
-    // Each auth layer derives its own displayName from its native user shape.
-    // Fall back to the proprietary REST endpoint only when the auth
-    // context yields nothing - then to "User" as a generic last resort.
-    const { displayName: authDisplayName, isAnonymous } = useAuth();
-    const [accountUsername, setAccountUsername] = useState<string | null>(null);
-    const displayName =
-      authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
-
-    const profilePictureUrl = useProfilePictureUrl();
-    const [pictureFailed, setPictureFailed] = useState(false);
-    useEffect(() => setPictureFailed(false), [profilePictureUrl]);
-    const showProfilePicture = !!profilePictureUrl && !pictureFailed;
-
-    useEffect(() => {
-      if (!config?.enableLogin) {
-        setAccountUsername(null);
-        return;
-      }
-      if (authDisplayName) {
-        // The auth context has a name; don't bother hitting the REST
-        // endpoint, but clear any stale cached value from a prior call.
-        setAccountUsername(null);
-        return;
-      }
-      accountService
-        .getAccountData()
-        .then((data) => {
-          // Always reflect the latest result - including clearing it on
-          // sign-out, when the endpoint returns no username (or 401s into
-          // the catch branch below). Without this, signing out would leave
-          // the old username on screen.
-          setAccountUsername(data?.username ?? null);
-        })
-        .catch(() => {
-          setAccountUsername(null);
-        });
-    }, [config?.enableLogin, authDisplayName]);
+    const { displayName, profilePictureUrl, isAnonymous } =
+      useAccountIdentity();
+    const credits = useFreeCreditsSummary();
+    const otherApp = useOtherAppSwitch();
 
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
@@ -1264,70 +1231,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         {/* Getting-started checklist, floating above the footer (SaaS only). */}
         <SidebarChecklistSlot collapsed={collapsed} />
 
-        {/* Box 3 — account footer (avatar + name + settings). */}
-        <NavSurface className="file-sidebar-footer-box">
-          {/* Bottom bar: user name + settings */}
-          <Tooltip
-            label={
-              onOpenSettings
-                ? `${displayName} - ${t("fileSidebar.openSettings", "Open settings")}`
-                : displayName
-            }
-            position="right"
-            withinPortal
-            disabled={!collapsed}
-          >
-            <div
-              className="file-sidebar-bottom-bar"
-              onClick={onOpenSettings}
-              role={onOpenSettings ? "button" : undefined}
-              tabIndex={onOpenSettings ? 0 : undefined}
-              onKeyDown={
-                onOpenSettings
-                  ? (e) => e.key === "Enter" && onOpenSettings()
-                  : undefined
-              }
-              data-testid={onOpenSettings ? "config-button" : undefined}
-              data-tour={onOpenSettings ? "config-button" : undefined}
-              aria-label={
-                onOpenSettings
-                  ? t("fileSidebar.openSettings", "Open settings")
-                  : displayName
-              }
-              style={onOpenSettings ? { cursor: "pointer" } : undefined}
-            >
-              <div
-                className={`file-sidebar-bottom-avatar${
-                  showProfilePicture
-                    ? " file-sidebar-bottom-avatar--picture"
-                    : ""
-                }`}
-                aria-label={displayName}
-              >
-                {showProfilePicture ? (
-                  <img
-                    src={profilePictureUrl}
-                    alt=""
-                    className="file-sidebar-bottom-avatar-img"
-                    onError={() => setPictureFailed(true)}
-                  />
-                ) : (
-                  displayName.charAt(0).toUpperCase()
-                )}
-              </div>
-              {!collapsed && (
-                <span className="file-sidebar-bottom-name sidebar-content-fade">
-                  {displayName}
-                </span>
-              )}
-              {onOpenSettings && !collapsed && (
-                <div className="file-sidebar-bottom-settings">
-                  <SettingsIcon sx={{ fontSize: "1.1rem" }} />
-                </div>
-              )}
-            </div>
-          </Tooltip>
-        </NavSurface>
+        {/* Box 3 — the shared footer: credits, app switch, account row. */}
+        <NavFooter
+          className="file-sidebar-footer-box"
+          displayName={displayName}
+          profilePictureUrl={profilePictureUrl}
+          onOpenSettings={onOpenSettings}
+          credits={credits}
+          otherApp={otherApp}
+          collapsed={collapsed}
+        />
       </div>
     );
   },

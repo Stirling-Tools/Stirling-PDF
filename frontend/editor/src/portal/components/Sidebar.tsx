@@ -2,6 +2,9 @@ import { useMediaQuery } from "@mantine/hooks";
 import { Tooltip } from "@mantine/core";
 import { ActionIcon, NavItem, NavSurface } from "@app/ui";
 import { BrandSwitcher } from "@app/components/shared/BrandSwitcher";
+import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
+import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
+import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
 import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +13,7 @@ import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { CloseIcon, SettingsIcon } from "@portal/components/icons";
+import { CloseIcon } from "@portal/components/icons";
 import {
   GROUP_PROCESSOR,
   GROUP_PLATFORM,
@@ -41,6 +44,8 @@ export function Sidebar() {
   const isMobile = useMediaQuery(MOBILE_QUERY, false, {
     getInitialValueInEffect: false,
   });
+  const { displayName, profilePictureUrl } = useAccountIdentity();
+  const credits = useFreeCreditsSummary();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
   // off-canvas drawer, so the icon-rail state never applies there.
@@ -146,15 +151,16 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <NavSurface className="portal-sidebar__footer">
-        <LinkAccountFooterItem />
-        <NavItem
-          id="settings"
-          label={t("portal.nav.settings")}
-          icon={<SettingsIcon />}
-          onClick={() => openSettings()}
-        />
-      </NavSurface>
+      <NavFooter
+        className="portal-sidebar__footer"
+        displayName={displayName}
+        profilePictureUrl={profilePictureUrl}
+        onOpenSettings={openSettings}
+        credits={credits}
+        otherApp={{ app: "editor", onOpen: goToEditor }}
+        accountExtras={<LinkAccountFooterItem />}
+        collapsed={collapsed}
+      />
     </aside>
   );
 }
