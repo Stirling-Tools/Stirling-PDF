@@ -41,7 +41,10 @@ import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
-import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
+import {
+  useLazyThumbnail,
+  useDiskThumbnail,
+} from "@app/hooks/useLazyThumbnail";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
 
@@ -1602,6 +1605,7 @@ function DiskFileCard({
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
+  const thumbnail = useDiskThumbnail(entry);
   const extension = entry.name.includes(".")
     ? entry.name.split(".").pop()!.toUpperCase()
     : "";
@@ -1618,14 +1622,18 @@ function DiskFileCard({
       title={entry.path}
     >
       <div className="files-page-card-thumb">
-        <div className="files-page-card-thumb-fallback">
-          {isPdf ? (
-            <PictureAsPdfIcon style={{ fontSize: "2rem" }} />
-          ) : (
-            <InsertDriveFileIcon style={{ fontSize: "2rem" }} />
-          )}
-          <span>{extension || "FILE"}</span>
-        </div>
+        {thumbnail ? (
+          <img src={thumbnail} alt="" draggable={false} />
+        ) : (
+          <div className="files-page-card-thumb-fallback">
+            {isPdf ? (
+              <PictureAsPdfIcon style={{ fontSize: "2rem" }} />
+            ) : (
+              <InsertDriveFileIcon style={{ fontSize: "2rem" }} />
+            )}
+            <span>{extension || "FILE"}</span>
+          </div>
+        )}
         <div className="files-page-card-origin">
           <FileOriginBadge origin="disk" compact />
         </div>
@@ -1677,6 +1685,7 @@ function DiskFileRow({
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
+  const thumbnail = useDiskThumbnail(entry);
   const ext = entry.name.includes(".")
     ? entry.name.split(".").pop()!.toUpperCase()
     : "";
@@ -1701,7 +1710,19 @@ function DiskFileRow({
           minWidth: 0,
         }}
       >
-        {ext === "PDF" ? (
+        {thumbnail ? (
+          <img
+            src={thumbnail}
+            alt=""
+            draggable={false}
+            style={{
+              width: "1.5rem",
+              height: "1.5rem",
+              objectFit: "cover",
+              borderRadius: "0.25rem",
+            }}
+          />
+        ) : ext === "PDF" ? (
           <PictureAsPdfIcon fontSize="small" />
         ) : (
           <InsertDriveFileIcon fontSize="small" />

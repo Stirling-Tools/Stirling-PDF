@@ -3,6 +3,7 @@ import type { FileId } from "@app/types/file";
 import { useFileManagement } from "@app/contexts/FileContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import { readDiskFile } from "@app/services/localFolderContents";
 
 const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
 
@@ -15,7 +16,7 @@ const LAZY_THUMB_CONCURRENCY = 2;
 let activeLazyThumbs = 0;
 const lazyThumbQueue: Array<() => Promise<void>> = [];
 
-function scheduleLazyThumb(task: () => Promise<void>): void {
+export function scheduleLazyThumb(task: () => Promise<void>): void {
   lazyThumbQueue.push(task);
   drainLazyThumbQueue();
 }
@@ -77,6 +78,74 @@ export function useLazyThumbnail(
       cancelled = true;
     };
   }, [fileId, size, thumbnailUrl, indexedDB, updateStirlingFileStub]);
+
+  return thumb;
+}
+
+// ─── thumbnails for files listed straight off a mounted directory ─────────
+
+/**
+ * Cache keyed by path + mtime + size, so an unchanged file never renders
+ * twice and an edited one re-renders. Bounded: a mounted Downloads folder can
+ * list hundreds of files, and each generation reads the file's FULL bytes off
+ * disk, so the cache is what makes revisits and re-sorts free.
+ */
+const diskThumbCache = new Map<string, string>();
+const DISK_THUMB_CACHE_CAP = 300;
+
+/**
+ * Thumbnail for a disk-listed file, through the same generator and the same
+ * concurrency gate as stored files — a mounted folder's rows fill in
+ * progressively alongside everything else instead of stampeding the disk.
+ * Returns undefined while pending, unsupported, or too large (placeholder
+ * icon stays).
+ */
+export function useDiskThumbnail(entry: {
+  path: string;
+  name: string;
+  sizeBytes: number;
+  lastModified: number;
+}): string | undefined {
+  const key = `${entry.path}|${entry.lastModified}|${entry.sizeBytes}`;
+  const [thumb, setThumb] = useState<string | undefined>(() => {
+    const hit = diskThumbCache.get(key);
+    return hit === "" ? undefined : hit;
+  });
+
+  useEffect(() => {
+    const cached = diskThumbCache.get(key);
+    if (cached !== undefined) {
+      setThumb(cached === "" ? undefined : cached);
+      return;
+    }
+    if (entry.sizeBytes >= THUMBNAIL_SIZE_LIMIT) return;
+    let cancelled = false;
+    scheduleLazyThumb(async () => {
+      if (cancelled || diskThumbCache.has(key)) return;
+      try {
+        const file = await readDiskFile(entry);
+        if (!file || cancelled) return;
+        const url = await generateThumbnailForFile(file);
+        if (diskThumbCache.size >= DISK_THUMB_CACHE_CAP) {
+          // Maps iterate in insertion order; dropping the first entry makes
+          // this FIFO — crude, but revisits re-generate rather than grow.
+          const oldest = diskThumbCache.keys().next().value;
+          if (oldest !== undefined) diskThumbCache.delete(oldest);
+        }
+        // "" is cached too: a failed/oversized render should not retry on
+        // every re-mount of the same row.
+        diskThumbCache.set(key, url);
+        if (!cancelled && url) setThumb(url);
+      } catch {
+        diskThumbCache.set(key, "");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // The key encodes every field of `entry` this effect reads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   return thumb;
 }
