@@ -93,7 +93,7 @@
 }
 
 .languagePickerLink {
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
   text-decoration: underline;
   cursor: pointer;
 }

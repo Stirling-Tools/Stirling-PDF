@@ -58,6 +58,7 @@ import {
   IndexedDBProvider,
   useIndexedDB,
 } from "@app/contexts/IndexedDBContext";
+import { onRecordUnreadable } from "@app/services/fileStorage";
 import { useZipConfirmation } from "@app/hooks/useZipConfirmation";
 import ZipWarningModal from "@app/components/shared/ZipWarningModal";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
@@ -185,6 +186,21 @@ function FileContextInner({
     setUnlockPassword("");
     setUnlockError(null);
   }, [activeEncryptedFileId]);
+
+  // Storage proved a file's bytes unreadable (WebKit losing a blob's backing
+  // store). Drop it: the viewer would otherwise spin on a document that can
+  // never load. The record stays, so a reload re-tests it.
+  useEffect(
+    () =>
+      onRecordUnreadable((fileId) => {
+        if (!stateRef.current.files.byId[fileId]) return;
+        console.error(
+          `[FileContext] dropping ${fileId} from the workbench: its stored bytes are unreadable`,
+        );
+        lifecycleManager.removeFiles([fileId], stateRef);
+      }),
+    [lifecycleManager],
+  );
 
   const handleUnlockSkip = useCallback(() => {
     if (activeEncryptedFileId) {

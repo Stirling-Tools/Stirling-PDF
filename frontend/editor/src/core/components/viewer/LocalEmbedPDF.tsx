@@ -486,7 +486,11 @@ export function LocalEmbedPDF({
       <Center h="100%" w="100%">
         <Stack align="center" gap="md">
           <div style={{ fontSize: "24px" }}>❌</div>
-          <Text c="red" size="sm" style={{ textAlign: "center" }}>
+          <Text
+            c="var(--color-red-dark)"
+            size="sm"
+            style={{ textAlign: "center" }}
+          >
             Error loading PDF engine: {error.message}
           </Text>
         </Stack>

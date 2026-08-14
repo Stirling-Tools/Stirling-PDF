@@ -37,7 +37,8 @@ jobs:
   check-comment:
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      contents: read # actions/checkout
+      issues: write # add reaction to the triggering issue comment
     if: |
       vars.CI_PROFILE != 'lite' && (
         github.event_name == 'workflow_dispatch' ||
@@ -75,15 +76,6 @@ jobs:
 
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Get PR data
         id: get-pr
@@ -155,7 +147,7 @@ jobs:
         id: add-eyes-reaction
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             console.log(`Adding eyes reaction to comment ID: ${context.payload.comment.id}`);
             try {
@@ -174,11 +166,14 @@ jobs:
             }
 
   deploy-pr:
+    environment: pr-preview
     needs: check-comment
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      contents: read # actions/checkout, incl. the PR merge ref
+      issues: write # reactions, 'pr-deployed' label, deployment URL comment
       pull-requests: write
+      packages: write # push PR image to ghcr.io
 
     steps:
       - name: Harden Runner
@@ -189,20 +184,12 @@ jobs:
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        if: github.actor != 'dependabot[bot]'
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        continue-on-error: true
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Checkout PR
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: refs/pull/${{ needs.check-comment.outputs.pr_number }}/merge
-          token: ${{ steps.setup-bot.outputs.token }}
+          # untrusted tree gets built below - never leave credentials in .git/config
+          persist-credentials: false
 
       - name: Set up JDK 25
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
@@ -216,7 +203,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
             gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
             gradle-${{ runner.os }}-${{ runner.arch }}-
@@ -240,11 +227,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
-      - name: Login to Docker Hub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_API }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
 
       - name: Build and push PR-specific image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
@@ -254,7 +246,7 @@ jobs:
           push: true
           cache-from: type=gha,scope=stirling-pdf-latest
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
+          tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:pr-${{ needs.check-comment.outputs.pr_number }}
           build-args: |
             VERSION_TAG=alpha
             PROTOTYPES_BUILD=${{ needs.check-comment.outputs.enable_prototypes }}
@@ -264,20 +256,22 @@ jobs:
         if: needs.check-comment.outputs.enable_prototypes == 'true'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
-          context: ./engine
+          context: .
           file: ./engine/Dockerfile
           push: true
           cache-from: type=gha,scope=stirling-pdf-engine
           cache-to: type=gha,mode=max,scope=stirling-pdf-engine
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
+          tags: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test:engine-pr-${{ needs.check-comment.outputs.pr_number }}
           platforms: linux/amd64
 
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Deploy to VPS
         id: deploy
         run: |
@@ -295,11 +289,11 @@ jobs:
           # Set pro/enterprise settings (enterprise implies pro)
           if [ "${{ needs.check-comment.outputs.enable_enterprise }}" == "true" ]; then
             PREMIUM_ENABLED="true"
-            PREMIUM_KEY="${{ secrets.ENTERPRISE_KEY }}"
+            PREMIUM_KEY="${ENTERPRISE_KEY}"
             PREMIUM_PROFEATURES_AUDIT_ENABLED="true"
           elif [ "${{ needs.check-comment.outputs.enable_pro }}" == "true" ]; then
             PREMIUM_ENABLED="true"
-            PREMIUM_KEY="${{ secrets.PREMIUM_KEY }}"
+            PREMIUM_KEY="${PRO_KEY}"
             PREMIUM_PROFEATURES_AUDIT_ENABLED="true"
           else
             PREMIUM_ENABLED="false"
@@ -309,7 +303,6 @@ jobs:
 
           ENABLE_PROTOTYPES="${{ needs.check-comment.outputs.enable_prototypes }}"
           PR_NUMBER="${{ needs.check-comment.outputs.pr_number }}"
-          DOCKER_USER="${{ secrets.DOCKER_HUB_USERNAME }}"
 
           # Build engine env vars for backend (only set when prototypes enabled)
           if [ "$ENABLE_PROTOTYPES" == "true" ]; then
@@ -319,9 +312,9 @@ jobs:
             ENGINE_SERVICE="
             stirling-pdf-engine:
               container_name: stirling-pdf-engine-pr-${PR_NUMBER}
-              image: ${DOCKER_USER}/test:engine-pr-${PR_NUMBER}
+              image: ${IMAGE_BASE}:engine-pr-${PR_NUMBER}
               environment:
-                ANTHROPIC_API_KEY: \"${{ secrets.ANTHROPIC_API_KEY }}\"
+                ANTHROPIC_API_KEY: \"${ANTHROPIC_API_KEY}\"
               networks:
                 - pr-network
               restart: on-failure:5"
@@ -344,7 +337,7 @@ jobs:
           services:
             stirling-pdf:
               container_name: stirling-pdf-pr-${PR_NUMBER}
-              image: ${DOCKER_USER}/test:pr-${PR_NUMBER}
+              image: ${IMAGE_BASE}:pr-${PR_NUMBER}
               ports:
                 - "${PR_NUMBER}:8080"
               volumes:
@@ -368,9 +361,9 @@ jobs:
           EOF
 
           # Then copy the file and execute commands
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${NEW_VPS_USERNAME}@${NEW_VPS_HOST}:/tmp/docker-compose.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << ENDSSH
             # Create PR-specific directories
             mkdir -p /stirling/PR-${PR_NUMBER}/{data,config,logs}
 
@@ -386,11 +379,19 @@ jobs:
           # Set output for use in PR comment
           echo "security_status=${SECURITY_STATUS}" >> $GITHUB_ENV
 
+        env:
+          ENTERPRISE_KEY: ${{ secrets.ENTERPRISE_KEY }}
+          # named PRO_KEY, not PREMIUM_KEY, so the shell var it feeds is not self-referential
+          PRO_KEY: ${{ secrets.PREMIUM_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          IMAGE_BASE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-test
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
       - name: Add success reaction to comment
         if: success() && github.event_name == 'issue_comment'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             console.log(`Adding rocket reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
             try {
@@ -425,7 +426,7 @@ jobs:
         if: failure() && github.event_name == 'issue_comment'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             console.log(`Adding -1 reaction to comment ID: ${{ needs.check-comment.outputs.comment_id }}`);
             try {
@@ -444,15 +445,17 @@ jobs:
       - name: Post deployment URL to PR
         if: success()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const { GITHUB_REPOSITORY } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
             const prNumber = ${{ needs.check-comment.outputs.pr_number }};
             const securityStatus = process.env.security_status || "Security Disabled";
 
-            const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${prNumber}`;
+            const deploymentUrl = `http://${process.env.NEW_VPS_HOST}:${prNumber}`;
             const commentBody = `## 🚀 PR Test Deployment\n\n` +
                               `Your PR has been deployed for testing!\n\n` +
                               `🔗 **Test URL:** [${deploymentUrl}](${deploymentUrl})\n` +
@@ -477,6 +480,9 @@ jobs:
   handle-label-commands:
     if: ${{ github.event.issue.pull_request != null }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # actions/checkout, reads repo_devs.json and labels.yml
+      issues: write # add/remove labels, delete the command comment
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -486,17 +492,10 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Apply label commands
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const fs = require('fs');
             const path = require('path');

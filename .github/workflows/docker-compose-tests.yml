@@ -44,7 +44,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
             gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
             gradle-${{ runner.os }}-${{ runner.arch }}-
@@ -69,16 +69,17 @@ jobs:
           sudo curl -SL "https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: "3.12"
-          cache: "pip" # caching pip dependencies
-          cache-dependency-path: ./testing/cucumber/requirements.txt
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
 
-      - name: Pip requirements
+      - name: Install Cucumber and coverage dependencies
         run: |
-          pip install --require-hashes --only-binary=:all: -r ./testing/cucumber/requirements.txt
+          uv sync --project engine --locked --group cucumber --group tools
 
       - name: Extract JaCoCo agent for cucumber coverage
         # Stages build/jacoco/jacocoagent.jar where the coverage override
@@ -121,16 +122,10 @@ jobs:
             echo "report=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Install defusedxml for coverage summary
-        # coverage-summary.py parses JaCoCo XML through defusedxml -
-        # see the script header for context.
-        if: always() && steps.cucumber-coverage.outputs.report == 'true'
-        run: python -m pip install --quiet defusedxml
-
       - name: Cucumber coverage step summary
         if: always() && steps.cucumber-coverage.outputs.report == 'true'
         run: |
-          python scripts/coverage-summary.py \
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
             --title "Cucumber (docker) JaCoCo coverage" \
             --jacoco "cucumber=build/reports/jacoco/cucumber/jacocoTestReport.xml" \
             --github-step-summary
