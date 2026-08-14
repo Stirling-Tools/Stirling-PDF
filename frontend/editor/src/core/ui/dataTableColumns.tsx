@@ -97,7 +97,7 @@ export function renderCellActions(actions: CellAction[]): ReactNode {
           <Dropdown.Root key={a.label}>
             <Dropdown.Trigger>
               <Button
-                variant={a.iconOnly ? "quiet" : "tertiary"}
+                variant={a.iconOnly ? "tertiary" : "secondary"}
                 size="sm"
                 shape={a.iconOnly ? "circle" : undefined}
                 leftSection={a.glyph ? <KebabGlyph /> : undefined}
@@ -128,7 +128,7 @@ export function renderCellActions(actions: CellAction[]): ReactNode {
         ) : (
           <Button
             key={a.label}
-            variant={a.iconOnly ? "quiet" : "tertiary"}
+            variant={a.iconOnly ? "tertiary" : "secondary"}
             accent={a.tone === "danger" ? "danger" : undefined}
             size="sm"
             shape={a.iconOnly ? "circle" : undefined}
