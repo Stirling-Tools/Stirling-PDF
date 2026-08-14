@@ -986,6 +986,11 @@ main() {
         else
             mkdir -p "$PROJECT_ROOT/testing/cucumber-coverage"
             rm -f "$PROJECT_ROOT/testing/cucumber-coverage/cucumber.exec"
+            # The application runs as a non-root container user whose UID is
+            # different from the GitHub runner. Pre-create only the output
+            # file as writable so JaCoCo can truncate it without making the
+            # entire bind-mounted directory world-writable.
+            install -m 0666 /dev/null "$PROJECT_ROOT/testing/cucumber-coverage/cucumber.exec"
             COVERAGE_COMPOSE_FILE="$PROJECT_ROOT/testing/compose/docker-compose-coverage.override.yml"
             echo "Cucumber JaCoCo coverage enabled - exec will land at testing/cucumber-coverage/cucumber.exec"
         fi
