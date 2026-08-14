@@ -111,7 +111,11 @@ interface FilesPageContextValue {
   openNewFolderDialog: (parentId?: FolderId | null) => void;
   openRenameFolderDialog: (folder: FolderRecord) => void;
   closeFolderNameDialog: () => void;
-  submitFolderName: (name: string, kind?: FolderKind) => Promise<void>;
+  submitFolderName: (
+    name: string,
+    kind?: FolderKind,
+    directory?: string,
+  ) => Promise<void>;
 
   moveDialog: MoveDialogState;
   promptMoveFiles: (fileIds: FileId[]) => void;
@@ -264,8 +268,14 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const submitFolderName = useCallback(
-    async (name: string, kind?: FolderKind) => {
+    async (name: string, kind?: FolderKind, directory?: string) => {
       if (folderNameDialog.mode === "new") {
+        if (kind === "local" && directory) {
+          // Mounting, not creating: the directory already exists on disk and
+          // the record just points at it.
+          await folders.mountLocalFolder(directory, name);
+          return;
+        }
         // The kind only matters at the root; a subfolder inherits its
         // parent's kind in the context regardless of what is passed.
         await folders.createFolder(
@@ -620,10 +630,24 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const promptDeleteFolder = useCallback(
     (folder: FolderRecord) => {
+      if (folderKind(folder) === "local") {
+        // Removing a mount destroys nothing — the record goes, the directory
+        // and every file in it stay — so there is nothing to warn about and
+        // the delete dialog's "what about the files?" question would be a
+        // scary lie. Remove directly.
+        void folders.deleteFolder(folder.id).catch((err) => {
+          folders.setError(
+            err instanceof Error
+              ? `Could not remove folder: ${err.message}`
+              : "Could not remove folder.",
+          );
+        });
+        return;
+      }
       const fileCount = filesInSubtree(folder.id).length;
       setDeleteFolderDialog({ folder, fileCount });
     },
-    [filesInSubtree],
+    [filesInSubtree, folders],
   );
 
   const deleteFolder = useCallback(

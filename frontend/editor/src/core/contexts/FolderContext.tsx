@@ -27,6 +27,7 @@ import React, {
 
 import { folderStorage } from "@app/services/folderStorage";
 import { virtualFolderStorage } from "@app/services/virtualFolderStorage";
+import { localFolderStorage } from "@app/services/localFolderStorage";
 import { folderSyncService } from "@app/services/folderSyncService";
 import {
   FolderBreadcrumbEntry,
@@ -113,6 +114,12 @@ interface FolderContextValue {
     appearance: { color?: string; icon?: string | null },
   ) => Promise<FolderRecord | null>;
   deleteFolder: (id: FolderId) => Promise<FolderId[]>;
+  /**
+   * Mount a directory on the machine as a local folder. Idempotent per
+   * directory. Removing the mount later goes through {@link deleteFolder};
+   * the directory itself is never touched by either.
+   */
+  mountLocalFolder: (directory: string, name: string) => Promise<FolderRecord>;
 
   getChildFolderIds: (parentId: FolderId | null) => FolderId[];
   isDescendant: (candidateId: FolderId, ancestorId: FolderId | null) => boolean;
@@ -282,12 +289,13 @@ export function FolderProvider({ children }: FolderProviderProps) {
     try {
       // Two systems of record: the server cache and the browser-owned virtual
       // store. The UI sees one list; kind says which rules each row follows.
-      const [server, virtual] = await Promise.all([
+      const [server, virtual, local] = await Promise.all([
         folderStorage.getAllFolders(),
         virtualFolderStorage.getAllFolders(),
+        localFolderStorage.getAllFolders(),
       ]);
       if (!mountedRef.current) return;
-      setFolders([...server, ...virtual]);
+      setFolders([...server, ...virtual, ...local]);
     } catch (err) {
       console.error("[FolderContext] cache read failed", err);
       if (mountedRef.current) {
@@ -730,12 +738,18 @@ export function FolderProvider({ children }: FolderProviderProps) {
     async (id: FolderId): Promise<FolderId[]> => {
       const kind = requireKind(id);
       if (kind === "local") {
-        // Removing the mount is the mounting feature's job; deleting the
-        // directory itself is nobody's job but the user's, in their file
-        // explorer.
-        throw new Error(
-          "Local folders are removed by the feature that mounted them",
-        );
+        // Removing the mount removes the record and nothing else — the
+        // directory on disk is the user's, always.
+        await localFolderStorage.removeFolder(id);
+        if (mountedRef.current) {
+          setError(null);
+          setFolders((prev) => prev.filter((f) => f.id !== id));
+          if (currentFolderId === id) {
+            setCurrentFolderId(ROOT_FOLDER_ID);
+          }
+        }
+        bumpFolderRevision();
+        return [id];
       }
       if (kind === "virtual") {
         // Same shape as the server path below: subtree delete, strand-reset,
@@ -829,6 +843,22 @@ export function FolderProvider({ children }: FolderProviderProps) {
     ],
   );
 
+  const mountLocalFolder = useCallback(
+    async (directory: string, name: string): Promise<FolderRecord> => {
+      const record = await localFolderStorage.mountDirectory(directory, name);
+      if (mountedRef.current) {
+        setError(null);
+        // Idempotent mount can hand back a record that's already listed.
+        setFolders((prev) =>
+          prev.some((f) => f.id === record.id) ? prev : [...prev, record],
+        );
+      }
+      bumpFolderRevision();
+      return record;
+    },
+    [bumpFolderRevision],
+  );
+
   const value = useMemo<FolderContextValue>(
     () => ({
       folders,
@@ -844,6 +874,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
       refresh,
       pullFromServer,
       createFolder,
+      mountLocalFolder,
       renameFolder,
       moveFolder,
       updateFolderAppearance,
@@ -863,6 +894,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
       refresh,
       pullFromServer,
       createFolder,
+      mountLocalFolder,
       renameFolder,
       moveFolder,
       updateFolderAppearance,

@@ -497,6 +497,15 @@ export const DATABASE_CONFIGS = {
       // every pull, and these rows have no server copy to be restored from.
       // NOT named smart_folders/folder_members/folder_run_states — the upgrade
       // cleanup above deletes stores by those names.
+      // Folders mounted from a directory on the machine (kind "local"). Flat
+      // by construction — a mount has no parent, and its subdirectories are
+      // the filesystem's business. Same lifecycle reasoning as
+      // virtual_folders: browser-owned, so never in the server-synced cache.
+      {
+        name: "local_folders",
+        keyPath: "id",
+        indexes: [{ name: "name", keyPath: "name", unique: false }],
+      },
       {
         name: "virtual_folders",
         keyPath: "id",

@@ -429,6 +429,7 @@ describe("IndexedDB migration (FILES store)", () => {
 
     const stores = await getObjectStoreNames();
     expect(stores).toContain("virtual_folders");
+    expect(stores).toContain("local_folders");
     expect(stores).toContain("files");
     expect(stores).toContain("folders");
 

@@ -65,6 +65,7 @@ import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { canPickDirectory } from "@app/services/directoryPicker";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
@@ -816,34 +817,47 @@ export default function FileManagerView() {
     [selectedFiles, fileMap],
   );
 
-  // Kinds a ROOT-level New folder may be. Server needs storage, a session,
-  // and a reachable backend; virtual needs nothing — that's its point. A
-  // subfolder gets no choice (it inherits its parent's kind), and a single
-  // option renders no chooser.
-  const newFolderKindOptions = useMemo(() => {
-    const serverViable =
-      uploadEnabled && !signInRequiredReason && folders.serverReachable;
+  // Choices a ROOT-level New folder offers. Every kind is listed — an option
+  // this install can't provide renders greyed with the reason as its tooltip
+  // (the treatment the New folder button itself used to get), so the user
+  // learns the capability exists rather than never seeing it. A subfolder
+  // gets no chooser: it inherits its parent's kind.
+  const newFolderKindChoices = useMemo(() => {
     const creatingAtRoot =
       folderNameDialog.mode === "new" &&
       (folderNameDialog.parentId ?? null) === null;
     if (!creatingAtRoot) return undefined;
-    return serverViable
-      ? (["server", "virtual"] as const)
-      : (["virtual"] as const);
+    const serverDisabledReason =
+      signInRequiredReason ??
+      (!uploadEnabled || !folders.serverReachable
+        ? t(
+            "filesPage.newFolderStorageDisabled",
+            "Server folder storage isn't enabled. Ask your admin to turn it on.",
+          )
+        : undefined);
+    return [
+      {
+        kind: "local" as const,
+        disabledReason: canPickDirectory
+          ? undefined
+          : t(
+              "filesPage.folderKindChoice.localUnavailable",
+              "Available in the desktop app, which can see your disk.",
+            ),
+      },
+      { kind: "virtual" as const },
+      { kind: "server" as const, disabledReason: serverDisabledReason },
+    ];
   }, [
-    uploadEnabled,
-    signInRequiredReason,
-    folders.serverReachable,
     folderNameDialog,
+    signInRequiredReason,
+    uploadEnabled,
+    folders.serverReachable,
+    t,
   ]);
 
   // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
-    // Guests can't use cloud folders at all - say so before any tab/storage
-    // hint, since switching tabs wouldn't help them.
-    if (signInRequiredReason) {
-      return signInRequiredReason;
-    }
     if (currentTab === "local") {
       return t(
         "filesPage.localFoldersUnavailable",
@@ -860,23 +874,11 @@ export default function FileManagerView() {
         "Switch to All or Cloud to create folders.",
       );
     }
-    // Only server folders need the server. On an install without server
-    // storage, New folder creates a virtual (browser-owned) folder, so the
-    // control stays live — that's what lets a desktop user organise at all.
-    if (uploadEnabled && !folders.serverReachable) {
-      return t(
-        "filesPage.newFolderStorageDisabled",
-        "Server folder storage isn't enabled. Ask your admin to turn it on.",
-      );
-    }
+    // Reachability and storage no longer disable the button: those only rule
+    // out the server option, which the dialog now greys out individually —
+    // browser and disk folders remain creatable regardless.
     return null;
-  }, [
-    signInRequiredReason,
-    currentTab,
-    uploadEnabled,
-    folders.serverReachable,
-    t,
-  ]);
+  }, [currentTab, t]);
 
   return (
     <div className="files-page" ref={dropZoneRef}>
@@ -1653,9 +1655,7 @@ export default function FileManagerView() {
             ? t("filesPage.save", "Save")
             : t("filesPage.create", "Create")
         }
-        kindOptions={
-          newFolderKindOptions ? [...newFolderKindOptions] : undefined
-        }
+        kindChoices={newFolderKindChoices}
         onClose={closeFolderNameDialog}
         onSubmit={submitFolderName}
       />

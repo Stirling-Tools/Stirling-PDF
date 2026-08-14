@@ -597,6 +597,18 @@ function FolderCard({
             >
               {t("filesPage.open", "Open")}
             </Menu.Item>
+            {editsHidden && (
+              <Menu.Item
+                color="red"
+                leftSection={<DeleteIcon fontSize="small" />}
+                onClick={onDelete}
+              >
+                {t(
+                  "filesPage.removeLocalFolder",
+                  "Remove (files stay on disk)",
+                )}
+              </Menu.Item>
+            )}
             {!editsHidden && (
               <>
                 <Menu.Item
@@ -1234,6 +1246,18 @@ function FolderRow({
             >
               {t("filesPage.open", "Open")}
             </Menu.Item>
+            {editsHidden && (
+              <Menu.Item
+                color="red"
+                leftSection={<DeleteIcon fontSize="small" />}
+                onClick={onDelete}
+              >
+                {t(
+                  "filesPage.removeLocalFolder",
+                  "Remove (files stay on disk)",
+                )}
+              </Menu.Item>
+            )}
             {!editsHidden && (
               <>
                 <Menu.Item

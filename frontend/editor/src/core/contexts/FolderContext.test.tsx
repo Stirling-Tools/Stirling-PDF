@@ -105,6 +105,14 @@ vi.mock("@app/services/virtualFolderStorage", () => ({
   },
 }));
 
+vi.mock("@app/services/localFolderStorage", () => ({
+  localFolderStorage: {
+    getAllFolders: vi.fn(() => Promise.resolve([])),
+    mountDirectory: vi.fn(),
+    removeFolder: vi.fn(() => Promise.resolve()),
+  },
+}));
+
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({
     clearFolderForFiles: vi.fn().mockResolvedValue(undefined),
