@@ -193,6 +193,56 @@ class OcrRuntimeServiceTest {
         }
     }
 
+    /**
+     * The install endpoints are deliberately reachable without an admin role, so on a self-hosted
+     * server any user can trigger a download. A catalogue that named loopback or a cloud metadata
+     * address would turn that into an SSRF probe - which is what Aikido flagged on this code.
+     */
+    @Nested
+    @DisplayName("server-side fetch guard")
+    class FetchGuard {
+
+        private OcrRuntimeService serviceWithCatalogue(String manifestUrl) {
+            ApplicationProperties properties = new ApplicationProperties();
+            properties.getSystem().getOcr().setManifestUrl(manifestUrl);
+            return new OcrRuntimeService(properties);
+        }
+
+        @Test
+        @DisplayName("a public catalogue may not send the server to loopback")
+        void refusesLoopbackFromPublicCatalogue() throws IOException {
+            OcrRuntimeService svc =
+                    serviceWithCatalogue("https://example.invalid/ocr-manifest.json");
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            "https://127.0.0.1/engine.zip", 1, "0".repeat(64), null, "engine");
+
+            IOException e =
+                    assertThrows(
+                            IOException.class,
+                            () -> svc.download(artifact, tmp.resolve("out.bin"), "engine"));
+
+            assertTrue(e.getMessage().contains("must not reach"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("a local catalogue may name local artefacts, which is how a mirror works")
+        void allowsInternalWhenCatalogueIsLocal() throws IOException {
+            // The point of the setting is air-gapped and corporate installs: a mirror's catalogue
+            // lists artefacts on the same internal network, so banning private addresses outright
+            // would break the feature this exists for.
+            Path source = fileWith("mirror.bin", "engine");
+            OcrRuntimeService svc = serviceWithCatalogue(fileUrl(tmp.resolve("catalogue.json")));
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            fileUrl(source), Files.size(source), sha256(source), null, "engine");
+
+            svc.download(artifact, tmp.resolve("mirrored.bin"), "engine");
+
+            assertTrue(Files.exists(tmp.resolve("mirrored.bin")));
+        }
+    }
+
     @Nested
     @DisplayName("validatedUri")
     class ValidatedUri {

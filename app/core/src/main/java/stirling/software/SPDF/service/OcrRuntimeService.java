@@ -3,8 +3,10 @@ package stirling.software.SPDF.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -33,6 +35,7 @@ import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.ChecksumUtils;
+import stirling.software.common.util.GeneralUtils;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -405,6 +408,7 @@ public class OcrRuntimeService {
             throw new IOException("The OCR catalogue lists " + label + " without a SHA-256");
         }
         URI uri = validatedUri(artifact.url());
+        requireReachableFromServer(uri);
         progress.set(new Progress(label, 0, artifact.size()));
         long written = 0;
         // Copied in chunks rather than with Files.copy so the byte count can be
@@ -446,6 +450,77 @@ public class OcrRuntimeService {
      * <p>Plain http would let whoever can rewrite the traffic rewrite the manifest and the digests
      * it contains in the same breath, which makes the checksum theatre rather than a check.
      */
+    /**
+     * Refuses to fetch an artefact aimed somewhere the server should not reach.
+     *
+     * <p>The install endpoints are deliberately not admin-only, so on a self-hosted server any user
+     * can trigger a download. Without this, a catalogue could point the server at loopback or at a
+     * cloud metadata address and use it as a probe - the classic SSRF shape, and what Aikido
+     * flagged on this code.
+     *
+     * <p>A flat ban on private addresses would break the thing this feature exists for, though: an
+     * air-gapped or corporate install points {@code system.ocr.manifestUrl} at an internal mirror,
+     * whose artefacts are on the same internal network. So the rule follows the trust: if the
+     * operator configured a catalogue that is itself internal, its artefacts may be internal too.
+     * If the catalogue is public, nothing it names may resolve inside.
+     */
+    private void requireReachableFromServer(URI uri) throws IOException {
+        if (!"https".equalsIgnoreCase(uri.getScheme())) {
+            return; // local files never leave the machine
+        }
+        if (catalogueIsInternal()) {
+            return;
+        }
+        String host = uri.getHost();
+        if (host == null || GeneralUtils.isSensitiveHost(host)) {
+            throw new IOException(
+                    "Refusing to fetch OCR components from a host the server must not reach: "
+                            + host);
+        }
+    }
+
+    /**
+     * Whether the configured catalogue is itself an internal mirror.
+     *
+     * <p>Deliberately <em>not</em> {@code GeneralUtils.isSensitiveHost}. That one answers "should I
+     * refuse to contact this?" and so reports true when a name fails to resolve, which is right for
+     * blocking and wrong here: reusing it meant a catalogue host that simply did not resolve was
+     * read as "internal mirror" and switched the guard off altogether. A DNS failure must not open
+     * the hole it is there to close, so this only says yes when the host really does resolve
+     * inside.
+     */
+    private boolean catalogueIsInternal() {
+        try {
+            URI catalogue = new URI(manifestUrl().trim());
+            if (!"https".equalsIgnoreCase(catalogue.getScheme())) {
+                return true; // a file: catalogue is by definition a local mirror
+            }
+            String host = catalogue.getHost();
+            if (host == null) {
+                return false;
+            }
+            InetAddress[] addresses = InetAddress.getAllByName(host);
+            if (addresses.length == 0) {
+                return false;
+            }
+            for (InetAddress address : addresses) {
+                boolean internal =
+                        address != null
+                                && (address.isLoopbackAddress()
+                                        || address.isSiteLocalAddress()
+                                        || address.isLinkLocalAddress()
+                                        || address.isAnyLocalAddress());
+                if (!internal) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (URISyntaxException | UnknownHostException e) {
+            log.debug("Treating the OCR catalogue as external: {}", e.getMessage());
+            return false;
+        }
+    }
+
     static URI validatedUri(String url) throws IOException {
         if (url == null || url.isBlank()) {
             throw new IOException("No OCR catalogue address configured");
