@@ -1,25 +1,23 @@
 ###############################################################################
 # Declarative source of truth for this repo's GitHub Actions environments.
 #
-# Reconciled by .github/workflows/sync-environments.yml, which creates each
-# environment, overwrites its protection rules to match this file, and copies
-# the listed secrets in from repo/org scope.
+# Only the `secrets:` lists are applied automatically, by
+# .github/workflows/sync-environments.yml, and only additively: it creates an
+# environment if absent and sets a secret only when that environment has none by
+# that name. It never overwrites a secret and never deletes anything.
+#
+# `branches:` and `reviewers:` are DOCUMENTATION of the intended protection rules.
+# Nothing applies them - set them by hand in Settings > Environments. They are
+# recorded here so the intent is reviewable alongside the secrets.
 #
 # Rules:
 #   branches: all         -> no deployment branch policy (any ref, incl. PR and
 #                            merge-queue refs). Required for anything a PR runs.
-#             protected   -> protected branches only.
 #             [a, b, ...] -> custom policy. Prefix a tag pattern with "tag:".
 #   reviewers:            -> GitHub logins that must approve. Empty = no pause.
-#   prevent_self_review:  -> optional; defaults to true whenever reviewers are set.
-#   wait_timer:           -> optional minutes to delay; defaults to 0.
-#   secrets:              -> the environment's desired contents. A name already
-#                            present in the environment but not available at
-#                            repo/org scope is left alone; a name that exists in
-#                            neither is reported and fails the run.
-#
-# The PUT that applies this file REPLACES an environment's whole protection-rule
-# set, so anything not expressed here is cleared. Keep it complete.
+#   secrets:              -> names to fill in. One already present in the
+#                            environment is left untouched; one that exists in
+#                            neither the environment nor repo/org scope fails the run.
 #
 # Never add SCORECARD_TOKEN or ENV_BOOTSTRAP_TOKEN here: they are consumed by jobs
 # that cannot declare an environment (scorecards.yml, and the sync job itself),
@@ -36,8 +34,8 @@
 # Environments NOT listed here (saas-dev, prod, copilot) are left untouched. They
 # hold credentials no workflow in this repo reads - audit them separately.
 #
-# prune_secrets deletes anything not listed. pr-preview still holds NEW_VPS_IP,
-# which has no consumer left; pruning removes it for good.
+# pr-preview still holds NEW_VPS_IP, which has no consumer left. Nothing here
+# removes it - delete it by hand if you want it gone.
 ###############################################################################
 
 environments:
