@@ -1,11 +1,10 @@
 import { useRef, useEffect } from "react";
-import { Modal, Text, Group, Stack } from "@mantine/core";
+import { Modal, Text, Group, Stack, rem } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { IconBadge } from "@app/ui/IconBadge";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { useTranslation } from "react-i18next";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import { Z_INDEX_TOAST } from "@app/styles/zIndex";
 
 const NavigationWarningModal = () => {
@@ -72,8 +71,6 @@ const NavigationWarningModal = () => {
   const hasApply = !!handlers?.onApplyAndContinue;
   const hasExport = !!handlers?.onExportAndContinue;
 
-  const BUTTON_WIDTH = "12rem";
-
   // Only show modal if there are unsaved changes AND there's an actual pending navigation
   if (!hasUnsavedChanges || !pendingNavigation) {
     return null;
@@ -83,109 +80,71 @@ const NavigationWarningModal = () => {
     <Modal
       opened={showNavigationWarning}
       onClose={handleKeepWorking}
-      title={t("unsavedChangesTitle", "Unsaved Changes")}
       centered
-      size="auto"
+      size={rem(400)}
+      radius="lg"
+      padding="xl"
+      withCloseButton={false}
+      overlayProps={{ blur: 4, opacity: 0.4 }}
+      transitionProps={{ transition: "pop", duration: 140 }}
       closeOnClickOutside={true}
       closeOnEscape={true}
       zIndex={Z_INDEX_TOAST}
+      aria-label={t("unsavedChangesTitle", "Unsaved changes")}
     >
-      <Stack>
-        <Stack ta="center" p="md">
-          <Text size="md" fw="300">
-            {t("unsavedChanges", "You have unsaved changes to your PDF.")}
+      <Stack align="center" gap="md">
+        <IconBadge accent="amber" size="md">
+          <WarningAmberRoundedIcon style={{ fontSize: 22 }} />
+        </IconBadge>
+
+        <Stack gap={4} ta="center">
+          <Text fw={600} size="lg">
+            {t("unsavedChangesTitle", "Unsaved changes")}
           </Text>
-          <Text size="lg" fw="500">
-            {t("areYouSure", "Are you sure you want to leave?")}
+          <Text size="sm" c="var(--c-text-muted)" lh={1.5}>
+            {t(
+              "unsavedChangesBody",
+              "You have unsaved changes to your PDF. Are you sure you want to leave?",
+            )}
           </Text>
         </Stack>
 
-        {/* Desktop layout: 2 groups side by side */}
-        <Group justify="space-between" gap="xl" visibleFrom="md">
-          <Group gap="sm">
-            <Button
-              variant="secondary"
-              accent="neutral"
-              onClick={handleKeepWorking}
-              style={{
-                width: BUTTON_WIDTH,
-              }}
-              leftSection={<ArrowBackIcon fontSize="small" />}
-            >
-              {t("keepWorking", "Keep Working")}
-            </Button>
-          </Group>
-          <Group gap="sm">
-            <Button
-              accent="danger"
-              onClick={handleDiscardChanges}
-              style={{
-                width: BUTTON_WIDTH,
-              }}
-              leftSection={<DeleteOutlineIcon fontSize="small" />}
-            >
-              {t("discardChanges", "Discard Changes")}
-            </Button>
-            {hasApply && (
-              <Button
-                onClick={handleApplyAndContinue}
-                style={{ width: BUTTON_WIDTH }}
-                leftSection={<CheckCircleOutlineIcon fontSize="small" />}
-              >
-                {t("applyAndContinue", "Apply & Leave")}
-              </Button>
-            )}
-            {hasExport && (
-              <Button
-                onClick={handleExportAndContinue}
-                style={{ width: BUTTON_WIDTH }}
-                leftSection={<CheckCircleOutlineIcon fontSize="small" />}
-              >
-                {t("exportAndContinue", "Export & Leave")}
-              </Button>
-            )}
-          </Group>
-        </Group>
-
-        {/* Mobile layout: centered stack of 4 buttons */}
-        <Stack align="center" gap="sm" hiddenFrom="md">
-          <Button
-            variant="secondary"
-            accent="neutral"
-            onClick={handleKeepWorking}
-            style={{ width: BUTTON_WIDTH }}
-            leftSection={<ArrowBackIcon fontSize="small" />}
-          >
-            {t("keepWorking", "Keep Working")}
-          </Button>
-          <Button
-            accent="danger"
-            onClick={handleDiscardChanges}
-            style={{
-              width: BUTTON_WIDTH,
-            }}
-            leftSection={<DeleteOutlineIcon fontSize="small" />}
-          >
-            {t("discardChanges", "Discard Changes")}
-          </Button>
+        <Stack gap="sm" w="100%" mt="xs">
           {hasApply && (
             <Button
+              fullWidth
+              variant="primary"
               onClick={handleApplyAndContinue}
-              style={{ width: BUTTON_WIDTH }}
-              leftSection={<CheckCircleOutlineIcon fontSize="small" />}
             >
-              {t("applyAndContinue", "Apply & Leave")}
+              {t("applyAndContinue", "Save & Leave")}
             </Button>
           )}
           {hasExport && (
             <Button
+              fullWidth
+              variant="primary"
               onClick={handleExportAndContinue}
-              style={{ width: BUTTON_WIDTH }}
-              leftSection={<CheckCircleOutlineIcon fontSize="small" />}
             >
               {t("exportAndContinue", "Export & Leave")}
             </Button>
           )}
+          <Group grow gap="sm" wrap="nowrap">
+            <Button
+              variant="secondary"
+              accent="neutral"
+              data-autofocus
+              onClick={handleKeepWorking}
+            >
+              {t("keepWorking", "Keep Working")}
+            </Button>
+            <Button
+              variant="secondary"
+              accent="danger"
+              onClick={handleDiscardChanges}
+            >
+              {t("discardChanges", "Discard & Leave")}
+            </Button>
+          </Group>
         </Stack>
       </Stack>
     </Modal>
