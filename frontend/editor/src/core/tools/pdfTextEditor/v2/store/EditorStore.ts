@@ -3,6 +3,10 @@ import { HistoryStack } from "@app/tools/pdfTextEditor/v2/store/HistoryStack";
 import { Selection } from "@app/tools/pdfTextEditor/v2/store/Selection";
 import { pageGuides } from "@app/tools/pdfTextEditor/v2/util/guides";
 import { PdfiumTextReader } from "@app/tools/pdfTextEditor/v2/pdfium/PdfiumTextReader";
+import {
+  PdfiumModelSync,
+  type ModelSyncResult,
+} from "@app/tools/pdfTextEditor/v2/pdfium/PdfiumModelSync";
 import { resetBackendResolverCaches } from "@app/tools/pdfTextEditor/v2/charcode/BackendResolver";
 import { resetCmapCache } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 import { resetContentStreamCache } from "@app/tools/pdfTextEditor/v2/charcode/ContentStreamResolver";
@@ -307,6 +311,10 @@ export class EditorStore {
       if (!doc) return;
       for (const page of doc.loadedPages()) {
         try {
+          // Positions only. `PdfiumModelSync.resyncPage` re-reads the whole
+          // page and would give identity-preserved RUNS too, but it re-runs
+          // grouping, font registration and the annotation walk on every tick
+          // for no gain while only positions may safely be adopted mid-edit.
           PdfiumTextReader.recapturePositions(doc, page);
         } catch {
           continue;
@@ -314,6 +322,23 @@ export class EditorStore {
       }
       this.refreshRunSnapshots();
     }, POSITION_REFRESH_MS);
+  }
+
+  // Re-read one page's geometry from the engine immediately, keeping run ids.
+  // The debounced refresh above calls the same thing; this is the un-debounced
+  // entry point for callers that need it now (and for measuring its cost).
+  resyncPage(pageIndex: number): ModelSyncResult | null {
+    const doc = this.doc;
+    if (!doc) return null;
+    try {
+      return PdfiumModelSync.resyncPage(
+        doc,
+        doc.page(pageIndex),
+        this.groupingMode,
+      );
+    } catch {
+      return null;
+    }
   }
 
   private refreshRunSnapshots(): void {
