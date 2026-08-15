@@ -12,8 +12,9 @@ test.describe("20. Edge Cases and Security", () => {
     test("should prevent XSS via search input", async ({ page }) => {
       await loginAndSetup(page);
 
-      // Step 1: Enter XSS payload in the search box
-      const searchBox = page.getByPlaceholder(/search|cari/i).first();
+      // Step 1: Enter the payload into the always-mounted super search bar
+      const searchBox = page.locator("#super-search-input");
+      await searchBox.click();
       await searchBox.fill('"><img src=x onerror=alert(1)>');
 
       // Step 2: Verify no script execution or image error handler fires

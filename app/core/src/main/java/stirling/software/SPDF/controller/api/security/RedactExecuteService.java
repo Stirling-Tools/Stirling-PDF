@@ -634,7 +634,7 @@ class RedactExecuteService {
         PageColumnLayout layout =
                 PageColumnLayout.fromLineBoxes(extractor.getLineBoxes(), pageWidth);
         if (layout.columnCount() > 1) {
-            float[] g = layout.gutters().get(0);
+            float[] g = layout.gutters().getFirst();
             log.info(
                     "[redact/execute] page {} layout: 2 cols, gutter x=[{}, {}]",
                     pageIdx + 1,
@@ -760,12 +760,12 @@ class RedactExecuteService {
             char ch = raw.charAt(i);
             if (Character.isLetterOrDigit(ch)) {
                 current.append(ch);
-            } else if (current.length() > 0) {
+            } else if (!current.isEmpty()) {
                 tokens.add(current.toString());
                 current.setLength(0);
             }
         }
-        if (current.length() > 0) tokens.add(current.toString());
+        if (!current.isEmpty()) tokens.add(current.toString());
         if (tokens.size() < 2) return null;
         StringBuilder out = new StringBuilder();
         for (int i = 0; i < tokens.size(); i++) {
@@ -788,25 +788,25 @@ class RedactExecuteService {
         StringBuilder current = new StringBuilder();
         for (String token : tokens) {
             if (token.isEmpty()) {
-                if (current.length() > 0) {
-                    if (result.length() > 0) result.append(' ');
+                if (!current.isEmpty()) {
+                    if (!result.isEmpty()) result.append(' ');
                     result.append(current);
                     current.setLength(0);
                 }
             } else if (token.length() == 1) {
                 current.append(token);
             } else {
-                if (current.length() > 0) {
-                    if (result.length() > 0) result.append(' ');
+                if (!current.isEmpty()) {
+                    if (!result.isEmpty()) result.append(' ');
                     result.append(current);
                     current.setLength(0);
                 }
-                if (result.length() > 0) result.append(' ');
+                if (!result.isEmpty()) result.append(' ');
                 result.append(token);
             }
         }
-        if (current.length() > 0) {
-            if (result.length() > 0) result.append(' ');
+        if (!current.isEmpty()) {
+            if (!result.isEmpty()) result.append(' ');
             result.append(current);
         }
         return result.toString().trim();

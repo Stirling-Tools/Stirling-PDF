@@ -30,13 +30,14 @@ export interface LanguagePickerProps {
 const LanguagePicker: React.FC<LanguagePickerProps> = ({
   value,
   onChange,
-  placeholder = "Select languages",
+  placeholder,
   disabled = false,
   label,
   languagesEndpoint = "/api/v1/ui-data/ocr-pdf",
   autoFillFromBrowserLanguage = true,
 }) => {
   const { t, i18n } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("dropdownList.selectLanguages");
   const [availableLanguages, setAvailableLanguages] = useState<DropdownItem[]>(
     [],
   );
@@ -165,7 +166,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
         <Text
           size="xs"
           style={{
-            color: "var(--c-primary)",
+            color: "var(--c-accent-text)",
             cursor: "pointer",
             textDecoration: "underline",
             textAlign: "center",
@@ -184,7 +185,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
         value={value}
         onChange={(newValue) => onChange(newValue as string[])}
         items={availableLanguages}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         disabled={disabled}
         label={label}
         footer={footer}

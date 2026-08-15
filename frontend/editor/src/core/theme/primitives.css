@@ -11,6 +11,11 @@
   --p-gray-300: #d1d5db;
   --p-gray-400: #9ca3af;
   --p-gray-500: #6b7280;
+  /* Subtle body text in light mode. gray-500 clears 4.5:1 on pure white but
+     falls under it on the --p-paper canvas; this is the same hue nudged dark
+     enough to pass on the tinted surfaces too (4.94:1 on the blue banner tint,
+     the darkest ground it lands on) while staying lighter than gray-600. */
+  --p-gray-550: #5d636d;
   --p-gray-600: #4b5563;
   --p-gray-700: #374151;
   --p-gray-800: #1f2937;
@@ -26,26 +31,47 @@
   --p-zinc-600: #333338;
   --p-zinc-500: #3f3f46;
   --p-zinc-400: #52525b;
+  /* Subtlest text shade that still clears 4.5:1 on the deepest dark
+     surfaces; zinc-300 is a border/icon shade and reads at ~3:1 there. */
+  --p-zinc-250: #9a9aa2;
   --p-zinc-300: #71717a;
   --p-zinc-200: #a1a1aa;
   --p-zinc-100: #f4f4f5;
+  --p-c-141416: #141416;
+  --p-c-1a1a1d: #1a1a1d;
+  --p-c-28282d: #28282d;
+  --p-c-343439: #343439;
   --p-blue-400: #60a5fa;
   --p-blue-500: #3b82f6;
   --p-blue-600: #2563eb;
   --p-blue-700: #1d4ed8;
+  --p-green-50: #f0fdf4;
+  --p-green-100: #dcfce7;
+  --p-green-200: #bbf7d0;
   --p-green-500: #22c55e;
   --p-green-600: #16a34a;
   --p-green-700: #15803d;
+  --p-green-800: #166534;
+  --p-amber-50: #fffbeb;
+  --p-amber-100: #fef3c7;
+  --p-amber-200: #fde68a;
   --p-amber-400: #fbbf24;
   --p-amber-500: #f59e0b;
   --p-amber-600: #d97706;
+  --p-amber-700: #b45309;
+  --p-amber-800: #92400e;
+  --p-red-50: #fef2f2;
+  --p-red-100: #fee2e2;
+  --p-red-200: #fecaca;
   --p-red-400: #f87171;
   --p-red-500: #ef4444;
   --p-red-600: #dc2626;
+  --p-red-700: #b91c1c;
 
   /* Brand-red + ai-accent scales, consumed by core/ui/accents.css. */
   --p-brand-red-200: #d9a8a8;
   --p-brand-red-300: #d98a8a;
+  --p-brand-red-400: #ad7373;
   --p-brand-red-650: #8e3131;
   --p-brand-red-700: #7a2929;
   --p-brand-red-900: #5a2424;
@@ -54,6 +80,7 @@
   --p-indigo-300: #a5b4fc;
   --p-indigo-400: #818cf8;
   --p-indigo-500: #6366f1;
+  --p-indigo-600: #4f46e5;
   --p-indigo-800: #3730a3;
 
   /* Extended accent/status/neutral weights referenced by app CSS. */
@@ -84,6 +111,10 @@
   --p-tint-blue: #eef1fb;
   --p-tint-violet: #f6f4fc;
   --p-tint-pink: #fbf4f7;
+  --p-paper: #f5f4f1;
+  --p-ink: #373530;
+  --p-snow: #fafafa;
+  --p-c-f0f0f0: #f0f0f0;
 
   /* Notion-style procurement view palette. */
   --p-notion-blue: #2383e2;
@@ -92,7 +123,6 @@
   --p-notion-ink: #37352f;
   --p-notion-gray: #9b9a97;
   --p-notion-gray-strong: #787774;
-  --p-notion-paper: #f5f4f1;
   --p-notion-paper-2: #f0eee9;
   --p-notion-border: #e3e1dc;
   --p-notion-border-2: #eae8e3;
@@ -125,6 +155,7 @@
   --p-c-2d3560: #2d3560;
   --p-emerald-400: #34d399;
   --p-azure-650: #3a7be8;
+  --p-azure-700: #0a6ac9;
   --p-navy-500: #3b4b6e;
   --p-c-475569: #475569;
   --p-c-334155: #334155;
@@ -133,13 +164,14 @@
   --p-c-545454: #545454;
   --p-azure-450: #5b9bf7;
   --p-c-64748b: #64748b;
-  --p-c-656d76: #656d76;
+  --p-c-8b9bb4: #8b9bb4;
+  --p-c-656d76: #5f6772;
   --p-c-6e7781: #6e7781;
   --p-violet-600: #7c3aed;
   --p-c-7e7e7e: #7e7e7e;
   --p-c-8250df: #8250df;
   --p-violet-500: #8b5cf6;
-  --p-c-8c959f: #8c959f;
+  --p-c-8c959f: #57606a;
   --p-blue-200: #93c5fd;
   --p-c-94a3b8: #94a3b8;
   --p-code-type: #953800;

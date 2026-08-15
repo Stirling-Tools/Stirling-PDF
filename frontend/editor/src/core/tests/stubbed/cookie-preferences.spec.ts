@@ -10,7 +10,7 @@ test.describe("18. Cookie Preferences", () => {
       await page.route("**/api/v1/ui-data/footer-info", (route) =>
         route.fulfill({ json: { analyticsEnabled: true } }),
       );
-      await page.goto("/");
+      await page.goto("/editor");
 
       // Step 1: The "Cookie Preferences" button lives in Settings → Legal
       await openSettings(page);

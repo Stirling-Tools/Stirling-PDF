@@ -19,6 +19,9 @@ public enum AuditEventType {
     // File operations - STANDARD level
     FILE_OPERATION("File operation"),
 
+    // Storage encryption at rest - STANDARD level
+    STORAGE_ENCRYPTION("Storage encryption operation"),
+
     // PDF operations - STANDARD level
     PDF_PROCESS("PDF processing operation"),
 

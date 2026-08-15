@@ -58,6 +58,8 @@ class ToolIOWhen(ApiModel):
 
     param: str
     matches: list[str]
+    # The value the endpoint uses when this parameter is absent; None when it has none.
+    default: str | None = None
 
 
 class ToolIOCase(ApiModel):
@@ -101,7 +103,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         arity=ToolArity.SIMO,
         cases=[
             ToolIOCase(
-                when=[ToolIOWhen(param="singleOrMultiple", matches=["single"])],
+                when=[ToolIOWhen(param="singleOrMultiple", matches=["single"], default="multiple")],
                 produces=ToolFormat.IMAGE,
                 arity=ToolArity.SISO,
             )
@@ -130,15 +132,19 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         arity=ToolArity.SISO,
         cases=[
             ToolIOCase(
-                when=[ToolIOWhen(param="outputFormat", matches=["ps"])],
+                when=[ToolIOWhen(param="outputFormat", matches=["ps"], default="eps")],
                 produces=ToolFormat.POSTSCRIPT,
                 arity=ToolArity.SISO,
             ),
             ToolIOCase(
-                when=[ToolIOWhen(param="outputFormat", matches=["pcl"])], produces=ToolFormat.PCL, arity=ToolArity.SISO
+                when=[ToolIOWhen(param="outputFormat", matches=["pcl"], default="eps")],
+                produces=ToolFormat.PCL,
+                arity=ToolArity.SISO,
             ),
             ToolIOCase(
-                when=[ToolIOWhen(param="outputFormat", matches=["xps"])], produces=ToolFormat.XPS, arity=ToolArity.SISO
+                when=[ToolIOWhen(param="outputFormat", matches=["xps"], default="eps")],
+                produces=ToolFormat.XPS,
+                arity=ToolArity.SISO,
             ),
         ],
     ),
@@ -151,7 +157,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         arity=ToolArity.MIMO,
         cases=[
             ToolIOCase(
-                when=[ToolIOWhen(param="combineIntoSinglePdf", matches=["true"])],
+                when=[ToolIOWhen(param="combineIntoSinglePdf", matches=["true"], default="false")],
                 produces=ToolFormat.PDF,
                 arity=ToolArity.MISO,
             )
@@ -202,7 +208,9 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         arity=ToolArity.SISO,
         cases=[
             ToolIOCase(
-                when=[ToolIOWhen(param="dryRun", matches=["true"])], produces=ToolFormat.JSON, arity=ToolArity.SISO
+                when=[ToolIOWhen(param="dryRun", matches=["true"], default="false")],
+                produces=ToolFormat.JSON,
+                arity=ToolArity.SISO,
             )
         ],
     ),
@@ -223,7 +231,9 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         arity=ToolArity.SISO,
         cases=[
             ToolIOCase(
-                when=[ToolIOWhen(param="sidecar", matches=["true"])], produces=ToolFormat.ZIP, arity=ToolArity.SISO
+                when=[ToolIOWhen(param="sidecar", matches=["true"], default="false")],
+                produces=ToolFormat.ZIP,
+                arity=ToolArity.SISO,
             )
         ],
     ),
@@ -242,7 +252,10 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         arity=ToolArity.SISO,
         cases=[
             ToolIOCase(
-                when=[ToolIOWhen(param="password", matches=[""]), ToolIOWhen(param="ownerPassword", matches=[""])],
+                when=[
+                    ToolIOWhen(param="password", matches=[""], default=""),
+                    ToolIOWhen(param="ownerPassword", matches=[""], default=""),
+                ],
                 produces=ToolFormat.PDF,
                 arity=ToolArity.SISO,
             )

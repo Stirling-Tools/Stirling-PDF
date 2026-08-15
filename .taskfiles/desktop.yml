@@ -22,6 +22,7 @@ vars:
               linux-amd64)   echo "linux-x64";;
               linux-arm64)   echo "linux-arm64";;
               windows-amd64) echo "windows-x64";;
+              windows-arm64) echo "none";;  # no JPDFium windows-arm64 natives published yet
               *)             echo "all";;
           esac
       fi
@@ -207,7 +208,11 @@ tasks:
       # `desktop:build` run `jlink:clean` first to force a fresh build.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse runtime/jre | ForEach-Object { $_.IsReadOnly = $false }"
+      # Single-quoted so Task's shell leaves `$_` and `$false` alone. Double
+      # quotes let it expand them as its own variables, and since neither is
+      # set the command PowerShell actually received was
+      # `ForEach-Object { .IsReadOnly = }`, which fails on every file.
+      - cmd: powershell -NoProfile -Command 'Get-ChildItem -Recurse -File runtime/jre | ForEach-Object { $_.IsReadOnly = $false }'
         platforms: [windows]
     status:
       - test -f runtime/jre/release

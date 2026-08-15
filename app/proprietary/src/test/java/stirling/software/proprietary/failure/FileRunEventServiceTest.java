@@ -1,0 +1,641 @@
+package stirling.software.proprietary.failure;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
+
+import java.lang.reflect.Field;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
+
+/**
+ * Tests for {@link FileRunEventService}: team scoping, the declaration guard, transition legality,
+ * and that triaging an incident leaves the document alone.
+ */
+@ExtendWith(MockitoExtension.class)
+class FileRunEventServiceTest {
+
+    private static final Long TEAM = 3L;
+    private static final String ACTOR = "reviewer@example.com";
+
+    @Mock private PolicyManagementAuthority authority;
+    @Mock private UserServiceInterface userService;
+
+    private FileRunEventStore store;
+    private FileRunEventService service;
+
+    @BeforeEach
+    void setUp() {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getSecurity().setEnableLogin(true);
+
+        store = new FileRunEventStore(new InMemoryFileRunEventRepository());
+        FailureActionRegistry registry =
+                new FailureActionRegistry(
+                        List.of(new AcknowledgeAction(store), new DismissAction(store)));
+        registry.verifyEveryDeclaredActionHasAHandler();
+
+        service = new FileRunEventService(store, registry, authority, userService, props);
+
+        lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
+        lenient().when(userService.getCurrentUsername()).thenReturn(ACTOR);
+    }
+
+    private FileRunEvent given(FailureKind kind, Long teamId, String fileId) {
+        return store.record(
+                new RecordFailure(
+                        kind,
+                        FailureOrigin.POLICY,
+                        teamId,
+                        "author@example.com",
+                        "policy-1",
+                        "run-1",
+                        null,
+                        fileId,
+                        "detail"));
+    }
+
+    @Nested
+    @DisplayName("acknowledge")
+    class Acknowledge {
+
+        @Test
+        void movesANewEventToAcknowledgedAndStampsTheActor() {
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            FileRunEvent updated = service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
+
+            assertThat(updated.status()).isEqualTo(FileRunEventStatus.ACKNOWLEDGED);
+            assertThat(updated.statusActor()).isEqualTo(ACTOR);
+            assertThat(updated.statusAt()).isNotNull();
+        }
+
+        @Test
+        void isANoOpWhenAlreadyAcknowledgedSoOwnershipIsNotStolen() {
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+            FileRunEvent first = service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
+            Instant originalAt = first.statusAt();
+
+            when(userService.getCurrentUsername()).thenReturn("someone-else@example.com");
+            FileRunEvent second = service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
+
+            assertThat(second.status()).isEqualTo(FileRunEventStatus.ACKNOWLEDGED);
+            assertThat(second.statusActor()).isEqualTo(ACTOR);
+            assertThat(second.statusAt()).isEqualTo(originalAt);
+        }
+    }
+
+    @Nested
+    @DisplayName("dismiss")
+    class Dismiss {
+
+        @Test
+        void closesANewEvent() {
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThat(service.dispatch(event.id(), "DISMISS", Map.of()).status())
+                    .isEqualTo(FileRunEventStatus.DISMISSED);
+        }
+
+        @Test
+        void closesAnAcknowledgedEvent() {
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+            service.dispatch(event.id(), "ACKNOWLEDGE", Map.of());
+
+            assertThat(service.dispatch(event.id(), "DISMISS", Map.of()).status())
+                    .isEqualTo(FileRunEventStatus.DISMISSED);
+        }
+    }
+
+    @Nested
+    @DisplayName("triage never touches the document")
+    class NeverTouchesTheDocument {
+
+        /**
+         * What makes both actions valid for every kind, UNKNOWN included: they are incident
+         * dispositions, not document ones. Asserted structurally — an action whose only dependency
+         * is the event store <em>cannot</em> reach the ledger, file storage, or an output sink. A
+         * mocked-collaborator version of this test passed vacuously, because nothing ever handed
+         * the mocks to the actions.
+         */
+        @Test
+        void actionsDependOnNothingButTheEventStore() {
+            for (FailureAction action :
+                    List.of(new AcknowledgeAction(store), new DismissAction(store))) {
+                String name = action.getClass().getSimpleName();
+                List<Class<?>> dependencies =
+                        Arrays.stream(action.getClass().getDeclaredFields())
+                                // Coverage instrumentation adds its own field; only ours count.
+                                .filter(field -> !field.isSynthetic())
+                                .map(Field::getType)
+                                .toList();
+
+                // Asserted first, so an action that lost its fields fails here rather than
+                // satisfying the check below by holding nothing at all.
+                assertThat(dependencies).as("%s declares no dependencies", name).isNotEmpty();
+                assertThat(dependencies)
+                        .as(
+                                "%s: an incident disposition reaches the event store and nothing"
+                                        + " else. Adding to this is how one starts touching"
+                                        + " documents.",
+                                name)
+                        .containsOnly(FileRunEventStore.class);
+            }
+        }
+
+        @Test
+        void dismissLeavesTheFileReferenceIntactRatherThanClearingIt() {
+            // Nothing is deleted, so the row must still say which file it was about.
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            FileRunEvent dismissed = service.dispatch(event.id(), "DISMISS", Map.of());
+
+            assertThat(dismissed.fileId()).isEqualTo("f1");
+        }
+    }
+
+    @Nested
+    @DisplayName("guards")
+    class Guards {
+
+        @Test
+        void anotherTeamsEventIsNotFound() {
+            FileRunEvent theirs = given(FailureKind.UNKNOWN, 99L, "f1");
+
+            assertThatThrownBy(() -> service.dispatch(theirs.id(), "ACKNOWLEDGE", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.EVENT_NOT_FOUND);
+        }
+
+        @Test
+        void anUnknownEventIdIsNotFound() {
+            assertThatThrownBy(() -> service.dispatch("nope", "ACKNOWLEDGE", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.EVENT_NOT_FOUND);
+        }
+
+        @Test
+        void anUnknownActionIdIsRejected() {
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThatThrownBy(() -> service.dispatch(event.id(), "APPROVE", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ACTION_NOT_RECOGNISED);
+        }
+
+        @Test
+        void aDeclaredActionWithNoRegisteredHandlerIsRejectedWithoutAnyStateChange() {
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            ApplicationProperties props = new ApplicationProperties();
+            props.getSecurity().setEnableLogin(true);
+            FileRunEventService missingHandler =
+                    new FileRunEventService(
+                            store,
+                            new FailureActionRegistry(List.of(new AcknowledgeAction(store))),
+                            authority,
+                            userService,
+                            props);
+
+            assertThatThrownBy(() -> missingHandler.dispatch(event.id(), "DISMISS", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ACTION_NOT_RECOGNISED);
+
+            assertThat(store.find(event.id(), TEAM).orElseThrow().status())
+                    .isEqualTo(FileRunEventStatus.NEW);
+        }
+
+        @Test
+        void aClosedEventCannotBeActedOnAgain() {
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+            service.dispatch(event.id(), "DISMISS", Map.of());
+
+            assertThatThrownBy(() -> service.dispatch(event.id(), "ACKNOWLEDGE", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ALREADY_CLOSED);
+
+            assertThatThrownBy(() -> service.dispatch(event.id(), "DISMISS", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    .isEqualTo(FailureActionException.Reason.ALREADY_CLOSED);
+        }
+    }
+
+    @Nested
+    @DisplayName("available actions are resolved per row")
+    class Availability {
+
+        @Test
+        void openRowOffersEveryDeclaredActionEnabled() {
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            List<FileRunEventService.AvailableAction> actions = service.availableActions(event);
+
+            assertThat(actions).hasSize(2);
+            assertThat(actions).allMatch(FileRunEventService.AvailableAction::enabled);
+            assertThat(actions).allMatch(action -> action.disabledReasonKey() == null);
+        }
+
+        @Test
+        void closedRowOffersThemDisabledWithAReasonRatherThanHidingThem() {
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+            FileRunEvent dismissed = service.dispatch(event.id(), "DISMISS", Map.of());
+
+            List<FileRunEventService.AvailableAction> actions = service.availableActions(dismissed);
+
+            assertThat(actions).isNotEmpty();
+            assertThat(actions).noneMatch(FileRunEventService.AvailableAction::enabled);
+            assertThat(actions)
+                    .allMatch(
+                            action ->
+                                    "portal.failures.disabled.closed"
+                                            .equals(action.disabledReasonKey()));
+        }
+
+        @Test
+        void carriesTheKindsOverriddenLabelWhereItHasOne() {
+            FileRunEvent event = given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1");
+
+            assertThat(service.availableActions(event))
+                    .extracting(FileRunEventService.AvailableAction::labelKey)
+                    .contains("portal.failures.action.dismissSkipFile");
+        }
+
+        @Test
+        void fallsBackToTheGenericLabelWhereTheKindDeclaresNoOverride() {
+            FileRunEvent event = given(FailureKind.UNKNOWN, TEAM, "f1");
+
+            assertThat(service.availableActions(event))
+                    .extracting(FileRunEventService.AvailableAction::labelKey)
+                    .containsExactly("portal.failures.action.dismiss");
+        }
+    }
+
+    @Nested
+    @DisplayName("team scoping")
+    class Scoping {
+
+        @Test
+        void listReturnsOnlyTheCallersTeam() {
+            given(FailureKind.UNKNOWN, TEAM, "mine");
+            given(FailureKind.UNKNOWN, 99L, "theirs");
+
+            assertThat(service.list(null, null, 50))
+                    .extracting(FileRunEvent::fileId)
+                    .containsExactly("mine");
+        }
+
+        @Test
+        void aCallerWhoseTeamCannotBeResolvedReadsNothing() {
+            // A run with no stored policy is recorded unteamed, and those rows are shared by every
+            // team, so a caller whose team does not resolve reads nothing instead.
+            given(FailureKind.UNKNOWN, null, "someone-elses-adhoc-run");
+            given(FailureKind.UNKNOWN, TEAM, "mine");
+            when(authority.currentUserTeamId()).thenReturn(null);
+
+            assertThat(service.list(null, null, 50)).isEmpty();
+        }
+
+        @Test
+        void aCallerWhoseTeamCannotBeResolvedCannotActOnAnUnteamedRow() {
+            FileRunEvent unteamed = given(FailureKind.UNKNOWN, null, "someone-elses-adhoc-run");
+            when(authority.currentUserTeamId()).thenReturn(null);
+
+            assertThatThrownBy(() -> service.dispatch(unteamed.id(), "ACKNOWLEDGE", Map.of()))
+                    .isInstanceOf(FailureActionException.class)
+                    .extracting(e -> ((FailureActionException) e).getReason())
+                    // Not a distinct "no team" reason: that would confirm the id exists.
+                    .isEqualTo(FailureActionException.Reason.EVENT_NOT_FOUND);
+
+            assertThat(store.find(unteamed.id(), null).orElseThrow().status())
+                    .isEqualTo(FileRunEventStatus.NEW);
+        }
+
+        @Test
+        void loginDisabledFallsBackToTheUnteamedRowsWithoutConsultingTheAuthority() {
+            ApplicationProperties props = new ApplicationProperties();
+            props.getSecurity().setEnableLogin(false);
+            FailureActionRegistry registry =
+                    new FailureActionRegistry(
+                            List.of(new AcknowledgeAction(store), new DismissAction(store)));
+            FileRunEventService unsecured =
+                    new FileRunEventService(store, registry, authority, userService, props);
+
+            given(FailureKind.UNKNOWN, null, "unteamed");
+            given(FailureKind.UNKNOWN, TEAM, "teamed");
+
+            assertThat(unsecured.list(null, null, 50))
+                    .extracting(FileRunEvent::fileId)
+                    .containsExactly("unteamed");
+        }
+    }
+
+    @Nested
+    @DisplayName("the action registry")
+    class Registry {
+
+        @Test
+        void refusesToStartWhenAKindDeclaresAnActionWithNoHandler() {
+            // A missing handler would otherwise surface as a button that 400s in production.
+            FailureActionRegistry incomplete =
+                    new FailureActionRegistry(List.of(new AcknowledgeAction(store)));
+
+            assertThatThrownBy(incomplete::verifyEveryDeclaredActionHasAHandler)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("DISMISS");
+        }
+
+        @Test
+        void refusesTwoHandlersForTheSameAction() {
+            assertThatThrownBy(
+                            () ->
+                                    new FailureActionRegistry(
+                                            List.of(
+                                                    new AcknowledgeAction(store),
+                                                    new AcknowledgeAction(store))))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("ACKNOWLEDGE");
+        }
+
+        @Test
+        void acceptsACompleteSetOfHandlers() {
+            FailureActionRegistry complete =
+                    new FailureActionRegistry(
+                            List.of(new AcknowledgeAction(store), new DismissAction(store)));
+
+            complete.verifyEveryDeclaredActionHasAHandler();
+
+            for (FailureActionId id : FailureActionId.values()) {
+                assertThat(complete.find(id)).isPresent();
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("reporting a failure the user hit in the editor")
+    class Reporting {
+
+        @Test
+        void classifiesTheReportedCodeAndStampsItAsEditorOrigin() {
+            service.report(
+                    new EditorFailureReport("remove-password", "E004", List.of("f-1"), "boom"));
+
+            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            assertThat(event.kind()).isEqualTo(FailureKind.INPUT_PASSWORD_PROTECTED);
+            assertThat(event.origin()).isEqualTo(FailureOrigin.TOOL);
+            assertThat(event.fileId()).isEqualTo("f-1");
+            assertThat(event.detail()).contains("boom");
+        }
+
+        @Test
+        void takesTheTeamAndActorFromThePrincipalNotTheReport() {
+            // The report carries no team or actor field at all; both come from the caller's
+            // session.
+            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
+
+            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            assertThat(event.teamId()).isEqualTo(TEAM);
+            assertThat(event.actor()).isEqualTo(ACTOR);
+        }
+
+        @Test
+        void recordsAnUnrecognisedCodeAsUnknownRatherThanDroppingIt() {
+            service.report(new EditorFailureReport("ocr", "E999", List.of("f-1"), "no idea"));
+
+            assertThat(store.list(TEAM, null, null, 10).getFirst().kind())
+                    .isEqualTo(FailureKind.UNKNOWN);
+        }
+
+        @Test
+        void recordsAnAbsentCodeAsUnknown() {
+            service.report(new EditorFailureReport("ocr", null, List.of("f-1"), "network died"));
+
+            assertThat(store.list(TEAM, null, null, 10).getFirst().kind())
+                    .isEqualTo(FailureKind.UNKNOWN);
+        }
+
+        @Test
+        void recordsOneIncidentPerFileSoEachDocumentStaysActionable() {
+            service.report(
+                    new EditorFailureReport(
+                            "compress", "E004", List.of("f-1", "f-2", "f-3"), "boom"));
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .hasSize(3)
+                    .extracting(FileRunEvent::fileId)
+                    .containsExactlyInAnyOrder("f-1", "f-2", "f-3");
+        }
+
+        @Test
+        void foldsARepeatOfTheSameFileIntoTheExistingIncident() {
+            service.report(new EditorFailureReport("compress", "E004", List.of("f-1"), "boom"));
+            service.report(
+                    new EditorFailureReport("compress", "E004", List.of("f-1"), "boom again"));
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::occurrences)
+                    .isEqualTo(2);
+        }
+
+        @Test
+        void recordsOneUnattributedIncidentWhenNoFileWasNamed() {
+            service.report(new EditorFailureReport("compress", "E004", List.of(), "boom"));
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::fileId)
+                    .isNull();
+        }
+
+        @Test
+        void recordsEveryFileInALargeBatchRatherThanTrimmingIt() {
+            // A cap here used to drop the overflow silently, so a reviewer saw 25 of 60 failures
+            // with nothing indicating the rest existed. The processor path has never had one.
+            List<String> many =
+                    java.util.stream.IntStream.range(0, 60).mapToObj(i -> "f-" + i).toList();
+
+            service.report(new EditorFailureReport("compress", "E004", many, "boom"));
+
+            assertThat(store.list(TEAM, null, null, 200)).hasSize(60);
+        }
+
+        @Test
+        void keepsTheOperationNameOutOfTheStoredDocumentReferences() {
+            // The operation is context for the reviewer, not a document reference: it belongs in
+            // detail, never in fileId.
+            service.report(
+                    new EditorFailureReport("remove-password", "E004", List.of("f-1"), "boom"));
+
+            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            assertThat(event.detail()).contains("remove-password");
+            assertThat(event.fileId()).isEqualTo("f-1");
+        }
+
+        @Test
+        void storesTheReportedMessageVerbatimAlongsideTheOperation() {
+            // The user's own error about their own file. The operation is prefixed because an
+            // editor failure has no run to give a reviewer context.
+            service.report(
+                    new EditorFailureReport(
+                            "compress", "E004", List.of("f-1"), "Failed on Q4 report.pdf"));
+
+            assertThat(store.list(TEAM, null, null, 10).getFirst().detail())
+                    .isEqualTo("compress: Failed on Q4 report.pdf");
+        }
+
+        @Test
+        void theServiceHoldsNothingThatCouldReachADocument() {
+            // Asserted structurally rather than with verifyNoInteractions on unwired mocks, which
+            // is how the version of this test on the other branch passed without proving anything.
+            List<Class<?>> forbidden =
+                    List.of(
+                            stirling.software.proprietary.policy.ledger.ProcessedLedger.class,
+                            stirling.software.common.service.FileStorage.class,
+                            stirling.software.proprietary.policy.output.PolicyOutputSink.class);
+
+            List<Class<?>> held =
+                    Arrays.stream(FileRunEventService.class.getDeclaredFields())
+                            .filter(field -> !field.isSynthetic())
+                            .map(Field::getType)
+                            .toList();
+
+            assertThat(held).isNotEmpty().doesNotContainAnyElementsOf(forbidden);
+        }
+    }
+
+    @Nested
+    @DisplayName("editor incidents stay separate")
+    class EditorIncidentIdentity {
+
+        private void reportedBy(String actor, String fileId) {
+            when(userService.getCurrentUsername()).thenReturn(actor);
+            service.report(new EditorFailureReport("compress", null, List.of(fileId), "boom"));
+        }
+
+        @Test
+        void twoPeopleHittingTheSameUnclassifiedFailureAreTwoIncidents() {
+            // UNKNOWN is RUN scoped and an editor report has no run, so without the fallback every
+            // unclassified editor failure in a team collapsed into one row: one actor credited for
+            // everyone's, and the wrong person offered the row.
+            reportedBy("alice@example.com", "a-1");
+            reportedBy("bob@example.com", "b-1");
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .extracting(FileRunEvent::actor)
+                    .containsExactlyInAnyOrder("alice@example.com", "bob@example.com");
+        }
+
+        @Test
+        void onePersonsTwoBrokenFilesAreTwoIncidents() {
+            reportedBy("alice@example.com", "a-1");
+            reportedBy("alice@example.com", "a-2");
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .extracting(FileRunEvent::fileId)
+                    .containsExactlyInAnyOrder("a-1", "a-2");
+        }
+
+        @Test
+        void theSamePersonHittingTheSameFileTwiceIsOneIncident() {
+            reportedBy("alice@example.com", "a-1");
+            reportedBy("alice@example.com", "a-1");
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .singleElement()
+                    .extracting(FileRunEvent::occurrences)
+                    .isEqualTo(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("files deleted from the editor")
+    class RemovedFiles {
+
+        private void reported(String fileId) {
+            service.report(new EditorFailureReport("compress", "E004", List.of(fileId), "boom"));
+        }
+
+        @Test
+        void closeTheirIncidentsSoTheQueueStopsAskingAboutThem() {
+            reported("f-1");
+
+            assertThat(service.forgetFiles(List.of("f-1"))).isEqualTo(1);
+            assertThat(service.list(null, null, 10))
+                    .as("the open queue is what the reviewer works from")
+                    .isEmpty();
+        }
+
+        @Test
+        void theRowSurvivesForAudit() {
+            reported("f-1");
+            service.forgetFiles(List.of("f-1"));
+
+            assertThat(service.list(FileRunEventStatus.FILE_REMOVED, null, 10))
+                    .singleElement()
+                    .satisfies(
+                            event -> {
+                                assertThat(event.fileId()).isEqualTo("f-1");
+                                assertThat(event.detail()).contains("boom");
+                            });
+        }
+
+        @Test
+        void aReviewersDismissKeepsItsMeaningAndItsActor() {
+            reported("f-1");
+            FileRunEvent event = service.list(null, null, 10).getFirst();
+            service.dispatch(event.id(), "DISMISS", Map.of());
+
+            assertThat(service.forgetFiles(List.of("f-1")))
+                    .as("only open rows move; a closed one has already been decided")
+                    .isZero();
+            assertThat(service.list(FileRunEventStatus.DISMISSED, null, 10)).hasSize(1);
+        }
+
+        @Test
+        void aColleaguesIncidentIsUntouched() {
+            // File ids come from the client, so naming one must not close someone else's row.
+            store.record(
+                    RecordFailure.forEditor(
+                            FailureKind.UNKNOWN, TEAM, "employee@example.com", "f-1", "theirs"));
+
+            assertThat(service.forgetFiles(List.of("f-1"))).isZero();
+        }
+
+        @Test
+        void aProcessorIncidentIsUntouchedEvenOnTheSameFileId() {
+            // Nothing was deleted from an editor there, and the file may still be in the bucket.
+            given(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f-1");
+
+            assertThat(service.forgetFiles(List.of("f-1"))).isZero();
+        }
+
+        @Test
+        void namingNoFilesClosesNothing() {
+            reported("f-1");
+
+            assertThat(service.forgetFiles(List.of())).isZero();
+            assertThat(service.forgetFiles(java.util.Arrays.asList(null, "  "))).isZero();
+            assertThat(service.list(null, null, 10)).hasSize(1);
+        }
+    }
+}

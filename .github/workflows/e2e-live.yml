@@ -21,25 +21,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
-      # Same cache layer as backend-build.yml. Without it every run resolved the
-      # whole classpath cold and eventually got HTTP 429 from Maven Central.
-      - name: Cache Gradle dependency artifacts
+      - name: Cache Gradle User Home
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
+            ~/.gradle/caches
             ~/.gradle/wrapper
-            ~/.gradle/caches/modules-2/files-2.1
-            ~/.gradle/caches/modules-2/metadata-2.*
-          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
-        with:
-          gradle-version: 9.6.1
-          cache-disabled: true
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
+            gradle-${{ runner.os }}-${{ runner.arch }}-
       # Gradle does not retry 429s, and a cold cache resolving the buildscript
       # classpath is exactly where Maven Central rate-limits us. Retry it here,
       # where a failure is cheap, instead of inside the backgrounded bootRun.
@@ -124,20 +119,18 @@ jobs:
             echo "::warning::No e2e:live .exec found at .test-state/playwright/jacoco.exec; skipping report"
             echo "report=false" >> "$GITHUB_OUTPUT"
           fi
-      - name: Set up Python for coverage summary
-        if: always() && steps.live-coverage.outputs.report == 'true'
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - name: Install uv
+        if: always()
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: "3.12"
-      - name: Install defusedxml for coverage summary
-        # coverage-summary.py uses defusedxml instead of stdlib xml.etree
-        # to dodge XXE / billion-laughs scanner findings.
-        if: always() && steps.live-coverage.outputs.report == 'true'
-        run: python -m pip install --quiet defusedxml
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
       - name: e2e:live coverage step summary
         if: always() && steps.live-coverage.outputs.report == 'true'
         run: |
-          python scripts/coverage-summary.py \
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
             --title "Playwright (live backend) JaCoCo coverage" \
             --jacoco "e2e-live=build/reports/jacoco/e2e-live/jacocoTestReport.xml" \
             --github-step-summary
@@ -160,23 +153,6 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-      - name: Set up Python for frontend coverage summary
-        # Separate from the backend-coverage python step because the
-        # frontend path doesn't depend on a JaCoCo report - it produces
-        # a summary even on backend failure, as long as some Playwright
-        # tests ran far enough to dump V8 coverage.
-        if: always()
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-
-      - name: Install defusedxml for frontend coverage summary
-        # Idempotent re-install: the backend-coverage step may have
-        # installed it already, but this leg can run on its own when the
-        # backend report step skips (e.g. .exec missing).
-        if: always()
-        run: python -m pip install --quiet defusedxml
-
       - name: Aggregate Playwright frontend (V8) coverage
         # Rolls per-test V8 dumps from the test-base fixture into one
         # vitest-shaped coverage-summary.json. Tolerates a missing dump
@@ -187,7 +163,7 @@ jobs:
         run: |
           if [ -d .test-state/playwright/coverage-pw ] && \
              find .test-state/playwright/coverage-pw -name '*.json' -type f | grep -q .; then
-            python scripts/playwright-coverage-summary.py \
+            uv run --project engine --locked --group tools python scripts/playwright-coverage-summary.py \
               .test-state/playwright/coverage-pw \
               --out .test-state/playwright/coverage-pw-summary/coverage-summary.json
             echo "summary=true" >> "$GITHUB_OUTPUT"
@@ -199,10 +175,10 @@ jobs:
       - name: Playwright frontend coverage step summary
         if: always() && steps.pw-frontend-coverage.outputs.summary == 'true'
         run: |
-          python scripts/coverage-summary.py \
-            --title "Playwright (live) frontend coverage" \
-            --vitest .test-state/playwright/coverage-pw-summary/coverage-summary.json \
-            --github-step-summary
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
+          --title "Playwright (live) frontend coverage" \
+          --vitest .test-state/playwright/coverage-pw-summary/coverage-summary.json \
+          --github-step-summary
 
       - name: Upload Playwright frontend coverage
         # Bundle both the aggregated summary and the raw V8 dumps so

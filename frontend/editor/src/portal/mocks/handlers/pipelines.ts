@@ -70,6 +70,29 @@ function seedPipelines(): StoredPolicy[] {
       outputIds: ["src-contracts"],
     },
     {
+      // A chain long enough to overflow the builder's graph column, which is where the graph has to
+      // start scrolling instead of pushing the inspector off the page.
+      id: "plc-long",
+      name: "Full document pipeline",
+      owner: "ops@acme.com",
+      enabled: true,
+      inputs: [{ sourceId: "src-claims", trigger: null }],
+      steps: [
+        { operation: "/api/v1/misc/repair", parameters: {} },
+        { operation: "/api/v1/misc/ocr-pdf", parameters: {} },
+        { operation: "/api/v1/general/rotate-pdf", parameters: {} },
+        { operation: "/api/v1/general/crop", parameters: {} },
+        { operation: "/api/v1/general/remove-pages", parameters: {} },
+        { operation: "/api/v1/misc/add-page-numbers", parameters: {} },
+        { operation: "/api/v1/security/add-watermark", parameters: {} },
+        { operation: "/api/v1/security/sanitize-pdf", parameters: {} },
+        { operation: "/api/v1/misc/flatten", parameters: {} },
+        { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+      ],
+      output: { type: "inline", options: {} },
+      outputIds: ["src-archive"],
+    },
+    {
       id: "plc-onboarding",
       name: "Onboarding OCR (paused)",
       owner: "ops@acme.com",
@@ -129,9 +152,16 @@ function toView(policy: StoredPolicy): PipelineView {
   };
 }
 
-function buildKpis(): PipelineKpi[] {
-  const total = store.length;
-  const active = store.filter((p) => p.enabled).length;
+// Mirrors the backend PolicyOverviewService: hide frontend/catalogue policies (a categoryId in
+// output options). A folder-watch trigger is still a normal pipeline and stays.
+function isPipeline(policy: StoredPolicy): boolean {
+  const categoryId = policy.output?.options?.categoryId;
+  return !(typeof categoryId === "string" && categoryId.length > 0);
+}
+
+function buildKpis(policies: StoredPolicy[]): PipelineKpi[] {
+  const total = policies.length;
+  const active = policies.filter((p) => p.enabled).length;
   return [
     { value: total, description: "pipelines" },
     { value: active, description: "running automatically" },
@@ -140,10 +170,11 @@ function buildKpis(): PipelineKpi[] {
 }
 
 function buildOverview(): PipelinesOverviewResponse {
-  const pipelines = store
+  const visible = store.filter(isPipeline);
+  const pipelines = visible
     .map(toView)
     .sort((a, b) => a.name.localeCompare(b.name));
-  return { kpis: buildKpis(), pipelines };
+  return { kpis: buildKpis(visible), pipelines };
 }
 
 export const pipelinesHandlers = [
