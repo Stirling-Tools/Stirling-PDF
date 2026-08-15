@@ -149,7 +149,20 @@ export class LineGrouper {
     // Mutate the representative's text/bounds to reflect the merged group and
     // remember the underlying object pointers so ReplaceLineGroupCommand can.
     for (const group of groups) {
-      if (group.members.length === 1) continue;
+      if (group.members.length === 1) {
+        // A one-object line still needs its sub-run arrays. EditTextCommand's
+        // surgical path requires a non-empty mergedFromPtrs; without it even a
+        // two-character append detached the object and re-emitted the whole run
+        // from scratch, which is where real documents lost their text.
+        const only = group.members[0];
+        group.representative.mergedFromPtrs = [only.pdfiumObjPtr];
+        group.representative.mergedFromTexts = [only.text];
+        group.representative.mergedFromBounds = [
+          { x: only.bounds.x, right: only.bounds.x + only.bounds.width },
+        ];
+        group.representative.mergedFromCharStarts = [0];
+        continue;
+      }
       // Snapshot per-member texts and bounds BEFORE we mutate the
       // representative.
       const memberTexts = group.members.map((m) => m.text);
