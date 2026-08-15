@@ -85,10 +85,20 @@ public class StorageFolderInputSource implements InputSource {
             String gate = gate(file);
             // The hash tier turns metadata-only gate bumps (a folder move, a rename) into a gate
             // refresh instead of a reprocess; only genuinely new content runs again.
-            if (!ctx.claim(
-                    identity,
-                    gate,
-                    () -> StorageFileIdentities.contentHash(storageProvider, file))) {
+            boolean claimed;
+            try {
+                claimed =
+                        ctx.claim(
+                                identity,
+                                gate,
+                                () -> StorageFileIdentities.contentHash(storageProvider, file));
+            } catch (RuntimeException e) {
+                // One unreadable blob (missing key, provider hiccup) skips that file — never the
+                // whole sweep. Unclaimed, so the next sweep tries it again.
+                log.debug("Could not read {} for its content hash: {}", identity, e.getMessage());
+                continue;
+            }
+            if (!claimed) {
                 continue;
             }
             Long fileId = file.getId();

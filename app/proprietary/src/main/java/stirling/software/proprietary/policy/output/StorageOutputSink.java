@@ -106,9 +106,11 @@ public class StorageOutputSink implements PolicyOutputSink {
             Resource output = outputs.get(i);
             StoredFile stored;
             if (replaceInPlace) {
-                // The output takes the input's place — same row, same name, new content.
+                // The output takes the input's place — same row, same name, new content, and
+                // replaceFile keeps the row in whatever folder the user put it in.
                 stored =
-                        replaceKeepingPlacement(
+                        fileStorageService.replaceFile(
+                                origin.getOwner(),
                                 origin,
                                 new ResourceMultipartFile(output, origin.getOriginalFilename()));
             } else {
@@ -127,35 +129,6 @@ public class StorageOutputSink implements PolicyOutputSink {
                     stored.getId());
         }
         return results;
-    }
-
-    /**
-     * Replace a file's content in place, keeping it in the folder the user put it in.
-     *
-     * <p>Runs are delivered on a worker thread with no open persistence context, so {@code origin}
-     * is detached and its lazy {@code folder} association is an uninitialized proxy from a closed
-     * session. Saving it merges, and the unreadable proxy would leave the row with no folder — the
-     * file would silently fall out to the root of the file manager. The placement is therefore read
-     * as a plain id beforehand and re-applied afterwards if the write dropped it.
-     */
-    private StoredFile replaceKeepingPlacement(StoredFile origin, MultipartFile replacement) {
-        UUID folderId = storedFileRepository.findFolderIdByFileId(origin.getId()).orElse(null);
-        StoredFile stored = fileStorageService.replaceFile(origin.getOwner(), origin, replacement);
-        if (folderId == null) {
-            return stored;
-        }
-        UUID placement = storedFileRepository.findFolderIdByFileId(stored.getId()).orElse(null);
-        if (folderId.equals(placement)) {
-            return stored;
-        }
-        // Restore by writing the FK directly: re-saving the entity would merge the same detached
-        // state that lost the placement in the first place.
-        log.debug(
-                "Restoring folder {} on stored file {} after in-place replace",
-                folderId,
-                stored.getId());
-        storedFileRepository.updateFolderId(stored.getId(), folderId);
-        return stored;
     }
 
     /**

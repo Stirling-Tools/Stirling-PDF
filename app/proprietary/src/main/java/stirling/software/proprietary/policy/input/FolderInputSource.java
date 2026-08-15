@@ -139,11 +139,14 @@ public class FolderInputSource implements InputSource {
                                 if (config.track()) {
                                     // Track mode never removes the input: the directory belongs to
                                     // the user (their Downloads, a scan drop), so a processed file
-                                    // is recorded and left exactly where they put it.
+                                    // is recorded and left exactly where they put it. The hash is
+                                    // taken at the claimed version only — a file replaced or
+                                    // removed mid-run settles null rather than recording the
+                                    // replacement's bytes under the old gate.
                                     ctx.settle(
                                             identity,
                                             claimedGate,
-                                            contentHash == null ? null : contentHash.get(),
+                                            claimedHash(file, claimedGate, contentHash),
                                             success);
                                     return;
                                 }

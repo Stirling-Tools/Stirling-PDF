@@ -20,7 +20,7 @@
  * guard that stops the loop re-processing its own results.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useAllFiles, useFileContext } from "@app/contexts/FileContext";
 import {
@@ -162,8 +162,21 @@ export function useVirtualFolderProcessing(): void {
   // them would make the scan re-trigger on its own deliveries.
   const fileStubsRef = useRef(fileStubs);
   fileStubsRef.current = fileStubs;
-  // One scan at a time; a scan already covers everything pending when it runs.
+  // One scan at a time. A running scan's own deliveries bump the revision and
+  // re-fire the effect, so the re-fire queues a follow-up scan instead of
+  // cancelling the one in flight — cancelling there would strand every file
+  // after the first delivery until some unrelated write happened along.
   const scanning = useRef(false);
+  const rescanQueued = useRef(false);
+  const unmounted = useRef(false);
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    unmounted.current = false;
+    return () => {
+      unmounted.current = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!aiEnabled) return;
@@ -173,9 +186,12 @@ export function useVirtualFolderProcessing(): void {
         folder.processing?.enabled &&
         folder.processing.steps.length > 0,
     );
-    if (enabled.length === 0 || scanning.current) return;
+    if (enabled.length === 0) return;
+    if (scanning.current) {
+      rescanQueued.current = true;
+      return;
+    }
     scanning.current = true;
-    let cancelled = false;
 
     void (async () => {
       try {
@@ -190,7 +206,7 @@ export function useVirtualFolderProcessing(): void {
               !isDispatched(category, stub.id as string),
           );
           for (const stub of pending) {
-            if (cancelled) return;
+            if (unmounted.current) return;
             await processOne(folder, stub, category, {
               workspaceStubs: () => fileStubsRef.current,
               consumeFiles,
@@ -200,14 +216,19 @@ export function useVirtualFolderProcessing(): void {
         }
       } finally {
         scanning.current = false;
+        // Anything that changed mid-scan (deliveries included) gets one full
+        // follow-up pass; a clean follow-up finds nothing pending and stops.
+        if (!unmounted.current && rescanQueued.current) {
+          rescanQueued.current = false;
+          setTick((n) => n + 1);
+        }
       }
     })();
-    return () => {
-      cancelled = true;
-    };
     // `revision` re-scans after any IndexedDB write — that is how a file
-    // moved or uploaded into the folder gets picked up.
-  }, [folders, revision, aiEnabled, consumeFiles, bumpRevision]);
+    // moved or uploaded into the folder gets picked up. No cleanup cancels
+    // the loop: it must outlive re-renders its own deliveries cause, and
+    // only unmount stops it.
+  }, [folders, revision, aiEnabled, tick, consumeFiles, bumpRevision]);
 }
 
 /** Run one file through its folder's pipeline and deliver the result. */

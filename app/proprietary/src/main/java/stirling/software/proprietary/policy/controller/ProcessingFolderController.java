@@ -204,9 +204,21 @@ public class ProcessingFolderController {
                     "a processing folder needs either a folderId or a directory, not both");
         }
         Folder folder = onDisk ? null : requireOwnedFolder(request.folderId(), user);
-        boolean isCreate = request.id() == null || request.id().isBlank();
-        Policy existing = isCreate ? null : requireOwn(request.id(), user);
+        boolean requestedCreate = request.id() == null || request.id().isBlank();
+        // A place carries at most one processing folder per user: a create against a place that
+        // already has one adopts it — same policy, same ledger — instead of composing a duplicate
+        // pair whose empty ledger would re-process everything the original already did. The
+        // adopted create still runs the backlog sweep below; the kept ledger makes it pick up
+        // only what is genuinely new.
+        Policy existing =
+                requestedCreate ? existingForPlace(request, user) : requireOwn(request.id(), user);
         String name = onDisk ? diskFolderName(request.directory()) : folder.getName();
+
+        // Held for rollback: the source is written before the policy validates, and a rejected
+        // save must not leave the pair half-updated (source mutated, policy old).
+        String existingSourceId = existing == null ? null : soleSourceId(existing);
+        Source priorSource =
+                existingSourceId == null ? null : sourceStore.get(existingSourceId).orElse(null);
 
         Source source =
                 sourceStore.save(
@@ -245,12 +257,14 @@ public class ProcessingFolderController {
         } catch (IllegalArgumentException e) {
             if (existing == null) {
                 sourceStore.delete(source.id());
+            } else if (priorSource != null) {
+                sourceStore.save(priorSource);
             }
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
         Policy saved = policyStore.save(policy);
         policyTriggerManager.notifyPoliciesChanged();
-        if (!isCreate) {
+        if (!requestedCreate) {
             return ResponseEntity.ok(toView(saved));
         }
         // Process the backlog: everything already in the folder runs once, now. The counts go back
@@ -348,6 +362,41 @@ public class ProcessingFolderController {
         processedLedger.clearPolicy(policy.id());
         policyTriggerManager.notifyPoliciesChanged();
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * The caller's processing folder already watching the requested place, if any. Paths compare
+     * normalized (and by the platform's own case rules), so the same directory spelled two ways is
+     * still one place.
+     */
+    private Policy existingForPlace(SaveProcessingFolderRequest request, User user) {
+        boolean onDisk = request.directory() != null && !request.directory().isBlank();
+        Path directory = onDisk ? Path.of(request.directory().trim()).normalize() : null;
+        return policyAccessGuard.visibleFrom(policyStore).stream()
+                .filter(ProcessingFolderController::isProcessingFolder)
+                .filter(policy -> ownedBy(policy, user))
+                .filter(
+                        policy -> {
+                            String sourceId = soleSourceId(policy);
+                            Source source =
+                                    sourceId == null
+                                            ? null
+                                            : sourceStore.get(sourceId).orElse(null);
+                            if (source == null) {
+                                return false;
+                            }
+                            if (onDisk) {
+                                Object watched = source.options().get("directory");
+                                return watched != null
+                                        && Path.of(watched.toString())
+                                                .normalize()
+                                                .equals(directory);
+                            }
+                            return String.valueOf(source.options().get("folderId"))
+                                    .equals(request.folderId());
+                        })
+                .findFirst()
+                .orElse(null);
     }
 
     /** The pair's policy record, only if it is a processing folder the caller owns. */

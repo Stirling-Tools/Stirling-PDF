@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -36,16 +37,27 @@ public class SourceOverviewService {
 
     public SourcesResponse overview() {
         // Processing folders (source + policy pairs) are the editor's own surface, served by
-        // ProcessingFolderController; the portal's sources/pipelines views never see them.
+        // ProcessingFolderController; the portal's sources/pipelines views never see them. The
+        // pair's source is hidden by reference, not by type alone: a disk-backed processing
+        // folder's source shares its type with ordinary folder-watch sources, and hiding those
+        // wholesale would take a real portal feature with it. The type filter stays as a backstop
+        // for a pair-half orphaned by a deleted policy.
+        List<Policy> visiblePolicies = policyAccessGuard.visibleFrom(policyStore);
+        Set<String> processingFolderSourceIds =
+                visiblePolicies.stream()
+                        .filter(ProcessingFolderController::isProcessingFolder)
+                        .flatMap(policy -> policy.sourceIds().stream())
+                        .collect(Collectors.toSet());
         List<Source> sources =
                 sourceAccessGuard.visibleFrom(sourceStore).stream()
                         .filter(
                                 source ->
                                         !ProcessingFolderController.SOURCE_TYPE.equals(
                                                 source.type()))
+                        .filter(source -> !processingFolderSourceIds.contains(source.id()))
                         .toList();
         List<Policy> policies =
-                policyAccessGuard.visibleFrom(policyStore).stream()
+                visiblePolicies.stream()
                         .filter(policy -> !ProcessingFolderController.isProcessingFolder(policy))
                         .toList();
 

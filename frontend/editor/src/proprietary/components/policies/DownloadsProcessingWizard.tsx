@@ -17,6 +17,7 @@ import {
 import { refreshProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFolders } from "@app/contexts/FolderContext";
+import { canListDirectory } from "@app/services/localFolderContents";
 import "@app/components/policies/DownloadsProcessingWizard.css";
 
 type Phase = "asking" | "working" | "done" | "failed";
@@ -181,13 +182,18 @@ export function DownloadsProcessingWizard({
       });
       // Mount the directory as a local folder too, so Downloads exists in the
       // file manager as a real folder — the processing record attaches to it
-      // there — rather than results appearing from nowhere. Idempotent, and
-      // best-effort: the sweep's results matter more than the bookmark.
-      const segments = suggestion.directory.split(/[/\\]/).filter(Boolean);
-      await mountLocalFolder(
-        suggestion.directory,
-        segments[segments.length - 1] ?? suggestion.directory,
-      ).catch(() => {});
+      // there — rather than results appearing from nowhere. Only where this
+      // build can actually read the directory (the desktop app, where the
+      // server's Downloads IS this machine's): a plain browser mounting the
+      // server's path would show a folder that is forever empty. Idempotent,
+      // and best-effort: the sweep's results matter more than the bookmark.
+      if (canListDirectory) {
+        const segments = suggestion.directory.split(/[/\\]/).filter(Boolean);
+        await mountLocalFolder(
+          suggestion.directory,
+          segments[segments.length - 1] ?? suggestion.directory,
+        ).catch(() => {});
+      }
       // The server reports what it actually started; 0 means everything there was already
       // processed, which is a finished state, not something to wait for.
       setStarted(folder.startedRuns);
