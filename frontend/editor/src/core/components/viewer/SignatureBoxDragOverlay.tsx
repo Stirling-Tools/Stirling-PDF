@@ -44,12 +44,9 @@ const DRAG_THRESHOLD_PX = 4;
  * The box is reported in PDF points with the origin bottom-left, which is what the
  * cert-sign endpoint takes, so nothing downstream has to convert again.
  */
-export const SignatureBoxDragOverlay: React.FC<SignatureBoxDragOverlayProps> = ({
-  pageIndex,
-  pageWidth,
-  pageHeight,
-  pdfSource,
-}) => {
+export const SignatureBoxDragOverlay: React.FC<
+  SignatureBoxDragOverlayProps
+> = ({ pageIndex, pageWidth, pageHeight, pdfSource }) => {
   const [isActive, setIsActive] = useState(false);
   const [drag, setDrag] = useState<DragState | null>(null);
   /** First corner of a two-click placement, once the user has clicked it. */
@@ -237,7 +234,10 @@ export const SignatureBoxDragOverlay: React.FC<SignatureBoxDragOverlayProps> = (
   // While dragging the box follows the pointer; after the first of two clicks it
   // follows the hover position, so both gestures preview the same way.
   const corners = drag
-    ? { a: { x: drag.startX, y: drag.startY }, b: { x: drag.currentX, y: drag.currentY } }
+    ? {
+        a: { x: drag.startX, y: drag.startY },
+        b: { x: drag.currentX, y: drag.currentY },
+      }
     : anchor && hover
       ? { a: anchor, b: hover }
       : null;

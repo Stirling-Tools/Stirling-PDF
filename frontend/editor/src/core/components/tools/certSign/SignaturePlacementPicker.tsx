@@ -85,7 +85,10 @@ const SignaturePlacementPicker: React.FC<SignaturePlacementPickerProps> = ({
           pdfWorkerManager.destroyDocument(pdf);
         }
       } catch (error) {
-        console.error("Failed to read page size for signature placement:", error);
+        console.error(
+          "Failed to read page size for signature placement:",
+          error,
+        );
         // A4 keeps the picker usable; the backend clamps anything that overflows.
         if (!cancelled) {
           setPdfBounds(
@@ -117,7 +120,10 @@ const SignaturePlacementPicker: React.FC<SignaturePlacementPickerProps> = ({
     if (!pdfBounds) return null;
     const margin = 40;
     return {
-      x: Math.max(0, pdfBounds.actualWidth - DEFAULT_SIGNATURE_BOX.width - margin),
+      x: Math.max(
+        0,
+        pdfBounds.actualWidth - DEFAULT_SIGNATURE_BOX.width - margin,
+      ),
       y: margin,
       width: DEFAULT_SIGNATURE_BOX.width,
       height: DEFAULT_SIGNATURE_BOX.height,

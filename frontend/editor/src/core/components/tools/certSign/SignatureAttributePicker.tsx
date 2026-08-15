@@ -74,9 +74,7 @@ const SignatureAttributePicker: React.FC<SignatureAttributePickerProps> = ({
             size="xs"
             disabled={disabled}
             checked={selected.includes(attribute)}
-            onChange={(event) =>
-              toggle(attribute, event.currentTarget.checked)
-            }
+            onChange={(event) => toggle(attribute, event.currentTarget.checked)}
             label={t(CERTIFICATE_ATTRIBUTE_LABEL_KEYS[attribute], attribute)}
           />
         ))}

@@ -48,7 +48,10 @@ const SignatureAppearanceSettings = ({
   const { files, fileStubs } = useAllFiles();
   const [isPlacing, setIsPlacing] = useState(false);
 
-  const selectedFile = useMemo(() => (files.length > 0 ? files[0] : null), [files]);
+  const selectedFile = useMemo(
+    () => (files.length > 0 ? files[0] : null),
+    [files],
+  );
   const selectedStub = useMemo(
     () => (fileStubs.length > 0 ? fileStubs[0] : null),
     [fileStubs],
