@@ -640,13 +640,18 @@ function readFontFamily(
 ): { family: string; subset: boolean } {
   if (!fontPtr) return { family: "Unknown", subset: false };
   const familyRaw = readFontNameVia(m, fontPtr, m.FPDFFont_GetFamilyName);
-  if (familyRaw == null) return { family: "Unknown", subset: false };
-  const tagged = SUBSET_TAG_RE.test(familyRaw);
-  const family = tagged ? familyRaw.slice(7) : familyRaw;
-  if (tagged) return { family, subset: true };
   // Some PDFs carry the 6-letter subset tag only on /BaseFont, not the embedded
   // name table.
   const baseRaw = readFontNameVia(m, fontPtr, m.FPDFFont_GetBaseFontName);
+  // Plenty of embedded fonts expose no name-table family at all. /BaseFont
+  // still names the face, and that name is what decides the fallback's
+  // serif/sans class - calling it "Unknown" silently substituted Helvetica
+  // into serif documents.
+  const nameRaw = familyRaw ?? baseRaw;
+  if (nameRaw == null) return { family: "Unknown", subset: false };
+  const tagged = SUBSET_TAG_RE.test(nameRaw);
+  const family = tagged ? nameRaw.slice(7) : nameRaw;
+  if (tagged) return { family, subset: true };
   return { family, subset: baseRaw != null && SUBSET_TAG_RE.test(baseRaw) };
 }
 
