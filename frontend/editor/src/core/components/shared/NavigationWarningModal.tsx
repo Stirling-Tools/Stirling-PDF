@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, type CSSProperties } from "react";
 import { Modal, Text, Group, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
@@ -72,6 +72,8 @@ const NavigationWarningModal = () => {
   const hasApply = !!handlers?.onApplyAndContinue;
   const hasExport = !!handlers?.onExportAndContinue;
 
+  // Equal width for every action button so the Apply/Discard/Export row reads
+  // as one consistent control set regardless of which handlers are registered.
   const BUTTON_WIDTH = "12rem";
 
   // Only show modal if there are unsaved changes AND there's an actual pending navigation
@@ -79,13 +81,15 @@ const NavigationWarningModal = () => {
     return null;
   }
 
+  const modalStyle = { "--modal-size": "auto" } as CSSProperties;
+
   return (
     <Modal
       opened={showNavigationWarning}
       onClose={handleKeepWorking}
       title={t("unsavedChangesTitle", "Unsaved Changes")}
       centered
-      size="auto"
+      style={modalStyle}
       closeOnClickOutside={true}
       closeOnEscape={true}
       zIndex={Z_INDEX_TOAST}
@@ -100,9 +104,15 @@ const NavigationWarningModal = () => {
           </Text>
         </Stack>
 
-        {/* Desktop layout: 2 groups side by side */}
-        <Group justify="space-between" gap="xl" visibleFrom="md">
-          <Group gap="sm">
+        {/* Desktop layout: 2 groups side by side. align="stretch" pins every
+            button to the tallest one so wrapped translations stay equal height. */}
+        <Group
+          justify="space-between"
+          gap="xl"
+          align="stretch"
+          visibleFrom="md"
+        >
+          <Group gap="sm" align="stretch">
             <Button
               variant="secondary"
               accent="neutral"
@@ -115,7 +125,7 @@ const NavigationWarningModal = () => {
               {t("keepWorking", "Keep Working")}
             </Button>
           </Group>
-          <Group gap="sm">
+          <Group gap="sm" align="stretch">
             <Button
               accent="danger"
               onClick={handleDiscardChanges}
@@ -147,13 +157,14 @@ const NavigationWarningModal = () => {
           </Group>
         </Group>
 
-        {/* Mobile layout: centered stack of 4 buttons */}
-        <Stack align="center" gap="sm" hiddenFrom="md">
+        {/* Mobile layout: full-width buttons stacked so they span the modal on
+            narrow screens instead of a fixed-width centered column. */}
+        <Stack w="100%" gap="sm" hiddenFrom="md">
           <Button
             variant="secondary"
             accent="neutral"
             onClick={handleKeepWorking}
-            style={{ width: BUTTON_WIDTH }}
+            fullWidth
             leftSection={<ArrowBackIcon fontSize="small" />}
           >
             {t("keepWorking", "Keep Working")}
@@ -161,9 +172,7 @@ const NavigationWarningModal = () => {
           <Button
             accent="danger"
             onClick={handleDiscardChanges}
-            style={{
-              width: BUTTON_WIDTH,
-            }}
+            fullWidth
             leftSection={<DeleteOutlineIcon fontSize="small" />}
           >
             {t("discardChanges", "Discard Changes")}
@@ -171,7 +180,7 @@ const NavigationWarningModal = () => {
           {hasApply && (
             <Button
               onClick={handleApplyAndContinue}
-              style={{ width: BUTTON_WIDTH }}
+              fullWidth
               leftSection={<CheckCircleOutlineIcon fontSize="small" />}
             >
               {t("applyAndContinue", "Apply & Leave")}
@@ -180,7 +189,7 @@ const NavigationWarningModal = () => {
           {hasExport && (
             <Button
               onClick={handleExportAndContinue}
-              style={{ width: BUTTON_WIDTH }}
+              fullWidth
               leftSection={<CheckCircleOutlineIcon fontSize="small" />}
             >
               {t("exportAndContinue", "Export & Leave")}
