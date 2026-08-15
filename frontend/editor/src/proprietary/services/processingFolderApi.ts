@@ -6,6 +6,7 @@
  */
 
 import apiClient from "@app/services/apiClient";
+import { readDiskFile } from "@app/services/localFolderContents";
 
 /** The classify step: identifies the document's type and tags it. No parameters. */
 export const CLASSIFY_OPERATION = "/api/v1/ai/tools/classify-and-label";
@@ -129,28 +130,49 @@ export interface ProcessingFolderRun {
 export async function fetchProcessingFolderRuns(
   policyId: string,
 ): Promise<ProcessingFolderRun[]> {
-  const res = await apiClient.get<(ProcessingFolderRun & { policyId?: string })[]>(
-    "/api/v1/policies/runs",
-  );
+  const res = await apiClient.get<
+    (ProcessingFolderRun & { policyId?: string })[]
+  >("/api/v1/policies/runs");
   return (res.data ?? []).filter((run) => run.policyId === policyId);
 }
 
+/** An absolute filesystem path (Windows drive-letter or POSIX rooted). */
+function isAbsolutePath(value: string): boolean {
+  return /^([A-Za-z]:[\\/]|\/)/.test(value);
+}
+
 /**
- * Fetch a run output's bytes as a File, ready to hand to the workbench. Runs are server-side, so
- * their results exist only in storage until something pulls them down.
+ * Fetch a run output's bytes as a File, ready to hand to the workbench.
  *
  * A storage-backed run puts the stored file's own id in `fileId`, so it downloads from the storage
  * endpoint. The job endpoint (`/api/v1/general/files/{id}`) keys off job-file UUIDs and rejects a
  * stored-file id outright — the two share a field name but not an id space.
+ *
+ * A disk-backed run delivers to the filesystem instead: its `fileId` is synthetic (nothing serves
+ * it) and `fileName` is the output's absolute path. Only a build that can see the filesystem — the
+ * desktop app, where the server is this machine — can pick those up, by reading the path directly.
  */
 export async function fetchRunOutputFile(
   output: ProcessingRunOutput,
 ): Promise<File> {
+  const name = output.fileName?.trim() || `${output.fileId}.pdf`;
+  if (isAbsolutePath(name)) {
+    const baseName = name.split(/[\\/]/).pop() || name;
+    const file = await readDiskFile({
+      path: name,
+      name: baseName,
+      sizeBytes: 0,
+      lastModified: 0,
+    });
+    if (!file) {
+      throw new Error(`This build cannot read the run output at ${name}`);
+    }
+    return file;
+  }
   const res = await apiClient.get(
     `/api/v1/storage/files/${output.fileId}/download`,
     { responseType: "blob" },
   );
-  const name = output.fileName?.trim() || `${output.fileId}.pdf`;
   return new File([res.data as Blob], name, {
     type: (res.data as Blob).type || "application/pdf",
   });
