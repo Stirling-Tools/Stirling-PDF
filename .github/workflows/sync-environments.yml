@@ -14,6 +14,9 @@ name: Sync GitHub Environments
 # Requires ENV_BOOTSTRAP_TOKEN: a PAT (classic `repo` scope, or fine-grained with
 # Administration: read+write, Environments: read+write, Secrets: read+write).
 # GITHUB_TOKEN cannot manage environments or secrets.
+#
+# Run mode: a push to main applies. Any other push previews unless the head commit
+# message contains [apply]. A manual dispatch honours its dry_run input.
 
 on:
   push:
@@ -25,7 +28,7 @@ on:
       # A push trigger runs the copy of the workflow on the pushed branch, so
       # listing the working branch here lets the first reconcile run pre-merge.
       # Any branch named here can read every repo/org secret - keep it to one.
-      - claude/duplicate-secrets-cleanup-f2ed94
+      - ci/environments-cutover
     paths:
       - .github/environments.yml
       - .github/workflows/sync-environments.yml
@@ -85,6 +88,31 @@ jobs:
           # Structure only - no secret values live in the manifest.
           jq -r '.environments | keys_unsorted[]' "${RUNNER_TEMP}/manifest.json"
 
+      # Computed in shell rather than an expression: the `x && y || z` idiom
+      # silently returns z whenever y is false, which is exactly the case here.
+      - name: Resolve run mode
+        id: mode
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          INPUT_DRY: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          if [ "${EVENT}" = "workflow_dispatch" ]; then
+            dry="${INPUT_DRY}"
+          elif [ "${REF}" = "refs/heads/main" ]; then
+            # Steady state: the manifest on main is the source of truth, so apply it.
+            dry=false
+          elif git log -1 --pretty=%B | grep -qF '[apply]'; then
+            # Bootstrap branch escape hatch, since dispatch is unavailable until
+            # this file reaches the default branch.
+            dry=false
+          else
+            dry=true
+          fi
+          echo "dry_run=${dry}" >> "$GITHUB_OUTPUT"
+          echo "event=${EVENT} ref=${REF} -> dry_run=${dry}"
+
       - name: Reconcile environments and secrets
         env:
           GH_TOKEN: ${{ secrets.ENV_BOOTSTRAP_TOKEN }}
@@ -93,7 +121,7 @@ jobs:
           # Every secret visible to this job (org + repo). Consumed by the script
           # below and never printed; GitHub masks the values in logs regardless.
           ALL_SECRETS: ${{ toJSON(secrets) }}
-          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+          DRY_RUN: ${{ steps.mode.outputs.dry_run }}
           PRUNE_SECRETS: ${{ github.event_name == 'workflow_dispatch' && inputs.prune_secrets || 'false' }}
         run: python3 .github/scripts/sync_environments.py
 
