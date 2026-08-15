@@ -98,6 +98,21 @@ public class SignPDFWithCertRequest extends PDFFile {
 
     @Schema(
             description =
+                    "Image drawn inside the signature box when showLogo is set, typically the"
+                            + " signer's organisation logo. PNG or JPEG. Omit to keep the bundled"
+                            + " mark.")
+    private MultipartFile logoImage;
+
+    @Schema(
+            description =
+                    "Where the logo sits inside the signature box. BEHIND draws it under the text"
+                            + " as a watermark; the others give it a strip of its own. Ignored"
+                            + " unless a signature box is requested.",
+            defaultValue = "LEFT")
+    private SignatureLogoPosition logoPosition;
+
+    @Schema(
+            description =
                     "Distance in PDF points from the left edge of the page to the left edge of the"
                             + " signature box. Omit to keep the legacy bottom-left placement.")
     private Float signatureX;

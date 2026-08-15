@@ -2498,6 +2498,18 @@ title = "Fields to show in the signature"
 validFrom = "Valid from"
 validUntil = "Valid until"
 
+[certSign.logo]
+choose = "Choose a logo image (PNG or JPEG)"
+hint = "Leave empty to use the built-in Stirling PDF mark."
+positionLabel = "Logo position"
+
+[certSign.logo.position]
+BEHIND = "Behind the text (watermark)"
+BOTTOM = "Below the text"
+LEFT = "Left of the text"
+RIGHT = "Right of the text"
+TOP = "Above the text"
+
 [certSign.markAllPages]
 label = "Repeat it on every page"
 needsBox = "Draw the box first, so there is a shape to repeat."
@@ -2524,6 +2536,21 @@ bullet2 = "Meets legal requirements for digital signing"
 bullet3 = "Doesn't affect document layout or design"
 text = "The signature is added to the PDF for security but won't be visible when viewing the document. Perfect for legal requirements without changing the document's appearance."
 title = "Invisible Signatures"
+
+[certSign.appearance.tooltip.attributes]
+bullet1 = "Show only what matters, such as your name and the date"
+bullet2 = "Add the issuing authority when the reader needs to trust the source"
+bullet3 = "Details your certificate does not contain are simply left out"
+text = "Your certificate holds details such as your name, who issued it and how long it is valid. Tick the ones you want printed inside the signature box."
+title = "Choosing What the Signature Shows"
+
+[certSign.appearance.tooltip.logo]
+bullet1 = "PNG or JPEG; the image keeps its proportions, never stretched"
+bullet2 = "Put it beside the text, above it, below it, or behind it"
+bullet3 = "Behind draws it as a faded watermark, so the text stays readable on top"
+bullet4 = "The text keeps its share of the box, however wide the logo is"
+text = "Upload your organisation's logo to show it inside the signature box, and choose where it sits. Leave it empty and the built-in Stirling PDF mark is used instead."
+title = "Adding Your Logo"
 
 [certSign.appearance.tooltip.markAllPages]
 bullet1 = "Only the page you drew on carries the real signature"

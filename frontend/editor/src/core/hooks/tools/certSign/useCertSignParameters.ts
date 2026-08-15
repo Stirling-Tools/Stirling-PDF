@@ -4,7 +4,11 @@ import {
   BaseParametersHook,
 } from "@app/hooks/tools/shared/useBaseParameters";
 import { Rectangle } from "@app/utils/cropCoordinates";
-import { CertificateAttribute } from "@app/constants/certSignConstants";
+import {
+  CertificateAttribute,
+  DEFAULT_SIGNATURE_LOGO_POSITION,
+  SignatureLogoPosition,
+} from "@app/constants/certSignConstants";
 
 export interface CertSignParameters extends BaseParameters {
   // Where the signing certificate comes from:
@@ -32,6 +36,15 @@ export interface CertSignParameters extends BaseParameters {
   name: string;
   pageNumber: number;
   showLogo: boolean;
+
+  /**
+   * Image drawn inside the box, typically the signer's organisation logo. Undefined
+   * keeps the mark that ships with the app.
+   */
+  logoImage?: File;
+
+  /** Where that logo sits inside the box. */
+  logoPosition: SignatureLogoPosition;
 
   /**
    * Where the signature box sits on the page, in PDF points with the origin at the
@@ -64,6 +77,7 @@ export const defaultParameters: CertSignParameters = {
   name: "",
   pageNumber: 1,
   showLogo: true,
+  logoPosition: DEFAULT_SIGNATURE_LOGO_POSITION,
   visibleAttributes: [],
   markAllPages: false,
 };

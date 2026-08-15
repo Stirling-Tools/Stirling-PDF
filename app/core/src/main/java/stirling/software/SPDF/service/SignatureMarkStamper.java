@@ -12,6 +12,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
@@ -20,6 +21,7 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPa
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.security.SignatureBox;
+import stirling.software.SPDF.model.api.security.SignatureLogoPosition;
 
 /**
  * Draws the signature's appearance onto pages that are not the signed one.
@@ -50,6 +52,13 @@ public class SignatureMarkStamper {
 
     private SignatureMarkStamper() {}
 
+    /** Stamps the mark on every page except the signed one, without a logo. */
+    public static int stampOtherPages(
+            PDDocument document, int signedPageIndex, SignatureBox box, Map<String, String> lines)
+            throws IOException {
+        return stampOtherPages(document, signedPageIndex, box, lines, null);
+    }
+
     /**
      * Stamps the mark on every page except the signed one.
      *
@@ -57,10 +66,17 @@ public class SignatureMarkStamper {
      * @param signedPageIndex zero-based page holding the real signature, which is skipped
      * @param box where the mark goes, in PDF user space
      * @param lines label/value pairs to draw, as the signature itself shows them
+     * @param logo the same logo the signature draws, or {@code null} for text only. Passing it
+     *     matters: a mark meant to be indistinguishable from the signature cannot be missing the
+     *     logo the signature has.
      * @return how many pages were marked
      */
     public static int stampOtherPages(
-            PDDocument document, int signedPageIndex, SignatureBox box, Map<String, String> lines)
+            PDDocument document,
+            int signedPageIndex,
+            SignatureBox box,
+            Map<String, String> lines,
+            SignatureLogoPlacement.Logo logo)
             throws IOException {
         if (box == null || lines == null || lines.isEmpty()) {
             return 0;
@@ -82,8 +98,20 @@ public class SignatureMarkStamper {
             PDPage page = document.getPage(pageIndex);
             PDRectangle rect = box.toPdfRectangle(page.getMediaBox());
 
+            // The logo takes its strip first, exactly as it does in the signature, so both end up
+            // with the text in the same place.
+            PDImageXObject logoImage = loadLogo(document, logo);
+            PDRectangle textArea = rect;
+            SignatureLogoPlacement.Placement placement = null;
+            if (logoImage != null) {
+                placement =
+                        SignatureLogoPlacement.place(rect, aspectRatio(logoImage), logo.position());
+                textArea = placement.textRect();
+            }
+
             SignatureAppearanceLayout.Layout layout =
-                    SignatureAppearanceLayout.fit(lines, font, rect.getWidth(), rect.getHeight());
+                    SignatureAppearanceLayout.fit(
+                            lines, font, textArea.getWidth(), textArea.getHeight());
             if (layout.lines().isEmpty()) {
                 // Pages smaller than the box can leave no room at all; skipping one page is
                 // better than drawing something illegible over its content.
@@ -95,7 +123,14 @@ public class SignatureMarkStamper {
             try (PDPageContentStream cs =
                     new PDPageContentStream(document, page, AppendMode.APPEND, true, true)) {
                 drawBorder(cs, rect);
-                drawLines(cs, font, rect, layout);
+                if (placement != null) {
+                    SignatureLogoPlacement.draw(
+                            cs,
+                            logoImage,
+                            placement.logoRect(),
+                            logo.position() == SignatureLogoPosition.BEHIND);
+                }
+                drawLines(cs, font, textArea, layout);
             }
             if (signedPage != null) {
                 addLinkToSignature(page, rect, signedPage);
@@ -131,6 +166,19 @@ public class SignatureMarkStamper {
         link.setAction(action);
 
         page.getAnnotations().add(link);
+    }
+
+    /** Decodes the logo once per page, or nothing when the caller passed none. */
+    private static PDImageXObject loadLogo(PDDocument document, SignatureLogoPlacement.Logo logo)
+            throws IOException {
+        if (logo == null || logo.image() == null || logo.image().length == 0) {
+            return null;
+        }
+        return PDImageXObject.createFromByteArray(document, logo.image(), "signatureMarkLogo");
+    }
+
+    private static float aspectRatio(PDImageXObject image) {
+        return image.getHeight() == 0 ? 1f : (float) image.getWidth() / (float) image.getHeight();
     }
 
     private static void drawBorder(PDPageContentStream cs, PDRectangle rect) throws IOException {

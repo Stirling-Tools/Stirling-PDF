@@ -56,3 +56,31 @@ export const DEFAULT_VISIBLE_ATTRIBUTES: CertificateAttribute[] = [
 
 /** Size of the box created when the user first enables placement, in PDF points. */
 export const DEFAULT_SIGNATURE_BOX = { width: 200, height: 60 } as const;
+
+/**
+ * Where the logo can sit inside the signature box.
+ *
+ * The identifiers must match the backend's SignatureLogoPosition enum exactly - they
+ * travel over the wire as-is.
+ */
+export const SIGNATURE_LOGO_POSITIONS = [
+  "LEFT",
+  "RIGHT",
+  "TOP",
+  "BOTTOM",
+  "BEHIND",
+] as const;
+
+export type SignatureLogoPosition = (typeof SIGNATURE_LOGO_POSITIONS)[number];
+
+/** Matches the backend default, so not choosing and choosing LEFT look the same. */
+export const DEFAULT_SIGNATURE_LOGO_POSITION: SignatureLogoPosition = "LEFT";
+
+/** English shown until a locale supplies its own wording. */
+export const LOGO_POSITION_FALLBACKS: Record<SignatureLogoPosition, string> = {
+  LEFT: "Left of the text",
+  RIGHT: "Right of the text",
+  TOP: "Above the text",
+  BOTTOM: "Below the text",
+  BEHIND: "Behind the text (watermark)",
+};

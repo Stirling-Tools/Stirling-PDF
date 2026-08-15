@@ -69,6 +69,12 @@ const withSignatureAppearance = (
     apiParams.pageNumber = parameters.pageNumber;
     apiParams.showLogo = parameters.showLogo;
 
+    // Sent only when the logo is on: a position with the logo hidden means nothing,
+    // and omitting it keeps the request as it was before the option existed.
+    if (parameters.showLogo) {
+      apiParams.logoPosition = parameters.logoPosition;
+    }
+
     // Only sent when the user actually placed a box. Omitting these keeps the
     // backend's original placement, so the tool still works without drawing one.
     const area = parameters.signatureArea;
@@ -92,21 +98,29 @@ const withSignatureAppearance = (
 // Select the keystore File uploads for the chosen certificate type. AUTO mode
 // (server certificate) uploads no keystore.
 const certSignFiles = (parameters: CertSignParameters): FormDataFiles => {
-  if (parameters.signMode === "AUTO") return {};
+  // The logo has nothing to do with where the certificate comes from, so it rides
+  // along in every mode, server certificate included.
+  const logo: FormDataFiles =
+    parameters.showSignature && parameters.showLogo && parameters.logoImage
+      ? { logoImage: parameters.logoImage }
+      : {};
+
+  if (parameters.signMode === "AUTO") return logo;
 
   switch (parameters.certType) {
     case "PEM":
       return {
+        ...logo,
         privateKeyFile: parameters.privateKeyFile,
         certFile: parameters.certFile,
       };
     case "PKCS12":
     case "PFX":
-      return { p12File: parameters.p12File };
+      return { ...logo, p12File: parameters.p12File };
     case "JKS":
-      return { jksFile: parameters.jksFile };
+      return { ...logo, jksFile: parameters.jksFile };
     default:
-      return {};
+      return logo;
   }
 };
 
@@ -139,6 +153,9 @@ export const certSignFromApiParams = (
     result.pageNumber = apiParams.pageNumber;
   }
   if (apiParams.showLogo !== undefined) result.showLogo = apiParams.showLogo;
+  if (apiParams.logoPosition !== undefined) {
+    result.logoPosition = apiParams.logoPosition;
+  }
 
   // A stored step only carries a box if all four values are present; a partial one
   // would silently reposition the signature somewhere the author never chose.

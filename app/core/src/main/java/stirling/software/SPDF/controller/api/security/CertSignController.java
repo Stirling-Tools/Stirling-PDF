@@ -11,6 +11,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -78,10 +79,12 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.CertificateAttribute;
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.model.api.security.SignatureBox;
+import stirling.software.SPDF.model.api.security.SignatureLogoPosition;
 import stirling.software.SPDF.pdf.signature.CreateSignatureBase;
 import stirling.software.SPDF.service.CertificateAttributeService;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.SPDF.service.SignatureAppearanceLayout;
+import stirling.software.SPDF.service.SignatureLogoPlacement;
 import stirling.software.SPDF.service.SignatureMarkStamper;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -194,7 +197,8 @@ public class CertSignController {
                                 doc,
                                 pageNumber != null ? pageNumber : 0,
                                 box,
-                                instance.displayLines(signature, visibleAttributes));
+                                instance.displayLines(signature, visibleAttributes),
+                                instance.effectiveLogo(showLogo));
                 log.info(
                         "Stamped the signature mark on {} page(s); only page {} carries the"
                                 + " signature itself",
@@ -349,6 +353,7 @@ public class CertSignController {
         char[] pin = keystorePassword != null ? keystorePassword.toCharArray() : null;
         CreateSignature createSignature =
                 new CreateSignature(ks, pin, request.getAlias(), signingProvider);
+        createSignature.setCustomLogo(readLogo(request.getLogoImage(), request.getLogoPosition()));
         TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");
         try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
             sign(
@@ -397,6 +402,55 @@ public class CertSignController {
         return file;
     }
 
+    /**
+     * Reads the uploaded logo, if the request carries one.
+     *
+     * @return the logo to draw, or {@code null} when the request asked for neither an image nor a
+     *     position - which is what keeps the appearance of old for callers that know nothing about
+     *     either
+     */
+    private SignatureLogoPlacement.Logo readLogo(
+            MultipartFile logoImage, SignatureLogoPosition logoPosition) throws IOException {
+        boolean hasImage = logoImage != null && !logoImage.isEmpty();
+        if (!hasImage && logoPosition == null) {
+            return null;
+        }
+        if (!hasImage) {
+            // A position on its own still means something: it moves the bundled mark.
+            return new SignatureLogoPlacement.Logo(null, logoPosition);
+        }
+        if (!isSupportedLogoType(logoImage)) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "signature logo - only PNG and JPEG images are supported");
+        }
+        return new SignatureLogoPlacement.Logo(logoImage.getBytes(), logoPosition);
+    }
+
+    /**
+     * PDFBox reads the image from its bytes, so the declared type is only a hint - but rejecting an
+     * obviously wrong upload here gives the user a clear message instead of a decoding failure
+     * halfway through signing.
+     */
+    private boolean isSupportedLogoType(MultipartFile logoImage) {
+        String contentType = logoImage.getContentType();
+        if (contentType != null) {
+            String normalised = contentType.toLowerCase(Locale.ROOT);
+            return normalised.equals("image/png")
+                    || normalised.equals("image/jpeg")
+                    || normalised.equals("image/jpg");
+        }
+        String filename = logoImage.getOriginalFilename();
+        if (filename == null) {
+            return false;
+        }
+        String normalised = filename.toLowerCase(Locale.ROOT);
+        return normalised.endsWith(".png")
+                || normalised.endsWith(".jpg")
+                || normalised.endsWith(".jpeg");
+    }
+
     private PrivateKey getPrivateKeyFromPEM(byte[] pemBytes, String password)
             throws IOException, OperatorCreationException, PKCSException {
         try (PEMParser pemParser =
@@ -429,6 +483,21 @@ public class CertSignController {
     public static class CreateSignature extends CreateSignatureBase {
         File logoFile;
 
+        /**
+         * Logo supplied with the request, if any. It lives on the instance rather than travelling
+         * through {@code sign(...)} because that is where the bundled mark already lives: the
+         * appearance builder owns what the signature looks like.
+         */
+        private SignatureLogoPlacement.Logo customLogo;
+
+        public void setCustomLogo(SignatureLogoPlacement.Logo customLogo) {
+            this.customLogo = customLogo;
+        }
+
+        public SignatureLogoPlacement.Logo getCustomLogo() {
+            return customLogo;
+        }
+
         public CreateSignature(KeyStore keystore, char[] pin)
                 throws KeyStoreException,
                         UnrecoverableKeyException,
@@ -459,6 +528,48 @@ public class CertSignController {
                 log.error("Failed to load image signature file");
                 throw e;
             }
+        }
+
+        /** The uploaded logo when there is one, otherwise the mark that ships with the app. */
+        private PDImageXObject loadLogoImage(PDDocument doc) throws IOException {
+            if (customLogo != null && customLogo.image() != null) {
+                return PDImageXObject.createFromByteArray(doc, customLogo.image(), "signatureLogo");
+            }
+            return PDImageXObject.createFromFileByExtension(logoFile, doc);
+        }
+
+        /**
+         * The logo the signature will actually draw, resolved to bytes.
+         *
+         * <p>Handed to the mark stamper so the marks on the other pages carry the same image as the
+         * signature - including the bundled mark, which otherwise only the signature knows how to
+         * find.
+         *
+         * @return the logo, or {@code null} when the signature is not drawing one
+         */
+        public SignatureLogoPlacement.Logo effectiveLogo(Boolean showLogo) throws IOException {
+            if (!Boolean.TRUE.equals(showLogo)) {
+                return null;
+            }
+            if (customLogo != null && customLogo.image() != null) {
+                return new SignatureLogoPlacement.Logo(customLogo.image(), logoPosition());
+            }
+            return new SignatureLogoPlacement.Logo(
+                    Files.readAllBytes(logoFile.toPath()), logoPosition());
+        }
+
+        /** Where the caller asked for the logo, defaulting to the left of the box. */
+        private SignatureLogoPosition logoPosition() {
+            if (customLogo != null && customLogo.position() != null) {
+                return customLogo.position();
+            }
+            return SignatureLogoPosition.LEFT;
+        }
+
+        private static float aspectRatio(PDImageXObject image) {
+            return image.getHeight() == 0
+                    ? 1f
+                    : (float) image.getWidth() / (float) image.getHeight();
         }
 
         public InputStream createVisibleSignature(
@@ -510,26 +621,47 @@ public class CertSignController {
                 appearance.setNormalAppearance(appearanceStream);
                 widget.setAppearance(appearance);
 
+                // Nothing new asked for means the appearance of old, logo included, so callers
+                // that never heard of these parameters keep the output they already had.
+                boolean legacyAppearance =
+                        box == null && visibleAttributes == null && customLogo == null;
+
+                // The appearance stream draws in its own space: the origin is the bottom-left of
+                // the box, not of the page. Everything below is therefore box-local.
+                PDRectangle textArea = bbox;
+
                 try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream)) {
                     if (Boolean.TRUE.equals(showLogo)) {
-                        cs.saveGraphicsState();
-                        PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
-                        extState.setBlendMode(BlendMode.MULTIPLY);
-                        extState.setNonStrokingAlphaConstant(0.5f);
-                        cs.setGraphicsStateParameters(extState);
-                        cs.transform(Matrix.getScaleInstance(0.08f, 0.08f));
-                        PDImageXObject img =
-                                PDImageXObject.createFromFileByExtension(logoFile, doc);
-                        cs.drawImage(img, 100, 0);
-                        cs.restoreGraphicsState();
+                        PDImageXObject img = loadLogoImage(doc);
+
+                        if (legacyAppearance) {
+                            cs.saveGraphicsState();
+                            PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
+                            extState.setBlendMode(BlendMode.MULTIPLY);
+                            extState.setNonStrokingAlphaConstant(0.5f);
+                            cs.setGraphicsStateParameters(extState);
+                            cs.transform(Matrix.getScaleInstance(0.08f, 0.08f));
+                            cs.drawImage(img, 100, 0);
+                            cs.restoreGraphicsState();
+                        } else {
+                            SignatureLogoPosition position = logoPosition();
+                            SignatureLogoPlacement.Placement placement =
+                                    SignatureLogoPlacement.place(bbox, aspectRatio(img), position);
+                            SignatureLogoPlacement.draw(
+                                    cs,
+                                    img,
+                                    placement.logoRect(),
+                                    position == SignatureLogoPosition.BEHIND);
+                            textArea = placement.textRect();
+                        }
                     }
 
                     X509Certificate cert = (X509Certificate) getCertificateChain()[0];
 
-                    if (box == null && visibleAttributes == null) {
+                    if (legacyAppearance) {
                         drawLegacyText(cs, font, height, cert, signature);
                     } else {
-                        drawAttributeText(cs, font, rect, cert, signature, visibleAttributes);
+                        drawAttributeText(cs, font, textArea, cert, signature, visibleAttributes);
                     }
                 }
 
@@ -606,14 +738,15 @@ public class CertSignController {
         private void drawAttributeText(
                 PDPageContentStream cs,
                 PDFont font,
-                PDRectangle rect,
+                PDRectangle textArea,
                 X509Certificate cert,
                 PDSignature signature,
                 List<CertificateAttribute> visibleAttributes)
                 throws IOException {
             Map<String, String> lines = displayLines(signature, visibleAttributes);
             SignatureAppearanceLayout.Layout layout =
-                    SignatureAppearanceLayout.fit(lines, font, rect.getWidth(), rect.getHeight());
+                    SignatureAppearanceLayout.fit(
+                            lines, font, textArea.getWidth(), textArea.getHeight());
             if (layout.lines().isEmpty()) {
                 return;
             }
@@ -621,9 +754,11 @@ public class CertSignController {
             cs.beginText();
             cs.setFont(font, layout.fontSize());
             cs.setNonStrokingColor(Color.black);
-            // The appearance stream's own origin is its lower-left corner, so the first baseline
-            // is measured down from the top of the box.
-            cs.newLineAtOffset(layout.padding(), rect.getHeight() - layout.firstBaselineFromTop());
+            // Offsets are relative to the area left for the text, which is the whole box unless a
+            // logo took a strip of it. The first baseline is measured down from that area's top.
+            cs.newLineAtOffset(
+                    textArea.getLowerLeftX() + layout.padding(),
+                    textArea.getUpperRightY() - layout.firstBaselineFromTop());
             cs.setLeading(layout.leading());
             for (int i = 0; i < layout.lines().size(); i++) {
                 if (i > 0) {

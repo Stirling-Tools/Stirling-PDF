@@ -4,19 +4,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.SPDF.model.api.security.SignatureBox;
+import stirling.software.SPDF.model.api.security.SignatureLogoPosition;
 
 /**
  * Tests for {@link SignatureMarkStamper}. The mark is page content rather than a signature, so the
@@ -188,6 +198,81 @@ class SignatureMarkStamperTest {
                 assertEquals(BOX.width(), rect.getWidth(), 0.01f);
                 assertEquals(BOX.height(), rect.getHeight(), 0.01f);
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("With a logo")
+    class WithLogo {
+
+        /** A red 40x20 PNG, wide enough that its strip and the text area cannot coincide. */
+        private static byte[] pngBytes() throws IOException {
+            BufferedImage image = new BufferedImage(40, 20, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = image.createGraphics();
+            g.setColor(Color.RED);
+            g.fillRect(0, 0, 40, 20);
+            g.dispose();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", out);
+            return out.toByteArray();
+        }
+
+        @Test
+        @DisplayName("The logo is embedded on every marked page")
+        void drawsTheLogo() throws IOException {
+            try (PDDocument doc = document(3)) {
+                SignatureLogoPlacement.Logo logo =
+                        new SignatureLogoPlacement.Logo(pngBytes(), SignatureLogoPosition.LEFT);
+
+                int stamped = SignatureMarkStamper.stampOtherPages(doc, 0, BOX, lines(), logo);
+
+                assertEquals(2, stamped);
+                for (int page : new int[] {1, 2}) {
+                    assertTrue(
+                            hasImage(doc, page),
+                            "page " + (page + 1) + " carries a mark but no logo");
+                }
+                // The signed page is left alone: its own signature already draws the logo.
+                assertFalse(hasImage(doc, 0));
+            }
+        }
+
+        @Test
+        @DisplayName("The text still fits, and the mark still reads, once the logo takes its strip")
+        void textSurvivesTheLogo() throws IOException {
+            try (PDDocument doc = document(2)) {
+                SignatureLogoPlacement.Logo logo =
+                        new SignatureLogoPlacement.Logo(pngBytes(), SignatureLogoPosition.LEFT);
+
+                SignatureMarkStamper.stampOtherPages(doc, 0, BOX, lines(), logo);
+
+                assertTrue(textOnPage(doc, 1).contains("Samuel Saez"));
+            }
+        }
+
+        @Test
+        @DisplayName("Without a logo the mark is text only, as before")
+        void noLogoKeepsPreviousOutput() throws IOException {
+            try (PDDocument doc = document(2)) {
+                SignatureMarkStamper.stampOtherPages(doc, 0, BOX, lines(), null);
+
+                assertFalse(hasImage(doc, 1));
+                assertTrue(textOnPage(doc, 1).contains("Samuel Saez"));
+            }
+        }
+
+        /** Whether the page's resources hold any image, which for a blank page means the logo. */
+        private static boolean hasImage(PDDocument doc, int pageIndex) throws IOException {
+            PDResources resources = doc.getPage(pageIndex).getResources();
+            if (resources == null) {
+                return false;
+            }
+            for (COSName name : resources.getXObjectNames()) {
+                if (resources.getXObject(name) instanceof PDImageXObject) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

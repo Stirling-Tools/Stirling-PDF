@@ -2498,6 +2498,18 @@ title = "Campos que aparecerán en la firma"
 validFrom = "Válido desde"
 validUntil = "Válido hasta"
 
+[certSign.logo]
+choose = "Elegir una imagen de logotipo (PNG o JPEG)"
+hint = "Déjalo vacío para usar la marca incluida de Stirling PDF."
+positionLabel = "Posición del logotipo"
+
+[certSign.logo.position]
+BEHIND = "Detrás del texto (marca de agua)"
+BOTTOM = "Debajo del texto"
+LEFT = "A la izquierda del texto"
+RIGHT = "A la derecha del texto"
+TOP = "Encima del texto"
+
 [certSign.markAllPages]
 label = "Repetirla en todas las páginas"
 needsBox = "Dibuja primero el recuadro, para que haya una forma que repetir."
@@ -2547,6 +2559,14 @@ bullet3 = "El texto se reduce para caber, así que nunca se sale del recuadro"
 bullet4 = "Si no dibujas nada, la firma irá a su sitio de siempre"
 text = "Dibuja un recuadro directamente sobre el documento para indicar dónde debe aparecer la firma. Útil cuando el formulario ya trae una línea o un cuadro impreso para firmar."
 title = "Dónde colocar la firma"
+
+[certSign.appearance.tooltip.logo]
+bullet1 = "PNG o JPEG; la imagen conserva sus proporciones, nunca se deforma"
+bullet2 = "Colócalo junto al texto, encima, debajo o detrás"
+bullet3 = "Detrás lo dibuja como marca de agua atenuada, para que el texto siga legible encima"
+bullet4 = "El texto conserva su parte del recuadro, por ancho que sea el logotipo"
+text = "Sube el logotipo de tu organización para mostrarlo dentro del recuadro de la firma y elige dónde se coloca. Si lo dejas vacío se usa la marca incluida de Stirling PDF."
+title = "Añadir tu logotipo"
 
 [certSign.appearance.tooltip.attributes]
 bullet1 = "Muestre solo lo importante, como su nombre y la fecha"

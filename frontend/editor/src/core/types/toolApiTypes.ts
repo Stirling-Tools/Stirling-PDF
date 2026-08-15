@@ -1350,6 +1350,10 @@ export interface SignPDFWithCertRequest {
    */
   showLogo?: boolean;
   /**
+   * Where the logo sits inside the signature box. BEHIND draws it under the text as a watermark; the others give it a strip of its own.
+   */
+  logoPosition?: "LEFT" | "RIGHT" | "TOP" | "BOTTOM" | "BEHIND";
+  /**
    * Whether to visually show the signature in the PDF file
    */
   showSignature?: boolean;

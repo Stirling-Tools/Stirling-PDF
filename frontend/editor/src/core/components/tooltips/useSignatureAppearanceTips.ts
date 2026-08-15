@@ -117,6 +117,31 @@ export const useSignatureAppearanceTips = (): TooltipContent => {
         ],
       },
       {
+        title: t("certSign.appearance.tooltip.logo.title", "Adding Your Logo"),
+        description: t(
+          "certSign.appearance.tooltip.logo.text",
+          "Upload your organisation's logo to show it inside the signature box, and choose where it sits. Leave it empty and the built-in Stirling PDF mark is used instead.",
+        ),
+        bullets: [
+          t(
+            "certSign.appearance.tooltip.logo.bullet1",
+            "PNG or JPEG; the image keeps its proportions, never stretched",
+          ),
+          t(
+            "certSign.appearance.tooltip.logo.bullet2",
+            "Put it beside the text, above it, below it, or behind it",
+          ),
+          t(
+            "certSign.appearance.tooltip.logo.bullet3",
+            "Behind draws it as a faded watermark, so the text stays readable on top",
+          ),
+          t(
+            "certSign.appearance.tooltip.logo.bullet4",
+            "The text keeps its share of the box, however wide the logo is",
+          ),
+        ],
+      },
+      {
         title: t(
           "certSign.appearance.tooltip.attributes.title",
           "Choosing What the Signature Shows",
