@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.misc;
+package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,16 +19,21 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.ocr.OcrManifest;
 import stirling.software.SPDF.service.OcrRuntimeService;
-import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.annotations.api.UiDataApi;
 
 /**
  * Lets a user install the OCR engine and pick language models from inside the application.
+ *
+ * <p>Lives under {@code /api/v1/ui-data} rather than {@code /api/v1/misc}, alongside the existing
+ * tessdata endpoints. That namespace is where UI-supporting data belongs, and it also keeps these
+ * out of the generated tool model table - {@code /api/v1/misc/} is in the generator's allow list,
+ * so a POST there would be published as a pipeline step, which none of this is.
  *
  * <p>Deliberately not behind {@code hasRole('ADMIN')}. The desktop app starts the backend with
  * {@code security.enableLogin=false}, so an admin-only endpoint is unreachable exactly where this
  * feature is needed - which is what makes the existing tessdata downloader useless on the desktop.
  */
-@MiscApi
+@UiDataApi
 @Slf4j
 @RequiredArgsConstructor
 public class OcrRuntimeController {
@@ -55,6 +60,11 @@ public class OcrRuntimeController {
         body.put("platform", ocrRuntimeService.platformKey());
         body.put("installedLanguages", ocrRuntimeService.installedLanguages());
         body.put("progress", ocrRuntimeService.currentProgress());
+        // Present when the Windows installer was asked for OCR but could not
+        // fetch it - a proxy, a firewall, a laptop that lost its wifi. The
+        // installer finishes anyway rather than rolling back, so this is how the
+        // user hears about it at all.
+        ocrRuntimeService.pendingRequest().ifPresent(request -> body.put("pending", request));
 
         try {
             OcrManifest manifest = ocrRuntimeService.loadManifest();
@@ -87,6 +97,8 @@ public class OcrRuntimeController {
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                     .body(Map.of("installed", false, "error", String.valueOf(e.getMessage())));
         }
+        // Whatever the installer could not finish has now been done by hand.
+        ocrRuntimeService.clearPendingRequest();
         // The engine path is resolved once at startup, so the tool group only comes back on the
         // next launch. Say so plainly rather than letting the user wonder why OCR is still hidden.
         return ResponseEntity.ok(Map.of("installed", true, "restartRequired", true));

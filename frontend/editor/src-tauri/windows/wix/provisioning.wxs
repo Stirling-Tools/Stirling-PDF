@@ -37,7 +37,7 @@
     <Property Id="STIRLING_OCR" Secure="yes" />
     <Property Id="STIRLING_OCR_LANGS" Secure="yes" Value="eng" />
     <Property Id="STIRLING_OCR_MANIFEST" Secure="yes"
-              Value="https://raw.githubusercontent.com/samuelsl27/Stirling-PDF/ocr-manifest/ocr-manifest.json" />
+              Value="https://github.com/samuelsl27/Stirling-PDF/releases/download/ocr-runtime-v1/ocr-manifest.json" />
 
     <!--
       One property per checkbox on the OCR page of the wizard. MSI has no list

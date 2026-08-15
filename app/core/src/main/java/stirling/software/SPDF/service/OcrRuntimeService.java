@@ -2,6 +2,7 @@ package stirling.software.SPDF.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.ocr.OcrManifest;
 import stirling.software.SPDF.model.ocr.OcrManifest.OcrArtifact;
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.ChecksumUtils;
 
@@ -55,18 +58,24 @@ public class OcrRuntimeService {
      * hosting, and an operator can redirect it to an internal mirror, without touching code.
      */
     static final String DEFAULT_MANIFEST_URL =
-            "https://raw.githubusercontent.com/samuelsl27/Stirling-PDF/ocr-manifest/ocr-manifest.json";
+            "https://github.com/samuelsl27/Stirling-PDF/releases/download/ocr-runtime-v1/ocr-manifest.json";
 
     /** Directory name, kept identical to the one the bundled runtime used. */
     private static final String RUNTIME_DIR = "tesseract";
 
     private static final String TESSDATA_DIR = "tessdata";
 
+    /** Written by the Windows installer when its own download could not finish. */
+    private static final String PENDING_NOTE = "stirling-ocr-pending.json";
+
     /** Same character set the existing tessdata downloader accepts; anything else is rejected. */
     private static final Pattern LANGUAGE_CODE = Pattern.compile("[A-Za-z0-9_+\\-]{1,32}");
 
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(15);
     private static final Duration REQUEST_TIMEOUT = Duration.ofMinutes(10);
+
+    /** Matches the TTL the existing tessdata endpoint already uses. */
+    private static final Duration MANIFEST_TTL = Duration.ofMinutes(10);
 
     /** Ceilings that turn a hostile archive into a clean failure instead of a full disk. */
     private static final long MAX_ARCHIVE_BYTES = 300L * 1024 * 1024;
@@ -79,6 +88,8 @@ public class OcrRuntimeService {
 
     /** Last known progress, so the UI can show something during a long download. */
     private final AtomicReference<Progress> progress = new AtomicReference<>(Progress.idle());
+
+    private final AtomicReference<CachedManifest> manifestCache = new AtomicReference<>();
 
     /**
      * @param what artefact being fetched, empty when nothing is running
@@ -158,11 +169,84 @@ public class OcrRuntimeService {
         return configured == null || configured.isBlank() ? DEFAULT_MANIFEST_URL : configured;
     }
 
+    /**
+     * The catalogue, cached briefly.
+     *
+     * <p>The status endpoint is polled while a panel is open, and fetching a remote file on every
+     * poll would be rude to whoever hosts it and slow for the user. Ten minutes matches what the
+     * existing tessdata endpoint already does, and the catalogue changes on the order of releases,
+     * not minutes.
+     */
     public OcrManifest loadManifest() throws IOException {
-        URI uri = validatedUri(manifestUrl());
-        try (InputStream in = open(uri)) {
-            return objectMapper.readValue(in.readAllBytes(), OcrManifest.class);
+        String url = manifestUrl();
+        CachedManifest cached = manifestCache.get();
+        if (cached != null && cached.isFresh(url)) {
+            return cached.manifest();
         }
+        URI uri = validatedUri(url);
+        OcrManifest manifest;
+        try (InputStream in = open(uri)) {
+            manifest = objectMapper.readValue(in.readAllBytes(), OcrManifest.class);
+        }
+        manifestCache.set(new CachedManifest(url, manifest, System.nanoTime()));
+        return manifest;
+    }
+
+    private record CachedManifest(String url, OcrManifest manifest, long fetchedAtNanos) {
+        boolean isFresh(String currentUrl) {
+            return url.equals(currentUrl)
+                    && System.nanoTime() - fetchedAtNanos < MANIFEST_TTL.toNanos();
+        }
+    }
+
+    /** What the Windows installer asked for but could not fetch, if anything. */
+    public record PendingRequest(boolean ocrRequested, List<String> languages) {}
+
+    /**
+     * Reads the note the installer's custom action leaves when its download fails.
+     *
+     * <p>A corporate proxy, a firewall or a laptop that lost its wifi mid-wizard are ordinary, and
+     * the installer deliberately finishes anyway rather than rolling back. Without reading this the
+     * user would simply never hear about it again; with it, the app can offer to retry - which is
+     * the half of that bargain that lives on this side.
+     */
+    public Optional<PendingRequest> pendingRequest() {
+        for (Path dir : pendingNoteLocations()) {
+            Path note = dir.resolve(PENDING_NOTE);
+            if (!Files.isReadable(note)) {
+                continue;
+            }
+            try {
+                PendingRequest request =
+                        objectMapper.readValue(Files.readAllBytes(note), PendingRequest.class);
+                if (request != null && request.ocrRequested()) {
+                    return Optional.of(request);
+                }
+            } catch (Exception e) {
+                log.debug("Ignoring an unreadable OCR install note at {}", note, e);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** Clears the note once the retry has succeeded, so it stops being offered. */
+    public void clearPendingRequest() {
+        for (Path dir : pendingNoteLocations()) {
+            try {
+                Files.deleteIfExists(dir.resolve(PENDING_NOTE));
+            } catch (IOException e) {
+                // A note that cannot be deleted is a nuisance, not a failure: the engine is
+                // installed either way, and the next status call simply reports it again.
+                log.debug("Could not clear the OCR install note in {}", dir, e);
+            }
+        }
+    }
+
+    private List<Path> pendingNoteLocations() {
+        List<Path> locations = new ArrayList<>();
+        locations.add(Path.of(InstallationPathConfig.getPath()));
+        RuntimePathConfig.machineWideDataDir().ifPresent(locations::add);
+        return locations;
     }
 
     /** Language codes present on disk right now. Cheap enough to do per request. */
@@ -322,13 +406,25 @@ public class OcrRuntimeService {
         }
         URI uri = validatedUri(artifact.url());
         progress.set(new Progress(label, 0, artifact.size()));
-        try (InputStream in = open(uri)) {
-            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+        long written = 0;
+        // Copied in chunks rather than with Files.copy so the byte count can be
+        // published as it goes: a progress field that only ever reads zero is
+        // worse than none, because the UI would show a bar that never moves.
+        try (InputStream in = open(uri);
+                OutputStream out = Files.newOutputStream(target)) {
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+                written += read;
+                progress.set(new Progress(label, written, artifact.size()));
+                if (written > MAX_ARCHIVE_BYTES) {
+                    break;
+                }
+            }
         } finally {
             progress.set(Progress.idle());
         }
-
-        long written = Files.size(target);
         if (written > MAX_ARCHIVE_BYTES) {
             Files.deleteIfExists(target);
             throw new IOException(label + " is larger than the " + MAX_ARCHIVE_BYTES + " byte cap");

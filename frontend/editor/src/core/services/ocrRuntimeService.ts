@@ -35,7 +35,7 @@ export interface OcrLanguagesResult {
 
 export async function getOcrRuntimeStatus(): Promise<OcrRuntimeStatus> {
   const { data } = await apiClient.get<OcrRuntimeStatus>(
-    "/api/v1/misc/ocr/runtime",
+    "/api/v1/ui-data/ocr/runtime",
   );
   return data;
 }
@@ -45,7 +45,7 @@ export async function installOcrEngine(): Promise<{
   restartRequired?: boolean;
   error?: string;
 }> {
-  const { data } = await apiClient.post("/api/v1/misc/ocr/runtime/install");
+  const { data } = await apiClient.post("/api/v1/ui-data/ocr/runtime/install");
   return data;
 }
 
@@ -61,7 +61,7 @@ export async function changeOcrLanguages(
   remove: string[],
 ): Promise<OcrLanguagesResult> {
   const { data } = await apiClient.post<OcrLanguagesResult>(
-    "/api/v1/misc/ocr/languages",
+    "/api/v1/ui-data/ocr/languages",
     { install, remove },
   );
   return data;

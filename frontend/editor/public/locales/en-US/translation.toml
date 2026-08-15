@@ -5111,6 +5111,7 @@ catalogueUnreachable = "The list of installable OCR components could not be reac
 engineFailed = "Could not install the OCR engine."
 engineMissing = "Text recognition is not installed yet."
 engineUnavailable = "No OCR engine is offered for this platform"
+failed = "Something went wrong"
 installEngine = "Install OCR ({{size}})"
 languages = "Languages"
 restartRequired = "Restart Stirling-PDF to finish enabling OCR."
@@ -9928,6 +9929,10 @@ title = "Upgrade Your Plan"
 legal = "Legal"
 privacy = "Privacy"
 title = "Policies & Privacy"
+
+[settings.ocr]
+description = "Text recognition is downloaded when you want it, so the installer stays small. Add or remove languages at any time."
+title = "Text recognition"
 
 [settings.preferences]
 title = "Preferences"

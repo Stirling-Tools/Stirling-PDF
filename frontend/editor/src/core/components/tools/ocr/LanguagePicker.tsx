@@ -10,7 +10,7 @@ import apiClient from "@app/services/apiClient";
 import DropdownListWithFooter, {
   DropdownItem,
 } from "@app/components/shared/DropdownListWithFooter";
-import OcrRuntimeManager from "./OcrRuntimeManager";
+import OcrRuntimeManager from "@app/components/tools/ocr/OcrRuntimeManager";
 
 export interface LanguageOption {
   value: string;

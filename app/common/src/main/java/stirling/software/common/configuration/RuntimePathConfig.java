@@ -227,7 +227,36 @@ public class RuntimePathConfig {
                                 roots.add(parent);
                             }
                         });
+        // Last, because a per-user copy should win: the Windows installer runs
+        // elevated and installs OCR for every account, so what it wrote lives
+        // here rather than in any one user's profile.
+        machineWideDataDir().ifPresent(roots::add);
         return roots;
+    }
+
+    /**
+     * Where a per-machine installer can leave shared, writable application data.
+     *
+     * <p>Mirrors {@code system_provisioning_dir()} on the desktop side, so both halves agree on one
+     * location instead of each inventing its own.
+     */
+    public static Optional<Path> machineWideDataDir() {
+        try {
+            if (isWindows()) {
+                String programData = java.lang.System.getenv("PROGRAMDATA");
+                return StringUtils.isBlank(programData)
+                        ? Optional.empty()
+                        : Optional.of(Path.of(programData, "Stirling-PDF"));
+            }
+            String os = java.lang.System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+            if (os.contains("mac")) {
+                return Optional.of(Path.of("/Library", "Application Support", "Stirling-PDF"));
+            }
+            return Optional.of(Path.of("/etc", "stirling-pdf"));
+        } catch (InvalidPathException | SecurityException e) {
+            log.debug("No machine-wide data directory available", e);
+            return Optional.empty();
+        }
     }
 
     private static Optional<Path> applicationHome() {

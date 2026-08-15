@@ -5056,6 +5056,7 @@ catalogueUnreachable = "No se ha podido consultar la lista de componentes de OCR
 engineFailed = "No se ha podido instalar el motor de OCR."
 engineMissing = "El reconocimiento de texto aún no está instalado."
 engineUnavailable = "No hay motor de OCR disponible para esta plataforma"
+failed = "Algo ha salido mal"
 installEngine = "Instalar OCR ({{size}})"
 languages = "Idiomas"
 restartRequired = "Reinicia Stirling-PDF para terminar de activar el OCR."
@@ -9988,6 +9989,10 @@ title = "Actualiza tu plan"
 legal = "Legal"
 privacy = "Privacidad"
 title = "Políticas y privacidad"
+
+[settings.ocr]
+description = "El reconocimiento de texto se descarga cuando lo necesitas, así el instalador se mantiene ligero. Puedes añadir o quitar idiomas en cualquier momento."
+title = "Reconocimiento de texto"
 
 [settings.preferences]
 title = "Preferencias"
