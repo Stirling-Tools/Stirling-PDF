@@ -29,6 +29,11 @@ import stirling.software.SPDF.utils.SvgToPdf;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.model.tool.ToolIOCase;
+import stirling.software.common.model.tool.ToolIOWhen;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.SvgSanitizer;
@@ -50,15 +55,23 @@ public class ConvertSvgToPDF {
             value = "/svg/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
+    @ToolIO(
+            accepts = ToolFormat.IMAGE,
+            produces = ToolFormat.PDF,
+            arity = ToolArity.MIMO,
+            cases =
+                    @ToolIOCase(
+                            when = @ToolIOWhen(param = "combineIntoSinglePdf", matches = "true"),
+                            produces = ToolFormat.PDF,
+                            arity = ToolArity.MISO))
     @Operation(
             summary = "Convert SVG to PDF",
             description =
-                    "This endpoint converts one or more SVG (Scalable Vector Graphics) files to PDF format. "
-                            + "Each SVG is converted to a separate PDF file. "
-                            + "The conversion preserves vector graphics for crisp output at any resolution - no rasterization occurs. "
-                            + "SVG dimensions (width/height) determine the PDF page size; defaults to A4 if not specified. "
-                            + "SVG content is sanitized to prevent XSS attacks. "
-                            + "Input: SVG file(s), Output: PDF file(s) or ZIP. Type: MIMO")
+                    "This endpoint converts one or more SVG (Scalable Vector Graphics) files to PDF"
+                            + " format. Each SVG is converted to a separate PDF file. The conversion preserves"
+                            + " vector graphics for crisp output at any resolution - no rasterization occurs."
+                            + " SVG dimensions (width/height) determine the PDF page size; defaults to A4 if"
+                            + " not specified. SVG content is sanitized to prevent XSS attacks.")
     public ResponseEntity<Resource> convertSvgToPdf(@ModelAttribute SvgToPdfRequest request) {
 
         MultipartFile[] inputFiles = request.getFileInput();
@@ -147,7 +160,7 @@ public class ConvertSvgToPDF {
             String outputFilename =
                     filenames.isEmpty()
                             ? "combined_svgs.pdf"
-                            : GeneralUtils.generateFilename(filenames.get(0), "_combined.pdf");
+                            : GeneralUtils.generateFilename(filenames.getFirst(), "_combined.pdf");
 
             log.info("Successfully combined {} SVGs into single PDF", sanitizedSvgs.size());
 
@@ -203,7 +216,7 @@ public class ConvertSvgToPDF {
 
         try {
             if (convertedPdfs.size() == 1) {
-                ConvertedPdf pdf = convertedPdfs.get(0);
+                ConvertedPdf pdf = convertedPdfs.getFirst();
                 TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
                 try {
                     Files.write(tempOut.getPath(), pdf.content);
@@ -218,7 +231,7 @@ public class ConvertSvgToPDF {
                     filenames.isEmpty()
                             ? "converted_svgs.zip"
                             : GeneralUtils.generateFilename(
-                                    filenames.get(0), "_converted_svgs.zip");
+                                    filenames.getFirst(), "_converted_svgs.zip");
             TempFile zipFile = createZipFromPdfs(convertedPdfs);
             return WebResponseUtils.zipFileToWebResponse(zipFile, zipFilename);
         } catch (IOException e) {

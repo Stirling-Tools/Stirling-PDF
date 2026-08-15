@@ -44,10 +44,13 @@ import stirling.software.common.cluster.JobStore;
 import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
+import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.service.JobOwnershipService;
+import stirling.software.common.service.ToolChainValidator;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.audit.AuditContext;
+import stirling.software.proprietary.policy.asset.PolicyAssetCleaner;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
@@ -59,6 +62,7 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
+import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
@@ -101,6 +105,7 @@ public class PolicyController {
     private final PolicyManagementAuthority policyManagementAuthority;
     private final PolicyTriggerManager policyTriggerManager;
     private final PolicyOverviewService policyOverviewService;
+    private final PolicyAssetCleaner assetCleaner;
     private final ProcessedLedger processedLedger;
     private final List<PolicyTrigger> policyTriggers;
     private final ApplicationProperties applicationProperties;
@@ -239,6 +244,23 @@ public class PolicyController {
 
     // --- Policy management ---
 
+    @PostMapping(value = "/validate", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Check whether a chain of steps can run",
+            description =
+                    "Reports which steps cannot accept what the step before them produces, without"
+                            + " running anything or storing anything. Saving already rejects a"
+                            + " chain whose steps cannot run; this answers the same question up"
+                            + " front, and also returns the warnings and fan-out notes that saving"
+                            + " does not.")
+    public PipelineValidation.Response validateChain(
+            @RequestBody PipelineValidation.Request request) {
+        List<ToolDiagnostic> diagnostics =
+                policyValidator.diagnoseChain(request.steps(), request.sourceFormat());
+        return new PipelineValidation.Response(
+                !ToolChainValidator.hasErrors(diagnostics), diagnostics);
+    }
+
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create or update a policy",
@@ -255,7 +277,14 @@ public class PolicyController {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
+        // Snapshot the previous version before saving so supporting files this edit dropped can
+        // be cleaned up once nothing references them.
+        Policy previous =
+                owned.id() == null || owned.id().isBlank()
+                        ? null
+                        : policyStore.get(owned.id()).orElse(null);
         Policy saved = policyStore.save(owned);
+        assetCleaner.cleanupAfterSave(previous, saved);
         // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
         // watched immediately instead of after the next reconcile sweep.
         policyTriggerManager.notifyPoliciesChanged();
@@ -477,10 +506,10 @@ public class PolicyController {
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
         requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
-        boolean accessible =
-                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
-        if (accessible && policyStore.delete(policyId)) {
+        Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
+        if (policy != null && policyStore.delete(policyId)) {
             processedLedger.clearPolicy(policyId);
+            assetCleaner.cleanupAfterDelete(policy);
             // Cancel any now-orphaned folder watch promptly rather than leaving the WatchKey open
             // until the next reconcile sweep.
             policyTriggerManager.notifyPoliciesChanged();
@@ -514,8 +543,9 @@ public class PolicyController {
             description =
                     "Runs the stored policy's pipeline on the supplied files (primary documents"
                             + " under 'fileInput', supporting files under 'assets[i].key' /"
-                            + " 'assets[i].file'). Runs regardless of the policy's enabled flag,"
-                            + " which only gates automatic triggering. Returns a run id.")
+                            + " 'assets[i].file' - only for bindings the policy does not already"
+                            + " store). Runs regardless of the policy's enabled flag, which only"
+                            + " gates automatic triggering. Returns a run id.")
     public ResponseEntity<JobResponse<Void>> runStoredPolicy(
             @PathVariable String policyId, @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {

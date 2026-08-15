@@ -4,9 +4,10 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { WatchedFolderWorkbenchView } from "@app/components/watchedFolders/WatchedFolderWorkbenchView";
 import { seedDefaultFolders } from "@app/data/watchedFolderPresets";
 import { useWatchedFolderUrlSync } from "@app/hooks/useWatchedFolderUrlSync";
-
-export const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
-export const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder" as const;
+import {
+  WATCHED_FOLDER_VIEW_ID,
+  WATCHED_FOLDER_WORKBENCH_ID,
+} from "@app/components/watchedFolders/watchedFolderShared";
 
 export default function WatchedFoldersRegistration() {
   const { t } = useTranslation();

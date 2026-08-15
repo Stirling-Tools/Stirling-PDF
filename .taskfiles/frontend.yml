@@ -210,12 +210,25 @@ tasks:
       #   task frontend:storybook:test -- Button
       - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
 
-  storybook:a11y:
-    desc: "a11y regression gate over every story: fail only on NEW axe violations"
+  storybook:a11y:light:
+    desc: "a11y gate over every story in light mode"
     deps: [prepare, storybook:browser]
     cmds:
-      - node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-scan.mjs {{.CLI_ARGS}}
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
+
+  storybook:a11y:dark:
+    desc: "a11y gate over every story in dark mode"
+    deps: [prepare, storybook:browser]
+    cmds:
+      - SCAN_THEME=dark node .storybook/a11y-scan.mjs {{.CLI_ARGS}}
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --baseline .storybook/a11y-baseline.dark.json
+
+  storybook:a11y:
+    desc: "a11y gate over every story, light and dark"
+    cmds:
+      - task: storybook:a11y:light
+      - task: storybook:a11y:dark
 
   storybook:a11y:changed:
     desc: "a11y gate over the stories this branch affects (default base origin/main)"
@@ -231,7 +244,6 @@ tasks:
 
       Pass a base ref through CLI_ARGS, e.g.
         task frontend:storybook:a11y:changed -- origin/release
-    deps: [prepare, storybook:browser]
     vars:
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
       CHANGED:
@@ -242,15 +254,19 @@ tasks:
             echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
             exit 0
           fi
-          node .storybook/a11y-scan.mjs {{.CHANGED}}
-          node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
+          rc=0
+          task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
+          task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+          exit $rc
 
   storybook:a11y:record:
-    desc: "Re-record the a11y baseline (run after intentionally fixing/adding violations)"
+    desc: "Re-record both a11y baselines (run after intentionally fixing/adding violations)"
     deps: [prepare, storybook:browser]
     cmds:
       - node .storybook/a11y-scan.mjs
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record
+      - SCAN_THEME=dark node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --record --baseline .storybook/a11y-baseline.dark.json
 
   # ============================================================
   # Code quality
@@ -260,8 +276,7 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
-      - task: lint:eslint
-      - task: lint:dpdm
+      - task: lint:oxlint
       - task: lint:colors
       - task: lint:css
 
@@ -290,25 +305,17 @@ tasks:
     cmds:
       - node editor/scripts/lint/theme-lint.mjs contrast
 
-  lint:eslint:
-    desc: "Run ESLint linting"
+  lint:oxlint:
+    desc: "Run oxlint linting"
     deps: [install]
     cmds:
-      - npx eslint --max-warnings=0
-
-  lint:dpdm:
-    desc: "Run circular import linting"
-    deps: [install]
-    cmds:
-      # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
-      # shell-agnostic. Covers the whole editor tree, including the portal layer.
-      - npx dpdm "editor/src/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
+      - npx oxlint --config oxlint.config.ts --max-warnings=0
 
   lint:fix:
     desc: "Auto-fix lint issues"
     deps: [install]
     cmds:
-      - npx eslint --fix
+      - npx oxlint --config oxlint.config.ts --fix
 
   format:
     desc: "Auto-fix code formatting"
@@ -460,8 +467,17 @@ tasks:
   test:editor:
     desc: "Run editor tests"
     deps: [prepare]
+    vars:
+      COVERAGE: '{{.COVERAGE | default .CI | default "false"}}'
     cmds:
-      - npx vitest run --root editor
+      - >
+        npx vitest run --root editor
+        {{if eq .COVERAGE "true"}}--coverage
+        --coverage.provider=v8
+        --coverage.reporter=text-summary
+        --coverage.reporter=json-summary
+        --coverage.reporter=html
+        --coverage.reportsDirectory=./coverage{{end}}
 
   test:watch:
     desc: "Run tests in watch mode"
@@ -471,24 +487,9 @@ tasks:
 
   test:coverage:
     desc: "Run tests with coverage (one-shot; CI-friendly)."
-    deps: [prepare]
     cmds:
-      # `vitest run` makes this CI-safe (the bare `vitest` form enters watch
-      # mode). Explicit reporter list because v8 + json-summary is what the
-      # coverage-summary.py helper consumes; html/text are kept for humans.
-      #
-      # reportsDirectory is pinned to ./coverage relative to vitest's root
-      # (--root editor), so output lands at frontend/editor/coverage/. The
-      # CI upload step reads from that path. An earlier attempt with
-      # `./editor/coverage` double-nested into frontend/editor/editor/coverage;
-      # pinning future-proofs against vitest changing the default.
-      - >
-        npx vitest run --root editor --coverage
-        --coverage.provider=v8
-        --coverage.reporter=text-summary
-        --coverage.reporter=json-summary
-        --coverage.reporter=html
-        --coverage.reportsDirectory=./coverage
+      - task: test:editor
+        vars: { COVERAGE: "true" }
 
   # ============================================================
   # Code Generation
@@ -498,18 +499,19 @@ tasks:
     desc: "Generate tool API types from the Java OpenAPI spec"
     deps: [install, ":backend:swagger"]
     cmds:
-      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts
     sources:
       - editor/scripts/generate-tool-api-types.mts
       - ../SwaggerDoc.json
     generates:
       - editor/src/core/types/toolApiTypes.ts
+      - editor/src/core/types/toolIO.ts
 
   tool-models:check:
     desc: "Fail if committed tool API types are out of date"
     deps: [install, ":backend:swagger"]
     cmds:
-      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --check
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --io-output editor/src/core/types/toolIO.ts --check
 
   licenses:generate:
     desc: "Generate frontend license report"

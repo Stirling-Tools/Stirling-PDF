@@ -25,6 +25,9 @@ includes:
   e2e:
     taskfile: .taskfiles/e2e.yml
     dir: .
+  cucumber:
+    taskfile: .taskfiles/cucumber.yml
+    dir: testing/cucumber
   pre-commit:
     taskfile: .taskfiles/pre-commit.yml
     dir: .
@@ -193,6 +196,12 @@ tasks:
     cmds:
       - task: frontend:tool-models
       - task: engine:tool-models
+
+  tool-models:check:
+    desc: "Fail if any committed API model is out of date"
+    cmds:
+      - task: frontend:tool-models:check
+      - task: engine:tool-models:check
 
   # ============================================================
   # Quality Gate

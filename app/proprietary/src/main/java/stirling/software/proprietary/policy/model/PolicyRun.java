@@ -21,7 +21,20 @@ public class PolicyRun {
     /** ID of the stored policy that produced this run; null for ad-hoc pipelines. */
     private final String policyId;
 
+    /**
+     * ID of the source the input came from (folder, S3, webhook), or null when a user supplied the
+     * files. Recorded on a failure so a reviewer can see where an unattended file came from.
+     */
+    private final String sourceId;
+
     private final PipelineDefinition definition;
+
+    /**
+     * The source's opaque reference to the document this run is about; null for an ad-hoc run or a
+     * source that names no document. Hashed upstream, so never a path or a filename.
+     */
+    private final String fileIdentity;
+
     private final Instant createdAt = Instant.now();
 
     private volatile PolicyRunStatus status = PolicyRunStatus.PENDING;
@@ -49,10 +62,23 @@ public class PolicyRun {
     private volatile List<ResultFile> outputs = List.of();
     private volatile Instant updatedAt = Instant.now();
 
-    public PolicyRun(String runId, String policyId, PipelineDefinition definition) {
+    /**
+     * Both references are required rather than defaulted: a run with neither is a real case (a
+     * user's upload, an ad-hoc pipeline), but it should be stated at the call site. Overloads that
+     * omitted them would make losing the attribution the frictionless option, which is how both
+     * fields went unpopulated in the first place.
+     */
+    public PolicyRun(
+            String runId,
+            String policyId,
+            PipelineDefinition definition,
+            String sourceId,
+            String fileIdentity) {
         this.runId = runId;
         this.policyId = policyId;
+        this.sourceId = sourceId;
         this.definition = definition;
+        this.fileIdentity = fileIdentity;
     }
 
     public int stepCount() {
