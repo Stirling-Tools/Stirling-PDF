@@ -222,6 +222,8 @@ export class EditorStore {
         revision: live.revision,
         runs: live.runs.map((r) => r.snapshot()),
         images: live.images.map((img) => img.snapshot()),
+        // Regrouping re-populates the page, which re-reads its annotations.
+        annotations: live.annotations,
       };
     });
     this.patch({ groupingMode: mode, pages, dirty: this.isDirty() });

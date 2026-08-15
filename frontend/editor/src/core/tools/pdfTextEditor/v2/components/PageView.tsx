@@ -6,6 +6,7 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 import { TextRunOverlay } from "@app/tools/pdfTextEditor/v2/components/TextRunOverlay";
 import { ImageHandle } from "@app/tools/pdfTextEditor/v2/components/ImageHandle";
+import { AnnotationOutline } from "@app/tools/pdfTextEditor/v2/components/AnnotationOutline";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 import { PageGuides } from "@app/tools/pdfTextEditor/v2/components/PageRulers";
 
@@ -285,6 +286,16 @@ export function PageView({
         bottom={0}
         style={{ pointerEvents: "none" }}
       >
+        {/* Before the runs: a run overlapping an annotation still wins clicks. */}
+        {(page.annotations ?? []).map((annotation) => (
+          <AnnotationOutline
+            key={annotation.id}
+            annotation={annotation}
+            pageHeight={page.height}
+            transform={transform}
+            scale={cssScale}
+          />
+        ))}
         {page.images.map((image) => (
           <ImageHandle
             key={image.id}

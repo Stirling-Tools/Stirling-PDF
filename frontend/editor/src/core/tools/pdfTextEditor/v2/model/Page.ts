@@ -1,6 +1,7 @@
 import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import { ImageObject } from "@app/tools/pdfTextEditor/v2/model/ImageObject";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
+import type { AnnotationBox } from "@app/tools/pdfTextEditor/v2/model/AnnotationBox";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
 /** Wraps one PDFium page pointer. */
@@ -14,6 +15,8 @@ export class Page {
   readonly display: DisplayTransform;
   runs: TextRun[];
   images: ImageObject[];
+  /** Text-carrying annotations: rendered by the canvas, not editable. */
+  annotations: AnnotationBox[];
   /** True if any object on this page has uncommitted mutation. */
   dirty: boolean;
   /** True if the lazy reader has populated runs/images. */
@@ -42,6 +45,7 @@ export class Page {
       opts.display ?? DisplayTransform.identity(opts.width, opts.height);
     this.runs = [];
     this.images = [];
+    this.annotations = [];
     this.dirty = false;
     this.loaded = false;
     this.revision = 0;
@@ -55,6 +59,10 @@ export class Page {
 
   setImages(images: ImageObject[]): void {
     this.images = images;
+  }
+
+  setAnnotations(annotations: AnnotationBox[]): void {
+    this.annotations = annotations;
   }
 
   markDirty(): void {

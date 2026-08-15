@@ -72,6 +72,7 @@ export function useDocumentLoader(store: EditorStore) {
             revision: page.revision,
             runs: page.runs.map((r) => r.snapshot()),
             images: page.images.map((img) => img.snapshot()),
+            annotations: page.annotations,
             display: page.display.toData(),
           });
         }
@@ -143,6 +144,7 @@ export function ensureAllPagesRead(store: EditorStore): void {
       revision: page.revision,
       runs: page.runs.map((r) => r.snapshot()),
       images: page.images.map((img) => img.snapshot()),
+      annotations: page.annotations,
     };
   });
   store.publishPages(next);
@@ -169,6 +171,7 @@ export function ensurePageRead(store: EditorStore, pageIndex: number): void {
           revision: page.revision,
           runs: page.runs.map((r) => r.snapshot()),
           images: page.images.map((img) => img.snapshot()),
+          annotations: page.annotations,
         }
       : p,
   );

@@ -1,6 +1,7 @@
 /** Shared types for the v2 PDF text editor. */
 
 import type { DisplayTransformData } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
+import type { AnnotationBox } from "@app/tools/pdfTextEditor/v2/model/AnnotationBox";
 
 export interface RGBA {
   r: number; // 0..255
@@ -101,6 +102,9 @@ export interface PageSnapshot {
   revision: number;
   runs: TextRunSnapshot[];
   images: ImageObjectSnapshot[];
+  // Text-carrying annotations: drawn by the canvas, outside the editable
+  // object tree. Absent until the page has been read.
+  annotations?: AnnotationBox[];
   // Raw-PDF -> display (CropBox/rotation) transform for the screen boundary.
   display: DisplayTransformData;
 }

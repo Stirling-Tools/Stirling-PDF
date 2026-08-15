@@ -1,0 +1,21 @@
+/* Annotation-backed text: visible on the canvas, outside the editable model. */
+.v2-annotation-outline {
+  border: 1px dashed rgba(120, 120, 130, 0.55);
+  border-radius: 2px;
+  background: transparent;
+  cursor: help;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.v2-annotation-outline:hover {
+  border-color: rgba(90, 110, 190, 0.9);
+  background: rgba(90, 110, 190, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v2-annotation-outline {
+    transition: none;
+  }
+}

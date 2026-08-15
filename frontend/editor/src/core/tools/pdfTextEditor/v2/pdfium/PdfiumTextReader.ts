@@ -5,6 +5,7 @@ import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { LineGrouper } from "@app/tools/pdfTextEditor/v2/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@app/tools/pdfTextEditor/v2/pdfium/ParagraphGrouper";
+import { PdfiumAnnotationReader } from "@app/tools/pdfTextEditor/v2/pdfium/PdfiumAnnotationReader";
 import { primeFontGlyphMap } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 import type {
   Affine,
@@ -57,6 +58,9 @@ export class PdfiumTextReader {
 
       page.setRuns(runs);
       page.setImages(images);
+      // Annotation text is drawn by FPDF_ANNOT but lives outside the object
+      // tree, so record the boxes to explain why it can't be edited.
+      PdfiumAnnotationReader.populate(m, page);
       // LineGrouper always runs (merges per-glyph/per-word source objects into
       // one line).
       LineGrouper.apply(page);
