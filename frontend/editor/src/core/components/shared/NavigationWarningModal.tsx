@@ -90,8 +90,10 @@ const NavigationWarningModal = () => {
       closeOnClickOutside={true}
       closeOnEscape={true}
       zIndex={Z_INDEX_TOAST}
-      aria-label={t("unsavedChangesTitle", "Unsaved changes")}
     >
+      <Modal.Title className="sr-only">
+        {t("unsavedChangesTitle", "Unsaved changes")}
+      </Modal.Title>
       <Stack align="center" gap="md">
         <IconBadge accent="amber" size="md">
           <WarningAmberRoundedIcon style={{ fontSize: 22 }} />
