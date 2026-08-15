@@ -25,13 +25,6 @@ on:
   push:
     branches:
       - main
-      # TEMPORARY - DELETE THIS LINE BEFORE MERGING.
-      # workflow_dispatch only works once this file is on the default branch, but
-      # the environments have to be populated BEFORE the environment: edits merge.
-      # A push trigger runs the copy of the workflow on the pushed branch, so
-      # listing the working branch here lets the first reconcile run pre-merge.
-      # Any branch named here can read every repo/org secret - keep it to one.
-      - ci/environments-cutover
     paths:
       - .github/environments.yml
       - .github/workflows/sync-environments.yml
