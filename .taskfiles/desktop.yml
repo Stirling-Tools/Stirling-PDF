@@ -34,7 +34,6 @@ tasks:
       - task: ":frontend:prepare"
         vars: { MODE: desktop }
       - provisioner
-      - tesseract
 
   provisioner:
     desc: "Build installer provisioner"
@@ -43,16 +42,17 @@ tasks:
     cmds:
       - node scripts/build-provisioner.mjs
 
-  tesseract:
-    desc: "Fetch the Tesseract runtime bundled into the Windows installer"
-    # Windows-only: it is the one platform with no packaged Tesseract for users
-    # to install, so the installer has to carry its own.
+  ocr:runtime:
+    desc: "Build the publishable OCR runtime archive and its manifest"
+    # Not a dependency of `prepare`, and deliberately so: the installer no longer
+    # carries a Tesseract runtime. This produces the artefacts that get published
+    # once, which installations then fetch on demand.
     platforms: [windows]
     dir: ..
     cmds:
-      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-tesseract-bundle.ps1
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-ocr-runtime.ps1
     status:
-      - test -f frontend/editor/src-tauri/tesseract/tesseract.exe
+      - test -f dist/ocr/ocr-manifest.json
 
   dev:
     desc: "Start Tauri desktop dev mode"
@@ -109,7 +109,7 @@ tasks:
     dir: editor
     cmds:
       - task: jlink:clean
-      - task: tesseract:clean
+      - task: ocr:runtime:clean
       - cd src-tauri && cargo clean
       - rm -rf dist build
 
@@ -218,11 +218,12 @@ tasks:
     cmds:
       - rm -rf libs runtime
 
-  tesseract:clean:
-    desc: "Remove the bundled Tesseract runtime"
-    dir: editor/src-tauri
+  ocr:runtime:clean:
+    desc: "Remove the built OCR runtime artefacts"
+    # `dir: ..` is the repository root here, same as the ocr:runtime task above.
+    dir: ..
     cmds:
-      - rm -rf tesseract
+      - rm -rf dist/ocr
 
   # macOS-only. Replaces jlink:runtime's single-arch JRE with a universal
   # (arm64 + x86_64) one for the universal Tauri shell. Runs the x86_64

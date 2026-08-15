@@ -38,7 +38,7 @@
       "icons/128x128.png",
       "icons/192x192.png"
     ],
-    "resources": ["libs/*.jar", "runtime/jre/**/*", "tesseract/**/*"],
+    "resources": ["libs/*.jar", "runtime/jre/**/*"],
     "fileAssociations": [
       {
         "ext": ["pdf"],
