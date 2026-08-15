@@ -93,8 +93,94 @@ function buildSlotMerged(
 }
 
 // Astral characters (emoji, math symbols, CJK ext-B) are two UTF-16 code units.
-function hasSurrogatePair(s: string): boolean {
-  return /[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(s);
+// The planners index by code UNIT, so a boundary landing between the halves
+// would emit a lone surrogate. The helpers below let the planners bail only on
+// the edits that actually cut a pair, instead of on any text containing one.
+const HI_MIN = 0xd800;
+const HI_MAX = 0xdbff;
+const LO_MIN = 0xdc00;
+const LO_MAX = 0xdfff;
+
+/** Any surrogate code unit at all - BMP-only text skips every check below. */
+function hasAnySurrogate(s: string): boolean {
+  for (let i = 0; i < s.length; i++) {
+    const u = s.charCodeAt(i);
+    if (u >= HI_MIN && u <= LO_MAX) return true;
+  }
+  return false;
+}
+
+/** No orphaned half: every high surrogate is followed by its low. */
+function isWellFormedUtf16(s: string): boolean {
+  for (let i = 0; i < s.length; i++) {
+    const u = s.charCodeAt(i);
+    if (u >= HI_MIN && u <= HI_MAX) {
+      const next = i + 1 < s.length ? s.charCodeAt(i + 1) : 0;
+      if (next < LO_MIN || next > LO_MAX) return false;
+      i++;
+      continue;
+    }
+    if (u >= LO_MIN && u <= LO_MAX) return false;
+  }
+  return true;
+}
+
+/** True when slicing `s` at code-unit `idx` would not cut a surrogate pair. */
+function isCodePointBoundary(s: string, idx: number): boolean {
+  if (idx <= 0 || idx >= s.length) return true;
+  const before = s.charCodeAt(idx - 1);
+  const at = s.charCodeAt(idx);
+  return !(
+    before >= HI_MIN &&
+    before <= HI_MAX &&
+    at >= LO_MIN &&
+    at <= LO_MAX
+  );
+}
+
+/** Push a slice end off the middle of a pair so no half is orphaned. */
+function toCodePointBoundary(s: string, idx: number): number {
+  return isCodePointBoundary(s, idx) ? idx : idx + 1;
+}
+
+// Both halves of every astral char must share the SAME fate in the diff, and a
+// kept pair must stay adjacent on the other side. Sibling emoji share a high
+// surrogate (U+1F600 and U+1F601 are both \uD83D...), so the code-unit LCS can
+// match the highs and drop the lows - exactly the case this rejects.
+function surrogatePairsSurviveTogether(
+  prev: string,
+  next: string,
+  keptA: Set<number>,
+  keptB: Set<number>,
+  alignment: Array<{ aIdx: number; bIdx: number }>,
+): boolean {
+  const aToB = new Map<number, number>();
+  const bToA = new Map<number, number>();
+  for (const { aIdx, bIdx } of alignment) {
+    aToB.set(aIdx, bIdx);
+    bToA.set(bIdx, aIdx);
+  }
+  for (let a = 0; a + 1 < prev.length; a++) {
+    const hi = prev.charCodeAt(a);
+    if (hi < HI_MIN || hi > HI_MAX) continue;
+    const lo = prev.charCodeAt(a + 1);
+    if (lo < LO_MIN || lo > LO_MAX) continue;
+    if (keptA.has(a) !== keptA.has(a + 1)) return false;
+    if (keptA.has(a) && aToB.get(a + 1) !== (aToB.get(a) ?? -2) + 1)
+      return false;
+    a++;
+  }
+  for (let b = 0; b + 1 < next.length; b++) {
+    const hi = next.charCodeAt(b);
+    if (hi < HI_MIN || hi > HI_MAX) continue;
+    const lo = next.charCodeAt(b + 1);
+    if (lo < LO_MIN || lo > LO_MAX) continue;
+    if (keptB.has(b) !== keptB.has(b + 1)) return false;
+    if (keptB.has(b) && bToA.get(b + 1) !== (bToA.get(b) ?? -2) + 1)
+      return false;
+    b++;
+  }
+  return true;
 }
 
 /** Diff-driven partial editing. */
@@ -178,7 +264,15 @@ export function planPartialEdit(
   if (run.mergedFromBounds.length !== run.mergedFromPtrs.length) return null;
   if (nextText.length === 0) return null;
   if (prevText === nextText) return null;
-  if (hasSurrogatePair(prevText)) return null;
+  // Astral text is diffed in code UNITS. Rather than refusing every run that
+  // holds a pair, refuse only the edits that would cut one (checked below).
+  const astral = hasAnySurrogate(prevText) || hasAnySurrogate(nextText);
+  if (
+    astral &&
+    (!isWellFormedUtf16(prevText) || !isWellFormedUtf16(nextText))
+  ) {
+    return null;
+  }
 
   let { keptA, keptB, alignment } = lcsIndices(prevText, nextText);
 
@@ -193,6 +287,15 @@ export function planPartialEdit(
       keptB.add(i);
       alignment.push({ aIdx: i, bIdx: i });
     }
+  }
+
+  // Only now, against the alignment the ops walk will actually use: a diff
+  // boundary landing inside an astral char would emit a lone surrogate.
+  if (
+    astral &&
+    !surrogatePairsSurviveTogether(prevText, nextText, keptA, keptB, alignment)
+  ) {
+    return null;
   }
 
   // Read per-sub-run char-start positions directly off the run.
@@ -218,6 +321,14 @@ export function planPartialEdit(
     // Sanity check: the stored chars must actually match prevText at
     // that position. Catches model corruption without silent drift.
     if (prevText.slice(start, end) !== subText) return null;
+    // A sub-run split mid-pair would make "modify" SetText half a char.
+    if (
+      astral &&
+      (!isCodePointBoundary(prevText, start) ||
+        !isCodePointBoundary(prevText, end))
+    ) {
+      return null;
+    }
     for (let c = start; c < end; c++) {
       charToSubRun[c] = i;
     }
@@ -666,7 +777,10 @@ export function applyPartialEditPlan(
             const isLast = i === reptrs.length - 1;
             const slice = isLast
               ? modText.slice(charCursor)
-              : modText.slice(charCursor, charCursor + per);
+              : modText.slice(
+                  charCursor,
+                  toCodePointBoundary(modText, charCursor + per),
+                );
             const w = total / reptrs.length;
             newMergedFromPtrs.push(reptrs[i]);
             newMergedFromTexts.push(slice);
@@ -837,7 +951,10 @@ export function applyPartialEditPlan(
           const isLast = i === ptrs.length - 1;
           const sliceText = isLast
             ? insertText.slice(charCursor)
-            : insertText.slice(charCursor, charCursor + charsPerPtr);
+            : insertText.slice(
+                charCursor,
+                toCodePointBoundary(insertText, charCursor + charsPerPtr),
+              );
           newMergedFromPtrs.push(ptrs[i]);
           newMergedFromTexts.push(sliceText);
           newMergedFromBounds.push({
@@ -998,7 +1115,22 @@ export function planParagraphEdit(
   const slots = run.paragraphLineSlots;
   if (slots.length < 2) return null;
   if (prevText === nextText) return null;
-  if (hasSurrogatePair(prevText)) return null;
+  // Slot ranges are code-unit offsets. Only refuse astral text when a slot
+  // boundary would cut a pair; the per-line planPartialEdit re-checks the rest.
+  const astral = hasAnySurrogate(prevText) || hasAnySurrogate(nextText);
+  if (astral) {
+    if (!isWellFormedUtf16(prevText) || !isWellFormedUtf16(nextText)) {
+      return null;
+    }
+    for (const s of slots) {
+      if (
+        !isCodePointBoundary(prevText, s.startChar) ||
+        !isCodePointBoundary(prevText, s.endChar)
+      ) {
+        return null;
+      }
+    }
+  }
   // Per-VISUAL-line text comes from the slot char ranges.
   if (!slotsTileText(slots, prevText)) return null;
   const prevLines = slots.map((s) => prevText.slice(s.startChar, s.endChar));

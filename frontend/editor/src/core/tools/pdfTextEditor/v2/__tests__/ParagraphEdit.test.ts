@@ -85,17 +85,38 @@ function makeSingleSubRun(text: string): TextRun {
 }
 
 describe("planPartialEdit surrogate-pair guard (astral chars)", () => {
-  it("bails (returns null) when prevText already contains an emoji surrogate pair", () => {
-    // "🎉" is two UTF-16 code units.
+  it("stays surgical for an append after an emoji the edit never touches", () => {
+    // "🎉" is two UTF-16 code units, but the append is nowhere near it.
+    // Bailing here dropped the run to the overlay re-emit, which loses chars.
     const run = makeSingleSubRun("🎉ab");
-    expect(planPartialEdit(run, "🎉ab", "🎉abc")).toBeNull();
+    expect(planPartialEdit(run, "🎉ab", "🎉abc")).not.toBeNull();
   });
 
   it("returns a non-null plan for the same edit when prevText has NO surrogate", () => {
-    // Identical append, but an ASCII anchor instead of the emoji - proves the
-    // guard is specific to surrogate pairs and not a blanket bailout.
     const run = makeSingleSubRun("Xab");
     expect(planPartialEdit(run, "Xab", "Xabc")).not.toBeNull();
+  });
+
+  it("bails when the diff would cut a pair (sibling emoji share a high half)", () => {
+    // U+1F600 and U+1F601 are both "\uD83D...". The code-unit LCS matches the
+    // shared high surrogate and drops the low, which would emit a lone half.
+    const run = makeSingleSubRun("a\u{1F600}b");
+    expect(planPartialEdit(run, "a\u{1F600}b", "a\u{1F601}b")).toBeNull();
+  });
+
+  it("stays surgical when a whole astral char is deleted", () => {
+    const run = makeSingleSubRun("a\u{1F600}b");
+    expect(planPartialEdit(run, "a\u{1F600}b", "ab")).not.toBeNull();
+  });
+
+  it("stays surgical for a plane-1 script (U+10C80 Old Hungarian)", () => {
+    const run = makeSingleSubRun("x\u{10C80}y");
+    expect(planPartialEdit(run, "x\u{10C80}y", "x\u{10C80}yz")).not.toBeNull();
+  });
+
+  it("bails when prevText already holds a LONE surrogate", () => {
+    const run = makeSingleSubRun("a\uD83Db");
+    expect(planPartialEdit(run, "a\uD83Db", "a\uD83Dbc")).toBeNull();
   });
 });
 
