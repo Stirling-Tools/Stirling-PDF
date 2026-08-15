@@ -2859,6 +2859,10 @@ test.describe("PDF text editor v2 - bold/italic", () => {
       .getByRole("option", { name: /^Helvetica$/i })
       .first()
       .click({ timeout: 10_000 });
+    // Wait for the dispatch to LAND before reading the history depth. Clicking
+    // the option only starts it; reading straight after raced the command and
+    // saw an empty undo stack most of the time.
+    await expect(page.getByTestId("v2-undo")).toBeEnabled();
 
     const readState = (id: string) =>
       page.evaluate((rid) => {
@@ -2887,6 +2891,23 @@ test.describe("PDF text editor v2 - bold/italic", () => {
     await expect(page.getByTestId("v2-bold")).toHaveAttribute(
       "data-variant",
       /filled/i,
+    );
+
+    // The toolbar's active state flips on local component state, which can beat
+    // the command onto the screen - so wait for the history itself to grow.
+    await page.waitForFunction(
+      (depth) => {
+        const store = (
+          window as unknown as {
+            __v2_editor_store: {
+              history: { size: () => { undo: number; redo: number } };
+            };
+          }
+        ).__v2_editor_store;
+        return store.history.size().undo > depth;
+      },
+      before.undoDepth,
+      { timeout: 10_000 },
     );
 
     // The misnamed boolean was never compared. Assert a real history-size
