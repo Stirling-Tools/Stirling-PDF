@@ -105,13 +105,23 @@ environments:
       - GH_APP_ID
       - GH_APP_PRIVATE_KEY
 
-  # Base-image builds are dispatched from whatever branch holds the Dockerfile
-  # change (recently main and security/server-image-cves), so no branch policy is
-  # workable here. The real control is the github.actor == 'Frooodle' guard in
-  # push-docker-base.yml.
+  # Publishes stirlingtools/stirling-pdf-base, which every shipped image FROMs,
+  # and cosign-signs it with the same key docker-publish uses. Highest-value
+  # environment in the repo.
+  #
+  # No branch policy is workable - it is dispatched from whatever branch carries
+  # the Dockerfile change (main, security/server-image-cves, ...). So the gate is
+  # required reviewers instead. push-docker-base.yml's github.actor guard is NOT
+  # sufficient on its own: that check lives in the workflow file at the dispatched
+  # ref, so anyone with write access could push a branch with it removed. An
+  # environment reviewer is enforced by GitHub and cannot be edited away.
+  #
+  # It has run 3 times in 5 months, so an approval pause costs nothing.
   docker-base-publish:
     branches: all
-    reviewers: []
+    reviewers:
+      - Frooodle
+      - jbrunton96
     secrets:
       - DOCKER_HUB_USERNAME
       - DOCKER_HUB_ORG_USERNAME
