@@ -1124,6 +1124,93 @@ interface InkModule {
   FPDFPageObj_SetStrokeWidth?: (obj: number, width: number) => boolean;
 }
 
+/** Pen origin for one output line, in raw PDF page space. */
+export interface LineOrigin {
+  x: number;
+  y: number;
+}
+
+// THE one place that decides where each re-emitted line's pen starts. Reuse the
+// run's existing per-line origins when the line count still matches (so an edit
+// keeps the source's exact baselines), otherwise step along the run's rotated
+// down-axis: the (0,-lineHeight) vector through [cos,-sin] gives (sin*L,-cos*L).
+export function planLineOrigins(
+  run: TextRun,
+  lineCount: number,
+  lineHeight: number,
+): LineOrigin[] {
+  const rot = rotationFromMatrix(run.matrix);
+  const dcos = rot ? rot.cos : 1;
+  const dsin = rot ? rot.sin : 0;
+  const slots =
+    run.paragraphLineSlots.length === lineCount ? run.paragraphLineSlots : null;
+  const out: LineOrigin[] = [];
+  for (let i = 0; i < lineCount; i++) {
+    const slot = slots?.[i];
+    out.push(
+      slot
+        ? { x: slot.matrixE, y: slot.baselineY }
+        : {
+            x: run.matrix.e + i * lineHeight * dsin,
+            y: run.matrix.f - i * lineHeight * dcos,
+          },
+    );
+  }
+  return out;
+}
+
+/** One re-emitted line: the objects created for it and where they landed. */
+export interface EmittedLine {
+  ptrs: number[];
+  text: string;
+  x: number;
+  y: number;
+}
+
+// THE one place a whole run is re-emitted line by line. Rotation, ink state and
+// per-line baselines are applied here so no caller can carry one and drop
+// another - that fragmentation is why the same class of bug kept recurring.
+export function emitRunLines(opts: {
+  doc: EditorDocument;
+  page: Page;
+  run: TextRun;
+  lines: string[];
+  origins: LineOrigin[];
+  originalFontPtr: number;
+  fallbackFamily: string;
+  originalFontSubset?: boolean;
+}): EmittedLine[] {
+  const rot = rotationFromMatrix(opts.run.matrix);
+  const out: EmittedLine[] = [];
+  for (let i = 0; i < opts.lines.length; i++) {
+    const text = opts.lines[i];
+    const origin = opts.origins[i];
+    if (!origin) continue;
+    if (text.length === 0) {
+      out.push({ ptrs: [], text: "", x: origin.x, y: origin.y });
+      continue;
+    }
+    const ptrs = emitTextLine({
+      doc: opts.doc,
+      page: opts.page,
+      text,
+      x: origin.x,
+      y: origin.y,
+      fontSize: opts.run.fontSize,
+      fill: opts.run.fill,
+      ...inkFromRun(opts.run),
+      originalFontPtr: opts.originalFontPtr,
+      originalFontSubset: opts.originalFontSubset,
+      charSpacingPt: opts.run.charSpacingPt,
+      fallbackFamily: opts.fallbackFamily,
+      // Keep the run's rotation on re-emit (no-op for upright text).
+      rotation: rot,
+    });
+    out.push({ ptrs, text, x: origin.x, y: origin.y });
+  }
+  return out;
+}
+
 // How a run's glyphs are painted, other than the fill. Spread as a unit so a
 // call site cannot carry the render mode and forget the outline.
 export function inkFromRun(run: {

@@ -12,6 +12,8 @@ import {
   inkFromRun,
   removeMemberPtrs,
   rotationFromMatrix,
+  planLineOrigins,
+  emitRunLines,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import {
   bestFontPtrForText,
@@ -379,49 +381,28 @@ export class EditTextCommand implements Command {
     // Per-line emit metadata used to rebuild paragraphLineSlots so the NEXT
     // edit can route back through paragraph-aware partial-edit instead of.
     const perLineEmits: Array<{ ptrs: number[]; text: string; y: number }> = [];
-    // Step each line along the run's rotated down-axis: the (0,-lineHeight)
-    // stepping vector transformed by [cos,-sin] gives (sin*L, -cos*L).
-    const rot = rotationFromMatrix(run.matrix);
-    const keptOrigins =
-      run.paragraphLineSlots.length === outputLines.length
-        ? run.paragraphLineSlots
-        : null;
-
-    for (let i = 0; i < outputLines.length; i++) {
-      const kept = keptOrigins?.[i];
-      const x = kept
-        ? kept.matrixE
-        : run.matrix.e + (rot ? i * rot.sin * lineHeight : 0);
-      const y = kept
-        ? kept.baselineY
-        : run.matrix.f - i * lineHeight * (rot ? rot.cos : 1);
-      // Empty lines get a placeholder slot.
-      if (outputLines[i].length === 0) {
-        perLineEmits.push({ ptrs: [], text: "", y });
+    const emitted = emitRunLines({
+      doc,
+      page,
+      run,
+      lines: outputLines,
+      origins: planLineOrigins(run, outputLines.length, lineHeight),
+      originalFontPtr,
+      originalFontSubset: run.fontSubset,
+      fallbackFamily,
+    });
+    for (const line of emitted) {
+      // Empty lines keep a placeholder slot; a FAILED emit is dropped entirely.
+      if (line.text.length === 0) {
+        perLineEmits.push({ ptrs: [], text: "", y: line.y });
         continue;
       }
-      const ptrs = emitTextLine({
-        doc,
-        page,
-        text: outputLines[i],
-        x,
-        y,
-        fontSize: run.fontSize,
-        fill: run.fill,
-        ...inkFromRun(run),
-        originalFontPtr,
-        originalFontSubset: run.fontSubset,
-        charSpacingPt: run.charSpacingPt,
-        fallbackFamily,
-        // Keep the run's rotation on re-emit (no-op for upright text).
-        rotation: rot,
-      });
-      if (ptrs.length === 0) continue;
-      this.createdPtrs.push(...ptrs);
-      allEmittedPtrs.push(...ptrs);
-      lineAnchorPtrs.push(ptrs[0]);
-      lineAnchorYs.push(y);
-      perLineEmits.push({ ptrs, text: outputLines[i], y });
+      if (line.ptrs.length === 0) continue;
+      this.createdPtrs.push(...line.ptrs);
+      allEmittedPtrs.push(...line.ptrs);
+      lineAnchorPtrs.push(line.ptrs[0]);
+      lineAnchorYs.push(line.y);
+      perLineEmits.push({ ptrs: line.ptrs, text: line.text, y: line.y });
     }
 
     if (lineAnchorPtrs.length > 0) {
@@ -722,6 +703,10 @@ export class EditTextCommand implements Command {
         // Keep the run's original orientation - without this, undoing an
         // edit on a rotated run scattered its text axis-aligned.
         rotation: this.revertRotation ?? undefined,
+        // ...and its ink. applyInkState writes the mode unconditionally, so
+        // omitting this forced every restored object back to fill: undo on
+        // invisible OCR text stamped visible glyphs over the scan.
+        ...inkFromRun(run),
       });
       if (ptrs.length === 0) continue;
       lineAnchorPtrs.push(ptrs[0]);

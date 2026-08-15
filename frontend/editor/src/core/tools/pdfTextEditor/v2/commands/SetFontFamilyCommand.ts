@@ -8,10 +8,9 @@ import {
 import {
   collectContainersByPtr,
   collectMemberPtrs,
-  emitTextLine,
-  inkFromRun,
+  emitRunLines,
+  planLineOrigins,
   removeMemberPtrs,
-  rotationFromMatrix,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import { deviceFontEmitCount } from "@app/tools/pdfTextEditor/v2/util/deviceFontEmbed";
 
@@ -63,31 +62,26 @@ export class SetFontFamilyCommand implements Command {
       run.paragraphLineHeight > 0
         ? run.paragraphLineHeight
         : run.fontSize * 1.2;
-    // Step lines along the rotated down-axis (sin,-cos) so a rotated paragraph
-    // keeps its baseline grid; upright reduces to straight-down Y.
-    const rot = rotationFromMatrix(run.matrix);
-    const dcos = rot ? rot.cos : 1;
-    const dsin = rot ? rot.sin : 0;
     // Prefer per-line SLOT ranges: run.text joins SOFT-wrapped lines with
-    // separators a \n split can't see.
+    // separators a \n split can't see. Baseline stepping for the fallback case
+    // comes from planLineOrigins so it cannot drift from EditTextCommand's.
     const slots = run.paragraphLineSlots;
-    const emitLines: Array<{ text: string; x: number; y: number }> =
-      slots.length > 0
-        ? slots.map((s) => ({
-            text: run.text
-              .slice(
-                Math.max(0, s.startChar),
-                Math.min(run.text.length, s.endChar),
-              )
-              .replace(/[\r\n]+$/, ""),
-            x: s.matrixE,
-            y: s.baselineY,
-          }))
-        : run.text.split(/\r?\n/).map((text, i) => ({
-            text,
-            x: run.matrix.e + i * lineHeight * dsin,
-            y: run.matrix.f - i * lineHeight * dcos,
-          }));
+    const splitTexts = slots.length > 0 ? null : run.text.split(/\r?\n/);
+    const emitLines: Array<{ text: string; x: number; y: number }> = splitTexts
+      ? (() => {
+          const origins = planLineOrigins(run, splitTexts.length, lineHeight);
+          return splitTexts.map((text, i) => ({ text, ...origins[i] }));
+        })()
+      : slots.map((s) => ({
+          text: run.text
+            .slice(
+              Math.max(0, s.startChar),
+              Math.min(run.text.length, s.endChar),
+            )
+            .replace(/[\r\n]+$/, ""),
+          x: s.matrixE,
+          y: s.baselineY,
+        }));
     const lineAnchors: number[] = [];
     const memberFs: number[] = [];
     const leaf: number[] = [];
@@ -95,30 +89,24 @@ export class SetFontFamilyCommand implements Command {
     // Emits with the embedded device face are counted, so the font id below
     // can say what actually rendered rather than what was requested.
     const deviceEmitsBefore = deviceFontEmitCount(doc, this.nextFamily);
-    for (const line of emitLines) {
+    const emitted = emitRunLines({
+      doc,
+      page,
+      run,
+      lines: emitLines.map((l) => l.text),
+      origins: emitLines.map((l) => ({ x: l.x, y: l.y })),
+      originalFontPtr: 0, // base-14: never reuse the source font
+      fallbackFamily: this.nextFamily,
+    });
+    for (const line of emitted) {
       memberFs.push(line.y);
-      if (line.text.length === 0) {
+      if (line.ptrs.length === 0) {
         lineAnchors.push(0);
         continue;
       }
-      const ptrs = emitTextLine({
-        doc,
-        page,
-        text: line.text,
-        x: line.x,
-        y: line.y,
-        fontSize: run.fontSize,
-        fill: run.fill,
-        ...inkFromRun(run),
-        originalFontPtr: 0, // base-14: never reuse the source font
-        charSpacingPt: run.charSpacingPt,
-        fallbackFamily: this.nextFamily,
-        // Keep the run's rotation on re-emit (no-op for upright text).
-        rotation: rot,
-      });
-      lineAnchors.push(ptrs[0] ?? 0);
-      leaf.push(...ptrs);
-      created.push(...ptrs);
+      lineAnchors.push(line.ptrs[0]);
+      leaf.push(...line.ptrs);
+      created.push(...line.ptrs);
     }
 
     if (created.length === 0) {
