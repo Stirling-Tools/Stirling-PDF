@@ -17,8 +17,10 @@ MANIFEST = os.environ["MANIFEST"]
 DRY_RUN = os.environ.get("DRY_RUN", "false").lower() == "true"
 PRUNE = os.environ.get("PRUNE_SECRETS", "false").lower() == "true"
 
-# Never a candidate for copying: injected per-job, not a real repo secret.
-IGNORED_SECRETS = {"github_token", "GITHUB_TOKEN"}
+# Source values arrive as SECRET_<NAME> env vars, one per entry in the workflow's
+# explicit allowlist. An empty value means the name exists in no store this job
+# can see; a missing key means the allowlist has drifted from the manifest.
+SECRET_PREFIX = "SECRET_"
 
 missing: list[tuple[str, str]] = []
 changed = 0
@@ -121,11 +123,22 @@ def sync_secrets(env: str, wanted: list[str], available: dict) -> None:
 
 def main() -> int:
     manifest = json.load(open(MANIFEST, encoding="utf-8"))
-    raw = os.environ.get("ALL_SECRETS", "{}")
-    available = {k: v for k, v in json.loads(raw).items() if k not in IGNORED_SECRETS}
+
+    declared = {k[len(SECRET_PREFIX) :]: v for k, v in os.environ.items() if k.startswith(SECRET_PREFIX)}
+    available = {k: v for k, v in declared.items() if v}
+
+    wanted = {s for cfg in manifest["environments"].values() for s in (cfg.get("secrets") or [])}
+    undeclared = sorted(wanted - declared.keys())
+    if undeclared:
+        for name in undeclared:
+            print(
+                f"::error::{name} is listed in .github/environments.yml but has no "
+                f"SECRET_{name} entry in the workflow's allowlist. Add it, then re-run."
+            )
+        return 1
 
     print(f"repo={REPO} dry_run={DRY_RUN} prune={PRUNE}")
-    print(f"{len(available)} secrets visible at repo/org scope\n")
+    print(f"{len(available)}/{len(declared)} allowlisted secrets resolved at repo/org scope\n")
 
     for env, cfg in manifest["environments"].items():
         branches = cfg.get("branches", "all")

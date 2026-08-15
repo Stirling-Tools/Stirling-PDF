@@ -118,9 +118,50 @@ jobs:
           GH_TOKEN: ${{ secrets.ENV_BOOTSTRAP_TOKEN }}
           REPO: ${{ github.repository }}
           MANIFEST: ${{ runner.temp }}/manifest.json
-          # Every secret visible to this job (org + repo). Consumed by the script
-          # below and never printed; GitHub masks the values in logs regardless.
-          ALL_SECRETS: ${{ toJSON(secrets) }}
+          # Explicit allowlist of what this job may copy, one line per secret.
+          # Deliberately NOT toJSON(secrets): enumerating them keeps the blast
+          # radius reviewable, stops a newly added repo secret from being picked
+          # up silently, and avoids the bulk-secret-dump shape. Every name in
+          # .github/environments.yml must appear here or the script fails.
+          SECRET_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SECRET_APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          SECRET_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          SECRET_APPLE_ID: ${{ secrets.APPLE_ID }}
+          SECRET_APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          SECRET_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          SECRET_AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          SECRET_COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          SECRET_COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          SECRET_DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+          SECRET_DOCKER_HUB_API: ${{ secrets.DOCKER_HUB_API }}
+          SECRET_DOCKER_HUB_ORG_USERNAME: ${{ secrets.DOCKER_HUB_ORG_USERNAME }}
+          SECRET_DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          SECRET_ENTERPRISE_KEY: ${{ secrets.ENTERPRISE_KEY }}
+          SECRET_GH_APP_ID: ${{ secrets.GH_APP_ID }}
+          SECRET_GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          SECRET_HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          SECRET_MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          SECRET_MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          SECRET_NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
+          SECRET_NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
+          SECRET_NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          SECRET_PREMIUM_KEY: ${{ secrets.PREMIUM_KEY }}
+          SECRET_PREMIUM_KEY_ENTERPRISE: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
+          SECRET_RELEASE_GPG_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          SECRET_RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          SECRET_SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SECRET_SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          SECRET_SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          SECRET_SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
+          SECRET_SM_HOST: ${{ secrets.SM_HOST }}
+          SECRET_SM_KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+          SECRET_SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+          SECRET_TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          SECRET_TEST_LOGIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
+          SECRET_TEST_LOGIN_USERNAME: ${{ secrets.TEST_LOGIN_USERNAME }}
+          SECRET_VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL }}
+          SECRET_VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL }}
+          SECRET_VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
           DRY_RUN: ${{ steps.mode.outputs.dry_run }}
           PRUNE_SECRETS: ${{ github.event_name == 'workflow_dispatch' && inputs.prune_secrets || 'false' }}
         run: python3 .github/scripts/sync_environments.py
