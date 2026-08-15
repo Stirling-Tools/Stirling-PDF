@@ -215,6 +215,15 @@ public class ApplicationProperties {
          */
         private List<String> allowedFolderRoots = new java.util.ArrayList<>();
 
+        /**
+         * How many of one sweep's runs may execute at once; further runs queue (visible as pending)
+         * and start as slots free up. Sweeps fan out one run per file, and a folder of documents
+         * dispatched all at once just piles up at the pipeline's slowest tool (on a desktop
+         * install, the local AI engine) — same total time, but nothing visibly finishes until the
+         * end. A small cap keeps completions steady. 0 = unbounded.
+         */
+        private int sweepConcurrency = 2;
+
         /** How often (seconds) the schedule trigger checks for policies whose schedule is due. */
         private long scheduleSweepSeconds = 60;
 
