@@ -1,8 +1,11 @@
 name: Sync GitHub Environments
 
-# Reconciles the GitHub Actions environments described in .github/environments.yml:
-# creates each one, overwrites its protection rules to match the manifest, and
-# copies the listed secrets in from repo/org scope.
+# Fills in the environment secrets listed in .github/environments.yml.
+#
+# Strictly additive: it creates an environment only if absent, and sets a secret
+# only if that environment has no secret by that name. It never overwrites, never
+# deletes, and never touches protection rules, reviewers or branch policies -
+# those are configured by hand.
 #
 # This job declares no environment of its own. An environment-scoped job would
 # still see repo/org secrets, so the stronger setup is a hand-created `bootstrap`
@@ -39,10 +42,6 @@ on:
         description: "Report the plan without changing anything"
         type: boolean
         default: true
-      prune_secrets:
-        description: "Also delete environment secrets that the manifest does not list"
-        type: boolean
-        default: false
 
 concurrency:
   group: sync-environments
@@ -163,7 +162,6 @@ jobs:
           SECRET_VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL }}
           SECRET_VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
           DRY_RUN: ${{ steps.mode.outputs.dry_run }}
-          PRUNE_SECRETS: ${{ github.event_name == 'workflow_dispatch' && inputs.prune_secrets || 'false' }}
         run: python3 .github/scripts/sync_environments.py
 
       - name: Summary

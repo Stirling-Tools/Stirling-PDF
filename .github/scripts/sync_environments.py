@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Reconcile GitHub Actions environments from .github/environments.yml.
+"""Fill in missing GitHub Actions environment secrets from .github/environments.yml.
 
-Creates each environment, overwrites its protection rules to match the manifest,
-and copies the listed secrets in from the repo/org scope available to the calling
-workflow. Secret values are read from the ALL_SECRETS env var and are only ever
-written to a subprocess stdin - never logged, never placed on a command line.
+Strictly additive. It creates an environment only if it does not exist, and sets a
+secret only if that environment does not already have one by that name. It never
+overwrites a secret, never deletes anything, and never touches protection rules,
+reviewers or branch policies - those are managed by hand.
+
+Secret values arrive as SECRET_<NAME> env vars and are only ever written to a
+subprocess stdin - never logged, never placed on a command line.
 """
 
 import json
@@ -15,7 +18,6 @@ import sys
 REPO = os.environ["REPO"]
 MANIFEST = os.environ["MANIFEST"]
 DRY_RUN = os.environ.get("DRY_RUN", "false").lower() == "true"
-PRUNE = os.environ.get("PRUNE_SECRETS", "false").lower() == "true"
 
 # Source values arrive as SECRET_<NAME> env vars, one per entry in the workflow's
 # explicit allowlist. An empty value means the name exists in no store this job
@@ -23,7 +25,8 @@ PRUNE = os.environ.get("PRUNE_SECRETS", "false").lower() == "true"
 SECRET_PREFIX = "SECRET_"
 
 missing: list[tuple[str, str]] = []
-changed = 0
+created_secrets = 0
+created_envs = 0
 
 
 def gh(args: list[str], stdin: str | None = None, check: bool = True) -> str:
@@ -35,90 +38,62 @@ def gh(args: list[str], stdin: str | None = None, check: bool = True) -> str:
         text=True,
     )
     if check and proc.returncode != 0:
-        # gh masks nothing itself; only surface stderr, never our stdin.
+        # Only surface stderr, never our stdin.
         raise SystemExit(f"::error::gh {' '.join(args)} failed: {proc.stderr.strip()}")
     return proc.stdout
 
 
-def api(path: str, method: str = "GET", body: dict | None = None, check: bool = True) -> str:
-    args = ["api", "-H", "Accept: application/vnd.github+json", "--method", method, path]
-    if body is not None:
-        args += ["--input", "-"]
-        return gh(args, stdin=json.dumps(body), check=check)
-    return gh(args, check=check)
+def api(path: str, method: str = "GET", check: bool = True) -> str:
+    return gh(["api", "-H", "Accept: application/vnd.github+json", "--method", method, path], check=check)
 
 
-def user_id(login: str) -> int:
-    return int(gh(["api", f"users/{login}", "--jq", ".id"]).strip())
+def api_ok(path: str) -> bool:
+    """True when the GET succeeds. Must test the exit code, not the output:
+    gh prints the 404 error body to stdout, so a truthiness check reads as success."""
+    proc = subprocess.run(
+        ["gh", "api", "-H", "Accept: application/vnd.github+json", path],
+        capture_output=True,
+        text=True,
+    )
+    return proc.returncode == 0
 
 
-def branch_policy_shape(branches) -> dict | None:
-    if branches == "all":
-        return None
-    if branches == "protected":
-        return {"protected_branches": True, "custom_branch_policies": False}
-    return {"protected_branches": False, "custom_branch_policies": True}
+def ensure_environment(env: str) -> bool:
+    """Create the environment if absent. Returns True if it already existed.
+
+    A bare PUT creates it with no protection rules. Existing environments are left
+    completely alone - a PUT would replace their whole rule set.
+    """
+    global created_envs
+    if api_ok(f"repos/{REPO}/environments/{env}"):
+        return True
+    print("    * environment does not exist - creating it with no protection rules")
+    if not DRY_RUN:
+        api(f"repos/{REPO}/environments/{env}", "PUT")
+    created_envs += 1
+    return False
 
 
-def desired_policies(branches) -> list[dict]:
-    if not isinstance(branches, list):
-        return []
-    out = []
-    for entry in branches:
-        if entry.startswith("tag:"):
-            out.append({"name": entry[4:], "type": "tag"})
-        else:
-            out.append({"name": entry, "type": "branch"})
-    return out
-
-
-def sync_branch_policies(env: str, branches) -> None:
-    wanted = desired_policies(branches)
-    if not wanted:
-        return
-    # 404s when the environment does not exist yet, which is the normal dry-run
-    # case since dry run skips the creating PUT above.
-    raw = api(f"repos/{REPO}/environments/{env}/deployment-branch-policies", check=False)
-    existing = json.loads(raw or '{"branch_policies":[]}')
-    have = {(p["name"], p.get("type", "branch")): p["id"] for p in existing.get("branch_policies", [])}
-    want = {(p["name"], p["type"]) for p in wanted}
-
-    for key, pid in have.items():
-        if key not in want:
-            print(f"    - branch policy {key[1]}:{key[0]} (remove)")
-            if not DRY_RUN:
-                api(f"repos/{REPO}/environments/{env}/deployment-branch-policies/{pid}", "DELETE")
-    for p in wanted:
-        if (p["name"], p["type"]) not in have:
-            print(f"    + branch policy {p['type']}:{p['name']}")
-            if not DRY_RUN:
-                api(f"repos/{REPO}/environments/{env}/deployment-branch-policies", "POST", p)
-
-
-def sync_secrets(env: str, wanted: list[str], available: dict) -> None:
-    global changed
-    listed = json.loads(api(f"repos/{REPO}/environments/{env}/secrets", check=False) or '{"secrets":[]}')
+def fill_secrets(env: str, wanted: list[str], available: dict, env_exists: bool) -> None:
+    global created_secrets
+    listed = (
+        json.loads(api(f"repos/{REPO}/environments/{env}/secrets", check=False) or '{"secrets":[]}')
+        if env_exists
+        else {}
+    )
     present = {s["name"] for s in listed.get("secrets", [])}
 
     for name in wanted:
-        if name in available:
-            verb = "update" if name in present else "create"
-            print(f"    + secret {name} ({verb} from repo/org scope)")
+        if name in present:
+            print(f"    = secret {name} (already set - left untouched)")
+        elif name in available:
+            print(f"    + secret {name} (create from repo/org scope)")
             if not DRY_RUN:
                 gh(["secret", "set", name, "--env", env, "--repo", REPO], stdin=available[name])
-            changed += 1
-        elif name in present:
-            # Already environment-scoped and not visible at repo/org level. Correct.
-            print(f"    = secret {name} (already in environment, no source to copy)")
+            created_secrets += 1
         else:
             print(f"    ! secret {name} MISSING from both {env} and repo/org scope")
             missing.append((env, name))
-
-    if PRUNE:
-        for name in sorted(present - set(wanted)):
-            print(f"    - secret {name} (prune)")
-            if not DRY_RUN:
-                gh(["secret", "delete", name, "--env", env, "--repo", REPO])
 
 
 def main() -> int:
@@ -137,30 +112,14 @@ def main() -> int:
             )
         return 1
 
-    print(f"repo={REPO} dry_run={DRY_RUN} prune={PRUNE}")
-    print(f"{len(available)}/{len(declared)} allowlisted secrets resolved at repo/org scope\n")
+    print(f"repo={REPO} dry_run={DRY_RUN} mode=additive-only")
+    print(f"{len(available)}/{len(declared)} allowlisted secrets resolved at repo/org scope")
+    print("Protection rules, reviewers and branch policies are NOT managed here.\n")
 
     for env, cfg in manifest["environments"].items():
-        branches = cfg.get("branches", "all")
-        reviewers = cfg.get("reviewers") or []
-        print(
-            f"[{env}] branches={branches} reviewers={reviewers or 'none'} "
-            f"prevent_self_review={cfg.get('prevent_self_review', bool(reviewers))}"
-        )
-
-        # PUT replaces the whole protection-rule set, so anything omitted here is
-        # cleared. prevent_self_review defaults on whenever reviewers are required -
-        # sending a bare False would silently let a reviewer approve their own run.
-        body = {
-            "wait_timer": cfg.get("wait_timer", 0),
-            "prevent_self_review": cfg.get("prevent_self_review", bool(reviewers)),
-            "reviewers": [{"type": "User", "id": user_id(r)} for r in reviewers],
-            "deployment_branch_policy": branch_policy_shape(branches),
-        }
-        if not DRY_RUN:
-            api(f"repos/{REPO}/environments/{env}", "PUT", body)
-        sync_branch_policies(env, branches)
-        sync_secrets(env, cfg.get("secrets") or [], available)
+        print(f"[{env}]")
+        env_exists = ensure_environment(env)
+        fill_secrets(env, cfg.get("secrets") or [], available, env_exists)
         print()
 
     if missing:
@@ -173,7 +132,9 @@ def main() -> int:
         print("::endgroup::")
         return 1
 
-    print(f"Done. {changed} secret writes{' (dry run - nothing applied)' if DRY_RUN else ''}.")
+    suffix = " (dry run - nothing applied)" if DRY_RUN else ""
+    print(f"Done. {created_envs} environments created, {created_secrets} secrets created{suffix}.")
+    print("Nothing was overwritten or deleted.")
     return 0
 
 
