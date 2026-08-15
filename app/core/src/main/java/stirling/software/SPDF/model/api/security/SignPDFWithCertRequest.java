@@ -106,8 +106,9 @@ public class SignPDFWithCertRequest extends PDFFile {
     @Schema(
             description =
                     "Where the logo sits inside the signature box. BEHIND draws it under the text"
-                            + " as a watermark; the others give it a strip of its own. Ignored"
-                            + " unless a signature box is requested.",
+                            + " as a watermark; the others give it a strip of its own. Sending it"
+                            + " without a signature box is allowed and applies the same layout to"
+                            + " the default box.",
             defaultValue = "LEFT")
     private SignatureLogoPosition logoPosition;
 

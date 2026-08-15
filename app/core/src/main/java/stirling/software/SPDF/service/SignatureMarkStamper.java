@@ -85,6 +85,12 @@ public class SignatureMarkStamper {
         // Same face the visible signature uses, so a mark is not distinguishable from it
         // by its typography.
         PDFont font = new PDType1Font(FontName.TIMES_BOLD);
+
+        // Loaded once and shared by every page. Decoding it inside the loop would not merely
+        // repeat work: each call embeds another image object in the document, so a long contract
+        // would carry the same logo once per marked page.
+        PDImageXObject logoImage = loadLogo(document, logo);
+
         int stamped = 0;
         PDPage signedPage =
                 signedPageIndex >= 0 && signedPageIndex < document.getNumberOfPages()
@@ -99,8 +105,8 @@ public class SignatureMarkStamper {
             PDRectangle rect = box.toPdfRectangle(page.getMediaBox());
 
             // The logo takes its strip first, exactly as it does in the signature, so both end up
-            // with the text in the same place.
-            PDImageXObject logoImage = loadLogo(document, logo);
+            // with the text in the same place. This part stays per page: the box lands on each
+            // page's own media box, and a document can mix page sizes.
             PDRectangle textArea = rect;
             SignatureLogoPlacement.Placement placement = null;
             if (logoImage != null) {

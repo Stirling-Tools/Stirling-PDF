@@ -9,11 +9,14 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -247,6 +250,36 @@ class SignatureMarkStamperTest {
                 SignatureMarkStamper.stampOtherPages(doc, 0, BOX, lines(), logo);
 
                 assertTrue(textOnPage(doc, 1).contains("Samuel Saez"));
+            }
+        }
+
+        @Test
+        @DisplayName("One image object serves every page, rather than a copy per page")
+        void embedsTheImageOnlyOnce() throws IOException {
+            try (PDDocument doc = document(6)) {
+                SignatureLogoPlacement.Logo logo =
+                        new SignatureLogoPlacement.Logo(pngBytes(), SignatureLogoPosition.LEFT);
+
+                SignatureMarkStamper.stampOtherPages(doc, 0, BOX, lines(), logo);
+
+                // Loading the image inside the page loop would add a fresh object to the document
+                // each time, so the same logo would be stored once per marked page and the file
+                // would grow with the page count. Identity is what proves it is shared: equal
+                // bytes drawn twice would still be two objects.
+                Set<COSBase> embedded = new HashSet<>();
+                for (int page = 1; page < doc.getNumberOfPages(); page++) {
+                    PDResources resources = doc.getPage(page).getResources();
+                    for (COSName name : resources.getXObjectNames()) {
+                        if (resources.getXObject(name) instanceof PDImageXObject image) {
+                            embedded.add(image.getCOSObject());
+                        }
+                    }
+                }
+
+                assertEquals(
+                        1,
+                        embedded.size(),
+                        "the logo should be stored once and referenced by all 5 marked pages");
             }
         }
 
