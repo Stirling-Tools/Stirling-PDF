@@ -102,6 +102,57 @@ class OCRControllerTest {
         return dir;
     }
 
+    /**
+     * Measured against the bundled Tesseract 5.4.0: pointing {@code --tessdata-dir} at a directory
+     * without {@code configs/pdf} makes the run print "read_params_file: Can't open pdf", write no
+     * output file, and still <em>exit 0</em>. A directory of bare .traineddata files is exactly
+     * what the OCR documentation tells users to assemble, so the guard is what keeps the fix from
+     * breaking them.
+     */
+    @Nested
+    @DisplayName("hasTesseractConfigs")
+    class HasTesseractConfigs {
+
+        @Test
+        @DisplayName("true when the directory carries configs/pdf")
+        void trueWhenConfigsPresent() throws IOException {
+            Path tessdata = tessdataDirWith("eng");
+            Files.createDirectories(tessdata.resolve("configs"));
+            Files.createFile(tessdata.resolve("configs").resolve("pdf"));
+
+            assertTrue(OCRController.hasTesseractConfigs(tessdata.toString()));
+        }
+
+        @Test
+        @DisplayName("false for a directory of bare traineddata files")
+        void falseWithoutConfigs() throws IOException {
+            Path tessdata = tessdataDirWith("eng", "spa");
+
+            assertFalse(OCRController.hasTesseractConfigs(tessdata.toString()));
+        }
+
+        @Test
+        @DisplayName("false when configs exists but pdf is missing from it")
+        void falseWhenPdfConfigMissing() throws IOException {
+            Path tessdata = tessdataDirWith("eng");
+            Files.createDirectories(tessdata.resolve("configs"));
+            Files.createFile(tessdata.resolve("configs").resolve("hocr"));
+
+            assertFalse(OCRController.hasTesseractConfigs(tessdata.toString()));
+        }
+
+        @Test
+        @DisplayName("false for missing, null and blank paths")
+        void falseForUnusablePaths() {
+            assertFalse(OCRController.hasTesseractConfigs(null));
+            assertFalse(OCRController.hasTesseractConfigs(""));
+            assertFalse(OCRController.hasTesseractConfigs("   "));
+            assertFalse(
+                    OCRController.hasTesseractConfigs(
+                            baseTmpDir.resolve("does-not-exist").toString()));
+        }
+    }
+
     @Nested
     @DisplayName("getAvailableTesseractLanguages")
     class GetAvailableTesseractLanguages {

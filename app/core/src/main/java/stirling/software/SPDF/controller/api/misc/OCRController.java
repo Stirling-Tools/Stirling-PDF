@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,6 +88,29 @@ public class OCRController {
                 .map(file -> file.getName().replace(".traineddata", ""))
                 .filter(lang -> !"osd".equalsIgnoreCase(lang))
                 .toList();
+    }
+
+    /**
+     * Whether Tesseract can safely be sent to {@code tessDataPath} with {@code --tessdata-dir}.
+     *
+     * <p>The {@code pdf} the OCR command ends with is not an output format: it is the name of a
+     * config file Tesseract loads from {@code <tessdata>/configs}. Pointing the engine at a
+     * directory holding nothing but {@code .traineddata} files - exactly the layout the
+     * documentation tells users to assemble - makes that lookup fail, and Tesseract then <em>exits
+     * 0 having written no file at all</em>, so the failure does not even surface as a non-zero
+     * return code. Falling back to the engine's own default directory ignores the configured path,
+     * but it still produces a PDF.
+     */
+    static boolean hasTesseractConfigs(String tessDataPath) {
+        if (tessDataPath == null || tessDataPath.isBlank()) {
+            return false;
+        }
+        try {
+            return Files.isReadable(Path.of(tessDataPath, "configs", "pdf"));
+        } catch (InvalidPathException e) {
+            log.debug("Unusable tessdata directory: {}", tessDataPath, e);
+            return false;
+        }
     }
 
     @AutoJobPostMapping(
@@ -339,6 +363,14 @@ public class OCRController {
             List<String> selectedLanguages, String ocrType, Path tempInputFile, Path tempOutputFile)
             throws IOException, InterruptedException {
 
+        String tessDataPath = runtimePathConfig.getTessDataPath();
+        boolean useTessdataDir = hasTesseractConfigs(tessDataPath);
+        if (!useTessdataDir) {
+            log.debug(
+                    "Leaving Tesseract on its own tessdata directory: {} has no configs/pdf",
+                    tessDataPath);
+        }
+
         // Create temp directory for Tesseract processing
         try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
             File tempOutputDir = new File(tempDir.getPath().toFile(), "output");
@@ -417,6 +449,15 @@ public class OCRController {
                         command.add(outputBase);
                         command.add("-l");
                         command.add(String.join("+", selectedLanguages));
+                        // Send the engine to the very directory the language list was read from.
+                        // Without this Tesseract resolves tessdata next to its own binary, so
+                        // system.tessdataDir moves the picker but not the OCR, and the two end up
+                        // disagreeing about which languages exist. Position matters: every
+                        // argument after "pdf" is parsed as another config file name.
+                        if (useTessdataDir) {
+                            command.add("--tessdata-dir");
+                            command.add(tessDataPath);
+                        }
                         command.add("pdf"); // Always output PDF
 
                         ProcessExecutorResult result =
