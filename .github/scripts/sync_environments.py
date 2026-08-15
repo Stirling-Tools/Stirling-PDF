@@ -25,8 +25,8 @@ DRY_RUN = os.environ.get("DRY_RUN", "false").lower() == "true"
 SECRET_PREFIX = "SECRET_"
 
 missing: list[tuple[str, str]] = []
+absent_envs: list[str] = []
 created_secrets = 0
-created_envs = 0
 
 
 def gh(args: list[str], stdin: str | None = None, check: bool = True) -> str:
@@ -58,19 +58,16 @@ def api_ok(path: str) -> bool:
     return proc.returncode == 0
 
 
-def ensure_environment(env: str) -> bool:
-    """Create the environment if absent. Returns True if it already existed.
+def environment_exists(env: str) -> bool:
+    """Report whether the environment exists. Never creates one.
 
-    A bare PUT creates it with no protection rules. Existing environments are left
-    completely alone - a PUT would replace their whole rule set.
+    Creating an environment needs Administration: write, and it is also where the
+    protection rules get set - both of which are handled by hand, not here.
     """
-    global created_envs
     if api_ok(f"repos/{REPO}/environments/{env}"):
         return True
-    print("    * environment does not exist - creating it with no protection rules")
-    if not DRY_RUN:
-        api(f"repos/{REPO}/environments/{env}", "PUT")
-    created_envs += 1
+    print("    ! environment does not exist - create it by hand, then re-run")
+    absent_envs.append(env)
     return False
 
 
@@ -118,9 +115,18 @@ def main() -> int:
 
     for env, cfg in manifest["environments"].items():
         print(f"[{env}]")
-        env_exists = ensure_environment(env)
-        fill_secrets(env, cfg.get("secrets") or [], available, env_exists)
+        if environment_exists(env):
+            fill_secrets(env, cfg.get("secrets") or [], available, True)
         print()
+
+    if absent_envs:
+        print("::group::Missing environments")
+        for env in absent_envs:
+            print(
+                f"::error::environment '{env}' does not exist. Create it in "
+                f"Settings > Environments (no protection rules needed), then re-run."
+            )
+        print("::endgroup::")
 
     if missing:
         print("::group::Missing secrets")
@@ -133,9 +139,9 @@ def main() -> int:
         return 1
 
     suffix = " (dry run - nothing applied)" if DRY_RUN else ""
-    print(f"Done. {created_envs} environments created, {created_secrets} secrets created{suffix}.")
+    print(f"Done. {created_secrets} secrets created{suffix}.")
     print("Nothing was overwritten or deleted.")
-    return 0
+    return 1 if absent_envs else 0
 
 
 if __name__ == "__main__":
