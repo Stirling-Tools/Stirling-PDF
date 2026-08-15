@@ -255,6 +255,11 @@ interface CreatedTextOptions {
   // Extra advance per glyph in PDF points - the source run's rendered
   // letter-spacing (Tc), inferred at read time.
   charSpacingPt?: number;
+  // Optional sink for the text each returned pointer carries, parallel to the
+  // return value. The emit branches chunk by word, by character, or not at all,
+  // so callers that must map pointers back onto the source string cannot guess
+  // it - and reading it back costs a full page text extraction per line.
+  outTexts?: string[];
 }
 
 interface CreateTextObjModule {
@@ -944,6 +949,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           outcome: "charcodes-ok",
         });
         ptrs.push(ptr);
+        opts.outTexts?.push(pc.ch);
         // Mark this ptr as verified - it was created via the per-char branch
         // with a known-good pair from the backend resolver cache.
         perCharBranchPtrs.add(ptr);
@@ -955,6 +961,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         perCharBranchPtrs.delete(p);
         removeAndDestroyObject(m, opts.page.pagePtr, p);
       }
+      if (opts.outTexts) opts.outTexts.length = 0;
     }
     // fall through to the normal path if per-char attempt didn't work
   }
@@ -971,7 +978,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     let cursor = opts.x;
     for (const ch of opts.text) {
       const ptr = emitWord(ch, cursor);
-      if (ptr) ptrs.push(ptr);
+      if (ptr) {
+        ptrs.push(ptr);
+        opts.outTexts?.push(ch);
+      }
       // Advance by the char's true advance width: the on-page advance of the
       // same char+font when it is still measurable, else canvas font metrics.
       const advEm = opts.originalFontPtr
@@ -987,6 +997,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // Fast path: no whitespace at all → one text object holds the whole word.
   if (!hasAnyWhitespace) {
     const ptr = emitWord(opts.text, opts.x);
+    if (ptr) opts.outTexts?.push(opts.text);
     return withRotation(ptr ? [ptr] : []);
   }
 
@@ -1004,13 +1015,16 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   for (const chunk of chunks) {
     if (chunk.text.length > 0) {
       // Recurse per word.
+      const chunkTexts: string[] = [];
       const wordPtrs = emitTextLine({
         ...opts,
         text: chunk.text,
         x: cursor,
         rotation: undefined,
+        outTexts: opts.outTexts ? chunkTexts : undefined,
       });
       if (wordPtrs.length === 0) continue;
+      if (opts.outTexts) opts.outTexts.push(...chunkTexts);
       let rightEdge = 0;
       for (const p of wordPtrs)
         rightEdge = Math.max(rightEdge, measureObjRightEdgePt(m, p));
@@ -1042,6 +1056,57 @@ interface TextObjReadModule {
 
 // Decode a just-inserted text object's content through the font's ToUnicode
 // (what any PDF reader will see), or null when unavailable.
+// Read what several objects actually carry, through ONE text page. Callers that
+// need to map emitted pointers back onto their source string must not assume a
+// chunking: emitTextLine may produce one object per word, per char, or one for
+// the whole string depending on which branch rendered it.
+export function readObjTexts(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  objPtrs: number[],
+): Array<string | null> {
+  const mod = m as unknown as TextObjReadModule;
+  const out: Array<string | null> = objPtrs.map(() => null);
+  if (
+    !mod.FPDFText_LoadPage ||
+    !mod.FPDFTextObj_GetText ||
+    !mod.FPDFText_ClosePage
+  ) {
+    return out;
+  }
+  const tp = mod.FPDFText_LoadPage(pagePtr);
+  if (!tp) return out;
+  try {
+    for (let i = 0; i < objPtrs.length; i += 1) {
+      const objPtr = objPtrs[i];
+      if (!objPtr) continue;
+      try {
+        const len = mod.FPDFTextObj_GetText(objPtr, tp, 0, 0);
+        if (len <= 2) {
+          out[i] = "";
+          continue;
+        }
+        const buf = m.pdfium.wasmExports.malloc(len);
+        try {
+          mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
+          out[i] = readUtf16(m, buf, len);
+        } finally {
+          m.pdfium.wasmExports.free(buf);
+        }
+      } catch {
+        out[i] = null;
+      }
+    }
+  } finally {
+    try {
+      mod.FPDFText_ClosePage(tp);
+    } catch {
+      /* best-effort */
+    }
+  }
+  return out;
+}
+
 function readBackTextObj(
   m: WrappedPdfiumModule,
   pagePtr: number,

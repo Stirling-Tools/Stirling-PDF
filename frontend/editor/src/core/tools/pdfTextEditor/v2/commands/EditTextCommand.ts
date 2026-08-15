@@ -748,6 +748,20 @@ export class EditTextCommand implements Command {
     const topBaseline = slots[0]?.baselineY ?? run.matrix.f;
     const leftX = slots[0]?.matrixE ?? run.matrix.e;
     const fallbackFamily = helveticaVariantFor(this.prevFontId ?? run.fontId);
+    // Re-emitted lines keep the run's embedded face. Joining two lines with
+    // Delete/Backspace only REMOVES characters, so every glyph the joined line
+    // needs already rendered in this font; emitting at base-14 turned the whole
+    // line a different typeface. Read before the loop starts mutating.
+    const memberPtrs = collectMemberPtrs(run);
+    const memberTexts =
+      run.mergedFromTexts.length === memberPtrs.length
+        ? run.mergedFromTexts
+        : memberPtrs.map(() => run.text);
+    const reuseFontPtr =
+      run.containerPtr === 0
+        ? bestFontPtrForText(m, memberPtrs, memberTexts, run.text) ||
+          (run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0)
+        : 0;
     const match = lineLCS(prevLines, nextLines);
 
     this.lineEdit = {
@@ -807,8 +821,10 @@ export class EditTextCommand implements Command {
         newMemberPtrs.push(0);
         newMemberFs.push(y);
       } else {
-        // New / changed line: emit fresh (only this line loses its font).
+        // New / changed line: re-emit it reusing the run's embedded face.
+        const emittedTexts: string[] = [];
         const ptrs = emitTextLine({
+          outTexts: emittedTexts,
           doc,
           page,
           text,
@@ -817,7 +833,8 @@ export class EditTextCommand implements Command {
           fontSize: run.fontSize,
           fill: run.fill,
           ...inkFromRun(run),
-          originalFontPtr: 0,
+          originalFontPtr: reuseFontPtr,
+          originalFontSubset: run.fontSubset,
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
         });
@@ -835,7 +852,8 @@ export class EditTextCommand implements Command {
           y,
           leftX,
           run,
-          `base14:${fallbackFamily}`,
+          reuseFontPtr ? run.fontId : `base14:${fallbackFamily}`,
+          emittedTexts,
         );
       }
       slot.startChar = cursor;
@@ -945,6 +963,7 @@ export class EditTextCommand implements Command {
         newMemberPtrs.push(0);
         newMemberFs.push(y);
       } else {
+        const emittedTexts: string[] = [];
         const ptrs = emitTextLine({
           doc,
           page,
@@ -957,6 +976,7 @@ export class EditTextCommand implements Command {
           originalFontPtr: 0,
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
+          outTexts: emittedTexts,
         });
         this.lineEdit.createdPtrs.push(...ptrs);
         newLeaf.push(...ptrs);
@@ -970,6 +990,7 @@ export class EditTextCommand implements Command {
           leftX,
           run,
           `base14:${fallbackFamily}`,
+          emittedTexts,
         );
       }
       slot.startChar = cursor;
@@ -1331,6 +1352,44 @@ function emptySlot(
 }
 
 /** Build a slot for a freshly-emitted line, mapping each ptr to its word. */
+// Map the objects an emit produced back onto the line's text.
+//
+// One object per WORD is only what the base-14 path happens to produce; reusing
+// an embedded font can route through the per-character branch instead, and
+// assuming word alignment then filled the slot with empty sub-run texts and
+// out-of-range char starts, which the NEXT edit's diff silently mis-sliced.
+// `emitTextLine` reports what it wrote via outTexts; falling back to a text-page
+// read would cost a full page extraction per line.
+function sliceLineAcrossPtrs(
+  ptrs: number[],
+  text: string,
+  emitted?: string[],
+): Array<{ text: string; start: number }> {
+  const out: Array<{ text: string; start: number }> = [];
+  if (emitted && emitted.length === ptrs.length) {
+    let cursor = 0;
+    for (const chunk of emitted) {
+      const at = chunk.length > 0 ? text.indexOf(chunk, cursor) : -1;
+      const start = at >= 0 ? at : cursor;
+      out.push({ text: chunk, start });
+      cursor = start + chunk.length;
+    }
+    return out;
+  }
+  // No report from the emit: assume the base-14 shape, one object per word.
+  const words: Array<{ text: string; start: number }> = [];
+  const re = /\S+/g;
+  let wm: RegExpExecArray | null;
+  while ((wm = re.exec(text)) !== null) {
+    words.push({ text: wm[0], start: wm.index });
+  }
+  for (let i = 0; i < ptrs.length; i += 1) {
+    const w = words[i];
+    out.push(w ? { ...w } : { text: "", start: text.length });
+  }
+  return out;
+}
+
 function buildSlotForLine(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   ptrs: number[],
@@ -1339,17 +1398,13 @@ function buildSlotForLine(
   leftX: number,
   run: TextRun,
   fontId: string,
+  emitted?: string[],
 ): ParagraphLineSlot {
   const mergedFromPtrs: number[] = [];
   const mergedFromTexts: string[] = [];
   const mergedFromBounds: Array<{ x: number; right: number }> = [];
   const mergedFromCharStarts: number[] = [];
-  const words: Array<{ text: string; start: number }> = [];
-  const re = /\S+/g;
-  let wm: RegExpExecArray | null;
-  while ((wm = re.exec(text)) !== null) {
-    words.push({ text: wm[0], start: wm.index });
-  }
+  const words = sliceLineAcrossPtrs(ptrs, text, emitted);
   for (let i = 0; i < ptrs.length; i++) {
     const w = words[i];
     const b = boundsFromPtr(m, ptrs[i], leftX);
