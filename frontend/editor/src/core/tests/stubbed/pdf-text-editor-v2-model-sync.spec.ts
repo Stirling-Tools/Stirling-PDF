@@ -107,15 +107,14 @@ test.describe("v2 editor - identity-preserving pdfium re-read", () => {
   test("a re-read does not disturb the model's text", async ({ page }) => {
     await open(page, SAMPLE_PDF);
     const textOf = () =>
-      page.evaluate(
-        () =>
-          (
-            window as unknown as {
-              __v2_editor_store: {
-                state: { pages: { runs: { text: string }[] }[] };
-              };
-            }
-          ).__v2_editor_store.state.pages[0].runs.map((r) => r.text),
+      page.evaluate(() =>
+        (
+          window as unknown as {
+            __v2_editor_store: {
+              state: { pages: { runs: { text: string }[] }[] };
+            };
+          }
+        ).__v2_editor_store.state.pages[0].runs.map((r) => r.text),
       );
     const before = await textOf();
     await page.evaluate(RESYNC);

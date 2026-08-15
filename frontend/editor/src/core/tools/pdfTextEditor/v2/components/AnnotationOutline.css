@@ -1,6 +1,6 @@
 /* Annotation-backed text: visible on the canvas, outside the editable model. */
 .v2-annotation-outline {
-  border: 1px dashed rgba(120, 120, 130, 0.55);
+  border: 1px dashed color-mix(in srgb, var(--c-text-subtle) 55%, transparent);
   border-radius: 2px;
   background: transparent;
   cursor: help;
@@ -10,8 +10,8 @@
 }
 
 .v2-annotation-outline:hover {
-  border-color: rgba(90, 110, 190, 0.9);
-  background: rgba(90, 110, 190, 0.08);
+  border-color: color-mix(in srgb, var(--c-primary) 90%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 8%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

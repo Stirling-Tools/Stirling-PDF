@@ -5968,6 +5968,11 @@ saveTooltip = "Download edited PDF (Ctrl+S)"
 title = "PDF Text Editor"
 workbenchLabel = "Editor"
 
+[pdfTextEditorV2.annotations]
+freetext = "Annotation text - not page text, so it can't be edited here"
+stamp = "Stamp annotation - not page text, so it can't be edited here"
+widget = "Form field - not page text, so it can't be edited here"
+
 [pdfTextEditorV2.drop]
 hint = "Releases on the editor stage replace any open document."
 title = "Drop a PDF to open"
