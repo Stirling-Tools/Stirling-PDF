@@ -4886,7 +4886,19 @@ failed = "La operación de OCR falló"
 [ocr.languagePicker]
 additionalLanguages = "¿Busca idiomas adicionales?"
 loading = "Cargando idiomas disponibles..."
-viewSetupGuide = "Ver guía de configuración →"
+manageLanguages = "Añadir idiomas →"
+
+[ocr.runtime]
+apply = "Aplicar"
+applyWithSize = "Aplicar ({{size}} a descargar)"
+catalogueUnreachable = "No se ha podido consultar la lista de componentes de OCR instalables. Lo que ya esté instalado sigue funcionando."
+engineFailed = "No se ha podido instalar el motor de OCR."
+engineMissing = "El reconocimiento de texto aún no está instalado."
+engineUnavailable = "No hay motor de OCR disponible para esta plataforma"
+installEngine = "Instalar OCR ({{size}})"
+languages = "Idiomas"
+restartRequired = "Reinicia Stirling-PDF para terminar de activar el OCR."
+title = "Configuración de OCR"
 
 [ocr.operation]
 submit = "Procesar OCR y Revisar"
