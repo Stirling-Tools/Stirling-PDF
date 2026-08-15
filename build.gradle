@@ -21,7 +21,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import stirling.software.gradle.ModuleLicenseOverrideFilter
 
 ext {
-    springBootVersion = "4.0.6"
+    springBootVersion = "4.1.0"
     pdfboxVersion = "3.0.8"
     imageioVersion = "3.13.1"
     lombokVersion = "1.18.46"
