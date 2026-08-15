@@ -740,21 +740,16 @@ function FolderCard({
                   disabled={editsDisabled}
                 />
                 <Menu.Divider />
-                {kind !== "virtual" && (
-                  <>
-                    <ProcessingMenuItems
-                      processing={processing}
-                      disabled={editsDisabled}
-                      disabledHint={offlineHint}
-                      onRun={() => void runProcessing("process folder now")}
-                      onStop={() =>
-                        void stopProcessing("stop processing folder")
-                      }
-                      onStart={() => void startProcessing("process folder")}
-                    />
-                    <Menu.Divider />
-                  </>
-                )}
+                <ProcessingMenuItems
+                  processing={processing}
+                  continuous={kind === "virtual"}
+                  disabled={editsDisabled}
+                  disabledHint={offlineHint}
+                  onRun={() => void runProcessing("process folder now")}
+                  onStop={() => void stopProcessing("stop processing folder")}
+                  onStart={() => void startProcessing("process folder")}
+                />
+                <Menu.Divider />
                 <Menu.Item
                   color="red"
                   leftSection={<DeleteIcon fontSize="small" />}
@@ -774,13 +769,14 @@ function FolderCard({
 }
 
 /**
- * The processing entries of a folder's action menu. Any folder that a
- * processing pipeline can reach carries these — including mounts, whose other
- * edit actions are hidden. Virtual folders are the exception until their
- * client-side engine exists.
+ * The processing entries of a folder's action menu. Every folder kind carries
+ * these — including mounts, whose other edit actions are hidden. `continuous`
+ * marks a folder whose engine processes arrivals on its own (virtual folders,
+ * run client-side), where an explicit "process now" would have nothing to do.
  */
 function ProcessingMenuItems({
   processing,
+  continuous = false,
   disabled,
   disabledHint,
   onRun,
@@ -788,6 +784,7 @@ function ProcessingMenuItems({
   onStart,
 }: {
   processing: ProcessingFolderState | undefined;
+  continuous?: boolean;
   disabled: boolean;
   disabledHint?: string;
   onRun: () => void;
@@ -797,12 +794,14 @@ function ProcessingMenuItems({
   const { t } = useTranslation();
   return processing ? (
     <>
-      <Menu.Item
-        leftSection={<AutoModeIcon fontSize="small" />}
-        onClick={onRun}
-      >
-        {t("filesPage.processing.sweep", "Process files now")}
-      </Menu.Item>
+      {!continuous && (
+        <Menu.Item
+          leftSection={<AutoModeIcon fontSize="small" />}
+          onClick={onRun}
+        >
+          {t("filesPage.processing.sweep", "Process files now")}
+        </Menu.Item>
+      )}
       <Menu.Item
         leftSection={<AutoModeIcon fontSize="small" />}
         onClick={onStop}
@@ -1506,21 +1505,16 @@ function FolderRow({
                   disabled={editsDisabled}
                 />
                 <Menu.Divider />
-                {kind !== "virtual" && (
-                  <>
-                    <ProcessingMenuItems
-                      processing={processing}
-                      disabled={editsDisabled}
-                      disabledHint={offlineHint}
-                      onRun={() => void runProcessing("process folder now")}
-                      onStop={() =>
-                        void stopProcessing("stop processing folder")
-                      }
-                      onStart={() => void startProcessing("process folder")}
-                    />
-                    <Menu.Divider />
-                  </>
-                )}
+                <ProcessingMenuItems
+                  processing={processing}
+                  continuous={kind === "virtual"}
+                  disabled={editsDisabled}
+                  disabledHint={offlineHint}
+                  onRun={() => void runProcessing("process folder now")}
+                  onStop={() => void stopProcessing("stop processing folder")}
+                  onStart={() => void startProcessing("process folder")}
+                />
+                <Menu.Divider />
                 <Menu.Item
                   color="red"
                   leftSection={<DeleteIcon fontSize="small" />}

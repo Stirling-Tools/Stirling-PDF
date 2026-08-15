@@ -52,6 +52,17 @@ export type FolderPaletteColor = (typeof FOLDER_COLOR_PALETTE)[number];
  */
 export type FolderKind = "server" | "virtual" | "local";
 
+/**
+ * A pipeline a folder runs over its files. Only browser-owned (virtual)
+ * folders carry this on their record: server and mounted folders keep their
+ * processing configuration server-side, where their engine runs.
+ */
+export interface FolderProcessingConfig {
+  enabled: boolean;
+  /** Tool endpoint paths with their parameters, run in order per file. */
+  steps: Array<{ operation: string; parameters: Record<string, unknown> }>;
+}
+
 /** Persisted folder shape stored in IndexedDB. */
 export interface FolderRecord {
   id: FolderId;
@@ -65,6 +76,8 @@ export interface FolderRecord {
   parentFolderId: FolderId | null;
   /** For `local` folders: the directory this record mounts. */
   directory?: string;
+  /** For `virtual` folders: the pipeline this folder runs over its files. */
+  processing?: FolderProcessingConfig;
   /** Hex colour - either a palette member or any custom hex from a future picker. */
   color?: string;
   icon?: string;

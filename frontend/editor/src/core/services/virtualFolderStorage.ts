@@ -15,6 +15,7 @@
 
 import {
   FolderId,
+  FolderProcessingConfig,
   FolderRecord,
   folderKind,
   createFolderId,
@@ -93,6 +94,23 @@ class VirtualFolderStorageService {
     };
     await this.put(record);
     return record;
+  }
+
+  /** Attach or replace the folder's processing pipeline; null removes it. */
+  async setProcessing(
+    id: FolderId,
+    config: FolderProcessingConfig | null,
+  ): Promise<FolderRecord | null> {
+    const existing = await this.getFolder(id);
+    if (!existing) return null;
+    const next: FolderRecord = {
+      ...existing,
+      processing: config ?? undefined,
+      updatedAt: Date.now(),
+    };
+    if (!config) delete next.processing;
+    await this.put(next);
+    return next;
   }
 
   /** Rename / recolour / re-icon in place. Structure is moveFolder's job. */
