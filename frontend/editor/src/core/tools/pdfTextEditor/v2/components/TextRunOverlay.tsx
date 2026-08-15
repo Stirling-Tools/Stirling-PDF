@@ -424,6 +424,13 @@ export function TextRunOverlay({
     const onBeforeInput = (event: Event) => {
       const inputType = (event as InputEvent).inputType ?? "";
       if (inputType.startsWith("format")) event.preventDefault();
+      // The browser keeps its OWN undo stack for a contenteditable, reachable
+      // from the Edit menu and trackpad gestures. Letting it fire would rewrite
+      // the overlay behind the editor's command history, so the two disagree
+      // about the document. Undo/redo has to come through the command stack.
+      if (inputType === "historyUndo" || inputType === "historyRedo") {
+        event.preventDefault();
+      }
     };
     el.addEventListener("beforeinput", onBeforeInput);
     return () => el.removeEventListener("beforeinput", onBeforeInput);
