@@ -45,6 +45,42 @@ export class PdfiumPageRenderer {
         0x01 | 0x10,
       );
 
+      // Second pass for the form layer. A widget with no appearance stream is
+      // drawn ONLY here - FPDF_ANNOT alone leaves such fields blank, which is
+      // why they were invisible in the editor but fine in the viewer.
+      const formEnv = doc.formEnvironment();
+      if (formEnv) {
+        doc.notifyFormPageLoaded(page);
+        const formMod = m as unknown as {
+          FPDF_FFLDraw?: (
+            env: number,
+            bitmap: number,
+            pagePtr: number,
+            startX: number,
+            startY: number,
+            sizeX: number,
+            sizeY: number,
+            rotate: number,
+            flags: number,
+          ) => void;
+        };
+        try {
+          formMod.FPDF_FFLDraw?.(
+            formEnv,
+            bitmapPtr,
+            page.pagePtr,
+            0,
+            0,
+            w,
+            h,
+            0,
+            0x01 | 0x10,
+          );
+        } catch {
+          /* the page content is already drawn; the form layer is additive */
+        }
+      }
+
       const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
       const stride = m.FPDFBitmap_GetStride(bitmapPtr);
       const pixels = new Uint8ClampedArray(w * h * 4);

@@ -25,6 +25,13 @@ export class EditorDocument {
   private readonly pageCache: Map<number, Page>;
   private readonly ownedFonts: Map<string, FontRef>;
   private _disposed: boolean;
+  // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
+  // this layer, so without it such fields are invisible in the editor while
+  // being visible everywhere else in the app. Created lazily and left null when
+  // the build lacks the entry points.
+  private formEnvPtr: number | null = null;
+  private formEnvTried = false;
+  private readonly formLoadedPages = new Set<number>();
 
   private constructor(
     module: WrappedPdfiumModule,
@@ -68,6 +75,44 @@ export class EditorDocument {
     return this._disposed;
   }
 
+  // Form-fill environment for this document, or null when unavailable. The
+  // caller must pair it with `notifyFormPageLoaded` before drawing a page.
+  formEnvironment(): number | null {
+    if (this.formEnvTried) return this.formEnvPtr;
+    this.formEnvTried = true;
+    const m = this.module as unknown as {
+      PDFiumExt_OpenFormFillInfo?: () => number;
+      PDFiumExt_InitFormFillEnvironment?: (doc: number, info: number) => number;
+    };
+    if (!m.PDFiumExt_OpenFormFillInfo || !m.PDFiumExt_InitFormFillEnvironment) {
+      return null;
+    }
+    try {
+      const info = m.PDFiumExt_OpenFormFillInfo();
+      const env = m.PDFiumExt_InitFormFillEnvironment(this.docPtr, info);
+      this.formEnvPtr = env || null;
+    } catch {
+      this.formEnvPtr = null;
+    }
+    return this.formEnvPtr;
+  }
+
+  /** Tell the form layer about a page once, before its first form draw. */
+  notifyFormPageLoaded(page: Page): void {
+    const env = this.formEnvironment();
+    if (!env || this.formLoadedPages.has(page.pagePtr)) return;
+    const m = this.module as unknown as {
+      FORM_OnAfterLoadPage?: (pagePtr: number, env: number) => void;
+    };
+    if (!m.FORM_OnAfterLoadPage) return;
+    try {
+      m.FORM_OnAfterLoadPage(page.pagePtr, env);
+      this.formLoadedPages.add(page.pagePtr);
+    } catch {
+      /* best-effort: the page still renders without the form layer */
+    }
+  }
+
   page(index: number): Page {
     const cached = this.pageCache.get(index);
     if (cached) return cached;
@@ -106,6 +151,26 @@ export class EditorDocument {
   dispose(): void {
     if (this._disposed) return;
     this._disposed = true;
+    if (this.formEnvPtr) {
+      const m = this.module as unknown as {
+        FORM_OnBeforeClosePage?: (pagePtr: number, env: number) => void;
+        FPDFDOC_ExitFormFillEnvironment?: (env: number) => void;
+      };
+      for (const pagePtr of this.formLoadedPages) {
+        try {
+          m.FORM_OnBeforeClosePage?.(pagePtr, this.formEnvPtr);
+        } catch {
+          /* best-effort */
+        }
+      }
+      try {
+        m.FPDFDOC_ExitFormFillEnvironment?.(this.formEnvPtr);
+      } catch {
+        /* best-effort */
+      }
+      this.formEnvPtr = null;
+    }
+    this.formLoadedPages.clear();
     for (const page of this.pageCache.values()) {
       try {
         this.module.FPDF_ClosePage(page.pagePtr);
