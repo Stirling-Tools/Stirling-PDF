@@ -1048,6 +1048,21 @@ public class ApplicationProperties {
         private boolean enableMobileScanner = true; // Enable mobile phone QR code upload feature
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
         private ServerCertificate serverCertificate = new ServerCertificate();
+        private Ocr ocr = new Ocr();
+
+        @Data
+        public static class Ocr {
+            /**
+             * Where the catalogue of installable OCR components lives.
+             *
+             * <p>Deliberately the only address the application knows: the manifest carries the URL,
+             * size and SHA-256 of the engine and of every language model, so whoever publishes it
+             * decides what gets installed and can move the hosting, withdraw a bad artefact or ship
+             * a newer engine without a new release of Stirling-PDF. Pointing this at a local copy
+             * is also what makes an air-gapped install possible.
+             */
+            private String manifestUrl;
+        }
 
         @Data
         public static class MobileScannerSettings {

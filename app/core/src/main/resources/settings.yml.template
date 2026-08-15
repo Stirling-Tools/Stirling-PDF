@@ -177,6 +177,8 @@ system:
   showSettingsWhenNoLogin: true # set to 'false' to hide settings button when login is disabled (enableLogin: false). Only applies when login is disabled.
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: "" # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
+  ocr:
+    manifestUrl: "" # catalogue of installable OCR components (engine and language models). Leave empty for the default. Point it at a local copy or an internal mirror to install OCR without internet access.
   enableAnalytics: null # Master toggle for analytics: set to 'true' to enable all analytics, 'false' to disable all analytics, or leave as 'null' to prompt admin on first launch
   enableDesktopInstallSlide: true # Set to 'false' to hide the desktop app installation slide in the onboarding flow
   enablePosthog: null # Enable PostHog analytics (open-source product analytics): set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
