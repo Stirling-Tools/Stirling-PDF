@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 
 import org.slf4j.MDC;
 import org.springframework.core.io.Resource;
@@ -130,7 +131,7 @@ public class PolicyEngine {
         // worker.
         String principal = currentActingPrincipal();
         return submitForPrincipal(
-                principal, principal, policyId, definition, inputs, listener, null, null);
+                principal, principal, policyId, definition, inputs, listener, null, null, null);
     }
 
     /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
@@ -151,6 +152,23 @@ public class PolicyEngine {
             PolicyProgressListener listener,
             String sourceId,
             String fileIdentity) {
+        return runPolicy(policy, inputs, listener, sourceId, fileIdentity, null);
+    }
+
+    /**
+     * As above, additionally pacing execution through {@code admission}: the run is registered and
+     * visible immediately (pending), but its work only proceeds while holding a permit. A sweep
+     * passes one gate for all its runs so a folderful of files executes a few at a time — the
+     * pipeline's slowest tool serializes them anyway, and paced runs finish steadily instead of all
+     * sitting in-flight until the end. Null means ungated.
+     */
+    public PolicyRunHandle runPolicy(
+            Policy policy,
+            PolicyInputs inputs,
+            PolicyProgressListener listener,
+            String sourceId,
+            String fileIdentity,
+            Semaphore admission) {
         // Bill the policy owner: trigger-fired runs have no security context, and the async worker
         // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
         // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
@@ -179,7 +197,8 @@ public class PolicyEngine {
                 resolved,
                 listener,
                 sourceId,
-                fileIdentity);
+                fileIdentity,
+                admission);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -190,7 +209,8 @@ public class PolicyEngine {
             PolicyInputs inputs,
             PolicyProgressListener listener,
             String sourceId,
-            String fileIdentity) {
+            String fileIdentity,
+            Semaphore admission) {
         // Scope the run id to the current user (this request thread) so the file-download
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
@@ -214,7 +234,27 @@ public class PolicyEngine {
                                 billingPrincipal,
                                 fileOwner,
                                 definition.name(),
-                                () -> runToCompletion(run, inputs, tracking, completion));
+                                () -> {
+                                    // Pacing gate: park (cheap on a virtual thread, and the run
+                                    // honestly reads as pending) until a slot frees up.
+                                    if (admission != null) {
+                                        try {
+                                            admission.acquire();
+                                        } catch (InterruptedException e) {
+                                            // Shutdown while parked: never ran, never will.
+                                            Thread.currentThread().interrupt();
+                                            completion.completeExceptionally(e);
+                                            return;
+                                        }
+                                    }
+                                    try {
+                                        runToCompletion(run, inputs, tracking, completion);
+                                    } finally {
+                                        if (admission != null) {
+                                            admission.release();
+                                        }
+                                    }
+                                });
 
         // One admission unit per run; steps run synchronously within it, so this gates heavy work
         // without the pool-within-pool risk of queueing each tool call.

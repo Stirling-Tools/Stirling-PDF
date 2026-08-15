@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.engine;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
@@ -42,6 +44,18 @@ public class PolicyRunner {
     private final SourceStore sourceStore;
     private final SourceDocCounter docCounter;
     private final ProcessedLedger processedLedger;
+    private final ApplicationProperties applicationProperties;
+
+    /**
+     * One admission gate per sweep: every run still starts (and is visible) immediately, but only
+     * this many execute at once. A sweep fans out one run per file, and a folderful dispatched all
+     * at once just queues at the pipeline's slowest tool — same total time, nothing visibly done
+     * until the end. Paced, completions arrive steadily from the first file onward.
+     */
+    private Semaphore sweepAdmission() {
+        int concurrency = applicationProperties.getPolicies().getSweepConcurrency();
+        return concurrency > 0 ? new Semaphore(concurrency) : null;
+    }
 
     /** Full-listing sweep over every input: resolve each source, then reconcile the ledger. */
     public SweepOutcome run(Policy policy) {
@@ -74,13 +88,21 @@ public class PolicyRunner {
     public SweepOutcome run(Policy policy, List<PipelineInput> inputs, SweepKind sweep) {
         long sweepStart = System.currentTimeMillis();
         PolicySweep context = new PolicySweep(policy.id(), sweep, processedLedger);
+        Semaphore admission = sweepAdmission();
         List<String> runIds = new ArrayList<>();
         if (inputs.isEmpty()) {
             // Generator pipeline: one run with no input. Still fall through to the cleanup
             // below so rows recorded for its folder outputs are pruned like anything else,
             // instead of accumulating until the policy is deleted.
             // Generator pipeline: no input, so neither a source nor a document to attribute to.
-            runIds.add(startRun(policy, null, null, PolicyInputs.of(List.of()), unused -> {}));
+            runIds.add(
+                    startRun(
+                            policy,
+                            null,
+                            null,
+                            PolicyInputs.of(List.of()),
+                            unused -> {},
+                            admission));
         }
         for (PipelineInput input : inputs) {
             String sourceId = input.sourceId();
@@ -100,7 +122,7 @@ public class PolicyRunner {
                 context.vetoCleanup();
                 continue;
             }
-            runIds.addAll(pullAndRun(policy, sourceId, source.toInputSpec(), context));
+            runIds.addAll(pullAndRun(policy, sourceId, source.toInputSpec(), context, admission));
         }
         boolean fullPolicy = inputs.size() == policy.inputs().size();
         if (fullPolicy && context.cleanupAllowed()) {
@@ -140,7 +162,11 @@ public class PolicyRunner {
      * this sweep's ledger cleanup.
      */
     private List<String> pullAndRun(
-            Policy policy, String sourceId, InputSpec spec, PolicySweep context) {
+            Policy policy,
+            String sourceId,
+            InputSpec spec,
+            PolicySweep context,
+            Semaphore admission) {
         InputSource source = sourceFor(spec);
         if (source == null) {
             log.warn(
@@ -174,7 +200,8 @@ public class PolicyRunner {
                             sourceId,
                             unit.fileIdentity(),
                             unit.inputs(),
-                            unit.onComplete()));
+                            unit.onComplete(),
+                            admission));
             docsFed += unit.inputs().primary().size();
         }
         docCounter.record(sourceId, docsFed);
@@ -186,11 +213,17 @@ public class PolicyRunner {
             String sourceId,
             String fileIdentity,
             PolicyInputs inputs,
-            Consumer<Boolean> onComplete) {
+            Consumer<Boolean> onComplete,
+            Semaphore admission) {
         log.info("Running policy {} ({})", policy.id(), policy.name());
         PolicyRunHandle handle =
                 policyEngine.runPolicy(
-                        policy, inputs, PolicyProgressListener.NOOP, sourceId, fileIdentity);
+                        policy,
+                        inputs,
+                        PolicyProgressListener.NOOP,
+                        sourceId,
+                        fileIdentity,
+                        admission);
         handle.completion()
                 .whenComplete((run, throwable) -> onComplete.accept(succeeded(run, throwable)));
         return handle.runId();

@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -83,6 +84,10 @@ public class FolderInputSource implements InputSource {
         }
         Path canonicalDir = FolderIdentities.canonicalDir(inputDir);
         List<Path> present = listFiles(inputDir, config.recursive());
+        // Smallest first: a sweep's first results should appear within seconds of it starting,
+        // not after the largest document in the folder. Unsizeable entries (vanished mid-listing)
+        // sort last and resolve their own fate at claim time.
+        present.sort(Comparator.comparingLong(FolderInputSource::sizeForOrdering));
 
         if (config.snapshot()) {
             List<ResolvedInput> work = new ArrayList<>();
@@ -238,6 +243,15 @@ public class FolderInputSource implements InputSource {
     }
 
     /** Every non-hidden regular file in the source, readable or not. */
+    /** The file's size for sweep ordering; unreadable reads as largest, sorting it last. */
+    private static long sizeForOrdering(Path file) {
+        try {
+            return Files.size(file);
+        } catch (IOException e) {
+            return Long.MAX_VALUE;
+        }
+    }
+
     private static List<Path> listFiles(Path inputDir, boolean recursive) throws IOException {
         List<Path> files = new ArrayList<>();
         if (!recursive) {
