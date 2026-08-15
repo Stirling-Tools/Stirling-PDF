@@ -1,4 +1,4 @@
-import { useRef, useEffect, type CSSProperties } from "react";
+import { useRef, useEffect } from "react";
 import { Modal, Text, Group, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
@@ -81,15 +81,13 @@ const NavigationWarningModal = () => {
     return null;
   }
 
-  const modalStyle = { "--modal-size": "auto" } as CSSProperties;
-
   return (
     <Modal
       opened={showNavigationWarning}
       onClose={handleKeepWorking}
       title={t("unsavedChangesTitle", "Unsaved Changes")}
       centered
-      style={modalStyle}
+      size="auto"
       closeOnClickOutside={true}
       closeOnEscape={true}
       zIndex={Z_INDEX_TOAST}
