@@ -17,6 +17,9 @@ permissions:
 
 jobs:
   push-base:
+    # Own environment: docker-publish is branch-locked to release/main,
+    # which excludes the baseDockerImage/accessIssueFix branches this runs on.
+    environment: docker-base-publish
     if: ${{ vars.CI_PROFILE != 'lite' && github.actor == 'Frooodle' }}
     runs-on: ubuntu-24.04-8core
     permissions:

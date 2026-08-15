@@ -20,6 +20,7 @@ permissions:
 
 jobs:
   build:
+    environment: ci-unsigned
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

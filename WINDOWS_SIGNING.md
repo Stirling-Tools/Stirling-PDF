@@ -4,6 +4,11 @@ This guide explains how to set up Windows code signing for Stirling-PDF desktop 
 
 ## Overview
 
+Releases are signed with **DigiCert KeyLocker**, a cloud HSM: the private key never
+leaves DigiCert, and the runner signs through a PKCS#11 provider. The older approach
+of uploading a base64 `.pfx` to a repository secret has been removed from the
+workflows - the sections below describe KeyLocker, which is what actually runs.
+
 Windows code signing is essential for:
 - Preventing Windows SmartScreen warnings
 - Building trust with users
@@ -51,27 +56,16 @@ openssl pkcs12 -export -out certificate.pfx -inkey private-key.key -in certifica
 
 Navigate to your GitHub repository → Settings → Secrets and variables → Actions
 
-Add the following secrets:
+These live in the `release-signing` environment, not at repository scope - see
+`.github/environments.yml`. All five come from the DigiCert ONE console.
 
-#### 1. `WINDOWS_CERTIFICATE`
-- **Description**: Base64-encoded .pfx certificate file
-- **How to create**:
-
-**On macOS/Linux:**
-```bash
-base64 -i certificate.pfx | pbcopy  # Copies to clipboard
-```
-
-**On Windows (PowerShell):**
-```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("certificate.pfx")) | Set-Clipboard
-```
-
-Paste the entire base64 string into the GitHub secret.
-
-#### 2. `WINDOWS_CERTIFICATE_PASSWORD`
-- **Description**: Password for the .pfx certificate
-- **Value**: The password you set when creating/exporting the .pfx file
+| Secret | Description |
+| --- | --- |
+| `SM_API_KEY` | KeyLocker API key. Also acts as the on/off switch: signing steps are gated on it being non-empty. |
+| `SM_CLIENT_CERT_FILE_B64` | Base64-encoded PKCS#12 client authentication certificate. |
+| `SM_CLIENT_CERT_PASSWORD` | Password for that client certificate. |
+| `SM_KEYPAIR_ALIAS` | Alias of the signing keypair to use. |
+| `SM_HOST` | DigiCert ONE host, e.g. `https://clientauth.one.digicert.com`. |
 
 ### Optional Secrets for Tauri Updater
 
@@ -110,23 +104,23 @@ The Windows signing configuration is already set up:
 
 ### 2. GitHub Workflow (.github/workflows/tauri-build.yml)
 
-The workflow includes three Windows signing steps:
+The workflow includes four Windows signing steps, all gated on `SM_API_KEY` being
+set and the ref being the release branch:
 
-1. **Import Certificate**: Decodes and imports the .pfx certificate into Windows certificate store
-2. **Build Tauri App**: Builds and signs the application using the imported certificate
-3. **Verify Signature**: Validates that both .exe and .msi files are properly signed
+1. **Setup DigiCert KeyLocker**: Installs the DigiCert signing tools via `digicert/ssm-code-signing`
+2. **Setup DigiCert KeyLocker Certificate**: Writes the client cert and exports the PKCS#11 config
+3. **Configure Windows code signing / Build Tauri app**: Signs through the PKCS#11 provider
+4. **Verify Windows Code Signature**: Validates that the .exe and .msi are properly signed
 
 ## Testing the Setup
 
 ### 1. Local Testing (Windows Only)
 
-Before pushing to GitHub, test locally:
+KeyLocker is CI-only. To check signing locally, install your own certificate into
+the Windows store and point Tauri at it; the build no longer reads any certificate
+from an environment variable.
 
 ```powershell
-# Set environment variables
-$env:WINDOWS_CERTIFICATE = [Convert]::ToBase64String([IO.File]::ReadAllBytes("certificate.pfx"))
-$env:WINDOWS_CERTIFICATE_PASSWORD = "your-certificate-password"
-
 # Build the application
 cd frontend
 npm run tauri build
@@ -191,9 +185,10 @@ Look for:
 - Consider EV certificate for immediate reputation
 
 ### Certificate Not Found During Build
-- Verify `WINDOWS_CERTIFICATE` secret is set
-- Check base64 encoding is correct (no extra whitespace)
-- Ensure password is correct
+- Verify `SM_API_KEY` is present in the `release-signing` environment. If it is empty
+  the signing steps skip silently and the build succeeds unsigned.
+- Check `SM_CLIENT_CERT_FILE_B64` base64 encoding is correct (no extra whitespace)
+- Ensure `SM_CLIENT_CERT_PASSWORD` and `SM_KEYPAIR_ALIAS` match the DigiCert keypair
 
 ## Security Best Practices
 
@@ -220,11 +215,10 @@ Look for:
 ## Certificate Lifecycle
 
 ### Before Expiration
-1. Obtain new certificate from CA (typically annual renewal)
-2. Convert to .pfx format if needed
-3. Update `WINDOWS_CERTIFICATE` secret with new base64-encoded certificate
-4. Update `WINDOWS_CERTIFICATE_PASSWORD` if password changed
-5. Test build to verify new certificate works
+1. Renew the certificate in the DigiCert ONE console (typically annual)
+2. If the keypair alias changed, update `SM_KEYPAIR_ALIAS` in the `release-signing` environment
+3. If the client authentication certificate was reissued, update `SM_CLIENT_CERT_FILE_B64` and `SM_CLIENT_CERT_PASSWORD`
+4. Test build to verify the new certificate works
 
 ### Expired Certificates
 - Signed binaries remain valid (timestamp proves signing time)

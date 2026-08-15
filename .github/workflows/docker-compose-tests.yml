@@ -17,6 +17,7 @@ permissions:
 
 jobs:
   docker-compose-tests:
+    environment: ci-unsigned
     runs-on: ubuntu-latest
     permissions:
       actions: write

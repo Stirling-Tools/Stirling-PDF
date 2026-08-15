@@ -37,6 +37,7 @@ jobs:
     uses: ./.github/workflows/_runner-pick.yml
 
   playwright-e2e-enterprise:
+    environment: ci-unsigned
     needs: pick
     # Skip on fork PRs / untrusted authors: they have no PREMIUM_KEY_ENTERPRISE,
     # so the suite can't boot premium and would fail. See the header comment.
@@ -309,6 +310,7 @@ jobs:
   # Multi-node regression: builds + seeds the clustered stack (testing/compose/docker-compose-multinode.yml)
   # and runs behave features/multinode. Licence-gated, so it runs after the Playwright job (not in parallel).
   multinode-e2e:
+    environment: ci-unsigned
     needs: [pick, playwright-e2e-enterprise]
     # Nightly cron + manual dispatch only (heavy build), fork-gated for the licence secret.
     if: >-

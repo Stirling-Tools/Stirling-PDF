@@ -1,0 +1,102 @@
+name: Sync GitHub Environments
+
+# Reconciles the GitHub Actions environments described in .github/environments.yml:
+# creates each one, overwrites its protection rules to match the manifest, and
+# copies the listed secrets in from repo/org scope.
+#
+# This job declares no environment of its own. An environment-scoped job would
+# still see repo/org secrets, so the stronger setup is a hand-created `bootstrap`
+# environment (branch policy main + required reviewer) added as `environment:` on
+# the job below. Until that exists, the actor allowlist on the job is the control:
+# workflow_dispatch runs the workflow from the caller-selected ref, so without it
+# anyone with write access could run their own code against an admin-grade PAT.
+#
+# Requires ENV_BOOTSTRAP_TOKEN: a PAT (classic `repo` scope, or fine-grained with
+# Administration: read+write, Environments: read+write, Secrets: read+write).
+# GITHUB_TOKEN cannot manage environments or secrets.
+
+on:
+  push:
+    branches:
+      - main
+      # TEMPORARY - DELETE THIS LINE BEFORE MERGING.
+      # workflow_dispatch only works once this file is on the default branch, but
+      # the environments have to be populated BEFORE the environment: edits merge.
+      # A push trigger runs the copy of the workflow on the pushed branch, so
+      # listing the working branch here lets the first reconcile run pre-merge.
+      # Any branch named here can read every repo/org secret - keep it to one.
+      - claude/duplicate-secrets-cleanup-f2ed94
+    paths:
+      - .github/environments.yml
+      - .github/workflows/sync-environments.yml
+      - .github/scripts/sync_environments.py
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report the plan without changing anything"
+        type: boolean
+        default: true
+      prune_secrets:
+        description: "Also delete environment secrets that the manifest does not list"
+        type: boolean
+        default: false
+
+concurrency:
+  group: sync-environments
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    if: ${{ vars.CI_PROFILE != 'lite' && (github.actor == 'Frooodle' || github.actor == 'jbrunton96') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Check bootstrap token is present
+        env:
+          ENV_BOOTSTRAP_TOKEN: ${{ secrets.ENV_BOOTSTRAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ENV_BOOTSTRAP_TOKEN}" ]; then
+            echo "::error::ENV_BOOTSTRAP_TOKEN is not set. Create a PAT with Administration/Environments/Secrets write and add it as a repo secret."
+            exit 1
+          fi
+
+      - name: Convert manifest to JSON
+        run: |
+          set -euo pipefail
+          if command -v yq >/dev/null 2>&1; then
+            yq -o=json '.' .github/environments.yml > "${RUNNER_TEMP}/manifest.json"
+          else
+            python3 -c 'import json,sys,yaml; json.dump(yaml.safe_load(open(".github/environments.yml")), sys.stdout)' \
+              > "${RUNNER_TEMP}/manifest.json"
+          fi
+          # Structure only - no secret values live in the manifest.
+          jq -r '.environments | keys_unsorted[]' "${RUNNER_TEMP}/manifest.json"
+
+      - name: Reconcile environments and secrets
+        env:
+          GH_TOKEN: ${{ secrets.ENV_BOOTSTRAP_TOKEN }}
+          REPO: ${{ github.repository }}
+          MANIFEST: ${{ runner.temp }}/manifest.json
+          # Every secret visible to this job (org + repo). Consumed by the script
+          # below and never printed; GitHub masks the values in logs regardless.
+          ALL_SECRETS: ${{ toJSON(secrets) }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+          PRUNE_SECRETS: ${{ github.event_name == 'workflow_dispatch' && inputs.prune_secrets || 'false' }}
+        run: python3 .github/scripts/sync_environments.py
+
+      - name: Summary
+        if: always()
+        run: echo "See the step log above for the per-environment plan and result."
