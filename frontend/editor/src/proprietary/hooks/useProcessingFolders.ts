@@ -9,6 +9,8 @@ import {
   type ProcessingFolder,
 } from "@app/services/processingFolderApi";
 import { useFolders } from "@app/contexts/FolderContext";
+import { useFileHandler } from "@app/hooks/useFileHandler";
+import { deliverSweepResults } from "@app/services/processingRunDelivery";
 import { virtualFolderStorage } from "@app/services/virtualFolderStorage";
 import { folderKind, type FolderRecord } from "@app/types/folder";
 // The core stub declares the contract this shadows; import it from @core
@@ -92,6 +94,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
   // folder list is this hook's second system of record (and its refresh is how
   // a virtual mutation becomes visible).
   const { folders: allFolders, refresh: refreshFolders } = useFolders();
+  const { addFiles } = useFileHandler();
 
   useEffect(() => {
     void load();
@@ -159,15 +162,22 @@ export function useProcessingFolders(): ProcessingFoldersApi {
   const enable = useCallback(
     async (folder: FolderRecord) => {
       switch (folderKind(folder)) {
-        case "local":
-          await saveProcessingFolder({
+        case "local": {
+          const saved = await saveProcessingFolder({
             directory: folder.directory ?? "",
             enabled: true,
             steps: [
               { operation: CLASSIFY_OPERATION, parameters: {}, assets: {} },
             ],
           });
+          // The create-time backlog sweep runs server-side; its results land
+          // on disk, so pull them into the workbench as they settle — a
+          // sweep whose results appear nowhere reads as nothing happening.
+          if (saved.startedRuns > 0) {
+            void deliverSweepResults(saved.id, saved.startedRuns, addFiles);
+          }
           break;
+        }
         case "virtual":
           // Browser-owned: the config lives on the folder record and the
           // client-side engine picks it up from there. No server record.
@@ -182,7 +192,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       }
       await load(true);
     },
-    [refreshFolders],
+    [refreshFolders, addFiles],
   );
 
   const disable = useCallback(
@@ -209,9 +219,15 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       }
       const existing = recordFor(folder);
       if (!existing) return;
-      await sweepProcessingFolder(existing.id);
+      const outcome = await sweepProcessingFolder(existing.id);
+      // A mount's results land on disk where nothing shows them; open them
+      // into the workbench as they settle. A storage folder's results replace
+      // its files in place, already visible where the user is looking.
+      if (folderKind(folder) === "local" && outcome.runIds.length > 0) {
+        void deliverSweepResults(existing.id, outcome.runIds.length, addFiles);
+      }
     },
-    [recordFor],
+    [recordFor, addFiles],
   );
 
   return useMemo(

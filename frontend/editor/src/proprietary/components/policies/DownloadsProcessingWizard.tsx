@@ -8,12 +8,10 @@ import { Modal } from "@app/ui/Modal";
 import {
   CLASSIFY_OPERATION,
   fetchDownloadsSuggestion,
-  fetchProcessingFolderRuns,
-  fetchRunOutputFile,
   saveProcessingFolder,
   type DownloadsSuggestion,
-  type ProcessingRunOutput,
 } from "@app/services/processingFolderApi";
+import { deliverSweepResults } from "@app/services/processingRunDelivery";
 import { refreshProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFolders } from "@app/contexts/FolderContext";
@@ -107,68 +105,19 @@ export function DownloadsProcessingWizard({
   };
 
   /**
-   * Poll the folder's runs until the sweep's own runs have all settled. `expected` is what the
-   * server reported starting, so this never waits on runs that were never going to appear — and
-   * gives up after a bounded wait rather than spinning forever if a run goes missing.
-   */
-  /**
-   * Pull a batch of results into the workbench as open files. Runs happen server-side, so without
-   * this the user is left with a finished job and an unchanged screen. Downloads are sequential so
-   * a hundred results don't open a hundred parallel requests, and one failure costs one file
-   * rather than the batch — it is still in the user's file library either way.
-   */
-  const openInWorkbench = useCallback(
-    async (outputs: ProcessingRunOutput[]) => {
-      if (outputs.length === 0) return;
-      const files: File[] = [];
-      for (const output of outputs) {
-        try {
-          files.push(await fetchRunOutputFile(output));
-        } catch (e) {
-          // Skipped: it is still in the file library, just not opened. Logged rather than
-          // swallowed — a download that fails for every file is indistinguishable from the
-          // pipeline producing nothing, and looks like the feature simply not working.
-          console.warn(
-            `[processing folders] could not open result ${output.fileId}`,
-            e,
-          );
-        }
-      }
-      if (files.length === 0) return;
-      await addFiles(files, { selectFiles: true });
-      setOpened((count) => count + files.length);
-    },
-    [addFiles],
-  );
-
-  /**
-   * Poll until the sweep's own runs have settled, opening each run's results as soon as that run
-   * finishes rather than at the end. A single slow or stuck file would otherwise hold back
-   * everything that already succeeded, and a timeout would throw all of it away.
+   * Deliver the sweep's results into the workbench as they settle, mirroring
+   * the shared delivery's progress into this dialog's own display state.
    */
   const trackRuns = useCallback(
     async (policyId: string, expected: number) => {
-      const TERMINAL = ["COMPLETED", "FAILED", "CANCELLED"];
-      const alreadyOpened = new Set<string>();
-      for (let attempt = 0; attempt < 900; attempt++) {
-        const runs = await fetchProcessingFolderRuns(policyId).catch(() => []);
-        const settled = runs.filter((run) => TERMINAL.includes(run.status));
-        const done = settled.filter((run) => run.status === "COMPLETED");
-        setProcessed(done.length);
-        setFailed(settled.length - done.length);
-
-        const fresh = done.filter(
-          (run) => run.runId && !alreadyOpened.has(run.runId),
-        );
-        fresh.forEach((run) => alreadyOpened.add(run.runId!));
-        await openInWorkbench(fresh.flatMap((run) => run.outputs ?? []));
-
-        if (settled.length >= expected) return;
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-      setStalled(true);
+      await deliverSweepResults(policyId, expected, addFiles, (progress) => {
+        setProcessed(progress.processed);
+        setFailed(progress.failed);
+        setOpened(progress.opened);
+        if (progress.stalled) setStalled(true);
+      });
     },
-    [openInWorkbench],
+    [addFiles],
   );
 
   const approve = async () => {

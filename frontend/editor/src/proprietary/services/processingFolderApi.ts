@@ -68,9 +68,19 @@ export async function saveProcessingFolder(
   return res.data;
 }
 
+/** What one sweep took on, as the backend reports it. */
+export interface SweepOutcome {
+  runIds: string[];
+  filesListed: number;
+  alreadyProcessed: number;
+}
+
 /** Run the pipeline over the folder's current contents now. */
-export async function sweepProcessingFolder(id: string): Promise<void> {
-  await apiClient.post(`/api/v1/processing-folders/${id}/sweep`);
+export async function sweepProcessingFolder(id: string): Promise<SweepOutcome> {
+  const res = await apiClient.post<SweepOutcome>(
+    `/api/v1/processing-folders/${id}/sweep`,
+  );
+  return res.data;
 }
 
 /** Remove the processing behaviour. The folder and its files are untouched. */
