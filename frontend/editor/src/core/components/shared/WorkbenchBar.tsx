@@ -3,9 +3,10 @@ import React, {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   useSyncExternalStore,
 } from "react";
-import { Group, Loader, Progress, Stack, Text } from "@mantine/core";
+import { Group, Loader, Menu, Progress, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
@@ -56,7 +57,10 @@ import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import "@app/components/shared/WorkbenchBar.css";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
@@ -132,6 +136,8 @@ export default function WorkbenchBar({
   const icons = useFileActionIcons();
   const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
+  const isMobile = useIsMobile();
+  const [mobileToolsExpanded, setMobileToolsExpanded] = useState(false);
 
   const selectors = useFileSelectors();
   const { selectedFiles, selectedFileIds } = useFileSelection();
@@ -558,38 +564,72 @@ export default function WorkbenchBar({
           whole row; Workbench then shows a tab below the bar to bring it back. */}
       {sectionsWithButtons.length > 0 &&
         !(isViewer && viewerToolbarCollapsed) && (
-          <div className="workbench-bar-center">
-            {sectionsWithButtons.map(
-              ({ section, buttons: sectionButtons }, idx) => (
-                <React.Fragment key={section}>
-                  {idx > 0 && <div className="workbench-bar-divider" />}
-                  {sectionButtons.map((btn) => {
-                    const content = renderButton(btn);
-                    if (!content) return null;
-                    return (
-                      <div
-                        key={btn.id}
-                        className="workbench-bar-action-wrapper"
-                      >
-                        {content}
-                      </div>
-                    );
-                  })}
-                </React.Fragment>
-              ),
-            )}
-            {isViewer && onCollapseViewerToolbar && (
-              <Button
-                type="button"
-                variant="quiet"
-                className="workbench-bar-toolbar-handle workbench-bar-toolbar-handle-retract"
-                onClick={() => onCollapseViewerToolbar(true)}
-                aria-expanded
-                aria-label={t("workbenchBar.hideToolbar", "Hide toolbar")}
-                title={t("workbenchBar.hideToolbar", "Hide toolbar")}
-                leftSection={<KeyboardArrowUpIcon sx={{ fontSize: "1rem" }} />}
-              />
-            )}
+          <div
+            className={`workbench-bar-center${
+              isMobile && mobileToolsExpanded
+                ? " workbench-bar-center--expanded"
+                : ""
+            }`}
+          >
+            <div className="workbench-bar-center-scroll">
+              {sectionsWithButtons.map(
+                ({ section, buttons: sectionButtons }, idx) => (
+                  <React.Fragment key={section}>
+                    {idx > 0 && <div className="workbench-bar-divider" />}
+                    {sectionButtons.map((btn) => {
+                      const content = renderButton(btn);
+                      if (!content) return null;
+                      return (
+                        <div
+                          key={btn.id}
+                          className="workbench-bar-action-wrapper"
+                        >
+                          {content}
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
+                ),
+              )}
+            </div>
+            {isMobile
+              ? sectionsWithButtons.some((s) => s.buttons.length > 0) && (
+                  <Button
+                    type="button"
+                    variant="quiet"
+                    size="lg"
+                    className="workbench-bar-toolbar-handle workbench-bar-toolbar-handle-expand"
+                    onClick={() => setMobileToolsExpanded((v) => !v)}
+                    aria-expanded={mobileToolsExpanded}
+                    aria-label={
+                      mobileToolsExpanded
+                        ? t("workbenchBar.showFewerTools", "Collapse toolbar")
+                        : t("workbenchBar.showAllTools", "Show all tools")
+                    }
+                    leftSection={
+                      mobileToolsExpanded ? (
+                        <KeyboardArrowUpIcon sx={{ fontSize: "1.25rem" }} />
+                      ) : (
+                        <KeyboardArrowDownIcon sx={{ fontSize: "1.25rem" }} />
+                      )
+                    }
+                  />
+                )
+              : isViewer &&
+                onCollapseViewerToolbar && (
+                  <Button
+                    type="button"
+                    variant="quiet"
+                    className="workbench-bar-toolbar-handle workbench-bar-toolbar-handle-retract"
+                    onClick={() => onCollapseViewerToolbar(true)}
+                    aria-expanded
+                    aria-label={t("workbenchBar.hideToolbar", "Hide toolbar")}
+                    title={t("workbenchBar.hideToolbar", "Hide toolbar")}
+                    leftSection={
+                      <KeyboardArrowUpIcon sx={{ fontSize: "1rem" }} />
+                    }
+                  />
+                )}
           </div>
         )}
 
@@ -604,8 +644,98 @@ export default function WorkbenchBar({
           />
         )}
 
+        {isMobile && (
+          <Menu shadow="md" width={230} position="bottom-end">
+            <Menu.Target>
+              <ActionIcon
+                variant="tertiary"
+                hover={false}
+                className="workbench-bar-action-icon"
+                aria-label={t("workbenchBar.moreActions", "More actions")}
+              >
+                <MoreVertIcon sx={{ fontSize: "1.25rem" }} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {currentView === "viewer" && (
+                <Menu.Item
+                  leftSection={<PrintIcon sx={{ fontSize: "1.1rem" }} />}
+                  disabled={
+                    totalItems === 0 ||
+                    allButtonsDisabled ||
+                    disableForFullscreen ||
+                    policyEnforcing
+                  }
+                  onClick={handlePrint}
+                >
+                  {t("workbenchBar.print", "Print PDF")}
+                </Menu.Item>
+              )}
+              {!isCustomView && (
+                <Menu.Item
+                  leftSection={
+                    <LocalIcon
+                      icon={icons.downloadIconName}
+                      width="1.1rem"
+                      height="1.1rem"
+                    />
+                  }
+                  disabled={
+                    disableForFullscreen ||
+                    totalItems === 0 ||
+                    allButtonsDisabled ||
+                    policyEnforcing
+                  }
+                  onClick={() => void handleExportAll()}
+                >
+                  {downloadTooltip}
+                </Menu.Item>
+              )}
+              {!isCustomView && icons.saveAsIconName && (
+                <Menu.Item
+                  leftSection={
+                    <LocalIcon
+                      icon={icons.saveAsIconName}
+                      width="1.1rem"
+                      height="1.1rem"
+                    />
+                  }
+                  disabled={
+                    disableForFullscreen ||
+                    totalItems === 0 ||
+                    allButtonsDisabled ||
+                    policyEnforcing
+                  }
+                  onClick={() => void handleExportAll(true)}
+                >
+                  {t("workbenchBar.saveAs", "Save As")}
+                </Menu.Item>
+              )}
+              {!isCustomView && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Item
+                    leftSection={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
+                    disabled={
+                      totalItems === 0 ||
+                      allButtonsDisabled ||
+                      disableForFullscreen
+                    }
+                    onClick={() => void handleClose()}
+                  >
+                    {currentView === "fileEditor"
+                      ? t("workbenchBar.closeAll", "Close All")
+                      : t("workbenchBar.closePdf", "Close PDF")}
+                  </Menu.Item>
+                </>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        )}
+
         {/* Print */}
-        {currentView === "viewer" &&
+        {!isMobile &&
+          currentView === "viewer" &&
           renderWithTooltip(
             <ActionIcon
               variant="tertiary"
@@ -628,7 +758,8 @@ export default function WorkbenchBar({
           )}
 
         {/* Download (file-level action — not relevant in custom views) */}
-        {!isCustomView &&
+        {!isMobile &&
+          !isCustomView &&
           renderWithTooltip(
             <ActionIcon
               variant="tertiary"
@@ -655,7 +786,8 @@ export default function WorkbenchBar({
           )}
 
         {/* Save As */}
-        {!isCustomView &&
+        {!isMobile &&
+          !isCustomView &&
           icons.saveAsIconName &&
           renderWithTooltip(
             <ActionIcon
@@ -683,12 +815,13 @@ export default function WorkbenchBar({
           )}
 
         {/* Separator: export group | close */}
-        {!isCustomView && (
+        {!isMobile && !isCustomView && (
           <div className="workbench-bar-divider workbench-bar-globals-sep" />
         )}
 
         {/* Close (context-aware: close all / close viewer file / close page editor) */}
-        {!isCustomView &&
+        {!isMobile &&
+          !isCustomView &&
           renderWithTooltip(
             <ActionIcon
               variant="tertiary"

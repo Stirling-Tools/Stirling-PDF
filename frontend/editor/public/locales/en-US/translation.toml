@@ -9642,7 +9642,9 @@ toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}
 expired = "Your session has expired. Please refresh the page and try again."
 
 [settings]
+backToSections = "All settings"
 close = "Close"
+title = "Settings"
 
 [settings.ai]
 documents = "Documents & RAG"
@@ -11622,6 +11624,7 @@ exportAll = "Export PDF"
 exportSelected = "Export Selected Pages"
 formFill = "Fill Form"
 hideToolbar = "Hide toolbar"
+moreActions = "More actions"
 multiTool = "Multi-Tool"
 panMode = "Pan Mode"
 print = "Print PDF"
@@ -11642,6 +11645,8 @@ selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
 selectLanguage = "Select language"
 share = "Share"
+showAllTools = "Show all tools"
+showFewerTools = "Collapse toolbar"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Toggle Annotations Visibility"
 toggleAttachments = "Toggle Attachments"
