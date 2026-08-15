@@ -113,8 +113,59 @@ function contrastingMaskFor(fill: {
   return luma > 160 ? "rgba(30, 30, 30, 0.85)" : "rgba(255, 255, 255, 0.9)";
 }
 
+// Put the caret at the end of the LAST painted line block rather than at the
+// container's end. A container-level caret makes Firefox insert typed text as
+// a bare sibling of the line div, which then reads back as an extra line.
+function caretToEnd(el: HTMLElement, sel: Selection): void {
+  let node: Node = el;
+  while (node.lastChild) node = node.lastChild;
+  const range = document.createRange();
+  if (node.nodeType === Node.TEXT_NODE) {
+    range.setStart(node, (node.textContent ?? "").length);
+    range.collapse(true);
+  } else if (node !== el && node.parentNode) {
+    // Trailing filler <br>: sit just before it, still inside its block.
+    range.setStartBefore(node);
+    range.collapse(true);
+  } else {
+    range.selectNodeContents(el);
+    range.collapse(false);
+  }
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+// Read the overlay's hard breaks without trusting innerText's block-joining.
+// A bare text node at container level is caret drift (Firefox parks the caret
+// after the last line block), never a user line break - fold it into the
+// current line instead of letting it become a phantom one.
 function extractHardBreaks(element: HTMLElement): string {
-  return element.innerText.replace(/\u00A0/g, " ");
+  const children = Array.from(element.childNodes);
+  if (children.length === 0) return "";
+  const lines: string[] = [];
+  let lastWasTrailingBr = false;
+  for (const node of children) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent ?? "";
+      if (text.length === 0) continue;
+      if (lines.length === 0) lines.push(text);
+      else lines[lines.length - 1] += text;
+      lastWasTrailingBr = false;
+      continue;
+    }
+    if (!(node instanceof HTMLElement)) continue;
+    if (node.tagName === "BR") {
+      lines.push("");
+      lastWasTrailingBr = true;
+      continue;
+    }
+    lines.push(node.innerText);
+    lastWasTrailingBr = false;
+  }
+  // Browsers park a filler <br> at the end of a contenteditable; innerText
+  // ignores it and so must we.
+  if (lastWasTrailingBr) lines.pop();
+  return lines.join("\n").replace(/\u00A0/g, " ");
 }
 
 interface ExactLayout {
@@ -599,11 +650,7 @@ export function TextRunOverlay({
           sel &&
           !(sel.rangeCount > 0 && el.contains(sel.anchorNode))
         ) {
-          const range = document.createRange();
-          range.selectNodeContents(el);
-          range.collapse(false);
-          sel.removeAllRanges();
-          sel.addRange(range);
+          caretToEnd(el, sel);
         }
         // Backend strategy: pre-warm the per-char charcode cache for the whole
         // page in the background.
