@@ -54,10 +54,11 @@ openssl pkcs12 -export -out certificate.pfx -inkey private-key.key -in certifica
 
 ### Required Secrets
 
-Navigate to your GitHub repository → Settings → Secrets and variables → Actions
+Navigate to your GitHub repository → Settings → Environments → `release-signing`.
 
-These live in the `release-signing` environment, not at repository scope - see
-`.github/environments.yml`. All five come from the DigiCert ONE console.
+These live in the `release-signing` environment, not at repository scope. That
+environment requires reviewer approval and is limited to `main`, `release`,
+`hotfix/*` and `v*` tags. All five come from the DigiCert ONE console.
 
 | Secret | Description |
 | --- | --- |
