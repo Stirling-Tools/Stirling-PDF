@@ -7,8 +7,11 @@ import {
   Divider,
   Checkbox,
   Alert,
+  Group,
 } from "@mantine/core";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Select } from "@app/ui/Select";
 import { FormField } from "@app/ui/FormField";
 import { useTranslation } from "react-i18next";
@@ -287,9 +290,30 @@ const SignatureAppearanceSettings = ({
           <Divider />
 
           <Stack gap="xs">
-            <Text size="sm" fw={500}>
-              {t("certSign.placement.title", "Signature position")}
-            </Text>
+            <Group justify="space-between" align="center">
+              <Text size="sm" fw={500}>
+                {t("certSign.placement.title", "Signature position")}
+              </Text>
+              {/* Always present, disabled until there is a box to clear. A control that
+                  only appears once a box is placed grows the panel at exactly the wrong
+                  moment - it is what pushed the run button out of sight the instant the
+                  user finished drawing. Same reset the thumbnail picker already uses. */}
+              <ActionIcon
+                variant="secondary"
+                onClick={() => onParameterChange("signatureArea", undefined)}
+                disabled={disabled || isPlacing || !parameters.signatureArea}
+                title={t(
+                  "certSign.placement.reset",
+                  "Use the default position",
+                )}
+                aria-label={t(
+                  "certSign.placement.reset",
+                  "Use the default position",
+                )}
+              >
+                <RestartAltIcon style={{ fontSize: "1rem" }} />
+              </ActionIcon>
+            </Group>
 
             <Button
               variant={isPlacing ? "primary" : "secondary"}
@@ -321,17 +345,6 @@ const SignatureAppearanceSettings = ({
                       "Not placed — the signature goes where it always has, on the page above.",
                     )}
             </Text>
-
-            {parameters.signatureArea && !isPlacing && (
-              <Button
-                variant="tertiary"
-                accent="neutral"
-                disabled={disabled}
-                onClick={() => onParameterChange("signatureArea", undefined)}
-              >
-                {t("certSign.placement.reset", "Use the default position")}
-              </Button>
-            )}
           </Stack>
 
           <Divider />
