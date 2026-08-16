@@ -11,6 +11,7 @@ import {
   buildDirectory,
   type TeamGroup,
 } from "@processor/components/users/directory";
+import "@processor/theme/surface.css";
 import "@processor/views/Users.css";
 
 /** Collapse a group's rows past this many, behind a "Show all" expander. */
@@ -350,7 +351,7 @@ export function UsersDirectory({
     <div className="processor-users__directory">
       {/* Organization (a single-org deployment only; SaaS has no org). */}
       {capabilities.orgGroup && dir.organization.length > 0 && (
-        <section className="processor-users__group">
+        <section className="processor-surface processor-users__group">
           <header className="processor-users__group-head">
             <div className="processor-users__group-title">
               <strong>{t("users.group.org", "Organization")}</strong>
@@ -373,7 +374,10 @@ export function UsersDirectory({
 
       {/* Teams */}
       {dir.teams.map((team) => (
-        <section className="processor-users__group" key={team.id}>
+        <section
+          className="processor-surface processor-users__group"
+          key={team.id}
+        >
           <header className="processor-users__group-head">
             <div className="processor-users__group-title">
               <strong>
@@ -461,7 +465,7 @@ export function UsersDirectory({
 
       {/* Guests (parked in the live app; shown when showGuests is set). */}
       {showGuests && dir.guests.length > 0 && (
-        <section className="processor-users__group">
+        <section className="processor-surface processor-users__group">
           <header className="processor-users__group-head">
             <div className="processor-users__group-title">
               <strong>{t("users.group.guests", "Guests")}</strong>

@@ -11,6 +11,7 @@ import {
 } from "@processor/api/integrations";
 import { ConnectionTypePicker } from "@processor/components/sources/ConnectionTypePicker";
 import { ConnectionForm } from "@processor/components/sources/ConnectionForm";
+import "@processor/components/sources/connections.css";
 import {
   CREATABLE_CONNECTION_TYPES,
   buildConnectionConfig,

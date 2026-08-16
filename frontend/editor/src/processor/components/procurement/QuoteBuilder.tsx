@@ -16,6 +16,7 @@ import {
 } from "@processor/api/procurement";
 import { LegalDocumentModal } from "@processor/components/procurement/ProcurementExtras";
 import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
+import "@processor/theme/surface.css";
 import "@processor/views/Procurement.css";
 
 const STEPS = ["volume", "plan", "details", "review"] as const;
@@ -532,7 +533,7 @@ export function QuoteBuilder({
             PDF and the Stripe quote exactly. */}
         {step === REVIEW_STEP && issued && (
           <div className="processor-qb__papertray">
-            <div className="processor-qb__paper">
+            <div className="processor-surface processor-qb__paper">
               <div className="processor-qb__paper-head">
                 <div>
                   <div className="processor-qb__paper-brand">Stirling PDF</div>

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -51,16 +52,6 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
 
     private static boolean sameKind(FileRunEventEntity entity, String kindId) {
         return kindId == null || kindId.equals(entity.getKindId());
-    }
-
-    @Override
-    public List<FileRunEventEntity> findByTeam(Long teamId, String kindId, Pageable pageable) {
-        return page(
-                newestFirst(
-                        rows.values().stream()
-                                .filter(e -> sameTeam(e, teamId) && sameKind(e, kindId))
-                                .toList()),
-                pageable);
     }
 
     @Override
@@ -122,6 +113,46 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
         entity.setStatusActor(actor);
         entity.setStatusAt(now);
         return 1;
+    }
+
+    @Override
+    public int markFilesRemoved(
+            Long teamId,
+            String actor,
+            Collection<String> fileIds,
+            Instant now,
+            Collection<FileRunEventStatus> allowedFrom) {
+        int closed = 0;
+        for (FileRunEventEntity entity : rows.values()) {
+            if (entity.getOrigin() != FailureOrigin.TOOL
+                    || !sameTeam(entity, teamId)
+                    || !Objects.equals(entity.getActor(), actor)
+                    || entity.getFileId() == null
+                    || !fileIds.contains(entity.getFileId())
+                    || !allowedFrom.contains(entity.getStatus())) {
+                continue;
+            }
+            entity.setStatus(FileRunEventStatus.FILE_REMOVED);
+            entity.setStatusActor(actor);
+            entity.setStatusAt(now);
+            closed++;
+        }
+        return closed;
+    }
+
+    @Override
+    public List<FileRunEventEntity> findByTeamAndStatusIn(
+            Long teamId, List<FileRunEventStatus> statuses, String kindId, Pageable pageable) {
+        return page(
+                newestFirst(
+                        rows.values().stream()
+                                .filter(
+                                        e ->
+                                                sameTeam(e, teamId)
+                                                        && statuses.contains(e.getStatus())
+                                                        && sameKind(e, kindId))
+                                .toList()),
+                pageable);
     }
 
     @Override

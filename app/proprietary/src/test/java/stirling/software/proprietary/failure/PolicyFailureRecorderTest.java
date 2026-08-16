@@ -89,8 +89,9 @@ class PolicyFailureRecorderTest {
             recorder.recordRunFailure(
                     "run-1",
                     "policy-1",
-                    "dana@example.com",
                     null,
+                    null,
+                    "dana@example.com",
                     "Policy run failed: locked",
                     passwordFailure());
 
@@ -114,8 +115,9 @@ class PolicyFailureRecorderTest {
             recorder.recordRunFailure(
                     "run-1",
                     "policy-1",
-                    "dana@example.com",
                     null,
+                    null,
+                    "dana@example.com",
                     "Policy run failed: something we do not recognise",
                     new RuntimeException("boom"));
 
@@ -133,6 +135,7 @@ class PolicyFailureRecorderTest {
                     "policy-1",
                     null,
                     null,
+                    null,
                     "Policy run failed: java.lang.NullPointerException",
                     new RuntimeException("npe"));
 
@@ -147,7 +150,7 @@ class PolicyFailureRecorderTest {
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
             recorder.recordRunFailureAs(
-                    FailureKind.UNKNOWN, "run-3", "policy-1", null, "could not be queued");
+                    FailureKind.UNKNOWN, "run-3", "policy-1", null, null, "could not be queued");
 
             assertThat(store.list(TEAM, null, null, 10)).hasSize(1);
         }
@@ -161,9 +164,21 @@ class PolicyFailureRecorderTest {
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
             recorder.recordRunFailure(
-                    "run-1", "policy-1", "dana@example.com", null, "locked", passwordFailure());
+                    "run-1",
+                    "policy-1",
+                    null,
+                    null,
+                    "dana@example.com",
+                    "locked",
+                    passwordFailure());
             recorder.recordRunFailure(
-                    "run-2", "policy-1", "dana@example.com", null, "locked", passwordFailure());
+                    "run-2",
+                    "policy-1",
+                    null,
+                    null,
+                    "dana@example.com",
+                    "locked",
+                    passwordFailure());
 
             List<FileRunEvent> events = store.list(TEAM, null, null, 10);
             assertThat(events).hasSize(2);
@@ -174,13 +189,61 @@ class PolicyFailureRecorderTest {
         }
 
         @Test
+        void namesTheSourceWhenNoUserWasInvolved() {
+            // An unattended file has no actor, so the source is the only attribution a reviewer
+            // gets: which bucket, folder or webhook fed the run.
+            when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
+
+            recorder.recordRunFailure(
+                    "run-1",
+                    "policy-1",
+                    "src-s3-invoices",
+                    null,
+                    null,
+                    "locked",
+                    passwordFailure());
+
+            FileRunEvent event = store.list(TEAM, null, null, 10).getFirst();
+            assertThat(event.sourceId()).isEqualTo("src-s3-invoices");
+            assertThat(event.actor()).isNull();
+        }
+
+        @Test
+        void keepsTwoSourcesApartEvenWhenTheyFailIdentically() {
+            // Same kind, same policy, no user on either: without the source they would be one row.
+            when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
+
+            recorder.recordRunFailureAs(
+                    FailureKind.UNKNOWN, "run-1", "policy-1", "src-a", null, "unreachable");
+            recorder.recordRunFailureAs(
+                    FailureKind.UNKNOWN, "run-2", "policy-1", "src-b", null, "unreachable");
+
+            assertThat(store.list(TEAM, null, null, 10))
+                    .hasSize(2)
+                    .extracting(FileRunEvent::sourceId)
+                    .containsExactlyInAnyOrder("src-a", "src-b");
+        }
+
+        @Test
         void thatSameRunFailingTwiceStaysOneIncident() {
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
             recorder.recordRunFailure(
-                    "run-1", "policy-1", "dana@example.com", null, "locked", passwordFailure());
+                    "run-1",
+                    "policy-1",
+                    null,
+                    null,
+                    "dana@example.com",
+                    "locked",
+                    passwordFailure());
             recorder.recordRunFailure(
-                    "run-1", "policy-1", "dana@example.com", null, "locked", passwordFailure());
+                    "run-1",
+                    "policy-1",
+                    null,
+                    null,
+                    "dana@example.com",
+                    "locked",
+                    passwordFailure());
 
             assertThat(store.list(TEAM, null, null, 10))
                     .singleElement()
@@ -198,7 +261,7 @@ class PolicyFailureRecorderTest {
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
             recorder.recordRunFailure(
-                    "run-1", "policy-1", null, null, "boom", new RuntimeException());
+                    "run-1", "policy-1", null, null, null, "boom", new RuntimeException());
 
             assertThat(store.list(TEAM, null, null, 10)).hasSize(1);
         }
@@ -207,7 +270,8 @@ class PolicyFailureRecorderTest {
         void leavesAnAdHocRunUnteamedRatherThanGuessing() {
             // No stored policy means no team to attribute it to. Recorded unteamed rather than
             // attributed to whichever team happened to be nearby.
-            recorder.recordRunFailure("run-1", null, null, null, "boom", new RuntimeException());
+            recorder.recordRunFailure(
+                    "run-1", null, null, null, null, "boom", new RuntimeException());
 
             assertThat(store.list(null, null, null, 10)).hasSize(1);
             assertThat(store.list(TEAM, null, null, 10)).isEmpty();
@@ -222,6 +286,7 @@ class PolicyFailureRecorderTest {
                                     recorder.recordRunFailure(
                                             "run-1",
                                             "policy-1",
+                                            null,
                                             null,
                                             null,
                                             "boom",
@@ -258,6 +323,7 @@ class PolicyFailureRecorderTest {
                                             "policy-1",
                                             null,
                                             null,
+                                            null,
                                             "Policy run failed: locked",
                                             passwordFailure()))
                     .doesNotThrowAnyException();
@@ -270,7 +336,13 @@ class PolicyFailureRecorderTest {
             assertThatCode(
                             () ->
                                     recorder.recordRunFailure(
-                                            "run-1", "policy-1", null, null, "no cause", null))
+                                            "run-1",
+                                            "policy-1",
+                                            null,
+                                            null,
+                                            null,
+                                            "no cause",
+                                            null))
                     .doesNotThrowAnyException();
             assertThat(store.list(TEAM, null, null, 10).getFirst().kind())
                     .isEqualTo(FailureKind.UNKNOWN);
@@ -286,9 +358,9 @@ class PolicyFailureRecorderTest {
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
             recorder.recordRunFailure(
-                    "run-1", "policy-1", null, null, "boom", new IOException("x"));
+                    "run-1", "policy-1", null, null, null, "boom", new IOException("x"));
             recorder.recordRunFailure(
-                    "run-1", "policy-1", null, null, "boom", new IOException("x"));
+                    "run-1", "policy-1", null, null, null, "boom", new IOException("x"));
 
             List<FileRunEvent> events = store.list(TEAM, null, null, 10);
             assertThat(events).hasSize(1);
@@ -301,9 +373,9 @@ class PolicyFailureRecorderTest {
             when(policyStore.get("policy-1")).thenReturn(Optional.of(policy("policy-1", TEAM)));
 
             recorder.recordRunFailure(
-                    "run-1", "policy-1", null, null, "boom", new IOException("x"));
+                    "run-1", "policy-1", null, null, null, "boom", new IOException("x"));
             recorder.recordRunFailure(
-                    "run-2", "policy-1", null, null, "boom", new IOException("x"));
+                    "run-2", "policy-1", null, null, null, "boom", new IOException("x"));
 
             assertThat(store.list(TEAM, null, null, 10)).hasSize(2);
         }

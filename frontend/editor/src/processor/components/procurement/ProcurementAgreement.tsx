@@ -12,6 +12,7 @@ import {
 import { DownloadIcon } from "@processor/components/icons";
 import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
 import { useAsync } from "@processor/hooks/useAsync";
+import "@processor/theme/surface.css";
 import "@processor/views/Procurement.css";
 
 /**
@@ -154,7 +155,7 @@ export function ProcurementAgreement({
         role="group"
         aria-label={t("processor.procurement.agreement.docName")}
       >
-        <div className="processor-agreement__doc">
+        <div className="processor-surface processor-agreement__doc">
           {loading && <p>{t("processor.procurement.agreement.loading")}</p>}
           {!loading && !doc && (
             <p>{t("processor.procurement.agreement.loadError")}</p>

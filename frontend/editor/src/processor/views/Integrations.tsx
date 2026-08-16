@@ -24,6 +24,7 @@ import {
 } from "@processor/components/sources/connectionTypes";
 import { STEP_OPERATIONS } from "@processor/components/policies/stepOperations";
 import { COMING_SOON_SOURCE_TYPES } from "@processor/components/sources/sourceTypes";
+import "@processor/theme/surface.css";
 import "@processor/views/Integrations.css";
 
 /**
@@ -243,6 +244,7 @@ export function Integrations() {
         </div>
         {capabilities?.customApi && (
           <Button
+            fat
             onClick={() => openCreate("api")}
             leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
           >
@@ -306,7 +308,7 @@ export function Integrations() {
           ))}
         </div>
       ) : (
-        <div className="processor-integrations__table">
+        <div className="processor-surface processor-integrations__table">
           <div className="processor-integrations__cols" aria-hidden>
             <span>{t("processor.integrations.table.integration")}</span>
             <span>{t("processor.integrations.table.worksWith")}</span>

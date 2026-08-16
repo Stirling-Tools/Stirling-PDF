@@ -121,9 +121,10 @@
   height: auto;
   width: 100%;
   text-align: left;
-  background: var(--c-bg);
+  background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
+  box-shadow: var(--sui-elevation-raised);
   transition:
     background var(--motion-fast),
     border-color var(--motion-fast);
@@ -148,6 +149,7 @@
 .processor-pf__node--soon {
   background: transparent;
   border-style: dashed;
+  box-shadow: none;
   /* The dashed border and muted ink mark this as not-yet-available; fading the
      whole node with opacity would drop its label below the contrast floor. */
   color: var(--c-text-muted);
@@ -202,15 +204,16 @@
 }
 
 /* ── Policies card (core) ───────────────────────────────────────────────────── */
+/* Same secondary-surface treatment as the nodes it sits between. */
 .processor-pf__policies {
   align-self: center;
   flex: none;
   width: 18rem;
   padding: 0.75rem;
-  background: var(--c-bg);
+  background: var(--c-surface);
   border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
+  box-shadow: var(--sui-elevation-raised);
 }
 
 .processor-pf__policies-head {

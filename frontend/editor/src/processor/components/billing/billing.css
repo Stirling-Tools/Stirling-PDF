@@ -1198,9 +1198,6 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem;
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-md);
-  background: var(--c-surface);
 }
 .processor-billing__card-placeholder-head {
   display: flex;
@@ -1333,8 +1330,6 @@
 
 /* Progressive-disclosure finer settings: summary rows that bloom a card picker. */
 .processor-billing__bundle-rows {
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-md);
   overflow: hidden;
 }
 .processor-billing__bundle-row + .processor-billing__bundle-row {

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { MethodBadge, Tabs, type HttpMethod, type TabItem } from "@app/ui";
 import { VERTICALS, ALL_ENDPOINTS } from "@processor/data/endpoints";
 import { DocsSection } from "@processor/components/docs/DocsSection";
+import "@processor/theme/surface.css";
 
 type VerticalFilter = "all" | (typeof VERTICALS)[number]["key"];
 
@@ -46,7 +47,10 @@ export function EndpointReferenceSection() {
       />
       <div className="processor-docs__endpoints">
         {shown.map((v) => (
-          <div key={v.key} className="processor-docs__endpoint-group">
+          <div
+            key={v.key}
+            className="processor-surface processor-docs__endpoint-group"
+          >
             <div className="processor-docs__endpoint-grouphead">
               <span
                 className="processor-docs__endpoint-dot"

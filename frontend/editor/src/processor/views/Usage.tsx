@@ -176,7 +176,7 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
           {wallet?.status === "subscribed" && (
             <Button
               variant="secondary"
-              size="sm"
+              fat
               loading={processor.opening}
               onClick={processor.open}
             >

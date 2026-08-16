@@ -10,6 +10,7 @@ import {
 } from "@processor/queries/infrastructure";
 import { type EditorInstance } from "@processor/api/editorDeploy";
 import { DownloadEditorModal } from "@processor/components/DownloadEditorModal";
+import "@processor/theme/surface.css";
 import "@processor/components/EditorStatusCard.css";
 
 /** The Stirling brand mark, drawn at the hero size. Decorative. */
@@ -120,7 +121,7 @@ export function EditorStatusCard({ footer }: EditorStatusCardProps) {
 
   return (
     <section
-      className="processor-editor-hero"
+      className="processor-surface processor-editor-hero"
       aria-label={t("processor.home.editor.name")}
     >
       <div className="processor-editor-hero__row">

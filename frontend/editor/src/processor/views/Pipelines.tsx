@@ -46,6 +46,7 @@ export function Pipelines() {
           </p>
         </div>
         <Button
+          fat
           onClick={openCreate}
           leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
         >

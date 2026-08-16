@@ -52,6 +52,7 @@ export function ApiKeysTab() {
           sub={t("processor.infrastructure.apiKeys.subheading")}
         />
         <Button
+          variant="secondary"
           size="sm"
           onClick={() => setModalOpen(true)}
           leftSection={<span aria-hidden>+</span>}
