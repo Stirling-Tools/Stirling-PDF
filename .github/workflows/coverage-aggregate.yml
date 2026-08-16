@@ -34,14 +34,14 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: "25"
           distribution: "temurin"
@@ -52,20 +52,18 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
             gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
             gradle-${{ runner.os }}-${{ runner.arch }}-
 
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: "3.12"
-
-      - name: Install defusedxml for coverage scripts
-        # Both coverage-summary.py and coverage-matrix.py parse JaCoCo
-        # XML through defusedxml - see the script headers for context.
-        run: python -m pip install --quiet defusedxml
+          enable-cache: true
+          cache-dependency-glob: |
+            engine/pyproject.toml
+            engine/uv.lock
 
       # Pattern matches every artifact this PR's producers might upload:
       #   jacoco-exec-junit-jdk-25            (uploaded only by the saas
@@ -158,7 +156,7 @@ jobs:
         # ("how much of the backend do real user flows cover?").
         if: steps.inventory.outputs.found_e2e == 'true'
         run: |
-          python scripts/coverage-summary.py \
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
             --title "Real user-flow backend coverage (e2e:live + cucumber)" \
             --jacoco "merged=build/reports/jacoco/aggregate-e2e/jacocoTestReport.xml" \
             --github-step-summary
@@ -169,7 +167,7 @@ jobs:
         # is meaningless when one is a strict superset of the other.
         if: steps.inventory.outputs.found_all == 'true'
         run: |
-          python scripts/coverage-summary.py \
+          uv run --project engine --locked --group tools python scripts/coverage-summary.py \
             --title "Combined backend coverage (JUnit + e2e:live + cucumber)" \
             --jacoco "merged=build/reports/jacoco/aggregate-all/jacocoTestReport.xml" \
             --github-step-summary
@@ -224,7 +222,7 @@ jobs:
         # generated above) plus whichever frontend artifacts landed.
         # Every input is optional; missing ones render as "-".
         run: |
-          python scripts/coverage-matrix.py \
+          uv run --project engine --locked --group tools python scripts/coverage-matrix.py \
             ${{ steps.inventory.outputs.found_all == 'true' && '--jacoco-all build/reports/jacoco/aggregate-all/jacocoTestReport.xml' || '' }} \
             ${{ steps.inventory.outputs.found_e2e == 'true' && '--jacoco-e2e build/reports/jacoco/aggregate-e2e/jacocoTestReport.xml' || '' }} \
             --vitest matrix-inputs/vitest/coverage-summary.json \

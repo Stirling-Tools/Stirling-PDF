@@ -1,5 +1,12 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchEndpointEnabled,
+  fetchEndpointsAvailability,
+} from "@app/api/config";
+import { qk } from "@app/query/keys";
+import { CONFIG_STALE_TIME } from "@app/query/staleTime";
+import { useJwtConfigSync } from "@app/hooks/useJwtConfigSync";
 import type { EndpointAvailabilityDetails } from "@app/types/endpointAvailability";
 import { editorQk } from "@app/queries/keys";
 import {
@@ -7,41 +14,47 @@ import {
   pickEndpointDetails,
 } from "@app/queries/endpoints";
 
-function useInvalidateEndpoints(): () => Promise<void> {
-  const queryClient = useQueryClient();
-  return useCallback(async () => {
-    await queryClient.invalidateQueries({
-      queryKey: editorQk.endpointsAvailability(),
-    });
-  }, [queryClient]);
+const OPTIMISTIC: EndpointAvailabilityDetails = { enabled: true, reason: null };
+
+function message(error: unknown): string | null {
+  if (!error) return null;
+  return error instanceof Error ? error.message : "Unknown error occurred";
+}
 }
 
+/**
+ * Hook to check if a specific endpoint is enabled
+ * This wraps the context for single endpoint checks
+ */
 export function useEndpointEnabled(endpoint: string): {
   enabled: boolean | null;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
 } {
-  const refetch = useInvalidateEndpoints();
-  const query = useQuery({
-    queryKey: editorQk.endpointsAvailability(),
-    queryFn: fetchEndpointsAvailability,
-    enabled: !!endpoint,
-    staleTime: 60_000,
-  });
-
-  if (!endpoint) {
-    return { enabled: null, loading: false, error: null, refetch };
-  }
+const { data, isPending, error, refetch } = useQuery({
+  queryKey: qk.endpointEnabled(endpoint),
+  queryFn: () => fetchEndpointEnabled(endpoint),
+  enabled: Boolean(endpoint),
+  staleTime: CONFIG_STALE_TIME,
+});
 
   return {
-    enabled: query.isPending ? null : (query.data?.[endpoint]?.enabled ?? true),
-    loading: query.isPending,
-    error: query.error instanceof Error ? query.error.message : null,
-    refetch,
+enabled: data ?? null,
+loading: Boolean(endpoint) && isPending,
+error: message(error),
+refetch: useCallback(async () => {
+  await refetch();
+}, [refetch]),
   };
 }
 
+/**
+ * Availability for a set of endpoints, projected from one shared request for
+ * the whole map. Unknown endpoints and any failure read as enabled — this runs
+ * before auth settles, and disabling every tool on a hiccup is worse than
+ * letting a call fail later.
+ */
 export function useMultipleEndpointsEnabled(endpoints: string[]): {
   endpointStatus: Record<string, boolean>;
   endpointDetails: Record<string, EndpointAvailabilityDetails>;
@@ -49,40 +62,47 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
-  const refetch = useInvalidateEndpoints();
-  const endpointsKey = endpoints.join("\0");
-  const sortedEndpoints = useMemo(() => [...endpoints].sort(), [endpointsKey]);
+const queryClient = useQueryClient();
+const wanted = endpoints ?? [];
 
-  const query = useQuery({
-    queryKey: editorQk.endpointsAvailability(),
-    queryFn: fetchEndpointsAvailability,
-    enabled: endpoints.length > 0,
-    staleTime: 60_000,
-  });
+const { data, isPending, error, refetch } = useQuery({
+  queryKey: qk.endpointsAvailability(),
+  queryFn: fetchEndpointsAvailability,
+  enabled: wanted.length > 0,
+  staleTime: CONFIG_STALE_TIME,
+  retry: false,
+});
 
-  const resolved = useMemo(() => {
-    if (sortedEndpoints.length === 0) return { status: {}, details: {} };
-    if (query.isError && !query.data) {
-      return pickEndpointDetails(undefined, sortedEndpoints);
-    }
-    return pickEndpointDetails(query.data, sortedEndpoints);
-  }, [sortedEndpoints, query.data, query.isError]);
+const reload = useCallback(async () => {
+  await refetch();
+}, [refetch]);
 
-  if (endpoints.length === 0) {
-    return {
-      endpointStatus: {},
-      endpointDetails: {},
-      loading: false,
-      error: null,
-      refetch,
-    };
+useJwtConfigSync(
+  useCallback(() => {
+    void queryClient.invalidateQueries({
+      queryKey: qk.endpointsAvailability(),
+    });
+  }, [queryClient]),
+);
+
+const key = wanted.join(",");
+const projected = useMemo(() => {
+  const status: Record<string, boolean> = {};
+  const details: Record<string, EndpointAvailabilityDetails> = {};
+  if (!data && !error) return { status, details };
+  for (const endpoint of key ? key.split(",") : []) {
+    const detail = data?.[endpoint] ?? OPTIMISTIC;
+    status[endpoint] = detail.enabled;
+    details[endpoint] = detail;
   }
+  return { status, details };
+}, [data, error, key]);
 
   return {
-    endpointStatus: resolved.status,
-    endpointDetails: resolved.details,
-    loading: query.isPending,
-    error: query.error instanceof Error ? query.error.message : null,
-    refetch,
+endpointStatus: projected.status,
+endpointDetails: projected.details,
+loading: wanted.length > 0 && isPending,
+error: message(error),
+refetch: reload,
   };
 }

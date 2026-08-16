@@ -70,7 +70,7 @@ const BookletImpositionSettings = ({
         {/* Manual Duplex Pass Selection - only show when double-sided is OFF */}
         {!parameters.doubleSided && (
           <Stack gap="xs" ml="lg">
-            <Text size="sm" fw={500} c="orange">
+            <Text size="sm" fw={500} c="var(--color-amber-dark)">
               {t("bookletImposition.manualDuplex.title", "Manual Duplex Mode")}
             </Text>
             <Text size="xs" c="dimmed">
@@ -97,7 +97,7 @@ const BookletImpositionSettings = ({
               disabled={disabled}
             />
 
-            <Text size="xs" c="blue" fs="italic">
+            <Text size="xs" c="var(--c-accent-text)" fs="italic">
               {parameters.duplexPass === "FIRST"
                 ? t(
                     "bookletImposition.duplexPass.firstInstructions",

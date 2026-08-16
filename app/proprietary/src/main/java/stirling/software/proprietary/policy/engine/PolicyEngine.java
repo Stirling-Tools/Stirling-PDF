@@ -32,6 +32,9 @@ import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
+import stirling.software.proprietary.failure.FailureKind;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
+import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -72,12 +75,15 @@ public class PolicyEngine {
     private final PolicyExecutor stepExecutor;
     private final TaskManager taskManager;
     private final PolicyRunRegistry registry;
+    // Durable record of why a run failed. Best-effort by contract: see PolicyFailureRecorder.
+    private final PolicyFailureRecorder failureRecorder;
     private final FileStorage fileStorage;
     private final JobOwnershipService jobOwnershipService;
     private final List<PolicyOutputSink> outputSinks;
     private final PolicyOutputResolver outputResolver;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
+    private final PolicyAssetResolver assetResolver;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
 
@@ -123,12 +129,28 @@ public class PolicyEngine {
         // async
         // worker.
         String principal = currentActingPrincipal();
-        return submitForPrincipal(principal, principal, policyId, definition, inputs, listener);
+        return submitForPrincipal(
+                principal, principal, policyId, definition, inputs, listener, null, null);
     }
 
     /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
     public PolicyRunHandle runPolicy(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
+        return runPolicy(policy, inputs, listener, null, null);
+    }
+
+    /**
+     * As {@link #runPolicy(Policy, PolicyInputs, PolicyProgressListener)}, recording which source
+     * fed the run and its opaque reference to the document. The first says where an unattended
+     * failure came from; the second says which document, and is what lets the same document failing
+     * again fold into one incident. Both null for a user's upload.
+     */
+    public PolicyRunHandle runPolicy(
+            Policy policy,
+            PolicyInputs inputs,
+            PolicyProgressListener listener,
+            String sourceId,
+            String fileIdentity) {
         // Bill the policy owner: trigger-fired runs have no security context, and the async worker
         // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
         // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
@@ -138,6 +160,9 @@ public class PolicyEngine {
         // the owner owns those outputs.
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
+        // Stored supporting files (certificates, watermark images, ...) load here, before the
+        // async hop: worker threads have no principal, so assets bind by the policy's own team.
+        PolicyInputs resolved = assetResolver.resolve(policy, inputs);
         // Resolve the referenced output destinations live (like sourceIds), so a stored policy
         // delivers to each of its saved Source destinations. Unreferenced policies fall back to
         // their inline output.
@@ -145,7 +170,16 @@ public class PolicyEngine {
                 new PipelineDefinition(
                         policy.name(), policy.steps(), outputResolver.resolve(policy));
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), definition, inputs, listener);
+                policy.owner(),
+                fileOwner,
+                policy.id(),
+                definition,
+                // main's asset-resolved inputs, not the raw ones: stored certificates and watermark
+                // images bind here, before the async hop, because worker threads have no principal.
+                resolved,
+                listener,
+                sourceId,
+                fileIdentity);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -154,7 +188,9 @@ public class PolicyEngine {
             String policyId,
             PipelineDefinition definition,
             PolicyInputs inputs,
-            PolicyProgressListener listener) {
+            PolicyProgressListener listener,
+            String sourceId,
+            String fileIdentity) {
         // Scope the run id to the current user (this request thread) so the file-download
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
@@ -163,7 +199,7 @@ public class PolicyEngine {
         if (policyId != null) {
             taskManager.putMetadata(runId, "policyId", policyId);
         }
-        PolicyRun run = new PolicyRun(runId, policyId, definition);
+        PolicyRun run = new PolicyRun(runId, policyId, definition, sourceId, fileIdentity);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
@@ -271,6 +307,7 @@ public class PolicyEngine {
                         e.getMessage());
                 run.fail(message);
                 taskManager.setError(runId, message);
+                recordFailure(run, message, e);
             } catch (RestClientResponseException e) {
                 // A downstream tool call returned an error status. When it's a structured
                 // entitlement
@@ -294,17 +331,20 @@ public class PolicyEngine {
                     run.failWithCode(
                             message, code, DownstreamEntitlementError.extractSubscribed(e));
                     taskManager.setError(runId, message);
+                    recordFailure(run, message, e);
                 } else {
                     String message = "Policy run failed: " + e.getMessage();
                     log.error("Policy run {} failed (downstream HTTP error)", runId, e);
                     run.fail(message);
                     taskManager.setError(runId, message);
+                    recordFailure(run, message, e);
                 }
             } catch (Exception e) {
                 String message = "Policy run failed: " + e.getMessage();
                 log.error("Policy run {} failed", runId, e);
                 run.fail(message);
                 taskManager.setError(runId, message);
+                recordFailure(run, message, e);
             } finally {
                 // Always resolve so stream/await callers unblock.
                 completion.complete(run);
@@ -322,9 +362,33 @@ public class PolicyEngine {
             // Transient admission rejection, not a processing failure (see QUEUE_FULL_CODE).
             run.failWithCode(message, QUEUE_FULL_CODE, null);
             taskManager.setError(run.getRunId(), message);
+            // No exception to classify here: nothing was thrown by a tool, the run simply was not
+            // admitted. Record it explicitly so a run lost to load pressure is still accounted for.
+            failureRecorder.recordRunFailureAs(
+                    FailureKind.UNKNOWN,
+                    run.getRunId(),
+                    run.getPolicyId(),
+                    run.getSourceId(),
+                    null,
+                    message);
             completion.complete(run);
         }
         return null;
+    }
+
+    /**
+     * Record why a run failed. Called after the run's own state transition and task-manager update,
+     * so a recording problem cannot change the outcome the caller observes.
+     */
+    private void recordFailure(PolicyRun run, String message, Throwable cause) {
+        failureRecorder.recordRunFailure(
+                run.getRunId(),
+                run.getPolicyId(),
+                run.getSourceId(),
+                run.getFileIdentity(),
+                MDC.get(AUDIT_PRINCIPAL_MDC_KEY),
+                message,
+                cause);
     }
 
     private WaitState suspend(PolicyInputRequiredException e) {

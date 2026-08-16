@@ -98,6 +98,7 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
     name: "prerender-og",
     apply: "build" as const,
     async closeBundle() {
+      // oxlint-disable-next-line no-restricted-imports -- vite config runs before path aliases resolve, so a relative import is required here
       const { prerenderOg } = await import("./scripts/og-prerender.mjs");
       const ogBase = (
         process.env.VITE_OG_BASE_URL ||
@@ -334,6 +335,11 @@ export default defineConfig(async ({ mode, command }) => {
       compressStaticCopyPlugin(),
       prerenderOgPlugin(effectiveMode === "saas"),
     ],
+    // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
+    // so without this `@app/*` resolves in the app and fails in a worker.
+    worker: {
+      plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
+    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
