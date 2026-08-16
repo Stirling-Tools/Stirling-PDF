@@ -83,7 +83,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          key: gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
             gradle-${{ runner.os }}-${{ runner.arch }}-jdk-25-
             gradle-${{ runner.os }}-${{ runner.arch }}-
@@ -134,9 +134,10 @@ jobs:
     uses: ./.github/workflows/frontend-validation.yml
     secrets: inherit
 
-  # Advisory: deliberately NOT in all-checks-passed. It reports on the stories a
-  # branch touches so a regression is visible in review, but a browser scan is
-  # too new here to block merges on. Promote it once its pass/fail proves stable.
+  # Required (in all-checks-passed). Scans the stories a branch touches in both
+  # light and dark; an axe violation in either theme blocks the merge. The
+  # whole-suite sweep (nightly.yml) still covers stories a change affects without
+  # touching them directly.
   frontend-a11y:
     if: needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed]
@@ -290,6 +291,7 @@ jobs:
       - db-migration-test
       - check-generateOpenApiDocs
       - frontend-validation
+      - frontend-a11y
       - playwright-e2e
       - playwright-e2e-live
       - playwright-e2e-enterprise
@@ -316,6 +318,7 @@ jobs:
             db-migration-test=${{ needs.db-migration-test.result }}
             check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}
             frontend-validation=${{ needs.frontend-validation.result }}
+            frontend-a11y=${{ needs.frontend-a11y.result }}
             playwright-e2e=${{ needs.playwright-e2e.result }}
             playwright-e2e-live=${{ needs.playwright-e2e-live.result }}
             playwright-e2e-enterprise=${{ needs.playwright-e2e-enterprise.result }}

@@ -78,13 +78,13 @@ class PolicyRunnerTest {
     @Test
     void runsOnceWithNoFilesWhenThePolicyHasNoSources() {
         Policy policy = policy(List.of());
-        when(policyEngine.runPolicy(eq(policy), any(), any(), any()))
+        when(policyEngine.runPolicy(eq(policy), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy);
 
         ArgumentCaptor<PolicyInputs> inputs = ArgumentCaptor.forClass(PolicyInputs.class);
-        verify(policyEngine).runPolicy(eq(policy), inputs.capture(), any(), any());
+        verify(policyEngine).runPolicy(eq(policy), inputs.capture(), any(), any(), any());
         assertTrue(inputs.getValue().primary().isEmpty());
         // Ledger hygiene still runs: rows recorded for a generator policy's folder outputs
         // are pruned by its own sweeps rather than accumulating until the policy is deleted.
@@ -137,12 +137,12 @@ class PolicyRunnerTest {
                         List.of(
                                 ResolvedInput.of(PolicyInputs.of(List.of())),
                                 ResolvedInput.of(PolicyInputs.of(List.of()))));
-        when(policyEngine.runPolicy(any(), any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy);
 
-        verify(policyEngine, times(2)).runPolicy(eq(policy), any(), any(), any());
+        verify(policyEngine, times(2)).runPolicy(eq(policy), any(), any(), any(), any());
     }
 
     @Test
@@ -154,7 +154,7 @@ class PolicyRunnerTest {
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
-        when(policyEngine.runPolicy(any(), any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", completion));
 
         runner.run(policy);
@@ -175,7 +175,7 @@ class PolicyRunnerTest {
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
-        when(policyEngine.runPolicy(any(), any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", completion));
 
         runner.run(policy);
@@ -224,12 +224,12 @@ class PolicyRunnerTest {
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.resolve(eq(spec), any()))
                 .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
-        when(policyEngine.runPolicy(any(), any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy, SweepKind.LIGHT);
 
-        verify(policyEngine).runPolicy(eq(policy), any(), any(), any());
+        verify(policyEngine).runPolicy(eq(policy), any(), any(), any(), any());
         verify(processedLedger, never()).markSeen(any(), any());
         verify(processedLedger, never()).deleteUnseen(any(), anyLong());
     }
@@ -244,12 +244,13 @@ class PolicyRunnerTest {
         when(folderSource.resolve(eq(broken), any())).thenThrow(new IOException("mount gone"));
         when(folderSource.resolve(eq(healthy), any()))
                 .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
-        when(policyEngine.runPolicy(any(), any(), any(), any()))
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
 
         runner.run(policy);
 
-        verify(policyEngine).runPolicy(eq(policy), any(), any(), any()); // healthy source still ran
+        verify(policyEngine)
+                .runPolicy(eq(policy), any(), any(), any(), any()); // healthy source still ran
         verify(processedLedger, never()).deleteUnseen(any(), anyLong()); // history preserved
     }
 

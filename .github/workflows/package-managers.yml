@@ -73,6 +73,7 @@ jobs:
           echo "jar_sha256=$JAR_SHA" >> "$GITHUB_OUTPUT"
 
   update-homebrew-and-scoop:
+    environment: package-publish
     needs: get-release-info
     runs-on: ubuntu-latest
     permissions:
