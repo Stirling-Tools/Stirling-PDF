@@ -1,0 +1,30 @@
+/* Slim strip at the top of the main column hosting the shared search bar.
+   Deliberately unpainted: only the input itself shows, on the page ground. */
+.portal-searchbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.22rem 1rem;
+  flex-shrink: 0;
+}
+
+.portal-searchbar .super-search {
+  flex: 0 1 24rem;
+  width: min(100%, 24rem);
+  max-width: 24rem;
+}
+
+.portal-searchbar .super-search input {
+  background-color: transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+
+/* The dropdown is portalled to <body>, so it can't inherit portal styling by
+   nesting — this class (passed via dropdownClassName) is the portal's hook.
+   Colours come from the shared semantic tokens; only the roomier padding
+   differs from the editor dropdown. */
+.portal-search-dropdown.super-search-dropdown {
+  padding: 0.5rem;
+}
