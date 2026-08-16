@@ -46,7 +46,7 @@ ext {
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.51.2"
     jschVersion = "2.28.6"
-    commonsNetVersion = "3.11.1"
+    commonsNetVersion = "3.13.0"
     smbjVersion = "0.14.0"
     tinkVersion = "1.23.0"
     testcontainersMinioVersion = "1.21.4"
