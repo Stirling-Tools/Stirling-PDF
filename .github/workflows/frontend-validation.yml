@@ -37,7 +37,7 @@ jobs:
         if: steps.frontend-check.outcome == 'failure' && github.event_name == 'pull_request'
         continue-on-error: true
         run: |
-          echo "Comments are handled by report-pr-check-failures.yml"
+          echo "Comments are handled by report-pr-check.yml"
       - name: Fail if frontend check failed
         if: steps.frontend-check.outcome == 'failure'
         run: |
@@ -57,7 +57,7 @@ jobs:
         if: steps.frontend-check.outcome == 'success' && github.event_name == 'pull_request'
         continue-on-error: true
         run: |
-          echo "Comments are handled by report-pr-check-failures.yml"
+          echo "Comments are handled by report-pr-check.yml"
       - name: Install uv
         if: always()
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0

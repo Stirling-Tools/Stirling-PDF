@@ -143,39 +143,19 @@ jobs:
             echo "LICENSE_WARNINGS_EXIST=false" >> $GITHUB_ENV
           fi
 
+      - name: Upload frontend license warnings
+        if: env.LICENSE_WARNINGS_EXIST == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-license-warnings
+          path: frontend/editor/src/assets/license-warnings.json
+
       # PR Event: Check licenses and comment on PR
       - name: Delete previous license check comments
-        if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) && github.actor != 'dependabot[bot]'
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
-          script: |
-            const { owner, repo } = context.repo;
-            const prNumber = context.issue.number;
-
-            // Get all comments on the PR
-            const { data: comments } = await github.rest.issues.listComments({
-              owner,
-              repo,
-              issue_number: prNumber,
-              per_page: 100
-            });
-
-            // Filter for license check comments
-            const licenseComments = comments.filter(comment => 
-              comment.body.includes('## ✅ Frontend License Check Passed') ||
-              comment.body.includes('## ❌ Frontend License Check Failed')
-            );
-
-            // Delete old license check comments
-            for (const comment of licenseComments) {
-              console.log(`Deleting old license check comment: ${comment.id}`);
-              await github.rest.issues.deleteComment({
-                owner,
-                repo,
-                comment_id: comment.id
-              });
-            }
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: |
+          echo "Comments are handled by report-pr-check.yml"
 
       - name: Summarize results (fork PRs)
         if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true) || github.actor == 'dependabot[bot]'
@@ -198,51 +178,10 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment on PR - License Check Results
-        if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) && github.actor != 'dependabot[bot]'
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
-          script: |
-            const { owner, repo } = context.repo;
-            const prNumber = context.issue.number;
-            const hasWarnings = process.env.LICENSE_WARNINGS_EXIST === 'true';
-
-            let commentBody;
-
-            if (hasWarnings) {
-              // Read warnings file to get specific issues
-              const fs = require('fs');
-              let warningDetails = '';
-              try {
-                const warnings = JSON.parse(fs.readFileSync('frontend/editor/src/assets/license-warnings.json', 'utf8'));
-                warningDetails = warnings.warnings.map(w => `- ${w.message}`).join('\n');
-              } catch (e) {
-                warningDetails = 'Unable to read warning details';
-              }
-
-              commentBody = `## ❌ Frontend License Check Failed
-
-              The frontend license check has detected compatibility warnings that require review:
-
-              ${warningDetails}
-
-              **Action Required:** Please review these licenses to ensure they are acceptable for your use case before merging.
-
-              _This check will fail the PR until license issues are resolved._`;
-            } else {
-              commentBody = `## ✅ Frontend License Check Passed
-
-              All frontend licenses have been validated and no compatibility warnings were detected.
-
-              The frontend license report has been updated successfully.`;
-            }
-
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number: prNumber,
-              body: commentBody
-            });
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: |
+          echo "Comments are handled by report-pr-check.yml"
 
       - name: Fail workflow if license warnings exist (PR only)
         if: github.event_name == 'pull_request' && env.LICENSE_WARNINGS_EXIST == 'true'
@@ -398,84 +337,16 @@ jobs:
           cp build/reports/dependency-license/index.json app/core/src/main/resources/static/3rdPartyLicenses.json
 
       - name: Delete previous backend license check comments
-        if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) && github.actor != 'dependabot[bot]'
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
-          script: |
-            const { owner, repo } = context.repo;
-            const prNumber = context.issue.number;
-
-            const { data: comments } = await github.rest.issues.listComments({
-              owner,
-              repo,
-              issue_number: prNumber,
-              per_page: 100
-            });
-
-            const backendLicenseComments = comments.filter(comment => 
-              comment.body.includes('## ✅ Backend License Check Passed') ||
-              comment.body.includes('## ❌ Backend License Check Failed')
-            );
-
-            for (const comment of backendLicenseComments) {
-              console.log(`Deleting old backend license comment: ${comment.id}`);
-              await github.rest.issues.deleteComment({
-                owner,
-                repo,
-                comment_id: comment.id
-              });
-            }
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: |
+          echo "Comments are handled by report-pr-check.yml"
 
       - name: Comment on PR - Backend License Check Results
-        if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false) && github.actor != 'dependabot[bot]'
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
-          script: |
-            const hasWarnings = process.env.LICENSE_WARNINGS_EXIST === 'true';
-            const fs = require('fs');
-            let warningDetails = '';
-
-            if (hasWarnings) {
-              try {
-                const warningsFile = 'build/reports/dependency-license/dependencies-without-allowed-license.json';
-                if (fs.existsSync(warningsFile)) {
-                  const data = JSON.parse(fs.readFileSync(warningsFile, 'utf8'));
-                  if (data.length > 0) {
-                    warningDetails = data.map(dep => `- **${dep.moduleName}@${dep.moduleVersion}** – ${dep.moduleLicenses.map(l => l.licenseName).join(', ')}`).join('\n');
-                  }
-                }
-              } catch (e) {
-                warningDetails = 'Unable to parse warning details.';
-              }
-            }
-
-            let commentBody;
-            if (hasWarnings) {
-              commentBody = `## ❌ Backend License Check Failed
-
-              The backend license check has detected dependencies with incompatible or unallowed licenses:
-
-              ${warningDetails || 'See uploaded artifact for details.'}
-
-              **Action Required:** Please review these licenses and resolve before merging.
-
-              _This check will fail the PR until license issues are resolved._`;
-            } else {
-              commentBody = `## ✅ Backend License Check Passed
-
-              All backend dependencies have valid and allowed licenses.
-
-              The backend license report has been updated successfully.`;
-            }
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: commentBody
-            });
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: |
+          echo "Comments are handled by report-pr-check.yml"
 
       - name: Fail workflow if license warnings exist (PR only)
         if: github.event_name == 'pull_request' && env.LICENSE_WARNINGS_EXIST == 'true'

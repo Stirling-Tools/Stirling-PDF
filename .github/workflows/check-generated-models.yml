@@ -76,7 +76,7 @@ jobs:
         if: steps.models-check.outcome == 'failure' && github.event_name == 'pull_request'
         continue-on-error: true
         run: |
-          echo "Comments are handled by report-pr-check-failures.yml"
+          echo "Comments are handled by report-pr-check.yml"
 
       - name: Fail if generated models check failed
         if: steps.models-check.outcome == 'failure'
@@ -97,4 +97,4 @@ jobs:
         if: steps.models-check.outcome == 'success' && github.event_name == 'pull_request'
         continue-on-error: true
         run: |
-          echo "Comments are handled by report-pr-check-failures.yml"
+          echo "Comments are handled by report-pr-check.yml"
