@@ -3890,6 +3890,8 @@ addFiles = "Add files"
 addingFiles = "Adding files…"
 collapse = "Collapse sidebar"
 customizeGroups = "Customize groups"
+dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
+dataLostTitle = "File data is unavailable"
 dropHint = "Open files to get started"
 dropToAdd = "Drop files to add"
 expand = "Expand sidebar"
@@ -3908,6 +3910,8 @@ viewAll = "View all {{count}} files"
 
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
+dataLost = "Data lost"
+dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
 delete = "Delete"
 moreActions = "More actions"
 openInViewer = "Open in viewer"
@@ -6933,6 +6937,32 @@ label = "Jira"
 description = "Email a document or a notification when a policy runs."
 label = "Mailgun"
 
+[processor.connections.types.n8n]
+baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
+description = "Hand documents to an n8n workflow, and take back whatever it produces."
+label = "n8n"
+
+[processor.connections.types.n8n.fields.authType]
+helperText = "Match the Authentication set on the n8n Webhook node."
+label = "Webhook authentication"
+
+[processor.connections.types.n8n.fields.authType.options.basic]
+label = "Basic auth"
+
+[processor.connections.types.n8n.fields.authType.options.header]
+label = "Header auth"
+
+[processor.connections.types.n8n.fields.authType.options.none]
+label = "None"
+
+[processor.connections.types.n8n.fields.headerName]
+helperText = "The header name from the n8n credential, not its value."
+label = "Header name"
+placeholder = "X-N8N-Key"
+
+[processor.connections.types.n8n.fields.token]
+label = "Header value"
+
 [processor.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
 description = "File processed documents into Nextcloud."
@@ -7331,9 +7361,11 @@ retry = "Try again"
 title = "Something went wrong on this page"
 
 [processor.failures]
+fromSource = "From source {{source}}"
 occurrences = "{{count}} occurrences"
+reportedBy = "Hit by {{actor}}"
 runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs, with the actions you can take."
+subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
 title = "Failures"
 
 [processor.failures.action]
@@ -7357,6 +7389,11 @@ title = "Password-protected document"
 [processor.failures.kind.unknown]
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
+
+[processor.failures.origin]
+pipeline = "Pipeline"
+policy = "Policy"
+tool = "Tool run"
 
 [processor.failures.stage]
 blocked = "Blocked"
@@ -7443,7 +7480,7 @@ morning = "Good morning"
 [processor.infrastructure]
 manageEditorDeployment = "Manage Editor deployment"
 sectionsAriaLabel = "Infrastructure sections"
-subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
+subtitle = "API credentials and the audit trail for your Stirling workspace."
 title = "Infrastructure"
 
 [processor.infrastructure.apiKeys]
@@ -7470,11 +7507,6 @@ body = "Revoke \"{{name}}\"? Any integration still using this key will immediate
 cancel = "Cancel"
 confirm = "Revoke key"
 title = "Revoke API key"
-
-[processor.infrastructure.attestationLabel]
-attested = "Attested"
-inScope = "In scope"
-notApplicable = "N/A"
 
 [processor.infrastructure.audit]
 filterAriaLabel = "Filter audit events by category"
@@ -7547,11 +7579,6 @@ info = "Info"
 success = "Success"
 warning = "Warning"
 
-[processor.infrastructure.certLabel]
-certified = "Certified"
-inProgress = "In progress"
-notStarted = "Not started"
-
 [processor.infrastructure.createKey]
 cancel = "Cancel"
 createKey = "Create key"
@@ -7565,239 +7592,9 @@ subtitleCreated = "Copy this secret now — it won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
 
-[processor.infrastructure.deployLabel]
-live = "Live"
-queued = "Queued"
-rolledBack = "Rolled back"
-rolling = "Rolling out"
-
-[processor.infrastructure.deployments]
-loadAria = "Load for {{name}}"
-msValue = "{{value}} ms"
-throughputValue = "{{value}}/min"
-
-[processor.infrastructure.deployments.deployColumns]
-deployedBy = "Deployed by"
-environment = "Environment"
-product = "Product"
-status = "Status"
-version = "Version"
-when = "When"
-
-[processor.infrastructure.deployments.recent]
-heading = "Recent deployments"
-subheading = "The latest rollouts across products and environments."
-
-[processor.infrastructure.deployments.regionColumns]
-instances = "Instances"
-latency = "Latency"
-load = "Load"
-p99 = "P99"
-region = "Region"
-status = "Status"
-throughput = "Throughput"
-uptime = "Uptime"
-version = "Version"
-
-[processor.infrastructure.deployments.regions]
-heading = "Regions"
-subheading = "Live health for every deployed Stirling region — latency, load, and rollout version."
-
-[processor.infrastructure.deployments.regions.empty]
-description = "Deployed regions appear here once your workspace is provisioned."
-title = "No regions deployed"
-
 [processor.infrastructure.keyLabel]
 active = "Active"
 revoked = "Revoked"
-
-[processor.infrastructure.modelLabel]
-active = "Active"
-degraded = "Degraded"
-disabled = "Disabled"
-
-[processor.infrastructure.models]
-heading = "Models"
-loadAria = "Load for {{name}}"
-msValue = "{{value}} ms"
-subheading = "The model catalogue and routing that powers document processing across your workspace."
-
-[processor.infrastructure.models.byom]
-description = "Register an on-prem or self-hosted model and pin it to a region for data-residency-bound processing."
-title = "Bring your own model"
-
-[processor.infrastructure.models.catalogue]
-heading = "Catalogue"
-sub = "Managed models available to your workspace, with live latency and cost."
-subEnterprise = "Managed, bring-your-own, and on-prem models — with per-region pinning available."
-
-[processor.infrastructure.models.catalogue.empty]
-description = "Models in your workspace's catalogue appear here."
-title = "No models available"
-
-[processor.infrastructure.models.columns]
-cost = "Cost"
-latency = "Latency"
-load = "Load"
-model = "Model"
-status = "Status"
-type = "Type"
-version = "Version"
-
-[processor.infrastructure.models.cost]
-perCall = "{{price}}/call"
-perThousand = "{{price}}/1k"
-
-[processor.infrastructure.models.metrics]
-activeModels = "Active models"
-avgLatency = "Avg latency"
-included = "Included"
-monthlySpend = "Monthly model spend"
-
-[processor.infrastructure.models.routing]
-empty = "No routing rules configured."
-heading = "Routing rules"
-sub = "Which model handles each operation. The default applies when no narrower rule matches."
-subLocked = "Route operations to specific models — available on paid plans."
-
-[processor.infrastructure.models.routing.lockedBanner]
-description = "Upgrade to Pro to control which model handles each operation and document type."
-title = "Model routing is a paid feature"
-
-[processor.infrastructure.models.routingColumns]
-default = "Default"
-docType = "Document type"
-modelForAria = "Model for {{operation}}"
-operation = "Operation"
-routedTo = "Routed to"
-
-[processor.infrastructure.modelTypeLabel]
-classification = "Classification"
-extraction = "Extraction"
-llm = "LLM"
-ocr = "OCR"
-
-[processor.infrastructure.regionLabel]
-degraded = "Degraded"
-down = "Down"
-healthy = "Healthy"
-
-[processor.infrastructure.security.access.byok]
-description = "Supply a key from your own KMS. Stirling encrypts with it but can still read."
-label = "Bring your own key (BYOK)"
-
-[processor.infrastructure.security.access.hyok]
-description = "Keys never leave your KMS. Stirling holds only ciphertext."
-label = "Hold your own key (HYOK)"
-
-[processor.infrastructure.security.access.stirling]
-description = "Stirling manages encryption keys. Simplest — zero key ops on your side."
-label = "Stirling-held keys"
-
-[processor.infrastructure.security.accessPolicy]
-heading = "Document access policy"
-subheading = "Controls who can decrypt processed documents at rest."
-
-[processor.infrastructure.security.attestations]
-heading = "Compliance attestations"
-noReport = "No report available"
-subheading = "Framework-by-framework audit posture, with reports available on attested controls."
-viewReport = "View report →"
-
-[processor.infrastructure.security.compliance]
-heading = "Compliance"
-subheading = "Attestations and certifications covering the Stirling platform."
-
-[processor.infrastructure.security.empty]
-description = "Your workspace's security configuration will appear here."
-title = "Security posture unavailable"
-
-[processor.infrastructure.security.hyokBanner]
-description = "With HYOK, encryption keys never leave your KMS. Stirling stores and processes only ciphertext you can revoke at any time."
-title = "Stirling cannot decrypt your documents"
-
-[processor.infrastructure.security.ipAllowlist]
-empty = "No IP ranges configured — all IPs allowed."
-heading = "IP allowlist"
-sub = "API access is restricted to these CIDR ranges."
-subLocked = "Restrict API access to known IP ranges — available on paid plans."
-
-[processor.infrastructure.security.ipAllowlist.lockedBanner]
-description = "Upgrade to Pro to restrict API access to specific networks."
-title = "IP allowlisting is a paid feature"
-
-[processor.infrastructure.security.ipColumns]
-added = "Added"
-addedBy = "Added by"
-cidr = "CIDR"
-label = "Label"
-
-[processor.infrastructure.security.keyManagement]
-algorithm = "Algorithm"
-heading = "Encryption key management"
-keyId = "Key identifier"
-lastRotated = "Last rotated"
-rotateKey = "Rotate key"
-rotationPolicy = "Rotation policy"
-subheading = "Custody of the keys that encrypt documents at rest — who can decrypt, and how keys rotate."
-
-[processor.infrastructure.security.managedBanner]
-description = "Bring-your-own-key (BYOK) and hold-your-own-key (HYOK) custody are available on Enterprise. Upgrade to supply keys from your own KMS."
-title = "Keys are managed by Stirling on your plan"
-
-[processor.infrastructure.security.residency.apac]
-description = "ap-southeast-1"
-label = "Asia Pacific"
-
-[processor.infrastructure.security.residency.eu]
-description = "eu-west-1 · GDPR data boundary"
-label = "European Union"
-
-[processor.infrastructure.security.residency.us]
-description = "us-east-1 · us-west-2"
-label = "United States"
-
-[processor.infrastructure.security.residencyHeader]
-heading = "Data residency"
-subheading = "Where documents are stored and processed."
-
-[processor.infrastructure.storage]
-gbValue = "{{value}} GB"
-percentUsed = "{{value}} used"
-
-[processor.infrastructure.storage.empty]
-description = "Connected storage and usage appear here."
-title = "No storage configured"
-
-[processor.infrastructure.storage.lifecycle]
-active = "Active"
-activeRange = "0–{{value}}d"
-archived = "Archived"
-coldStorage = "cold storage"
-deleted = "Deleted"
-never = "never"
-purged = "purged"
-
-[processor.infrastructure.storage.providers]
-connect = "Connect"
-connected = "Connected"
-heading = "Connected providers"
-subheading = "Where processed artifacts are written."
-
-[processor.infrastructure.storage.retention]
-heading = "Retention"
-subheading = "How long artifacts are kept before lifecycle deletion."
-windowLabel = "Default retention window"
-
-[processor.infrastructure.storage.retentionOption]
-days_one = "{{count}} day"
-days_other = "{{count}} days"
-never = "Never delete"
-
-[processor.infrastructure.storage.totalUsage]
-heading = "Total usage"
-progressLabel = "Storage used"
-subheading = "Storage consumed across all connected providers."
 
 [processor.infrastructure.tabs]
 apiKeys = "API Keys"
@@ -7877,6 +7674,7 @@ title = "Pipelines"
 newPipeline = "New pipeline"
 
 [processor.pipelines.builder]
+activate = "Activate"
 back = "Back to pipelines"
 cannotFollow = "Can't take {{produced}}"
 chooseAccount = "Choose an account"
@@ -7884,7 +7682,6 @@ chooseDestination = "Choose a destination"
 chooseOperation = "Choose what this step does"
 chooseSource = "Choose a source"
 discard = "Discard changes"
-enabled = "Enabled"
 inputs = "Input"
 inputSource = "Input source"
 inputTrigger = "Trigger"
@@ -7895,6 +7692,8 @@ needsDestination = "No destination chosen"
 needsSource = "No source chosen"
 needsUpload = "Needs an uploaded file"
 noToolMatches = "No tools match your search."
+pause = "Pause"
+rename = "Rename pipeline"
 searchTools = "Search tools"
 sendToSystem = "Send to another system"
 stepsIncompatible = "These steps can't run on what their prior step produces: {{tools}}."
@@ -7907,6 +7706,17 @@ uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these 
 usesDefaults = "Runs with default settings"
 viewDefinition = "View definition"
 
+[processor.pipelines.builder.blocker]
+destination = "Choose a destination"
+heading = "To create this pipeline:"
+incompatible = "Fix steps that can't run in order: {{tools}}"
+name = "Give the pipeline a name"
+saveHeading = "To save your changes:"
+schedule = "Set how often it runs"
+setup = "Finish setting up: {{tools}}"
+source = "Choose an input source"
+upload = "Remove steps that need an uploaded file: {{tools}}"
+
 [processor.pipelines.builder.diagnostic]
 fan-in = "Combines every incoming file"
 fan-out = "Runs once per incoming file"
@@ -7917,12 +7727,12 @@ undeclared-operation = "Can't check what this step accepts"
 
 [processor.pipelines.composer]
 addTool = "Add a tool"
-cancel = "Cancel"
 create = "Create pipeline"
+createPaused = "Create paused"
 editingUnsupported = "Displaying these tool params for editing is not supported yet."
 editSource = "Edit source"
 name = "Name"
-namePlaceholder = "e.g. Redaction sweep"
+namePlaceholder = "Pipeline name"
 noToolSettings = "This tool has no configurable settings."
 output = "Destination"
 save = "Save changes"
@@ -7954,7 +7764,7 @@ confirm = "Delete"
 title = "Delete pipeline?"
 
 [processor.pipelines.detail]
-clearHistory = "Clear history"
+clearHistory = "Process ignored files in source"
 delete = "Delete pipeline"
 run = "Run now"
 
@@ -8007,10 +7817,9 @@ completed_one = "Run completed."
 completed_other = "All {{count}} runs completed."
 empty = "Nothing to run: the sources had no documents to process."
 failed = "Run failed: {{error}}"
-historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
 inFlight = "Nothing new to run: documents are still being processed from an earlier run."
-parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
-parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then reprocess the source to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then reprocess the source to retry them."
 running = "Run started; still in progress."
 timeout = "Run is taking longer than expected; it may still finish in the background."
 
@@ -8337,6 +8146,24 @@ label = "Attach to a Jira issue"
 [processor.policies.operations.mailgunEmail]
 description = "Sends the processed document as an attachment."
 label = "Email the document (Mailgun)"
+
+[processor.policies.operations.n8nGate]
+description = "Your workflow decides whether the run carries on."
+label = "Ask an n8n workflow to approve"
+note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+
+[processor.policies.operations.n8nNotify]
+description = "Sends the run's details, not the document."
+label = "Tell an n8n workflow"
+
+[processor.policies.operations.n8nSend]
+description = "Sends the document and the run's details to your workflow."
+label = "Send the document to n8n"
+
+[processor.policies.operations.n8nTransform]
+description = "Your workflow processes the document and the file it returns replaces it."
+label = "Process the document in n8n"
+note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
 
 [processor.policies.operations.nextcloudUpload]
 description = "Writes the processed document into a folder."
@@ -8861,10 +8688,6 @@ body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it wo
 cancel = "Cancel"
 confirm = "Delete"
 title = "Delete source?"
-
-[processor.sources.empty]
-description = "Connect a storage location so your policies have somewhere to pull data from."
-title = "No sources connected yet"
 
 [processor.sources.kpi]
 inUse = "In use"

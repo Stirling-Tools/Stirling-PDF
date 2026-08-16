@@ -1,14 +1,6 @@
 import { http, HttpResponse, delay } from "msw";
 import type { Tier } from "@processor/contexts/TierContext";
-import {
-  apiKeysFor,
-  auditLogFor,
-  modelsResponseFor,
-  recentDeploymentsFor,
-  regionsFor,
-  securityFor,
-  storageFor,
-} from "@processor/mocks/infrastructure";
+import { apiKeysFor, auditLogFor } from "@processor/mocks/infrastructure";
 
 function tierFrom(request: Request): Tier {
   const url = new URL(request.url);
@@ -16,15 +8,6 @@ function tierFrom(request: Request): Tier {
 }
 
 export const infrastructureHandlers = [
-  http.get("/v1/infrastructure/deployments", async ({ request }) => {
-    await delay(120);
-    const tier = tierFrom(request);
-    return HttpResponse.json({
-      regions: regionsFor(tier),
-      recent: recentDeploymentsFor(tier),
-    });
-  }),
-
   // Real backend route; wildcard prefix intercepts both local (same-origin) and
   // SaaS (absolute) callers.
   http.get(
@@ -67,21 +50,6 @@ export const infrastructureHandlers = [
       return new HttpResponse(null, { status: 204 });
     },
   ),
-
-  http.get("/v1/infrastructure/security", async ({ request }) => {
-    await delay(120);
-    return HttpResponse.json(securityFor(tierFrom(request)));
-  }),
-
-  http.get("/v1/infrastructure/models", async ({ request }) => {
-    await delay(120);
-    return HttpResponse.json(modelsResponseFor(tierFrom(request)));
-  }),
-
-  http.get("/v1/infrastructure/storage", async ({ request }) => {
-    await delay(120);
-    return HttpResponse.json(storageFor(tierFrom(request)));
-  }),
 
   // Mirrors the real backend route. Wildcard prefix so it intercepts both the
   // self-hosted apiClient.local call (same-origin) and the SaaS apiClient.saas

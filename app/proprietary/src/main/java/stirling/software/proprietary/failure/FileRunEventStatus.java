@@ -11,7 +11,14 @@ public enum FileRunEventStatus {
     NEW(false),
     ACKNOWLEDGED(false),
     DISMISSED(true),
-    RESOLVED(true);
+    RESOLVED(true),
+
+    /**
+     * The document this incident was about was deleted from its owner's editor, so there is nothing
+     * left to act on. Distinct from {@code DISMISSED}, which is a reviewer's decision, and from
+     * {@code RESOLVED}, which reopens on recurrence: this one cannot recur, the file is gone.
+     */
+    FILE_REMOVED(true);
 
     /** The statuses a review queue shows by default: everything still needing a decision. */
     private static final List<FileRunEventStatus> OPEN =

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { LockIcon } from "@processor/components/icons";
+import "@processor/theme/surface.css";
 
 /**
  * Card-form stand-in shown on the checkout payment step when no Stripe publishable key is configured
@@ -9,7 +10,7 @@ import { LockIcon } from "@processor/components/icons";
 export function CardPlaceholder() {
   const { t } = useTranslation();
   return (
-    <div className="processor-billing__card-placeholder">
+    <div className="processor-surface processor-billing__card-placeholder">
       <div className="processor-billing__card-placeholder-head">
         <span>
           {t("processor.billing.checkout.card.label", "Card details")}

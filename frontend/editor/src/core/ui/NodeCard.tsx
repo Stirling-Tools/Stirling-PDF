@@ -1,6 +1,7 @@
 import type { HTMLAttributes, MouseEvent, ReactNode, Ref } from "react";
 import { Button } from "@app/ui/Button";
 import { IconBadge, type IconBadgeAccent } from "@app/ui/IconBadge";
+import "@app/ui/Surface.css";
 import "@app/ui/NodeCard.css";
 
 /** Border tone. `selected` (a separate prop) overrides this with the primary ring. */
@@ -53,6 +54,7 @@ export function NodeCard({
       {...rest}
       ref={ref}
       className={[
+        "sui-surface",
         "sui-node-card",
         tone === "warning" ? "sui-node-card--warning" : "",
         selected ? "is-selected" : "",

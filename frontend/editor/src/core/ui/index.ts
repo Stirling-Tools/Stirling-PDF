@@ -11,6 +11,7 @@ export * from "@app/ui/MetricCard";
 export * from "@app/ui/NodeCard";
 export * from "@app/ui/NavItem";
 export * from "@app/ui/NavSurface";
+export * from "@app/ui/Surface";
 export * from "@app/ui/PanelHeader";
 export * from "@app/ui/CodeBlock";
 export * from "@app/ui/SectionDivider";

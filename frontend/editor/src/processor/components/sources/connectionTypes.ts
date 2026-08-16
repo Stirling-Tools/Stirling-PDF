@@ -496,6 +496,57 @@ const field = {
   }),
 };
 
+/** The three modes an n8n Webhook node can be set to, asked for rather than baked into the preset
+ * because it is the operator's choice; field values apply over `presetConfig`, so the answer wins. */
+const N8N_AUTH_FIELDS: ConnectionFieldDef[] = [
+  {
+    key: "authType",
+    labelKey: `${PREFIX}.n8n.fields.authType.label`,
+    control: "select",
+    required: true,
+    defaultValue: "NONE",
+    helperTextKey: `${PREFIX}.n8n.fields.authType.helperText`,
+    options: [
+      {
+        value: "NONE",
+        labelKey: `${PREFIX}.n8n.fields.authType.options.none.label`,
+      },
+      {
+        value: "HEADER",
+        labelKey: `${PREFIX}.n8n.fields.authType.options.header.label`,
+      },
+      {
+        value: "BASIC",
+        labelKey: `${PREFIX}.n8n.fields.authType.options.basic.label`,
+      },
+    ],
+  },
+  {
+    key: "headerName",
+    labelKey: `${PREFIX}.n8n.fields.headerName.label`,
+    control: "text",
+    required: true,
+    placeholderKey: `${PREFIX}.n8n.fields.headerName.placeholder`,
+    helperTextKey: `${PREFIX}.n8n.fields.headerName.helperText`,
+    visibleWhen: { key: "authType", oneOf: ["HEADER"] },
+  },
+  {
+    key: "token",
+    labelKey: `${PREFIX}.n8n.fields.token.label`,
+    control: "password",
+    required: true,
+    visibleWhen: { key: "authType", oneOf: ["HEADER"] },
+  },
+  {
+    ...field.username(),
+    visibleWhen: { key: "authType", oneOf: ["BASIC"] },
+  },
+  {
+    ...field.password(),
+    visibleWhen: { key: "authType", oneOf: ["BASIC"] },
+  },
+];
+
 /**
  * A vendor whose integration is "an HTTP API with known mechanics". The auth shape, and the base
  * URL when the vendor has a single global one, are baked into `preset`; the operator supplies only
@@ -691,6 +742,26 @@ const API_PRESETS: CreatableConnectionType[] = [
     fields: [field.webhookUrl("zapier")],
     searchTerms: ["make", "automation", "workflow", "trigger", "no-code"],
     identifyHosts: ["zapier.com"],
+  }),
+  // Usually self-hosted, so there is no global host to bake in. The node's three auth options are
+  // mirrored exactly; BEARER or TOKEN_LOGIN would be auth it cannot be configured for.
+  apiPreset({
+    id: "n8n",
+    category: "notify",
+    preset: { authType: "NONE" },
+    fields: [field.webhookUrl("n8n"), ...N8N_AUTH_FIELDS],
+    searchTerms: [
+      "n8n",
+      "automation",
+      "workflow",
+      "trigger",
+      "self-hosted",
+      "no-code",
+      "low-code",
+    ],
+    // n8n Cloud instances live at <tenant>.app.n8n.cloud; a self-hosted one is recovered from
+    // its presetId marker instead, since its host is whatever the operator chose.
+    identifyHosts: ["n8n.cloud"],
   }),
   apiPreset({
     id: "webhook",

@@ -210,14 +210,25 @@ tasks:
       #   task frontend:storybook:test -- Button
       - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
 
-  storybook:a11y:
-    desc: "a11y regression gate over every story, light and dark: fail only on NEW axe violations"
+  storybook:a11y:light:
+    desc: "a11y gate over every story in light mode"
     deps: [prepare, storybook:browser]
     cmds:
-      - node .storybook/a11y-scan.mjs
+      - node .storybook/a11y-scan.mjs {{.CLI_ARGS}}
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
-      - SCAN_THEME=dark node .storybook/a11y-scan.mjs
+
+  storybook:a11y:dark:
+    desc: "a11y gate over every story in dark mode"
+    deps: [prepare, storybook:browser]
+    cmds:
+      - SCAN_THEME=dark node .storybook/a11y-scan.mjs {{.CLI_ARGS}}
       - node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --baseline .storybook/a11y-baseline.dark.json
+
+  storybook:a11y:
+    desc: "a11y gate over every story, light and dark"
+    cmds:
+      - task: storybook:a11y:light
+      - task: storybook:a11y:dark
 
   storybook:a11y:changed:
     desc: "a11y gate over the stories this branch affects (default base origin/main)"
@@ -233,7 +244,6 @@ tasks:
 
       Pass a base ref through CLI_ARGS, e.g.
         task frontend:storybook:a11y:changed -- origin/release
-    deps: [prepare, storybook:browser]
     vars:
       BASE: '{{.CLI_ARGS | default "origin/main"}}'
       CHANGED:
@@ -244,10 +254,10 @@ tasks:
             echo "a11y: no story files affected vs {{.BASE}} — nothing to check"
             exit 0
           fi
-          node .storybook/a11y-scan.mjs {{.CHANGED}}
-          node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt
-          SCAN_THEME=dark node .storybook/a11y-scan.mjs {{.CHANGED}}
-          node .storybook/a11y-check.mjs --in .a11y-scan --manifest .a11y-scan/manifest.txt --baseline .storybook/a11y-baseline.dark.json
+          rc=0
+          task frontend:storybook:a11y:light -- {{.CHANGED}} || rc=1
+          task frontend:storybook:a11y:dark -- {{.CHANGED}} || rc=1
+          exit $rc
 
   storybook:a11y:record:
     desc: "Re-record both a11y baselines (run after intentionally fixing/adding violations)"

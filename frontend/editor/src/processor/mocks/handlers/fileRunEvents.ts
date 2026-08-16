@@ -26,9 +26,13 @@ export const fileRunEventsHandlers = [
     const status = url.searchParams.get("status");
     const kindId = url.searchParams.get("kindId");
 
+    // Mirrors the server: no status asked for means the open queue, so a dismissed
+    // row leaves the list instead of sitting there with its buttons greyed out.
     const filtered = events.filter(
       (event) =>
-        (!status || event.status === status) &&
+        (status
+          ? event.status === status
+          : event.status !== "DISMISSED" && event.status !== "RESOLVED") &&
         (!kindId || event.kindId === kindId),
     );
     return HttpResponse.json({

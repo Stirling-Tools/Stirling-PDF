@@ -34,6 +34,7 @@ import {
   type LatestBundleQuote,
 } from "@processor/billing/stripe";
 import { PrepayModalHeader } from "@processor/components/billing/PrepayModalHeader";
+import "@processor/theme/surface.css";
 
 /**
  * Prepaid-bundle purchase modal for the Processor billing page — "12 months for
@@ -1173,7 +1174,7 @@ function CalculatorStep({
       </div>
 
       {/* Finer settings as progressive-disclosure rows — a "Change" blooms the card picker. */}
-      <div className="processor-billing__bundle-rows">
+      <div className="processor-surface processor-billing__bundle-rows">
         {rows.map((row) => {
           const open = expanded === row.id;
           return (

@@ -299,6 +299,25 @@ class FileRunEventStoreTest {
         }
 
         @Test
+        void dismissingARowClearsItFromTheDefaultQueue() {
+            // The reviewer's whole complaint: without this, dismissing changes the buttons and
+            // leaves the row sitting there, so the list can only ever grow.
+            FileRunEvent event = store.record(failure(FailureKind.UNKNOWN, TEAM, "f1", "boom"));
+            store.applyStatus(event.id(), TEAM, FileRunEventStatus.DISMISSED, "reviewer");
+
+            assertThat(store.list(TEAM, null, null, 10)).isEmpty();
+            assertThat(store.list(TEAM, FileRunEventStatus.DISMISSED, null, 10)).hasSize(1);
+        }
+
+        @Test
+        void anAcknowledgedRowIsStillOpenWorkSoItStays() {
+            FileRunEvent event = store.record(failure(FailureKind.UNKNOWN, TEAM, "f1", "boom"));
+            store.applyStatus(event.id(), TEAM, FileRunEventStatus.ACKNOWLEDGED, "reviewer");
+
+            assertThat(store.list(TEAM, null, null, 10)).hasSize(1);
+        }
+
+        @Test
         void filtersByStatus() {
             FileRunEvent open = store.record(failure(FailureKind.UNKNOWN, TEAM, "open", "a"));
             store.record(failure(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "closed", "b"));

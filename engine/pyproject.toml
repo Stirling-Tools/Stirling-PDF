@@ -64,7 +64,7 @@ updater-signatures = [
 ]
 # Pinned repository-wide pre-commit tooling.
 pre-commit = [
-    "codespell==2.4.2",
+    "codespell==2.4.3",
     "ruff==0.15.5",
     "tomli-w==1.2.0",
 ]

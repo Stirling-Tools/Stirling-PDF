@@ -8,6 +8,8 @@ import {
   type CreatableConnectionType,
 } from "@processor/components/sources/connectionTypes";
 import { BrandMark } from "@processor/components/BrandMarks";
+import "@processor/theme/surface.css";
+import "@processor/components/sources/connections.css";
 
 /**
  * Choose what to connect to.
@@ -112,7 +114,7 @@ function Grid({
             key={type.id}
             type="button"
             className={
-              "processor-conn-picker__card" +
+              "processor-surface processor-conn-picker__card" +
               (type.kind === "custom"
                 ? " processor-conn-picker__card--advanced"
                 : "")

@@ -1,0 +1,67 @@
+/**
+ * Edit mode's toolbar: identity on the left, operational actions on the right.
+ */
+
+.processor-pipeline-edit-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.processor-pipeline-edit-header__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+
+/* The name is the page's title. It takes the room the identity row leaves and truncates rather than
+   wrapping, so a long name never pushes the pencil out of reach. */
+.processor-pipeline-edit-header__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.processor-pipeline-edit-header__name-input {
+  flex: 1 1 16rem;
+  min-width: 12rem;
+}
+
+.processor-pipeline-edit-header__name-input input {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+/* Never let the labels squash: buttons hold their width and the row wraps instead of clipping. */
+.processor-pipeline-edit-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: none;
+}
+
+.processor-pipeline-edit-header__actions .sui-btn {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* Save is wrapped so its disabled hover reaches the blocker tooltip; the wrapper must not shrink. */
+.processor-pipeline-edit-header__save {
+  display: inline-flex;
+  flex: none;
+}
+
+/* Destructive item in the overflow tray: red label and icon, so it reads as the exception among
+   the neutral entries above it. */
+.processor-pipeline-edit-header__delete-item .sui-dd__item-label,
+.processor-pipeline-edit-header__delete-item .sui-dd__item-leading {
+  color: var(--c-danger);
+}

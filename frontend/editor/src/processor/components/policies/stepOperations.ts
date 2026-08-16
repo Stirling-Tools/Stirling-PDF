@@ -83,6 +83,9 @@ export interface OperationCall {
   bodyTemplate?: string;
   /** False for notify-style calls that send facts rather than the document. */
   includeFile?: boolean;
+  /** Send the fact context beside the document so the receiver can branch on the run.
+   * Off by default: a vendor with a fixed API has no field for it. */
+  includeContext?: boolean;
 }
 
 export interface StepOperation {
@@ -151,6 +154,138 @@ function notify(
       },
     ],
   };
+}
+
+/** Facts every document has, whatever its type — `document.pageCount` is PDF-only and would
+ * fail the step on anything else, so it is offered in the editable message rather than baked in. */
+const N8N_FACTS = {
+  event: "policy.document.processed",
+  run: {
+    policy: "{{run.policyName}}",
+    id: "{{run.runId}}",
+    at: "{{run.timestamp}}",
+  },
+  document: {
+    filename: "{{document.filename}}",
+    extension: "{{document.extension}}",
+    contentType: "{{document.contentType}}",
+    sizeBytes: "{{document.sizeBytes}}",
+    sha256: "{{document.sha256}}",
+  },
+};
+
+/** The four shapes an n8n workflow can take part in; see the catalogue entry for why n8n gets more
+ * than one. All four post to the Webhook node's URL, which is the whole endpoint. */
+function n8nOperations(): StepOperation[] {
+  const base = {
+    connectionTypeId: "n8n",
+    integrationType: "API" as const,
+    category: "notify" as const,
+  };
+  const entry = (
+    id: string,
+    call: OperationCall,
+    extra: Partial<StepOperation> = {},
+  ) => ({
+    ...base,
+    id,
+    labelKey: `${PREFIX}.${id}.label`,
+    descriptionKey: `${PREFIX}.${id}.description`,
+    call,
+    ...extra,
+  });
+
+  return [
+    // Facts only, structured rather than one text blob: a workflow branches on
+    // fields instead of parsing a sentence back apart.
+    entry(
+      "n8nNotify",
+      {
+        path: "",
+        bodyMode: "json",
+        includeFile: false,
+        bodyTemplate: JSON.stringify({ ...N8N_FACTS, message: "{{message}}" }),
+      },
+      {
+        searchTerms: ["n8n", "notify", "trigger", "workflow", "automation"],
+        fields: [
+          {
+            key: "message",
+            labelKey: `${PREFIX}.fields.message.label`,
+            control: "textarea",
+            required: true,
+            helperTextKey: `${PREFIX}.fields.message.helperText`,
+            defaultValue: "{{run.policyName}} processed {{document.filename}}",
+          },
+        ],
+      },
+    ),
+
+    // The document itself, plus the facts as a `stirlingContext` part so the workflow knows which
+    // policy sent it. Fire-and-forget: whatever n8n replies is recorded, the document is unchanged.
+    entry(
+      "n8nSend",
+      {
+        path: "",
+        bodyMode: "multipart",
+        fileFieldName: "file",
+        includeContext: true,
+        responseMode: "report",
+      },
+      {
+        searchTerms: ["n8n", "send", "file", "upload", "workflow", "binary"],
+      },
+    ),
+
+    // The round trip: the returned file replaces the one in the pipeline. Needs the Webhook node
+    // set to "Respond to Webhook" - on "Immediately" its acknowledgement would replace the document.
+    entry(
+      "n8nTransform",
+      {
+        path: "",
+        bodyMode: "multipart",
+        fileFieldName: "file",
+        includeContext: true,
+        responseMode: "replace",
+      },
+      {
+        searchTerms: [
+          "n8n",
+          "transform",
+          "process",
+          "convert",
+          "workflow",
+          "replace",
+        ],
+        noteKey: `${PREFIX}.n8nTransform.note`,
+      },
+    ),
+
+    // The workflow decides whether the run continues. `requireTrue` is fail-closed, so an n8n
+    // outage or a malformed reply parks the document rather than waving it through.
+    entry(
+      "n8nGate",
+      {
+        path: "",
+        bodyMode: "multipart",
+        fileFieldName: "file",
+        includeContext: true,
+        responseMode: "report",
+        requireTrue: "approved",
+      },
+      {
+        searchTerms: [
+          "n8n",
+          "approve",
+          "gate",
+          "review",
+          "decision",
+          "workflow",
+        ],
+        noteKey: `${PREFIX}.n8nGate.note`,
+      },
+    ),
+  ];
 }
 
 export const STEP_OPERATIONS: StepOperation[] = [
@@ -501,6 +636,11 @@ export const STEP_OPERATIONS: StepOperation[] = [
     "trigger",
   ]),
 
+  // ---- n8n: the one vendor here that can answer back ---------------------------------------------
+  // A Webhook node takes binary and can return what the workflow produces, so n8n reaches all three
+  // engine modes - report, replace and a `requireTrue` verdict - and gets an operation for each.
+  ...n8nOperations(),
+
   {
     id: "webhookPost",
     connectionTypeId: "webhook",
@@ -660,7 +800,7 @@ export function buildStepParameters(
     headers: call.headers ? substituteJson(JSON.stringify(call.headers)) : "",
     fields: call.fields ? substituteJson(JSON.stringify(call.fields)) : "",
     bodyTemplate: call.bodyTemplate ? substituteJson(call.bodyTemplate) : "",
-    includeContext: "false",
+    includeContext: String(call.includeContext ?? false),
     includeFile: String(call.includeFile ?? true),
     operationId: op.id,
     operationValues: JSON.stringify(values),

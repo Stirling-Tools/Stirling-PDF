@@ -10,6 +10,7 @@ import {
   useFileRunEventActions,
 } from "@processor/queries/fileRunEvents";
 import { FailureActionButtons } from "@processor/components/failures/FailureActionButtons";
+import "@processor/theme/surface.css";
 
 /**
  * Recorded policy and pipeline failures, with the triage actions the server offered
@@ -31,6 +32,7 @@ export function FileRunEventList() {
   const { apply, refresh } = useFileRunEventActions();
   const [busy, setBusy] = useState<{ id: string; action: string } | null>(null);
   const [showJson, setShowJson] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   // A build without the proprietary module has no such route, and a caller who is
   // not a team leader gets a 403. Both mean there is nothing to show.
@@ -45,12 +47,40 @@ export function FileRunEventList() {
     }
   };
 
+  // Empties the queue so a test run starts from nothing. Sequential rather than
+  // concurrent: dismissing is cheap, and one request at a time keeps the failure
+  // obvious if the endpoint refuses one of them.
+  const dismissAll = async () => {
+    setClearing(true);
+    try {
+      for (const event of events ?? []) {
+        const dismiss = event.actions.find(
+          (action) => action.id === "DISMISS" && action.enabled,
+        );
+        if (dismiss) {
+          await apply(event.id, "DISMISS");
+        }
+      }
+    } finally {
+      setClearing(false);
+      await refresh();
+    }
+  };
+
   // Dev-only inspector for hand-checking classification against real uploads.
   // Vite folds `import.meta.env.DEV` to false, so builds drop this entirely.
   const debugPanel = !import.meta.env.DEV ? null : (
     <div className="processor-failures__debug">
       <Button variant="secondary" size="sm" onClick={() => void refresh()}>
         Refresh failures
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        disabled={clearing || (events?.length ?? 0) === 0}
+        onClick={() => void dismissAll()}
+      >
+        {clearing ? "Dismissing..." : `Dismiss all (${events?.length ?? 0})`}
       </Button>
       <Button
         variant="secondary"
@@ -140,7 +170,10 @@ function FailureBody({
   return (
     <ul className="processor-failures__list">
       {events.map((event) => (
-        <li key={event.id} className="processor-failures__row">
+        <li
+          key={event.id}
+          className="processor-surface processor-failures__row"
+        >
           <div className="processor-failures__meta">
             <StatusBadge tone={SEVERITY_TONE[event.severity]}>
               {t(
@@ -160,7 +193,31 @@ function FailureBody({
                 })}
               </span>
             )}
+            <span className="processor-failures__origin">
+              {t(
+                `processor.failures.origin.${event.origin.toLowerCase()}`,
+                event.origin,
+              )}
+            </span>
           </div>
+
+          {/* Who or what it came from. An unattended file has no user, so the source
+            is the only attribution there is. */}
+          {event.actor ? (
+            <div className="processor-failures__actor">
+              {t("processor.failures.reportedBy", "Hit by {{actor}}", {
+                actor: event.actor,
+              })}
+            </div>
+          ) : (
+            event.sourceId && (
+              <div className="processor-failures__actor">
+                {t("processor.failures.fromSource", "From source {{source}}", {
+                  source: event.sourceId,
+                })}
+              </div>
+            )
+          )}
 
           {/* A reference, not a name. The record deliberately holds no document
             identity, so a reviewer sees which run failed, never which file. */}

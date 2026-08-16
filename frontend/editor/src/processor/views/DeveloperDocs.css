@@ -438,8 +438,6 @@
 .processor-docs__endpoint-group {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 

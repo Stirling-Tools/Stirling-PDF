@@ -25,6 +25,9 @@ includes:
   e2e:
     taskfile: .taskfiles/e2e.yml
     dir: .
+  cucumber:
+    taskfile: .taskfiles/cucumber.yml
+    dir: testing/cucumber
   pre-commit:
     taskfile: .taskfiles/pre-commit.yml
     dir: .

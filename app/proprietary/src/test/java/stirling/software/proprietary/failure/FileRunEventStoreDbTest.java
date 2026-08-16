@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -198,10 +199,64 @@ class FileRunEventStoreDbTest {
                 FailureKind.INPUT_PASSWORD_PROTECTED,
                 TEAM,
                 null,
+                null,
                 "policy-1",
                 runId,
                 fileId,
                 "locked");
+    }
+
+    @Test
+    @DisplayName("closing deleted files touches only that owner's own open editor rows")
+    void markFilesRemovedIsScopedBySqlNotByTheCaller() {
+        // The scoping is entirely in the JPQL, so the in-memory fake proves nothing about it:
+        // it implements the same rules by hand and would agree with a wrong query.
+        FileRunEvent mine =
+                store.record(
+                        RecordFailure.forEditor(
+                                FailureKind.UNKNOWN, TEAM, "owner@example.com", "f-1", "boom"));
+        FileRunEvent theirs =
+                store.record(
+                        RecordFailure.forEditor(
+                                FailureKind.UNKNOWN, TEAM, "colleague@example.com", "f-1", "boom"));
+        FileRunEvent otherTeam =
+                store.record(
+                        RecordFailure.forEditor(
+                                FailureKind.UNKNOWN,
+                                OTHER_TEAM,
+                                "owner@example.com",
+                                "f-1",
+                                "boom"));
+        FileRunEvent fromProcessor = store.record(failure(FailureKind.UNKNOWN, TEAM, "f-1"));
+
+        int closed = store.markFilesRemoved(TEAM, "owner@example.com", List.of("f-1"));
+
+        assertThat(closed).isEqualTo(1);
+        assertThat(store.find(mine.id(), TEAM).orElseThrow().status())
+                .isEqualTo(FileRunEventStatus.FILE_REMOVED);
+        assertThat(store.find(theirs.id(), TEAM).orElseThrow().status())
+                .as("another person's incident about their own file")
+                .isEqualTo(FileRunEventStatus.NEW);
+        assertThat(store.find(otherTeam.id(), OTHER_TEAM).orElseThrow().status())
+                .as("another team entirely")
+                .isEqualTo(FileRunEventStatus.NEW);
+        assertThat(store.find(fromProcessor.id(), TEAM).orElseThrow().status())
+                .as("nothing was deleted from an editor here")
+                .isEqualTo(FileRunEventStatus.NEW);
+    }
+
+    @Test
+    @DisplayName("a row already closed by a reviewer is left as they left it")
+    void markFilesRemovedLeavesClosedRowsAlone() {
+        FileRunEvent event =
+                store.record(
+                        RecordFailure.forEditor(
+                                FailureKind.UNKNOWN, TEAM, "owner@example.com", "f-1", "boom"));
+        store.applyStatus(event.id(), TEAM, FileRunEventStatus.DISMISSED, "reviewer@example.com");
+
+        assertThat(store.markFilesRemoved(TEAM, "owner@example.com", List.of("f-1"))).isZero();
+        assertThat(store.find(event.id(), TEAM).orElseThrow().statusActor())
+                .isEqualTo("reviewer@example.com");
     }
 
     @Test

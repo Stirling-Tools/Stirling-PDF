@@ -79,7 +79,8 @@ public class PolicyRunner {
             // Generator pipeline: one run with no input. Still fall through to the cleanup
             // below so rows recorded for its folder outputs are pruned like anything else,
             // instead of accumulating until the policy is deleted.
-            runIds.add(startRun(policy, PolicyInputs.of(List.of()), null, unused -> {}));
+            // Generator pipeline: no input, so neither a source nor a document to attribute to.
+            runIds.add(startRun(policy, null, null, PolicyInputs.of(List.of()), unused -> {}));
         }
         for (PipelineInput input : inputs) {
             String sourceId = input.sourceId();
@@ -167,7 +168,13 @@ public class PolicyRunner {
         List<String> runIds = new ArrayList<>();
         long docsFed = 0;
         for (ResolvedInput unit : work) {
-            runIds.add(startRun(policy, unit.inputs(), unit.fileIdentity(), unit.onComplete()));
+            runIds.add(
+                    startRun(
+                            policy,
+                            sourceId,
+                            unit.fileIdentity(),
+                            unit.inputs(),
+                            unit.onComplete()));
             docsFed += unit.inputs().primary().size();
         }
         docCounter.record(sourceId, docsFed);
@@ -175,10 +182,15 @@ public class PolicyRunner {
     }
 
     private String startRun(
-            Policy policy, PolicyInputs inputs, String fileIdentity, Consumer<Boolean> onComplete) {
+            Policy policy,
+            String sourceId,
+            String fileIdentity,
+            PolicyInputs inputs,
+            Consumer<Boolean> onComplete) {
         log.info("Running policy {} ({})", policy.id(), policy.name());
         PolicyRunHandle handle =
-                policyEngine.runPolicy(policy, inputs, fileIdentity, PolicyProgressListener.NOOP);
+                policyEngine.runPolicy(
+                        policy, inputs, PolicyProgressListener.NOOP, sourceId, fileIdentity);
         handle.completion()
                 .whenComplete((run, throwable) -> onComplete.accept(succeeded(run, throwable)));
         return handle.runId();

@@ -31,6 +31,67 @@ public class FileRunEventService {
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
 
+    /**
+     * Record a failure a user hit in the editor. One incident per named file, so each document
+     * stays separately actionable; one unattributed incident when the report names none.
+     *
+     * <p>The team and actor come from the session rather than the report, and the kind is
+     * classified from the reported code, falling back to {@link FailureKind#UNKNOWN} for a code no
+     * kind claims.
+     */
+    public List<FileRunEvent> report(EditorFailureReport report) {
+        FailureKind kind = FailureKind.byErrorCode(report.errorCode()).orElse(FailureKind.UNKNOWN);
+        Long teamId = scope().teamId();
+        String actor = currentActor();
+        String detail = detailFor(report);
+
+        List<String> fileIds =
+                report.fileIds().stream().filter(id -> id != null && !id.isBlank()).toList();
+        if (fileIds.isEmpty()) {
+            return List.of(recordReported(kind, teamId, actor, null, detail));
+        }
+        // Every named file gets its row. An earlier cap here silently dropped the rest, which lost
+        // failures a reviewer needed and was inconsistent with the processor path, where a sweep
+        // records one row per failing file with no limit at all. How many files one report may name
+        // is bounded at the boundary instead (see EditorFailureReport#MAX_FILE_IDS), where an
+        // oversized report can be refused whole before anything is written.
+        return fileIds.stream()
+                .map(fileId -> recordReported(kind, teamId, actor, fileId, detail))
+                .toList();
+    }
+
+    private FileRunEvent recordReported(
+            FailureKind kind, Long teamId, String actor, String fileId, String detail) {
+        return store.record(RecordFailure.forEditor(kind, teamId, actor, fileId, detail));
+    }
+
+    /**
+     * The operation is the context a reviewer needs, since an editor failure has no policy or run.
+     */
+    private String detailFor(EditorFailureReport report) {
+        String message = report.detail() == null ? "" : report.detail();
+        return message.isBlank() ? report.operation() : report.operation() + ": " + message;
+    }
+
+    /**
+     * Close the incidents about documents the caller has deleted from their editor. The queue means
+     * "needs attention", and a document that no longer exists needs none; the rows stay for audit.
+     *
+     * <p>Best-effort by nature: this only arrives if the browser that owns the file says so, and a
+     * cleared cache or another device never will. Rows left open that way are retention's problem,
+     * not this method's.
+     *
+     * @return how many incidents were closed
+     */
+    public int forgetFiles(List<String> fileIds) {
+        TeamScope scope = scope();
+        if (!scope.permitted()) {
+            return 0;
+        }
+        List<String> named = fileIds.stream().filter(id -> id != null && !id.isBlank()).toList();
+        return store.markFilesRemoved(scope.teamId(), currentActor(), named);
+    }
+
     /** The calling user's events, newest first. Empty when their team cannot be resolved. */
     public List<FileRunEvent> list(FileRunEventStatus status, String kindId, int limit) {
         TeamScope scope = scope();

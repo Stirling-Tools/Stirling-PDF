@@ -15,6 +15,7 @@ import { VIEW_PATHS, toProcessorPath } from "@processor/contexts/ViewContext";
 import { DocumentsIcon } from "@processor/components/icons";
 import { ReviewQueueTable } from "@processor/components/documents/ReviewQueueTable";
 import { DocumentDrawer } from "@processor/components/documents/DocumentDrawer";
+import { SourceModal } from "@processor/components/sources/SourceModal";
 
 type QueueFilter = "all" | "flagged" | "processed" | "in-review";
 
@@ -55,6 +56,7 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
   const [filter, setFilter] = useState<QueueFilter>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [connectSourceOpen, setConnectSourceOpen] = useState(false);
 
   const searched = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -156,9 +158,7 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
               </Button>
               <Button
                 variant="secondary"
-                onClick={() =>
-                  navigate(`${toProcessorPath(VIEW_PATHS.sources)}/new`)
-                }
+                onClick={() => setConnectSourceOpen(true)}
               >
                 {t("processor.documents.queue.empty.connectSource")}
               </Button>
@@ -175,6 +175,12 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
       )}
 
       <DocumentDrawer doc={selected} onClose={() => setSelectedId(null)} />
+
+      <SourceModal
+        open={connectSourceOpen}
+        sourceId={null}
+        onClose={() => setConnectSourceOpen(false)}
+      />
     </div>
   );
 }

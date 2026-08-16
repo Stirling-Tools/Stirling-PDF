@@ -447,3 +447,13 @@
     transform: translateY(-50%) scale(1);
   }
 }
+
+/* The stored bytes are gone - the row says so instead of pretending to open. */
+.file-sidebar-datalost-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  color: var(--c-danger);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}

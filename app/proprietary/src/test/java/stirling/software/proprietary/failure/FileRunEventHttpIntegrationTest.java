@@ -152,9 +152,9 @@ class FileRunEventHttpIntegrationTest {
 
         @Test
         void coercesQueryParametersAndFiltersOnThem() throws Exception {
-            String open = seed(FailureKind.UNKNOWN, TEAM, "open", "a");
-            seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "locked", "b");
-            post("/api/v1/file-run-events/" + open + "/actions/ACKNOWLEDGE", "{\"inputs\":{}}");
+            String locked = seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "locked", "b");
+            seed(FailureKind.UNKNOWN, TEAM, "open", "a");
+            post("/api/v1/file-run-events/" + locked + "/actions/ACKNOWLEDGE", "{\"inputs\":{}}");
 
             JsonNode acknowledged =
                     mapper.readTree(get("/api/v1/file-run-events?status=ACKNOWLEDGED").body())
@@ -190,6 +190,75 @@ class FileRunEventHttpIntegrationTest {
     }
 
     @Nested
+    @DisplayName("reporting from the editor")
+    class Reporting {
+
+        @Test
+        void bindsAReportBodyAndAnswersNoContent() throws Exception {
+            HttpResponse<String> response =
+                    post(
+                            "/api/v1/file-run-events/reports",
+                            "{\"operation\":\"remove-password\",\"errorCode\":\"E004\","
+                                    + "\"fileIds\":[\"f-1\",\"f-2\"],\"detail\":\"locked\"}");
+
+            assertThat(response.statusCode()).isEqualTo(204);
+            assertThat(response.body()).isEmpty();
+
+            JsonNode events = mapper.readTree(get("/api/v1/file-run-events").body()).get("events");
+            assertThat(events).hasSize(2);
+            assertThat(events.get(0).get("origin").asString()).isEqualTo("TOOL");
+            assertThat(events.get(0).get("kindId").asString())
+                    .isEqualTo("INPUT_PASSWORD_PROTECTED");
+        }
+
+        @Test
+        void acceptsAReportWithNoCodeOrFiles() throws Exception {
+            HttpResponse<String> response =
+                    post(
+                            "/api/v1/file-run-events/reports",
+                            "{\"operation\":\"compress\",\"detail\":\"network died\"}");
+
+            assertThat(response.statusCode()).isEqualTo(204);
+            JsonNode events = mapper.readTree(get("/api/v1/file-run-events").body()).get("events");
+            assertThat(events).hasSize(1);
+            assertThat(events.get(0).get("kindId").asString()).isEqualTo("UNKNOWN");
+            assertThat(events.get(0).get("fileId").isNull()).isTrue();
+        }
+
+        @Test
+        void rejectsAReportWithNoOperation() throws Exception {
+            assertThat(
+                            post(
+                                            "/api/v1/file-run-events/reports",
+                                            "{\"errorCode\":\"E004\",\"detail\":\"boom\"}")
+                                    .statusCode())
+                    .isEqualTo(400);
+        }
+
+        @Test
+        void rejectsAnOversizedReportWithoutRecordingAnyOfIt() throws Exception {
+            // Over the wire because that is where the flood would arrive: one request, an
+            // arbitrarily long fileIds array, a permanent row per entry. The read-back is the point
+            // of the test, since a partial write would be worse than either accepting or refusing.
+            String ids =
+                    java.util.stream.IntStream.range(0, EditorFailureReport.MAX_FILE_IDS + 1)
+                            .mapToObj(i -> "\"f-" + i + "\"")
+                            .collect(java.util.stream.Collectors.joining(","));
+
+            HttpResponse<String> response =
+                    post(
+                            "/api/v1/file-run-events/reports",
+                            "{\"operation\":\"compress\",\"errorCode\":\"E004\",\"fileIds\":["
+                                    + ids
+                                    + "],\"detail\":\"boom\"}");
+
+            assertThat(response.statusCode()).isEqualTo(400);
+            assertThat(mapper.readTree(get("/api/v1/file-run-events").body()).get("events"))
+                    .isEmpty();
+        }
+    }
+
+    @Nested
     @DisplayName("action dispatch")
     class Dispatch {
 
@@ -197,7 +266,7 @@ class FileRunEventHttpIntegrationTest {
         void bindsTheRequestBodyAndReturnsTheUpdatedRow() throws Exception {
             // The regression guard: an object body, sent as real JSON over the wire, binding into
             // ActionRequest. A double-encoded string would fail here.
-            String id = seed(FailureKind.UNKNOWN, TEAM, "f1", "boom");
+            String id = seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1", "boom");
 
             HttpResponse<String> response =
                     post(
@@ -262,7 +331,7 @@ class FileRunEventHttpIntegrationTest {
 
         @Test
         void mapsAnAlreadyClosedRowToConflict() throws Exception {
-            String id = seed(FailureKind.UNKNOWN, TEAM, "f1", "boom");
+            String id = seed(FailureKind.INPUT_PASSWORD_PROTECTED, TEAM, "f1", "boom");
             post("/api/v1/file-run-events/" + id + "/actions/DISMISS", "{\"inputs\":{}}");
 
             assertThat(

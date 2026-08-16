@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { Avatar, Button } from "@app/ui";
 import type { PendingInvitation } from "@processor/api/users";
+import "@processor/theme/surface.css";
 import "@processor/views/Users.css";
 
 interface PendingInvitationsProps {
@@ -34,7 +35,7 @@ export function PendingInvitations({
 }: PendingInvitationsProps) {
   const { t } = useTranslation();
   return (
-    <section className="processor-users__group">
+    <section className="processor-surface processor-users__group">
       <header className="processor-users__group-head">
         <div className="processor-users__group-title">
           <strong>{t("users.invites.title", "Pending invitations")}</strong>

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import "@app/ui/Surface.css";
 import "@app/ui/Table.css";
 
 export interface TableColumn<T> {
@@ -62,7 +63,9 @@ export function Table<T>({
   const interactive = Boolean(onRowClick);
   return (
     <div
-      className={["sui-table-wrap", className ?? ""].filter(Boolean).join(" ")}
+      className={["sui-surface", "sui-table-wrap", className ?? ""]
+        .filter(Boolean)
+        .join(" ")}
     >
       <table className="sui-table">
         <thead>

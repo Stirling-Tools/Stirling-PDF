@@ -1,4 +1,4 @@
-// frontend/src/services/httpErrorHandler.ts
+// frontend/editor/src/core/services/httpErrorHandler.ts
 import { alert } from "@app/components/toast";
 import {
   broadcastErroredFiles,

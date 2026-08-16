@@ -10,6 +10,8 @@ import {
   type ConnectionCategory,
 } from "@processor/components/sources/connectionTypes";
 import { BrandMark } from "@processor/components/BrandMarks";
+import "@processor/theme/surface.css";
+import "@processor/components/sources/connections.css";
 import {
   STEP_OPERATIONS,
   buildStepParameters,
@@ -258,7 +260,7 @@ function OperationGrid({
             key={op.id}
             type="button"
             className={
-              "processor-conn-picker__card" +
+              "processor-surface processor-conn-picker__card" +
               (op.custom ? " processor-conn-picker__card--advanced" : "")
             }
             onClick={() => onPick(op)}

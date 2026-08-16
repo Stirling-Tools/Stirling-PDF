@@ -17,19 +17,21 @@ import org.springframework.transaction.annotation.Transactional;
 public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity, String> {
 
     /**
-     * This team's events, newest first, scoped in the query rather than loaded and filtered. A
-     * {@code null} teamId matches the rows with no team (login disabled), mirroring {@link
-     * stirling.software.proprietary.policy.source.SourceRepository#findByTeam}, since a plain
-     * {@code = null} would return nothing.
+     * As {@link #findByTeamAndStatus} but for a set of statuses, e.g. the open ones. The kind
+     * filter is in the query, before the limit: filtering an already-limited page could return
+     * nothing while matching rows exist.
      */
     @Query(
             "select e from FileRunEventEntity e where ((:teamId is null and e.teamId is null) or"
-                    + " e.teamId = :teamId) and (:kindId is null or e.kindId = :kindId)"
-                    + " order by e.lastSeenAt desc")
-    List<FileRunEventEntity> findByTeam(
-            @Param("teamId") Long teamId, @Param("kindId") String kindId, Pageable pageable);
+                    + " e.teamId = :teamId) and e.status in :statuses"
+                    + " and (:kindId is null or e.kindId = :kindId) order by e.lastSeenAt desc")
+    List<FileRunEventEntity> findByTeamAndStatusIn(
+            @Param("teamId") Long teamId,
+            @Param("statuses") List<FileRunEventStatus> statuses,
+            @Param("kindId") String kindId,
+            Pageable pageable);
 
-    /** As {@link #findByTeam} but restricted to one status, for the review surface's filters. */
+    /** As {@link #findByTeamAndStatusIn} but for exactly one status, for the surface's filters. */
     @Query(
             "select e from FileRunEventEntity e where ((:teamId is null and e.teamId is null) or"
                     + " e.teamId = :teamId) and e.status = :status"
@@ -82,6 +84,31 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
             @Param("teamId") Long teamId,
             @Param("target") FileRunEventStatus target,
             @Param("actor") String actor,
+            @Param("now") Instant now,
+            @Param("allowedFrom") Collection<FileRunEventStatus> allowedFrom);
+
+    /**
+     * Close the incidents about documents their owner deleted from the editor: the queue is what
+     * needs attention, and a document that no longer exists needs none.
+     *
+     * <p>Restricted to that owner's own editor rows. File ids are minted by the client, so scoping
+     * on team alone would let one caller close a colleague's incidents by naming ids. Processor
+     * rows are excluded outright: nothing was deleted from an editor there.
+     */
+    @Modifying(clearAutomatically = true)
+    @Transactional
+    @Query(
+            "update FileRunEventEntity e set e.status ="
+                    + " stirling.software.proprietary.failure.FileRunEventStatus.FILE_REMOVED,"
+                    + " e.statusActor = :actor, e.statusAt = :now where e.origin ="
+                    + " stirling.software.proprietary.failure.FailureOrigin.TOOL and ((:teamId is"
+                    + " null and e.teamId is null) or e.teamId = :teamId) and ((:actor is null and"
+                    + " e.actor is null) or e.actor = :actor) and e.fileId in :fileIds and e.status in"
+                    + " :allowedFrom")
+    int markFilesRemoved(
+            @Param("teamId") Long teamId,
+            @Param("actor") String actor,
+            @Param("fileIds") Collection<String> fileIds,
             @Param("now") Instant now,
             @Param("allowedFrom") Collection<FileRunEventStatus> allowedFrom);
 

@@ -182,10 +182,10 @@ class FailureKindTest {
     class Unknown {
 
         @Test
-        void existsAndCanBeTriaged() {
-            assertThat(FailureKind.UNKNOWN.getActions())
-                    .containsExactlyInAnyOrder(
-                            FailureActionId.ACKNOWLEDGE, FailureActionId.DISMISS);
+        void offersOnlyTheActionThatClearsIt() {
+            // Nothing here can be fixed, so "seen it" and "clear it" would be the same decision.
+            // Offering both just asks the reviewer to press two buttons to reach one outcome.
+            assertThat(FailureKind.UNKNOWN.getActions()).containsExactly(FailureActionId.DISMISS);
         }
 
         @Test
@@ -233,8 +233,14 @@ class FailureKindTest {
 
         @Test
         void declaresOnlyWhatItLists() {
-            assertThat(FailureKind.UNKNOWN.declares(FailureActionId.ACKNOWLEDGE)).isTrue();
             assertThat(FailureKind.UNKNOWN.declares(FailureActionId.DISMISS)).isTrue();
+            assertThat(FailureKind.UNKNOWN.declares(FailureActionId.ACKNOWLEDGE)).isFalse();
+        }
+
+        @Test
+        void aKindWithSomethingToFixOffersTheFixAndAWayToSkipIt() {
+            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getActions())
+                    .containsExactly(FailureActionId.ACKNOWLEDGE, FailureActionId.DISMISS);
         }
 
         @Test

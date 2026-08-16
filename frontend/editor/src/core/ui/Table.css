@@ -1,9 +1,6 @@
 .sui-table-wrap {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-md);
-  background: var(--c-surface);
 }
 
 .sui-table {
