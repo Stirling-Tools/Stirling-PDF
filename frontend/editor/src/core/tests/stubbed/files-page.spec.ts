@@ -565,25 +565,6 @@ test.describe("Files page", () => {
   test.describe("Side-rail integration with /files", () => {
     test.use({ autoGoto: false });
 
-    test("Rail Search focuses the central search field, no navigation", async ({
-      page,
-    }) => {
-      await stubStorageApis(page);
-      await seedFiles(page, [
-        { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
-      ]);
-      await gotoFilesPage(page);
-      // Click the search row in the rail.
-      await page.locator(".file-sidebar-search-row").click();
-      // The central search input should be focused.
-      const focused = await page.evaluate(
-        () => document.activeElement?.getAttribute("aria-label") ?? "",
-      );
-      expect(focused).toMatch(/Search/i);
-      // And we must still be on /files (i.e. didn't navigate home).
-      await expect(page).toHaveURL(/\/files/);
-    });
-
     test("Rail New folder button visible on /files", async ({ page }) => {
       await stubStorageApis(page);
       await seedFiles(page, [
@@ -647,10 +628,8 @@ test.describe("Files page", () => {
       await card.getByRole("button", { name: /File actions/i }).click();
       await page.getByRole("menuitem", { name: /Add to workspace/i }).click();
       // The materializer should have hit the download endpoint and
-      // routed the user to the viewer (/).
-      await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?(\?|$)/, {
-        timeout: 5_000,
-      });
+      // routed the user to the viewer (the editor).
+      await expect(page).toHaveURL(/\/editor(\?|$)/, { timeout: 5_000 });
       expect(downloadHit).toBe(true);
     });
 
@@ -703,9 +682,7 @@ test.describe("Files page", () => {
       // Open the card and confirm the share-link download endpoint fires.
       await card.getByRole("button", { name: /File actions/i }).click();
       await page.getByRole("menuitem", { name: /Add to workspace/i }).click();
-      await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?(\?|$)/, {
-        timeout: 5_000,
-      });
+      await expect(page).toHaveURL(/\/editor(\?|$)/, { timeout: 5_000 });
       expect(shareDownloadHit).toBe(true);
     });
 

@@ -63,7 +63,10 @@ class ToolIODeclarationCoverageTest {
                     // signing tool itself is /api/v1/security/cert-sign, which is declared.
                     "/api/v1/security/cert-sign/sessions",
                     "/api/v1/security/cert-sign/validate-certificate",
-                    "/api/v1/security/cert-sign/hardware");
+                    "/api/v1/security/cert-sign/hardware",
+                    // Releases finished jobs and their stored files; server maintenance, takes and
+                    // returns no document.
+                    "/api/v1/general/jobs/cleanup");
 
     private record Scan(Set<String> required, Map<String, ToolIOSpec> declared) {}
 

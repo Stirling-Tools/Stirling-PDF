@@ -12,6 +12,7 @@ import {
 import { DownloadIcon } from "@portal/components/icons";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import { useAsync } from "@portal/hooks/useAsync";
+import "@portal/theme/surface.css";
 import "@portal/views/Procurement.css";
 
 /**
@@ -144,12 +145,17 @@ export function ProcurementAgreement({
       {/* The tray scrolls, not the paper. The paper is its natural height inside it, so mid-document it
           runs flush to the footer with no grey beneath, and the tray's bottom padding only comes into
           view once the buyer reaches the end — the page ending is what shows they got there. */}
+      {/* Focusable and named: signing is gated on scrolling to the end, so the
+          tray has to be scrollable by keyboard as well as pointer. */}
       <div
         className="portal-agreement__tray portal-agreement__scroll"
         ref={docRef}
         onScroll={onScroll}
+        tabIndex={0}
+        role="group"
+        aria-label={t("portal.procurement.agreement.docName")}
       >
-        <div className="portal-agreement__doc">
+        <div className="portal-surface portal-agreement__doc">
           {loading && <p>{t("portal.procurement.agreement.loading")}</p>}
           {!loading && !doc && (
             <p>{t("portal.procurement.agreement.loadError")}</p>

@@ -1132,7 +1132,7 @@ const EmbedPdfViewerContent = ({
   ]);
 
   const sidebarWidthRem = 15;
-  const commentsSidebarWidthRem = 18;
+  const commentsSidebarWidthRem = 15;
   const totalRightMargin =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
@@ -1174,7 +1174,7 @@ const EmbedPdfViewerContent = ({
 
       {!effectiveFile ? (
         <Center style={{ flex: 1 }}>
-          <Text c="red">
+          <Text c="var(--color-red-dark)">
             {t(
               "viewer.error.noFileProvided",
               "Error: No file provided to viewer",

@@ -23,6 +23,7 @@ jobs:
     if: github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     permissions:
+      contents: read # Checkout, and read translation files via the contents API
       issues: write # Allow posting comments on issues/PRs
       pull-requests: write # Allow writing to pull requests
     steps:
@@ -34,18 +35,11 @@ jobs:
       - name: Checkout main branch first
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Setup GitHub App Bot
-        id: setup-bot
-        uses: ./.github/actions/setup-bot
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Get PR data
         id: get-pr-data
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const prNumber = context.payload.pull_request.number;
             const repoOwner = context.payload.repository.owner.login;
@@ -66,17 +60,18 @@ jobs:
       - name: Fetch PR changed files
         id: fetch-pr-changes
         env:
-          GH_TOKEN: ${{ steps.setup-bot.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.get-pr-data.outputs.pr_number }}
         run: |
           echo "Fetching PR changed files..."
           echo "Getting list of changed files from PR..."
           # Check if PR number exists
-          if [ -z "${{ steps.get-pr-data.outputs.pr_number }}" ]; then
+          if [ -z "${PR_NUMBER}" ]; then
             echo "Error: PR number is empty"
             exit 1
           fi
           # Get changed files and filter for TOML translation files
-          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^frontend/editor/public/locales/[a-zA-Z-]+/translation\.toml$' > changed_files.txt || echo "No matching TOML files found in PR"
+          gh pr view "${PR_NUMBER}" --json files -q ".files[].path" | grep -E '^frontend/editor/public/locales/[a-zA-Z-]+/translation\.toml$' > changed_files.txt || echo "No matching TOML files found in PR"
           # Check if any files were found
           if [ ! -s changed_files.txt ]; then
             echo "No TOML translation files changed in this PR"
@@ -88,32 +83,36 @@ jobs:
       - name: Determine reference file
         id: determine-file
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          # Untrusted, fork-controlled values are passed via env, never interpolated into the script
+          PR_NUMBER: ${{ steps.get-pr-data.outputs.pr_number }}
+          REPO_OWNER: ${{ steps.get-pr-data.outputs.repo_owner }}
+          REPO_NAME: ${{ steps.get-pr-data.outputs.repo_name }}
+          PR_REPO_OWNER: ${{ github.event.pull_request.head.repo.owner.login }}
+          PR_REPO_NAME: ${{ github.event.pull_request.head.repo.name }}
+          PR_BRANCH: ${{ steps.get-pr-data.outputs.branch }}
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const fs = require("fs");
             const path = require("path");
 
-            const prNumber = ${{ steps.get-pr-data.outputs.pr_number }};
-            const repoOwner = "${{ steps.get-pr-data.outputs.repo_owner }}";
-            const repoName = "${{ steps.get-pr-data.outputs.repo_name }}";
-
-            const prRepoOwner = "${{ github.event.pull_request.head.repo.owner.login }}";
-            const prRepoName = "${{ github.event.pull_request.head.repo.name }}";
-            const branch = "${{ steps.get-pr-data.outputs.branch }}";
-
-            console.log(`Determining reference file for PR #${prNumber}`);
-
-            // Validate inputs
+            // Validate inputs before any use
             const validateInput = (input, regex, name) => {
-              if (!regex.test(input)) {
+              if (typeof input !== "string" || !regex.test(input)) {
                 throw new Error(`Invalid ${name}: ${input}`);
               }
+              return input;
             };
 
-            validateInput(repoOwner, /^[a-zA-Z0-9_-]+$/, "repository owner");
-            validateInput(repoName, /^[a-zA-Z0-9._-]+$/, "repository name");
-            validateInput(branch, /^[a-zA-Z0-9._/-]+$/, "branch name");
+            const repoOwner = validateInput(process.env.REPO_OWNER, /^[a-zA-Z0-9_-]+$/, "repository owner");
+            const repoName = validateInput(process.env.REPO_NAME, /^[a-zA-Z0-9._-]+$/, "repository name");
+            const prRepoOwner = validateInput(process.env.PR_REPO_OWNER, /^[a-zA-Z0-9_-]+$/, "PR repository owner");
+            const prRepoName = validateInput(process.env.PR_REPO_NAME, /^[a-zA-Z0-9._-]+$/, "PR repository name");
+            const branch = validateInput(process.env.PR_BRANCH, /^[a-zA-Z0-9._/-]+$/, "branch name");
+            const prNumber = Number(validateInput(process.env.PR_NUMBER, /^[0-9]+$/, "PR number"));
+
+            console.log(`Determining reference file for PR #${prNumber}`);
 
             // Get the list of changed files in the PR
             const { data: files } = await github.rest.pulls.listFiles({
@@ -209,10 +208,12 @@ jobs:
 
       - name: Run Python script to check files
         id: run-check
+        env:
+          PR_ACTOR: ${{ github.event.pull_request.user.login }}
         run: |
           echo "Running Python script to check TOML files..."
           uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py \
-            --actor ${{ github.event.pull_request.user.login }} \
+            --actor "${PR_ACTOR}" \
             --reference-file "${REFERENCE_FILE}" \
             --branch "pr-branch" \
             --files "${FILES_LIST[@]}" > result.txt
@@ -245,7 +246,7 @@ jobs:
         if: env.SCRIPT_OUTPUT != ''
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          github-token: ${{ steps.setup-bot.outputs.token }}
+          github-token: ${{ github.token }}
           script: |
             const { GITHUB_REPOSITORY, SCRIPT_OUTPUT } = process.env;
             const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
@@ -261,7 +262,7 @@ jobs:
             const comment = comments.data.find(c => c.body.includes("## 🌐 TOML Translation Verification Summary"));
 
             // Only update or create comments by the action user
-            const expectedActor = "${{ steps.setup-bot.outputs.app-slug }}[bot]";
+            const expectedActor = "github-actions[bot]";
 
             if (comment && comment.user.login === expectedActor) {
               // Update existing comment

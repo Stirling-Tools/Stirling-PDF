@@ -156,7 +156,7 @@ test.describe("Settings dialog", () => {
       };
     });
 
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/editor", { waitUntil: "domcontentloaded" });
     await openSettings(page);
 
     const generalNav = page.locator('[data-tour="admin-general-nav"]').first();
@@ -200,7 +200,7 @@ test.describe("Settings dialog", () => {
     page,
   }) => {
     // Land on / first so the originating URL is unambiguous.
-    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.goto("/editor", { waitUntil: "domcontentloaded" });
     await expect(
       page.locator('[data-testid="config-button"]').first(),
     ).toBeVisible({ timeout: 5_000 });

@@ -36,9 +36,6 @@
 }
 
 .portal-failures__row {
-  border: 1px solid var(--c-border);
-  border-radius: 8px;
-  background: var(--c-surface);
   padding: 0.8rem 0.95rem;
 }
 
@@ -68,6 +65,19 @@
 
 /* The raw failure message. Monospace because for an unclassified failure this is
    a stack-trace-ish diagnostic, not prose. */
+.portal-failures__origin {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 0.25rem);
+  padding: 0 0.35rem;
+}
+
+.portal-failures__actor {
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+
 .portal-failures__detail {
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 0.76rem;
