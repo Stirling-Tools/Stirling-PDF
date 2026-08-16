@@ -17,14 +17,7 @@ test.describe("2. Main Dashboard / Home Page", () => {
         page.locator('[data-testid="config-button"]').first(),
       ).toBeVisible();
 
-      // Tool search sits behind a header toggle now, so assert the affordance
-      // AND that pressing it actually mounts a usable search field — dropping
-      // the second half would stop covering the input entirely.
-      const searchToggle = page
-        .getByRole("button", { name: /search tools/i })
-        .first();
-      await expect(searchToggle).toBeVisible();
-      await searchToggle.click();
+      // Tool search lives in the global super search bar, always mounted.
       await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
 
       await expect(
@@ -82,10 +75,8 @@ test.describe("2. Main Dashboard / Home Page", () => {
 
       await page.goto("/editor");
 
-      // Tool search is a header toggle; the field mounts only once pressed.
-      await expect(
-        page.getByRole("button", { name: /search tools/i }).first(),
-      ).toBeVisible();
+      // Tool search lives in the global super search bar, always mounted.
+      await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
     });
   });
 

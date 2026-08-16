@@ -1,7 +1,12 @@
 import os
 import subprocess
+import sys
 
 import requests
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "steps"))
+import job_support  # noqa: E402
+import parallel_support  # noqa: E402
 
 _BASE_URL = "http://localhost:8080"
 _CONTAINER_NAME = os.environ.get("TEST_CONTAINER_NAME", "")
@@ -164,8 +169,17 @@ def before_all(context):
 
 def before_scenario(context, scenario):
     """Reset all per-scenario state before each scenario runs."""
-    # Skip scenarios that require JWT Bearer auth when it is not functional.
     scenario_tags = set(scenario.effective_tags)
+
+    # Concurrency is opted into by a step in the feature, never by configuration.
+    context.parallel_repeat = 1
+    context.parallel_decoy = False
+    context.parallel_validated = False
+    context.parallel_ran_at = 0
+    context.parallel_request = None
+    context.parallel_get = None
+
+    # Skip scenarios that require JWT Bearer auth when it is not functional.
     if _JWT_DEPENDENT_TAGS & scenario_tags and not context.jwt_available:
         scenario.skip(
             "JWT Bearer authentication not available in this environment (V2 disabled). "
@@ -237,3 +251,48 @@ def after_scenario(context, scenario):
     context.jwt_token = None
     context.original_jwt_token = None
     context._status_ok = False
+    context.parallel_request = None
+    context.parallel_get = None
+
+
+def _cleanup_async_job_files():
+    """Release every async job result the run left on the server.
+
+    An async submit persists a copy of the upload plus its results, and both are held
+    for the job retention window (30 minutes by default) - far longer than a test run.
+    The regression check that diffs the container filesystem before and after this suite
+    would otherwise flag them as leaked temp files. Sweeping them here keeps that check
+    strict: anything it still reports afterwards is a genuine leak.
+    """
+    try:
+        response = job_support.trigger_cleanup()
+    except Exception as exc:
+        print(f"\n[CLEANUP] Async job cleanup request failed: {exc}")
+        return
+    if response.status_code == 404:
+        print(
+            "\n[CLEANUP] Async job cleanup endpoint not available on this build; "
+            "async job files will age out on their own."
+        )
+        return
+    if response.status_code != 200:
+        print(
+            f"\n[CLEANUP] Async job cleanup returned {response.status_code}: "
+            f"{response.text[:200]}"
+        )
+        return
+    try:
+        summary = response.json()
+    except ValueError:
+        print("\n[CLEANUP] Async job cleanup returned a non-JSON body")
+        return
+    print(
+        f"\n[CLEANUP] Released {summary.get('jobsRemoved', '?')} async job(s) and "
+        f"{summary.get('filesDeleted', '?')} stored file(s); "
+        f"{summary.get('jobsRetained', '?')} retained."
+    )
+
+
+def after_all(context):
+    _cleanup_async_job_files()
+    parallel_support.print_summary()
