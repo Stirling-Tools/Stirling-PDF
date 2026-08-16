@@ -2,7 +2,6 @@
 
 import io
 import json as json_module
-import os
 import re
 import sys
 import zipfile

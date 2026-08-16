@@ -7,6 +7,7 @@ import re
 import string
 import zipfile
 
+import parallel_support
 import requests
 from behave import given, then, when
 from PIL import Image, ImageDraw
@@ -15,8 +16,6 @@ from pypdf.errors import PdfReadError
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
-
-import parallel_support
 
 API_HEADERS = {"X-API-KEY": "123456789"}
 

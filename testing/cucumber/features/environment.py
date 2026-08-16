@@ -5,8 +5,8 @@ import sys
 import requests
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "steps"))
-import job_support  # noqa: E402
-import parallel_support  # noqa: E402
+import job_support
+import parallel_support
 
 _BASE_URL = "http://localhost:8080"
 _CONTAINER_NAME = os.environ.get("TEST_CONTAINER_NAME", "")
