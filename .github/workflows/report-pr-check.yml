@@ -142,15 +142,19 @@ jobs:
                   : `${marker}\n\n## ✅ Frontend License Check Passed\n\nAll frontend licenses have been validated and no compatibility warnings were detected.\n\nThe frontend license report has been updated successfully.`;
               }
 
-              let warningDetails = '';
-              try {
-                const data = JSON.parse(require('fs').readFileSync(
-                  'license-artifacts/backend/dependencies-without-allowed-license.json', 'utf8'));
-                warningDetails = data.map(dep => `- **${dep.moduleName}@${dep.moduleVersion}** – ${dep.moduleLicenses.map(l => l.licenseName).join(', ')}`).join('\n');
-              } catch (_) {}
-              return failed
-                ? `${marker}\n\n## ❌ Backend License Check Failed\n\nThe backend license check has detected dependencies with incompatible or unallowed licenses:\n\n${warningDetails || 'See uploaded artifact for details.'}\n\n**Action Required:** Please review these licenses and resolve before merging.\n\n_This check will fail the PR until license issues are resolved._`
-                : `${marker}\n\n## ✅ Backend License Check Passed\n\nAll backend dependencies have valid and allowed licenses.\n\nThe backend license report has been updated successfully.`;
+              if (type === 'backend-license') {
+                let warningDetails = '';
+                try {
+                  const data = JSON.parse(require('fs').readFileSync(
+                    'license-artifacts/backend/dependencies-without-allowed-license.json', 'utf8'));
+                  warningDetails = data.map(dep => `- **${dep.moduleName}@${dep.moduleVersion}** – ${dep.moduleLicenses.map(l => l.licenseName).join(', ')}`).join('\n');
+                } catch (_) {}
+                return failed
+                  ? `${marker}\n\n## ❌ Backend License Check Failed\n\nThe backend license check has detected dependencies with incompatible or unallowed licenses:\n\n${warningDetails || 'See uploaded artifact for details.'}\n\n**Action Required:** Please review these licenses and resolve before merging.\n\n_This check will fail the PR until license issues are resolved._`
+                  : `${marker}\n\n## ✅ Backend License Check Passed\n\nAll backend dependencies have valid and allowed licenses.\n\nThe backend license report has been updated successfully.`;
+              }
+
+              throw new Error(`Unsupported license comment type: ${type}`);
             };
 
             for (const check of checks) {
