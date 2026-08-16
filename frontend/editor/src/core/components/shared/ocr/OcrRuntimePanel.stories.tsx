@@ -22,7 +22,9 @@ const languages = {
 /** Every story is one answer from the status endpoint; that call drives the whole panel. */
 function status(body: Record<string, unknown>) {
   return {
-    msw: { handlers: [http.get(STATUS_ENDPOINT, () => HttpResponse.json(body))] },
+    msw: {
+      handlers: [http.get(STATUS_ENDPOINT, () => HttpResponse.json(body))],
+    },
   };
 }
 

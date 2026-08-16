@@ -5104,6 +5104,12 @@ additionalLanguages = "Looking for additional languages?"
 loading = "Loading available languages..."
 manageLanguages = "Add languages →"
 
+[ocr.operation]
+submit = "Process OCR and Review"
+
+[ocr.results]
+title = "OCR Results"
+
 [ocr.runtime]
 apply = "Apply"
 applyWithSize = "Apply ({{size}} to download)"
@@ -5116,12 +5122,6 @@ installEngine = "Install OCR ({{size}})"
 languages = "Languages"
 restartRequired = "Restart Stirling-PDF to finish enabling OCR."
 title = "OCR setup"
-
-[ocr.operation]
-submit = "Process OCR and Review"
-
-[ocr.results]
-title = "OCR Results"
 
 [ocr.settings]
 title = "Settings"
@@ -9859,6 +9859,10 @@ plan = "Plan"
 title = "Licensing & Analytics"
 usageAnalytics = "Usage Analytics"
 
+[settings.ocr]
+description = "Text recognition is downloaded when you want it, so the installer stays small. Add or remove languages at any time."
+title = "Text recognition"
+
 [settings.planBilling]
 currentPlan = "Current Plan"
 loading = "Loading billing information..."
@@ -9929,10 +9933,6 @@ title = "Upgrade Your Plan"
 legal = "Legal"
 privacy = "Privacy"
 title = "Policies & Privacy"
-
-[settings.ocr]
-description = "Text recognition is downloaded when you want it, so the installer stays small. Add or remove languages at any time."
-title = "Text recognition"
 
 [settings.preferences]
 title = "Preferences"

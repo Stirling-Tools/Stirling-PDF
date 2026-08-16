@@ -87,7 +87,8 @@ const OcrRuntimePanel: React.FC<OcrRuntimePanelProps> = ({
   const pendingBytes = useMemo(
     () =>
       pending.toInstall.reduce(
-        (total, code) => total + (status?.availableLanguages?.[code]?.size ?? 0),
+        (total, code) =>
+          total + (status?.availableLanguages?.[code]?.size ?? 0),
         0,
       ),
     [pending.toInstall, status],
@@ -138,7 +139,9 @@ const OcrRuntimePanel: React.FC<OcrRuntimePanelProps> = ({
       if (failed.length > 0) {
         // Naming the ones that failed matters: the rest did land, and a blanket
         // "something went wrong" would invite redoing all of it.
-        setError(failed.map(([code, reason]) => `${code}: ${reason}`).join("\n"));
+        setError(
+          failed.map(([code, reason]) => `${code}: ${reason}`).join("\n"),
+        );
       }
       await refresh();
       onLanguagesChanged?.();
@@ -149,7 +152,8 @@ const OcrRuntimePanel: React.FC<OcrRuntimePanelProps> = ({
     }
   };
 
-  const hasChanges = pending.toInstall.length > 0 || pending.toRemove.length > 0;
+  const hasChanges =
+    pending.toInstall.length > 0 || pending.toRemove.length > 0;
 
   if (loading && !status) {
     return <Loader size="sm" />;
@@ -172,7 +176,10 @@ const OcrRuntimePanel: React.FC<OcrRuntimePanelProps> = ({
       {!status.engineInstalled && (
         <div className="flex flex-col gap-2">
           <Text size="sm">
-            {t("ocr.runtime.engineMissing", "Text recognition is not installed yet.")}
+            {t(
+              "ocr.runtime.engineMissing",
+              "Text recognition is not installed yet.",
+            )}
           </Text>
           <Button
             variant="primary"
@@ -241,7 +248,10 @@ const OcrRuntimePanel: React.FC<OcrRuntimePanelProps> = ({
         not a sentence written for a user in their language.
       */}
       {error && (
-        <Alert color="red" title={t("ocr.runtime.failed", "Something went wrong")}>
+        <Alert
+          color="red"
+          title={t("ocr.runtime.failed", "Something went wrong")}
+        >
           <span style={{ whiteSpace: "pre-line" }}>{error}</span>
         </Alert>
       )}
