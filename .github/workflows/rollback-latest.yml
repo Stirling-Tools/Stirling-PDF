@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   rollback:
+    environment: docker-publish
     runs-on: ubuntu-latest
     permissions:
       packages: write

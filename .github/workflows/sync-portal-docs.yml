@@ -24,6 +24,7 @@ permissions:
 
 jobs:
   sync:
+    environment: bot-identity
     name: Sync docs manifest
     runs-on: ubuntu-latest
     timeout-minutes: 10
