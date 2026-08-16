@@ -3679,11 +3679,11 @@ test.describe("PDF text editor v2 - dirty state", () => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
-    // Save state lives on the top-bar filename (a trailing "*"); the sidebar
-    // no longer repeats it. Clean on load.
+    // Save state lives beside the top-bar filename; the sidebar no longer
+    // repeats it. Clean on load.
     const filename = page.getByTestId("v2-filename");
     await expect(filename).toBeVisible();
-    await expect(filename).not.toContainText("*");
+    await expect(filename).not.toContainText("unsaved");
 
     const firstRunTestId = await page
       .locator('[data-testid^="v2-run-p0-"]')
@@ -3691,7 +3691,7 @@ test.describe("PDF text editor v2 - dirty state", () => {
       .getAttribute("data-testid");
     await typeIntoRun(page, firstRunTestId!, "X");
 
-    await expect(filename).toContainText("*");
+    await expect(filename).toContainText("unsaved");
   });
 });
 

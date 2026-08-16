@@ -1,10 +1,10 @@
-import { Box, Group, Text, Tooltip } from "@mantine/core";
+import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 
-/** Top bar for the v2 text/image editor. */
+/** Header for the text/image editor panel. */
 interface TopBarProps {
   store: EditorStore;
   hasDocument: boolean;
@@ -34,111 +34,25 @@ export function EditorTopBar(props: TopBarProps) {
     onShowHelp,
   } = props;
 
+  const zoomTo = (scale: number) =>
+    store.setRenderScale(
+      +Math.min(Z_IN_LIMIT, Math.max(Z_OUT_LIMIT, scale)).toFixed(2),
+    );
+
   return (
-    <Group
+    // The panel is narrow, so this stacks instead of relying on a single row
+    // wrapping - a wrapped row split the zoom cluster across lines.
+    <Stack
       gap="xs"
       px="md"
       py="xs"
       style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}
     >
-      <Text fw={600} size="sm">
-        {t("pdfTextEditorV2.title", "PDF Text Editor")}
-      </Text>
-      <Text size="xs" c="dimmed">
-        v2
-      </Text>
-      {openedFileName && (
-        <Text
-          size="xs"
-          c="dimmed"
-          data-testid="v2-filename"
-          style={{
-            maxWidth: 320,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-          title={openedFileName}
-        >
-          · {openedFileName}
-          {dirty ? " *" : ""}
+      <Group gap="xs" wrap="nowrap" justify="space-between">
+        <Text fw={600} size="sm" style={{ whiteSpace: "nowrap" }}>
+          {t("pdfTextEditorV2.title", "PDF Text Editor")}
         </Text>
-      )}
-      <Box style={{ flex: 1 }} />
-      {hasDocument && (
-        <Group gap="xs">
-          <Group gap={4} data-testid="v2-zoom-controls">
-            <Button
-              size="sm"
-              variant="tertiary"
-              aria-label={t("pdfTextEditorV2.zoom.out", "Zoom out")}
-              data-testid="v2-zoom-out"
-              onClick={() =>
-                store.setRenderScale(
-                  Math.max(Z_OUT_LIMIT, +(renderScale - Z_STEP).toFixed(2)),
-                )
-              }
-            >
-              -
-            </Button>
-            <Text size="xs" miw={40} ta="center" data-testid="v2-zoom-percent">
-              {Math.round(renderScale * 100)}%
-            </Text>
-            <Button
-              size="sm"
-              variant="tertiary"
-              aria-label={t("pdfTextEditorV2.zoom.in", "Zoom in")}
-              data-testid="v2-zoom-in"
-              onClick={() =>
-                store.setRenderScale(
-                  Math.min(Z_IN_LIMIT, +(renderScale + Z_STEP).toFixed(2)),
-                )
-              }
-            >
-              +
-            </Button>
-            <Button
-              size="sm"
-              variant="tertiary"
-              aria-label={t("pdfTextEditorV2.zoom.reset", "Reset zoom")}
-              data-testid="v2-zoom-reset"
-              onClick={() => store.setRenderScale(1)}
-            >
-              100%
-            </Button>
-            <Button
-              size="sm"
-              variant="tertiary"
-              aria-label={t("pdfTextEditorV2.zoom.fitToWidth", "Fit to width")}
-              data-testid="v2-zoom-fit"
-              onClick={() => {
-                const stage = document.querySelector<HTMLElement>(
-                  '[data-testid="v2-stage"]',
-                );
-                const firstPage = pages[0];
-                if (!stage || !firstPage) return;
-                const available = stage.clientWidth - FIT_PAD_PX;
-                const target = available / Math.max(1, firstPage.width);
-                const clamped = Math.min(
-                  Z_IN_LIMIT,
-                  Math.max(Z_OUT_LIMIT, target),
-                );
-                store.setRenderScale(+clamped.toFixed(2));
-              }}
-            >
-              {t("pdfTextEditorV2.zoom.fit", "Fit")}
-            </Button>
-          </Group>
-          <Tooltip
-            label={t(
-              "pdfTextEditorV2.saveTooltip",
-              "Download edited PDF (Ctrl+S)",
-            )}
-          >
-            <Button size="sm" onClick={onSave} data-testid="v2-save">
-              {t("pdfTextEditorV2.save", "Save PDF")}
-            </Button>
-          </Tooltip>
+        {hasDocument && (
           <Tooltip
             label={t("pdfTextEditorV2.help.tooltip", "Keyboard shortcuts (?)")}
           >
@@ -155,8 +69,108 @@ export function EditorTopBar(props: TopBarProps) {
               ?
             </Button>
           </Tooltip>
+        )}
+      </Group>
+
+      {openedFileName && (
+        // The name truncates but the unsaved marker must not, so it sits in its
+        // own non-shrinking element rather than inside the ellipsised text.
+        <Group gap={4} wrap="nowrap" data-testid="v2-filename">
+          <Text
+            size="xs"
+            c="dimmed"
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            title={openedFileName}
+          >
+            {openedFileName}
+          </Text>
+          {dirty && (
+            <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+              {t("pdfTextEditorV2.unsaved", "(unsaved)")}
+            </Text>
+          )}
         </Group>
       )}
-    </Group>
+
+      {hasDocument && (
+        <>
+          <Group gap="xs" wrap="nowrap" justify="space-between">
+            <Group gap={2} wrap="nowrap" data-testid="v2-zoom-controls">
+              <Button
+                size="sm"
+                variant="tertiary"
+                aria-label={t("pdfTextEditorV2.zoom.out", "Zoom out")}
+                data-testid="v2-zoom-out"
+                onClick={() => zoomTo(renderScale - Z_STEP)}
+              >
+                −
+              </Button>
+              {/* The readout doubles as the reset control: a separate "100%"
+                  button beside a "150%" readout read as two zoom values. */}
+              <Tooltip
+                label={t("pdfTextEditorV2.zoom.reset", "Reset zoom to 100%")}
+              >
+                <Button
+                  size="sm"
+                  variant="tertiary"
+                  data-testid="v2-zoom-reset"
+                  onClick={() => store.setRenderScale(1)}
+                >
+                  <Text
+                    size="xs"
+                    miw={38}
+                    ta="center"
+                    data-testid="v2-zoom-percent"
+                  >
+                    {Math.round(renderScale * 100)}%
+                  </Text>
+                </Button>
+              </Tooltip>
+              <Button
+                size="sm"
+                variant="tertiary"
+                aria-label={t("pdfTextEditorV2.zoom.in", "Zoom in")}
+                data-testid="v2-zoom-in"
+                onClick={() => zoomTo(renderScale + Z_STEP)}
+              >
+                +
+              </Button>
+            </Group>
+            <Button
+              size="sm"
+              variant="tertiary"
+              aria-label={t("pdfTextEditorV2.zoom.fitToWidth", "Fit to width")}
+              data-testid="v2-zoom-fit"
+              onClick={() => {
+                const stage = document.querySelector<HTMLElement>(
+                  '[data-testid="v2-stage"]',
+                );
+                const firstPage = pages[0];
+                if (!stage || !firstPage) return;
+                const available = stage.clientWidth - FIT_PAD_PX;
+                zoomTo(available / Math.max(1, firstPage.width));
+              }}
+            >
+              {t("pdfTextEditorV2.zoom.fit", "Fit")}
+            </Button>
+          </Group>
+
+          <Tooltip
+            label={t(
+              "pdfTextEditorV2.saveTooltip",
+              "Download edited PDF (Ctrl+S)",
+            )}
+          >
+            <Button size="sm" onClick={onSave} data-testid="v2-save" fullWidth>
+              {t("pdfTextEditorV2.save", "Save PDF")}
+            </Button>
+          </Tooltip>
+        </>
+      )}
+    </Stack>
   );
 }

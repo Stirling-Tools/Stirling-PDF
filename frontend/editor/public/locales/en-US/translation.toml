@@ -5966,6 +5966,7 @@ confirmReplaceDirty = "You have unsaved changes. Replace the open document and d
 save = "Save PDF"
 saveTooltip = "Download edited PDF (Ctrl+S)"
 title = "PDF Text Editor"
+unsaved = "(unsaved)"
 workbenchLabel = "Editor"
 
 [pdfTextEditorV2.annotations]
@@ -6278,7 +6279,7 @@ fit = "Fit"
 fitToWidth = "Fit to width"
 in = "Zoom in"
 out = "Zoom out"
-reset = "Reset zoom"
+reset = "Reset zoom to 100%"
 
 [PDFToCSV]
 header = "PDF to CSV"
